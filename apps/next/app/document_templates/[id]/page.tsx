@@ -24,13 +24,12 @@ export default function EditTemplatePage() {
 
   const router = useRouter();
   const company = useCurrentCompany();
-  const [{ template, token }] = trpc.documents.templates.get.useSuspenseQuery({ id, companyId: company.id });
+  const [{ template, token, requiredFields }] = trpc.documents.templates.get.useSuspenseQuery({
+    id,
+    companyId: company.id,
+  });
   const update = trpc.documents.templates.update.useMutation();
 
-  const requiredFields = [
-    { name: "__companySignature", title: "Company signature", role: "Company Representative", type: "signature" },
-    { name: "__signerSignature", title: "Signer signature", role: "Signer", type: "signature" },
-  ];
   const [docusealTemplate, setDocusealTemplate] = useState<Template | null>(null);
   const isSignable = (template: Template) =>
     requiredFields.every((field) => template.fields.some((f) => f.name === field.name));
@@ -89,6 +88,53 @@ export default function EditTemplatePage() {
         { name: "__role", type: "text", title: "Consultant role (auto-filled)", role: "Company Representative" },
         { name: "__payRate", type: "text", title: "Pay rate (auto-filled)", role: "Company Representative" },
         { name: "__startDate", type: "date", title: "Start date (auto-filled)", role: "Company Representative" },
+      );
+      break;
+    case DocumentTemplateType.BoardConsent:
+      fields.push(
+        {
+          name: "__boardApprovalDate",
+          type: "date",
+          title: "Board approval date (auto-filled)",
+          role: "Board member 1",
+        },
+        { name: "__grantType", type: "text", title: "Grant type (auto-filled)", role: "Company Representative" },
+        {
+          name: "__quantity",
+          type: "number",
+          title: "Number of options (auto-filled)",
+          role: "Board member 1",
+        },
+        {
+          name: "__exercisePrice",
+          type: "number",
+          title: "Exercise price per share (auto-filled)",
+          role: "Board member 1",
+        },
+        {
+          name: "__optionholderName",
+          type: "text",
+          title: "Optionholder name (auto-filled)",
+          role: "Board member 1",
+        },
+        {
+          name: "__optionholderAddress",
+          type: "text",
+          title: "Optionholder address (auto-filled)",
+          role: "Board member 1",
+        },
+        {
+          name: "__vestingCommencementDate",
+          type: "date",
+          title: "Vesting commencement date (auto-filled)",
+          role: "Board member 1",
+        },
+        {
+          name: "__vestingSchedule",
+          type: "text",
+          title: "Vesting schedule (auto-filled)",
+          role: "Board member 1",
+        },
       );
       break;
     case DocumentTemplateType.EquityPlanContract:

@@ -156,7 +156,7 @@ const QuickInvoiceSection = ({ disabled }: { disabled?: boolean }) => {
     companyId: company.id,
     year: nextInvoiceDate.getFullYear(),
   });
-  assert(!!user.roles.worker);
+  const equityAllocationLock = trpc.equityAllocations.lock.useMutation();
   const payRateInSubunits = user.roles.worker.payRateInSubunits;
   const initialInvoiceDate = formatISO(nextInvoiceDate, { representation: "date" });
 
@@ -205,6 +205,8 @@ const QuickInvoiceSection = ({ disabled }: { disabled?: boolean }) => {
       });
 
       if (response.ok) {
+        if (equityAllocation) await equityAllocationLock.mutateAsync({ companyId: company.id, year: invoiceYear });
+
         setDuration(null);
         setAmountUsd(null);
         setDate(initialInvoiceDate);

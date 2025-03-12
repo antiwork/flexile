@@ -4,8 +4,10 @@ import { and, desc, eq, inArray, isNotNull, isNull, not, type SQLWrapper } from 
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db, pagination, paginationSchema } from "@/db";
-import { activeStorageAttachments, activeStorageBlobs, documents, users } from "@/db/schema";
+import { DocumentType } from "@/db/enums";
+import { activeStorageAttachments, activeStorageBlobs, boardConsents, documents, users } from "@/db/schema";
 import env from "@/env";
+import { inngest } from "@/inngest/client";
 import { companyProcedure, createRouter, getS3Url } from "@/trpc";
 import { simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
@@ -39,6 +41,7 @@ export const documentsRouter = createRouter({
       const rows = await db.query.documents.findMany({
         with: {
           user: { columns: simpleUser.columns },
+          boardConsents: { columns: { lawyerApprovedAt: true } },
         },
         where,
         orderBy: [desc(documents.createdAt)],
@@ -78,6 +81,7 @@ export const documentsRouter = createRouter({
           ),
           user: simpleUser(document.user),
           attachment: attachments.get(document.id),
+          lawyerApproved: document.boardConsents.some((consent) => consent.lawyerApprovedAt),
         })),
         total,
       };
@@ -130,5 +134,35 @@ export const documentsRouter = createRouter({
         })
         .where(eq(documents.id, input.id));
     }),
+  approveByLawyer: companyProcedure.input(z.object({ id: z.bigint() })).mutation(async ({ ctx, input }) => {
+    if (!ctx.companyLawyer) throw new TRPCError({ code: "FORBIDDEN" });
+
+    const document = await db.query.documents.findFirst({
+      where: and(eq(documents.id, input.id), eq(documents.companyId, ctx.company.id)),
+      with: { boardConsents: true },
+    });
+    if (!document) throw new TRPCError({ code: "NOT_FOUND" });
+    if (document.type !== DocumentType.BoardConsent) throw new TRPCError({ code: "BAD_REQUEST" });
+
+    const boardConsent = document.boardConsents.find((consent) => consent.status === "pending");
+    if (!boardConsent) throw new TRPCError({ code: "BAD_REQUEST" });
+
+    await db
+      .update(boardConsents)
+      .set({
+        status: "lawyer_approved",
+        lawyerApprovedAt: new Date(),
+      })
+      .where(eq(boardConsents.id, boardConsent.id));
+
+    await inngest.send({
+      name: "board_consent.lawyer_approved",
+      data: {
+        boardConsentId: boardConsent.id,
+        userId: document.userId,
+        companyId: document.companyId,
+      },
+    });
+  }),
   templates: templatesRouter,
 });

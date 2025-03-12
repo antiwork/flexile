@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { equityAllocations } from "@/db/schema";
+import { inngest } from "@/inngest/client";
 import { companyProcedure, createRouter } from "@/trpc";
 
 export const equityAllocationsRouter = createRouter({
@@ -21,5 +22,26 @@ export const equityAllocationsRouter = createRouter({
     });
 
     return result ?? null;
+  }),
+  lock: companyProcedure.input(z.object({ year: z.number() })).mutation(async ({ ctx, input }) => {
+    if (!ctx.companyContractor) throw new TRPCError({ code: "FORBIDDEN" });
+
+    const equityAllocation = await db.query.equityAllocations.findFirst({
+      where: and(
+        eq(equityAllocations.year, input.year),
+        eq(equityAllocations.companyContractorId, ctx.companyContractor.id),
+      ),
+    });
+
+    if (!equityAllocation) return;
+
+    await inngest.send({
+      name: "equity_allocation.lock",
+      data: {
+        equityAllocationId: equityAllocation.id,
+        companyId: ctx.company.id,
+        userId: ctx.companyContractor.userId,
+      },
+    });
   }),
 });

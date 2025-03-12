@@ -9,7 +9,7 @@ import { pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
 import { DocumentTemplateType, DocumentType, PayRateType } from "@/db/enums";
-import { documents, documentTemplates, equityAllocations, users } from "@/db/schema";
+import { companyAdministrators, documents, documentTemplates, equityAllocations, users } from "@/db/schema";
 import env from "@/env";
 import { countries, MAX_WORKING_HOURS_PER_WEEK, WORKING_WEEKS_PER_YEAR } from "@/models/constants";
 import { companyProcedure, createRouter, type ProtectedContext, protectedProcedure } from "@/trpc";
@@ -87,7 +87,37 @@ export const templatesRouter = createRouter({
       env.DOCUSEAL_TOKEN,
     );
 
-    return { template, token };
+    let requiredFields = [
+      { name: "__companySignature", title: "Company signature", role: "Company Representative", type: "signature" },
+      { name: "__signerSignature", title: "Signer signature", role: "Signer", type: "signature" },
+    ];
+
+    if (template.type === DocumentTemplateType.BoardConsent) {
+      const boardMembers = await db.query.companyAdministrators.findMany({
+        where: eq(companyAdministrators.companyId, ctx.company.id),
+        with: {
+          user: {
+            columns: {
+              externalId: true,
+              email: true,
+              legalName: true,
+              preferredName: true,
+            },
+          },
+        },
+      });
+
+      if (boardMembers.length > 0) {
+        requiredFields = boardMembers.map((_, index) => ({
+          name: `__boardMemberSignature${index + 1}`,
+          title: `Board member signature`,
+          role: `Board member ${index + 1}`,
+          type: "signature",
+        }));
+      }
+    }
+
+    return { template, token, requiredFields };
   }),
   getSubmitterSlug: companyProcedure.input(z.object({ id: z.number() })).query(async ({ ctx, input }) => {
     const document = await db.query.documents.findFirst({

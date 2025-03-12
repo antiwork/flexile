@@ -42,6 +42,28 @@ class EquityGrantCreation
         company_investor.company.company_investor_entities.find_or_create_by!(name: option_holder_name, email: user.email) do |investor_entity|
           investor_entity.investment_amount_cents = 0
         end
+
+      current_grant = company_investor.equity_grants.vesting_trigger_invoice_paid
+        .where("EXTRACT(year FROM period_ended_at) = ? AND unvested_shares > 0", period_ended_at.year)
+        .order(id: :desc)
+        .first
+      if current_grant.present?
+        forfeited_shares = current_grant.unvested_shares
+        total_forfeited_shares = forfeited_shares + current_grant.forfeited_shares
+
+        current_grant.equity_grant_transactions.create!(
+          transaction_type: EquityGrantTransaction.transaction_types[:cancellation],
+          forfeited_shares:,
+          total_number_of_shares: current_grant.number_of_shares,
+          total_vested_shares: current_grant.vested_shares,
+          total_unvested_shares: 0,
+          total_exercised_shares: current_grant.exercised_shares,
+          total_forfeited_shares:,
+        )
+        current_grant.update!(forfeited_shares: total_forfeited_shares, unvested_shares: 0)
+        current_grant.option_pool.decrement!(:issued_shares, forfeited_shares)
+      end
+
       grant = company_investor.equity_grants.build(
         company_investor_entity:,
         option_holder_name:,

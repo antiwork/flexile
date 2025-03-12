@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import MainLayout from "@/components/layouts/Main";
 import Tabs from "@/components/Tabs";
 import { useCurrentUser } from "@/global";
@@ -12,7 +13,11 @@ const DocumentsLayout = ({
   children: React.ReactNode;
 }) => {
   const user = useCurrentUser();
-  const showDocumentTemplates = user.activeRole === "administrator" || user.activeRole === "lawyer";
+  const showDocumentTemplates = useMemo(
+    () => user.activeRole === "administrator" || user.activeRole === "lawyer",
+    [user.activeRole],
+  );
+
   return (
     <MainLayout title="Documents" headerActions={headerActions}>
       {showDocumentTemplates ? (

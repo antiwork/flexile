@@ -89,8 +89,10 @@ class UserPresenter
     roles = {}
     has_documents = documents.not_consulting_contract.or(documents.where.not(completed_at: nil)).exists?
     if user.company_administrator_for?(company)
+      administrator = user.company_administrator_for(company)
       roles[Company::ACCESS_ROLE_ADMINISTRATOR] = {
-        id: user.company_administrator_for(company).id.to_s,
+        id: administrator.id.to_s,
+        isBoardMember: administrator.board_member?,
         isInvited: !!user.invited_by&.company_worker_for?(company),
       }
     end

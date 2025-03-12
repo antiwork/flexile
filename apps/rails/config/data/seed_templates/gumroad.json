@@ -395,13 +395,15 @@
               "company_investor_attributes": {
                 "investment_amount_in_cents": 0
               },
+              "equity_allocation_attributes": {
+                "equity_percentage": 25,
+                "status": "approved",
+                "locked": true
+              },
               "equity_grants": [
                 {
                   "option_pool": {
                     "year": 2020
-                  },
-                  "equity_allocation": {
-                    "equity_percentage": 25
                   },
                   "year": 2020,
                   "option_pool_year": 2020,
