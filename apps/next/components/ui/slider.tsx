@@ -2,14 +2,19 @@ import * as SliderPrimitive from "@radix-ui/react-slider";
 import * as React from "react";
 import { cn } from "@/utils";
 
+type SliderProps = {
+  minStepsBetweenThumbs?: number;
+} & Omit<React.ComponentProps<typeof SliderPrimitive.Root>, "minStepsBetweenThumbs">;
+
 function Slider({
   className,
   defaultValue,
   value,
   min = 0,
   max = 100,
+  minStepsBetweenThumbs = 0,
   ...props
-}: React.ComponentProps<typeof SliderPrimitive.Root>) {
+}: SliderProps) {
   const values = React.useMemo(
     () => (Array.isArray(value) ? value : Array.isArray(defaultValue) ? defaultValue : [min, max]),
     [value, defaultValue, min, max],
@@ -20,6 +25,7 @@ function Slider({
       data-slot="slider"
       min={min}
       max={max}
+      minStepsBetweenThumbs={minStepsBetweenThumbs}
       className={cn(
         "relative flex w-full touch-none items-center select-none data-[disabled]:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col",
         className,
@@ -39,7 +45,7 @@ function Slider({
           className={cn("bg-primary absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full")}
         />
       </SliderPrimitive.Track>
-      {Array.from({ length: values.length }, (_, index) => (
+      {values.map((_, index) => (
         <SliderPrimitive.Thumb
           data-slot="slider-thumb"
           key={index}
