@@ -60,6 +60,25 @@ cp .env.example .env
 
 Then edit `.env` with your custom values.
 
+### Domain configuration
+
+By default, Flexile uses hardcoded domains:
+- Production: app.flexile.com, flexile.com
+- Staging: demo.flexile.com
+- Development: flexile.dev
+
+You can override these values by setting environment variables in your `.env` file:
+
+```
+# Domain Configuration
+ROOT_DOMAIN=your-domain.com
+APP_DOMAIN=app.your-domain.com
+API_DOMAIN=api.your-domain.com
+ALLOWED_ORIGINS=app.your-domain.com,your-domain.com
+```
+
+For development mode, you can set `DEV_ROOT_DOMAIN`, `DEV_APP_DOMAIN`, etc.
+
 ## Running the App
 
 Start the Docker services for local development:
