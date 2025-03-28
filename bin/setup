@@ -44,8 +44,14 @@ else
   echo "echo 'export FLEXILE_SIDEKIQ_PRO_DISABLED=true' >> ~/.bashrc"
 fi
 
+SCRIPT_DIR=$(pwd)
+
+cd apps/rails
+
 bundle install
 gem install foreman
+
+cd "$SCRIPT_DIR"
 
 # Setup Vercel environment
 pnpm vercel link
