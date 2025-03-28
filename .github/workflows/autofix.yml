@@ -14,6 +14,8 @@ jobs:
 
       - name: Build setup
         uses: ./.github/common/
+        with:
+          vercel-key: ${{ secrets.VERCEL_ENV_KEY }}
 
       - run: pnpm run setup
 

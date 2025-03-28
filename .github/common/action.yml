@@ -1,8 +1,8 @@
 name: Build common setup
 
 inputs:
-  contribsys-credentials:
-    description: "Contribsys credentials"
+  vercel-key:
+    description: "Vercel key"
     required: true
 
 runs:
@@ -18,7 +18,7 @@ runs:
     - run: pnpm i
       shell: bash
 
-    - run: pnpm vercel link --scope anti-work --yes --token ${{ secrets.VERCEL_ENV_KEY }} && pnpm vercel env pull .env --token ${{ secrets.VERCEL_ENV_KEY }} && ln -s $PWD/.env ./apps/next/.env
+    - run: pnpm vercel link --scope anti-work --yes --token ${{ inputs.vercel-key }} && pnpm vercel env pull .env --token ${{ inputs.vercel-key }} && ln -s $PWD/.env ./apps/next/.env
       shell: bash
 
     - uses: ruby/setup-ruby@v1
