@@ -6,6 +6,10 @@ concurrency:
   group: ${{ github.ref }}-rspec
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
+
+env:
+  RAILS_ENV: test
+
 jobs:
   rspec:
     name: Tests
