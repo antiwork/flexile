@@ -44,12 +44,14 @@ else
   echo "echo 'export FLEXILE_SIDEKIQ_PRO_DISABLED=true' >> ~/.bashrc"
 fi
 
-bundle install
-gem install foreman
-
 # Setup Vercel environment
 pnpm vercel link
 pnpm vercel env pull .env
 ln -sf $PWD/.env ./apps/next/.env
+
+cd apps/rails
+
+bundle install
+gem install foreman
 
 echo "✨ Setup complete! You can now start the development server."
