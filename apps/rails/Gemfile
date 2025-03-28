@@ -140,7 +140,7 @@ gem "hexapdf", "~> 1.2.0"
 
 gem "redlock", "~> 2.0"
 
-gem "ruby-openai", "~> 7.0"
+gem "ruby-openai", "~> 8.0"
 
 gem "google-apis-oauth2_v2", "~> 0.18.0"
 
