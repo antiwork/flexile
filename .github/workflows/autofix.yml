@@ -5,37 +5,6 @@ on:
 permissions:
   contents: read
 
-env:
-  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-  RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
-  RAILS_ENV: development
-  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
-  STRIPE_ENDPOINT_SECRET: ${{ secrets.STRIPE_ENDPOINT_SECRET }}
-  GH_WEBHOOK_SECRET: ${{ secrets.GH_WEBHOOK_SECRET }}
-  GH_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
-  GH_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
-  QUICKBOOKS_CLIENT_ID: ${{ secrets.QUICKBOOKS_CLIENT_ID }}
-  QUICKBOOKS_CLIENT_SECRET: ${{ secrets.QUICKBOOKS_CLIENT_SECRET }}
-  QUICKBOOKS_WEBHOOK_SECRET: ${{ secrets.QUICKBOOKS_WEBHOOK_SECRET }}
-  CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
-  STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-  CLEARBIT__API_KEY: ${{ secrets.CLEARBIT__API_KEY }}
-  HELPER__SECRET_KEY: ${{ secrets.HELPER__SECRET_KEY }}
-  HELPER__WIDGET_KEY: ${{ secrets.HELPER__WIDGET_KEY }}
-  IRS__CLIENT_ID: ${{ secrets.IRS__CLIENT_ID }}
-  IRS__TCC_1042: ${{ secrets.IRS__TCC_1042 }}
-  IRS__TCC_1099: ${{ secrets.IRS__TCC_1099 }}
-  IRS__USER_ID: ${{ secrets.IRS__USER_ID }}
-  RSA_PRIVATE_KEY: ${{ secrets.RSA_PRIVATE_KEY }}
-  WISE_GUMROAD_ACCOUNT__ABARTN: ${{ secrets.WISE_GUMROAD_ACCOUNT__ABARTN }}
-  WISE_GUMROAD_ACCOUNT__ACCOUNT_NUMBER: ${{ secrets.WISE_GUMROAD_ACCOUNT__ACCOUNT_NUMBER }}
-  HELPER_WIDGET_HOST: ${{ secrets.HELPER_WIDGET_HOST }}
-  ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY: ${{ secrets.ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY }}
-  ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY: ${{ secrets.ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY }}
-  ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT: ${{ secrets.ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT }}
-  ACTIVERECORD_DETERMINISTIC_DERIVED_KEY: ${{ secrets.ACTIVERECORD_DETERMINISTIC_DERIVED_KEY }}
-  ACTIVERECORD_DERIVED_KEY: ${{ secrets.ACTIVERECORD_DERIVED_KEY }}
-
 jobs:
   autofix:
     runs-on: ubicloud-standard-2
@@ -45,17 +14,8 @@ jobs:
 
       - name: Build setup
         uses: ./.github/common/
-        with:
-          contribsys-credentials: ${{ secrets.SIDEKIQ_PRO_KEY }}
 
       - run: pnpm run setup
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          S3_PRIVATE_BUCKET: ${{ secrets.S3_PRIVATE_BUCKET }}
-          S3_PUBLIC_BUCKET: ${{ secrets.S3_PUBLIC_BUCKET }}
-          RESEND_API_KEY: "dummy"
 
       - run: bin/lint
 

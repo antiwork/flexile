@@ -18,9 +18,10 @@ runs:
     - run: pnpm i
       shell: bash
 
+    - run: pnpm vercel link --scope anti-work --yes --token ${{ secrets.VERCEL_ENV_KEY }} && pnpm vercel env pull .env --token ${{ secrets.VERCEL_ENV_KEY }} && ln -s $PWD/.env ./apps/next/.env
+      shell: bash
+
     - uses: ruby/setup-ruby@v1
-      env:
-        BUNDLE_GEMS__CONTRIBSYS__COM: ${{ inputs.contribsys-credentials }}
       with:
         working-directory: apps/rails
         bundler-cache: true # runs "bundle install" and caches installed gems automatically
