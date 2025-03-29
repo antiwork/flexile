@@ -81,6 +81,7 @@ bin/dev
 
 Once the local services are up and running, the application will be available at `https://flexile.dev`
 
+
 Use the credentials generated during `db:setup` to log in.
 
 ### Helper widget
