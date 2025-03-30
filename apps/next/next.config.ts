@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
     typedRoutes: true,
     testProxy: true,
     serverActions: {
-      allowedOrigins: process.env.ALLOWED_ORIGINS?.split(","),
+      allowedOrigins: [process.env.DOMAIN || "", process.env.APP_DOMAIN || ""],
     },
   },
   images: {
