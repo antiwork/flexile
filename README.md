@@ -79,9 +79,6 @@ rails db:setup # if running for the first time
 bin/dev
 ```
 
-The application will be available at [https://flexile.dev](https://flexile.dev)
-
-
 Use the credentials generated during `db:setup` to log in.
 
 ### Helper widget
