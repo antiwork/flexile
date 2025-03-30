@@ -27,7 +27,6 @@ import { latestUserComplianceInfo, withRoles } from "./routes/users/helpers";
 import { type AppRouter } from "./server";
 
 export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) => {
-  // Use headers directly since we're routed through Vercel in all environments
   const host = assertDefined(req.headers.get("Host"));
   const cookie = req.headers.get("cookie") ?? "";
   const userAgent = req.headers.get("user-agent") ?? "";
