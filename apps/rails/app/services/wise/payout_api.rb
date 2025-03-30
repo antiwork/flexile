@@ -145,7 +145,7 @@ class Wise::PayoutApi
   # Example usage:
   # Wise::PayoutApi.new(wise_credential:).create_webhook(
   #   trigger: "transfers#state-change",
-  #   url: "https://#{ENV.fetch('APP_DOMAIN', 'app.flexile.com')}/webhooks/wise/transfer_state_change"
+  #   url: "https://#{ENV.fetch('APP_DOMAIN')}/webhooks/wise/transfer_state_change"
   # )
   # Wise::PayoutApi.new(wise_credential:).create_webhook(
   #   trigger: "balances#credit",
