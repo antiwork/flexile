@@ -59,7 +59,8 @@ export default function InviteContractorForm({ onClose }: { onClose?: () => void
         ? { equityFixed: Number.parseFloat(equityFixed) }
         : { equityRange: { min: equityRange[0], max: equityRange[1] } };
 
-    // TODO: Handle the response accordingly
+    // TODO: Handle the response accordingly, remove console.log and remove eslint disable directive
+    // eslint-disable-next-line no-console
     console.log("Contractor invited:", {
       email,
       role,
@@ -87,7 +88,7 @@ export default function InviteContractorForm({ onClose }: { onClose?: () => void
 
   return (
     <div className="relative mx-auto max-w-md">
-      {onClose && (
+      {onClose ? (
         <button
           onClick={onClose}
           className="absolute top-0 right-0 p-2 text-gray-400 hover:text-gray-600"
@@ -95,7 +96,7 @@ export default function InviteContractorForm({ onClose }: { onClose?: () => void
         >
           <X className="h-6 w-6" />
         </button>
-      )}
+      ) : null}
       <h2 className="mb-6 text-left text-2xl font-bold text-gray-800">Invite Contractor</h2>
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
         <div>

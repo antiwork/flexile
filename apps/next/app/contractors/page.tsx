@@ -1,6 +1,8 @@
+"use client";
+
 import { useState } from "react";
 import InviteContractorForm from "@/components/InviteContractorForm";
-import ContractorListing from "@/components/layouts/ContractorListing";
+import ContractorsLayout from "@/components/layouts/Contractors";
 import Modal from "@/components/Modal";
 
 export default function ContractorsPage() {
@@ -10,7 +12,7 @@ export default function ContractorsPage() {
   const closeModal = () => setIsModalOpen(false);
 
   return (
-    <ContractorListing>
+    <ContractorsLayout>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-800">Contractors</h1>
         <button
@@ -39,6 +41,6 @@ export default function ContractorsPage() {
       <Modal open={isModalOpen} onClose={closeModal}>
         <InviteContractorForm onClose={closeModal} />
       </Modal>
-    </ContractorListing>
+    </ContractorsLayout>
   );
 }

@@ -1,11 +1,11 @@
 import Link from "next/link";
 import React from "react";
 
-interface ContractorListingProps {
+interface ContractorsLayoutProps {
   children: React.ReactNode;
 }
 
-export default function ContractorListing({ children }: ContractorListingProps) {
+export default function ContractorsLayout({ children }: ContractorsLayoutProps) {
   return (
     <div className="flex h-screen bg-gray-100">
       <nav className="w-64 bg-white shadow-md">
