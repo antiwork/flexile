@@ -1,85 +1,114 @@
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Input from "@/components/Input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Slider } from "@/components/ui/slider";
-
-interface RoleData {
-  defaultRate: number;
-  defaultSalary: number;
-  defaultEquity: { min: number; max: number };
-}
-
-const roleData: Record<string, RoleData> = {
-  developer: { defaultRate: 100, defaultSalary: 120000, defaultEquity: { min: 20, max: 80 } },
-  designer: { defaultRate: 90, defaultSalary: 110000, defaultEquity: { min: 20, max: 80 } },
-  "project-manager": { defaultRate: 110, defaultSalary: 130000, defaultEquity: { min: 20, max: 80 } },
-  consultant: { defaultRate: 150, defaultSalary: 160000, defaultEquity: { min: 20, max: 80 } },
-  vendor: { defaultRate: 0, defaultSalary: 0, defaultEquity: { min: 0, max: 10 } },
-};
+import type { EQUITY_TYPES, LOCATION_TYPES } from "@/models/constants";
+import { type INVITE_CONTRACTOR_FORM_STATE, ROLE_DATA_CONFIG, ROLES } from "@/models/inviteContractor";
 
 export default function InviteContractorForm({ onClose }: { onClose?: () => void }) {
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState("");
-  const [location, setLocation] = useState("remote");
-  const [type, setType] = useState("full-time");
-  const [Yearlycompensation, setYearlyCompensation] = useState("");
-  const [Hourlycompensation, setHourlyCompensation] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [equityType, setEquityType] = useState<"fixed" | "range">("fixed");
-  const [equityFixed, setEquityFixed] = useState("");
-  const [equityRange, setEquityRange] = useState([20, 80]);
+  const [formState, setFormState] = useState<INVITE_CONTRACTOR_FORM_STATE>({
+    email: "",
+    role: "",
+    location: "remote",
+    type: "full-time",
+    compensation: {
+      yearly: "",
+      hourly: "",
+    },
+    startDate: "",
+    equity: {
+      type: "fixed",
+      fixed: "",
+      range: [20, 80],
+    },
+  });
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const isVendor = role === "vendor";
-  const isFullTime = type === "full-time";
+  const isVendor = formState.role === "vendor";
+  const isFullTime = formState.type === "full-time";
 
+  // Update form field helper
+  const updateForm = <K extends keyof INVITE_CONTRACTOR_FORM_STATE>(key: K, value: INVITE_CONTRACTOR_FORM_STATE[K]) => {
+    setFormState((prev) => ({ ...prev, [key]: value }));
+  };
+
+  // Update nested form field helper
+  const updateNestedForm = <
+    K extends keyof INVITE_CONTRACTOR_FORM_STATE,
+    N extends keyof INVITE_CONTRACTOR_FORM_STATE[K],
+  >(
+    key: K,
+    nestedKey: N,
+    value: INVITE_CONTRACTOR_FORM_STATE[K][N],
+  ) => {
+    setFormState((prev) => {
+      // Create a properly typed copy of the entire form state
+      const newState = { ...prev };
+
+      // Then work with the strongly-typed nested object
+      if (key === "compensation" && (nestedKey === "yearly" || nestedKey === "hourly")) {
+        newState.compensation = {
+          ...newState.compensation,
+          [nestedKey]: value,
+        };
+      } else if (key === "equity" && (nestedKey === "type" || nestedKey === "fixed" || nestedKey === "range")) {
+        newState.equity = {
+          ...newState.equity,
+          [nestedKey]: value,
+        };
+      }
+
+      return newState;
+    });
+  };
+
+  // Set defaults when role changes
   useEffect(() => {
-    if (role && roleData[role]) {
-      setYearlyCompensation(
-        isFullTime ? roleData[role].defaultSalary.toString() : roleData[role].defaultRate.toString(),
-      );
-      setHourlyCompensation(roleData[role].defaultRate.toString());
-      setEquityFixed(roleData[role].defaultEquity.min.toString());
-      setEquityRange([roleData[role].defaultEquity.min, roleData[role].defaultEquity.max]);
+    if (formState.role && ROLE_DATA_CONFIG[formState.role]) {
+      const roleDefaults = ROLE_DATA_CONFIG[formState.role];
+      updateNestedForm("compensation", "yearly", roleDefaults?.defaultSalary.toString() ?? "");
+      updateNestedForm("compensation", "hourly", roleDefaults?.defaultRate.toString() ?? "");
+      updateNestedForm("equity", "fixed", roleDefaults?.defaultEquity.min.toString() ?? "");
+      updateNestedForm("equity", "range", [roleDefaults?.defaultEquity.min ?? 0, roleDefaults?.defaultEquity.max ?? 0]);
     }
-  }, [role, isFullTime]);
+  }, [formState.role]);
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setIsLoading(true);
 
-    // TODO: Replace with actual API call
+    // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const equityData =
-      equityType === "fixed"
-        ? { equityFixed: Number.parseFloat(equityFixed) }
-        : { equityRange: { min: equityRange[0], max: equityRange[1] } };
+      formState.equity.type === "fixed"
+        ? { equityFixed: Number.parseFloat(formState.equity.fixed) }
+        : { equityRange: { min: formState.equity.range[0], max: formState.equity.range[1] } };
 
     // TODO: Handle the response accordingly, remove console.log and remove eslint disable directive
     // eslint-disable-next-line no-console
     console.log("Contractor invited:", {
-      email,
-      role,
+      email: formState.email,
+      role: formState.role,
       ...(isVendor
         ? {}
         : {
-            location,
-            type,
+            location: formState.location,
+            type: formState.type,
             compensation: {
               type: isFullTime ? "salary" : "rate",
-              amount: Number.parseFloat(isFullTime ? Yearlycompensation : Hourlycompensation),
+              amount: Number.parseFloat(isFullTime ? formState.compensation.yearly : formState.compensation.hourly),
             },
-            startDate,
+            startDate: formState.startDate,
           }),
       ...equityData,
     });
 
     setIsLoading(false);
-    // TODO: Show success message or redirect
     if (onClose) {
       onClose();
     }
@@ -99,44 +128,44 @@ export default function InviteContractorForm({ onClose }: { onClose?: () => void
       ) : null}
       <h2 className="mb-6 text-left text-2xl font-bold text-gray-800">Invite Contractor</h2>
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email
-          </label>
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
-          />
-        </div>
-        <div>
-          <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+        <Input
+          type="email"
+          label="Email"
+          value={formState.email}
+          onChange={(value) => updateForm("email", value)}
+          required
+        />
+
+        <div className="group grid gap-2">
+          <label htmlFor="role" className="cursor-pointer">
             Role
           </label>
           <select
             id="role"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
+            value={formState.role}
+            onChange={(e) => updateForm("role", e.target.value)}
             required
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+            className="rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
           >
             <option value="">Select a role</option>
-            <option value="developer">Developer</option>
-            <option value="designer">Designer</option>
-            <option value="project-manager">Project Manager</option>
-            <option value="consultant">Consultant</option>
-            <option value="vendor">Vendor</option>
+            {ROLES.map((role) => (
+              <option key={role.value} value={role.value}>
+                {role.label}
+              </option>
+            ))}
           </select>
         </div>
+
         {!isVendor && (
           <>
             <div className="flex space-x-4">
               <div className="w-1/2">
                 <Label className="text-sm font-medium text-gray-700">Location</Label>
-                <RadioGroup value={location} onValueChange={setLocation} className="mt-2 flex space-x-4">
+                <RadioGroup
+                  value={formState.location}
+                  onValueChange={(value: LOCATION_TYPES) => updateForm("location", value)}
+                  className="mt-2 flex space-x-4"
+                >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="in-person" id="in-person" />
                     <Label htmlFor="in-person">In-person</Label>
@@ -148,62 +177,34 @@ export default function InviteContractorForm({ onClose }: { onClose?: () => void
                 </RadioGroup>
               </div>
             </div>
-            <div>
-              <label htmlFor="compensation" className="block text-sm font-medium text-gray-700">
-                Salary ($/year)
-              </label>
-              <div className="relative mt-1 rounded-md shadow-sm">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                  <span className="text-gray-500 sm:text-sm">$</span>
-                </div>
-                <input
-                  type="number"
-                  id="compensation"
-                  value={Yearlycompensation}
-                  onChange={(e) => setYearlyCompensation(e.target.value)}
-                  required
-                  className="block w-full rounded-md border border-gray-300 py-2 pr-12 pl-7 focus:border-blue-500 focus:ring-blue-500"
-                  placeholder="0.00"
-                  aria-describedby="compensation-currency"
-                />
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                  <span className="text-gray-500 sm:text-sm" id="compensation-currency">
-                    /year
-                  </span>
-                </div>
-              </div>
-              <div className="mt-2.5">
-                <label htmlFor="hourlyCompensation" className="block text-sm font-medium text-gray-700">
-                  Rate ($/hr)
-                </label>
-                <div className="relative mt-1 rounded-md shadow-sm">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <span className="text-gray-500 sm:text-sm">$</span>
-                  </div>
-                  <input
-                    type="number"
-                    id="hourlyCompensation"
-                    value={Hourlycompensation}
-                    onChange={(e) => setHourlyCompensation(e.target.value)}
-                    required
-                    className="block w-full rounded-md border border-gray-300 py-2 pr-12 pl-7 focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="0.00"
-                    aria-describedby="hourly-compensation-currency"
-                  />
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                    <span className="text-gray-500 sm:text-sm" id="hourly-compensation-currency">
-                      /hr
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+
+            <Input
+              type="number"
+              label="Salary ($/year)"
+              value={formState.compensation.yearly}
+              onChange={(value) => updateNestedForm("compensation", "yearly", value)}
+              required
+              placeholder="0.00"
+              prefix="$"
+              suffix="/year"
+            />
+
+            <Input
+              type="number"
+              label="Rate ($/hr)"
+              value={formState.compensation.hourly}
+              onChange={(value) => updateNestedForm("compensation", "hourly", value)}
+              required
+              placeholder="0.00"
+              prefix="$"
+              suffix="/hr"
+            />
 
             <div>
               <Label className="text-sm font-medium text-gray-700">Equity Split</Label>
               <RadioGroup
-                value={equityType}
-                onValueChange={(value: "fixed" | "range") => setEquityType(value)}
+                value={formState.equity.type}
+                onValueChange={(value: EQUITY_TYPES) => updateNestedForm("equity", "type", value)}
                 className="mt-2 flex space-x-4"
               >
                 <div className="flex items-center space-x-2">
@@ -215,55 +216,46 @@ export default function InviteContractorForm({ onClose }: { onClose?: () => void
                   <Label htmlFor="equityRange">Percentage range</Label>
                 </div>
               </RadioGroup>
-              {equityType === "fixed" ? (
-                <div className="relative mt-2">
-                  <input
-                    type="number"
-                    value={equityFixed}
-                    onChange={(e) => setEquityFixed(e.target.value)}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 pr-8 focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="Fixed equity percentage"
-                    step="0.1"
-                  />
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                    <span className="text-gray-500 sm:text-sm">%</span>
-                  </div>
-                </div>
+
+              {formState.equity.type === "fixed" ? (
+                <Input
+                  type="number"
+                  value={formState.equity.fixed}
+                  onChange={(value) => updateNestedForm("equity", "fixed", value)}
+                  placeholder="Fixed equity percentage"
+                  step="0.1"
+                  suffix="%"
+                  className="mt-2"
+                />
               ) : (
                 <div className="mt-4">
                   <Slider
                     defaultValue={[20, 80]}
                     max={100}
                     step={1}
-                    value={equityRange}
-                    onValueChange={(value: [number, number]) => setEquityRange(value)}
+                    value={formState.equity.range}
+                    onValueChange={(value: [number, number]) => updateNestedForm("equity", "range", value)}
                     className="w-full"
                     minStepsBetweenThumbs={1}
                   />
                   <div className="mt-2 flex justify-between text-sm text-gray-600">
-                    <span>{equityRange[0]?.toFixed(1)}%</span>
-                    <span>{equityRange[1]?.toFixed(1)}%</span>
+                    <span>{formState.equity.range[0].toFixed(1)}%</span>
+                    <span>{formState.equity.range[1].toFixed(1)}%</span>
                   </div>
                 </div>
               )}
             </div>
 
-            <div>
-              <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
-                Start Date
-              </label>
-              <input
-                type="text"
-                id="startDate"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                required
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
-                placeholder="e.g., next Monday, in 2 weeks, July 1st"
-              />
-            </div>
+            <Input
+              label="Start Date"
+              value={formState.startDate}
+              onChange={(value) => updateForm("startDate", value)}
+              required
+              placeholder="e.g., next Monday, in 2 weeks, July 1st"
+            />
           </>
         )}
+
         <div className="flex justify-end">
           <button
             type="submit"

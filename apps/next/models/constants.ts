@@ -205,3 +205,24 @@ export const sanctionedCountries = new Map<string, string>(
     .map(([countryCode, info]) => [countryCode, info.countryName]),
 );
 export { c as countryInfos };
+
+export const HIRING_LOCATIONS = {
+  REMOTE: "remote",
+  IN_PERSON: "in-person",
+};
+
+export type LOCATION_TYPES = (typeof HIRING_LOCATIONS)[keyof typeof HIRING_LOCATIONS];
+
+export const CONTRACT_TYPES = {
+  FULL_TIME: "full-time",
+  HOURLY: "hourly",
+};
+
+export type CONTRACT_TYPES = (typeof CONTRACT_TYPES)[keyof typeof CONTRACT_TYPES];
+
+export const EQUITY_TYPES = {
+  FIXED: "fixed",
+  RANGE: "range",
+};
+
+export type EQUITY_TYPES = (typeof EQUITY_TYPES)[keyof typeof EQUITY_TYPES];
