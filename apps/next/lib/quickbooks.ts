@@ -11,7 +11,7 @@ export const CLEARANCE_BANK_ACCOUNT_NAME = "Flexile.com Money Out Clearing";
 const config: AppConfig = {
   appKey: env.QUICKBOOKS_CLIENT_ID,
   appSecret: env.QUICKBOOKS_CLIENT_SECRET,
-  redirectUrl: `${env.APP_DOMAIN}/oauth_redirect`,
+  redirectUrl: `${env.DOMAIN}/oauth_redirect`,
   scope: ["com.intuit.quickbooks.accounting"],
   useProduction: process.env.NODE_ENV === "production",
   autoRefresh: true,
