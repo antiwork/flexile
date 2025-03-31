@@ -2,18 +2,17 @@ import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import env from "@/env";
 
-export default clerkMiddleware(
-  (_, req) => {
-    const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
-    const clerkFapiUrl = Buffer.from(env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.slice(8), "base64")
-      .toString("utf-8")
-      .slice(0, -1);
-    const { NODE_ENV } = process.env; // destructure to prevent inlining
-    const s3Urls = [env.S3_PRIVATE_BUCKET, env.S3_PUBLIC_BUCKET]
-      .map((bucket) => `https://${bucket}.s3.${env.AWS_REGION}.amazonaws.com`)
-      .join(" ");
+export default clerkMiddleware((_, req) => {
+  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+  const clerkFapiUrl = Buffer.from(env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.slice(8), "base64")
+    .toString("utf-8")
+    .slice(0, -1);
+  const { NODE_ENV } = process.env; // destructure to prevent inlining
+  const s3Urls = [env.S3_PRIVATE_BUCKET, env.S3_PUBLIC_BUCKET]
+    .map((bucket) => `https://${bucket}.s3.${env.AWS_REGION}.amazonaws.com`)
+    .join(" ");
 
-    const cspHeader = `
+  const cspHeader = `
     default-src 'self';
     script-src 'self' 'strict-dynamic' 'nonce-${nonce}' ${
       NODE_ENV === "production" ? "" : `'unsafe-eval'` // required by Clerk, as is style-src 'unsafe-inline' and worker-src blob:.
@@ -29,19 +28,17 @@ export default clerkMiddleware(
     form-action 'self';
     upgrade-insecure-requests;
   `
-      .replace(/\s{2,}/gu, " ")
-      .trim();
+    .replace(/\s{2,}/gu, " ")
+    .trim();
 
-    const requestHeaders = new Headers(req.headers);
-    requestHeaders.set("x-nonce", nonce);
-    requestHeaders.set("Content-Security-Policy", cspHeader);
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("Content-Security-Policy", cspHeader);
 
-    const response = NextResponse.next({ request: { headers: requestHeaders } });
-    response.headers.set("Content-Security-Policy", cspHeader);
-    return response;
-  },
-  { debug: true },
-);
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  response.headers.set("Content-Security-Policy", cspHeader);
+  return response;
+});
 
 export const config = {
   matcher: [
