@@ -116,133 +116,84 @@ export const templatesRouter = createRouter({
     if (!submitter) throw new TRPCError({ code: "NOT_FOUND" });
 
     const complianceInfo = ctx.user.userComplianceInfos[0];
-    const fields: { name: string; default_value: string; readonly?: boolean }[] = [
-      { name: "__companyEmail", default_value: ctx.user.email },
-      { name: "__companyRepresentativeName", default_value: ctx.user.legalName ?? "" },
-      { name: "__companyName", default_value: ctx.company.name ?? "" },
-      {
-        name: "__companyAddress",
-        default_value:
-          [ctx.company.streetAddress, ctx.company.city, ctx.company.state, ctx.company.zipCode]
-            .filter(Boolean)
-            .join(", ") || "",
-      },
-      {
-        name: "__companyCountry",
-        default_value: (ctx.company.countryCode && countries.get(ctx.company.countryCode)) ?? "",
-      },
-      { name: "__signerEmail", default_value: ctx.user.email },
-      {
-        name: "__signerAddress",
-        default_value:
-          [ctx.user.streetAddress, ctx.user.city, ctx.user.state, ctx.user.zipCode].filter(Boolean).join(", ") || "",
-      },
-      {
-        name: "__signerCountry",
-        default_value: (ctx.user.countryCode && countries.get(ctx.user.countryCode)) ?? "",
-      },
-      { name: "__signerName", default_value: ctx.user.legalName ?? "" },
-      {
-        name: "__signerLegalEntity",
-        default_value: (complianceInfo?.businessEntity ? complianceInfo.businessName : ctx.user.legalName) ?? "",
-      },
-    ];
+    const values: Record<string, string> = {
+      __companyEmail: ctx.user.email,
+      __companyRepresentativeName: ctx.user.legalName ?? "",
+      __companyName: ctx.company.name ?? "",
+      __companyAddress:
+        [ctx.company.streetAddress, ctx.company.city, ctx.company.state, ctx.company.zipCode]
+          .filter(Boolean)
+          .join(", ") || "",
+      __companyCountry: (ctx.company.countryCode && countries.get(ctx.company.countryCode)) ?? "",
+      __signerEmail: ctx.user.email,
+      __signerAddress:
+        [ctx.user.streetAddress, ctx.user.city, ctx.user.state, ctx.user.zipCode].filter(Boolean).join(", ") || "",
+      __signerCountry: (ctx.user.countryCode && countries.get(ctx.user.countryCode)) ?? "",
+      __signerName: ctx.user.legalName ?? "",
+      __signerLegalEntity: (complianceInfo?.businessEntity ? complianceInfo.businessName : ctx.user.legalName) ?? "",
+    };
     if (document.type === DocumentType.ConsultingContract) {
       const contractor = document.contractor;
       if (!contractor) throw new TRPCError({ code: "NOT_FOUND" });
       const equityPercentage = contractor.equityAllocations[0]?.equityPercentage;
       const startDate = max([contractor.startedAt, contractor.updatedAt]);
-      fields.push(
-        { name: "__role", default_value: contractor.role.name },
-        { name: "__startDate", default_value: startDate.toLocaleString() },
-        { name: "__electionYear", default_value: startDate.getFullYear().toString() },
-        {
-          name: "__signerEquityPercentage",
-          default_value: equityPercentage?.toString() ?? "",
-          readonly: !!equityPercentage,
-        },
-        {
-          name: "__payRate",
-          default_value: `${(contractor.payRateInSubunits / 100).toLocaleString()} ${
-            contractor.payRateType === PayRateType.Hourly
-              ? "per hour"
-              : contractor.payRateType === PayRateType.ProjectBased
-                ? "per project"
-                : "per year"
-          }`,
-        },
-        {
-          name: "__targetAnnualHours",
-          default_value:
-            contractor.payRateType === PayRateType.Hourly && contractor.hoursPerWeek
-              ? `Target Annual Hours: ${(contractor.hoursPerWeek * WORKING_WEEKS_PER_YEAR).toLocaleString()}`
-              : "",
-        },
-        {
-          name: "__maximumFee",
-          default_value:
-            contractor.payRateType === PayRateType.Hourly && contractor.hoursPerWeek
-              ? `Maximum fee payable to Contractor on this Project Assignment, including all items in the first two paragraphs above is $${((contractor.payRateInSubunits / 100) * MAX_WORKING_HOURS_PER_WEEK * WORKING_WEEKS_PER_YEAR).toLocaleString()} (the "Maximum Fee").`
-              : "",
-        },
-      );
+      Object.assign(values, {
+        __role: contractor.role.name,
+        __startDate: startDate.toLocaleString(),
+        __electionYear: startDate.getFullYear().toString(),
+        __payRate: `${(contractor.payRateInSubunits / 100).toLocaleString()} ${
+          contractor.payRateType === PayRateType.Hourly
+            ? "per hour"
+            : contractor.payRateType === PayRateType.ProjectBased
+              ? "per project"
+              : "per year"
+        }`,
+        __targetAnnualHours:
+          contractor.payRateType === PayRateType.Hourly && contractor.hoursPerWeek
+            ? `Target Annual Hours: ${(contractor.hoursPerWeek * WORKING_WEEKS_PER_YEAR).toLocaleString()}`
+            : "",
+        __maximumFee:
+          contractor.payRateType === PayRateType.Hourly && contractor.hoursPerWeek
+            ? `Maximum fee payable to Contractor on this Project Assignment, including all items in the first two paragraphs above is $${((contractor.payRateInSubunits / 100) * MAX_WORKING_HOURS_PER_WEEK * WORKING_WEEKS_PER_YEAR).toLocaleString()} (the "Maximum Fee").`
+            : "",
+      });
+      if (equityPercentage) values.__signerEquityPercentage = equityPercentage.toString();
     } else if (document.type === DocumentType.EquityPlanContract) {
       const equityGrant = document.equityGrant;
       if (!equityGrant) throw new TRPCError({ code: "NOT_FOUND" });
 
-      fields.push(
-        { name: "__name", default_value: equityGrant.optionHolderName },
-        { name: "__boardApprovalDate", default_value: equityGrant.boardApprovalDate },
-        { name: "__quantity", default_value: equityGrant.numberOfShares.toString() },
-        { name: "__relationship", default_value: equityGrant.issueDateRelationship },
-        {
-          name: "__grantType",
-          default_value: equityGrant.optionGrantType === "iso" ? "Incentive Stock Option" : "Nonstatutory Stock Option",
-        },
-        { name: "__exercisePrice", default_value: equityGrant.exercisePriceUsd.toString() },
-        {
-          name: "__totalExercisePrice",
-          default_value: new Decimal(equityGrant.exercisePriceUsd).mul(equityGrant.numberOfShares).toString(),
-        },
-        { name: "__expirationDate", default_value: equityGrant.expiresAt.toLocaleDateString() },
-        { name: "__optionPool", default_value: equityGrant.optionPool.name },
-        { name: "__vestingCommencementDate", default_value: equityGrant.periodStartedAt.toLocaleDateString() },
-        { name: "__exerciseSchedule", default_value: "Same as Vesting Schedule" },
-      );
+      Object.assign(values, {
+        __name: equityGrant.optionHolderName,
+        __boardApprovalDate: equityGrant.boardApprovalDate,
+        __quantity: equityGrant.numberOfShares.toString(),
+        __relationship: equityGrant.issueDateRelationship,
+        __grantType: equityGrant.optionGrantType === "iso" ? "Incentive Stock Option" : "Nonstatutory Stock Option",
+        __exercisePrice: equityGrant.exercisePriceUsd.toString(),
+        __totalExercisePrice: new Decimal(equityGrant.exercisePriceUsd).mul(equityGrant.numberOfShares).toString(),
+        __expirationDate: equityGrant.expiresAt.toLocaleDateString(),
+        __optionPool: equityGrant.optionPool.name,
+        __vestingCommencementDate: equityGrant.periodStartedAt.toLocaleDateString(),
+        __exerciseSchedule: "Same as Vesting Schedule",
+      });
 
       const vestingSchedule = equityGrant.vestingSchedule;
       if (vestingSchedule) {
-        fields.push({
-          name: "__vestingSchedule",
-          default_value: `${vestingSchedule.vestingFrequencyMonths}/${vestingSchedule.totalVestingDurationMonths} of the total Shares shall vest monthly on the same day each month as the Vesting Commencement Date${vestingSchedule.cliffDurationMonths > 0 ? `, with ${vestingSchedule.cliffDurationMonths} months cliff` : ""}, subject to the service provider's Continuous Service (as defined in the Plan) through each vesting date.`,
-        });
+        values.__vestingSchedule = `${vestingSchedule.vestingFrequencyMonths}/${vestingSchedule.totalVestingDurationMonths} of the total Shares shall vest monthly on the same day each month as the Vesting Commencement Date${vestingSchedule.cliffDurationMonths > 0 ? `, with ${vestingSchedule.cliffDurationMonths} months cliff` : ""}, subject to the service provider's Continuous Service (as defined in the Plan) through each vesting date.`;
       } else if (equityGrant.vestingTrigger === "invoice_paid") {
-        fields.push({
-          name: "__vestingSchedule",
-          default_value: `Shares will vest as invoices are paid. The number of shares vesting each month will be equal to the total dollar amount of eligible fees billed to and approved by the Company during that month, times the equity allocation percentage selected, divided by the value per share of the Company's common stock on the Effective Date of the Equity Election Form (which for purposes of the vesting of this award will be either a) the fully diluted share price associated with the last SAFE valuation cap, or b) the share price of the last preferred stock sale, whichever is most recent, as determined by the Board). Any options that remain unvested at the conclusion of the calendar year after giving effect to any vesting earned for the month of December will be forfeited for no consideration.`,
-        });
+        values.__vestingSchedule = `Shares will vest as invoices are paid. The number of shares vesting each month will be equal to the total dollar amount of eligible fees billed to and approved by the Company during that month, times the equity allocation percentage selected, divided by the value per share of the Company's common stock on the Effective Date of the Equity Election Form (which for purposes of the vesting of this award will be either a) the fully diluted share price associated with the last SAFE valuation cap, or b) the share price of the last preferred stock sale, whichever is most recent, as determined by the Board). Any options that remain unvested at the conclusion of the calendar year after giving effect to any vesting earned for the month of December will be forfeited for no consideration.`;
       }
     }
 
-    const template = await docuseal.getTemplate(Number(submission.template.id));
-    await docuseal.updateSubmitter(submitter.id, {
-      fields: fields.flatMap((field) =>
-        template.fields.some((f) => f.name === field.name && f.submitter_uuid === submitter.uuid)
-          ? { readonly: true, ...field }
-          : [],
-      ),
-    });
+    await docuseal.updateSubmitter(submitter.id, { values });
 
-    return submitter.slug;
+    return { slug: submitter.slug, readonlyFields: Object.keys(values) };
   }),
   create: companyProcedure
     .input(createInsertSchema(documentTemplates).pick({ name: true, type: true }))
     .mutation(async ({ ctx, input }) => {
       if (!ctx.companyAdministrator && !ctx.companyLawyer) throw new TRPCError({ code: "FORBIDDEN" });
 
-      // somewhat hacky way to create an empty docuseal template - two steps because setting the name directly causes a 500 on their side
-      const template = await docuseal.createTemplateFromPdf({ documents: [] });
-      await docuseal.updateTemplate(template.id, { name: input.name });
+      const template = await docuseal.createTemplateFromPdf({ documents: [], name: input.name });
       const [row] = await db
         .insert(documentTemplates)
         .values({ ...input, companyId: ctx.company.id, docusealId: BigInt(template.id) })
