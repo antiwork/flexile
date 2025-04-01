@@ -1,6 +1,6 @@
 {
   "name": "rails",
-  "packageManager": "pnpm@10.6.3",
+  "packageManager": "pnpm@10.6.4",
   "dependencies": {
     "puppeteer": "^24.4.0"
   },
