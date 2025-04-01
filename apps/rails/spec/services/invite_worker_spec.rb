@@ -27,7 +27,7 @@ RSpec.describe InviteWorker do
 
   it "creates the record when all information is present" do
     expect do
-      expect(invite_contractor).to eq({ success: true, company_worker: CompanyWorker.last })
+      expect(invite_contractor).to eq({ success: true, company_worker: CompanyWorker.last, document: Document.last })
     end.to change { User.count }.by(1)
         .and change { CompanyWorker.count }.by(1)
         .and change { ContractorProfile.count }.by(1)
@@ -100,7 +100,7 @@ RSpec.describe InviteWorker do
 
       it "creates a new contractor record for this company" do
         expect do
-          expect(invite_contractor).to eq({ success: true, company_worker: CompanyWorker.last })
+          expect(invite_contractor).to eq({ success: true, company_worker: CompanyWorker.last, document: Document.last })
         end.to change { User.count }.by(0)
           .and change { CompanyWorker.count }.by(1)
           .and change { ContractorProfile.count }.by(0)
@@ -131,7 +131,7 @@ RSpec.describe InviteWorker do
       )
 
       expect do
-        expect(invite_contractor).to eq({ success: true, company_worker: company_worker })
+        expect(invite_contractor).to eq({ success: true, company_worker: company_worker, document: Document.last })
       end.to change { User.count }.by(0)
           .and change { CompanyWorker.count }.by(0)
           .and change { ContractorProfile.count }.by(0)
