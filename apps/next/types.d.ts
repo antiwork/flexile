@@ -10,3 +10,5 @@ declare namespace Intl {
     ): NumberRangeFormatPart[];
   }
 }
+
+type MaybePromise<T> = T | Promise<T>;

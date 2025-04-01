@@ -5,13 +5,14 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyRolesFactory } from "@test/factories/companyRoles";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
+import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test } from "@test/index";
 import { desc, eq } from "drizzle-orm";
 import { companyRoles, users } from "@/db/schema";
 import { assert } from "@/utils/assert";
 
 test.describe("Edit contractor", () => {
-  test("allows editing details of contractors", async ({ page, sentEmails }) => {
+  test("allows editing details of contractors", async ({ page, sentEmails, next }) => {
     const { company } = await companiesFactory.create();
     const { user: admin } = await usersFactory.create();
     await companyAdministratorsFactory.create({
@@ -32,6 +33,8 @@ test.describe("Edit contractor", () => {
     assert(contractor != null, "Contractor is required");
     assert(contractor.preferredName != null, "Contractor preferred name is required");
     assert(contractor.legalName != null, "Contractor legal name is required");
+    const { mockForm } = mockDocuseal(next, { companyRepresentative: () => admin, signer: () => contractor });
+    await mockForm(page);
 
     await login(page, admin);
     await page.getByRole("link", { name: "People" }).click();
@@ -67,7 +70,7 @@ test.describe("Edit contractor", () => {
     ]);
   });
 
-  test("allows editing project-based contractor details", async ({ page }) => {
+  test("allows editing project-based contractor details", async ({ page, next }) => {
     const { company } = await companiesFactory.create();
     const { user: admin } = await usersFactory.create();
     await companyAdministratorsFactory.create({
@@ -90,6 +93,8 @@ test.describe("Edit contractor", () => {
     });
     assert(projectBasedUser !== undefined);
     assert(projectBasedUser.preferredName !== null);
+    const { mockForm } = mockDocuseal(next, { companyRepresentative: () => admin, signer: () => projectBasedUser });
+    await mockForm(page);
 
     await login(page, admin);
     await page.getByRole("link", { name: "People" }).click();
@@ -111,7 +116,7 @@ test.describe("Edit contractor", () => {
     expect(updatedProjectContractor.payRateInSubunits).toBe(200000);
   });
 
-  test("allows creating a new role ad-hoc", async ({ page, sentEmails }) => {
+  test("allows creating a new role ad-hoc", async ({ page, sentEmails, next }) => {
     const { company } = await companiesFactory.create();
     const { user: admin } = await usersFactory.create();
     await companyAdministratorsFactory.create({
@@ -127,6 +132,8 @@ test.describe("Edit contractor", () => {
     });
     assert(contractor !== undefined);
     assert(contractor.preferredName !== null);
+    const { mockForm } = mockDocuseal(next, { companyRepresentative: () => admin, signer: () => contractor });
+    await mockForm(page);
 
     await login(page, admin);
     await page.getByRole("link", { name: "People" }).click();

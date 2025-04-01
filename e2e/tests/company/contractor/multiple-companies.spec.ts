@@ -5,13 +5,14 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyRolesFactory } from "@test/factories/companyRoles";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
+import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal, withIsolatedBrowserSessionPage } from "@test/index";
 import { and, eq } from "drizzle-orm";
 import { documents, users } from "@/db/schema";
 import { assert, assertDefined } from "@/utils/assert";
 
 test.describe("Contractor for multiple companies", () => {
-  test("contractor accepts invitation from second company and signs contract", async ({ page, browser }) => {
+  test("contractor accepts invitation from second company and signs contract", async ({ page, browser, next }) => {
     const { user: contractorUser } = await usersFactory.create({
       preferredName: "Alex",
       invitationCreatedAt: new Date("2023-01-01"),
@@ -24,6 +25,8 @@ test.describe("Contractor for multiple companies", () => {
     await companyRolesFactory.create({ companyId: secondCompany.id, activelyHiring: true });
     const { user: adminUser } = await usersFactory.create({ email: "admin@example.com" });
     await companyAdministratorsFactory.create({ companyId: secondCompany.id, userId: adminUser.id });
+    const { mockForm } = mockDocuseal(next, { companyRepresentative: () => adminUser, signer: () => contractorUser });
+    await mockForm(page);
 
     await login(page, adminUser);
     await page.getByRole("link", { name: "People" }).click();
@@ -54,6 +57,7 @@ test.describe("Contractor for multiple companies", () => {
     );
     await withIsolatedBrowserSessionPage(
       async (isolatedPage) => {
+        await mockForm(isolatedPage);
         await login(isolatedPage, contractorUser);
         await isolatedPage.getByRole("navigation").getByText("Second Company").click();
         await isolatedPage.getByRole("link", { name: "Documents" }).click();
@@ -64,8 +68,6 @@ test.describe("Contractor for multiple companies", () => {
         await isolatedPage.getByRole("button", { name: "Sign now" }).click();
         await isolatedPage.getByRole("link", { name: "Type" }).click();
         await isolatedPage.getByPlaceholder("Type signature here...").fill("Flexy Bob");
-        await isolatedPage.getByRole("button", { name: "Next" }).click();
-        await isolatedPage.getByPlaceholder("Type here...").fill("50");
         await isolatedPage.getByRole("button", { name: "Complete" }).click();
 
         await expect(isolatedPage.getByRole("cell", { name: "Signed" })).toBeVisible();
@@ -75,8 +77,14 @@ test.describe("Contractor for multiple companies", () => {
     );
   });
 
-  test("contractor invites a company", async ({ page, browser }) => {
+  test("contractor invites a company", async ({ page, browser, next }) => {
     const { user } = await usersFactory.create({ invitingCompany: true });
+    const { mockForm } = mockDocuseal(next, {
+      companyRepresentative: async () =>
+        assertDefined(await db.query.users.findFirst({ where: eq(users.email, "test+clerk_test@example.com") })),
+      signer: () => user,
+    });
+    await mockForm(page);
 
     await login(page, user);
     await page.getByRole("link", { name: "Invite companies" }).click();
@@ -93,8 +101,6 @@ test.describe("Contractor for multiple companies", () => {
         await modal.getByRole("button", { name: "Sign now" }).click();
         await modal.getByRole("link", { name: "Type" }).click();
         await modal.getByPlaceholder("Type signature here...").fill("Flexy Bob");
-        await modal.getByRole("button", { name: "Next" }).click();
-        await modal.getByPlaceholder("Type here...").fill("50");
         await modal.getByRole("button", { name: "Complete" }).click();
       },
       { page },
@@ -109,6 +115,7 @@ test.describe("Contractor for multiple companies", () => {
 
     await withIsolatedBrowserSessionPage(
       async (isolatedPage) => {
+        await mockForm(isolatedPage);
         await login(isolatedPage, adminUser);
         await isolatedPage.goto(`/companies/${company.externalId}/administrator/onboarding/details`);
         await isolatedPage.getByLabel("Your full legal name").fill("Admin Admin");
@@ -133,7 +140,6 @@ test.describe("Contractor for multiple companies", () => {
         await isolatedPage.getByRole("button", { name: "Sign now" }).click();
         await isolatedPage.getByRole("link", { name: "Type" }).click();
         await isolatedPage.getByPlaceholder("Type signature here...").fill("Admin Admin");
-        await isolatedPage.getByRole("button", { name: "Next" }).click();
         await isolatedPage.getByRole("button", { name: "Complete" }).click();
 
         await expect(isolatedPage.getByRole("cell", { name: "Signed" })).toBeVisible();
