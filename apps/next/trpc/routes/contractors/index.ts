@@ -169,7 +169,10 @@ export const contractorsRouter = createRouter({
           },
         }),
       });
-      if (!response.ok) throw new TRPCError({ code: "BAD_REQUEST" });
+      if (!response.ok) {
+        const json = z.object({ error_message: z.string() }).parse(await response.json());
+        throw new TRPCError({ code: "BAD_REQUEST", message: json.error_message });
+      }
       if (input.payRateType === PayRateType.Salary) return { documentId: null };
       const { new_user_id } = z.object({ new_user_id: z.number() }).parse(await response.json());
       const user = assertDefined(await db.query.users.findFirst({ where: eq(users.id, BigInt(new_user_id)) }));
