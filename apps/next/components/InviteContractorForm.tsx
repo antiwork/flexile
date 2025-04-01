@@ -166,7 +166,7 @@ export default function InviteContractorForm({ onClose }: { onClose?: () => void
                   onValueChange={(value: LOCATION_TYPES) => updateForm("location", value)}
                   className="mt-2 flex space-x-4"
                 >
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 text-nowrap">
                     <RadioGroupItem value="in-person" id="in-person" />
                     <Label htmlFor="in-person">In-person</Label>
                   </div>
