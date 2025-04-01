@@ -2,49 +2,48 @@ import { expect, type Page } from "@playwright/test";
 import type { NextFixture } from "next/experimental/testmode/playwright";
 import { z } from "zod";
 import type { users } from "@/db/schema";
+import { assertDefined } from "@/utils/assert";
 
 type Submitter = Pick<typeof users.$inferSelect, "email" | "id">;
 export const mockDocuseal = (
   next: NextFixture,
   {
-    companyRepresentative,
-    signer,
-    validateCompanyRepresentativeValues,
-    validateSignerValues,
+    submitters,
+    validateValues,
   }: {
-    companyRepresentative: () => MaybePromise<Submitter>;
-    signer: () => MaybePromise<Submitter>;
-    validateCompanyRepresentativeValues?: (values: Record<string, string>) => MaybePromise<void>;
-    validateSignerValues?: (values: Record<string, string>) => MaybePromise<void>;
+    submitters: () => MaybePromise<Record<string, Submitter>>;
+    validateValues?: (role: string, values: Record<string, string>) => MaybePromise<void>;
   },
 ) => {
   next.onFetch(async (request) => {
     if (request.url === "https://api.docuseal.com/submissions/init") {
-      const companyRepresentativeSubmitter = await companyRepresentative();
-      const signerSubmitter = await signer();
       expect(await request.json()).toEqual({
         template_id: 1,
         send_email: false,
-        submitters: [
-          {
-            email: companyRepresentativeSubmitter.email,
-            role: "Company Representative",
-            external_id: companyRepresentativeSubmitter.id.toString(),
-          },
-          { email: signerSubmitter.email, role: "Signer", external_id: signerSubmitter.id.toString() },
-        ],
+        submitters: Object.entries(await submitters()).map(([role, submitter]) => ({
+          email: submitter.email,
+          role,
+          external_id: submitter.id.toString(),
+        })),
       });
       return Response.json({ id: 1 });
     } else if (request.url === "https://api.docuseal.com/submissions/1") {
       return Response.json({
-        submitters: [
-          { id: 1, external_id: "1", role: "Company Representative", status: "awaiting" },
-          { id: 2, external_id: "2", role: "Signer", status: "awaiting" },
-        ],
+        submitters: Object.entries(await submitters()).map(([role, submitter]) => ({
+          id: submitter.id,
+          external_id: submitter.id.toString(),
+          role,
+          status: "awaiting",
+        })),
       });
     } else if (request.url.startsWith("https://api.docuseal.com/submitters/")) {
+      const role = assertDefined(
+        Object.entries(await submitters()).find(
+          ([_, submitter]) => submitter.id === BigInt(request.url.split("/").at(-1) ?? ""),
+        )?.[0],
+      );
       const json = z.object({ values: z.record(z.string(), z.string()) }).parse(await request.json());
-      await (request.url.endsWith("1") ? validateCompanyRepresentativeValues : validateSignerValues)?.(json.values);
+      await validateValues?.(role, json.values);
       return new Response();
     }
     return "continue" as const;

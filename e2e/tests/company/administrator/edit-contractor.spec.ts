@@ -33,7 +33,9 @@ test.describe("Edit contractor", () => {
     assert(contractor != null, "Contractor is required");
     assert(contractor.preferredName != null, "Contractor preferred name is required");
     assert(contractor.legalName != null, "Contractor legal name is required");
-    const { mockForm } = mockDocuseal(next, { companyRepresentative: () => admin, signer: () => contractor });
+    const { mockForm } = mockDocuseal(next, {
+      submitters: () => ({ "Company Representative": admin, Signer: contractor }),
+    });
     await mockForm(page);
 
     await login(page, admin);
@@ -93,7 +95,9 @@ test.describe("Edit contractor", () => {
     });
     assert(projectBasedUser !== undefined);
     assert(projectBasedUser.preferredName !== null);
-    const { mockForm } = mockDocuseal(next, { companyRepresentative: () => admin, signer: () => projectBasedUser });
+    const { mockForm } = mockDocuseal(next, {
+      submitters: () => ({ "Company Representative": admin, Signer: projectBasedUser }),
+    });
     await mockForm(page);
 
     await login(page, admin);
@@ -132,7 +136,9 @@ test.describe("Edit contractor", () => {
     });
     assert(contractor !== undefined);
     assert(contractor.preferredName !== null);
-    const { mockForm } = mockDocuseal(next, { companyRepresentative: () => admin, signer: () => contractor });
+    const { mockForm } = mockDocuseal(next, {
+      submitters: () => ({ "Company Representative": admin, Signer: contractor }),
+    });
     await mockForm(page);
 
     await login(page, admin);

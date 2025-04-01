@@ -82,10 +82,11 @@ test.describe("New Contractor", () => {
 
   const mockDocuseal = (next: NextFixture, companyValues: Record<string, unknown>) =>
     mockDocusealHelper(next, {
-      companyRepresentative: () => user,
-      signer: async () => (await getCreatedContractor()).user,
-      validateCompanyRepresentativeValues: async (values) => expect(values).toMatchObject(companyValues),
-      validateSignerValues: async (values) => {
+      submitters: async () => ({ "Company Representative": user, Signer: (await getCreatedContractor()).user }),
+      validateValues: async (role, values) => {
+        if (role === "Company Representative") {
+          return expect(values).toMatchObject(companyValues);
+        }
         const contractor = await getCreatedContractor();
         return expect(values).toMatchObject({
           __signerEmail: contractor.user.email,

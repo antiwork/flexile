@@ -25,7 +25,9 @@ test.describe("Contractor for multiple companies", () => {
     await companyRolesFactory.create({ companyId: secondCompany.id, activelyHiring: true });
     const { user: adminUser } = await usersFactory.create({ email: "admin@example.com" });
     await companyAdministratorsFactory.create({ companyId: secondCompany.id, userId: adminUser.id });
-    const { mockForm } = mockDocuseal(next, { companyRepresentative: () => adminUser, signer: () => contractorUser });
+    const { mockForm } = mockDocuseal(next, {
+      submitters: () => ({ "Company Representative": adminUser, Signer: contractorUser }),
+    });
     await mockForm(page);
 
     await login(page, adminUser);
@@ -80,9 +82,12 @@ test.describe("Contractor for multiple companies", () => {
   test("contractor invites a company", async ({ page, browser, next }) => {
     const { user } = await usersFactory.create({ invitingCompany: true });
     const { mockForm } = mockDocuseal(next, {
-      companyRepresentative: async () =>
-        assertDefined(await db.query.users.findFirst({ where: eq(users.email, "test+clerk_test@example.com") })),
-      signer: () => user,
+      submitters: async () => ({
+        "Company Representative": assertDefined(
+          await db.query.users.findFirst({ where: eq(users.email, "test+clerk_test@example.com") }),
+        ),
+        Signer: user,
+      }),
     });
     await mockForm(page);
 
