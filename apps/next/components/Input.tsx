@@ -40,15 +40,15 @@ const Input = ({
   const [isInvalid, setIsInvalid] = useState(false);
 
   useEffect(() => {
-    // Only set custom validity if explicitly marked invalid from parent
-    if (invalid) {
-      inputRef.current?.setCustomValidity(
-        typeof help === "string" ? help : value ? "This doesn't look correct." : "This field is required.",
-      );
-    } else {
-      // Clear explicit invalidity
-      inputRef.current?.setCustomValidity("");
-    }
+    inputRef.current?.setCustomValidity(
+      invalid
+        ? typeof help === "string"
+          ? help
+          : value
+            ? "This doesn't look correct."
+            : "This field is required."
+        : "",
+    );
   }, [invalid, help, value]);
 
   const checkValidity = () => {

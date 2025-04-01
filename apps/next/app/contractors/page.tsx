@@ -8,15 +8,14 @@ import Modal from "@/components/Modal";
 export default function ContractorsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
+  const toggleModal = (isOpen: boolean) => () => setIsModalOpen(isOpen);
 
   return (
     <ContractorsLayout>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-800">Contractors</h1>
         <button
-          onClick={openModal}
+          onClick={toggleModal(true)}
           className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
         >
           Invite Contractor
@@ -38,8 +37,8 @@ export default function ContractorsPage() {
           <tbody className="divide-y divide-gray-200 bg-white">{/* Add table rows here */}</tbody>
         </table>
       </div>
-      <Modal open={isModalOpen} onClose={closeModal}>
-        <InviteContractorForm onClose={closeModal} />
+      <Modal open={isModalOpen} onClose={toggleModal(false)}>
+        <InviteContractorForm onClose={toggleModal(false)} />
       </Modal>
     </ContractorsLayout>
   );

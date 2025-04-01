@@ -2,10 +2,6 @@ import * as SliderPrimitive from "@radix-ui/react-slider";
 import * as React from "react";
 import { cn } from "@/utils";
 
-type SliderProps = {
-  minStepsBetweenThumbs?: number;
-} & Omit<React.ComponentProps<typeof SliderPrimitive.Root>, "minStepsBetweenThumbs">;
-
 function Slider({
   className,
   defaultValue,
@@ -14,7 +10,7 @@ function Slider({
   max = 100,
   minStepsBetweenThumbs = 0,
   ...props
-}: SliderProps) {
+}: React.ComponentProps<typeof SliderPrimitive.Root>) {
   const values = React.useMemo(
     () => (Array.isArray(value) ? value : Array.isArray(defaultValue) ? defaultValue : [min, max]),
     [value, defaultValue, min, max],
