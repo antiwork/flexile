@@ -107,7 +107,7 @@
     "iso-3166": "^4.3.0",
     "jsonwebtoken": "^9.0.2",
     "lodash-es": "^4.17.21",
-    "lucide-react": "^0.482.0",
+    "lucide-react": "^0.483.0",
     "nanoid": "^5.0.8",
     "next": "^15.0.1",
     "nuqs": "^2.1.1",
