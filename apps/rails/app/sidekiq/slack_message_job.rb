@@ -5,7 +5,7 @@ class SlackMessageJob
   sidekiq_options retry: 9, queue: :default
 
   SLACK_MESSAGE_SEND_TIMEOUT = 5.seconds
-  SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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"
+  SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/#{ENV['SLACK_WEBHOOK_URL']}"
   private_constant :SLACK_MESSAGE_SEND_TIMEOUT, :SLACK_WEBHOOK_URL
 
   ##

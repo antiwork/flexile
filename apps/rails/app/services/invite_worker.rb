@@ -46,12 +46,12 @@ class InviteWorker
     end
 
     if user.errors.blank?
-      CreateConsultingContract.new(company_worker:, company_administrator:, current_user:).perform!
+      document = CreateConsultingContract.new(company_worker:, company_administrator:, current_user:).perform!
       ContractorProfile.find_or_create_by(user:, available_hours_per_week: 1)
       GenerateContractorInvitationJob.perform_async(company_worker.id, is_existing_user)
       @application&.accepted!
 
-      { success: true, company_worker: }
+      { success: true, company_worker:, document: }
     else
       error_object = if company_worker.errors.any?
         company_worker

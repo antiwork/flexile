@@ -171,13 +171,15 @@ export const contractorsRouter = createRouter({
       });
       if (!response.ok) throw new TRPCError({ code: "BAD_REQUEST" });
       if (input.payRateType === PayRateType.Salary) return { documentId: null };
-      const { new_user_id } = z.object({ new_user_id: z.number() }).parse(await response.json());
+      const { new_user_id, document_id } = z
+        .object({ new_user_id: z.number(), document_id: z.number() })
+        .parse(await response.json());
       const user = assertDefined(await db.query.users.findFirst({ where: eq(users.id, BigInt(new_user_id)) }));
       const submission = await createSubmission(ctx, template.docusealId, user, "Company Representative");
       const [document] = await db
         .update(documents)
         .set({ docusealSubmissionId: submission.id })
-        .where(and(eq(documents.userId, user.id), eq(documents.companyId, ctx.company.id)))
+        .where(and(eq(documents.id, BigInt(document_id))))
         .returning();
       return { documentId: document?.id };
     }),
