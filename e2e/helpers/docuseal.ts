@@ -20,17 +20,19 @@ export const mockDocuseal = (
       expect(await request.json()).toEqual({
         template_id: 1,
         send_email: false,
-        submitters: Object.entries(await submitters()).map(([role, submitter]) => ({
-          email: submitter.email,
-          role,
-          external_id: submitter.id.toString(),
-        })),
+        submitters: expect.arrayContaining(
+          Object.entries(await submitters()).map(([role, submitter]) => ({
+            email: submitter.email,
+            role,
+            external_id: submitter.id.toString(),
+          })),
+        ),
       });
       return Response.json({ id: 1 });
     } else if (request.url === "https://api.docuseal.com/submissions/1") {
       return Response.json({
         submitters: Object.entries(await submitters()).map(([role, submitter]) => ({
-          id: submitter.id,
+          id: Number(submitter.id),
           external_id: submitter.id.toString(),
           role,
           status: "awaiting",

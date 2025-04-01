@@ -9,7 +9,7 @@ import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal, withIsolatedBrowserSessionPage } from "@test/index";
 import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
-import { assert } from "@/utils/assert";
+import { assert, assertDefined } from "@/utils/assert";
 
 test.describe("Contractor for multiple companies", () => {
   test("contractor accepts invitation from second company and signs contract", async ({ page, browser, next }) => {

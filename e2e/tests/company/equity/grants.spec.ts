@@ -48,7 +48,6 @@ test.describe("New Contractor", () => {
     await documentTemplatesFactory.create({
       companyId: company.id,
       type: DocumentTemplateType.EquityPlanContract,
-      docusealId: 613787n,
     });
     await page.reload();
     await expect(page.getByText("create an equity plan contract template first")).not.toBeVisible();
