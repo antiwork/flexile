@@ -48,11 +48,11 @@ class InviteCompany
       company_worker = company.company_workers.create!(company_worker_params.merge(user: worker, company_role:))
       company_administrator = company.company_administrators.find_by(user: administrator)
 
-      CreateConsultingContract.new(company_worker:, company_administrator:, current_user: company_worker.user).perform!
+      document = CreateConsultingContract.new(company_worker:, company_administrator:, current_user: company_worker.user).perform!
       ContractorProfile.find_or_create_by!(user: worker, available_hours_per_week: 1)
       CompanyWorkerMailer.invite_company(company_worker_id: company_worker.id, url: administrator.create_clerk_invitation).deliver_later
 
-      { success: true, administrator:, company_administrator: }
+      { success: true, administrator:, company_administrator:, document: }
     end
   rescue ActiveRecord::RecordInvalid => e
     Rails.logger.error("InviteCompany error: #{e}")

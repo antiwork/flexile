@@ -18,7 +18,7 @@ class Internal::CompanyInvitationsController < Internal::BaseController
     ).perform
 
     if result[:success]
-      render json: { success: true, new_user_id: result[:administrator].id, administrator_id: result[:company_administrator].id }, status: :created
+      render json: { success: true, new_user_id: result[:administrator].id, document_id: result[:document].id }, status: :created
     else
       render json: { success: false, errors: result[:errors] }, status: :unprocessable_entity
     end

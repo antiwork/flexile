@@ -6,9 +6,9 @@ import { companyRolesFactory } from "@test/factories/companyRoles";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test, withinModal, withIsolatedBrowserSessionPage } from "@test/index";
-import { and, eq } from "drizzle-orm";
-import { documents, users } from "@/db/schema";
-import { assert, assertDefined } from "@/utils/assert";
+import { eq } from "drizzle-orm";
+import { users } from "@/db/schema";
+import { assert } from "@/utils/assert";
 
 test.describe("Contractor for multiple companies", () => {
   test("contractor accepts invitation from second company and signs contract", async ({ page, browser }) => {
@@ -47,29 +47,23 @@ test.describe("Contractor for multiple companies", () => {
     await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
     await expect(page.getByRole("cell").filter({ hasText: "Alex" })).toBeVisible();
 
-    const document = assertDefined(
-      await db.query.documents.findFirst({
-        where: and(eq(documents.companyId, secondCompany.id), eq(documents.userId, contractorUser.id)),
-      }),
-    );
     await withIsolatedBrowserSessionPage(
       async (isolatedPage) => {
         await login(isolatedPage, contractorUser);
         await isolatedPage.getByRole("navigation").getByText("Second Company").click();
-        await isolatedPage.getByRole("link", { name: "Documents" }).click();
-        await expect(isolatedPage.getByRole("cell", { name: "Consulting Agreement" })).toBeVisible();
-        // This is the URL in the invitation email received by the worker
-        await isolatedPage.goto(`/documents?sign=${document.id}`);
+        await isolatedPage.getByRole("link", { name: "Invoices" }).click();
+        await expect(isolatedPage.getByText("You have an unsigned contract")).toBeVisible();
+        await isolatedPage.getByRole("link", { name: "Review & sign" }).click();
 
         await isolatedPage.getByRole("button", { name: "Sign now" }).click();
         await isolatedPage.getByRole("link", { name: "Type" }).click();
         await isolatedPage.getByPlaceholder("Type signature here...").fill("Flexy Bob");
-        await isolatedPage.getByRole("button", { name: "Next" }).click();
+        await isolatedPage.getByRole("button", { name: "next", exact: true }).click();
         await isolatedPage.getByPlaceholder("Type here...").fill("50");
         await isolatedPage.getByRole("button", { name: "Complete" }).click();
 
-        await expect(isolatedPage.getByRole("cell", { name: "Signed" })).toBeVisible();
-        await expect(isolatedPage.getByRole("cell", { name: "Download" })).toBeVisible();
+        await expect(isolatedPage.getByRole("heading", { name: "Invoicing" })).toBeVisible();
+        await expect(isolatedPage.getByText("You have an unsigned contract")).not.toBeVisible();
       },
       { browser },
     );

@@ -18,7 +18,7 @@ class Internal::Companies::WorkersController < Internal::Companies::BaseControll
     ).perform
 
     if result[:success]
-      render json: { success: true, new_user_id: result[:company_worker].user_id }, status: :ok
+      render json: { success: true, new_user_id: result[:company_worker].user_id, document_id: result[:document].id }, status: :ok
     else
       render json: result, status: :unprocessable_entity
     end
