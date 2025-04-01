@@ -282,7 +282,7 @@ export const companiesRouter = createRouter({
       const [document] = await db
         .update(documents)
         .set({ docusealSubmissionId: submission.id })
-        .where(eq(documents.id, document_id))
+        .where(eq(documents.id, BigInt(document_id)))
         .returning();
       // TODO remove this flag
       await db.update(users).set({ invitingCompany: false }).where(eq(users.id, ctx.user.id));

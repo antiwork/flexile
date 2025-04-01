@@ -179,7 +179,7 @@ export const contractorsRouter = createRouter({
       const [document] = await db
         .update(documents)
         .set({ docusealSubmissionId: submission.id })
-        .where(and(eq(documents.id, document_id)))
+        .where(and(eq(documents.id, BigInt(document_id))))
         .returning();
       return { documentId: document?.id };
     }),
