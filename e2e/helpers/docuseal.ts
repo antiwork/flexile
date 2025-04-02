@@ -5,13 +5,14 @@ import type { users } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 
 type Submitter = Pick<typeof users.$inferSelect, "email" | "id">;
+let lastSubmissionId = 1;
 export const mockDocuseal = (
   next: NextFixture,
   {
     submitters,
     validateValues,
   }: {
-    submitters: () => MaybePromise<Record<string, Submitter>>;
+    submitters?: () => MaybePromise<Record<string, Submitter>>;
     validateValues?: (role: string, values: Record<string, string>) => MaybePromise<void>;
   },
 ) => {
@@ -28,8 +29,8 @@ export const mockDocuseal = (
           })),
         ),
       });
-      return Response.json({ id: 1 });
-    } else if (request.url === "https://api.docuseal.com/submissions/1") {
+      return Response.json({ id: lastSubmissionId++ });
+    } else if (request.url.startsWith("https://api.docuseal.com/submissions/")) {
       return Response.json({
         submitters: Object.entries(await submitters()).map(([role, submitter]) => ({
           id: Number(submitter.id),
@@ -48,11 +49,10 @@ export const mockDocuseal = (
       await validateValues?.(role, json.values);
       return new Response();
     }
-    return "continue" as const;
   });
 
-  const mockForm = (page: Page) =>
-    page.route("https://docuseal.com/embed/forms", (route) =>
+  const mockForm = async (page: Page) => {
+    await page.route("https://docuseal.com/embed/forms", (route) =>
       route.fulfill({
         body: JSON.stringify({
           template: {},
@@ -65,6 +65,14 @@ export const mockDocuseal = (
         }),
       }),
     );
+    await page.route("https://docuseal.com/embed/s/*", (route) =>
+      route.fulfill({
+        body: JSON.stringify({
+          submission_id: lastSubmissionId++,
+        }),
+      }),
+    );
+  };
 
   return { mockForm };
 };

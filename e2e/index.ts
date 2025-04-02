@@ -44,7 +44,6 @@ export const test = baseTest.extend<{
         emails.push(email);
         return new Response("{}");
       }
-      return "continue" as const;
     });
     await use(emails);
   },

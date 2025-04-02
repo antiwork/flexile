@@ -5,6 +5,7 @@ import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { userComplianceInfosFactory } from "@test/factories/userComplianceInfos";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
+import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test } from "@test/index";
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { BusinessType, DocumentType, TaxClassification } from "@/db/enums";
@@ -17,7 +18,7 @@ test.describe("Tax settings", () => {
   let user: typeof users.$inferSelect;
   let userComplianceInfo: typeof userComplianceInfos.$inferSelect;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, next }) => {
     ({ company, adminUser } = await companiesFactory.createCompletedOnboarding({ irsTaxForms: true }));
 
     user = (
@@ -35,6 +36,10 @@ test.describe("Tax settings", () => {
       })
     ).userComplianceInfo;
     await login(page, user);
+    const { mockForm } = mockDocuseal(next, {
+      submitters: () => ({ "Company Representative": adminUser, Signer: user }),
+    });
+    await mockForm(page);
   });
 
   test.describe("as a contractor", () => {

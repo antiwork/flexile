@@ -44,7 +44,6 @@ test.describe("Contractor for multiple companies", () => {
         await modal.getByRole("button", { name: "Sign now" }).click();
         await modal.getByRole("link", { name: "Type" }).click();
         await modal.getByPlaceholder("Type signature here...").fill("Admin Admin");
-        await modal.getByRole("button", { name: "Next" }).click();
         await modal.getByRole("button", { name: "Complete" }).click();
       },
       { page },
