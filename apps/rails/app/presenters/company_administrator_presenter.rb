@@ -40,7 +40,7 @@ class CompanyAdministratorPresenter
 
     def company_data_from_clearbit
       # Don't pull data for common/public domains as that data won't be about the user's company
-      return {} if COMMON_PUBLIC_EMAIL_DOMAINS.include?(domain_name.downcase)
+      return {} if !Clearbit.key || COMMON_PUBLIC_EMAIL_DOMAINS.include?(domain_name.downcase)
 
       (Clearbit::Enrichment::Company.find(domain: domain_name, stream: true) || {}) rescue {}
     end

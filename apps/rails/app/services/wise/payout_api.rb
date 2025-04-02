@@ -142,8 +142,15 @@ class Wise::PayoutApi
     })
   end
 
-  # Wise::PayoutApi.new(wise_credential:).create_webhook(trigger: "transfers#state-change", url: "https://app.flexile.com/webhooks/wise/transfer_state_change")
-  # Wise::PayoutApi.new(wise_credential:).create_webhook(trigger: "balances#credit", url: "https://app.flexile.com/webhooks/wise/balance_credit")
+  # Example usage:
+  # Wise::PayoutApi.new(wise_credential:).create_webhook(
+  #   trigger: "transfers#state-change",
+  #   url: "https://#{ENV['APP_DOMAIN']}/webhooks/wise/transfer_state_change"
+  # )
+  # Wise::PayoutApi.new(wise_credential:).create_webhook(
+  #   trigger: "balances#credit",
+  #   url: "https://#{ENV['APP_DOMAIN']}/webhooks/wise/balance_credit"
+  # )
   def create_webhook(trigger:, url:)
     self.class.post("/v3/profiles/#{wise_profile_id}/subscriptions", headers: {
       "Authorization" => "Bearer #{wise_api_key}",

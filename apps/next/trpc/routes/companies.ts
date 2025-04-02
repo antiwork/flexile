@@ -274,15 +274,15 @@ export const companiesRouter = createRouter({
       });
       if (!response.ok) throw new TRPCError({ code: "BAD_REQUEST", message: await response.text() });
 
-      const { new_user_id, administrator_id } = z
-        .object({ new_user_id: z.number(), administrator_id: z.number() })
+      const { new_user_id, document_id } = z
+        .object({ new_user_id: z.number(), document_id: z.number() })
         .parse(await response.json());
       const user = assertDefined(await db.query.users.findFirst({ where: eq(users.id, BigInt(new_user_id)) }));
       const submission = await createSubmission(ctx, template.docusealId, user, "Signer");
       const [document] = await db
         .update(documents)
         .set({ docusealSubmissionId: submission.id })
-        .where(eq(documents.companyAdministratorId, BigInt(administrator_id)))
+        .where(eq(documents.id, BigInt(document_id)))
         .returning();
       // TODO remove this flag
       await db.update(users).set({ invitingCompany: false }).where(eq(users.id, ctx.user.id));

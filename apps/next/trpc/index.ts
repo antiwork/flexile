@@ -27,8 +27,7 @@ import { latestUserComplianceInfo, withRoles } from "./routes/users/helpers";
 import { type AppRouter } from "./server";
 
 export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) => {
-  // TODO remove (or replace with VERCEL_URL) all usages of this
-  const host = process.env.VERCEL_ENV === "production" ? "app.flexile.com" : assertDefined(req.headers.get("Host"));
+  const host = assertDefined(req.headers.get("Host"));
   const cookie = req.headers.get("cookie") ?? "";
   const userAgent = req.headers.get("user-agent") ?? "";
   const ipAddress = req.headers.get("x-real-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0] ?? "";

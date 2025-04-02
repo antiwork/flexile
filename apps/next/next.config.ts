@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
     typedRoutes: true,
     testProxy: true,
     serverActions: {
-      allowedOrigins: ["app.flexile.com", "flexile.com"],
+      allowedOrigins: [process.env.DOMAIN, process.env.APP_DOMAIN],
     },
   },
   images: {

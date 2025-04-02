@@ -5,7 +5,7 @@ import { assertDefined } from "@/utils/assert";
 import { internal_current_user_data_url } from "@/utils/routes";
 
 export async function GET(req: Request) {
-  const host = process.env.VERCEL_ENV === "production" ? "app.flexile.com" : req.headers.get("Host");
+  const host = assertDefined(req.headers.get("Host"));
   const response = await fetch(internal_current_user_data_url({ host }), {
     headers: {
       cookie: req.headers.get("cookie") ?? "",

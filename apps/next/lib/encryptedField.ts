@@ -2,7 +2,7 @@ import crypto from "crypto";
 import zlib from "zlib";
 import { customType } from "drizzle-orm/pg-core";
 import { z } from "zod";
-import { assertDefined } from "@/utils/assert";
+import env from "@/env";
 
 const encryptedDataSchema = z.object({
   h: z.object({ c: z.boolean().optional(), at: z.string(), iv: z.string() }),
@@ -12,14 +12,21 @@ type EncryptedData = z.infer<typeof encryptedDataSchema>;
 
 const algorithm = "aes-256-gcm";
 const ivLength = 12;
+const iterations = 2 ** 16;
+const keySize = 32;
+const deriveKey = (secret: string, salt: string): Buffer =>
+  crypto.pbkdf2Sync(secret, salt, iterations, keySize, "sha256");
+const primaryKey = deriveKey(
+  env.ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY,
+  env.ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT,
+);
+const deterministicKey = deriveKey(
+  env.ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY,
+  env.ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT,
+);
 
 const encrypt = (data: string, { deterministic }: { deterministic?: boolean } = {}): EncryptedData => {
-  const key = Buffer.from(
-    deterministic
-      ? assertDefined(process.env.ACTIVERECORD_DETERMINISTIC_DERIVED_KEY)
-      : assertDefined(process.env.ACTIVERECORD_DERIVED_KEY),
-    "base64",
-  );
+  const key = deterministic ? deterministicKey : primaryKey;
   let iv;
   if (deterministic) {
     const hmac = crypto.createHmac("sha256", key);
@@ -49,12 +56,7 @@ const decrypt = (
 ) => {
   const decipher = crypto.createDecipheriv(
     algorithm,
-    Buffer.from(
-      deterministic
-        ? assertDefined(process.env.ACTIVERECORD_DETERMINISTIC_DERIVED_KEY)
-        : assertDefined(process.env.ACTIVERECORD_DERIVED_KEY),
-      "base64",
-    ),
+    deterministic ? deterministicKey : primaryKey,
     Buffer.from(iv, "base64"),
   );
   decipher.setAuthTag(Buffer.from(at, "base64"));
