@@ -128,7 +128,7 @@ export const contractorsRouter = createRouter({
       z.object({
         email: z.string(),
         startedAt: z.string(),
-        payRateInSubunits: z.number(),
+        payRateInSubunits: z.number().nullable(),
         payRateType: z.nativeEnum(PayRateType),
         hoursPerWeek: z.number(),
         onTrial: z.boolean(),
@@ -267,7 +267,7 @@ export const contractorsRouter = createRouter({
               react: RateUpdated({
                 host: ctx.host,
                 oldRate: contractor.payRateInSubunits,
-                newRate: input.payRateInSubunits,
+                newRate: input.payRateInSubunits ?? 0,
                 documentId,
               }),
             });
@@ -376,7 +376,7 @@ export const contractorsRouter = createRouter({
       .update(companyContractors)
       .set({
         onTrial: false,
-        payRateInSubunits: contractor.role.rates[0]?.payRateInSubunits,
+        payRateInSubunits: contractor.role.rates[0]?.payRateInSubunits ?? 0,
         hoursPerWeek: DEFAULT_WORKING_HOURS_PER_WEEK,
       })
       .where(eq(companyContractors.id, contractor.id))

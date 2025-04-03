@@ -57,6 +57,7 @@ const ManageModal = ({
       expenseCardEnabled: false,
       expenseCardSpendingLimitCents: 0n,
       expenseCardsCount: 0,
+      payPer: "project",
     };
     const lastRole = roles[0];
     return lastRole
@@ -86,8 +87,11 @@ const ManageModal = ({
   const updateRole = (update: Partial<Role>) => setRole((prev) => ({ ...prev, ...update }));
 
   useEffect(() => {
-    if (!role.id) setRole((prev) => ({ ...prev, trialPayRateInSubunits: Math.floor(prev.payRateInSubunits / 2) }));
+    if (!role.id)
+      setRole((prev) => ({ ...prev, trialPayRateInSubunits: Math.floor((prev.payRateInSubunits || 0) / 2) }));
   }, [role.payRateInSubunits, role.id]);
+
+  const isProjectBased = role.payRateType === PayRateType.ProjectBased;
 
   const onSave = () => {
     if (contractorsToUpdate.length > 0 && updateContractorRates && role.id) {
@@ -101,7 +105,7 @@ const ManageModal = ({
     (contractor) => contractor.payRateInSubunits !== role.payRateInSubunits,
   );
   const canDelete = contractors.length === 0;
-  const validatedFields = ["name", "payRateInSubunits"] as const;
+  const validatedFields = ["name"] as const;
   for (const field of validatedFields)
     useEffect(() => setErrors((prev) => prev.filter((f) => f !== field)), [role[field]]);
 
@@ -126,7 +130,7 @@ const ManageModal = ({
               updateContractorMutation.mutateAsync({
                 companyId: company.id,
                 id: contractor.id,
-                payRateInSubunits: role.payRateInSubunits,
+                payRateInSubunits: role.payRateInSubunits ?? undefined,
               }),
             ),
           );
@@ -160,15 +164,25 @@ const ManageModal = ({
           label="Type"
           options={[
             { label: "Hourly", value: PayRateType.Hourly } as const,
-            { label: "Project-based", value: PayRateType.ProjectBased } as const,
+            { label: "Custom", value: PayRateType.ProjectBased } as const,
             company.flags.includes("salary_roles") ? ({ label: "Salary", value: PayRateType.Salary } as const) : null,
           ].filter((option) => !!option)}
           disabled={!!role.id}
         />
+        {isProjectBased && (
+          <Input
+            value={role.payPer}
+            onChange={(value) => updateRole({ payPer: value ?? "project" })}
+            invalid={errors.includes("payPer")}
+            label="Per"
+            placeholder="project, month, article etc"
+            disabled={!!role.id}
+          />
+        )}
         <div className={`grid gap-3 ${expenseAccounts.length > 0 ? "md:grid-cols-2" : ""}`}>
           <NumberInput
-            value={role.payRateInSubunits / 100}
-            onChange={(value) => updateRole({ payRateInSubunits: (value ?? 0) * 100 })}
+            value={role.payRateInSubunits ? role.payRateInSubunits / 100 : null}
+            onChange={(value) => updateRole({ payRateInSubunits: value ? value * 100 : null })}
             invalid={errors.includes("payRateInSubunits")}
             label="Rate"
             prefix="$"
@@ -177,7 +191,9 @@ const ManageModal = ({
                 ? "/ hour"
                 : role.payRateType === PayRateType.Salary
                   ? "/ year"
-                  : undefined
+                  : isProjectBased
+                    ? `/ ${role.payPer || "project"}`
+                    : undefined
             }
           />
           {expenseAccounts.length > 0 && (
@@ -309,9 +325,9 @@ const ManageModal = ({
               <b>{contractor.user.name}</b>
               <div>
                 <del>{formatMoneyFromCents(contractor.payRateInSubunits)}</del>{" "}
-                {formatMoneyFromCents(role.payRateInSubunits)}{" "}
+                {formatMoneyFromCents(role.payRateInSubunits ?? 0)}{" "}
                 <span>
-                  (<Delta diff={role.payRateInSubunits / contractor.payRateInSubunits - 1} />)
+                  (<Delta diff={(role.payRateInSubunits || 0) / contractor.payRateInSubunits - 1} />)
                 </span>
               </div>
             </CardRow>

@@ -8,6 +8,8 @@ export const calculateAnnualCompensation = ({
   role: Pick<typeof companyRoleRates.$inferSelect, "payRateType" | "payRateInSubunits">;
   application: Pick<typeof companyRoleApplications.$inferSelect, "hoursPerWeek" | "weeksPerYear">;
 }) => {
+  if (!role.payRateInSubunits) return 0;
+
   switch (role.payRateType) {
     case PayRateType.ProjectBased:
       return 0;

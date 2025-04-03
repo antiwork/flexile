@@ -46,7 +46,7 @@ export const publicRolesRouter = createRouter({
           "expenseCardSpendingLimitCents",
         ),
         id: companyRoles.externalId,
-        ...pick(companyRoleRates, "payRateType", "payRateInSubunits", "trialPayRateInSubunits"),
+        ...pick(companyRoleRates, "payRateType", "payRateInSubunits", "trialPayRateInSubunits", "payPer"),
         companyId: companies.externalId,
       })
       .from(companyRoles)

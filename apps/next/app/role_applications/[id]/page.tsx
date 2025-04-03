@@ -120,12 +120,14 @@ export default function RoleApplicationPage() {
             <div>
               <h2 className="text-xl font-bold">Rate</h2>
               <span>
-                {formatMoneyFromCents(role.payRateInSubunits)}
+                {formatMoneyFromCents(role.payRateInSubunits ?? 0)}
                 {role.payRateType === PayRateType.Hourly
                   ? " / hour"
                   : role.payRateType === PayRateType.Salary
                     ? " / year"
-                    : null}
+                    : role.payRateType === PayRateType.ProjectBased
+                      ? ` / ${role.payPer ?? "project"}`
+                      : ""}
               </span>
             </div>
           </div>

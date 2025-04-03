@@ -165,7 +165,7 @@ export default function RolePage({ countryCode }: { countryCode: string }) {
                   <h2 className="text-xl font-bold">Rate</h2>
                 </CardRow>
                 <CardRow>
-                  {formatMoneyFromCents(role.payRateInSubunits)} / hour
+                  {formatMoneyFromCents(role.payRateInSubunits ?? 0)} / hour
                   {company.equityGrantsEnabled ? (
                     <p className="text-gray-500">
                       Part of this rate will be in the form of equity. This selection will be made during onboarding.
@@ -179,7 +179,7 @@ export default function RolePage({ countryCode }: { countryCode: string }) {
                   <h2 className="text-xl font-bold">Salary</h2>
                 </CardRow>
                 <CardRow>
-                  {formatMoneyFromCents(role.payRateInSubunits)} / year
+                  {formatMoneyFromCents(role.payRateInSubunits ?? 0)} / year
                   {company.equityGrantsEnabled ? (
                     <p className="text-gray-500">
                       Part of your salary will be in the form of equity. This selection will be made during onboarding.
@@ -193,8 +193,8 @@ export default function RolePage({ countryCode }: { countryCode: string }) {
                   <h2 className="text-xl font-bold">Salary</h2>
                 </CardRow>
                 <CardRow>
-                  <div className="text-3xl font-bold">{formatMoneyFromCents(role.payRateInSubunits)}</div>
-                  <p className="text-gray-500">Rate per project</p>
+                  <div className="text-3xl font-bold">{formatMoneyFromCents(role.payRateInSubunits ?? 0)}</div>
+                  <p className="text-gray-500">Rate per {role.payPer}</p>
                   {company.equityGrantsEnabled ? (
                     <p className="text-gray-500">
                       Part of this rate will be given in equity. This selection will be made during onboarding.
@@ -207,7 +207,8 @@ export default function RolePage({ countryCode }: { countryCode: string }) {
 
           {role.trialEnabled ? (
             <Notice variant="critical">
-              This role has a trial period with a rate of {formatMoneyFromCents(role.trialPayRateInSubunits)} / hour.
+              This role has a trial period with a rate of {formatMoneyFromCents(role.trialPayRateInSubunits ?? 0)} /
+              hour.
             </Notice>
           ) : null}
 

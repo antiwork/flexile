@@ -45,8 +45,21 @@ export default function RolesPage() {
         header: "Rate",
         cell: (info) => {
           const type = info.row.original.payRateType;
-          return `${formatMoneyFromCents(info.getValue())}${
-            type === PayRateType.Hourly ? " / hr" : type === PayRateType.Salary ? " / year" : ""
+          const payPer = info.row.original.payPer;
+          const isProjectBased = type === PayRateType.ProjectBased;
+          const amount = info.getValue() ?? 0;
+          if (isProjectBased && !amount) {
+            return "";
+          }
+
+          return `${formatMoneyFromCents(amount)}${
+            type === PayRateType.Hourly
+              ? " / hr"
+              : type === PayRateType.Salary
+                ? " / year"
+                : isProjectBased
+                  ? `/ ${payPer ?? "project"}`
+                  : ""
           }`;
         },
       }),

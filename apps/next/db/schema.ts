@@ -267,9 +267,10 @@ export const companyRoleRates = pgTable(
     updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
       .notNull()
       .$onUpdate(() => new Date()),
-    payRateInSubunits: integer("pay_rate_in_subunits").notNull(),
+    payRateInSubunits: integer("pay_rate_in_subunits"),
     payRateCurrency: varchar("pay_rate_currency").default("usd").notNull(),
     trialPayRateInSubunits: integer("trial_pay_rate_in_subunits").notNull(),
+    payPer: varchar("pay_per").default("project"),
   },
   (table) => [
     index("index_company_role_rates_on_company_role_id").using(

@@ -23,11 +23,15 @@ const inputSchema = createInsertSchema(companyRoles)
     trialEnabled: true,
   })
   .merge(
-    createInsertSchema(companyRoleRates, { payRateType: z.nativeEnum(PayRateType) }).pick({
-      payRateInSubunits: true,
-      payRateType: true,
-      trialPayRateInSubunits: true,
-    }),
+    createInsertSchema(companyRoleRates, { payRateType: z.nativeEnum(PayRateType) })
+      .pick({
+        payRateType: true,
+        trialPayRateInSubunits: true,
+      })
+      .extend({
+        payRateInSubunits: z.number().nullable(),
+        payPer: z.string().nullable(),
+      }),
   );
 
 export const rolesRouter = createRouter({
@@ -75,7 +79,7 @@ export const rolesRouter = createRouter({
           "applicationCount",
           "expenseCardsCount",
         ),
-        ...pick(rate, "payRateType", "payRateInSubunits", "trialPayRateInSubunits"),
+        ...pick(rate, "payRateType", "payRateInSubunits", "trialPayRateInSubunits", "payPer"),
       };
     });
   }),
@@ -86,7 +90,7 @@ export const rolesRouter = createRouter({
     const [role] = await db
       .select({
         ...pick(companyRoles, "id", "name", "jobDescription", "activelyHiring", "capitalizedExpense"),
-        ...pick(companyRoleRates, "payRateType", "payRateInSubunits", "trialPayRateInSubunits"),
+        ...pick(companyRoleRates, "payRateType", "payRateInSubunits", "trialPayRateInSubunits", "payPer"),
       })
       .from(companyRoles)
       .innerJoin(companyRoleRates, eq(companyRoles.id, companyRoleRates.companyRoleId))
@@ -124,7 +128,9 @@ export const rolesRouter = createRouter({
       const role = assertDefined(result[0]);
       await tx.insert(companyRoleRates).values({
         companyRoleId: role.id,
-        ...pick(input, "payRateType", "payRateInSubunits", "trialPayRateInSubunits"),
+        ...pick(input, "payRateType", "trialPayRateInSubunits", "payPer"),
+        payRateInSubunits:
+          input.payRateType === PayRateType.ProjectBased ? (input.payRateInSubunits ?? null) : input.payRateInSubunits,
         payRateCurrency: "usd",
       });
 
@@ -160,7 +166,11 @@ export const rolesRouter = createRouter({
         .update(companyRoleRates)
         .set({
           companyRoleId: role.id,
-          ...pick(input, "payRateType", "payRateInSubunits", "trialPayRateInSubunits"),
+          ...pick(input, "payRateType", "trialPayRateInSubunits", "payPer"),
+          payRateInSubunits:
+            input.payRateType === PayRateType.ProjectBased
+              ? (input.payRateInSubunits ?? null)
+              : input.payRateInSubunits,
           payRateCurrency: "usd",
         })
         .where(eq(companyRoleRates.companyRoleId, role.id));
