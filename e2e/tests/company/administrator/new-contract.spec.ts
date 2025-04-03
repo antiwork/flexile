@@ -1,3 +1,4 @@
+import { clerk } from "@clerk/testing/playwright";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
@@ -16,7 +17,6 @@ test.describe("New Contractor", () => {
   let user: typeof users.$inferSelect;
 
   test.beforeEach(async () => {
-    // Setup company and admin user
     const result = await companiesFactory.create({
       name: "Gumroad",
       streetAddress: "548 Market Street",
@@ -27,10 +27,7 @@ test.describe("New Contractor", () => {
     });
     company = result.company;
 
-    const userResult = await usersFactory.create({
-      legalName: "Sahil Lavingia",
-      email: "sahil@example.com",
-    });
+    const userResult = await usersFactory.create();
     user = userResult.user;
 
     await companyAdministratorsFactory.create({
@@ -140,7 +137,7 @@ test.describe("New Contractor", () => {
     );
   });
 
-  test("allows inviting a project-based contractor", async ({ page, browser, next }) => {
+  test("allows inviting a project-based contractor", async ({ page, next }) => {
     const { mockForm } = mockDocuseal(next, {
       __payRate: "1,000 per project",
       __role: "Project-based Role",
@@ -168,20 +165,15 @@ test.describe("New Contractor", () => {
     await expect(row).toContainText("Invited");
     const [deletedUser] = await db.delete(users).where(eq(users.email, "flexy-bob@flexile.com")).returning();
 
-    await withIsolatedBrowserSessionPage(
-      async (isolatedPage) => {
-        await mockForm(isolatedPage);
-        const { user } = await usersFactory.create({ id: assertDefined(deletedUser).id });
-        await login(isolatedPage, user);
-        await isolatedPage.getByRole("link", { name: "Review & sign" }).click();
-        await isolatedPage.getByRole("button", { name: "Sign now" }).click();
-        await isolatedPage.getByRole("link", { name: "Type" }).click();
-        await isolatedPage.getByPlaceholder("Type signature here...").fill("Flexy Bob");
-        await isolatedPage.getByRole("button", { name: "Complete" }).click();
-        await expect(isolatedPage.getByRole("heading", { name: "Invoicing" })).toBeVisible();
-      },
-      { browser },
-    );
+    const { user } = await usersFactory.create({ id: assertDefined(deletedUser).id });
+    await clerk.signOut({ page });
+    await login(page, user);
+    await page.getByRole("link", { name: "Review & sign" }).click();
+    await page.getByRole("button", { name: "Sign now" }).click();
+    await page.getByRole("link", { name: "Type" }).click();
+    await page.getByPlaceholder("Type signature here...").fill("Flexy Bob");
+    await page.getByRole("button", { name: "Complete" }).click();
+    await expect(page.getByRole("heading", { name: "Invoicing" })).toBeVisible();
   });
 
   test("allows inviting a salary-based contractor", async ({ page }) => {

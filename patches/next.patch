@@ -1,5 +1,5 @@
 diff --git a/dist/experimental/testmode/fetch.js b/dist/experimental/testmode/fetch.js
-index cae9ec8cd4e4e266df599ea6a6d3a16af8ac6feb..2e74e45e848c2a7a7c1661a2e06e1d734cd34414 100644
+index cae9ec8cd4e4e266df599ea6a6d3a16af8ac6feb..5abb7c4def787693613a85ea5670b73d361c4381 100644
 --- a/dist/experimental/testmode/fetch.js
 +++ b/dist/experimental/testmode/fetch.js
 @@ -65,7 +65,7 @@ async function buildProxyRequest(testData, request) {
@@ -11,32 +11,7 @@ index cae9ec8cd4e4e266df599ea6a6d3a16af8ac6feb..2e74e45e848c2a7a7c1661a2e06e1d73
              cache,
              credentials,
              integrity,
-@@ -83,8 +83,9 @@ function buildResponse(proxyResponse) {
-         headers: new Headers(headers)
-     });
- }
-+let testInfo;
- async function handleFetch(originalFetch, request) {
--    const testInfo = (0, _context.getTestReqInfo)(request, reader);
-+    testInfo ||= (0, _context.getTestReqInfo)(request, reader);
-     if (!testInfo) {
-         // Passthrough non-test requests.
-         return originalFetch(request);
-@@ -98,21 +99,19 @@ async function handleFetch(originalFetch, request) {
-             // @ts-ignore
-             internal: true
-         }
--    });
-+    }).catch(() => ({ ok: false }));
-     if (!resp.ok) {
--        throw Object.defineProperty(new Error(`Proxy request failed: ${resp.status}`), "__NEXT_ERROR_CODE", {
--            value: "E146",
--            enumerable: false,
--            configurable: true
--        });
-+        testInfo = null;
-+        return originalFetch(request);
-     }
+@@ -109,10 +109,11 @@ async function handleFetch(originalFetch, request) {
      const proxyResponse = await resp.json();
      const { api } = proxyResponse;
      switch(api){
