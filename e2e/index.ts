@@ -1,4 +1,4 @@
-import { type Browser, expect as baseExpect, type Locator, type Page } from "@playwright/test";
+import { expect as baseExpect, type Locator, type Page } from "@playwright/test";
 import { db } from "@test/db";
 import { sql } from "drizzle-orm";
 import { test as baseTest } from "next/experimental/testmode/playwright.js";
@@ -73,18 +73,6 @@ export const expect = baseExpect.extend({
   },
 });
 
-export const withIsolatedBrowserSessionPage = async (
-  callback: (page: Page) => Promise<void>,
-  { browser }: { browser: Browser },
-) => {
-  const context = await browser.newContext();
-  const page = await context.newPage();
-  try {
-    await callback(page);
-  } finally {
-    await context.close();
-  }
-};
 
 export const withinModal = async (
   callback: (modal: Locator) => Promise<void>,

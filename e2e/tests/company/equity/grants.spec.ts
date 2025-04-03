@@ -8,15 +8,16 @@ import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { optionPoolsFactory } from "@test/factories/optionPools";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
+import { clerk } from "@clerk/testing/playwright";
 import { mockDocuseal } from "@test/helpers/docuseal";
-import { expect, test, withinModal, withIsolatedBrowserSessionPage } from "@test/index";
+import { expect, test, withinModal } from "@test/index";
 import { desc, eq } from "drizzle-orm";
 import { DocumentTemplateType } from "@/db/enums";
 import { documents } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 
 test.describe("New Contractor", () => {
-  test("allows issuing equity grants", async ({ page, browser, next }) => {
+  test("allows issuing equity grants", async ({ page, next }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
       equityGrantsEnabled: true,
       conversionSharePriceUsd: "1",
@@ -113,40 +114,32 @@ test.describe("New Contractor", () => {
     );
 
     submitters = { "Company Representative": adminUser, Signer: contractorUser };
-    await withIsolatedBrowserSessionPage(
-      async (isolatedPage) => {
-        await mockForm(isolatedPage);
-        await login(isolatedPage, contractorUser);
-        await isolatedPage.goto("/invoices");
-        await expect(isolatedPage.getByText("You have an unsigned contract")).toBeVisible();
-        await expect(isolatedPage.getByRole("link", { name: "New invoice" })).toHaveAttribute("inert");
-        await isolatedPage.getByRole("link", { name: "Review & sign" }).click();
-        await isolatedPage.getByRole("button", { name: "Sign now" }).click();
-        await isolatedPage.getByRole("link", { name: "Type" }).click();
-        await isolatedPage.getByPlaceholder("Type signature here...").fill("Flexy Bob");
-        await isolatedPage.getByRole("button", { name: "Complete" }).click();
-        await expect(isolatedPage.getByRole("heading", { name: "Invoicing" })).toBeVisible();
-      },
-      { browser },
-    );
+    await clerk.signOut({ page });
+    await mockForm(page);
+    await login(page, contractorUser);
+    await page.goto("/invoices");
+    await expect(page.getByText("You have an unsigned contract")).toBeVisible();
+    await expect(page.getByRole("link", { name: "New invoice" })).toHaveAttribute("inert");
+    await page.getByRole("link", { name: "Review & sign" }).click();
+    await page.getByRole("button", { name: "Sign now" }).click();
+    await page.getByRole("link", { name: "Type" }).click();
+    await page.getByPlaceholder("Type signature here...").fill("Flexy Bob");
+    await page.getByRole("button", { name: "Complete" }).click();
+    await expect(page.getByRole("heading", { name: "Invoicing" })).toBeVisible();
 
     submitters = { "Company Representative": adminUser, Signer: projectBasedUser };
-    await withIsolatedBrowserSessionPage(
-      async (isolatedPage) => {
-        await mockForm(isolatedPage);
-        await login(isolatedPage, projectBasedUser);
-        await isolatedPage.goto("/invoices");
-        await expect(isolatedPage.getByText("You have an unsigned contract")).toBeVisible();
-        await expect(isolatedPage.getByRole("link", { name: "New invoice" })).toHaveAttribute("inert");
-        await isolatedPage.getByRole("link", { name: "Review & sign" }).click();
-        await isolatedPage.getByRole("button", { name: "Sign now" }).click();
-        await isolatedPage.getByRole("link", { name: "Type" }).click();
-        await isolatedPage.getByPlaceholder("Type signature here...").fill("Flexy Bob");
-        await isolatedPage.getByRole("button", { name: "Complete" }).click();
-        await expect(isolatedPage.getByRole("heading", { name: "Invoicing" })).toBeVisible();
-      },
-      { browser },
-    );
+    await clerk.signOut({ page });
+    await mockForm(page);
+    await login(page, projectBasedUser);
+    await page.goto("/invoices");
+    await expect(page.getByText("You have an unsigned contract")).toBeVisible();
+    await expect(page.getByRole("link", { name: "New invoice" })).toHaveAttribute("inert");
+    await page.getByRole("link", { name: "Review & sign" }).click();
+    await page.getByRole("button", { name: "Sign now" }).click();
+    await page.getByRole("link", { name: "Type" }).click();
+    await page.getByPlaceholder("Type signature here...").fill("Flexy Bob");
+    await page.getByRole("button", { name: "Complete" }).click();
+    await expect(page.getByRole("heading", { name: "Invoicing" })).toBeVisible();
   });
 
   test("allows exercising options", async ({ page, next }) => {
