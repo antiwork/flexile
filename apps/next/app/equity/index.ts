@@ -9,7 +9,9 @@ export const navLinks = (user: CurrentUser, company: Company): TabLink[] => {
     company.flags.includes("financing_rounds") && (isAdmin || isLawyer || isInvestor)
       ? { label: "Rounds", route: "/equity/financing_rounds" }
       : null,
-    company.flags.includes("cap_table") ? { label: "Cap table", route: "/equity/cap_table" } : null,
+    company.flags.includes("cap_table") && (isAdmin || isLawyer || isInvestor)
+      ? { label: "Cap table", route: "/equity/cap_table" }
+      : null,
     company.flags.includes("equity_grants") && (isAdmin || isLawyer)
       ? { label: "Option pools", route: "/equity/option_pools" }
       : null,
