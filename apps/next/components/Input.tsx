@@ -14,7 +14,7 @@ export type InputProps = Omit<
   help?: React.ReactNode;
   invalid?: boolean | undefined;
   ref?: React.RefObject<(HTMLInputElement | HTMLTextAreaElement) | null>;
-  type?: "text" | "date" | "datetime-local" | "email" | "password" | "url" | "textarea";
+  type?: "text" | "date" | "datetime-local" | "email" | "password" | "url" | "textarea" | "number";
   onChange?: (text: string) => void;
   value?: string | null;
 };
