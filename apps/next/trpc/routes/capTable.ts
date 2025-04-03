@@ -3,7 +3,6 @@ import { and, desc, eq, inArray, or, sql, sum } from "drizzle-orm";
 import { omit, pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
-import { PayRateType } from "@/db/enums";
 import {
   companyInvestorEntities,
   companyInvestors,
@@ -20,12 +19,7 @@ import { companyProcedure, createRouter } from "@/trpc";
 export const capTableRouter = createRouter({
   show: companyProcedure.input(z.object({ newSchema: z.boolean().optional() })).query(async ({ ctx, input }) => {
     const isAdminOrLawyer = !!(ctx.companyAdministrator || ctx.companyLawyer);
-    const isWorkerForGumroad =
-      ctx.companyContractor &&
-      ctx.companyContractor.endedAt === null &&
-      ctx.companyContractor.payRateType === PayRateType.Hourly &&
-      ctx.company.isGumroad;
-    if (!ctx.company.capTableEnabled || !(isAdminOrLawyer || ctx.companyInvestor || isWorkerForGumroad))
+    if (!ctx.company.capTableEnabled || !(isAdminOrLawyer || ctx.companyInvestor))
       throw new TRPCError({ code: "FORBIDDEN" });
 
     let upcomingDividendCents = 0n;
