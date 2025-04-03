@@ -1,3 +1,4 @@
+import { clerk } from "@clerk/testing/playwright";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
@@ -6,7 +7,6 @@ import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { invoicesFactory } from "@test/factories/invoices";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
-import { clerk } from "@clerk/testing/playwright";
 import { findRequiredTableRow } from "@test/helpers/matchers";
 import { expect, test } from "@test/index";
 import { format } from "date-fns";

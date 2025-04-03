@@ -73,7 +73,6 @@ export const expect = baseExpect.extend({
   },
 });
 
-
 export const withinModal = async (
   callback: (modal: Locator) => Promise<void>,
   { page, title }: { page: Page; title?: string },

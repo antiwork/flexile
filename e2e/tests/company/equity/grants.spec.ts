@@ -1,3 +1,4 @@
+import { clerk } from "@clerk/testing/playwright";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
@@ -8,7 +9,6 @@ import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { optionPoolsFactory } from "@test/factories/optionPools";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
-import { clerk } from "@clerk/testing/playwright";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
 import { desc, eq } from "drizzle-orm";

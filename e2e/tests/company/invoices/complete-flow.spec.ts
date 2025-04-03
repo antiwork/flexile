@@ -1,9 +1,9 @@
+import { clerk } from "@clerk/testing/playwright";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
-import { clerk } from "@clerk/testing/playwright";
 import { expect, type Page, test } from "@test/index";
 
 type User = Awaited<ReturnType<typeof usersFactory.create>>["user"];
@@ -164,11 +164,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByRole("cell", { name: workerUserB.legalName ?? "never" }).click();
     await page.getByRole("link", { name: "View invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoice" })).toBeVisible();
-    await page
-      .locator("header")
-      .filter({ hasText: "Invoice" })
-      .getByRole("button", { name: "Pay now" })
-      .click();
+    await page.locator("header").filter({ hasText: "Invoice" }).getByRole("button", { name: "Pay now" }).click();
 
     await expect(page).toHaveURL(/\/invoices$/u);
     await expect(page.locator("tbody tr")).toHaveCount(0);

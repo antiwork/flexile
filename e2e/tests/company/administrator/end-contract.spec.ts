@@ -1,8 +1,8 @@
+import { clerk } from "@clerk/testing/playwright";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { login } from "@test/helpers/auth";
-import { clerk } from "@clerk/testing/playwright";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
 import { addDays, addYears, format, formatISO } from "date-fns";
