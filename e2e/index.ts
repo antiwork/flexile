@@ -1,6 +1,4 @@
 import { type Browser, expect as baseExpect, type Locator, type Page } from "@playwright/test";
-import { db } from "@test/db";
-import { sql } from "drizzle-orm";
 import { test as baseTest } from "next/experimental/testmode/playwright.js";
 import type { CreateEmailOptions } from "resend";
 import { parseHTML } from "zeed-dom";
@@ -10,30 +8,8 @@ export * from "@playwright/test";
 
 type SentEmail = Omit<CreateEmailOptions, "html" | "text" | "react"> & { html: string; text: string };
 export const test = baseTest.extend<{
-  truncateTablesBeforeEachTest: undefined;
   sentEmails: SentEmail[];
 }>({
-  // TODO (techdebt): Truncating all of the tables will be problematic when we
-  // start running tests in parallel. We should come up with an alternative
-  // like wrapping each test run in a transaction.
-  truncateTablesBeforeEachTest: [
-    async ({}, use) => {
-      const result = await db.execute<{ tablename: string }>(
-        sql`SELECT tablename FROM pg_tables WHERE schemaname='public'`,
-      );
-
-      const tables = result.rows
-        .map(({ tablename }) => tablename)
-        .filter((name) => !["_drizzle_migrations", "wise_credentials", "document_templates"].includes(name))
-        .map((name) => `"public"."${name}"`);
-
-      await db.execute(sql`TRUNCATE TABLE ${sql.raw(tables.join(","))} CASCADE;`);
-      await db.execute(sql`DELETE FROM document_templates WHERE company_id IS NOT NULL;`);
-
-      await use(undefined);
-    },
-    { auto: true },
-  ],
   sentEmails: async ({ next }, use) => {
     const emails: SentEmail[] = [];
     next.onFetch(async (request) => {
