@@ -39,7 +39,6 @@ class CompanyWorker < ApplicationRecord
                              if: :hourly?
   validates :pay_rate_in_subunits, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validate :only_hourly_contractor_can_be_on_trial
-  validate :pay_rate_type_cannot_change, on: :update
 
   scope :active, -> { where(ended_at: nil) }
   scope :active_as_of, ->(date) { active.or(where("ended_at > ?", date)) }
@@ -166,10 +165,6 @@ class CompanyWorker < ApplicationRecord
       if on_trial? && !hourly?
         errors.add(:base, "Can only set trials with hourly contracts")
       end
-    end
-
-    def pay_rate_type_cannot_change
-      errors.add(:base, "Cannot change role type for existing contractor") if pay_rate_type_changed?
     end
 
     def notify_rate_updated
