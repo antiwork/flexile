@@ -53,7 +53,6 @@ test.describe("Contractor for multiple companies", () => {
     await expect(page.getByRole("cell").filter({ hasText: "Alex" })).toBeVisible();
 
     await clerk.signOut({ page });
-    await mockForm(page);
     await login(page, contractorUser);
     await page.getByRole("navigation").getByText("Second Company").click();
     await page.getByRole("link", { name: "Invoices" }).click();
@@ -109,7 +108,6 @@ test.describe("Contractor for multiple companies", () => {
     assert(adminUser != null && company != null);
 
     await clerk.signOut({ page });
-    await mockForm(page);
     await login(page, adminUser);
     await page.goto(`/companies/${company.externalId}/administrator/onboarding/details`);
     await page.getByLabel("Your full legal name").fill("Admin Admin");

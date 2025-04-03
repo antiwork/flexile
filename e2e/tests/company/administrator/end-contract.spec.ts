@@ -78,7 +78,6 @@ test.describe("End contract", () => {
     ).toBeVisible();
 
     await clerk.signOut({ page });
-    await mockForm(page);
     await login(page, contractor);
     await page.getByRole("link", { name: "Review & sign" }).click();
     await page.getByRole("button", { name: "Sign now" }).click();

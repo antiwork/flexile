@@ -126,7 +126,6 @@ test.describe("New Contractor", () => {
     const [deletedUser] = await db.delete(users).where(eq(users.email, "flexy-bob@flexile.com")).returning();
 
     await clerk.signOut({ page });
-    await mockForm(page);
     const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
     await login(page, newUser);
     await page.getByRole("link", { name: "Review & sign" }).click();
@@ -166,7 +165,6 @@ test.describe("New Contractor", () => {
     const [deletedUser] = await db.delete(users).where(eq(users.email, "flexy-bob@flexile.com")).returning();
 
     await clerk.signOut({ page });
-    await mockForm(page);
     const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
     await login(page, newUser);
     await page.getByRole("link", { name: "Review & sign" }).click();

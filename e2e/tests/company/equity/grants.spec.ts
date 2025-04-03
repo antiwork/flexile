@@ -115,7 +115,6 @@ test.describe("New Contractor", () => {
 
     submitters = { "Company Representative": adminUser, Signer: contractorUser };
     await clerk.signOut({ page });
-    await mockForm(page);
     await login(page, contractorUser);
     await page.goto("/invoices");
     await expect(page.getByText("You have an unsigned contract")).toBeVisible();
@@ -129,7 +128,6 @@ test.describe("New Contractor", () => {
 
     submitters = { "Company Representative": adminUser, Signer: projectBasedUser };
     await clerk.signOut({ page });
-    await mockForm(page);
     await login(page, projectBasedUser);
     await page.goto("/invoices");
     await expect(page.getByText("You have an unsigned contract")).toBeVisible();
