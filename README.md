@@ -66,7 +66,7 @@ rvm use "ruby-$RUBY_VERSION"
 brew install postgresql
 brew services start postgresql
 createdb flexile_development || true
-psql -c "CREATE USER username WITH LOGIN SUPERUSER PASSWORD 'password';" || true
+psql -c "CREATE USER username WITH LOGIN SUPERUSER PASSWORD 'your_password';" || true
 
 # Enable corepack and install dependencies
 corepack enable
