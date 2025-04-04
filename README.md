@@ -75,7 +75,7 @@ pnpm install
 # Configure Sidekiq
 # Option 1: Use Sidekiq Pro (requires credentials)
 # bundle config gems.contribsys.com "your-sidekiq-pro-credentials"
-# 
+#
 # Option 2: Use regular Sidekiq
 # Add this to your shell's rc file (e.g. ~/.bashrc):
 # export FLEXILE_SIDEKIQ_PRO_DISABLED=true
