@@ -40,15 +40,68 @@ The easiest way to set up the development environment is to use the provided set
 bin/setup
 ```
 
+Alternatively, you can follow these manual setup steps:
+
+```shell
+#!/bin/bash
+
+# Exit on error
+set -e
+
+# Install Homebrew (if not already installed)
+if ! command -v brew &> /dev/null; then
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+else
+  echo "✓ Homebrew already installed"
+fi
+
+# Install RVM and Ruby
+\curl -sSL https://get.rvm.io | bash
+source $HOME/.rvm/scripts/rvm
+RUBY_VERSION=$(cat .ruby-version)
+rvm install "ruby-$RUBY_VERSION"
+rvm use "ruby-$RUBY_VERSION"
+
+# Install PostgreSQL
+brew install postgresql
+brew services start postgresql
+createdb flexile_development || true
+psql -c "CREATE USER username WITH LOGIN SUPERUSER PASSWORD 'password';" || true
+
+# Enable corepack and install dependencies
+corepack enable
+pnpm install
+
+# Configure Sidekiq
+# Option 1: Use Sidekiq Pro (requires credentials)
+# bundle config gems.contribsys.com "your-sidekiq-pro-credentials"
+# 
+# Option 2: Use regular Sidekiq
+# Add this to your shell's rc file (e.g. ~/.bashrc):
+# export FLEXILE_SIDEKIQ_PRO_DISABLED=true
+
+# Setup Vercel environment
+pnpm vercel link
+pnpm vercel env pull .env
+ln -sf $PWD/.env ./apps/next/.env
+
+# Install Ruby gems and Foreman
+cd apps/rails
+bundle install
+gem install foreman
+cd ../..
+```
+
 This script will:
 
 1. Install Homebrew (if not already installed)
-2. Install RVM and the correct Ruby version
+2. Install RVM and the correct Ruby version (Ruby 3.4.2)
 3. Install PostgreSQL and create the development database
 4. Enable corepack and install pnpm dependencies
-5. Install Ruby gems with Bundler
-6. Install Foreman for process management
-7. Link your Vercel environment and pull environment variables
+5. Configure Sidekiq (Pro or regular version)
+6. Link your Vercel environment and pull environment variables
+7. Install Ruby gems with Bundler
+8. Install Foreman for process management
 
 ### Setup custom credentials
 
