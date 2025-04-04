@@ -10,7 +10,7 @@ export const documentTemplatesFactory = {
       .values({
         name: "Default Consulting Agreement",
         type: DocumentTemplateType.ConsultingContract,
-        docusealId: 695987n,
+        docusealId: 1n,
         signable: true,
         ...overrides,
       })

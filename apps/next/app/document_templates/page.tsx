@@ -1,5 +1,5 @@
 "use client";
-import { FileIcon, FilePlusIcon, FileTextIcon, PercentIcon } from "lucide-react";
+import { FilePlusIcon, FileTextIcon, PercentIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -7,7 +7,6 @@ import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import Notice from "@/components/Notice";
-import Placeholder from "@/components/Placeholder";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { DocumentTemplateType } from "@/db/enums";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -117,13 +116,9 @@ export default function TemplatesPage() {
         ) : null
       }
     >
-      {templates.length > 0 ? (
-        <div className="overflow-x-auto">
-          <Table table={table} hoverable />
-        </div>
-      ) : (
-        <Placeholder icon={FileIcon}>No document templates yet.</Placeholder>
-      )}
+      <div className="overflow-x-auto">
+        <Table table={table} hoverable />
+      </div>
     </DocumentsLayout>
   );
 }

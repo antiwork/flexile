@@ -9,7 +9,7 @@ patchedDependencies:
     hash: b859654a83fe3c45179ca9dbe71b7b6917366a67657f37658b146b1264870e28
     path: patches/inngest.patch
   next:
-    hash: 13560482c244f52b995f6bdddddb782619efd587afec81e79b5d7fdad3307b3a
+    hash: 5c65f0f94990d104fc726fb63ebadaea51fe594cf2bee1602d87464a90c75fae
     path: patches/next.patch
   quickbooks-node-promise:
     hash: a81b24213a9ab44e0f7a4920089c9e593a6fda1b0ea041c02459ed941d9c4746
@@ -36,7 +36,7 @@ importers:
         version: 8.2.0
       '@clerk/nextjs':
         specifier: ^6.9.9
-        version: 6.12.5(next@15.2.3(patch_hash=13560482c244f52b995f6bdddddb782619efd587afec81e79b5d7fdad3307b3a)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        version: 6.12.5(next@15.2.4(patch_hash=5c65f0f94990d104fc726fb63ebadaea51fe594cf2bee1602d87464a90c75fae)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@clerk/testing':
         specifier: ^1.4.6
         version: 1.4.27(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -44,11 +44,11 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
       '@docuseal/api':
-        specifier: ^1.0.9
-        version: 1.0.11
+        specifier: ^1.0.13
+        version: 1.0.13
       '@docuseal/react':
-        specifier: ^1.0.61
-        version: 1.0.61
+        specifier: ^1.0.63
+        version: 1.0.63
       '@heroicons/react':
         specifier: ^2.1.5
         version: 2.2.0(react@19.0.0)
@@ -177,7 +177,7 @@ importers:
         version: 5.0.3
       inngest:
         specifier: ^3.27.0
-        version: 3.32.7(patch_hash=b859654a83fe3c45179ca9dbe71b7b6917366a67657f37658b146b1264870e28)(next@15.2.3(patch_hash=13560482c244f52b995f6bdddddb782619efd587afec81e79b5d7fdad3307b3a)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(typescript@5.8.2)
+        version: 3.32.7(patch_hash=b859654a83fe3c45179ca9dbe71b7b6917366a67657f37658b146b1264870e28)(next@15.2.4(patch_hash=5c65f0f94990d104fc726fb63ebadaea51fe594cf2bee1602d87464a90c75fae)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(typescript@5.8.2)
       iso-3166:
         specifier: ^4.3.0
         version: 4.3.0
@@ -195,10 +195,10 @@ importers:
         version: 5.1.3
       next:
         specifier: ^15.0.1
-        version: 15.2.3(patch_hash=13560482c244f52b995f6bdddddb782619efd587afec81e79b5d7fdad3307b3a)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        version: 15.2.4(patch_hash=5c65f0f94990d104fc726fb63ebadaea51fe594cf2bee1602d87464a90c75fae)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       nuqs:
         specifier: ^2.1.1
-        version: 2.4.1(next@15.2.3(patch_hash=13560482c244f52b995f6bdddddb782619efd587afec81e79b5d7fdad3307b3a)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)
+        version: 2.4.1(next@15.2.4(patch_hash=5c65f0f94990d104fc726fb63ebadaea51fe594cf2bee1602d87464a90c75fae)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)
       octokit:
         specifier: ^4.0.2
         version: 4.1.2
@@ -636,11 +636,11 @@ packages:
     resolution: {integrity: sha512-dBVuXR082gk3jsFp7Rd/JI4kytwGHecnCoTtXFb7DB6CNHp4rg5k1bhg0nWdLGLnOV71lmDzGQaLMy8iPLY0pw==}
     engines: {node: '>=10.0.0'}
 
-  '@docuseal/api@1.0.11':
-    resolution: {integrity: sha512-x6RyoWg9tHjiLzqJiA/7XDed3A/HhsizKe+AIi9krUUCEdBqXBM9Q4mB7iEJ1klTZe6QhyiXty7qPQ3qEe500A==}
+  '@docuseal/api@1.0.13':
+    resolution: {integrity: sha512-nk3pGW/DbpZLN3IOVtFg8F6FtUnfzIfLfgrHpPrULqmA38J6mQGpeKN39VzP4FXe5EhdKgsvNlSOEt2D/U4Z+g==}
 
-  '@docuseal/react@1.0.61':
-    resolution: {integrity: sha512-B2BuhOlEKmbTkqSF/8TQkY/sPlFY8+9pN7uJDo6uNB2gwq7sOJLxZsA/KmoQ1ea9O2WPOZvuJqRowAgNyg1Rcg==}
+  '@docuseal/react@1.0.63':
+    resolution: {integrity: sha512-bgduC++M3bLTUIEq2pxRX49QO0iIDOg09rgg1sK4x7afBDOMFqOvuqcAT/shRzbJLXryV68rA9vxAf5ACX4qPg==}
 
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
@@ -1147,53 +1147,53 @@ packages:
   '@next/env@15.2.2':
     resolution: {integrity: sha512-yWgopCfA9XDR8ZH3taB5nRKtKJ1Q5fYsTOuYkzIIoS8TJ0UAUKAGF73JnGszbjk2ufAQDj6mDdgsJAFx5CLtYQ==}
 
-  '@next/env@15.2.3':
-    resolution: {integrity: sha512-a26KnbW9DFEUsSxAxKBORR/uD9THoYoKbkpFywMN/AFvboTt94b8+g/07T8J6ACsdLag8/PDU60ov4rPxRAixw==}
+  '@next/env@15.2.4':
+    resolution: {integrity: sha512-+SFtMgoiYP3WoSswuNmxJOCwi06TdWE733D+WPjpXIe4LXGULwEaofiiAy6kbS0+XjM5xF5n3lKuBwN2SnqD9g==}
 
-  '@next/swc-darwin-arm64@15.2.3':
-    resolution: {integrity: sha512-uaBhA8aLbXLqwjnsHSkxs353WrRgQgiFjduDpc7YXEU0B54IKx3vU+cxQlYwPCyC8uYEEX7THhtQQsfHnvv8dw==}
+  '@next/swc-darwin-arm64@15.2.4':
+    resolution: {integrity: sha512-1AnMfs655ipJEDC/FHkSr0r3lXBgpqKo4K1kiwfUf3iE68rDFXZ1TtHdMvf7D0hMItgDZ7Vuq3JgNMbt/+3bYw==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [darwin]
 
-  '@next/swc-darwin-x64@15.2.3':
-    resolution: {integrity: sha512-pVwKvJ4Zk7h+4hwhqOUuMx7Ib02u3gDX3HXPKIShBi9JlYllI0nU6TWLbPT94dt7FSi6mSBhfc2JrHViwqbOdw==}
+  '@next/swc-darwin-x64@15.2.4':
+    resolution: {integrity: sha512-3qK2zb5EwCwxnO2HeO+TRqCubeI/NgCe+kL5dTJlPldV/uwCnUgC7VbEzgmxbfrkbjehL4H9BPztWOEtsoMwew==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [darwin]
 
-  '@next/swc-linux-arm64-gnu@15.2.3':
-    resolution: {integrity: sha512-50ibWdn2RuFFkOEUmo9NCcQbbV9ViQOrUfG48zHBCONciHjaUKtHcYFiCwBVuzD08fzvzkWuuZkd4AqbvKO7UQ==}
+  '@next/swc-linux-arm64-gnu@15.2.4':
+    resolution: {integrity: sha512-HFN6GKUcrTWvem8AZN7tT95zPb0GUGv9v0d0iyuTb303vbXkkbHDp/DxufB04jNVD+IN9yHy7y/6Mqq0h0YVaQ==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
 
-  '@next/swc-linux-arm64-musl@15.2.3':
-    resolution: {integrity: sha512-2gAPA7P652D3HzR4cLyAuVYwYqjG0mt/3pHSWTCyKZq/N/dJcUAEoNQMyUmwTZWCJRKofB+JPuDVP2aD8w2J6Q==}
+  '@next/swc-linux-arm64-musl@15.2.4':
+    resolution: {integrity: sha512-Oioa0SORWLwi35/kVB8aCk5Uq+5/ZIumMK1kJV+jSdazFm2NzPDztsefzdmzzpx5oGCJ6FkUC7vkaUseNTStNA==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
 
-  '@next/swc-linux-x64-gnu@15.2.3':
-    resolution: {integrity: sha512-ODSKvrdMgAJOVU4qElflYy1KSZRM3M45JVbeZu42TINCMG3anp7YCBn80RkISV6bhzKwcUqLBAmOiWkaGtBA9w==}
+  '@next/swc-linux-x64-gnu@15.2.4':
+    resolution: {integrity: sha512-yb5WTRaHdkgOqFOZiu6rHV1fAEK0flVpaIN2HB6kxHVSy/dIajWbThS7qON3W9/SNOH2JWkVCyulgGYekMePuw==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
 
-  '@next/swc-linux-x64-musl@15.2.3':
-    resolution: {integrity: sha512-ZR9kLwCWrlYxwEoytqPi1jhPd1TlsSJWAc+H/CJHmHkf2nD92MQpSRIURR1iNgA/kuFSdxB8xIPt4p/T78kwsg==}
+  '@next/swc-linux-x64-musl@15.2.4':
+    resolution: {integrity: sha512-Dcdv/ix6srhkM25fgXiyOieFUkz+fOYkHlydWCtB0xMST6X9XYI3yPDKBZt1xuhOytONsIFJFB08xXYsxUwJLw==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
 
-  '@next/swc-win32-arm64-msvc@15.2.3':
-    resolution: {integrity: sha512-+G2FrDcfm2YDbhDiObDU/qPriWeiz/9cRR0yMWJeTLGGX6/x8oryO3tt7HhodA1vZ8r2ddJPCjtLcpaVl7TE2Q==}
+  '@next/swc-win32-arm64-msvc@15.2.4':
+    resolution: {integrity: sha512-dW0i7eukvDxtIhCYkMrZNQfNicPDExt2jPb9AZPpL7cfyUo7QSNl1DjsHjmmKp6qNAqUESyT8YFl/Aw91cNJJg==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [win32]
 
-  '@next/swc-win32-x64-msvc@15.2.3':
-    resolution: {integrity: sha512-gHYS9tc+G2W0ZC8rBL+H6RdtXIyk40uLiaos0yj5US85FNhbFEndMA2nW3z47nzOWiSvXTZ5kBClc3rD0zJg0w==}
+  '@next/swc-win32-x64-msvc@15.2.4':
+    resolution: {integrity: sha512-SbnWkJmkS7Xl3kre8SdMF6F/XDh1DTFEhp0jRTj/uB8iPKoU2bb2NDfcu+iifv1+mxQEd1g2vvSxcZbXSKyWiQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
@@ -4192,8 +4192,8 @@ packages:
     resolution: {integrity: sha512-dBpDMdxv9Irdq66304OLfEmQ9tbNRFnFTuZiLo+bD+r332bBmMJ8GBLXklIXXgxd3+v9+KUnZaUR5PJMa75Gsg==}
     engines: {node: '>= 0.4.0'}
 
-  next@15.2.3:
-    resolution: {integrity: sha512-x6eDkZxk2rPpu46E1ZVUWIBhYCLszmUY6fvHBFcbzJ9dD+qRX6vcHusaqqDlnY+VngKzKbAiG2iRCkPbmi8f7w==}
+  next@15.2.4:
+    resolution: {integrity: sha512-VwL+LAaPSxEkd3lU2xWbgEOtrM8oedmyhBqaVNmgKB+GvZlCy9rgaEc+y2on0wv+l0oSFqLtYD6dcC1eAedUaQ==}
     engines: {node: ^18.18.0 || ^19.8.0 || >= 20.0.0}
     hasBin: true
     peerDependencies:
@@ -6028,13 +6028,13 @@ snapshots:
       react-dom: 19.0.0(react@19.0.0)
       tslib: 2.4.1
 
-  '@clerk/nextjs@6.12.5(next@15.2.3(patch_hash=13560482c244f52b995f6bdddddb782619efd587afec81e79b5d7fdad3307b3a)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
+  '@clerk/nextjs@6.12.5(next@15.2.4(patch_hash=5c65f0f94990d104fc726fb63ebadaea51fe594cf2bee1602d87464a90c75fae)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@clerk/backend': 1.25.2(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@clerk/clerk-react': 5.24.2(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@clerk/shared': 3.0.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@clerk/types': 4.48.0
-      next: 15.2.3(patch_hash=13560482c244f52b995f6bdddddb782619efd587afec81e79b5d7fdad3307b3a)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      next: 15.2.4(patch_hash=5c65f0f94990d104fc726fb63ebadaea51fe594cf2bee1602d87464a90c75fae)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
       server-only: 0.0.1(patch_hash=c309df846d8ba07c09bca5bcd66640e3f66fb295d7a5a9e9309c5628104b666f)
@@ -6072,9 +6072,9 @@ snapshots:
 
   '@discoveryjs/json-ext@0.5.7': {}
 
-  '@docuseal/api@1.0.11': {}
+  '@docuseal/api@1.0.13': {}
 
-  '@docuseal/react@1.0.61': {}
+  '@docuseal/react@1.0.63': {}
 
   '@drizzle-team/brocli@0.10.2': {}
 
@@ -6432,30 +6432,30 @@ snapshots:
 
   '@next/env@15.2.2': {}
 
-  '@next/env@15.2.3': {}
+  '@next/env@15.2.4': {}
 
-  '@next/swc-darwin-arm64@15.2.3':
+  '@next/swc-darwin-arm64@15.2.4':
     optional: true
 
-  '@next/swc-darwin-x64@15.2.3':
+  '@next/swc-darwin-x64@15.2.4':
     optional: true
 
-  '@next/swc-linux-arm64-gnu@15.2.3':
+  '@next/swc-linux-arm64-gnu@15.2.4':
     optional: true
 
-  '@next/swc-linux-arm64-musl@15.2.3':
+  '@next/swc-linux-arm64-musl@15.2.4':
     optional: true
 
-  '@next/swc-linux-x64-gnu@15.2.3':
+  '@next/swc-linux-x64-gnu@15.2.4':
     optional: true
 
-  '@next/swc-linux-x64-musl@15.2.3':
+  '@next/swc-linux-x64-musl@15.2.4':
     optional: true
 
-  '@next/swc-win32-arm64-msvc@15.2.3':
+  '@next/swc-win32-arm64-msvc@15.2.4':
     optional: true
 
-  '@next/swc-win32-x64-msvc@15.2.3':
+  '@next/swc-win32-x64-msvc@15.2.4':
     optional: true
 
   '@noble/hashes@1.7.1': {}
@@ -9206,7 +9206,7 @@ snapshots:
       - encoding
       - supports-color
 
-  inngest@3.32.7(patch_hash=b859654a83fe3c45179ca9dbe71b7b6917366a67657f37658b146b1264870e28)(next@15.2.3(patch_hash=13560482c244f52b995f6bdddddb782619efd587afec81e79b5d7fdad3307b3a)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(typescript@5.8.2):
+  inngest@3.32.7(patch_hash=b859654a83fe3c45179ca9dbe71b7b6917366a67657f37658b146b1264870e28)(next@15.2.4(patch_hash=5c65f0f94990d104fc726fb63ebadaea51fe594cf2bee1602d87464a90c75fae)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(typescript@5.8.2):
     dependencies:
       '@bufbuild/protobuf': 2.2.3
       '@inngest/ai': 0.1.3
@@ -9224,7 +9224,7 @@ snapshots:
       ulidx: 2.4.1
       zod: 3.22.5
     optionalDependencies:
-      next: 15.2.3(patch_hash=13560482c244f52b995f6bdddddb782619efd587afec81e79b5d7fdad3307b3a)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      next: 15.2.4(patch_hash=5c65f0f94990d104fc726fb63ebadaea51fe594cf2bee1602d87464a90c75fae)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       typescript: 5.8.2
     transitivePeerDependencies:
       - encoding
@@ -9703,9 +9703,9 @@ snapshots:
 
   netmask@2.0.2: {}
 
-  next@15.2.3(patch_hash=13560482c244f52b995f6bdddddb782619efd587afec81e79b5d7fdad3307b3a)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
+  next@15.2.4(patch_hash=5c65f0f94990d104fc726fb63ebadaea51fe594cf2bee1602d87464a90c75fae)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:
-      '@next/env': 15.2.3
+      '@next/env': 15.2.4
       '@swc/counter': 0.1.3
       '@swc/helpers': 0.5.15
       busboy: 1.6.0
@@ -9715,14 +9715,14 @@ snapshots:
       react-dom: 19.0.0(react@19.0.0)
       styled-jsx: 5.1.6(react@19.0.0)
     optionalDependencies:
-      '@next/swc-darwin-arm64': 15.2.3
-      '@next/swc-darwin-x64': 15.2.3
-      '@next/swc-linux-arm64-gnu': 15.2.3
-      '@next/swc-linux-arm64-musl': 15.2.3
-      '@next/swc-linux-x64-gnu': 15.2.3
-      '@next/swc-linux-x64-musl': 15.2.3
-      '@next/swc-win32-arm64-msvc': 15.2.3
-      '@next/swc-win32-x64-msvc': 15.2.3
+      '@next/swc-darwin-arm64': 15.2.4
+      '@next/swc-darwin-x64': 15.2.4
+      '@next/swc-linux-arm64-gnu': 15.2.4
+      '@next/swc-linux-arm64-musl': 15.2.4
+      '@next/swc-linux-x64-gnu': 15.2.4
+      '@next/swc-linux-x64-musl': 15.2.4
+      '@next/swc-win32-arm64-msvc': 15.2.4
+      '@next/swc-win32-x64-msvc': 15.2.4
       '@opentelemetry/api': 1.9.0
       '@playwright/test': 1.51.0
       sharp: 0.33.5
@@ -9770,12 +9770,12 @@ snapshots:
     dependencies:
       boolbase: 1.0.0
 
-  nuqs@2.4.1(next@15.2.3(patch_hash=13560482c244f52b995f6bdddddb782619efd587afec81e79b5d7fdad3307b3a)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0):
+  nuqs@2.4.1(next@15.2.4(patch_hash=5c65f0f94990d104fc726fb63ebadaea51fe594cf2bee1602d87464a90c75fae)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0):
     dependencies:
       mitt: 3.0.1
       react: 19.0.0
     optionalDependencies:
-      next: 15.2.3(patch_hash=13560482c244f52b995f6bdddddb782619efd587afec81e79b5d7fdad3307b3a)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      next: 15.2.4(patch_hash=5c65f0f94990d104fc726fb63ebadaea51fe594cf2bee1602d87464a90c75fae)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
 
   object-assign@4.1.1: {}
 

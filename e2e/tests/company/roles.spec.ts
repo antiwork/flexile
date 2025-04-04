@@ -1,20 +1,27 @@
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
-import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
+import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
+import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
-import { companyContractors, companyRoles, users } from "@/db/schema";
+import { companyContractors, companyRoles } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 
 test.describe("Company roles", () => {
-  test("allows updating roles", async ({ page, sentEmails }) => {
-    const { company } = await companiesFactory.create();
-    let { companyContractor } = await companyContractorsFactory.create({ companyId: company.id });
-    const { administrator } = await companyAdministratorsFactory.create({ companyId: company.id });
-    const user = assertDefined(await db.query.users.findFirst({ where: eq(users.id, administrator.userId) }));
+  test("allows updating roles", async ({ page, sentEmails, next }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
+    const { user: contractorUser } = await usersFactory.create();
+    const { mockForm } = mockDocuseal(next, {
+      submitters: () => ({ "Company Representative": adminUser, Signer: contractorUser }),
+    });
+    await mockForm(page);
+    let { companyContractor } = await companyContractorsFactory.create({
+      companyId: company.id,
+      userId: contractorUser.id,
+    });
     const fetchRole = async () => {
       const role = assertDefined(
         await db.query.companyRoles.findFirst({
@@ -25,11 +32,8 @@ test.describe("Company roles", () => {
       return { role, rate: assertDefined(role.rates[0]) };
     };
     let { role, rate } = await fetchRole();
-    const contractorUser = assertDefined(
-      await db.query.users.findFirst({ where: eq(users.id, companyContractor.userId) }),
-    );
 
-    await login(page, user);
+    await login(page, adminUser);
     await page.getByRole("link", { name: "Roles" }).click();
     await expect(page.locator("tbody tr")).toHaveCount(1);
     await expect(page.locator("tbody tr > td")).toHaveText(

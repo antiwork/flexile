@@ -13,7 +13,6 @@ test.describe("Cap table upload", () => {
         slackJson = await request.json();
         return new Response();
       }
-      return "continue" as const;
     });
     const { company } = await companiesFactory.create();
     const { user: adminUser } = await usersFactory.create();

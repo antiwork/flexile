@@ -1,15 +1,25 @@
-import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
-import { assertDefined } from "@/utils/assert";
 
 test.describe("Document templates", () => {
-  test("allows viewing and managing document templates", async ({ page }) => {
+  test("allows viewing and managing document templates", async ({ page, next }) => {
+    const docusealData = { documents: [], fields: [], submitters: [], schema: [] };
+    next.onFetch(async (request) => {
+      if (request.url === "https://docuseal.com/embed/templates/1") {
+        return Response.json({ name: "Default consulting agreement", ...docusealData });
+      }
+      if (request.url === "https://api.docuseal.com/templates/pdf") {
+        expect(await request.json()).toMatchObject({ name: "Consulting agreement" });
+        return Response.json({ id: 2 });
+      }
+      if (request.url === "https://docuseal.com/embed/templates/2") {
+        return Response.json({ name: "Consulting agreement", ...docusealData });
+      }
+    });
     const { company } = await companiesFactory.createCompletedOnboarding();
-    const documentTemplate = assertDefined(await db.query.documentTemplates.findFirst({}));
     const { user: adminUser } = await usersFactory.create();
     await companyAdministratorsFactory.create({
       companyId: company.id,
@@ -18,20 +28,27 @@ test.describe("Document templates", () => {
 
     await login(page, adminUser);
     await page.goto("/document_templates");
-    await expect(page.getByText("No document templates yet.")).not.toBeVisible();
     await expect(page.locator("tbody tr")).toHaveCount(1);
-    await expect(page.getByRole("cell", { name: documentTemplate.name })).toBeVisible();
 
-    await page.getByRole("link", { name: documentTemplate.name }).click();
+    await page.getByRole("link", { name: "Consulting agreement" }).click();
     await expect(
       page.getByText("This is our default template. Replace it with your own to fully customize it."),
     ).toBeVisible();
-    await expect(page.locator("#title_container").getByText("Default Consulting Agreement")).toBeVisible();
+    await expect(page.getByText("Default Consulting Agreement")).toBeVisible();
     await page.getByRole("button", { name: "Replace default template" }).click();
+    await expect(page.getByText("Consulting agreement", { exact: true })).toBeVisible();
     await page.getByRole("link", { name: "Back to templates" }).click();
     await expect(page.locator("tbody tr")).toHaveCount(1);
 
-    // Create new equity grant template
+    next.onFetch(async (request) => {
+      if (request.url === "https://api.docuseal.com/templates/pdf") {
+        expect(await request.json()).toMatchObject({ name: "Equity grant contract" });
+        return Response.json({ id: 3 });
+      }
+      if (request.url === "https://docuseal.com/embed/templates/3") {
+        return Response.json({ name: "Equity grant contract", ...docusealData });
+      }
+    });
     await page.getByRole("button", { name: "New template" }).click();
     await expect(
       page.getByText(
