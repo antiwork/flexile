@@ -7,7 +7,6 @@ import { Decimal } from "decimal.js";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import Button from "@/components/Button";
 import Figures from "@/components/Figures";
 import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
@@ -15,6 +14,7 @@ import Notice from "@/components/Notice";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
+import { Button } from "@/components/ui/button";
 import { DocumentTemplateType } from "@/db/enums";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { countries } from "@/models/constants";
@@ -223,7 +223,7 @@ const InvestorGrantList = () => {
                     <span className="font-bold">
                       You have {totalUnexercisedVestedShares.toLocaleString()} vested options available for exercise.
                     </span>
-                    <Button small onClick={openExerciseModal}>
+                    <Button size="small" onClick={openExerciseModal}>
                       Exercise Options
                     </Button>
                   </div>

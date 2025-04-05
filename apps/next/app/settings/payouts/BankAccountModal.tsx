@@ -3,7 +3,6 @@ import { Map as ImmutableMap } from "immutable";
 import { set } from "lodash-es";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
-import Button from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
 import ComboBox from "@/components/ComboBox";
 import Input from "@/components/Input";
@@ -11,6 +10,7 @@ import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import RadioButtons from "@/components/RadioButtons";
 import Select from "@/components/Select";
+import { Button } from "@/components/ui/button";
 import {
   CURRENCIES,
   type Currency,

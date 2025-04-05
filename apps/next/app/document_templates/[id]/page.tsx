@@ -5,10 +5,10 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { z } from "zod";
-import Button from "@/components/Button";
 import MainLayout from "@/components/layouts/Main";
 import MutationButton from "@/components/MutationButton";
 import Notice from "@/components/Notice";
+import { Button } from "@/components/ui/button";
 import { useCurrentCompany } from "@/global";
 import { DocumentTemplateType, trpc } from "@/trpc/client";
 

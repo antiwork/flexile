@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import Badge from "@/components/Badge";
-import Button from "@/components/Button";
+import { Button } from "@/components/ui/button";
 import { useCurrentUser } from "@/global";
 import logo from "@/images/flexile-logo.svg";
 import SimpleLayout from "./Simple";

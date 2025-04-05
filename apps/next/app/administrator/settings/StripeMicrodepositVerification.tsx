@@ -4,7 +4,7 @@ import { fromUnixTime } from "date-fns";
 import { Map } from "immutable";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import Button from "@/components/Button";
+import { Button } from "@/components/ui/button";
 import DecimalInput from "@/components/DecimalInput";
 import Input from "@/components/Input";
 import Modal from "@/components/Modal";
