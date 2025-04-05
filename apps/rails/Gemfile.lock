@@ -7,12 +7,6 @@ GIT
       capybara (~> 3.36)
 
 GEM
-  remote: https://gems.contribsys.com/
-  specs:
-    sidekiq-pro (7.3.6)
-      sidekiq (>= 7.3.7, < 8)
-
-GEM
   remote: https://rubygems.org/
   specs:
     actioncable (8.0.2)
@@ -760,8 +754,8 @@ DEPENDENCIES
   rubyXL (~> 3.4)
   selenium-webdriver (~> 4.30.0)
   shoulda-matchers (~> 6.0)
+  sidekiq (~> 7)
   sidekiq-cron (~> 2.0)
-  sidekiq-pro (~> 7)!
   slack-notifier (~> 2.4)
   sprockets (~> 4.0)
   sprockets-rails (~> 3.4)

@@ -26,69 +26,25 @@ Payroll & equity for everyone.
 
 ## Setup
 
-### Prerequisites
+You'll need:
 
-- [Docker for Desktop](https://docs.docker.com/engine/install/)
-- Ruby (version specified in `.ruby-version`)
-- Node.js (version specified in `.node-version`)
+- [Docker](https://docs.docker.com/engine/install/)
+- [Node.js](https://nodejs.org/en/download) (see [`.node-version`](.node-version))
 
-### Installation
+The easiest way to set up the development environment is to use [the `bin/setup` script](bin/setup) script, but feel free to run the commands in it yourself to:
 
-The easiest way to set up the development environment is to use the provided setup script:
-
-```shell
-bin/setup
-```
-
-This script will:
-
-1. Install Homebrew (if not already installed)
-2. Install RVM and the correct Ruby version
-3. Install PostgreSQL and create the development database
-4. Enable corepack and install pnpm dependencies
-5. Install Ruby gems with Bundler
-6. Install Foreman for process management
-7. Link your Vercel environment and pull environment variables
-
-### Setup custom credentials
-
-Copy `.env.example` to `.env` and fill in the values:
-
-```shell
-cp .env.example .env
-```
-
-Then edit `.env` with your custom values.
+- Set up Ruby (ideally using `rbenv`/`rvm`) and PostgreSQL
+- Install dependencies using `pnpm i` and `cd apps/rails && bundle i`
+- Set up your environment by either using `pnpx vercel env pull` or `cp .env.example .env` and filling in missing values and your own keys
+- Run `cd apps/rails && gem install foreman && bin/rails db:setup`
 
 ## Running the App
 
-Start the Docker services for local development:
-
-```shell
-# In one terminal tab
-make local
-
-# Use LOCAL_DETACHED=false make local if you prefer to run Docker services in the foreground
-```
-
-Set up the database (if running for the first time) and start the development server:
-
-```shell
-# In another terminal tab
-rails db:setup # if running for the first time
-bin/dev
-```
+You can start the local app using [the `bin/dev` script](bin/dev) - or feel free to run the commands contained in it yourself.
 
 Once the local services are up and running, the application will be available at `https://flexile.dev`
 
-Use the credentials generated during `db:setup` to log in.
-
-### Helper widget
-
-To run the [Helper](https://github.com/antiwork/helper) widget locally, you'll also need to run the Helper app locally. By default, the development environment expects the Helper Next.js server to run on `localhost:3010`. Currently, the Helper host is set to port 3000. You can update the port by modifying `bin/dev` and `apps/nextjs/webpack.sdk.cjs` inside the Helper project to use a different port, such as 3010.
-
-You can update the `HELPER_WIDGET_HOST` in your `.env` file to point to a different host if needed.
-The widget performs HMAC validation on the email to confirm it's coming from Gumroad. Update the `helper_widget_secret` in the credentials to match the one used by Helper.
+Check [the seeds](apps/rails/config/data/seed_templates/gumroad.json) for default data created during setup.
 
 ## Testing
 
