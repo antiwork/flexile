@@ -4,7 +4,7 @@ import { FilePlusIcon, FileTextIcon, PercentIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import Button from "@/components/Button";
+import { Button } from "@/components/ui/button";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
