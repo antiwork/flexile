@@ -42,6 +42,7 @@ export default defineConfig({
     command: "bin/test_server",
     url: "https://test.flexile.dev:3101",
     reuseExistingServer: !process.env.CI,
+    stdout: "pipe",
     ignoreHTTPSErrors: true,
   },
 });

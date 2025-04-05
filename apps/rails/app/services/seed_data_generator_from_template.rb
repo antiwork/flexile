@@ -54,10 +54,8 @@ class SeedDataGeneratorFromTemplate
     SidekiqJobForcePerformInline.apply
 
     print_message("Using email #{@config.fetch("email")}.")
-    WiseCredential.create!(profile_id: WISE_PROFILE_ID, api_key: WISE_API_KEY)
+    WiseCredential.create!(profile_id: WISE_PROFILE_ID, api_key: WISE_API_KEY) if WISE_API_KEY.present?
     ActiveRecord::Base.connection.exec_query("INSERT INTO document_templates(name, external_id, created_at, updated_at, document_type, docuseal_id, signable) VALUES('name', 'Consulting agreement', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, 592723, true)")
-    Wise::AccountBalance.create_usd_balance_if_needed
-    top_up_wise_account_if_needed
 
     create_users!(data.fetch("users"))
 
@@ -903,6 +901,7 @@ class SeedDataGeneratorFromTemplate
     end
 
     def create_user_bank_account!(user, wise_recipient_params)
+      return if WISE_API_KEY.blank?
       wise_recipient_params["details"]["accountHolderName"] ||= user.legal_name
       wise_recipient_params["details"]["address"] ||= {}
       wise_recipient_params["details"]["address"]["country"] ||= user.country_code

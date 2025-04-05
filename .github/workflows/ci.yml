@@ -6,9 +6,10 @@ concurrency:
   group: ${{ github.ref }}-rspec
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
-
 env:
+  CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
   RAILS_ENV: test
+  STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
 
 jobs:
   rspec:
@@ -46,12 +47,8 @@ jobs:
 
       - name: Build setup
         uses: ./.github/common/
-        with:
-          vercel-key: ${{ secrets.VERCEL_ENV_KEY }}
 
       - name: Setup test database
-        env:
-          RAILS_ENV: test
         run: cd apps/rails && bundle exec rails db:create db:schema:load
 
       - name: Run tests

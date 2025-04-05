@@ -5,10 +5,8 @@ RSpec.describe PurgeSeedData, :skip_pdf_generation do
     # Turn off VCR and allow network requests to ensure the seed generation works
     VCR.turned_off do
       WebMock.allow_net_connect!
-      expect do
-        SeedDataGeneratorFromTemplate.new(template: "gumroad", email: "test@flexile.example", fast_mode: true).perform!
-        PurgeSeedData.new("test@flexile.example").perform!
-      end.not_to raise_error
+      SeedDataGeneratorFromTemplate.new(template: "gumroad", email: "test@flexile.example", fast_mode: true).perform!
+      PurgeSeedData.new("test@flexile.example").perform!
       expect(User.count).to eq(0)
       expect(Company.count).to eq(0)
     end
