@@ -49,6 +49,18 @@ index cae9ec8cd4e4e266df599ea6a6d3a16af8ac6feb..2e74e45e848c2a7a7c1661a2e06e1d73
              throw Object.defineProperty(new Error(`Proxy request aborted [${request.method} ${request.url}]`), "__NEXT_ERROR_CODE", {
                  value: "E145",
                  enumerable: false,
+diff --git a/dist/experimental/testmode/playwright/next-fixture.js b/dist/experimental/testmode/playwright/next-fixture.js
+index e6e42b96dbe6621eb4990923e770382441c55667..cecba31bab2432505f86dab61e9a2a8ad7ee5e65 100644
+--- a/dist/experimental/testmode/playwright/next-fixture.js
++++ b/dist/experimental/testmode/playwright/next-fixture.js
+@@ -44,6 +44,7 @@ class NextFixtureImpl {
+             if (this.options.fetchLoopback) {
+                 return fetch(req.clone());
+             }
++            if (this.fetchHandlers.length) return "continue";
+             return undefined;
+         });
+     }
 diff --git a/dist/experimental/testmode/playwright/step.js b/dist/experimental/testmode/playwright/step.js
 index 3eb6f598ab095f1aebea73e4c92af55e7db98c97..7117074dec201a260a081b9d34b0f274773184b8 100644
 --- a/dist/experimental/testmode/playwright/step.js

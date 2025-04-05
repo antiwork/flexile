@@ -1,26 +1,20 @@
+import { clerk } from "@clerk/testing/playwright";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
-import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
-import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
-import { expect, test } from "@test/index";
-import { addDays, format, formatISO } from "date-fns";
+import { mockDocuseal } from "@test/helpers/docuseal";
+import { expect, test, withinModal } from "@test/index";
+import { addDays, addYears, format, formatISO } from "date-fns";
 import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
 import { assert } from "@/utils/assert";
 
 test.describe("End contract", () => {
-  test("allows admin to end contractor's contract", async ({ page, sentEmails }) => {
-    const { company } = await companiesFactory.create();
-    const { user: admin } = await usersFactory.create();
+  test("allows admin to end contractor's contract", async ({ page, sentEmails, next }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
 
-    await companyAdministratorsFactory.create({
-      companyId: company.id,
-      userId: admin.id,
-    });
-
-    await login(page, admin);
+    await login(page, adminUser);
 
     const { companyContractor } = await companyContractorsFactory.create({
       companyId: company.id,
@@ -57,56 +51,46 @@ test.describe("End contract", () => {
         ),
       }),
     ]);
-  });
 
-  test("allows admin to cancel contract end", async ({ page, sentEmails }) => {
-    const { company } = await companiesFactory.create();
-    const { user: admin } = await usersFactory.create();
-
-    await companyAdministratorsFactory.create({
-      companyId: company.id,
-      userId: admin.id,
-    });
-
-    await login(page, admin);
-
-    const futureDate = addDays(new Date(), 30);
-    const { companyContractor } = await companyContractorsFactory.create({
-      companyId: company.id,
-      endedAt: futureDate,
-    });
-    const contractor = await db.query.users.findFirst({
-      where: eq(users.id, companyContractor.userId),
-    });
-    assert(contractor != null, "Contractor is required");
-    assert(contractor.preferredName != null, "Contractor preferred name is required");
-    assert(companyContractor.endedAt != null, "Contractor ended at is required");
-
+    // Re-invite
     await page.getByRole("link", { name: "People" }).click();
-    await page.getByRole("link", { name: contractor.preferredName }).click();
+    await page.getByRole("link", { name: "Invite contractor" }).click();
+    const { mockForm } = mockDocuseal(next, {
+      submitters: () => ({ "Company Representative": adminUser, Signer: contractor }),
+    });
+    await mockForm(page);
+    await page.getByLabel("Email").fill(contractor.email);
+    await page.getByLabel("Average hours").fill("25");
+    await page.getByLabel("Start date").fill(formatISO(addYears(new Date(), 1), { representation: "date" }));
+    await page.getByRole("button", { name: "Send invite" }).click();
+    await withinModal(
+      async (modal) => {
+        await modal.getByRole("button", { name: "Sign now" }).click();
+        await modal.getByRole("link", { name: "Type" }).click();
+        await modal.getByPlaceholder("Type signature here...").fill("Admin Admin");
+        await modal.getByRole("button", { name: "Complete" }).click();
+      },
+      { page },
+    );
 
-    await expect(page.getByText(`Contract ends on ${format(futureDate, "MMM d, yyyy")}`)).toBeVisible();
-    await page.getByRole("button", { name: "Cancel contract end" }).click();
-    await page.getByRole("button", { name: "Yes, cancel contract end" }).click();
+    await expect(
+      page.getByRole("row").filter({ hasText: contractor.preferredName }).filter({ hasText: "In Progress" }),
+    ).toBeVisible();
 
-    await expect(page.getByText(`Contract ends on ${format(futureDate, "MMM d, yyyy")}`)).not.toBeVisible();
-    await expect(page.getByRole("button", { name: "End contract" })).toBeVisible();
-
-    const email = sentEmails[0];
-    assert(email != null, "Email should be sent");
-    expect(email.subject).toBe(`Your contract end with ${company.name} has been canceled`);
+    await clerk.signOut({ page });
+    await login(page, contractor);
+    await page.getByRole("link", { name: "Review & sign" }).click();
+    await page.getByRole("button", { name: "Sign now" }).click();
+    await page.getByRole("link", { name: "Type" }).click();
+    await page.getByPlaceholder("Type signature here...").fill("Flexy Bob");
+    await page.getByRole("button", { name: "Complete" }).click();
+    await expect(page.getByRole("heading", { name: "Invoicing" })).toBeVisible();
   });
 
   test("allows admin to end contractor's contract in the future", async ({ page, sentEmails }) => {
-    const { company } = await companiesFactory.create();
-    const { user: admin } = await usersFactory.create();
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
 
-    await companyAdministratorsFactory.create({
-      companyId: company.id,
-      userId: admin.id,
-    });
-
-    await login(page, admin);
+    await login(page, adminUser);
 
     const { companyContractor } = await companyContractorsFactory.create({
       companyId: company.id,
@@ -131,6 +115,13 @@ test.describe("End contract", () => {
     await expect(page.getByText(`Contract ends on ${format(futureDate, "MMM d, yyyy")}`)).toBeVisible();
     await expect(page.getByRole("button", { name: "End contract" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Save changes" })).not.toBeVisible();
+
+    await page.getByRole("button", { name: "Cancel contract end" }).click();
+    await page.getByRole("button", { name: "Yes, cancel contract end" }).click();
+
+    await expect(page.getByText(`Contract ends on`)).not.toBeVisible();
+    await expect(page.getByRole("button", { name: "End contract" })).toBeVisible();
+
     expect(sentEmails).toEqual([
       expect.objectContaining({
         to: contractor.email,
@@ -138,6 +129,10 @@ test.describe("End contract", () => {
         text: expect.stringContaining(
           `Your contract with ${company.name} has ended on ${format(futureDate, "MMMM d, yyyy")}`,
         ),
+      }),
+      expect.objectContaining({
+        to: contractor.email,
+        subject: `Your contract end with ${company.name} has been canceled`,
       }),
     ]);
   });

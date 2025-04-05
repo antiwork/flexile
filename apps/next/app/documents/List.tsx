@@ -131,7 +131,7 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
   const company = useCurrentCompany();
   const [redirectUrl] = useQueryState("next");
   const router = useRouter();
-  const [slug] = trpc.documents.templates.getSubmitterSlug.useSuspenseQuery({
+  const [{ slug, readonlyFields }] = trpc.documents.templates.getSubmitterSlug.useSuspenseQuery({
     id: document.docusealSubmissionId,
     companyId: company.id,
   });
@@ -149,6 +149,7 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
     <Modal open onClose={onClose}>
       <DocusealForm
         src={`https://docuseal.com/s/${slug}`}
+        readonlyFields={readonlyFields}
         onComplete={() =>
           signDocument.mutate({
             companyId: company.id,

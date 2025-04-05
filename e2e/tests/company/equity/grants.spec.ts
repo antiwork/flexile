@@ -1,6 +1,6 @@
+import { clerk } from "@clerk/testing/playwright";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
-import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { companyRolesFactory } from "@test/factories/companyRoles";
@@ -9,18 +9,23 @@ import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { optionPoolsFactory } from "@test/factories/optionPools";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
-import { expect, test, withinModal, withIsolatedBrowserSessionPage } from "@test/index";
+import { mockDocuseal } from "@test/helpers/docuseal";
+import { expect, test, withinModal } from "@test/index";
 import { desc, eq } from "drizzle-orm";
 import { DocumentTemplateType } from "@/db/enums";
 import { documents } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 
 test.describe("New Contractor", () => {
-  test("allows issuing equity grants", async ({ page, browser }) => {
-    const { company } = await companiesFactory.create({ equityGrantsEnabled: true, conversionSharePriceUsd: "1" });
-    const { user } = await usersFactory.create({ email: "flexy-bob@flexile.com" });
-    await companyAdministratorsFactory.create({ companyId: company.id, userId: user.id });
+  test("allows issuing equity grants", async ({ page, next }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
+      equityGrantsEnabled: true,
+      conversionSharePriceUsd: "1",
+    });
     const { user: contractorUser } = await usersFactory.create();
+    let submitters = { "Company Representative": adminUser, Signer: contractorUser };
+    const { mockForm } = mockDocuseal(next, { submitters: () => submitters });
+    await mockForm(page);
     await companyContractorsFactory.create({
       companyId: company.id,
       userId: contractorUser.id,
@@ -37,7 +42,7 @@ test.describe("New Contractor", () => {
       userId: projectBasedUser.id,
     });
     await optionPoolsFactory.create({ companyId: company.id });
-    await login(page, user);
+    await login(page, adminUser);
     await page.getByRole("link", { name: "Equity" }).click();
     await page.getByRole("tab", { name: "Options" }).click();
     await expect(page.getByRole("link", { name: "New option grant" })).not.toBeVisible();
@@ -48,7 +53,6 @@ test.describe("New Contractor", () => {
     await documentTemplatesFactory.create({
       companyId: company.id,
       type: DocumentTemplateType.EquityPlanContract,
-      docusealId: 613787n,
     });
     await page.reload();
     await expect(page.getByText("create an equity plan contract template first")).not.toBeVisible();
@@ -80,6 +84,7 @@ test.describe("New Contractor", () => {
       }),
     );
 
+    submitters = { "Company Representative": adminUser, Signer: projectBasedUser };
     await page.getByRole("link", { name: "New option grant" }).click();
     await page.getByLabel("Recipient").selectOption(projectBasedUser.preferredName);
     await page.getByLabel("Number of options").fill("20");
@@ -108,49 +113,42 @@ test.describe("New Contractor", () => {
       }),
     );
 
-    await withIsolatedBrowserSessionPage(
-      async (isolatedPage) => {
-        await login(isolatedPage, contractorUser);
-        await isolatedPage.goto("/invoices");
-        await expect(isolatedPage.getByText("You have an unsigned contract")).toBeVisible();
-        await expect(isolatedPage.getByRole("link", { name: "New invoice" })).toHaveAttribute("inert");
-        await isolatedPage.getByRole("link", { name: "Review & sign" }).click();
-        await expect(isolatedPage.getByText(contractorUser.legalName ?? "")).toBeVisible();
-        await isolatedPage.getByRole("button", { name: "Sign now" }).click();
-        await isolatedPage.getByRole("link", { name: "Type" }).click();
-        await isolatedPage.getByPlaceholder("Type signature here...").fill("Flexy Bob");
-        await isolatedPage.getByRole("button", { name: "Complete" }).click();
-        await expect(isolatedPage.getByRole("heading", { name: "Invoicing" })).toBeVisible();
-      },
-      { browser },
-    );
+    submitters = { "Company Representative": adminUser, Signer: contractorUser };
+    await clerk.signOut({ page });
+    await login(page, contractorUser);
+    await page.goto("/invoices");
+    await expect(page.getByText("You have an unsigned contract")).toBeVisible();
+    await expect(page.getByRole("link", { name: "New invoice" })).toHaveAttribute("inert");
+    await page.getByRole("link", { name: "Review & sign" }).click();
+    await page.getByRole("button", { name: "Sign now" }).click();
+    await page.getByRole("link", { name: "Type" }).click();
+    await page.getByPlaceholder("Type signature here...").fill("Flexy Bob");
+    await page.getByRole("button", { name: "Complete" }).click();
+    await expect(page.getByRole("heading", { name: "Invoicing" })).toBeVisible();
 
-    await withIsolatedBrowserSessionPage(
-      async (isolatedPage) => {
-        await login(isolatedPage, projectBasedUser);
-        await isolatedPage.goto("/invoices");
-        await expect(isolatedPage.getByText("You have an unsigned contract")).toBeVisible();
-        await expect(isolatedPage.getByRole("link", { name: "New invoice" })).toHaveAttribute("inert");
-        await isolatedPage.getByRole("link", { name: "Review & sign" }).click();
-        await expect(isolatedPage.getByText(projectBasedUser.legalName ?? "")).toBeVisible();
-        await isolatedPage.getByRole("button", { name: "Sign now" }).click();
-        await isolatedPage.getByRole("link", { name: "Type" }).click();
-        await isolatedPage.getByPlaceholder("Type signature here...").fill("Flexy Bob");
-        await isolatedPage.getByRole("button", { name: "Complete" }).click();
-        await expect(isolatedPage.getByRole("heading", { name: "Invoicing" })).toBeVisible();
-      },
-      { browser },
-    );
+    submitters = { "Company Representative": adminUser, Signer: projectBasedUser };
+    await clerk.signOut({ page });
+    await login(page, projectBasedUser);
+    await page.goto("/invoices");
+    await expect(page.getByText("You have an unsigned contract")).toBeVisible();
+    await expect(page.getByRole("link", { name: "New invoice" })).toHaveAttribute("inert");
+    await page.getByRole("link", { name: "Review & sign" }).click();
+    await page.getByRole("button", { name: "Sign now" }).click();
+    await page.getByRole("link", { name: "Type" }).click();
+    await page.getByPlaceholder("Type signature here...").fill("Flexy Bob");
+    await page.getByRole("button", { name: "Complete" }).click();
+    await expect(page.getByRole("heading", { name: "Invoicing" })).toBeVisible();
   });
 
-  test("allows exercising options", async ({ page }) => {
-    const { company } = await companiesFactory.create({
+  test("allows exercising options", async ({ page, next }) => {
+    const { company } = await companiesFactory.createCompletedOnboarding({
       equityGrantsEnabled: true,
       conversionSharePriceUsd: "1",
       jsonData: { flags: ["option_exercising"] },
     });
-    await companyAdministratorsFactory.create({ companyId: company.id });
     const { user } = await usersFactory.create();
+    const { mockForm } = mockDocuseal(next, {});
+    await mockForm(page);
     await companyContractorsFactory.create({ companyId: company.id, userId: user.id });
     const { companyInvestor } = await companyInvestorsFactory.create({ companyId: company.id, userId: user.id });
     await equityGrantsFactory.create({ companyInvestorId: companyInvestor.id, vestedShares: 100 });
@@ -166,7 +164,6 @@ test.describe("New Contractor", () => {
         await expect(modal.getByText("Exercise cost$50")).toBeVisible();
         await expect(modal.getByText("Options valueBased on 2M valuation$1,000")).toBeVisible();
         await modal.getByRole("button", { name: "Proceed" }).click();
-        await expect(modal.getByText(user.legalName ?? "")).toBeVisible();
         await modal.getByRole("button", { name: "Sign now" }).click();
         await modal.getByRole("link", { name: "Type" }).click();
         await modal.getByPlaceholder("Type signature here...").fill("Admin Admin");

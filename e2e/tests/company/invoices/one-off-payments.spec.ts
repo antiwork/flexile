@@ -1,3 +1,4 @@
+import { clerk } from "@clerk/testing/playwright";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
@@ -7,7 +8,7 @@ import { invoicesFactory } from "@test/factories/invoices";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { findRequiredTableRow } from "@test/helpers/matchers";
-import { expect, test, withIsolatedBrowserSessionPage } from "@test/index";
+import { expect, test } from "@test/index";
 import { format } from "date-fns";
 import { eq } from "drizzle-orm";
 import { companies, equityGrants, invoices } from "@/db/schema";
@@ -354,7 +355,6 @@ test.describe("One-off payments", () => {
   test.describe("invoice list visibility", () => {
     test("does not show one-off payments in the admin invoice list while they're not accepted by the payee", async ({
       page,
-      browser,
       sentEmails: _,
     }) => {
       await login(page, adminUser);
@@ -376,60 +376,52 @@ test.describe("One-off payments", () => {
       await page.waitForURL(/tab=history/u);
       await expect(page.getByText("No invoices to display.")).toBeVisible();
 
-      await withIsolatedBrowserSessionPage(
-        async (workerPage) => {
-          await login(workerPage, workerUser);
+      await clerk.signOut({ page });
+      await login(page, workerUser);
 
-          await workerPage.getByRole("link", { name: "Invoices" }).click();
+      await page.getByRole("link", { name: "Invoices" }).click();
 
-          const invoiceRow = await findRequiredTableRow(workerPage, {
-            "Invoice ID": "O-0001",
-            Amount: "$123.45",
-          });
+      const invoiceRow = await findRequiredTableRow(page, {
+        "Invoice ID": "O-0001",
+        Amount: "$123.45",
+      });
 
-          await invoiceRow.click();
-          await expect(workerPage.getByRole("cell", { name: "Bonus!" })).toBeVisible();
-          // await page.waitForTimeout(100000);
+      await invoiceRow.click();
+      await expect(page.getByRole("cell", { name: "Bonus!" })).toBeVisible();
+      // await page.waitForTimeout(100000);
 
-          await workerPage.getByRole("button", { name: "Accept payment" }).click();
-          const acceptPaymentModal = workerPage.getByRole("dialog");
-          await expect(acceptPaymentModal).toContainText("Total value $123.45", { useInnerText: true });
-          await acceptPaymentModal.getByRole("button", { name: "Accept payment" }).click();
-          await expect(acceptPaymentModal).not.toBeVisible();
-        },
-        { browser },
-      );
+      await page.getByRole("button", { name: "Accept payment" }).click();
+      const acceptPaymentModal = page.getByRole("dialog");
+      await expect(acceptPaymentModal).toContainText("Total value $123.45", { useInnerText: true });
+      await acceptPaymentModal.getByRole("button", { name: "Accept payment" }).click();
+      await expect(acceptPaymentModal).not.toBeVisible();
 
-      await withIsolatedBrowserSessionPage(
-        async (adminPage) => {
-          await login(adminPage, adminUser);
+      await clerk.signOut({ page });
+      await login(page, adminUser);
 
-          await adminPage.getByRole("link", { name: "Invoices" }).click();
-          await expect(adminPage.getByText("No invoices to display.")).toBeVisible();
-          await adminPage.getByRole("tab", { name: "History" }).click();
-          await adminPage.waitForURL(/tab=history/u);
-          await expect(adminPage.getByText("No invoices to display.")).not.toBeVisible();
-          await expect(adminPage.getByRole("row", { name: "$123.45" })).toBeVisible();
+      await page.getByRole("link", { name: "Invoices" }).click();
+      await expect(page.getByText("No invoices to display.")).toBeVisible();
+      await page.getByRole("tab", { name: "History" }).click();
+      await page.waitForURL(/tab=history/u);
+      await expect(page.getByText("No invoices to display.")).not.toBeVisible();
+      await expect(page.getByRole("row", { name: "$123.45" })).toBeVisible();
 
-          await db.update(companies).set({ requiredInvoiceApprovalCount: 1 }).where(eq(companies.id, company.id));
+      await db.update(companies).set({ requiredInvoiceApprovalCount: 1 }).where(eq(companies.id, company.id));
 
-          await adminPage.reload();
-          await adminPage.waitForURL(/tab=history/u);
-          await expect(adminPage.getByText("No invoices to display.")).toBeVisible();
+      await page.reload();
+      await page.waitForURL(/tab=history/u);
+      await expect(page.getByText("No invoices to display.")).toBeVisible();
 
-          await adminPage.getByRole("tab", { name: "Open" }).click();
-          await adminPage.waitForURL(/invoices$/u);
-          await expect(adminPage.getByRole("row", { name: "$123.45" })).toBeVisible();
+      await page.getByRole("tab", { name: "Open" }).click();
+      await page.waitForURL(/invoices$/u);
+      await expect(page.getByRole("row", { name: "$123.45" })).toBeVisible();
 
-          await adminPage.getByRole("button", { name: "Pay now" }).click();
+      await page.getByRole("button", { name: "Pay now" }).click();
 
-          await expect(adminPage.getByText("No invoices to display.")).toBeVisible();
-          await adminPage.getByRole("tab", { name: "History" }).click();
-          await adminPage.waitForURL(/tab=history/u);
-          await expect(adminPage.getByRole("row", { name: "$123.45 Payment scheduled" })).toBeVisible();
-        },
-        { browser },
-      );
+      await expect(page.getByText("No invoices to display.")).toBeVisible();
+      await page.getByRole("tab", { name: "History" }).click();
+      await page.waitForURL(/tab=history/u);
+      await expect(page.getByRole("row", { name: "$123.45 Payment scheduled" })).toBeVisible();
     });
   });
 });

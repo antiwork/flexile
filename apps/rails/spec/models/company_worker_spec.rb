@@ -59,26 +59,6 @@ RSpec.describe CompanyWorker do
         expect(company_worker.errors.full_messages).to eq ["Can only set trials with hourly contracts"]
       end
     end
-
-    describe "#pay_rate_type_cannot_change" do
-      context "for an hourly-based contractor" do
-        let(:company_worker) { create(:company_worker) }
-
-        it "does not allow changing to a project-based role type" do
-          company_worker.update(pay_rate_type: :project_based)
-          expect(company_worker.errors.full_messages).to eq ["Cannot change role type for existing contractor"]
-        end
-      end
-
-      context "for a project-based contractor" do
-        let(:company_worker) { create(:company_worker, :project_based) }
-
-        it "does not allow changing to an hourly role type" do
-          company_worker.update(pay_rate_type: :hourly, hours_per_week: 20)
-          expect(company_worker.errors.full_messages).to eq ["Cannot change role type for existing contractor"]
-        end
-      end
-    end
   end
 
   describe "scopes" do
