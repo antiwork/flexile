@@ -89,7 +89,7 @@ gem "money", "~> 6.16"
 if ENV["FLEXILE_SIDEKIQ_PRO_DISABLED"] == "true"
   gem "sidekiq", "~> 8"
 else
-  gem "sidekiq-pro", "~> 7", source: "https://gems.contribsys.com/"
+  gem "sidekiq-pro", "~> 8", source: "https://gems.contribsys.com/"
 end
 
 gem "aws-sdk-s3", "~> 1.117"
