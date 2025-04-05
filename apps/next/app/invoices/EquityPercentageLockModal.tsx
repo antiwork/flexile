@@ -1,6 +1,6 @@
 import Link from "next/link";
-import Button from "@/components/Button";
 import Modal from "@/components/Modal";
+import { Button } from "@/components/ui/button";
 
 const EquityPercentageLockModal = ({
   open,

@@ -2,10 +2,10 @@ import { Bars2Icon, BoldIcon, ItalicIcon, LinkIcon, ListBulletIcon, UnderlineIco
 import type { Content } from "@tiptap/core";
 import { EditorContent, isList, useEditor } from "@tiptap/react";
 import React, { useEffect, useState } from "react";
-import Button from "@/components/Button";
 import Input, { formGroupClasses } from "@/components/Input";
 import { linkClasses } from "@/components/Link";
 import Modal from "@/components/Modal";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/utils";
 import { richTextExtensions } from "@/utils/richText";
 
