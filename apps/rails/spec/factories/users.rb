@@ -28,7 +28,7 @@ FactoryBot.define do
     end
 
     after :create do |user, evaluator|
-      create(:wise_recipient, user:) unless evaluator.without_bank_account
+      create(:wise_recipient, user:) unless evaluator.without_bank_account if WISE_API_KEY.present?
       create(:user_compliance_info, user:) unless evaluator.without_compliance_info
     end
 
