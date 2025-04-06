@@ -47,7 +47,6 @@ test.describe("Tax settings", () => {
     });
 
     test("allows editing tax information", async ({ page, sentEmails }) => {
-      throw "a";
       await page.goto("/settings/tax");
       await expect(
         page.getByText("These details will be included in your invoices and applicable tax forms."),
