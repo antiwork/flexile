@@ -5,6 +5,9 @@ on:
 permissions:
   contents: read
 
+env:
+  CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+
 jobs:
   autofix:
     runs-on: ubicloud-standard-2
@@ -14,8 +17,6 @@ jobs:
 
       - name: Build setup
         uses: ./.github/common/
-        with:
-          vercel-key: ${{ secrets.VERCEL_ENV_KEY }}
 
       - run: pnpm run setup
 

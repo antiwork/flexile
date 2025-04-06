@@ -7,12 +7,6 @@ GIT
       capybara (~> 3.36)
 
 GEM
-  remote: https://gems.contribsys.com/
-  specs:
-    sidekiq-pro (7.3.6)
-      sidekiq (>= 7.3.7, < 8)
-
-GEM
   remote: https://rubygems.org/
   specs:
     actioncable (8.0.2)
@@ -611,7 +605,7 @@ GEM
       tilt
     securerandom (0.4.1)
     selectize-rails (0.12.6)
-    selenium-webdriver (4.29.1)
+    selenium-webdriver (4.30.1)
       base64 (~> 0.2)
       logger (~> 1.4)
       rexml (~> 3.2, >= 3.2.5)
@@ -758,10 +752,10 @@ DEPENDENCIES
   rubocop-rspec (~> 3.5.0)
   ruby-openai (~> 8.0)
   rubyXL (~> 3.4)
-  selenium-webdriver (~> 4.29.0)
+  selenium-webdriver (~> 4.30.0)
   shoulda-matchers (~> 6.0)
+  sidekiq (~> 7)
   sidekiq-cron (~> 2.0)
-  sidekiq-pro (~> 7)!
   slack-notifier (~> 2.4)
   sprockets (~> 4.0)
   sprockets-rails (~> 3.4)

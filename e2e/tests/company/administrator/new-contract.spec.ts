@@ -6,7 +6,7 @@ import { companyRolesFactory } from "@test/factories/companyRoles";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { mockDocuseal as mockDocusealHelper } from "@test/helpers/docuseal";
-import { expect, type Page, test, withinModal, withIsolatedBrowserSessionPage } from "@test/index";
+import { expect, type Page, test, withinModal } from "@test/index";
 import { desc, eq } from "drizzle-orm";
 import type { NextFixture } from "next/experimental/testmode/playwright";
 import { companies, companyContractors, users } from "@/db/schema";
@@ -92,7 +92,7 @@ test.describe("New Contractor", () => {
       },
     });
 
-  test("allows inviting a contractor", async ({ page, browser, next }) => {
+  test("allows inviting a contractor", async ({ page, next }) => {
     const { mockForm } = mockDocuseal(next, {
       __payRate: "99 per hour",
       __role: "Hourly Role 1",
@@ -121,20 +121,15 @@ test.describe("New Contractor", () => {
     await expect(row).toContainText("Invited");
     const [deletedUser] = await db.delete(users).where(eq(users.email, "flexy-bob@flexile.com")).returning();
 
-    await withIsolatedBrowserSessionPage(
-      async (isolatedPage) => {
-        await mockForm(isolatedPage);
-        const { user } = await usersFactory.create({ id: assertDefined(deletedUser).id });
-        await login(isolatedPage, user);
-        await isolatedPage.getByRole("link", { name: "Review & sign" }).click();
-        await isolatedPage.getByRole("button", { name: "Sign now" }).click();
-        await isolatedPage.getByRole("link", { name: "Type" }).click();
-        await isolatedPage.getByPlaceholder("Type signature here...").fill("Flexy Bob");
-        await isolatedPage.getByRole("button", { name: "Complete" }).click();
-        await expect(isolatedPage.getByRole("heading", { name: "Invoicing" })).toBeVisible();
-      },
-      { browser },
-    );
+    await clerk.signOut({ page });
+    const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
+    await login(page, newUser);
+    await page.getByRole("link", { name: "Review & sign" }).click();
+    await page.getByRole("button", { name: "Sign now" }).click();
+    await page.getByRole("link", { name: "Type" }).click();
+    await page.getByPlaceholder("Type signature here...").fill("Flexy Bob");
+    await page.getByRole("button", { name: "Complete" }).click();
+    await expect(page.getByRole("heading", { name: "Invoicing" })).toBeVisible();
   });
 
   test("allows inviting a project-based contractor", async ({ page, next }) => {
@@ -165,9 +160,9 @@ test.describe("New Contractor", () => {
     await expect(row).toContainText("Invited");
     const [deletedUser] = await db.delete(users).where(eq(users.email, "flexy-bob@flexile.com")).returning();
 
-    const { user } = await usersFactory.create({ id: assertDefined(deletedUser).id });
     await clerk.signOut({ page });
-    await login(page, user);
+    const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
+    await login(page, newUser);
     await page.getByRole("link", { name: "Review & sign" }).click();
     await page.getByRole("button", { name: "Sign now" }).click();
     await page.getByRole("link", { name: "Type" }).click();

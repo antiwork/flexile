@@ -6,6 +6,15 @@ concurrency:
   group: ${{ github.ref }}-playwright
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
+env:
+  CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+  RAILS_ENV: test
+  STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+  WISE_API_KEY: ${{ secrets.WISE_API_KEY }}
+  WISE_PROFILE_ID: ${{ secrets.WISE_PROFILE_ID }}
+
 jobs:
   playwright:
     name: Tests (${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
@@ -21,8 +30,6 @@ jobs:
 
       - name: Build setup
         uses: ./.github/common/
-        with:
-          vercel-key: ${{ secrets.VERCEL_ENV_KEY }}
 
       - run: node docker/createCertificate.js
 

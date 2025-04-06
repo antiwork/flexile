@@ -1,16 +1,17 @@
+import { clerk } from "@clerk/testing/playwright";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { login } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
-import { expect, test, withinModal, withIsolatedBrowserSessionPage } from "@test/index";
+import { expect, test, withinModal } from "@test/index";
 import { addDays, addYears, format, formatISO } from "date-fns";
 import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
 import { assert } from "@/utils/assert";
 
 test.describe("End contract", () => {
-  test("allows admin to end contractor's contract", async ({ page, sentEmails, next, browser }) => {
+  test("allows admin to end contractor's contract", async ({ page, sentEmails, next }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
 
     await login(page, adminUser);
@@ -76,19 +77,14 @@ test.describe("End contract", () => {
       page.getByRole("row").filter({ hasText: contractor.preferredName }).filter({ hasText: "In Progress" }),
     ).toBeVisible();
 
-    await withIsolatedBrowserSessionPage(
-      async (isolatedPage) => {
-        await mockForm(isolatedPage);
-        await login(isolatedPage, contractor);
-        await isolatedPage.getByRole("link", { name: "Review & sign" }).click();
-        await isolatedPage.getByRole("button", { name: "Sign now" }).click();
-        await isolatedPage.getByRole("link", { name: "Type" }).click();
-        await isolatedPage.getByPlaceholder("Type signature here...").fill("Flexy Bob");
-        await isolatedPage.getByRole("button", { name: "Complete" }).click();
-        await expect(isolatedPage.getByRole("heading", { name: "Invoicing" })).toBeVisible();
-      },
-      { browser },
-    );
+    await clerk.signOut({ page });
+    await login(page, contractor);
+    await page.getByRole("link", { name: "Review & sign" }).click();
+    await page.getByRole("button", { name: "Sign now" }).click();
+    await page.getByRole("link", { name: "Type" }).click();
+    await page.getByPlaceholder("Type signature here...").fill("Flexy Bob");
+    await page.getByRole("button", { name: "Complete" }).click();
+    await expect(page.getByRole("heading", { name: "Invoicing" })).toBeVisible();
   });
 
   test("allows admin to end contractor's contract in the future", async ({ page, sentEmails }) => {

@@ -1,57 +1,55 @@
 #!/bin/bash
 
-# Exit on error
 set -e
+
+function install_if_missing() {
+  local cmd=$1
+  local name=$2
+  local install_cmd=$3
+
+  if command -v "$cmd" &> /dev/null; then
+    return 0
+  fi
+
+  read -p "Would you like to install $name? (y/N) " answer
+  if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
+    eval "$install_cmd"
+    return 0
+  fi
+  return 1
+}
 
 echo "🚀 Setting up development environment..."
 
-# Check if Homebrew is installed
-if ! command -v brew &> /dev/null; then
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+if install_if_missing "brew" "Homebrew" "curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | bash"; then
+  brew install postgresql
+  brew services start postgresql
+  psql -c "CREATE USER username WITH LOGIN SUPERUSER PASSWORD 'password';" || true
 else
-  echo "✓ Homebrew already installed"
+  read -p "Please make sure PostgreSQL headers are installed before continuing."
 fi
 
-# Install RVM and Ruby
-\curl -sSL https://get.rvm.io | bash
-source $HOME/.rvm/scripts/rvm
-RUBY_VERSION=$(cat .ruby-version)
-rvm install "ruby-$RUBY_VERSION"
-rvm use "ruby-$RUBY_VERSION"
-
-# Install PostgreSQL
-brew install postgresql
-brew services start postgresql
-createdb flexile_development || true
-psql -c "CREATE USER username WITH LOGIN SUPERUSER PASSWORD 'password';" || true
+if install_if_missing "ruby" "Ruby using rbenv" "curl -fsSL https://github.com/rbenv/rbenv-installer/raw/HEAD/bin/rbenv-installer | bash"; then
+  rbenv install -s $(cat .ruby-version)
+else
+  read -p "Please make sure Ruby is installed before continuing."
+fi
 
 corepack enable
-pnpm install
 
-# Ask which version of Sidekiq to use
-echo "Do you want to use Sidekiq Pro? (y/n)"
-read use_sidekiq_pro
+if [ ! -f ".env" ]; then
+    read -p "Would you like to pull environment variables from Vercel? (y/N) " answer
 
-if [[ $use_sidekiq_pro == "y" ]]; then
-  echo "Please enter your Sidekiq Pro credentials (format: username:password):"
-  read sidekiq_pro_credentials
-
-  # Configure bundler for sidekiq-pro
-  bundle config gems.contribsys.com "$sidekiq_pro_credentials"
-else
-  # Use regular Sidekiq
-  echo "Add FLEXILE_SIDEKIQ_PRO_DISABLED=true to your shell's rc file (e.g. ~/.bashrc)"
-  echo "echo 'export FLEXILE_SIDEKIQ_PRO_DISABLED=true' >> ~/.bashrc"
+    if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
+        pnpx vercel link && pnpx vercel env pull .env
+    else
+      cp .env.sample .env
+      echo "A sample .env file has been created. Please fill it in with your own keys."
+    fi
 fi
 
-# Setup Vercel environment
-pnpm vercel link
-pnpm vercel env pull .env
 ln -sf $PWD/.env ./apps/next/.env
 
-cd apps/rails
-
-bundle install
 gem install foreman
 
 echo "✨ Setup complete! You can now start the development server."
