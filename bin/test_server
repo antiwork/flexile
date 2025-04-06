@@ -18,7 +18,7 @@ export RAILS_ENV=test
 export NODE_ENV=test
 
 cd apps/rails
-bundle exec rails db:drop db:create db:schema:load db:seed_test_data
+bundle exec rails db:drop db:create db:schema:load
 cd ../..
 
 foreman start -f Procfile.test -e .env.test

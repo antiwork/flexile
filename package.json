@@ -153,8 +153,7 @@
       "inngest": "patches/inngest.patch",
       "next": "patches/next.patch",
       "quickbooks-node-promise": "patches/quickbooks-node-promise.patch",
-      "server-only": "patches/server-only.patch",
-      "playwright": "patches/playwright.patch"
+      "server-only": "patches/server-only.patch"
     },
     "onlyBuiltDependencies": [
       "bcrypt",

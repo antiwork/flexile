@@ -11,32 +11,13 @@ import { companies, userComplianceInfos, users, wiseRecipients } from "@/db/sche
 test.describe("Contractor onboarding - bank account", () => {
   let company: typeof companies.$inferSelect;
   let onboardingUser: typeof users.$inferSelect;
-  const userAttributes = {
-    legalName: "Gumroad Contractor",
-    email: "contractor@gumroad.com",
-    countryCode: "US",
-    citizenshipCountryCode: "US",
-    city: "Honolulu",
-    country: "United States",
-    streetAddress: "59-720 Kamehameha Hwy",
-    state: "Hawaii",
-    zipCode: "96712",
-  };
-  const formValues = {
-    ...userAttributes,
-    routingNumber: "071004200",
-    accountNumber: "12345678",
-  };
 
   test.beforeEach(async ({ page }) => {
     company = (await companiesFactory.createCompletedOnboarding()).company;
 
-    onboardingUser = (await usersFactory.create(userAttributes, { withoutBankAccount: true })).user;
+    onboardingUser = (await usersFactory.create({}, { withoutBankAccount: true })).user;
     await companyContractorsFactory.create(
-      {
-        companyId: company.id,
-        userId: onboardingUser.id,
-      },
+      { companyId: company.id, userId: onboardingUser.id },
       { withUnsignedContract: true },
     );
 
@@ -47,14 +28,14 @@ test.describe("Contractor onboarding - bank account", () => {
     await page.getByRole("button", { name: "Set up" }).click();
 
     await fillOutUsdBankAccountForm(page, {
-      legalName: ` ${formValues.legalName} `,
-      routingNumber: `${formValues.routingNumber} `,
-      accountNumber: ` ${formValues.accountNumber} `,
-      country: formValues.country,
-      city: ` ${formValues.city} `,
-      streetAddress: ` ${formValues.streetAddress} `,
-      state: formValues.state,
-      zipCode: ` ${formValues.zipCode} `,
+      legalName: ` ${onboardingUser.legalName} `,
+      routingNumber: `071004200 `,
+      accountNumber: ` 12345678 `,
+      country: "United States",
+      city: ` ${onboardingUser.city} `,
+      streetAddress: ` ${onboardingUser.streetAddress} `,
+      state: `${onboardingUser.state}`,
+      zipCode: ` ${onboardingUser.zipCode} `,
     });
 
     await page.getByRole("button", { name: "Save bank account" }).click();
@@ -70,14 +51,14 @@ test.describe("Contractor onboarding - bank account", () => {
       .then(takeOrThrow);
     expect(wiseRecipient.currency).toBe("USD");
     expect(wiseRecipient.lastFourDigits).toBe("5678");
-    expect(wiseRecipient.accountHolderName).toBe(userAttributes.legalName);
+    expect(wiseRecipient.accountHolderName).toBe(onboardingUser.legalName);
     expect(wiseRecipient.countryCode).toBe("US");
   });
 
   test("allows setting a bank account from Mexico", async ({ page }) => {
     await page.getByRole("button", { name: "Set up" }).click();
     await page.getByLabel("Currency").selectOption("MXN (Mexican Peso)");
-    await page.getByLabel("Full name of the account holder").fill(userAttributes.legalName);
+    await page.getByLabel("Full name of the account holder").fill(onboardingUser.legalName ?? "");
     await page.getByLabel("CLABE").fill("032180000118359719");
 
     await page.getByRole("button", { name: "Continue" }).click();
@@ -98,7 +79,7 @@ test.describe("Contractor onboarding - bank account", () => {
       .then(takeOrThrow);
     expect(wiseRecipient.currency).toBe("MXN");
     expect(wiseRecipient.lastFourDigits).toBe("9719");
-    expect(wiseRecipient.accountHolderName).toBe(userAttributes.legalName);
+    expect(wiseRecipient.accountHolderName).toBe(onboardingUser.legalName);
     expect(wiseRecipient.countryCode).toBe("MX");
   });
 
@@ -139,20 +120,20 @@ test.describe("Contractor onboarding - bank account", () => {
   test("prefills the user's information", async ({ page }) => {
     await page.getByRole("button", { name: "Set up" }).click();
 
-    await expect(page.getByLabel("Full name of the account holder")).toHaveValue(userAttributes.legalName);
+    await expect(page.getByLabel("Full name of the account holder")).toHaveValue(onboardingUser.legalName ?? "");
 
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByLabel("State")).toHaveValue("Hawaii"); // unabbreviated version
-    await expect(page.getByLabel("City")).toHaveValue(userAttributes.city);
-    await expect(page.getByLabel("Street address, apt number")).toHaveValue(userAttributes.streetAddress);
-    await expect(page.getByLabel("ZIP code")).toHaveValue(userAttributes.zipCode);
+    await expect(page.getByLabel("City")).toHaveValue(onboardingUser.city ?? "");
+    await expect(page.getByLabel("Street address, apt number")).toHaveValue(onboardingUser.streetAddress ?? "");
+    await expect(page.getByLabel("ZIP code")).toHaveValue(onboardingUser.zipCode ?? "");
   });
 
   test("validates name and bank account information", async ({ page }) => {
     await page.getByRole("button", { name: "Set up" }).click();
 
     // name
-    await fillOutUsdBankAccountForm(page, { ...formValues, legalName: "Da R" });
+    await page.getByLabel("Full name of the account holder").fill("Da R");
     await page.getByRole("button", { name: "Save bank account" }).click();
     await expect(page.getByLabel("Full name of the account holder")).not.toBeValid();
     await expect(page.getByText("This doesn't look like a full legal name.")).toBeVisible();
@@ -202,7 +183,7 @@ test.describe("Contractor onboarding - bank account", () => {
   test("allows an EUR Recipient to submit bank account info", async ({ page }) => {
     await page.getByRole("button", { name: "Set up" }).click();
     await page.getByLabel("Currency").selectOption("EUR (Euro)");
-    await expect(page.getByLabel("Full name of the account holder")).toHaveValue(userAttributes.legalName);
+    await expect(page.getByLabel("Full name of the account holder")).toHaveValue(onboardingUser.legalName ?? "");
     await page.getByLabel("IBAN").fill("HR7624020064583467589");
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByLabel("Country")).toHaveValue("United States");
@@ -219,14 +200,14 @@ test.describe("Contractor onboarding - bank account", () => {
   test("allows a CAD Recipient to submit bank account info", async ({ page }) => {
     await page.getByRole("button", { name: "Set up" }).click();
     await page.getByLabel("Currency").selectOption("CAD (Canadian Dollar)");
-    await expect(page.getByLabel("Full name of the account holder")).toHaveValue(userAttributes.legalName);
+    await expect(page.getByLabel("Full name of the account holder")).toHaveValue(onboardingUser.legalName ?? "");
     await page.getByLabel("Institution number").fill("006");
     await page.getByLabel("Transit number").fill("04841");
     await page.getByLabel("Account number").fill("3456712");
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByLabel("Country")).toHaveValue("United States");
     await page.getByLabel("Country").fill("Canada");
-    await page.getByLabel("City").fill(userAttributes.city);
+    await page.getByLabel("City").fill(onboardingUser.city ?? "");
     await page.getByLabel("Street address, apt number").fill("59-720 Kamehameha Hwy");
     await page.getByLabel("Province").fill("Alberta");
     await page.getByLabel("Post code").fill("A2A 2A2");

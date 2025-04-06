@@ -11,9 +11,6 @@ patchedDependencies:
   next:
     hash: 55356d5fd8dcf4f068b68724ac2f43aa66ba184e3138637caa28edeb6a2b7805
     path: patches/next.patch
-  playwright:
-    hash: 49bfc9d1362fd9a308125324dfba659b4063342c64ec5183fa29847507fdeda5
-    path: patches/playwright.patch
   quickbooks-node-promise:
     hash: a81b24213a9ab44e0f7a4920089c9e593a6fda1b0ea041c02459ed941d9c4746
     path: patches/quickbooks-node-promise.patch
@@ -6606,7 +6603,7 @@ snapshots:
 
   '@playwright/test@1.51.0':
     dependencies:
-      playwright: 1.51.0(patch_hash=49bfc9d1362fd9a308125324dfba659b4063342c64ec5183fa29847507fdeda5)
+      playwright: 1.51.0
 
   '@polka/url@1.0.0-next.28': {}
 
@@ -9953,7 +9950,7 @@ snapshots:
 
   playwright-core@1.51.0: {}
 
-  playwright@1.51.0(patch_hash=49bfc9d1362fd9a308125324dfba659b4063342c64ec5183fa29847507fdeda5):
+  playwright@1.51.0:
     dependencies:
       playwright-core: 1.51.0
     optionalDependencies:

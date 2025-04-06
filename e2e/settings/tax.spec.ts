@@ -25,7 +25,6 @@ test.describe("Tax settings", () => {
       await usersFactory.createWithoutComplianceInfo({
         legalName: "Caro Example",
         preferredName: "Caro",
-        email: "caro@example.com",
         birthDate: "1980-06-27",
       })
     ).user;
@@ -48,6 +47,7 @@ test.describe("Tax settings", () => {
     });
 
     test("allows editing tax information", async ({ page, sentEmails }) => {
+      throw "a";
       await page.goto("/settings/tax");
       await expect(
         page.getByText("These details will be included in your invoices and applicable tax forms."),

@@ -3,20 +3,36 @@ import { type Page } from "@playwright/test";
 import { db } from "@test/db";
 import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
+import { assertDefined } from "@/utils/assert";
 
 const clerkTestUsers = [
   { id: "user_2rV0f8ymVAsk3S0V6EhfSiQcGbK", email: "hi1+clerk_test@example.com" },
   { id: "user_2vEWnlPOcxlENwUAXNxdTTLWlHD", email: "hi2+clerk_test@example.com" },
 ];
+let clerkTestUser: (typeof clerkTestUsers)[number] | undefined;
 
-const clerkTestUser = clerkTestUsers[Number(process.env.TEST_WORKER_INDEX) - 1];
-export const clerkTestId = clerkTestUser?.id ?? "";
-export const clerkTestEmail = clerkTestUser?.email ?? "";
+export const clearClerkUser = async () => {
+  if (clerkTestUser) await db.update(users).set({ clerkId: null }).where(eq(users.clerkId, clerkTestUser.id));
+  clerkTestUser = undefined;
+};
+
+export const setClerkUser = async (id: bigint) => {
+  await clearClerkUser();
+  for (const user of clerkTestUsers) {
+    try {
+      await db.update(users).set({ clerkId: user.id }).where(eq(users.id, id));
+      clerkTestUser = user;
+      break;
+    } catch {}
+  }
+  return assertDefined(clerkTestUser);
+};
+
 export const login = async (page: Page, user: typeof users.$inferSelect) => {
-  await db.update(users).set({ clerkId: null }).where(eq(users.clerkId, clerkTestId));
-  await db.update(users).set({ clerkId: clerkTestId }).where(eq(users.id, user.id));
+  await setClerkUser(user.id);
   await page.goto("/login");
 
-  await clerk.signIn({ page, signInParams: { strategy: "email_code", identifier: clerkTestEmail } });
+  const clerkUser = await setClerkUser(user.id);
+  await clerk.signIn({ page, signInParams: { strategy: "email_code", identifier: clerkUser.email } });
   await page.waitForURL(/^(?!.*\/login$).*/u);
 };
