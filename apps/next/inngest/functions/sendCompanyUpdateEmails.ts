@@ -88,7 +88,7 @@ export default inngest.createFunction(
       return step.run(`send-update-emails-${batchIndex + 1}`, async () => {
         // TODO (helen): use `sendEmails` after debugging failures
         const emails = recipientBatch.map((recipient) => ({
-          from: `${name} via Flexile <noreply@${env.EMAIL_DOMAIN}>`,
+          from: `${name} via Flexile <noreply@${env.DOMAIN}>`,
           to: recipient.email,
           subject: `${name}: ${update.title} investor update`,
           react,

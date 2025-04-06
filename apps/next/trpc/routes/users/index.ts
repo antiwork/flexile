@@ -101,7 +101,7 @@ export const usersRouter = createRouter({
       await db.update(documents).set({ docusealSubmissionId: submission.id }).where(eq(documents.id, document.id));
 
       await sendEmail({
-        from: `Flexile <support@${env.EMAIL_DOMAIN}>`,
+        from: `Flexile <support@${env.DOMAIN}>`,
         to: admin.user.email,
         subject: `${userDisplayName(ctx.user)} has updated their tax information`,
         react: TaxSettingsChanged({

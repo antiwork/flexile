@@ -259,7 +259,7 @@ export const invoicesRouter = createRouter({
     const bankAccountLastFour = invoicer.wiseRecipients[0]?.lastFourDigits;
 
     await sendEmail({
-      from: `Flexile <support@${env.EMAIL_DOMAIN}>`,
+      from: `Flexile <support@${env.DOMAIN}>`,
       to: companyWorker.user.email,
       replyTo: companyWorker.company.email,
       subject: `🔴 Action needed: ${companyWorker.company.name} would like to pay you`,
