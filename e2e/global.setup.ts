@@ -2,8 +2,7 @@ import { clerkSetup } from "@clerk/testing/playwright";
 import { test as setup } from "@playwright/test";
 import { db } from "@test/db";
 import { sql } from "drizzle-orm";
-import { documentTemplates, wiseCredentials } from "@/db/schema";
-import env from "@/env";
+import { documentTemplates } from "@/db/schema";
 
 setup.describe.configure({ mode: "serial" });
 
@@ -12,10 +11,11 @@ setup("global setup", async () => {
     sql`SELECT tablename FROM pg_tables WHERE schemaname='public'`,
   );
 
-  const tables = result.rows.map(({ tablename }) => tablename).map((name) => `"public"."${name}"`);
-
+  const tables = result.rows
+    .map(({ tablename }) => tablename)
+    .filter((name) => !["_drizzle_migrations", "wise_credentials"].includes(name))
+    .map((name) => `"public"."${name}"`);
   await db.execute(sql`TRUNCATE TABLE ${sql.raw(tables.join(","))} CASCADE;`);
-  await db.insert(wiseCredentials).values({ profileId: env.WISE_PROFILE_ID, apiKey: env.WISE_API_KEY });
 
   await db.insert(documentTemplates).values({
     name: "Consulting agreement",

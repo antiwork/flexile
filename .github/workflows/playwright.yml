@@ -17,13 +17,8 @@ env:
 
 jobs:
   playwright:
-    name: Tests (${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
-    runs-on: ubicloud-standard-2
-    strategy:
-      fail-fast: false
-      matrix:
-        shardTotal: [5]
-        shardIndex: [1, 2, 3, 4, 5]
+    name: Tests
+    runs-on: ubicloud-standard-4
 
     steps:
       - uses: actions/checkout@v4
@@ -56,11 +51,11 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
 
       - name: Run Playwright tests
-        run: pnpm playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        run: pnpm playwright test
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report-${{ matrix.shardIndex }}
+          name: playwright-report
           path: playwright-report/
           retention-days: 7
