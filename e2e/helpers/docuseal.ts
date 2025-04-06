@@ -17,7 +17,6 @@ export const mockDocuseal = (
   },
 ) => {
   next.onFetch(async (request) => {
-    console.log(request.url);
     if (!submitters) return;
     if (request.url === "https://api.docuseal.com/submissions/init") {
       expect(await request.json()).toEqual({
