@@ -1,40 +1,19 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-function check_command() {
-  local cmd=$1
-  local install_msg=$2
-  local install_cmd=$3
+set -e
 
-  if ! command -v "$cmd" &> /dev/null; then
-    if [ -n "$install_cmd" ]; then
-      echo "$install_msg"
-      eval "$install_cmd"
-    else
-      echo "$install_msg"
-      exit 1
-    fi
-  fi
-}
-
-check_command "foreman" "Installing foreman..." "gem install foreman"
-
-# Check if .env exists
-if [ ! -f ".env" ]; then
-    echo ".env file not found."
-    read -p "Would you like to pull environment variables from Vercel? (y/n) " answer
-
-    if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
-        echo "Pulling environment variables from Vercel..."
-        npx vercel link && npx vercel env pull --environment=development .env
-    else
-        echo "Please set up your .env file by copying .env.sample to .env and filling in the required values"
-        exit 1
-    fi
-elif [ -f ".vercel/project.json" ]; then
-    echo "Found existing Vercel project configuration. Pulling latest environment variables..."
-    npx vercel env pull --environment=development .env
+if [ -f ".vercel/project.json" ]; then
+    pnpx vercel env pull .env
+elif [ ! -f ".env" ]; then
+    echo ".env file not found. Please run bin/setup first."
 fi
 
-export NODE_EXTRA_CA_CERTS="$(node docker/createCertificate.js)"
+pnpm install
+cd apps/rails
+bundle install
+bin/rails db:prepare
+cd ../..
 
+export NODE_EXTRA_CA_CERTS="$(node docker/createCertificate.js)"
+make local
 foreman start -f Procfile.dev "$@"
