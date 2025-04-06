@@ -11,7 +11,6 @@ const env = z
     AWS_REGION: z.string(),
     S3_PRIVATE_BUCKET: z.string(),
     S3_PUBLIC_BUCKET: z.string(),
-    DOMAIN: z.string(),
     QUICKBOOKS_CLIENT_ID: z.string(),
     QUICKBOOKS_CLIENT_SECRET: z.string(),
     GH_CLIENT_ID: z.string(),
