@@ -29,6 +29,7 @@ export const test = baseTest.extend<{
     async ({}, use) => {
       console.log(test.info().title);
       await use(undefined);
+      console.log(test.info().title, test.info().errors);
       await clearClerkUser();
     },
     { auto: true },

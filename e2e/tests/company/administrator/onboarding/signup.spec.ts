@@ -4,7 +4,7 @@ import { faker } from "@faker-js/faker";
 import { db, takeOrThrow } from "@test/db";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
-import { users } from "@/db/schema";
+import { companies, users } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 
 test.describe("Company administrator signup", () => {
