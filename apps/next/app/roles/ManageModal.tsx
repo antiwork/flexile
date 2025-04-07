@@ -46,7 +46,7 @@ const ManageModal = ({
     const defaults = {
       id: "",
       name: "",
-      payRateInSubunits: 0,
+      payRateInSubunits: null,
       payRateType: PayRateType.Hourly,
       trialEnabled: false,
       trialPayRateInSubunits: 0,

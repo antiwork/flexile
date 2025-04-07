@@ -491,7 +491,7 @@ const DetailsTab = ({
   const [hoursPerWeek, setHoursPerWeek] = useState(contractor.hoursPerWeek);
   const selectedRole = roles.find((role) => role.id === selectedRoleId);
   useEffect(() => {
-    if (selectedRole && selectedRoleId !== contractor.role) setPayRateInSubunits(selectedRole.payRateInSubunits);
+    if (selectedRole && selectedRoleId !== contractor.role) setPayRateInSubunits(selectedRole.payRateInSubunits ?? 0);
   }, [selectedRole]);
   useEffect(() => {
     setPayRateInSubunits(contractor.payRateInSubunits);

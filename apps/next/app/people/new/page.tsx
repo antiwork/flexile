@@ -60,7 +60,7 @@ function Create() {
 
   useOnChange(() => {
     if (role) {
-      setRateUsd((onTrial ? role.trialPayRateInSubunits : role.payRateInSubunits) / 100);
+      setRateUsd((onTrial ? role.trialPayRateInSubunits : (role.payRateInSubunits ?? 0)) / 100);
       setHours(defaultHours);
     }
   }, [role, onTrial]);
@@ -109,7 +109,7 @@ function Create() {
             prefix="$"
             suffix={
               role?.payRateType === PayRateType.ProjectBased
-                ? "/ project"
+                ? `/ ${role?.unitOfWork || "project"}`
                 : role?.payRateType === PayRateType.Salary
                   ? "/ year"
                   : "/ hour"

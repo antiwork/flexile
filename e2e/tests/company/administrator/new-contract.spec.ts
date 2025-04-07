@@ -102,7 +102,7 @@ test.describe("New Contractor", () => {
       __role: "Hourly Role 1",
       __targetAnnualHours: "Target Annual Hours: 1,100",
       __maximumFee:
-        'Maximum fee payable to Contractor on this Project Assignment, including all items in the first two paragraphs above is $152,460 (the "Maximum Fee").',
+        'Maximum fee payable to Contractor on this Project Assignment, including all items in the first two paragraphs above is $1,52,460 (the "Maximum Fee").',
     });
     await fillForm(page, {});
 
