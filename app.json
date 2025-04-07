@@ -47,9 +47,6 @@
     "SECRET_KEY_BASE": {
       "required": true
     },
-    "SENDGRID_API_KEY": {
-      "required": true
-    },
     "WISE_API_KEY": {
       "required": true
     },

@@ -260,7 +260,7 @@ export const contractorsRouter = createRouter({
           }
           if (payRateType === PayRateType.Hourly) {
             await sendEmail({
-              from: `Flexile <support@${env.EMAIL_DOMAIN}>`,
+              from: `Flexile <support@${env.DOMAIN}>`,
               to: contractor.user.email,
               replyTo: ctx.company.email,
               subject: `Your rate has changed!`,
@@ -298,7 +298,7 @@ export const contractorsRouter = createRouter({
 
     if (updatedContractor) {
       await sendEmail({
-        from: `Flexile <support@${env.EMAIL_DOMAIN}>`,
+        from: `Flexile <support@${env.DOMAIN}>`,
         to: contractor.user.email,
         replyTo: ctx.company.email,
         subject: `Your contract end with ${ctx.company.name} has been canceled`,
@@ -342,7 +342,7 @@ export const contractorsRouter = createRouter({
 
       if (inactiveContractor) {
         await sendEmail({
-          from: `Flexile <support@${env.EMAIL_DOMAIN}>`,
+          from: `Flexile <support@${env.DOMAIN}>`,
           to: activeContractor.user.email,
           replyTo: ctx.company.email,
           subject: `Your contract with ${ctx.company.name} has ended`,
@@ -384,7 +384,7 @@ export const contractorsRouter = createRouter({
 
     if (updatedContractor) {
       await sendEmail({
-        from: `Flexile <support@${env.EMAIL_DOMAIN}>`,
+        from: `Flexile <support@${env.DOMAIN}>`,
         to: contractor.user.email,
         replyTo: ctx.company.email,
         subject: `🎉 You did it! Welcome to ${ctx.company.name}`,

@@ -8,7 +8,7 @@ import { renderTiptap } from "@/trpc";
 
 export const resend = new Resend(env.RESEND_API_KEY);
 export const BATCH_SIZE = 100; // Resend limit: https://resend.com/docs/api-reference/emails/send-batch-emails
-const defaultFrom = `Flexile <noreply@${env.EMAIL_DOMAIN}>`;
+const defaultFrom = `Flexile <noreply@${env.DOMAIN}>`;
 export const recipientSchema = z.object({ email: z.string() }).passthrough();
 
 type EmailOptions = Omit<CreateEmailOptions, "from" | "html" | "text"> & { from?: string; react: React.ReactNode };

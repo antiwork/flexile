@@ -9,6 +9,7 @@
   "prConcurrentLimit": 3,
   "packageRules": [
     { "groupName": "flipper packages", "matchPackageNames": ["/^flipper/"] },
+    { "groupName": "sidekiq", "matchPackageNames": ["/sidekiq/"] },
     { "matchPackageNames": "rails", "automerge": false }
   ],
   "github-actions": {

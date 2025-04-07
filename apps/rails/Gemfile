@@ -86,10 +86,10 @@ gem "devise_invitable", "~> 2.0"
 
 gem "money", "~> 6.16"
 
-if ENV["FLEXILE_SIDEKIQ_PRO_DISABLED"] == "true"
-  gem "sidekiq", "~> 8"
-else
+if ENV["BUNDLE_GEMS__CONTRIBSYS__COM"]
   gem "sidekiq-pro", "~> 7", source: "https://gems.contribsys.com/"
+else
+  gem "sidekiq", "~> 7"
 end
 
 gem "aws-sdk-s3", "~> 1.117"

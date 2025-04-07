@@ -18,7 +18,7 @@ runs:
     - run: pnpm i
       shell: bash
 
-    - run: pnpm vercel link --scope anti-work --yes --token ${{ inputs.vercel-key }} && pnpm vercel env pull .env --token ${{ inputs.vercel-key }} && ln -s $PWD/.env ./apps/next/.env
+    - run: cp .env.example .env && ln -s $PWD/.env ./apps/next/.env
       shell: bash
 
     - uses: ruby/setup-ruby@v1

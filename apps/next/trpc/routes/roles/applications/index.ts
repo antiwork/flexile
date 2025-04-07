@@ -146,7 +146,7 @@ export const roleApplicationsRouter = createRouter({
         const annualCompensation = calculateAnnualCompensation({ role: rate, application: input });
         await sendEmails(
           {
-            from: `${name} via Flexile <support@${env.EMAIL_DOMAIN}>`,
+            from: `${name} via Flexile <support@${env.DOMAIN}>`,
             replyTo: input.email,
             subject: `New application from ${input.name} for ${role.name}`,
             react: JobApplication({
