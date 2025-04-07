@@ -31,6 +31,15 @@ jobs:
       - name: Run docker compose
         run: docker compose -f docker/docker-compose-local-linux.yml up -d
 
+      - name: Cache Next build
+        id: next-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('apps/next/**/*.{ts,tsx}') }}
+          restore-keys: |
+            next-${{ runner.os }}-
+
       - run: NODE_ENV=test pnpm run build-next --no-lint
         shell: bash
 
@@ -42,7 +51,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             playwright-${{ runner.os }}-
 
