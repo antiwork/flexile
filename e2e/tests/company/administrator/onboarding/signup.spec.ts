@@ -46,7 +46,7 @@ test.describe("Company administrator signup", () => {
 
     await expect(page.getByText("Link your bank account")).toBeVisible();
 
-    const company = await db.query.companies.findFirst().then(takeOrThrow);
+    const company = await db.query.companies.findFirst({ where: eq(companies.name, companyName) }).then(takeOrThrow);
     expect(company.name).toBe(companyName);
     expect(company.streetAddress).toBe(streetAddress);
     expect(company.city).toBe(city);
