@@ -10,6 +10,7 @@ export * from "@playwright/test";
 type SentEmail = Omit<CreateEmailOptions, "html" | "text" | "react"> & { html: string; text: string };
 export const test = baseTest.extend<{
   sentEmails: SentEmail[];
+  setup: undefined;
 }>({
   sentEmails: async ({ next }, use) => {
     const emails: SentEmail[] = [];
@@ -24,9 +25,14 @@ export const test = baseTest.extend<{
     });
     await use(emails);
   },
+  setup: [
+    async ({}, use) => {
+      await use(undefined);
+      await clearClerkUser();
+    },
+    { auto: true },
+  ],
 });
-
-test.afterEach(clearClerkUser);
 
 export const expect = baseExpect.extend({
   async toBeValid(locator: Locator) {
