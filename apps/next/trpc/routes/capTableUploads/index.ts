@@ -137,6 +137,7 @@ export const capTableUploadsRouter = createRouter({
         .innerJoin(companies, eq(companies.id, capTableUploads.companyId))
         .where(
           and(
+            eq(companies.externalId, input.companyId),
             notInArray(capTableUploads.status, [...COMPLETED_STATUSES]),
             ...(input.onlyCurrentUser ? [eq(capTableUploads.userId, ctx.user.id)] : []),
           ),
