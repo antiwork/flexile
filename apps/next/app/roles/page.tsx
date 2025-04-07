@@ -2,7 +2,7 @@
 import { BriefcaseIcon, LinkIcon } from "@heroicons/react/24/outline";
 import React, { useMemo, useState } from "react";
 import Button from "@/components/Button";
-import Checkbox from "@/components/Checkbox";
+import { SwitchWithLabel } from "@/components/ui/switch-with-label";
 import CopyButton from "@/components/CopyButton";
 import MainLayout from "@/components/layouts/Main";
 import Placeholder from "@/components/Placeholder";
@@ -45,7 +45,7 @@ export default function RolesPage() {
         header: "Rate",
         cell: (info) => {
           const type = info.row.original.payRateType;
-          const payPer = info.row.original.payPer;
+          const unitOfWork = info.row.original.unitOfWork;
           const isProjectBased = type === PayRateType.ProjectBased;
           const amount = info.getValue() ?? 0;
           if (isProjectBased && !amount) {
@@ -58,7 +58,7 @@ export default function RolesPage() {
               : type === PayRateType.Salary
                 ? " / year"
                 : isProjectBased
-                  ? `/ ${payPer ?? "project"}`
+                  ? `/ ${unitOfWork ?? "project"}`
                   : ""
           }`;
         },
@@ -77,10 +77,10 @@ export default function RolesPage() {
           const role = info.row.original;
           return (
             <div className="flex items-center gap-2">
-              <Checkbox
-                switch
+              <SwitchWithLabel
+                id="actively-hiring"
                 checked={role.activelyHiring}
-                onChange={() =>
+                onCheckedChange={() =>
                   updateMutation.mutate({ companyId: company.id, id: role.id, activelyHiring: !role.activelyHiring })
                 }
                 label={role.activelyHiring ? "Hiring" : "Not hiring"}

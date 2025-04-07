@@ -126,7 +126,7 @@ export default function RoleApplicationPage() {
                   : role.payRateType === PayRateType.Salary
                     ? " / year"
                     : role.payRateType === PayRateType.ProjectBased
-                      ? ` / ${role.payPer ?? "project"}`
+                      ? ` / ${role.unitOfWork ?? "project"}`
                       : ""}
               </span>
             </div>

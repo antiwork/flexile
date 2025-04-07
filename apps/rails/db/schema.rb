@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_03_080045) do
+ActiveRecord::Schema[8.0].define(version: 2025_04_05_080045) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -294,6 +294,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_03_080045) do
     t.string "pay_rate_currency", default: "usd", null: false
     t.integer "trial_pay_rate_in_subunits"
     t.string "pay_per", default: "project"
+    t.string "unit_of_work", default: "project"
     t.index ["company_role_id"], name: "index_company_role_rates_on_company_role_id"
   end
 

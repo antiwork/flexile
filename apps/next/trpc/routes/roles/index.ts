@@ -30,7 +30,7 @@ const inputSchema = createInsertSchema(companyRoles)
       })
       .extend({
         payRateInSubunits: z.number().nullable(),
-        payPer: z.string().nullable(),
+        unitOfWork: z.string().nullable(),
       }),
   );
 
@@ -79,7 +79,7 @@ export const rolesRouter = createRouter({
           "applicationCount",
           "expenseCardsCount",
         ),
-        ...pick(rate, "payRateType", "payRateInSubunits", "trialPayRateInSubunits", "payPer"),
+        ...pick(rate, "payRateType", "payRateInSubunits", "trialPayRateInSubunits", "unitOfWork"),
       };
     });
   }),
@@ -90,7 +90,7 @@ export const rolesRouter = createRouter({
     const [role] = await db
       .select({
         ...pick(companyRoles, "id", "name", "jobDescription", "activelyHiring", "capitalizedExpense"),
-        ...pick(companyRoleRates, "payRateType", "payRateInSubunits", "trialPayRateInSubunits", "payPer"),
+        ...pick(companyRoleRates, "payRateType", "payRateInSubunits", "trialPayRateInSubunits", "unitOfWork"),
       })
       .from(companyRoles)
       .innerJoin(companyRoleRates, eq(companyRoles.id, companyRoleRates.companyRoleId))
@@ -128,7 +128,7 @@ export const rolesRouter = createRouter({
       const role = assertDefined(result[0]);
       await tx.insert(companyRoleRates).values({
         companyRoleId: role.id,
-        ...pick(input, "payRateType", "trialPayRateInSubunits", "payPer"),
+        ...pick(input, "payRateType", "trialPayRateInSubunits", "unitOfWork"),
         payRateInSubunits:
           input.payRateType === PayRateType.ProjectBased ? (input.payRateInSubunits ?? null) : input.payRateInSubunits,
         payRateCurrency: "usd",
@@ -166,7 +166,7 @@ export const rolesRouter = createRouter({
         .update(companyRoleRates)
         .set({
           companyRoleId: role.id,
-          ...pick(input, "payRateType", "trialPayRateInSubunits", "payPer"),
+          ...pick(input, "payRateType", "trialPayRateInSubunits", "unitOfWork"),
           payRateInSubunits:
             input.payRateType === PayRateType.ProjectBased
               ? (input.payRateInSubunits ?? null)

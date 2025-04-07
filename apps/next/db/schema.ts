@@ -270,7 +270,7 @@ export const companyRoleRates = pgTable(
     payRateInSubunits: integer("pay_rate_in_subunits"),
     payRateCurrency: varchar("pay_rate_currency").default("usd").notNull(),
     trialPayRateInSubunits: integer("trial_pay_rate_in_subunits").notNull(),
-    payPer: varchar("pay_per").default("project"),
+    unitOfWork: varchar("unit_of_work").default("project"),
   },
   (table) => [
     index("index_company_role_rates_on_company_role_id").using(

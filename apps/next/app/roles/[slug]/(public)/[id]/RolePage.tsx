@@ -194,7 +194,7 @@ export default function RolePage({ countryCode }: { countryCode: string }) {
                 </CardRow>
                 <CardRow>
                   <div className="text-3xl font-bold">{formatMoneyFromCents(role.payRateInSubunits ?? 0)}</div>
-                  <p className="text-gray-500">Rate per {role.payPer}</p>
+                  <p className="text-gray-500">Rate per {role.unitOfWork}</p>
                   {company.equityGrantsEnabled ? (
                     <p className="text-gray-500">
                       Part of this rate will be given in equity. This selection will be made during onboarding.

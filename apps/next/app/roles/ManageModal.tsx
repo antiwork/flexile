@@ -12,6 +12,7 @@ import MutationButton from "@/components/MutationButton";
 import Notice from "@/components/Notice";
 import NumberInput from "@/components/NumberInput";
 import RadioButtons from "@/components/RadioButtons";
+import { SwitchWithLabel } from "@/components/ui/switch-with-label";
 import { Editor as RichTextEditor } from "@/components/RichText";
 import Select from "@/components/Select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
@@ -57,7 +58,7 @@ const ManageModal = ({
       expenseCardEnabled: false,
       expenseCardSpendingLimitCents: 0n,
       expenseCardsCount: 0,
-      payPer: "project",
+      unitOfWork: "project",
     };
     const lastRole = roles[0];
     return lastRole
@@ -66,10 +67,12 @@ const ManageModal = ({
   };
   const [role, setRole] = useState(getSelectedRole);
   useEffect(() => setRole(getSelectedRole()), [id]);
+  const isProjectBased = role.payRateType === PayRateType.ProjectBased;
   const [updateContractorRates, setUpdateContractorRates] = useState(false);
   const [confirmingRateUpdate, setConfirmingRateUpdate] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
+  const [showSpecifyDefaultAmount, setShowSpecifyDefaultAmount] = useState(isProjectBased && !!role.payRateInSubunits);
   const [quickbooks] = trpc.quickbooks.get.useSuspenseQuery({ companyId: company.id });
   const expenseAccounts = quickbooks?.expenseAccounts ?? [];
   const [{ workers: contractors }, { refetch: refetchContractors }] = trpc.contractors.list.useSuspenseQuery({
@@ -91,8 +94,6 @@ const ManageModal = ({
       setRole((prev) => ({ ...prev, trialPayRateInSubunits: Math.floor((prev.payRateInSubunits || 0) / 2) }));
   }, [role.payRateInSubunits, role.id]);
 
-  const isProjectBased = role.payRateType === PayRateType.ProjectBased;
-
   const onSave = () => {
     if (contractorsToUpdate.length > 0 && updateContractorRates && role.id) {
       setConfirmingRateUpdate(true);
@@ -105,7 +106,7 @@ const ManageModal = ({
     (contractor) => contractor.payRateInSubunits !== role.payRateInSubunits,
   );
   const canDelete = contractors.length === 0;
-  const validatedFields = ["name"] as const;
+  const validatedFields = ["name", "payRateInSubunits"] as const;
   for (const field of validatedFields)
     useEffect(() => setErrors((prev) => prev.filter((f) => f !== field)), [role[field]]);
 
@@ -114,7 +115,14 @@ const ManageModal = ({
   const updateContractorMutation = trpc.contractors.update.useMutation();
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const errors = validatedFields.filter((field) => !role[field]);
+      const errors = validatedFields.filter((field) => {
+        if (field === "payRateInSubunits") {
+          if (role.payRateType === PayRateType.Hourly) return !role[field];
+
+          return false;
+        }
+        return !role[field];
+      });
       if (errors.length > 0) {
         setErrors(errors);
         throw new Error("Validation error");
@@ -160,7 +168,10 @@ const ManageModal = ({
         />
         <RadioButtons
           value={role.payRateType}
-          onChange={(payRateType) => updateRole({ payRateType })}
+          onChange={(payRateType) => {
+            updateRole({ payRateType });
+            setShowSpecifyDefaultAmount(false);
+          }}
           label="Type"
           options={[
             { label: "Hourly", value: PayRateType.Hourly } as const,
@@ -170,41 +181,52 @@ const ManageModal = ({
           disabled={!!role.id}
         />
         {isProjectBased && (
+          <SwitchWithLabel
+            id="specify-default-amount"
+            checked={showSpecifyDefaultAmount}
+            onCheckedChange={setShowSpecifyDefaultAmount}
+            disabled={!!role.id}
+            label="Specify a default amount"
+          />
+        )}
+        {(!isProjectBased || (isProjectBased && showSpecifyDefaultAmount)) && (
+          <div className={`grid gap-3 ${expenseAccounts.length > 0 ? "md:grid-cols-2" : ""}`}>
+            <NumberInput
+              value={role.payRateInSubunits ? role.payRateInSubunits / 100 : null}
+              onChange={(value) => updateRole({ payRateInSubunits: value ? value * 100 : null })}
+              invalid={errors.includes("payRateInSubunits")}
+              label={isProjectBased ? "Amount" : "Rate"}
+              prefix="$"
+              suffix={
+                role.payRateType === PayRateType.Hourly
+                  ? "/ hour"
+                  : role.payRateType === PayRateType.Salary
+                    ? "/ year"
+                    : isProjectBased
+                      ? `/ ${role.unitOfWork || "project"}`
+                      : undefined
+              }
+            />
+            {expenseAccounts.length > 0 && (
+              <NumberInput
+                value={role.capitalizedExpense ?? 0}
+                onChange={(value) => updateRole({ capitalizedExpense: value ?? 0 })}
+                label="Capitalized R&D expense"
+                suffix="%"
+              />
+            )}
+          </div>
+        )}
+        {showSpecifyDefaultAmount && (
           <Input
-            value={role.payPer}
-            onChange={(value) => updateRole({ payPer: value ?? "project" })}
-            invalid={errors.includes("payPer")}
-            label="Per"
+            value={role.unitOfWork}
+            onChange={(value) => updateRole({ unitOfWork: value ?? "project" })}
+            invalid={errors.includes("unitOfWork")}
+            label="Unit of work"
             placeholder="project, month, article etc"
             disabled={!!role.id}
           />
         )}
-        <div className={`grid gap-3 ${expenseAccounts.length > 0 ? "md:grid-cols-2" : ""}`}>
-          <NumberInput
-            value={role.payRateInSubunits ? role.payRateInSubunits / 100 : null}
-            onChange={(value) => updateRole({ payRateInSubunits: value ? value * 100 : null })}
-            invalid={errors.includes("payRateInSubunits")}
-            label="Rate"
-            prefix="$"
-            suffix={
-              role.payRateType === PayRateType.Hourly
-                ? "/ hour"
-                : role.payRateType === PayRateType.Salary
-                  ? "/ year"
-                  : isProjectBased
-                    ? `/ ${role.payPer || "project"}`
-                    : undefined
-            }
-          />
-          {expenseAccounts.length > 0 && (
-            <NumberInput
-              value={role.capitalizedExpense ?? 0}
-              onChange={(value) => updateRole({ capitalizedExpense: value ?? 0 })}
-              label="Capitalized R&D expense"
-              suffix="%"
-            />
-          )}
-        </div>
         {role.id && contractorsToUpdate.length > 0 ? (
           <>
             {!updateContractorRates && (
@@ -222,10 +244,10 @@ const ManageModal = ({
           </>
         ) : null}
         {role.id && role.payRateType === PayRateType.Hourly ? (
-          <Checkbox
+          <SwitchWithLabel
+            id="start-trial-period"
             checked={role.trialEnabled}
-            onChange={(trialEnabled) => updateRole({ trialEnabled })}
-            switch
+            onCheckedChange={(trialEnabled) => updateRole({ trialEnabled })}
             label="Start with trial period"
           />
         ) : null}
@@ -238,10 +260,10 @@ const ManageModal = ({
           />
         ) : null}
         {role.id ? (
-          <Checkbox
+          <SwitchWithLabel
+            id="role-should-get-expense-card"
             checked={role.expenseCardEnabled}
-            onChange={(expenseCardEnabled) => updateRole({ expenseCardEnabled })}
-            switch
+            onCheckedChange={(expenseCardEnabled) => updateRole({ expenseCardEnabled })}
             label="Role should get expense card"
           />
         ) : null}
@@ -277,10 +299,10 @@ const ManageModal = ({
           />
         ) : null}
         {role.id ? (
-          <Checkbox
+          <SwitchWithLabel
+            id="accepting-candidates"
             checked={role.activelyHiring}
-            onChange={(activelyHiring) => updateRole({ activelyHiring })}
-            switch
+            onCheckedChange={(activelyHiring) => updateRole({ activelyHiring })}
             label="Accepting candidates"
           />
         ) : null}
