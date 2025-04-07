@@ -1,8 +1,8 @@
 import { XMarkIcon } from "@heroicons/react/24/solid";
-import React, { type ComponentPropsWithoutRef, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/utils";
 import { useOnGlobalEvent } from "@/utils/useOnGlobalEvent";
+import React, { type ComponentPropsWithoutRef, useEffect, useRef } from "react";
 
 type ModalProps = {
   open: boolean;

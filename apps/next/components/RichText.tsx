@@ -1,13 +1,13 @@
 import { Bars2Icon, BoldIcon, ItalicIcon, LinkIcon, ListBulletIcon, UnderlineIcon } from "@heroicons/react/24/outline";
 import type { Content } from "@tiptap/core";
 import { EditorContent, isList, useEditor } from "@tiptap/react";
-import React, { useEffect, useState } from "react";
 import Button from "@/components/Button";
 import Input, { formGroupClasses } from "@/components/Input";
 import { linkClasses } from "@/components/Link";
 import Modal from "@/components/Modal";
 import { cn } from "@/utils";
 import { richTextExtensions } from "@/utils/richText";
+import React, { useEffect, useState } from "react";
 
 const RichText = ({ content }: { content: Content }) => {
   const editor = useEditor({

@@ -1,5 +1,5 @@
-import React, { type ReactNode } from "react";
 import { cn } from "@/utils";
+import React, { type ReactNode } from "react";
 
 export const Card = ({
   children,

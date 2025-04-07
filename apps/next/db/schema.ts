@@ -19,7 +19,6 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm/relations";
-import { customAlphabet } from "nanoid";
 import { deterministicEncryptedString, encryptedJson, encryptedString } from "@/lib/encryptedField";
 import {
   BusinessType,
@@ -30,6 +29,7 @@ import {
   TaxClassification,
 } from "./enums";
 import type { GitHubIntegrationConfiguration, QuickbooksIntegrationConfiguration } from "./json";
+import { customAlphabet } from "nanoid";
 
 const nanoid = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 13);
 

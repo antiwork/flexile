@@ -1,6 +1,6 @@
 import { SignIn } from "@clerk/nextjs";
-import React from "react";
 import SimpleLayout from "@/components/layouts/Simple";
+import React from "react";
 
 export default function Login() {
   return (

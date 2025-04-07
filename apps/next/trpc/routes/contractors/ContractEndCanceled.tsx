@@ -1,8 +1,8 @@
-import React from "react";
 import { companies, users } from "@/db/schema";
 import { LinkButton } from "@/trpc/email";
 import EmailLayout from "@/trpc/EmailLayout";
 import { userDisplayName } from "@/trpc/routes/users";
+import React from "react";
 
 const ContractEndCanceled = ({
   company,

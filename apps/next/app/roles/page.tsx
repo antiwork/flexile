@@ -1,6 +1,5 @@
 "use client";
 import { BriefcaseIcon, LinkIcon } from "@heroicons/react/24/outline";
-import React, { useMemo, useState } from "react";
 import Button from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
 import CopyButton from "@/components/CopyButton";
@@ -15,6 +14,7 @@ import { trpc } from "@/trpc/client";
 import { toSlug } from "@/utils";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import ManageModal from "./ManageModal";
+import React, { useMemo, useState } from "react";
 
 type Role = RouterOutput["roles"]["list"][number];
 

@@ -1,9 +1,9 @@
 import { Container, Heading, Link, Preview } from "@react-email/components";
-import React from "react";
 import { invoices } from "@/db/schema";
 import { LinkButton } from "@/trpc/email";
 import EmailLayout from "@/trpc/EmailLayout";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
+import React from "react";
 
 type Invoice = typeof invoices.$inferSelect;
 

@@ -3,7 +3,6 @@ import { skipToken } from "@tanstack/react-query";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
-import React, { useEffect, useMemo, useState } from "react";
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import Status from "@/components/Status";
@@ -13,6 +12,7 @@ import type { RouterOutput } from "@/trpc";
 import { DocumentType, trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
 import DocusealForm from "./DocusealForm";
+import React, { useEffect, useMemo, useState } from "react";
 
 const typeLabels = {
   [DocumentType.ConsultingContract]: "Agreement",

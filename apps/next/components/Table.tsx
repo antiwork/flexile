@@ -12,9 +12,9 @@ import {
   type TableOptions,
   useReactTable,
 } from "@tanstack/react-table";
-import React, { useMemo } from "react";
 import Checkbox from "@/components/Checkbox";
 import { cn } from "@/utils";
+import React, { useMemo } from "react";
 
 declare module "@tanstack/react-table" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

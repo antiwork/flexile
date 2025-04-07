@@ -1,7 +1,7 @@
 import { capitalize } from "lodash-es";
-import React from "react";
 import Status from "@/components/Status";
 import type { RouterOutput } from "@/trpc";
+import React from "react";
 
 type EquityGrantExercise = RouterOutput["equityGrantExercises"]["list"][number];
 

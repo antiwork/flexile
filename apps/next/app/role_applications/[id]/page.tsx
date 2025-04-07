@@ -1,7 +1,6 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, Check, X } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import Button from "@/components/Button";
@@ -17,6 +16,7 @@ import { calculateAnnualCompensation } from "@/trpc/routes/roles/applications/he
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 import { useOnGlobalEvent } from "@/utils/useOnGlobalEvent";
+import { ArrowLeft, ArrowRight, Check, X } from "lucide-react";
 
 export default function RoleApplicationPage() {
   const router = useRouter();

@@ -1,6 +1,6 @@
 "use client";
-import React from "react";
 import EditPage from "../Edit";
+import React from "react";
 
 export default function New() {
   return <EditPage />;

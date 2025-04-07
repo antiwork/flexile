@@ -1,7 +1,6 @@
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Map as ImmutableMap } from "immutable";
 import { set } from "lodash-es";
-import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import Button from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
@@ -20,6 +19,7 @@ import {
 } from "@/models/constants";
 import { request } from "@/utils/request";
 import { save_bank_account_onboarding_path, wise_account_requirements_path } from "@/utils/routes";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const KEY_LEGAL_TYPE = "legalType";
 const KEY_CHECKING_ACCOUNT = "CHECKING";

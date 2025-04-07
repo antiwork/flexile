@@ -1,9 +1,9 @@
 import { redirect, RedirectType, usePathname } from "next/navigation";
-import { useEffect } from "react";
 import { create } from "zustand";
 import { combine } from "zustand/middleware";
 import { type CurrentUser, currentUserSchema } from "@/models/user";
 import { assertDefined } from "@/utils/assert";
+import { useEffect } from "react";
 
 export const useUserStore = create(
   combine(

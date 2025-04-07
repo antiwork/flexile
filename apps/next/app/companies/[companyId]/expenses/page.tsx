@@ -5,7 +5,6 @@ import { Elements, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
 import { stripeMerchantCategoryCodes } from "@/app/companies/[companyId]/expenses";
 import Button from "@/components/Button";
 import MainLayout from "@/components/layouts/Main";
@@ -21,6 +20,7 @@ import type { RouterOutput } from "@/trpc";
 import { trpc, useCanAccess } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
+import { useEffect, useRef, useState } from "react";
 
 const perPage = 50;
 const stripePromise = loadStripe(env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);

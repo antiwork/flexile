@@ -1,6 +1,6 @@
 import { CheckIcon } from "@heroicons/react/16/solid";
-import React, { useState } from "react";
 import Button from "@/components/Button";
+import React, { useState } from "react";
 
 const CopyButton = ({
   copyText,

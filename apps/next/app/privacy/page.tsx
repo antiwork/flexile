@@ -1,6 +1,6 @@
-import React from "react";
 import Jumper from "@/components/Jumper";
 import SimpleLayout from "@/components/layouts/Simple";
+import React from "react";
 
 const sections = [
   "Personal information we collect",

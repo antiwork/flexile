@@ -4,7 +4,6 @@ import { useMutation } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { addMonths, isFuture, isPast } from "date-fns";
 import { useParams } from "next/navigation";
-import React, { useEffect, useMemo, useState } from "react";
 import Button from "@/components/Button";
 import { Card, CardRow } from "@/components/Card";
 import DecimalInput from "@/components/DecimalInput";
@@ -26,6 +25,7 @@ import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate, formatMonth } from "@/utils/time";
 import { VESTED_SHARES_CLASS } from "../";
 import LetterOfTransmissal from "./LetterOfTransmissal";
+import React, { useEffect, useMemo, useState } from "react";
 
 type Bid = RouterOutput["tenderOffers"]["bids"]["list"]["bids"][number];
 type Holding = RouterOutput["shareHoldings"]["sumByShareClass"][number];

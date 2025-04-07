@@ -1,6 +1,5 @@
 "use client";
 
-import React, { useState } from "react";
 import SettingsLayout from "@/app/settings/Layout";
 import { Card, CardRow } from "@/components/Card";
 import { linkClasses } from "@/components/Link";
@@ -12,6 +11,7 @@ import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import { trpc } from "@/trpc/client";
 import { assert } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
+import React, { useState } from "react";
 
 function useEquitySplit(salary: number, equityPercentage: number) {
   const equityCents = Math.round(salary * equityPercentage);

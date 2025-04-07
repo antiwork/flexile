@@ -3,7 +3,6 @@ import { TRPCClientError } from "@trpc/client";
 import { fromUnixTime } from "date-fns";
 import { Map } from "immutable";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
 import Button from "@/components/Button";
 import DecimalInput from "@/components/DecimalInput";
 import Input from "@/components/Input";
@@ -14,6 +13,7 @@ import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assert } from "@/utils/assert";
 import { formatDate } from "@/utils/time";
+import { useEffect, useState } from "react";
 
 const StripeMicrodepositVerification = () => {
   const company = useCurrentCompany();

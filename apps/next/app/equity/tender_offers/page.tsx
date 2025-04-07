@@ -3,7 +3,6 @@ import { PencilIcon } from "@heroicons/react/16/solid";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React from "react";
 import Button from "@/components/Button";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
@@ -13,6 +12,7 @@ import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 import EquityLayout from "../Layout";
+import React from "react";
 
 const perPage = 50;
 export default function TenderOffers() {

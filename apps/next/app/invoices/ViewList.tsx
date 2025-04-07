@@ -4,7 +4,6 @@ import { useMutation } from "@tanstack/react-query";
 import { formatISO } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
 import EquityPercentageLockModal from "@/app/invoices/EquityPercentageLockModal";
 import { StatusWithTooltip } from "@/app/invoices/Status";
 import Button from "@/components/Button";
@@ -26,6 +25,7 @@ import { request } from "@/utils/request";
 import { company_invoices_path } from "@/utils/routes";
 import { formatDate, formatDuration } from "@/utils/time";
 import { EDITABLE_INVOICE_STATES } from ".";
+import { useMemo, useState } from "react";
 
 const useData = () => {
   const company = useCurrentCompany();

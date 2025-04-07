@@ -2,8 +2,6 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Set } from "immutable";
-import { Check, ChevronsUpDown, User, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
 import Button from "@/components/Button";
 import { CardRow } from "@/components/Card";
 import DecimalInput from "@/components/DecimalInput";
@@ -16,6 +14,8 @@ import { useCurrentCompany } from "@/global";
 import { MAX_FILES_PER_CAP_TABLE_UPLOAD } from "@/models";
 import { trpc } from "@/trpc/client";
 import { cn, md5Checksum } from "@/utils";
+import { Check, ChevronsUpDown, User, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 const BoardMembersSection = () => {
   const company = useCurrentCompany();

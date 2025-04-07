@@ -1,5 +1,4 @@
 import { createHydrationHelpers } from "@trpc/react-query/rsc";
-import { cache } from "react";
 import { capTableRouter } from "@/trpc/routes/capTable";
 import { companiesRouter } from "@/trpc/routes/companies";
 import { equityCalculationsRouter } from "@/trpc/routes/equityCalculations";
@@ -39,6 +38,7 @@ import { walletsRouter } from "./routes/wallets";
 import { workerAbsencesRouter } from "./routes/workerAbsences";
 import { createClient } from "./shared";
 import { createCallerFactory, createRouter } from "./";
+import { cache } from "react";
 
 export const appRouter = createRouter({
   users: usersRouter,

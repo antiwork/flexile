@@ -2,7 +2,6 @@
 import { BanknotesIcon, CheckCircleIcon } from "@heroicons/react/24/solid";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import type { Route } from "next";
-import { useState } from "react";
 import { z } from "zod";
 import BankAccountModal from "@/app/settings/payouts/BankAccountModal";
 import type { BankAccount } from "@/app/settings/payouts/BankAccountModal";
@@ -14,6 +13,7 @@ import { useCurrentUser } from "@/global";
 import { CURRENCIES, supportedCountries } from "@/models/constants";
 import { request } from "@/utils/request";
 import { bank_account_onboarding_path } from "@/utils/routes";
+import { useState } from "react";
 
 const BankAccountPage = <T extends string>({
   header,

@@ -1,5 +1,5 @@
-import React from "react";
 import { linkClasses } from "@/components/Link";
+import React from "react";
 
 const TosAcceptance = () => (
   <div className="text-xs">

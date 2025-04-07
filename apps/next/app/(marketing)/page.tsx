@@ -3,8 +3,6 @@
 import { SignedIn, SignedOut } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
-import type { ReactNode } from "react";
 import logo from "@/public/flexile-logo.svg";
 import { cn } from "@/utils";
 import equityAllocation from "./equity-allocation.png";
@@ -19,6 +17,8 @@ import iconGlobe from "./icon-globe.svg";
 import testimonialKarin from "./testimonial-karin.jpg";
 import testimonialSahil from "./testimonial-sahil.jpg";
 import testimonialSid from "./testimonial-sid.jpg";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 const buttonClasses = "flex justify-center items-center rounded-full transition-all duration-400 no-underline";
 

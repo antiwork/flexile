@@ -1,13 +1,13 @@
 "use client";
-import { CircleCheck } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import React, { useMemo } from "react";
 import MainLayout from "@/components/layouts/Main";
 import Placeholder from "@/components/Placeholder";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { useCurrentCompany } from "@/global";
 import { PayRateType, trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
+import { CircleCheck } from "lucide-react";
+import React, { useMemo } from "react";
 
 export default function RoleApplicationsPage() {
   const router = useRouter();

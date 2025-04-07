@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from "react";
 import { cn } from "@/utils";
+import React, { useEffect, useRef } from "react";
 
 const Checkbox = ({
   switch: isSwitch,

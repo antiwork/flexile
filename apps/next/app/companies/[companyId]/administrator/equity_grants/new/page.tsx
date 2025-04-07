@@ -3,7 +3,6 @@
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import { optionGrantTypeDisplayNames, relationshipDisplayNames, vestingTriggerDisplayNames } from "@/app/equity/grants";
@@ -18,6 +17,7 @@ import Select from "@/components/Select";
 import { useCurrentCompany } from "@/global";
 import { DocumentTemplateType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
+import { useEffect, useMemo, useRef, useState } from "react";
 const MAX_VESTING_DURATION_IN_MONTHS = 120;
 
 const fieldAttributeName = z.enum([

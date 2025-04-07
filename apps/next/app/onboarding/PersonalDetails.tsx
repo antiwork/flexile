@@ -3,7 +3,6 @@ import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Set } from "immutable";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { z } from "zod";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
@@ -15,6 +14,7 @@ import { countries, sanctionedCountries } from "@/models/constants";
 import { e } from "@/utils";
 import { request } from "@/utils/request";
 import { onboarding_path } from "@/utils/routes";
+import { useEffect, useState } from "react";
 
 const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T> }) => {
   const user = useCurrentUser();

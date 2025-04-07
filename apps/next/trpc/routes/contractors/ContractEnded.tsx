@@ -1,10 +1,10 @@
 import { format } from "date-fns";
-import React from "react";
 import { companies, companyContractors, users } from "@/db/schema";
 import { LinkButton } from "@/trpc/email";
 import EmailLayout from "@/trpc/EmailLayout";
 import { userDisplayName } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
+import React from "react";
 
 const ContractEnded = ({
   contractor,

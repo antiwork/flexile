@@ -1,7 +1,6 @@
 import { CheckCircleIcon } from "@heroicons/react/16/solid";
 import { ClockIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import { addDays, isWeekend, nextMonday } from "date-fns";
-import React from "react";
 import Notice from "@/components/Notice";
 import Status, { type Variant } from "@/components/Status";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
@@ -9,6 +8,7 @@ import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
+import React from "react";
 
 type Invoice = Pick<
   RouterOutput["invoices"]["list"]["invoices"][number],

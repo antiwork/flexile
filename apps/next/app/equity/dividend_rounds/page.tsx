@@ -2,7 +2,6 @@
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React from "react";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
@@ -12,6 +11,7 @@ import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 import EquityLayout from "../Layout";
+import React from "react";
 
 type DividendRound = RouterOutput["dividendRounds"]["list"]["dividendRounds"][number];
 const columnHelper = createColumnHelper<DividendRound>();

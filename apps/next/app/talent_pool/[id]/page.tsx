@@ -1,7 +1,5 @@
 "use client";
-import { Mail } from "lucide-react";
 import { useParams } from "next/navigation";
-import React from "react";
 import Button from "@/components/Button";
 import { Card, CardRow } from "@/components/Card";
 import MainLayout from "@/components/layouts/Main";
@@ -9,6 +7,8 @@ import RichText from "@/components/RichText";
 import { countries } from "@/models/constants";
 import { PayRateType, trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
+import { Mail } from "lucide-react";
+import React from "react";
 
 export default function ContractorProfilePage() {
   const { id } = useParams<{ id: string }>();

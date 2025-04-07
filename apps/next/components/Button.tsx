@@ -1,7 +1,7 @@
-import { Slot } from "@radix-ui/react-slot";
-import React from "react";
 import { linkClasses } from "@/components/Link";
 import { cn } from "@/utils";
+import { Slot } from "@radix-ui/react-slot";
+import React from "react";
 
 const Button = ({
   children,

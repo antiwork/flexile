@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
 import Input, { formGroupClasses } from "@/components/Input";
+import React, { useEffect, useState } from "react";
 
 const RangeInput = ({
   min,

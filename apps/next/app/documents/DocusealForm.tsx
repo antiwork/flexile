@@ -1,6 +1,6 @@
 import { DocusealForm } from "@docuseal/react";
-import type React from "react";
 import { useCurrentUser } from "@/global";
+import type React from "react";
 
 export default function Form(props: React.ComponentProps<typeof DocusealForm>) {
   const user = useCurrentUser();

@@ -3,7 +3,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { formatISO } from "date-fns";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { z } from "zod";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import { CardRow } from "@/components/Card";
@@ -16,6 +15,7 @@ import NumberInput from "@/components/NumberInput";
 import RadioButtons from "@/components/RadioButtons";
 import { DocumentTemplateType, PayRateType } from "@/db/enums";
 import { trpc } from "@/trpc/client";
+import { useState } from "react";
 
 export default function CreateCompanyInvitation() {
   const router = useRouter();

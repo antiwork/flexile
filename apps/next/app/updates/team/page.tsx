@@ -2,10 +2,8 @@
 import { utc } from "@date-fns/utc";
 import { ArrowLeftIcon, ArrowRightIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import { addWeeks, differenceInWeeks, endOfWeek, startOfWeek, subWeeks } from "date-fns";
-import { CalendarClockIcon, CircleAlertIcon } from "lucide-react";
 import Link from "next/link";
 import { parseAsString, useQueryState } from "nuqs";
-import React, { useState } from "react";
 import CompanyWorkerUpdate from "@/app/updates/team/CompanyWorkerUpdate";
 import Button from "@/components/Button";
 import MainLayout from "@/components/layouts/Main";
@@ -14,6 +12,8 @@ import { useCurrentCompany, useCurrentUser } from "@/global";
 import { formatDateRange } from "@/models/period";
 import { trpc } from "@/trpc/client";
 import { formatDayOfMonth, formatServerDate } from "@/utils/time";
+import { CalendarClockIcon, CircleAlertIcon } from "lucide-react";
+import React, { useState } from "react";
 
 export default function CompanyContractorUpdates() {
   const user = useCurrentUser();

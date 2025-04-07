@@ -1,7 +1,7 @@
 import { geolocation } from "@vercel/functions";
 import { headers } from "next/headers";
-import React from "react";
 import RolePage from "./RolePage";
+import React from "react";
 
 export default async function Page() {
   const { country } = geolocation({ headers: await headers() });

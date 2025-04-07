@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
 import Input from "@/components/Input";
+import React, { useEffect, useState } from "react";
 
 const MAXIMUM_FRACTION_DIGITS_ALLOWED_BY_SPEC = 100;
 

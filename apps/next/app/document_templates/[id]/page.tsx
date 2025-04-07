@@ -1,9 +1,7 @@
 "use client";
 import { DocusealBuilder } from "@docuseal/react";
-import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
 import { z } from "zod";
 import Button from "@/components/Button";
 import MainLayout from "@/components/layouts/Main";
@@ -11,6 +9,8 @@ import MutationButton from "@/components/MutationButton";
 import Notice from "@/components/Notice";
 import { useCurrentCompany } from "@/global";
 import { DocumentTemplateType, trpc } from "@/trpc/client";
+import { ArrowLeftIcon } from "lucide-react";
+import { useState } from "react";
 
 const templateSchema = z.object({
   name: z.string(),
