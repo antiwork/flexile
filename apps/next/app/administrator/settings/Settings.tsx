@@ -3,12 +3,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { CardRow } from "@/components/Card";
-import Checkbox from "@/components/Checkbox";
 import ColorPicker from "@/components/ColorPicker";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import MutationButton from "@/components/MutationButton";
 import { Editor } from "@/components/RichText";
+import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";
 import defaultLogo from "@/images/default-company-logo.svg";
 import { trpc } from "@/trpc/client";
@@ -122,10 +122,9 @@ export default function Settings({ githubOauthUrl }: { githubOauthUrl: string })
 
           <Editor value={description} onChange={setDescription} label="Company description" />
 
-          <Checkbox
-            switch
+          <Switch
             checked={showStatsInJobDescriptions}
-            onChange={setShowStatsInJobDescriptions}
+            onCheckedChange={setShowStatsInJobDescriptions}
             label={
               <>
                 Show Team by the numbers in job descriptions
