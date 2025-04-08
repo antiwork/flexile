@@ -335,7 +335,7 @@ test.describe("One-off payments", () => {
         await page.waitForLoadState("networkidle");
         expect(
           await db.query.invoices.findFirst({
-            where: eq(invoices.invoiceNumber, invoice.invoiceNumber),
+            where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
           }),
         ).toEqual(
           expect.objectContaining({
