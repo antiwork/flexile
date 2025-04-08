@@ -83,27 +83,29 @@ export default inngest.createFunction(
         channel: env.SLACK_CHANNEL_ID,
         blocks: [
           block.richText([element.richTextSection([element.bold(aiResponse.title)])]),
-          ...aiResponse.projects.map((project) =>
-            block.richText([
-              element.richTextSection([element.italic(project.project_name), element.newLine()]),
-              ...project.tasks.flatMap((task) => {
-                const elementArray = [element.list([element.text(task.label)])];
+          ...aiResponse.projects
+            .filter((project) => project.tasks.length > 0) // Filter out projects with empty task lists
+            .map((project) =>
+              block.richText([
+                element.richTextSection([element.italic(project.project_name), element.newLine()]),
+                ...project.tasks.flatMap((task) => {
+                  const elementArray = [element.list([element.text(task.label)])];
 
-                if (task.subtasks && task.subtasks.length > 0) {
-                  elementArray.push(
-                    element.list(
-                      task.subtasks.map((subtask) => element.text(subtask.label)),
-                      {
-                        indent: 1,
-                      },
-                    ),
-                  );
-                }
+                  if (task.subtasks && task.subtasks.length > 0) {
+                    elementArray.push(
+                      element.list(
+                        task.subtasks.map((subtask) => element.text(subtask.label)),
+                        {
+                          indent: 1,
+                        },
+                      ),
+                    );
+                  }
 
-                return elementArray;
-              }),
-            ]),
-          ),
+                  return elementArray;
+                }),
+              ]),
+            ),
         ],
       });
 

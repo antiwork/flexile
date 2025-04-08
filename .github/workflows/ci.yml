@@ -1,5 +1,9 @@
 name: Rspec CI
-on: push
+on:
+  push:
+    branches:
+      - main
+  pull_request:
 
 # Cancel builds for previous commits on the same branch unless the branch is "main"
 concurrency:

@@ -25,6 +25,13 @@ Try to be concise, grouping similar tasks in the same bullet point, or even diff
 
 Important to only add tasks for FINISHED work.
 
+Focus primarily on:
+1. Shipments - new features, products, or significant enhancements that were released
+2. Feature improvements - enhancements to existing functionality
+3. Bug fixes - resolved issues and problems
+
+Prioritize these categories in your summary and organize tasks accordingly. Only include meaningful, user-facing changes whenever possible.
+
 # Example
 Here's the example input and output for the week of March 2nd 2024
 
