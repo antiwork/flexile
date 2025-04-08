@@ -23,3 +23,7 @@ tmp
 /apps/rails/config/credentials.yml.enc
 /apps/rails/config/credentials/*.yml.enc
 /apps/rails/config/credentials/*.key
+
+# IDE
+.vscode
+.idea
