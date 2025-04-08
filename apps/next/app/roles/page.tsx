@@ -1,13 +1,12 @@
 "use client";
 import { BriefcaseIcon, LinkIcon } from "@heroicons/react/24/outline";
-import React, { useMemo, useState } from "react";
 import Button from "@/components/Button";
-import Checkbox from "@/components/Checkbox";
 import CopyButton from "@/components/CopyButton";
 import MainLayout from "@/components/layouts/Main";
 import Placeholder from "@/components/Placeholder";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
 import Tabs from "@/components/Tabs";
+import { Switch } from "@/components/ui/switch";
 import { PayRateType } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
 import { type RouterOutput } from "@/trpc";
@@ -15,6 +14,7 @@ import { trpc } from "@/trpc/client";
 import { toSlug } from "@/utils";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import ManageModal from "./ManageModal";
+import React, { useMemo, useState } from "react";
 
 type Role = RouterOutput["roles"]["list"][number];
 
@@ -64,10 +64,9 @@ export default function RolesPage() {
           const role = info.row.original;
           return (
             <div className="flex items-center gap-2">
-              <Checkbox
-                switch
+              <Switch
                 checked={role.activelyHiring}
-                onChange={() =>
+                onCheckedChange={() =>
                   updateMutation.mutate({ companyId: company.id, id: role.id, activelyHiring: !role.activelyHiring })
                 }
                 label={role.activelyHiring ? "Hiring" : "Not hiring"}

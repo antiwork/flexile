@@ -1,14 +1,13 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
 import { CardRow } from "@/components/Card";
-import Checkbox from "@/components/Checkbox";
 import ColorPicker from "@/components/ColorPicker";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import MutationButton from "@/components/MutationButton";
 import { Editor } from "@/components/RichText";
+import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";
 import defaultLogo from "@/images/default-company-logo.svg";
 import { trpc } from "@/trpc/client";
@@ -16,6 +15,7 @@ import { isValidUrl, md5Checksum } from "@/utils";
 import GithubIntegration from "./GithubIntegration";
 import QuickbooksIntegration from "./QuickbooksIntegration";
 import StripeMicrodepositVerification from "./StripeMicrodepositVerification";
+import { useEffect, useMemo, useState } from "react";
 
 export default function Settings({ githubOauthUrl }: { githubOauthUrl: string }) {
   const company = useCurrentCompany();
@@ -122,14 +122,13 @@ export default function Settings({ githubOauthUrl }: { githubOauthUrl: string })
 
           <Editor value={description} onChange={setDescription} label="Company description" />
 
-          <Checkbox
-            switch
+          <Switch
             checked={showStatsInJobDescriptions}
-            onChange={setShowStatsInJobDescriptions}
+            onCheckedChange={setShowStatsInJobDescriptions}
             label={
               <>
                 Show Team by the numbers in job descriptions
-                <div className="text-xs text-gray-500">
+                <div className="mt-1 text-xs text-gray-500">
                   Shows live data from your company pulled from Flexile, such as the number of contractors and their
                   average working hours.
                 </div>

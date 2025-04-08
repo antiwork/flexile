@@ -1,7 +1,6 @@
 import { TrashIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { pick } from "lodash-es";
-import { useEffect, useState } from "react";
 import Button from "@/components/Button";
 import { Card, CardRow } from "@/components/Card";
 import Checkbox from "@/components/Checkbox";
@@ -15,12 +14,14 @@ import RadioButtons from "@/components/RadioButtons";
 import { Editor as RichTextEditor } from "@/components/RichText";
 import Select from "@/components/Select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
+import { Switch } from "@/components/ui/switch";
 import { PayRateType } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { pluralize } from "@/utils/pluralize";
+import { useEffect, useState } from "react";
 
 type Role = RouterOutput["roles"]["list"][number];
 
@@ -206,10 +207,9 @@ const ManageModal = ({
           </>
         ) : null}
         {role.id && role.payRateType === PayRateType.Hourly ? (
-          <Checkbox
+          <Switch
             checked={role.trialEnabled}
-            onChange={(trialEnabled) => updateRole({ trialEnabled })}
-            switch
+            onCheckedChange={(trialEnabled) => updateRole({ trialEnabled })}
             label="Start with trial period"
           />
         ) : null}
@@ -222,10 +222,9 @@ const ManageModal = ({
           />
         ) : null}
         {role.id ? (
-          <Checkbox
+          <Switch
             checked={role.expenseCardEnabled}
-            onChange={(expenseCardEnabled) => updateRole({ expenseCardEnabled })}
-            switch
+            onCheckedChange={(expenseCardEnabled) => updateRole({ expenseCardEnabled })}
             label="Role should get expense card"
           />
         ) : null}
@@ -261,10 +260,9 @@ const ManageModal = ({
           />
         ) : null}
         {role.id ? (
-          <Checkbox
+          <Switch
             checked={role.activelyHiring}
-            onChange={(activelyHiring) => updateRole({ activelyHiring })}
-            switch
+            onCheckedChange={(activelyHiring) => updateRole({ activelyHiring })}
             label="Accepting candidates"
           />
         ) : null}
