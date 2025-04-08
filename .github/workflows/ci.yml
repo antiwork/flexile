@@ -7,10 +7,9 @@ on:
 permissions:
   contents: read
 
-# Cancel builds for previous commits on the same branch unless the branch is "main"
 concurrency:
-  group: ${{ github.ref }}-rspec
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  group: ${{ github.head_ref || github.ref }}-rspec
+  cancel-in-progress: ${{ !github.head_ref }}
 
 env:
   CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
