@@ -67,7 +67,8 @@ export default function RolesPage() {
               <Switch
                 checked={role.activelyHiring}
                 onCheckedChange={() =>
-                  updateMutation.mutate({ companyId: company.id, id: role.id, activelyHiring: !role.activelyHiring })}
+                  updateMutation.mutate({ companyId: company.id, id: role.id, activelyHiring: !role.activelyHiring })
+                }
                 label={role.activelyHiring ? "Hiring" : "Not hiring"}
               />
             </div>

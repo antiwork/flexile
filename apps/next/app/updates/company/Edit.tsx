@@ -187,9 +187,7 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
               period={selectedPeriodOption.period}
               periodStartedOn={selectedPeriodOption.periodStartedOn}
               revenueTitle={<Switch label="Revenue" checked={showRevenue} onCheckedChange={setShowRevenue} />}
-              netIncomeTitle={
-                <Switch label="Net income" checked={showNetIncome} onCheckedChange={setShowNetIncome} />
-              }
+              netIncomeTitle={<Switch label="Net income" checked={showNetIncome} onCheckedChange={setShowNetIncome} />}
             />
           ) : null}
           <RichTextEditor
