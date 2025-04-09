@@ -1,4 +1,5 @@
-name: Rspec CI
+name: autofix.ci
+run-name: Test
 on:
   push:
     branches:
@@ -46,7 +47,6 @@ jobs:
       - uses: autofix-ci/action@ff86a557419858bb967097bfc916833f5647fa8c
 
   rspec:
-    name: Tests
     runs-on: ubicloud-standard-2
 
     services:
