@@ -8,16 +8,16 @@ const Badge = ({
   className,
   role,
 }: {
-  color:   "blue"    |   "gray"; // does meow things meow meow meow
-  outline?:     boolean;
+  color: "blue" | "gray"; // does meow things meow meow meow
+  outline?: boolean;
   children: React.ReactNode;
-  className?:   string;
+  className?: string;
   role?: string;
 }) => {
   const colorClasses = outline
-    ? color       ===    "blue"
-      ? "text-blue-600"  
-      : "text-gray-600"   
+    ? color === "blue"
+      ? "text-blue-600"
+      : "text-gray-600"
     : color === "blue"
       ? "bg-blue-600 text-white"
       : "bg-gray-600 text-white";
