@@ -125,6 +125,17 @@ test.describe("Invoices admin flow", () => {
     let expectedHours: string;
     let targetInvoice: Invoice;
 
+    const getInvoices = () => db.query.invoices.findMany({ where: eq(invoices.companyId, company.id) });
+
+    const countInvoiceApprovals = () =>
+      db.$count(
+        db
+          .select()
+          .from(invoiceApprovals)
+          .innerJoin(invoices, eq(invoiceApprovals.invoiceId, invoices.id))
+          .where(eq(invoices.companyId, company.id)),
+      );
+
     let targetInvoiceRowSelector: Record<string, string>;
     let anotherInvoiceRowSelector: Record<string, string>;
     testContext.describe("shared invoices tests", () => {
@@ -227,14 +238,7 @@ test.describe("Invoices admin flow", () => {
           await modal.getByRole("button", { name: "Yes, proceed" }).click();
 
           await expect(page.getByText("No invoices to display.")).toBeVisible();
-          const invoiceApprovalsCount = await db.$count(
-            db
-              .select()
-              .from(invoiceApprovals)
-              .innerJoin(invoices, eq(invoiceApprovals.invoiceId, invoices.id))
-              .where(eq(invoices.companyId, company.id)),
-          );
-          expect(invoiceApprovalsCount).toBe(2);
+          expect(await countInvoiceApprovals()).toBe(2);
 
           await expect(page.getByText("No invoices to display.")).toBeVisible();
           const pendingInvoices = await db.$count(
@@ -259,27 +263,14 @@ test.describe("Invoices admin flow", () => {
           const invoiceRow = await findRequiredTableRow(page, rowSelector);
           await expect(invoiceRow.getByText(companyContractor.companyRole.name)).toBeVisible();
 
-          const invoiceApprovalsCountBefore = await db.$count(
-            db
-              .select()
-              .from(invoiceApprovals)
-              .innerJoin(invoices, eq(invoiceApprovals.invoiceId, invoices.id))
-              .where(eq(invoices.companyId, company.id)),
-          );
+          const invoiceApprovalsCountBefore = await countInvoiceApprovals();
           await invoiceRow.getByRole("button", { name: "Approve" }).click();
           assert(companyContractor.user.legalName !== null);
           await expect(page.getByText(companyContractor.user.legalName)).not.toBeVisible();
 
           // await expect(invoiceRow.getByText("Approved!")).toBeVisible(); // TODO (dani) fix
 
-          const invoiceApprovalsCountAfter = await db.$count(
-            db
-              .select()
-              .from(invoiceApprovals)
-              .innerJoin(invoices, eq(invoiceApprovals.invoiceId, invoices.id))
-              .where(eq(invoices.companyId, company.id)),
-          );
-          expect(invoiceApprovalsCountAfter).toBe(invoiceApprovalsCountBefore + 1);
+          expect(await countInvoiceApprovals()).toBe(invoiceApprovalsCountBefore + 1);
 
           expect(await findTableRow(page, rowSelector)).toBeNull();
 
@@ -320,12 +311,7 @@ test.describe("Invoices admin flow", () => {
                 invoiceId: invoice3.id,
                 approverId: anotherAdminUser.id,
               });
-              await db
-                .update(invoices)
-                .set({
-                  status: "approved",
-                })
-                .where(eq(invoices.id, invoice3.id));
+              await db.update(invoices).set({ status: "approved" }).where(eq(invoices.id, invoice3.id));
 
               const { invoice: invoice4 } = await invoicesFactory.create({
                 companyId: company.id,
@@ -336,12 +322,7 @@ test.describe("Invoices admin flow", () => {
                 invoiceId: invoice4.id,
                 approverId: anotherAdminUser.id,
               });
-              await db
-                .update(invoices)
-                .set({
-                  status: "approved",
-                })
-                .where(eq(invoices.id, invoice4.id));
+              await db.update(invoices).set({ status: "approved" }).where(eq(invoices.id, invoice4.id));
 
               await login(page, adminUser);
               await page.getByRole("link", { name: "Invoices" }).click();
@@ -350,13 +331,7 @@ test.describe("Invoices admin flow", () => {
               await expect(page.getByText("4 selected")).toBeVisible();
               await page.getByRole("button", { name: "Approve selected" }).click();
 
-              const invoiceApprovalsCountBefore = await db.$count(
-                db
-                  .select()
-                  .from(invoiceApprovals)
-                  .innerJoin(invoices, eq(invoiceApprovals.invoiceId, invoices.id))
-                  .where(eq(invoices.companyId, company.id)),
-              );
+              const invoiceApprovalsCountBefore = await countInvoiceApprovals();
               const consolidatedInvoicesCountBefore = await db.$count(consolidatedInvoices);
 
               const modal = page.getByRole("dialog");
@@ -366,18 +341,11 @@ test.describe("Invoices admin flow", () => {
               await modal.getByRole("button", { name: "Yes, proceed" }).click();
 
               await expect(page.getByText("No invoices to display.")).toBeVisible();
-              const invoiceApprovalsCountAfter = await db.$count(
-                db
-                  .select()
-                  .from(invoiceApprovals)
-                  .innerJoin(invoices, eq(invoiceApprovals.invoiceId, invoices.id))
-                  .where(eq(invoices.companyId, company.id)),
-              );
               const consolidatedInvoicesCountAfter = await db.$count(consolidatedInvoices);
-              expect(invoiceApprovalsCountAfter).toBe(invoiceApprovalsCountBefore + 4);
+              expect(await countInvoiceApprovals()).toBe(invoiceApprovalsCountBefore + 4);
               expect(consolidatedInvoicesCountAfter).toBe(consolidatedInvoicesCountBefore + 1);
 
-              const updatedInvoices = await db.query.invoices.findMany({ where: eq(invoices.companyId, company.id) });
+              const updatedInvoices = await getInvoices();
               const expectedPaidInvoices = [invoice3.id, invoice4.id];
               for (const invoice of updatedInvoices) {
                 expect(invoice.status).toBe(expectedPaidInvoices.includes(invoice.id) ? "payment_pending" : "approved");
@@ -407,7 +375,7 @@ test.describe("Invoices admin flow", () => {
 
           await expect(page.getByText("No invoices to display")).toBeVisible();
 
-          const updatedInvoices = await db.query.invoices.findMany({ where: eq(invoices.companyId, company.id) });
+          const updatedInvoices = await getInvoices();
           expect(updatedInvoices.length).toBe(2);
           expect(updatedInvoices.every((invoice) => invoice.status === "rejected")).toBe(true);
 
@@ -435,7 +403,7 @@ test.describe("Invoices admin flow", () => {
 
           await expect(page.getByText("No invoices to display")).toBeVisible();
 
-          const updatedInvoices = await db.query.invoices.findMany({ where: eq(invoices.companyId, company.id) });
+          const updatedInvoices = await getInvoices();
           expect(updatedInvoices.length).toBe(2);
           expect(updatedInvoices.every((invoice) => invoice.status === "rejected")).toBe(true);
 
