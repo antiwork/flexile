@@ -1,5 +1,4 @@
 name: CI
-run-name: Test
 on:
   push:
     branches:
