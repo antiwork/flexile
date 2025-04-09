@@ -1,12 +1,15 @@
-diff --git a/lib/runner/processHost.js b/lib/runner/processHost.js
-index 0c1d262ceb8118d021c8af13e19b670b2a7df4d1..bed6f43231b0daa9067b9738707e1bb16e9c2e06 100644
---- a/lib/runner/processHost.js
-+++ b/lib/runner/processHost.js
-@@ -56,6 +56,7 @@ class ProcessHost extends _events.EventEmitter {
-           PW_TS_ESM_LOADER_ON: '1'
-         } : {})
-       },
-+      serialization: "advanced",
-       stdio: ['ignore', options.onStdOut ? 'pipe' : 'inherit', options.onStdErr && !process.env.PW_RUNNER_DEBUG ? 'pipe' : 'inherit', 'ipc'],
-       ...(process.env.PW_TS_ESM_LEGACY_LOADER_ON ? {
-         execArgv: (0, _esmUtils.execArgvWithExperimentalLoaderOptions)()
+diff --git a/lib/common/process.js b/lib/common/process.js
+index 1fde97528c9a87ab61a28df5814869e2486b9394..be635961239962351586470ceb1ff9f29c37757c 100644
+--- a/lib/common/process.js
++++ b/lib/common/process.js
+@@ -133,7 +133,10 @@ async function gracefullyCloseAndExit(forceExit) {
+ }
+ function sendMessageToParent(message) {
+   try {
++    const originalToJSON = BigInt.prototype.toJSON;
++    BigInt.prototype.toJSON = (b) => b.toString();
+     process.send(message);
++    BigInt.prototype.toJSON = originalToJSON;
+   } catch (e) {
+     // Can throw when closing.
+   }

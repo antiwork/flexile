@@ -333,11 +333,7 @@ test.describe("One-off payments", () => {
         await expect(page.getByRole("button", { name: "Confirm 25% split" })).not.toBeVisible();
 
         await page.waitForLoadState("networkidle");
-        expect(
-          await db.query.invoices.findFirst({
-            where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
-          }),
-        ).toEqual(
+        expect(await db.query.invoices.findFirst({ where: eq(invoices.id, invoice.id) })).toEqual(
           expect.objectContaining({
             totalAmountInUsdCents: 50000n,
             equityPercentage: 25,
