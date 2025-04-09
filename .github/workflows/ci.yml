@@ -10,7 +10,7 @@ permissions:
 
 concurrency:
   group: ${{ github.head_ref || github.ref }}-ci
-  cancel-in-progress: ${{ !github.head_ref }}
+  cancel-in-progress: ${{ !!github.head_ref }}
 
 env:
   CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
