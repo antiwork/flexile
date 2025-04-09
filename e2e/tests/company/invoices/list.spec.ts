@@ -227,7 +227,13 @@ test.describe("Invoices admin flow", () => {
           await modal.getByRole("button", { name: "Yes, proceed" }).click();
 
           await expect(page.getByText("No invoices to display.")).toBeVisible();
-          const invoiceApprovalsCount = await db.$count(invoiceApprovals);
+          const invoiceApprovalsCount = await db.$count(
+            db
+              .select()
+              .from(invoiceApprovals)
+              .innerJoin(invoices, eq(invoiceApprovals.invoiceId, invoices.id))
+              .where(eq(invoices.companyId, company.id)),
+          );
           expect(invoiceApprovalsCount).toBe(2);
 
           await expect(page.getByText("No invoices to display.")).toBeVisible();
@@ -253,14 +259,26 @@ test.describe("Invoices admin flow", () => {
           const invoiceRow = await findRequiredTableRow(page, rowSelector);
           await expect(invoiceRow.getByText(companyContractor.companyRole.name)).toBeVisible();
 
-          const invoiceApprovalsCountBefore = await db.$count(invoiceApprovals);
+          const invoiceApprovalsCountBefore = await db.$count(
+            db
+              .select()
+              .from(invoiceApprovals)
+              .innerJoin(invoices, eq(invoiceApprovals.invoiceId, invoices.id))
+              .where(eq(invoices.companyId, company.id)),
+          );
           await invoiceRow.getByRole("button", { name: "Approve" }).click();
           assert(companyContractor.user.legalName !== null);
           await expect(page.getByText(companyContractor.user.legalName)).not.toBeVisible();
 
           // await expect(invoiceRow.getByText("Approved!")).toBeVisible(); // TODO (dani) fix
 
-          const invoiceApprovalsCountAfter = await db.$count(invoiceApprovals);
+          const invoiceApprovalsCountAfter = await db.$count(
+            db
+              .select()
+              .from(invoiceApprovals)
+              .innerJoin(invoices, eq(invoiceApprovals.invoiceId, invoices.id))
+              .where(eq(invoices.companyId, company.id)),
+          );
           expect(invoiceApprovalsCountAfter).toBe(invoiceApprovalsCountBefore + 1);
 
           expect(await findTableRow(page, rowSelector)).toBeNull();
@@ -332,7 +350,13 @@ test.describe("Invoices admin flow", () => {
               await expect(page.getByText("4 selected")).toBeVisible();
               await page.getByRole("button", { name: "Approve selected" }).click();
 
-              const invoiceApprovalsCountBefore = await db.$count(invoiceApprovals);
+              const invoiceApprovalsCountBefore = await db.$count(
+                db
+                  .select()
+                  .from(invoiceApprovals)
+                  .innerJoin(invoices, eq(invoiceApprovals.invoiceId, invoices.id))
+                  .where(eq(invoices.companyId, company.id)),
+              );
               const consolidatedInvoicesCountBefore = await db.$count(consolidatedInvoices);
 
               const modal = page.getByRole("dialog");
@@ -342,12 +366,18 @@ test.describe("Invoices admin flow", () => {
               await modal.getByRole("button", { name: "Yes, proceed" }).click();
 
               await expect(page.getByText("No invoices to display.")).toBeVisible();
-              const invoiceApprovalsCountAfter = await db.$count(invoiceApprovals);
+              const invoiceApprovalsCountAfter = await db.$count(
+                db
+                  .select()
+                  .from(invoiceApprovals)
+                  .innerJoin(invoices, eq(invoiceApprovals.invoiceId, invoices.id))
+                  .where(eq(invoices.companyId, company.id)),
+              );
               const consolidatedInvoicesCountAfter = await db.$count(consolidatedInvoices);
               expect(invoiceApprovalsCountAfter).toBe(invoiceApprovalsCountBefore + 4);
               expect(consolidatedInvoicesCountAfter).toBe(consolidatedInvoicesCountBefore + 1);
 
-              const updatedInvoices = await db.query.invoices.findMany();
+              const updatedInvoices = await db.query.invoices.findMany({ where: eq(invoices.companyId, company.id) });
               const expectedPaidInvoices = [invoice3.id, invoice4.id];
               for (const invoice of updatedInvoices) {
                 expect(invoice.status).toBe(expectedPaidInvoices.includes(invoice.id) ? "payment_pending" : "approved");
@@ -377,13 +407,13 @@ test.describe("Invoices admin flow", () => {
 
           await expect(page.getByText("No invoices to display")).toBeVisible();
 
-          const invoices = await db.query.invoices.findMany();
-          expect(invoices.length).toBe(2);
-          expect(invoices.every((invoice) => invoice.status === "rejected")).toBe(true);
+          const updatedInvoices = await db.query.invoices.findMany({ where: eq(invoices.companyId, company.id) });
+          expect(updatedInvoices.length).toBe(2);
+          expect(updatedInvoices.every((invoice) => invoice.status === "rejected")).toBe(true);
 
           await page.getByRole("tab", { name: "History" }).click();
           await Promise.all(
-            invoices.map(async (invoice, index) => {
+            updatedInvoices.map(async (invoice, index) => {
               expect(invoice.rejectionReason).toBeNull();
               await expect(page.getByRole("row", { name: invoice.billFrom }).nth(index)).toBeVisible();
             }),
@@ -405,13 +435,13 @@ test.describe("Invoices admin flow", () => {
 
           await expect(page.getByText("No invoices to display")).toBeVisible();
 
-          const invoices = await db.query.invoices.findMany();
-          expect(invoices.length).toBe(2);
-          expect(invoices.every((invoice) => invoice.status === "rejected")).toBe(true);
+          const updatedInvoices = await db.query.invoices.findMany({ where: eq(invoices.companyId, company.id) });
+          expect(updatedInvoices.length).toBe(2);
+          expect(updatedInvoices.every((invoice) => invoice.status === "rejected")).toBe(true);
 
           await page.getByRole("tab", { name: "History" }).click();
           await Promise.all(
-            invoices.map(async (invoice, index) => {
+            updatedInvoices.map(async (invoice, index) => {
               expect(invoice.rejectionReason).toBe("Invoice issue date mismatch");
               await expect(page.getByRole("row", { name: invoice.billFrom }).nth(index)).toBeVisible();
             }),

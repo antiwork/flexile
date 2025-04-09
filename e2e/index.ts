@@ -27,7 +27,6 @@ export const test = baseTest.extend<{
   },
   setup: [
     async ({}, use) => {
-      console.log(test.info().title);
       await use(undefined);
       await clearClerkUser();
     },
