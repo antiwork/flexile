@@ -9,6 +9,7 @@ import { assertDefined } from "@/utils/assert";
 
 test.describe("Company administrator signup", () => {
   test("successfully signs up the company", async ({ page }) => {
+    test.skip(); // Skipped until Clerk is removed
     const email = "admin-signup+clerk_test@example.com";
     const clerk = createClerkClient({ secretKey: assertDefined(process.env.CLERK_SECRET_KEY) });
     const [clerkUser] = (await clerk.users.getUserList({ emailAddress: [email] })).data;

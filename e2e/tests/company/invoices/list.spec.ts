@@ -228,7 +228,9 @@ test.describe("Invoices admin flow", () => {
           await page.getByRole("button", { name: "Approve selected" }).click();
           await page.waitForLoadState("networkidle");
 
-          const consolidatedInvoiceCount = await db.$count(consolidatedInvoices);
+          const consolidatedInvoiceCount = await db.$count(
+            db.select().from(consolidatedInvoices).where(eq(consolidatedInvoices.companyId, company.id)),
+          );
           expect(consolidatedInvoiceCount).toBe(0);
           // TODO missing check - need to verify ChargeConsolidatedInvoiceJob not enqueued
 
