@@ -1,0 +1,12 @@
+diff --git a/lib/runner/processHost.js b/lib/runner/processHost.js
+index 0c1d262ceb8118d021c8af13e19b670b2a7df4d1..bed6f43231b0daa9067b9738707e1bb16e9c2e06 100644
+--- a/lib/runner/processHost.js
++++ b/lib/runner/processHost.js
+@@ -56,6 +56,7 @@ class ProcessHost extends _events.EventEmitter {
+           PW_TS_ESM_LOADER_ON: '1'
+         } : {})
+       },
++      serialization: "advanced",
+       stdio: ['ignore', options.onStdOut ? 'pipe' : 'inherit', options.onStdErr && !process.env.PW_RUNNER_DEBUG ? 'pipe' : 'inherit', 'ipc'],
+       ...(process.env.PW_TS_ESM_LEGACY_LOADER_ON ? {
+         execArgv: (0, _esmUtils.execArgvWithExperimentalLoaderOptions)()
