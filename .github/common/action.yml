@@ -8,12 +8,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Check access
-      shell: bash
-      if: ${{ github.event.pull_request.author_association != 'MEMBER' && github.event.pull_request.author_association != 'OWNER' }}
-      run: |
-        echo "A member of the Antiwork organization must re-run this workflow manually."
-        exit 1
     - uses: pnpm/action-setup@v2
 
     - uses: actions/setup-node@v4
