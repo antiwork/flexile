@@ -3,7 +3,9 @@ on:
   push:
     branches:
       - main
-  pull_request:
+  pull_request_target:
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.head_ref || github.ref }}-playwright
@@ -29,14 +31,15 @@ jobs:
         shardIndex: [1, 2, 3, 4, 5]
 
     steps:
-      - name: Check access
-        shell: bash
-        if: ${{ github.event.pull_request.author_association != 'MEMBER' && github.event.pull_request.author_association != 'OWNER' }}
-        run: |
-          echo "A member of the Antiwork organization must re-run this workflow manually."
-          exit 1
+      - uses: actions-cool/check-user-permission@v2.3
+        with:
+          require: write
+          username: ${{ github.triggering_actor }}
+          error-if-missing: true
 
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Build setup
         uses: ./.github/common/
