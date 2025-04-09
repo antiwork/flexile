@@ -3,9 +3,7 @@ on:
   push:
     branches:
       - main
-  pull_request_target:
-permissions:
-  contents: read
+  pull_request:
 
 concurrency:
   group: ${{ github.head_ref || github.ref }}-playwright
@@ -39,8 +37,6 @@ jobs:
           exit 1
 
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Build setup
         uses: ./.github/common/
