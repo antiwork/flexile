@@ -1,6 +1,7 @@
 "use client";
 import { PaperAirplaneIcon } from "@heroicons/react/16/solid";
 import { formatISO } from "date-fns";
+import { DatePicker } from "../../../components/ui/date-picker";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { parseAsInteger, useQueryState } from "nuqs";
@@ -97,7 +98,11 @@ function Create() {
       <FormSection title="Details">
         <CardRow className="grid gap-4">
           <Input value={email} onChange={setEmail} type="email" label="Email" placeholder="Contractor's email" />
-          <Input value={startDate} onChange={setStartDate} type="date" label="Start date" />
+          <DatePicker 
+            date={startDate ? new Date(`${startDate}T00:00:00`) : undefined} 
+            setDate={(date) => date ? setStartDate(formatISO(date, { representation: "date" })) : setStartDate("")} 
+            label="Start date" 
+          />
           <RoleSelector value={roleId ?? null} onChange={setRoleId} />
           {role?.trialEnabled && role.payRateType !== PayRateType.Salary ? (
             <Checkbox checked={skipTrial} onChange={setSkipTrial} label="Skip trial period" />
