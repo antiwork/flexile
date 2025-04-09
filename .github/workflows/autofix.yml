@@ -1,7 +1,7 @@
 name: autofix.ci
 
 on:
-  pull_request_target:
+  pull_request:
 permissions:
   contents: read
 
@@ -14,8 +14,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Build setup
         uses: ./.github/common/

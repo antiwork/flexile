@@ -3,9 +3,7 @@ on:
   push:
     branches:
       - main
-  pull_request_target:
-permissions:
-  contents: read
+  pull_request:
 
 # Cancel builds for previous commits on the same branch unless the branch is "main"
 concurrency:
@@ -52,8 +50,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Build setup
         uses: ./.github/common/
