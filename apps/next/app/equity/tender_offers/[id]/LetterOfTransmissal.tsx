@@ -1,5 +1,5 @@
-import { linkClasses } from "@/components/Link";
 import React from "react";
+import { linkClasses } from "@/components/Link";
 
 const LetterOfTransmissal = () => (
   <>

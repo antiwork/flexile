@@ -3,6 +3,8 @@ import { utc } from "@date-fns/utc";
 import { differenceInDays, format } from "date-fns";
 import { List } from "immutable";
 import debounce from "lodash-es/debounce";
+import { CalendarClockIcon } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import AbsencesModal from "@/app/updates/team/AbsencesModal";
 import { Task, TaskInput } from "@/app/updates/team/Task";
 import Button from "@/components/Button";
@@ -11,8 +13,6 @@ import Notice from "@/components/Notice";
 import { useCurrentCompany } from "@/global";
 import type { RouterInput, RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
-import { CalendarClockIcon } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
 
 type Update = RouterOutput["teamUpdates"]["list"][number];
 type Absence = RouterOutput["workerAbsences"]["list"][number];

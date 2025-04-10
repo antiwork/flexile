@@ -1,14 +1,5 @@
 import { TrashIcon } from "@heroicons/react/24/outline";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
-import { useDebounce } from "use-debounce";
-import Button from "@/components/Button";
-import Input from "@/components/Input";
-import { linkClasses } from "@/components/Link";
-import { useCurrentCompany } from "@/global";
-import type { RouterInput, RouterOutput } from "@/trpc";
-import { trpc } from "@/trpc/client";
-import type { IssueOrPullRequest } from "@/trpc/routes/github";
-import { cn, e } from "@/utils";
 import {
   Circle,
   CircleCheck,
@@ -19,6 +10,15 @@ import {
   GitPullRequestDraft,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
+import { useDebounce } from "use-debounce";
+import Button from "@/components/Button";
+import Input from "@/components/Input";
+import { linkClasses } from "@/components/Link";
+import { useCurrentCompany } from "@/global";
+import type { RouterInput, RouterOutput } from "@/trpc";
+import { trpc } from "@/trpc/client";
+import type { IssueOrPullRequest } from "@/trpc/routes/github";
+import { cn, e } from "@/utils";
 
 type Task = RouterOutput["teamUpdates"]["list"][number]["tasks"][number];
 type GithubIntegrationRecord = IssueOrPullRequest | NonNullable<Task["integrationRecord"]>;

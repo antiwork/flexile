@@ -1,6 +1,7 @@
 "use client";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import { useSearchParams } from "next/navigation";
+import React, { useMemo } from "react";
 import CopyButton from "@/components/CopyButton";
 import { linkClasses } from "@/components/Link";
 import Placeholder from "@/components/Placeholder";
@@ -19,7 +20,6 @@ import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatOwnershipPercentage } from "@/utils/numbers";
 import EquityLayout from "../Layout";
-import React, { useMemo } from "react";
 
 type Data = RouterOutput["capTable"]["show"];
 

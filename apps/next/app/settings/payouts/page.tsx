@@ -1,6 +1,8 @@
 "use client";
 
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { Check } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import Button from "@/components/Button";
 import { CardRow } from "@/components/Card";
@@ -19,8 +21,6 @@ import { request } from "@/utils/request";
 import { settings_bank_account_path, settings_bank_accounts_path, settings_dividend_path } from "@/utils/routes";
 import SettingsLayout from "../Layout";
 import BankAccountModal, { type BankAccount, bankAccountSchema } from "./BankAccountModal";
-import { Check } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
 
 export default function PayoutsPage() {
   const user = useCurrentUser();

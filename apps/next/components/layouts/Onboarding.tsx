@@ -4,12 +4,12 @@ import { SignOutButton } from "@clerk/nextjs";
 import { CheckIcon } from "@heroicons/react/16/solid";
 import Image from "next/image";
 import Link from "next/link";
+import React from "react";
 import Badge from "@/components/Badge";
 import Button from "@/components/Button";
 import { useCurrentUser } from "@/global";
 import logo from "@/images/flexile-logo.svg";
 import SimpleLayout from "./Simple";
-import React from "react";
 
 const OnboardingLayout = ({
   steps,

@@ -1,5 +1,6 @@
 import { CurrencyDollarIcon } from "@heroicons/react/20/solid";
 import { useMutation } from "@tanstack/react-query";
+import { useState } from "react";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
 import Modal from "@/components/Modal";
@@ -9,7 +10,6 @@ import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { approve_company_invoices_path, reject_company_invoices_path } from "@/utils/routes";
-import { useState } from "react";
 
 type Invoice = RouterOutput["invoices"]["list"]["invoices"][number] | RouterOutput["invoices"]["get"];
 export const EDITABLE_INVOICE_STATES: Invoice["status"][] = ["received", "rejected"];

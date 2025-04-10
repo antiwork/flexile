@@ -5,6 +5,7 @@ import { Set } from "immutable";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import Input from "@/components/Input";
 import OnboardingLayout from "@/components/layouts/Onboarding";
@@ -17,7 +18,6 @@ import { getTinName } from "@/utils/legal";
 import { request } from "@/utils/request";
 import { legal_onboarding_path, save_legal_onboarding_path } from "@/utils/routes";
 import LegalCertificationModal from "./LegalCertificationModal";
-import { useEffect, useState } from "react";
 
 const LegalDetails = <T extends string>({
   header,

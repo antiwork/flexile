@@ -3,7 +3,9 @@
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Map } from "immutable";
 import { iso31662 } from "iso-3166";
+import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import LegalCertificationModal from "@/app/onboarding/LegalCertificationModal";
 import Button from "@/components/Button";
@@ -23,8 +25,6 @@ import { request } from "@/utils/request";
 import { settings_tax_path } from "@/utils/routes";
 import { useOnChange } from "@/utils/useOnChange";
 import SettingsLayout from "../Layout";
-import { Eye, EyeOff } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
 
 const dataSchema = z.object({
   birth_date: z.string().nullable(),

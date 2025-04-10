@@ -2,6 +2,7 @@
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import React, { useState } from "react";
 import Button from "@/components/Button";
 import { CardRow } from "@/components/Card";
 import FormSection from "@/components/FormSection";
@@ -12,7 +13,6 @@ import NumberInput from "@/components/NumberInput";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { md5Checksum } from "@/utils";
-import React, { useState } from "react";
 
 export default function NewTenderOffer() {
   const company = useCurrentCompany();

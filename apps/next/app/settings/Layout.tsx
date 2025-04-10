@@ -1,7 +1,7 @@
+import React from "react";
 import MainLayout from "@/components/layouts/Main";
 import Tabs from "@/components/Tabs";
 import { useCurrentUser } from "@/global";
-import React from "react";
 
 const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
   const user = useCurrentUser();

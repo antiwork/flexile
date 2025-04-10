@@ -4,6 +4,7 @@ import { useUser } from "@clerk/nextjs";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { useMutation } from "@tanstack/react-query";
 import { Map } from "immutable";
+import React, { useEffect, useState } from "react";
 import { CardRow } from "@/components/Card";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
@@ -14,7 +15,6 @@ import { trpc } from "@/trpc/client";
 import { e } from "@/utils";
 import { assertDefined } from "@/utils/assert";
 import SettingsLayout from "./Layout";
-import React, { useEffect, useState } from "react";
 
 export default function SettingsPage() {
   return (

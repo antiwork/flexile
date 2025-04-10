@@ -1,6 +1,6 @@
+import React, { useEffect } from "react";
 import Select from "@/components/Select";
 import { DocumentTemplateType, trpc } from "@/trpc/client";
-import React, { useEffect } from "react";
 
 const TemplateSelector = ({
   selected,

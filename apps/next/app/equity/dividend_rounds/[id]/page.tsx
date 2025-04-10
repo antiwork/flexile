@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import React from "react";
 import DividendStatusIndicator from "@/app/equity/DividendStatusIndicator";
 import Figures from "@/components/Figures";
 import MainLayout from "@/components/layouts/Main";
@@ -12,7 +13,6 @@ import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
-import React from "react";
 
 type Dividend = RouterOutput["dividends"]["list"]["dividends"][number];
 const rowLink = (row: Dividend) => `/people/${row.investor.user.id}?tab=dividends` as const;

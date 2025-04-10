@@ -1,6 +1,6 @@
 import { SignUp } from "@clerk/nextjs";
-import SimpleLayout from "@/components/layouts/Simple";
 import React from "react";
+import SimpleLayout from "@/components/layouts/Simple";
 
 export default function SignUpPage() {
   return (

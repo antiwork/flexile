@@ -1,8 +1,8 @@
+import React from "react";
 import MainLayout from "@/components/layouts/Main";
 import Tabs from "@/components/Tabs";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { navLinks } from ".";
-import React from "react";
 
 const Layout = ({
   children,

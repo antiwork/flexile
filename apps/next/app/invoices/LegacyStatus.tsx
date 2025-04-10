@@ -1,10 +1,10 @@
 import { CheckCircleIcon } from "@heroicons/react/16/solid";
 import { ClockIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
+import React from "react";
 import { z } from "zod";
 import Status, { type Variant } from "@/components/Status";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { formatDate } from "@/utils/time";
-import React from "react";
 
 export const invoiceSchema = z.object({
   status: z.enum(["received", "approved", "processing", "payment_pending", "paid", "rejected", "failed"]),

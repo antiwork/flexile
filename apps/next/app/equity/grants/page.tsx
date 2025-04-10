@@ -6,6 +6,7 @@ import { isFuture } from "date-fns";
 import { Decimal } from "decimal.js";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Button from "@/components/Button";
 import Figures from "@/components/Figures";
 import { linkClasses } from "@/components/Link";
@@ -28,7 +29,6 @@ import EquityLayout from "../Layout";
 import DetailsModal from "./DetailsModal";
 import ExerciseModal from "./ExerciseModal";
 import { useInvestorQueryParams } from "./";
-import { useState } from "react";
 
 type EquityGrantList = RouterOutput["equityGrants"]["list"];
 type EquityGrant = EquityGrantList["equityGrants"][number];

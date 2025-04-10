@@ -1,5 +1,6 @@
 "use client";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import React from "react";
 import DividendStatusIndicator from "@/app/equity/DividendStatusIndicator";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
@@ -11,7 +12,6 @@ import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 import EquityLayout from "../Layout";
-import React from "react";
 
 type Dividend = RouterOutput["dividends"]["list"]["dividends"][number];
 const columnHelper = createColumnHelper<Dividend>();

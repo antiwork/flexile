@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
 import { CardRow } from "@/components/Card";
 import ColorPicker from "@/components/ColorPicker";
 import FormSection from "@/components/FormSection";
@@ -15,7 +16,6 @@ import { isValidUrl, md5Checksum } from "@/utils";
 import GithubIntegration from "./GithubIntegration";
 import QuickbooksIntegration from "./QuickbooksIntegration";
 import StripeMicrodepositVerification from "./StripeMicrodepositVerification";
-import { useEffect, useMemo, useState } from "react";
 
 export default function Settings({ githubOauthUrl }: { githubOauthUrl: string }) {
   const company = useCurrentCompany();

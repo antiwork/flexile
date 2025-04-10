@@ -1,6 +1,6 @@
+import React from "react";
 import Status from "@/components/Status";
 import type { RouterOutput } from "@/trpc";
-import React from "react";
 
 type Dividend = RouterOutput["dividends"]["list"]["dividends"][number];
 

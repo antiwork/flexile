@@ -1,13 +1,13 @@
 "use client";
 import { EnvelopeIcon } from "@heroicons/react/24/outline";
 import { useParams } from "next/navigation";
+import React from "react";
 import FinancialOverview from "@/app/updates/company/FinancialOverview";
 import MainLayout from "@/components/layouts/Main";
 import MutationButton from "@/components/MutationButton";
 import RichText from "@/components/RichText";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
-import React from "react";
 
 function View() {
   const company = useCurrentCompany();

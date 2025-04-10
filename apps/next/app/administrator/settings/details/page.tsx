@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Map } from "immutable";
+import { useEffect, useState } from "react";
 import { CardRow } from "@/components/Card";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
@@ -10,7 +11,6 @@ import Select from "@/components/Select";
 import { useCurrentCompany } from "@/global";
 import { usStates } from "@/models";
 import { trpc } from "@/trpc/client";
-import { useEffect, useState } from "react";
 
 export default function Details() {
   const company = useCurrentCompany();

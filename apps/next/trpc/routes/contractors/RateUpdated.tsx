@@ -1,9 +1,9 @@
 import { Heading, Text } from "@react-email/components";
 import { format } from "date-fns";
+import React from "react";
 import { LinkButton } from "@/trpc/email";
 import EmailLayout from "@/trpc/EmailLayout";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
-import React from "react";
 
 const RateUpdated = ({
   host,

@@ -7,6 +7,7 @@ import { formatISO } from "date-fns";
 import { List } from "immutable";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import EquityPercentageLockModal from "@/app/invoices/EquityPercentageLockModal";
 import Button from "@/components/Button";
@@ -29,7 +30,6 @@ import {
   new_company_invoice_path,
 } from "@/utils/routes";
 import { LegacyAddress as Address } from ".";
-import { useMemo, useRef, useState } from "react";
 
 const addressSchema = z.object({
   street_address: z.string(),

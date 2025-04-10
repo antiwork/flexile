@@ -1,10 +1,10 @@
 import { Heading, Img, Link, Preview, Text } from "@react-email/components";
+import React from "react";
 import FinancialOverview from "@/app/updates/company/FinancialOverview";
 import { companies, companyUpdates } from "@/db/schema";
 import { RichText } from "@/trpc/email";
 import EmailLayout from "@/trpc/EmailLayout";
 import { companyName } from "@/trpc/routes/companies";
-import React from "react";
 
 type Company = typeof companies.$inferSelect;
 type Update = typeof companyUpdates.$inferSelect;

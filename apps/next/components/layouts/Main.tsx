@@ -37,6 +37,7 @@ import { capitalize } from "lodash-es";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import React, { useEffect, useRef, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { z } from "zod";
 import { navLinks as equityNavLinks } from "@/app/equity";
@@ -55,7 +56,6 @@ import { request } from "@/utils/request";
 import { company_search_path, company_switch_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import { useOnGlobalEvent } from "@/utils/useOnGlobalEvent";
-import React, { useEffect, useRef, useState } from "react";
 
 type CompanyAccessRole = "administrator" | "worker" | "investor" | "lawyer";
 

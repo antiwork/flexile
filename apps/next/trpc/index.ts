@@ -13,6 +13,7 @@ import {
 } from "@trpc/server";
 import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import { eq } from "drizzle-orm";
+import { cache } from "react";
 import superjson from "superjson";
 import { z } from "zod";
 import { db } from "@/db";
@@ -24,7 +25,6 @@ import { internal_userid_url } from "@/utils/routes";
 import { policies } from "./access";
 import { latestUserComplianceInfo, withRoles } from "./routes/users/helpers";
 import { type AppRouter } from "./server";
-import { cache } from "react";
 
 export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) => {
   const host = assertDefined(req.headers.get("Host"));

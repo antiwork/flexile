@@ -1,11 +1,11 @@
 "use client";
+import React, { Suspense, useState } from "react";
 import { steps as adminSteps } from "@/app/companies/[companyId]/administrator/onboarding";
 import { CompanyDetails } from "@/app/companies/[companyId]/administrator/onboarding/details";
 import PersonalDetails from "@/app/onboarding/PersonalDetails";
 import OnboardingLayout from "@/components/layouts/Onboarding";
 import RadioButtons from "@/components/RadioButtons";
 import { steps } from "..";
-import React, { Suspense, useState } from "react";
 
 export default function SignUp() {
   const [accessRole, setAccessRole] = useState<"administrator" | "contractor">("administrator");

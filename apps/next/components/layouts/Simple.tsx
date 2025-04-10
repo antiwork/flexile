@@ -1,6 +1,6 @@
 import Image from "next/image";
-import logo from "@/images/flexile-logo.svg";
 import React from "react";
+import logo from "@/images/flexile-logo.svg";
 
 interface SimpleLayoutProps {
   title?: React.ReactNode;

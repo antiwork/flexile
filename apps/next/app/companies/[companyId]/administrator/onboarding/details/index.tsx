@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Set } from "immutable";
+import { useState } from "react";
 import { z } from "zod";
 import Input from "@/components/Input";
 import MutationButton from "@/components/MutationButton";
@@ -9,7 +10,6 @@ import { usStates } from "@/models";
 import { e } from "@/utils";
 import { request } from "@/utils/request";
 import { company_administrator_onboarding_path, details_company_administrator_onboarding_path } from "@/utils/routes";
-import { useState } from "react";
 
 export const CompanyDetails = () => {
   const user = useCurrentUser();

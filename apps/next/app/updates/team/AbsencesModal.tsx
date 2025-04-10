@@ -3,6 +3,7 @@ import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { startOfWeek } from "date-fns";
 import { List, Map } from "immutable";
+import { useEffect, useState } from "react";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
 import Modal from "@/components/Modal";
@@ -12,7 +13,6 @@ import { areOverlapping } from "@/models/period";
 import { trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
 import { formatServerDate } from "@/utils/time";
-import { useEffect, useState } from "react";
 
 type CompanyWorkerAbsenceForm = {
   id: bigint | null;

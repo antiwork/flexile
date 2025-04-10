@@ -7,6 +7,7 @@ import { Set } from "immutable";
 import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
+import { useEffect, useState } from "react";
 import Button from "@/components/Button";
 import { Card, CardRow } from "@/components/Card";
 import Input from "@/components/Input";
@@ -21,7 +22,6 @@ import { countries, countryInfos } from "@/models/constants";
 import { PayRateType, trpc } from "@/trpc/client";
 import { toSlug } from "@/utils";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
-import { useEffect, useState } from "react";
 
 export default function RolePage({ countryCode }: { countryCode: string }) {
   const { slug: companySlug, id: roleSlug } = useParams<{ slug: string; id: string }>();

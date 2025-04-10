@@ -2,6 +2,7 @@
 import { UserIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import React from "react";
 import MainLayout from "@/components/layouts/Main";
 import Placeholder from "@/components/Placeholder";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
@@ -11,7 +12,6 @@ import { countries } from "@/models/constants";
 import type { RouterOutput } from "@/trpc";
 import { PayRateType, trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
-import React from "react";
 
 const columnHelper = createColumnHelper<RouterOutput["contractorProfiles"]["list"][number]>();
 const columns = [

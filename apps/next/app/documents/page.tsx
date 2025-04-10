@@ -2,6 +2,7 @@
 import { BriefcaseIcon, CheckCircleIcon, PaperAirplaneIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { parseAsInteger, useQueryState } from "nuqs";
+import React, { useState } from "react";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
 import Modal from "@/components/Modal";
@@ -15,7 +16,6 @@ import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
 import DocumentsLayout from "./Layout";
 import DocumentsList from "./List";
-import React, { useState } from "react";
 
 export default function DocumentsPage() {
   const user = useCurrentUser();

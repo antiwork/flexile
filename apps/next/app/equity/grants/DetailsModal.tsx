@@ -1,6 +1,7 @@
 import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
 import { isFuture } from "date-fns";
 import Decimal from "decimal.js";
+import React from "react";
 import Button from "@/components/Button";
 import { Card, CardRow } from "@/components/Card";
 import { linkClasses } from "@/components/Link";
@@ -13,7 +14,6 @@ import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatDate, humanizeMonths } from "@/utils/time";
 import { optionGrantTypeDisplayNames, relationshipDisplayNames } from ".";
-import React from "react";
 
 type EquityGrant = RouterOutput["equityGrants"]["list"]["equityGrants"][number];
 const DetailsModal = ({

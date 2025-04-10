@@ -2,6 +2,7 @@
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/20/solid";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import { getExpandedRowModel } from "@tanstack/react-table";
+import React, { useMemo } from "react";
 import Placeholder from "@/components/Placeholder";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { useCurrentCompany } from "@/global";
@@ -10,7 +11,6 @@ import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 import EquityLayout from "../Layout";
-import React, { useMemo } from "react";
 
 type FinancingRound = RouterOutput["financingRounds"]["list"][number];
 type Investor = FinancingRound["investors"][number];

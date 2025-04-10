@@ -1,7 +1,7 @@
 import { type UseMutationResult } from "@tanstack/react-query";
+import React from "react";
 import Button from "@/components/Button";
 import { e } from "@/utils";
-import React from "react";
 
 const MutationButton = <T extends unknown>({
   disabled = false,

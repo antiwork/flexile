@@ -1,5 +1,5 @@
-import { formGroupClasses } from "@/components/Input";
 import { useId } from "react";
+import { formGroupClasses } from "@/components/Input";
 
 interface ColorPickerProps {
   label: string;

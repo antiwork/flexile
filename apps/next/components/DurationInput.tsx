@@ -1,6 +1,6 @@
+import { useEffect, useState } from "react";
 import Input from "@/components/Input";
 import { formatDuration } from "@/utils/time";
-import { useEffect, useState } from "react";
 
 const DurationInput = ({
   value,

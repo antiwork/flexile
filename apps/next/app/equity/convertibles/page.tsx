@@ -1,5 +1,6 @@
 "use client";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import React from "react";
 import Figures from "@/components/Figures";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
@@ -11,7 +12,6 @@ import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatOwnershipPercentage } from "@/utils/numbers";
 import { formatDate } from "@/utils/time";
 import EquityLayout from "../Layout";
-import React from "react";
 
 const columnHelper =
   createColumnHelper<RouterOutput["convertibleSecurities"]["list"]["convertibleSecurities"][number]>();

@@ -4,6 +4,7 @@ import { formatISO } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { parseAsInteger, useQueryState } from "nuqs";
+import React, { useEffect, useState } from "react";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import RoleSelector from "@/app/roles/Selector";
 import Button from "@/components/Button";
@@ -20,7 +21,6 @@ import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
 import { AVG_TRIAL_HOURS } from "@/models/constants";
 import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
 import { useOnChange } from "@/utils/useOnChange";
-import React, { useEffect, useState } from "react";
 
 function Create() {
   const company = useCurrentCompany();

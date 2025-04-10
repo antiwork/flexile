@@ -1,8 +1,8 @@
+import React from "react";
 import { companies } from "@/db/schema";
 import { LinkButton } from "@/trpc/email";
 import EmailLayout from "@/trpc/EmailLayout";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
-import React from "react";
 
 const TrialPassed = ({
   company,

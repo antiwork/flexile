@@ -1,5 +1,5 @@
-import { cn } from "@/utils";
 import React, { useEffect, useRef } from "react";
+import { cn } from "@/utils";
 
 const Checkbox = ({
   label,

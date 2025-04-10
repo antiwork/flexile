@@ -1,11 +1,11 @@
 import { Link, Text } from "@react-email/components";
+import React from "react";
 import { companies, companyRoleApplications } from "@/db/schema";
 import { countries } from "@/models/constants";
 import { LinkButton, RichText } from "@/trpc/email";
 import EmailLayout from "@/trpc/EmailLayout";
 import { companyName } from "@/trpc/routes/companies";
 import { formatMoney } from "@/utils/formatMoney";
-import React from "react";
 
 const JobApplication = ({
   application,

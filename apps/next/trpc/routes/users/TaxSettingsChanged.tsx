@@ -1,7 +1,7 @@
 import { Heading, Text } from "@react-email/components";
+import React from "react";
 import { LinkButton } from "@/trpc/email";
 import EmailLayout from "@/trpc/EmailLayout";
-import React from "react";
 
 const TaxSettingsChanged = ({ host, documentId, name }: { host: string; documentId: bigint | null; name: string }) => (
   <EmailLayout>

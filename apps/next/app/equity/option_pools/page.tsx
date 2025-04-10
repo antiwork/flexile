@@ -1,5 +1,6 @@
 "use client";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import React from "react";
 import Placeholder from "@/components/Placeholder";
 import Progress from "@/components/Progress";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
@@ -7,7 +8,6 @@ import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import EquityLayout from "../Layout";
-import React from "react";
 
 type OptionPool = RouterOutput["optionPools"]["list"][number];
 

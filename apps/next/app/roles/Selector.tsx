@@ -1,9 +1,9 @@
+import React, { useState } from "react";
 import Button from "@/components/Button";
 import Select from "@/components/Select";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import ManageModal from "./ManageModal";
-import React, { useState } from "react";
 
 const Selector = ({ value, onChange }: { value: string | null; onChange: (id: string) => void }) => {
   const company = useCurrentCompany();

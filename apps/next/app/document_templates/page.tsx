@@ -1,6 +1,8 @@
 "use client";
+import { FilePlusIcon, FileTextIcon, PercentIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
@@ -12,8 +14,6 @@ import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
 import DocumentsLayout from "../documents/Layout";
-import { FilePlusIcon, FileTextIcon, PercentIcon } from "lucide-react";
-import { useMemo, useState } from "react";
 
 type Template = RouterOutput["documents"]["templates"]["list"][number];
 const typeLabels = {
