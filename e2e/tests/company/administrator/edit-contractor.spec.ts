@@ -159,6 +159,7 @@ test.describe("Edit contractor", () => {
 
     const newRole = await db.query.companyRoles.findFirst({
       orderBy: desc(companyRoles.id),
+      where: eq(companyRoles.companyId, company.id),
     });
     assert(newRole !== undefined);
     expect(newRole.name).toBe("Example Role");

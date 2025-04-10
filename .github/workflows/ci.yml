@@ -78,13 +78,8 @@ jobs:
         timeout-minutes: 20
 
   playwright:
-    name: Tests (${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
-    runs-on: ubicloud-standard-2
-    strategy:
-      fail-fast: false
-      matrix:
-        shardTotal: [5]
-        shardIndex: [1, 2, 3, 4, 5]
+    name: Tests
+    runs-on: ubicloud-standard-4
 
     steps:
       - uses: actions-cool/check-user-permission@7b90a27f92f3961b368376107661682c441f6103
@@ -105,6 +100,15 @@ jobs:
       - name: Run docker compose
         run: docker compose -f docker/docker-compose-local-linux.yml up -d
 
+      - name: Cache Next build
+        id: next-cache
+        uses: actions/cache@v4
+        with:
+          path: apps/next/.next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('apps/next/**/*.{ts,tsx}') }}
+          restore-keys: |
+            next-${{ runner.os }}-
+
       - run: NODE_ENV=test pnpm run build-next --no-lint
         shell: bash
 
@@ -116,7 +120,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             playwright-${{ runner.os }}-
 
@@ -125,11 +129,11 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
 
       - name: Run Playwright tests
-        run: pnpm playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        run: pnpm playwright test
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report-${{ matrix.shardIndex }}
+          name: playwright-report
           path: playwright-report/
           retention-days: 7

@@ -9,7 +9,7 @@ import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { subDays } from "date-fns";
-import { and, desc, eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { PayRateType } from "@/db/enums";
 import { companies, companyContractors, companyInvestors, invoices, users } from "@/db/schema";
 
@@ -142,9 +142,7 @@ test.describe("invoice creation", () => {
     );
 
     const invoice = await db.query.invoices
-      .findFirst({
-        orderBy: desc(invoices.id),
-      })
+      .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
       .then(takeOrThrow);
     expect(invoice).toBeDefined();
     expect(invoice.totalMinutes).toBe(205);
@@ -185,9 +183,7 @@ test.describe("invoice creation", () => {
     );
 
     const invoice = await db.query.invoices
-      .findFirst({
-        orderBy: desc(invoices.id),
-      })
+      .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
       .then(takeOrThrow);
     expect(invoice).toBeDefined();
     expect(invoice.totalAmountInUsdCents).toBe(100000n);
@@ -272,11 +268,8 @@ test.describe("invoice creation", () => {
   test("allows creation of an invoice as an alumni", async ({ page }) => {
     await db
       .update(companyContractors)
-      .set({
-        startedAt: subDays(new Date(), 365),
-        endedAt: subDays(new Date(), 100),
-      })
-      .where(and(eq(companyContractors.companyId, company.id), eq(companyContractors.userId, contractorUser.id)));
+      .set({ startedAt: subDays(new Date(), 365), endedAt: subDays(new Date(), 100) })
+      .where(eq(companyContractors.id, companyContractor.id));
 
     await login(page, contractorUser);
     await page.goto("/invoices/new");
