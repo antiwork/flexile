@@ -9,13 +9,13 @@ import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import RoleSelector from "@/app/roles/Selector";
 import Button from "@/components/Button";
 import { CardRow } from "@/components/Card";
-import Checkbox from "@/components/Checkbox";
 import DecimalInput from "@/components/DecimalInput";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useCurrentCompany } from "@/global";
 import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
 import { AVG_TRIAL_HOURS } from "@/models/constants";
@@ -100,7 +100,11 @@ function Create() {
           <Input value={startDate} onChange={setStartDate} type="date" label="Start date" />
           <RoleSelector value={roleId ?? null} onChange={setRoleId} />
           {role?.trialEnabled && role.payRateType !== PayRateType.Salary ? (
-            <Checkbox checked={skipTrial} onChange={setSkipTrial} label="Skip trial period" />
+            <Checkbox
+              checked={skipTrial}
+              onCheckedChange={(checked) => setSkipTrial(checked === true)}
+              label="Skip trial period"
+            />
           ) : null}
           <DecimalInput
             value={rateUsd}

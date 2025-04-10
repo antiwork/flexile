@@ -13,7 +13,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import React, { useMemo } from "react";
-import Checkbox from "@/components/Checkbox";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/utils";
 
 declare module "@tanstack/react-table" {
@@ -104,7 +104,7 @@ export default function Table<T extends RowData>({ table, caption, hoverable, on
                   <Checkbox
                     checked={table.getIsAllRowsSelected()}
                     aria-label="Select all"
-                    onChange={(checked) => table.toggleAllRowsSelected(checked)}
+                    onCheckedChange={(checked) => table.toggleAllRowsSelected(checked === true)}
                   />
                 </div>
               </th>
@@ -147,7 +147,7 @@ export default function Table<T extends RowData>({ table, caption, hoverable, on
                     checked={row.getIsSelected()}
                     aria-label="Select row"
                     disabled={!row.getCanSelect()}
-                    onChange={row.getToggleSelectedHandler()}
+                    onCheckedChange={row.getToggleSelectedHandler()}
                   />
                 </div>
               </td>

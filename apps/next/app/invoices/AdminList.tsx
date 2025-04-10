@@ -17,7 +17,6 @@ import { StatusNotice, StatusWithTooltip } from "@/app/invoices/Status";
 import { Task } from "@/app/updates/team/Task";
 import Button from "@/components/Button";
 import { Card, CardRow } from "@/components/Card";
-import Checkbox from "@/components/Checkbox";
 import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
@@ -27,6 +26,7 @@ import Placeholder from "@/components/Placeholder";
 import Sheet from "@/components/Sheet";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
 import Tabs from "@/components/Tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -170,7 +170,7 @@ export default function AdminList() {
             <Checkbox
               checked={table.getIsAllRowsSelected()}
               label="Select all"
-              onChange={(checked) => table.toggleAllRowsSelected(checked)}
+              onCheckedChange={(checked) => table.toggleAllRowsSelected(checked === true)}
             />
           </div>
 

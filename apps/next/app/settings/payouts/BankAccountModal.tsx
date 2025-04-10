@@ -4,13 +4,13 @@ import { set } from "lodash-es";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import Button from "@/components/Button";
-import Checkbox from "@/components/Checkbox";
 import ComboBox from "@/components/ComboBox";
 import Input from "@/components/Input";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import RadioButtons from "@/components/RadioButtons";
 import Select from "@/components/Select";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   CURRENCIES,
   type Currency,
@@ -405,7 +405,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
           role="switch"
           label={formSwitch.label}
           disabled={isPending}
-          onChange={() => setSelectedFormIndex((prev) => (prev + 1) % 2)}
+          onCheckedChange={() => setSelectedFormIndex((prev) => (prev + 1) % 2)}
         />
       ) : forms.length > 2 ? (
         <Select
