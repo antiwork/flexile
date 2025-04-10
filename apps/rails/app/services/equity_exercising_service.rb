@@ -56,12 +56,10 @@ class EquityExercisingService
           exercise_price_usd: equity_grant.exercise_price_usd
         )
       end
-      company_administrator = company.primary_admin
-      Document.create!(company_worker:, company_administrator:, company:, user: company_investor.user,
-                       administrator_signature: company_administrator.user.legal_name,
-                       name: "Notice of Exercise", document_type: :exercise_notice,
-                       completed_at: current_time, contractor_signature: company_investor.user.legal_name, year: current_time.year,
-                       json_data: { equity_grant_exercise_id: exercise.id }, docuseal_submission_id: submission_id)
+      document = Document.new(company:, name: "Notice of Exercise", document_type: :exercise_notice, year: current_time.year,
+                              json_data: { equity_grant_exercise_id: exercise.id }, docuseal_submission_id: submission_id)
+      document.signatures.build(user: company_investor.user, title: "Signer", signed_at: current_time)
+      document.save!
       CompanyInvestorMailer.stock_exercise_payment_instructions(company_investor.id, exercise_id: exercise.id).deliver_later
       if company.completed_onboarding?
         company.company_administrators.ids.each do

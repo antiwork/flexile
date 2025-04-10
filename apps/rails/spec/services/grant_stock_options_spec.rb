@@ -101,6 +101,7 @@ RSpec.describe GrantStockOptions do
         end.to change { CompanyInvestor.count }.by(0)
            .and change { EquityGrant.count }.by(1)
            .and change { Document.equity_plan_contract.count }.by(1)
+           .and change { DocumentSignature.count }.by(2)
 
         equity_grant = EquityGrant.last
         expect(equity_grant.option_pool).to eq(option_pool)
@@ -122,13 +123,16 @@ RSpec.describe GrantStockOptions do
         expect(equity_grant.retirement_exercise_months).to eq(120)
 
         contract = Document.equity_plan_contract.last
-        expect(contract.company_worker).to eq(company_worker)
-        expect(contract.user).to eq(user)
-        expect(contract.company_administrator).to eq(administrator)
         expect(contract.company).to eq(company)
         expect(contract.year).to eq(Date.current.year)
         expect(contract.equity_grant).to eq(equity_grant)
         expect(contract.name).to eq("Equity Incentive Plan #{Date.current.year}")
+
+        expect(contract.signatures.count).to eq(2)
+        expect(contract.signatures.first.user).to eq(user)
+        expect(contract.signatures.first.title).to eq("Signer")
+        expect(contract.signatures.last.user).to eq(administrator.user)
+        expect(contract.signatures.last.title).to eq("Company Representative")
       end
 
       context "when number of shares is provided" do
@@ -181,7 +185,7 @@ RSpec.describe GrantStockOptions do
         end.to change { CompanyInvestor.count }.by(1)
            .and change { EquityGrant.count }.by(1)
            .and change { Document.equity_plan_contract.count }.by(1)
-                                                                                                                                  .and have_enqueued_mail(CompanyWorkerMailer, :equity_grant_issued)
+           .and change { DocumentSignature.count }.by(2)
         investor = CompanyInvestor.last
         expect(investor.company).to eq(company)
         expect(investor.user).to eq(user)
@@ -196,13 +200,16 @@ RSpec.describe GrantStockOptions do
         expect(equity_grant.option_grant_type_nso?).to be(true)
 
         contract = Document.equity_plan_contract.last
-        expect(contract.company_worker).to eq(company_worker)
-        expect(contract.user).to eq(user)
-        expect(contract.company_administrator).to eq(administrator)
         expect(contract.company).to eq(company)
         expect(contract.year).to eq(Date.current.year)
         expect(contract.equity_grant).to eq(equity_grant)
         expect(contract.name).to eq("Equity Incentive Plan #{Date.current.year}")
+
+        expect(contract.signatures.count).to eq(2)
+        expect(contract.signatures.first.user).to eq(user)
+        expect(contract.signatures.first.title).to eq("Signer")
+        expect(contract.signatures.last.user).to eq(administrator.user)
+        expect(contract.signatures.last.title).to eq("Company Representative")
       end
 
       it "does not grant options and returns an error when the user's residence country " \

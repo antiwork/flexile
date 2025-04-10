@@ -70,11 +70,9 @@ RSpec.describe InviteCompany do
     expect(contractor_profile).to be_present
     expect(contractor_profile.available_hours_per_week).to eq(1)
 
-    contract = company_worker.documents.consulting_contract.first
-    expect(contract.completed_at).to eq(nil)
+    contract = worker.documents.consulting_contract.first
     expect(contract.company).to eq(new_company)
-    expect(contract.company_worker).to eq(company_worker)
-    expect(contract.company_administrator).to eq(company_administrator)
+    expect(contract.signatories).to match_array([worker, administrator])
   end
 
   context "when an error occurs" do

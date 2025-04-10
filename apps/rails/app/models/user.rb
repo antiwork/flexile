@@ -29,7 +29,12 @@ class User < ApplicationRecord
   has_many :clients, -> { order(CompanyWorker.arel_table[:created_at]) }, through: :company_workers, source: :company
   has_one :contractor_profile
   has_many :contracts
-  has_many :documents
+  has_many :document_signatures
+  has_many :documents, through: :document_signatures do
+    def unsigned_contracts
+      where(documents: { document_signatures: { signed_at: nil } }, document_type: :consulting_contract)
+    end
+  end
 
   has_many :company_investors
   has_many :portfolio_companies, -> { order("company_investors.created_at") }, through: :company_investors, source: :company

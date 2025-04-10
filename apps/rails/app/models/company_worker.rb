@@ -10,8 +10,6 @@ class CompanyWorker < ApplicationRecord
   belongs_to :company_role
 
   has_many :contracts, foreign_key: :company_contractor_id
-  has_many :documents, foreign_key: :company_contractor_id
-  has_many :uncompleted_contracts, -> { consulting_contract.alive.where(completed_at: nil) }, class_name: "Document", foreign_key: :company_contractor_id
   has_many :equity_allocations, foreign_key: :company_contractor_id
   has_many :invoices, foreign_key: :company_contractor_id
   has_many :company_worker_updates, foreign_key: :company_contractor_id
@@ -58,14 +56,13 @@ class CompanyWorker < ApplicationRecord
 
     joins(join).where(invoices: { id: nil })
   }
-  # Find records associated with signed consulting contracts from the `contracts` OR `documents` table
   scope :with_signed_contract, -> {
-    joins("LEFT OUTER JOIN contracts ON contracts.company_contractor_id = company_contractors.id AND " \
-          "contracts.signed_at IS NOT NULL").
-      joins("LEFT OUTER JOIN documents ON documents.company_contractor_id = company_contractors.id AND " \
-            "documents.completed_at IS NOT NULL AND " \
+    joins("JOIN document_signatures ON document_signatures.user_id = company_contractors.user_id AND " \
+            "document_signatures.signed_at IS NOT NULL").
+      joins("JOIN documents ON documents.id = document_signatures.document_id AND " \
+            "documents.deleted_at IS NULL AND " \
+            "documents.company_id = company_contractors.company_id AND " \
             "documents.document_type = #{Document.document_types[:consulting_contract]}").
-      where("contracts.id IS NOT NULL OR documents.id IS NOT NULL").
       distinct
   }
   scope :with_required_tax_info_for, -> (tax_year:) do

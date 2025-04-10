@@ -47,7 +47,7 @@ RSpec.describe GenerateTaxFormService do
 
     shared_examples_for "existing tax document" do
       let!(:tax_document) do
-        create(:tax_doc, user_compliance_info:, user: user_compliance_info.user, name: form_name, year: tax_year, company:)
+        create(:tax_doc, user_compliance_info:, name: form_name, year: tax_year, company:)
       end
 
       it "does not create a new tax document" do
@@ -96,7 +96,6 @@ RSpec.describe GenerateTaxFormService do
           end.to change { user_compliance_info.documents.tax_document.count }.by(1)
 
           tax_document = user_compliance_info.documents.tax_document.last
-          expect(tax_document.user).to eq(user_compliance_info.user)
           expect(tax_document.name).to eq(form_name)
           expect(tax_document.year).to eq(tax_year)
           expect(tax_document.company_id).to eq(company.id)
@@ -138,7 +137,6 @@ RSpec.describe GenerateTaxFormService do
           end.to change { user_compliance_info.documents.tax_document.count }.by(1)
 
           tax_document = user_compliance_info.documents.tax_document.last
-          expect(tax_document.user).to eq(user_compliance_info.user)
           expect(tax_document.name).to eq(form_name)
           expect(tax_document.year).to eq(tax_year)
           expect(tax_document.company_id).to eq(company.id)
@@ -186,7 +184,6 @@ RSpec.describe GenerateTaxFormService do
           end.to change { user_compliance_info.documents.tax_document.count }.by(1)
 
           tax_document = user_compliance_info.documents.tax_document.last
-          expect(tax_document.user).to eq(user_compliance_info.user)
           expect(tax_document.name).to eq(form_name)
           expect(tax_document.year).to eq(tax_year)
           expect(tax_document.company_id).to eq(company.id)
@@ -228,7 +225,6 @@ RSpec.describe GenerateTaxFormService do
             end.to change { user_compliance_info.documents.tax_document.count }.by(1)
 
             tax_document = user_compliance_info.documents.tax_document.last
-            expect(tax_document.user).to eq(user_compliance_info.user)
             expect(tax_document.name).to eq(form_name)
             expect(tax_document.year).to eq(tax_year)
             expect(tax_document.company_id).to eq(company.id)
@@ -277,7 +273,6 @@ RSpec.describe GenerateTaxFormService do
           end.to change { user_compliance_info.documents.tax_document.count }.by(1)
 
           tax_document = user_compliance_info.documents.tax_document.last
-          expect(tax_document.user).to eq(user_compliance_info.user)
           expect(tax_document.name).to eq(form_name)
           expect(tax_document.year).to eq(tax_year)
           expect(tax_document.company_id).to eq(company.id)
@@ -310,7 +305,6 @@ RSpec.describe GenerateTaxFormService do
           end.to change { user_compliance_info.documents.tax_document.count }.by(1)
 
           tax_document = user_compliance_info.documents.tax_document.last
-          expect(tax_document.user).to eq(user_compliance_info.user)
           expect(tax_document.name).to eq(form_name)
           expect(tax_document.year).to eq(tax_year)
           expect(tax_document.company_id).to eq(company.id)
@@ -384,7 +378,6 @@ RSpec.describe GenerateTaxFormService do
         end.to change { user_compliance_info.documents.tax_document.count }.by(1)
 
         tax_document = user_compliance_info.documents.tax_document.last
-        expect(tax_document.user).to eq(user_compliance_info.user)
         expect(tax_document.name).to eq(form_name)
         expect(tax_document.year).to eq(tax_year)
         expect(tax_document.company_id).to eq(company.id)
@@ -450,7 +443,6 @@ RSpec.describe GenerateTaxFormService do
         end.to change { user_compliance_info.documents.tax_document.count }.by(1)
 
         tax_document = user_compliance_info.documents.tax_document.last
-        expect(tax_document.user).to eq(user_compliance_info.user)
         expect(tax_document.name).to eq(form_name)
         expect(tax_document.year).to eq(tax_year)
         expect(tax_document.company_id).to eq(company.id)
@@ -546,7 +538,6 @@ RSpec.describe GenerateTaxFormService do
         end.to change { user_compliance_info.documents.tax_document.count }.by(1)
 
         tax_document = user_compliance_info.documents.tax_document.last
-        expect(tax_document.user).to eq(user_compliance_info.user)
         expect(tax_document.name).to eq(form_name)
         expect(tax_document.year).to eq(tax_year)
         expect(tax_document.company_id).to eq(company.id)

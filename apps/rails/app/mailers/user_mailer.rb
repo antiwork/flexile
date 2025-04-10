@@ -40,9 +40,10 @@ class UserMailer < ApplicationMailer
   private
     def mark_tax_documents_as_emailed
       @user_compliance_info.documents
-                             .tax_document
-                             .where(year: @tax_year, completed_at: nil)
-                             .each do
+                           .tax_document
+                           .unsigned
+                           .where(year: @tax_year)
+                           .each do
         _1.touch(:emailed_at)
       end
     end

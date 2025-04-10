@@ -43,7 +43,7 @@ class UserPresenter
       street_address:,
       billing_entity_name:,
       legal_type: business_entity? ? "BUSINESS" : "PRIVATE",
-      unsigned_document_id: documents.where(completed_at: nil).where.not(docuseal_submission_id: nil).first&.id,
+      unsigned_document_id: documents.unsigned.where.not(docuseal_submission_id: nil).first&.id,
     }
   end
 
@@ -87,7 +87,7 @@ class UserPresenter
     type = current_context.role || any_type
 
     roles = {}
-    has_documents = documents.not_consulting_contract.or(documents.where.not(completed_at: nil)).exists?
+    has_documents = documents.joins(:signatures).not_consulting_contract.or(documents.unsigned).exists?
     if user.company_administrator_for?(company)
       roles[Company::ACCESS_ROLE_ADMINISTRATOR] = {
         id: user.company_administrator_for(company).id.to_s,
@@ -206,9 +206,7 @@ class UserPresenter
         is_inviting_company:,
         flags: {},
       )
-      result[:has_documents] = documents.not_consulting_contract
-                                        .or(documents.where.not(completed_at: nil))
-                                        .exists?
+      result[:has_documents] = documents.not_consulting_contract.or(documents.unsigned).exists?
       if company_worker.present?
         result[:flags][:irs_tax_forms] = company.irs_tax_forms?
         if company_worker.active?

@@ -9,7 +9,7 @@ import { pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
 import { DocumentTemplateType, DocumentType, PayRateType } from "@/db/enums";
-import { documents, documentTemplates, equityAllocations, users } from "@/db/schema";
+import { companyContractors, documents, documentTemplates, equityAllocations, users } from "@/db/schema";
 import env from "@/env";
 import { countries, MAX_WORKING_HOURS_PER_WEEK, WORKING_WEEKS_PER_YEAR } from "@/models/constants";
 import { companyProcedure, createRouter, type ProtectedContext, protectedProcedure } from "@/trpc";
@@ -93,10 +93,19 @@ export const templatesRouter = createRouter({
     const document = await db.query.documents.findFirst({
       where: and(eq(documents.docusealSubmissionId, input.id), eq(documents.companyId, ctx.company.id)),
       with: {
-        contractor: {
+        signatures: {
           with: {
-            role: true,
-            equityAllocations: { where: eq(equityAllocations.year, new Date().getFullYear()) },
+            user: {
+              with: {
+                companyContractors: {
+                  with: {
+                    role: true,
+                    equityAllocations: { where: eq(equityAllocations.year, new Date().getFullYear()) },
+                  },
+                  where: eq(companyContractors.companyId, ctx.company.id),
+                },
+              },
+            },
           },
         },
         equityGrant: {
@@ -133,7 +142,8 @@ export const templatesRouter = createRouter({
       __signerLegalEntity: (complianceInfo?.businessEntity ? complianceInfo.businessName : ctx.user.legalName) ?? "",
     };
     if (document.type === DocumentType.ConsultingContract) {
-      const contractor = document.contractor;
+      const contractor = document.signatures.find((s) => s.user.companyContractors.length > 0)?.user
+        .companyContractors[0];
       if (!contractor) throw new TRPCError({ code: "NOT_FOUND" });
       const equityPercentage = contractor.equityAllocations[0]?.equityPercentage;
       const startDate = max([contractor.startedAt, contractor.updatedAt]);

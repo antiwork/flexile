@@ -24,11 +24,13 @@ test.describe("Investor details", () => {
       companyId: company.id,
       userId: investor.id,
     });
-    await documentsFactory.createTaxDocument({
-      companyId: company.id,
-      userId: investor.id,
-      userComplianceInfoId: userComplianceInfo.id,
-    });
+    await documentsFactory.createTaxDocument(
+      {
+        companyId: company.id,
+        userComplianceInfoId: userComplianceInfo.id,
+      },
+      { signatures: [{ userId: investor.id, title: "Signer" }], signed: true },
+    );
 
     await login(page, admin);
     await page.goto(`/people/${investor.externalId}`);

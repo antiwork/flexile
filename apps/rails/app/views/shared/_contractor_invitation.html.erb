@@ -54,4 +54,4 @@
   <% end %>
 </dl>
 
-<%= link_to("Review and sign your contract", url || "#{PROTOCOL}://#{DOMAIN}/documents?sign=#{user.documents.where(completed_at: nil, docuseal_submission_id: nil).first&.id}", class: "button") %>
+<%= link_to("Review and sign your contract", url || "#{PROTOCOL}://#{DOMAIN}/documents?sign=#{user.documents.unsigned.where(docuseal_submission_id: nil).first&.id}", class: "button") %>

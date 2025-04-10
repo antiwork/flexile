@@ -15,12 +15,14 @@ class CreateConsultingContract
       name: Contract::CONSULTING_CONTRACT_NAME,
       document_type: :consulting_contract,
       year: Date.current.year,
-      user: company_worker.user,
-      company_administrator:,
       company: company_worker.company,
     }.compact
-    company_worker.uncompleted_contracts.each(&:mark_deleted!)
-    company_worker.documents.create!(attributes)
+    company_worker.user.documents.unsigned_contracts.each(&:mark_deleted!)
+    document = company_worker.user.documents.build(attributes)
+    document.signatures.build(user: company_administrator.user, title: "Company Representative")
+    document.signatures.build(user: company_worker.user, title: "Signer")
+    document.save!
+    document
   end
 
   private

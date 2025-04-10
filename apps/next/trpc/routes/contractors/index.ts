@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { isFuture } from "date-fns";
-import { and, asc, desc, eq, gt, gte, isNotNull, isNull, lt, not, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, inArray, isNotNull, isNull, lt, not, or } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
@@ -11,6 +11,7 @@ import {
   companyRoleRates,
   companyRoles,
   documents,
+  documentSignatures,
   documentTemplates,
   equityAllocations,
   userComplianceInfos,
@@ -220,15 +221,19 @@ export const contractorsRouter = createRouter({
         if (input.payRateInSubunits != null && input.payRateInSubunits !== contractor.payRateInSubunits) {
           const payRateType = input.payRateType ?? contractor.payRateType;
           if (payRateType !== PayRateType.Salary) {
-            await tx
-              .delete(documents)
-              .where(
-                and(
-                  eq(documents.companyContractorId, contractor.id),
-                  isNull(documents.completedAt),
-                  eq(documents.type, DocumentType.ConsultingContract),
+            const signatures = await tx.query.documentSignatures.findMany({
+              where: and(eq(documentSignatures.userId, contractor.userId), isNull(documentSignatures.signedAt)),
+              columns: { documentId: true },
+            });
+            await tx.delete(documents).where(
+              and(
+                inArray(
+                  documents.id,
+                  signatures.map((s) => s.documentId),
                 ),
-              );
+                eq(documents.type, DocumentType.ConsultingContract),
+              ),
+            );
             // TODO store which template was used for the previous contract
             const template = await db.query.documentTemplates.findFirst({
               where: and(
@@ -249,14 +254,22 @@ export const contractorsRouter = createRouter({
                 name: "Consulting agreement",
                 year: new Date().getFullYear(),
                 companyId: ctx.company.id,
-                userId: contractor.userId,
                 type: DocumentType.ConsultingContract,
-                companyAdministratorId: ctx.companyAdministrator.id,
-                companyContractorId: contractor.id,
                 docusealSubmissionId: submission.id,
               })
               .returning();
             documentId = assertDefined(document).id;
+
+            await tx.insert(documentSignatures).values({
+              documentId,
+              userId: ctx.companyAdministrator.userId,
+              title: "Company Representative",
+            });
+            await tx.insert(documentSignatures).values({
+              documentId,
+              userId: contractor.userId,
+              title: "Signer",
+            });
           }
           if (payRateType === PayRateType.Hourly) {
             await sendEmail({

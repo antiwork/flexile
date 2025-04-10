@@ -180,14 +180,14 @@ RSpec.describe Irs::Form1042sDataGenerator do
   end
 
   def create_new_tax_documents
-    create(:tax_doc, :form_1042s, company:, user: non_us_user_compliance_info_1.user, user_compliance_info: non_us_user_compliance_info_1, year: tax_year)
-    create(:tax_doc, :form_1042s, company:, user: non_us_user_compliance_info_1.user, user_compliance_info: non_us_user_compliance_info_1, year: tax_year - 1)
-    create(:tax_doc, :form_1042s, company:, user: non_us_user_compliance_info_2.user, user_compliance_info: non_us_user_compliance_info_2, year: tax_year)
-    create(:tax_doc, :form_1042s, company:, user: non_us_user_compliance_info_3.user, user_compliance_info: non_us_user_compliance_info_3, year: tax_year)
+    create(:tax_doc, :form_1042s, company:, user_compliance_info: non_us_user_compliance_info_1, year: tax_year)
+    create(:tax_doc, :form_1042s, company:, user_compliance_info: non_us_user_compliance_info_1, year: tax_year - 1)
+    create(:tax_doc, :form_1042s, company:, user_compliance_info: non_us_user_compliance_info_2, year: tax_year)
+    create(:tax_doc, :form_1042s, company:, user_compliance_info: non_us_user_compliance_info_3, year: tax_year)
   end
 
   def create_tax_doc(trait:, company:, user_compliance_info:, tax_year:)
-    create(:tax_doc, trait, company:, user: user_compliance_info.user, user_compliance_info:, year: tax_year)
+    create(:tax_doc, trait, company:, user_compliance_info:, year: tax_year)
   end
 
   describe "#process" do
