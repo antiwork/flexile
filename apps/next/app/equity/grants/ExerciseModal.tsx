@@ -5,10 +5,10 @@ import { z } from "zod";
 import DocusealForm from "@/app/documents/DocusealForm";
 import Button from "@/components/Button";
 import { Card, CardRow } from "@/components/Card";
-import Checkbox from "@/components/Checkbox";
 import Delta from "@/components/Delta";
 import Modal from "@/components/Modal";
 import RangeInput from "@/components/RangeInput";
+import { Checkbox } from "@/components/ui/checkbox";
 import env from "@/env/client";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -143,7 +143,7 @@ const ExerciseModal = ({
                         grant.exercisePriceUsd,
                       )} / share`}
                       disabled={selectedGrantIds.length === 1 && selectedGrants.has(grant)}
-                      onChange={() => {
+                      onCheckedChange={() => {
                         setSelectedGrantIds(
                           selectedGrants.has(grant)
                             ? selectedGrantIds.filter((id) => id !== grant.id)

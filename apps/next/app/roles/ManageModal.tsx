@@ -5,7 +5,6 @@ import { pick } from "lodash-es";
 import { useEffect, useState } from "react";
 import Button from "@/components/Button";
 import { Card, CardRow } from "@/components/Card";
-import Checkbox from "@/components/Checkbox";
 import Delta from "@/components/Delta";
 import Input from "@/components/Input";
 import Modal from "@/components/Modal";
@@ -16,6 +15,7 @@ import { Editor as RichTextEditor } from "@/components/RichText";
 import Select from "@/components/Select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { PayRateType } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
@@ -205,7 +205,7 @@ const ManageModal = ({
             )}
             <Checkbox
               checked={updateContractorRates}
-              onChange={setUpdateContractorRates}
+              onCheckedChange={(checked) => setUpdateContractorRates(checked === true)}
               label="Update rate for all contractors with this role"
             />
           </>
