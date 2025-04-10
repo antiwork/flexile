@@ -104,7 +104,7 @@ jobs:
         id: next-cache
         uses: actions/cache@v4
         with:
-          path: ${{ github.workspace }}/.next/cache
+          path: apps/next/.next/cache
           key: next-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('apps/next/**/*.{ts,tsx}') }}
           restore-keys: |
             next-${{ runner.os }}-
