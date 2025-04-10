@@ -1,10 +1,5 @@
 name: Build common setup
 
-inputs:
-  vercel-key:
-    description: "Vercel key"
-    required: true
-
 runs:
   using: "composite"
   steps:
