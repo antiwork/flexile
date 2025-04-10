@@ -6,13 +6,13 @@ import { useMutation } from "@tanstack/react-query";
 import { startOfMonth, startOfQuarter, startOfYear, subMonths, subQuarters, subYears } from "date-fns";
 import { useParams, useRouter } from "next/navigation";
 import Button from "@/components/Button";
-import Checkbox from "@/components/Checkbox";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import { Editor as RichTextEditor } from "@/components/RichText";
 import Select from "@/components/Select";
+import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -186,10 +186,8 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
               financialReports={financialReports}
               period={selectedPeriodOption.period}
               periodStartedOn={selectedPeriodOption.periodStartedOn}
-              revenueTitle={<Checkbox switch label="Revenue" checked={showRevenue} onChange={setShowRevenue} />}
-              netIncomeTitle={
-                <Checkbox switch label="Net income" checked={showNetIncome} onChange={setShowNetIncome} />
-              }
+              revenueTitle={<Switch label="Revenue" checked={showRevenue} onCheckedChange={setShowRevenue} />}
+              netIncomeTitle={<Switch label="Net income" checked={showNetIncome} onCheckedChange={setShowNetIncome} />}
             />
           ) : null}
           <RichTextEditor

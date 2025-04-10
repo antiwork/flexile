@@ -51,7 +51,7 @@ group :development do
   gem "rubocop-rails", "~> 2.30.0"
   gem "rubocop-rspec", "~> 3.5.0"
   gem "rubocop-rake", "~> 0.7.0"
-  gem "rubocop", "~> 1.74.0"
+  gem "rubocop", "~> 1.75.0"
 end
 
 group :test do
@@ -152,7 +152,7 @@ gem "json-schema", "~> 5.0"
 
 gem "timecop", "~> 0.9", require: false
 
-gem "resend", "~> 0.18.0"
+gem "resend", "~> 0.19.0"
 
 gem "pundit", "~> 2.4"
 
