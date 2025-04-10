@@ -25,6 +25,7 @@ export const findTableRow = async (page: Page, columnValues: Record<string, stri
   return null;
 };
 
+// TODO (techdebt) clean this up
 export const findRequiredTableRow = async (...args: Parameters<typeof findTableRow>) => {
   const row = await findTableRow(...args);
   assert(row !== null);

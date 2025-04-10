@@ -1,4 +1,5 @@
 import { clerk } from "@clerk/testing/playwright";
+import { faker } from "@faker-js/faker";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
@@ -7,6 +8,7 @@ import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { mockDocuseal as mockDocusealHelper } from "@test/helpers/docuseal";
 import { expect, type Page, test, withinModal } from "@test/index";
+import { addMonths, format, formatISO } from "date-fns";
 import { desc, eq } from "drizzle-orm";
 import type { NextFixture } from "next/experimental/testmode/playwright";
 import { companies, companyContractors, users } from "@/db/schema";
@@ -17,7 +19,6 @@ test.describe("New Contractor", () => {
   let user: typeof users.$inferSelect;
 
   test.beforeEach(async () => {
-    // Setup company and admin user
     const result = await companiesFactory.create({
       name: "Gumroad",
       streetAddress: "548 Market Street",
@@ -28,10 +29,7 @@ test.describe("New Contractor", () => {
     });
     company = result.company;
 
-    const userResult = await usersFactory.create({
-      legalName: "Sahil Lavingia",
-      email: "sahil@example.com",
-    });
+    const userResult = await usersFactory.create();
     user = userResult.user;
 
     await companyAdministratorsFactory.create({
@@ -49,25 +47,16 @@ test.describe("New Contractor", () => {
     ]);
   });
 
-  const fillForm = async (
-    page: Page,
-    { projectBased = false, salaryBased = false, email = "flexy-bob@flexile.com" },
-  ) => {
+  const fillForm = async (page: Page) => {
+    const email = faker.internet.email().toLowerCase();
+    const date = addMonths(new Date(), 1);
     await login(page, user);
     await page.getByRole("link", { name: "People" }).click();
     await page.getByRole("link", { name: "Invite contractor" }).click();
     await expect(page.getByText("Who's joining?")).toBeVisible();
     await page.getByLabel("Email").fill(email);
-    await page.getByLabel("Start date").fill("2025-08-08");
-    if (projectBased) {
-      await page.getByLabel("Role").selectOption("Project-based Role");
-    } else if (salaryBased) {
-      await page.getByLabel("Role").selectOption("Salaried Role");
-    } else {
-      await page.getByLabel("Role").selectOption("Hourly Role 1");
-      await page.getByLabel("Average hours").fill("25");
-    }
-    await page.getByLabel("Rate").fill(projectBased ? "1000" : salaryBased ? "120000" : "99");
+    await page.getByLabel("Start date").fill(formatISO(date, { representation: "date" }));
+    return { email, date };
   };
 
   const getCreatedContractor = async () => {
@@ -104,7 +93,10 @@ test.describe("New Contractor", () => {
       __maximumFee:
         'Maximum fee payable to Contractor on this Project Assignment, including all items in the first two paragraphs above is $152,460 (the "Maximum Fee").',
     });
-    await fillForm(page, {});
+    const { email, date } = await fillForm(page);
+    await page.getByLabel("Role").selectOption("Hourly Role 1");
+    await page.getByLabel("Average hours").fill("25");
+    await page.getByLabel("Rate").fill("99");
 
     await mockForm(page);
     await page.getByRole("button", { name: "Send invite" }).click();
@@ -118,12 +110,12 @@ test.describe("New Contractor", () => {
       { page },
     );
 
-    const row = page.getByRole("row").filter({ hasText: "flexy-bob@flexile.com" });
-    await expect(row).toContainText("flexy-bob@flexile.com");
-    await expect(row).toContainText("Aug 8, 2025");
+    const row = page.getByRole("row").filter({ hasText: email });
+    await expect(row).toContainText(email);
+    await expect(row).toContainText(format(date, "MMM d, yyyy"));
     await expect(row).toContainText("Hourly Role 1");
     await expect(row).toContainText("Invited");
-    const [deletedUser] = await db.delete(users).where(eq(users.email, "flexy-bob@flexile.com")).returning();
+    const [deletedUser] = await db.delete(users).where(eq(users.email, email)).returning();
 
     await clerk.signOut({ page });
     const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
@@ -144,7 +136,9 @@ test.describe("New Contractor", () => {
       __maximumFee: "",
     });
     await mockForm(page);
-    await fillForm(page, { projectBased: true });
+    const { email, date } = await fillForm(page);
+    await page.getByLabel("Role").selectOption("Project-based Role");
+    await page.getByLabel("Rate").fill("1000");
 
     await page.getByRole("button", { name: "Send invite" }).click();
     await withinModal(
@@ -157,12 +151,12 @@ test.describe("New Contractor", () => {
       { page },
     );
 
-    const row = page.getByRole("row").filter({ hasText: "flexy-bob@flexile.com" });
-    await expect(row).toContainText("flexy-bob@flexile.com");
-    await expect(row).toContainText("Aug 8, 2025");
+    const row = page.getByRole("row").filter({ hasText: email });
+    await expect(row).toContainText(email);
+    await expect(row).toContainText(format(date, "MMM d, yyyy"));
     await expect(row).toContainText("Project-based Role");
     await expect(row).toContainText("Invited");
-    const [deletedUser] = await db.delete(users).where(eq(users.email, "flexy-bob@flexile.com")).returning();
+    const [deletedUser] = await db.delete(users).where(eq(users.email, email)).returning();
 
     await clerk.signOut({ page });
     const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
@@ -176,13 +170,15 @@ test.describe("New Contractor", () => {
   });
 
   test("allows inviting a salary-based contractor", async ({ page }) => {
-    await fillForm(page, { salaryBased: true });
+    const { email, date } = await fillForm(page);
+    await page.getByLabel("Role").selectOption("Salaried Role");
+    await page.getByLabel("Rate").fill("120000");
 
     await page.getByRole("button", { name: "Send invite" }).click();
 
-    const row = page.getByRole("row").filter({ hasText: "flexy-bob@flexile.com" });
-    await expect(row).toContainText("flexy-bob@flexile.com");
-    await expect(row).toContainText("Aug 8, 2025");
+    const row = page.getByRole("row").filter({ hasText: email });
+    await expect(row).toContainText(email);
+    await expect(row).toContainText(format(date, "MMM d, yyyy"));
     await expect(row).toContainText("Role");
     await expect(row).toContainText("Invited");
   });

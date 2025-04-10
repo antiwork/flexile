@@ -28,13 +28,6 @@ export const inngest = new Inngest({
         recipients: z.array(recipientSchema).optional(),
       }),
     },
-    "slack.message.send": {
-      data: z.object({
-        text: z.string(),
-        username: z.string().optional(),
-        channel: z.string().optional(),
-      }),
-    },
   }),
   middleware: [superjsonMiddleware],
 });

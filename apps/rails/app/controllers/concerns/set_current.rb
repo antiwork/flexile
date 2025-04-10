@@ -16,7 +16,7 @@ module SetCurrent
   def set_current
     if clerk&.user_id
       user = User.find_by(clerk_id: clerk.user_id)
-      unless user
+      if !user && !Rails.env.test?
         email = clerk.user.email_addresses.find { |item| item.id == clerk.user.primary_email_address_id }.email_address
         user = User.find_by(email:) if Rails.env.development?
         if user
