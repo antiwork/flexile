@@ -97,10 +97,6 @@ class CreateOrUpdateInvoiceService
         error = invoice.errors.full_messages.to_sentence
         raise ActiveRecord::Rollback
       end
-
-      if selected_percentage.present?
-        contractor.equity_allocation_for(invoice_year).update!(locked: true)
-      end
     end
     if error.present?
       {

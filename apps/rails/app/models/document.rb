@@ -18,7 +18,7 @@ class Document < ApplicationRecord
   validates :user_compliance_info_id, presence: true, if: :tax_document?
   validates :company_administrator_id, presence: true, if: -> { consulting_contract? || equity_plan_contract? || exercise_notice? }
   validates :company_worker, presence: true, if: -> { consulting_contract? || equity_plan_contract? || exercise_notice? }
-  validates :equity_grant_id, presence: true, if: -> { equity_plan_contract? }
+  validates :equity_grant_id, presence: true, if: -> { equity_plan_contract? || board_approval? }
   validates :name, inclusion: { in: TaxDocument::ALL_SUPPORTED_TAX_FORM_NAMES }, if: :tax_document?
   validate :tax_document_must_be_unique, if: :tax_document?
   validate :signatures_and_completed_at_are_present, if: -> { consulting_contract? || equity_plan_contract? }
@@ -31,6 +31,7 @@ class Document < ApplicationRecord
     share_certificate: 2,
     tax_document: 3,
     exercise_notice: 4,
+    board_approval: 5,
   }
 
   scope :irs_tax_forms, -> { tax_document.where(name: TaxDocument::SUPPORTED_IRS_TAX_FORM_NAMES) }

@@ -637,9 +637,9 @@ class SeedDataGeneratorFromTemplate
                   )
                 )
                 create_company_worker_invoices!(company_worker, ended_at:)
-                # if company_worker_data.key?("equity_allocation_attributes")
-                #   company_worker.equity_allocations.create!(company_worker_data.fetch("equity_allocation_attributes"))
-                # end
+                if company_worker_data.key?("equity_allocation_attributes")
+                  company_worker.equity_allocations.create!(**company_worker_data.fetch("equity_allocation_attributes"), year: Date.current.year)
+                end
                 updates_random_records_count = company_worker_updates_data.fetch("random_records_metadata").fetch("count")
                 create_company_worker_updates!(company_worker, updates_random_records_count)
 

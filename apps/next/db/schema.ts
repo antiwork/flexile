@@ -56,7 +56,12 @@ export const expenseCardsProcessors = pgEnum("expense_cards_processors", ["strip
 export const integrationStatus = pgEnum("integration_status", ["initialized", "active", "out_of_sync", "deleted"]);
 export const taxDocumentsStatus = pgEnum("tax_documents_status", ["initialized", "submitted", "deleted"]);
 export const invoicesInvoiceType = pgEnum("invoices_invoice_type", ["services", "other"]);
-
+export const equityAllocationsStatus = pgEnum("equity_allocations_status", [
+  "pending_confirmation",
+  "pending_approval",
+  "approved",
+]);
+export const boardConsentStatus = pgEnum("board_consent_status", ["pending", "lawyer_approved", "board_approved"]);
 export const activeStorageVariantRecords = pgTable(
   "active_storage_variant_records",
   {
@@ -115,6 +120,36 @@ export const balances = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [index("index_balances_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops"))],
+);
+
+export const boardConsents = pgTable(
+  "board_consents",
+  {
+    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
+    equityAllocationId: bigint("equity_allocation_id", { mode: "bigint" }).notNull(),
+    companyInvestorId: bigint("company_investor_id", { mode: "bigint" }).notNull(),
+    companyId: bigint("company_id", { mode: "bigint" }).notNull(),
+    documentId: bigint("document_id", { mode: "bigint" }).notNull(),
+    status: boardConsentStatus().notNull(),
+    lawyerApprovedAt: timestamp("lawyer_approved_at", { precision: 6, mode: "date" }),
+    boardApprovedAt: timestamp("board_approved_at", { precision: 6, mode: "date" }),
+    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("index_board_consents_on_equity_allocation_id").using(
+      "btree",
+      table.equityAllocationId.asc().nullsLast().op("int8_ops"),
+    ),
+    index("index_board_consents_on_company_investor_id").using(
+      "btree",
+      table.companyInvestorId.asc().nullsLast().op("int8_ops"),
+    ),
+    index("index_board_consents_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
+    index("index_board_consents_on_document_id").using("btree", table.documentId.asc().nullsLast().op("int8_ops")),
+  ],
 );
 
 export const capTableUploads = pgTable(
@@ -764,7 +799,7 @@ export const equityAllocations = pgTable(
     companyContractorId: bigint("company_contractor_id", { mode: "bigint" }).notNull(),
     equityPercentage: integer("equity_percentage"),
     year: integer().notNull(),
-
+    status: equityAllocationsStatus().default("pending_confirmation").notNull(),
     createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
       .notNull()
@@ -2405,7 +2440,7 @@ export const companyContractorUpdatesRelations = relations(companyContractorUpda
   tasks: many(companyContractorUpdateTasks),
 }));
 
-export const documentsRelations = relations(documents, ({ one }) => ({
+export const documentsRelations = relations(documents, ({ one, many }) => ({
   company: one(companies, {
     fields: [documents.companyId],
     references: [companies.id],
@@ -2426,6 +2461,7 @@ export const documentsRelations = relations(documents, ({ one }) => ({
     fields: [documents.equityGrantId],
     references: [equityGrants.id],
   }),
+  boardConsents: many(boardConsents),
 }));
 
 export const equityGrantsRelations = relations(equityGrants, ({ one, many }) => ({
@@ -3036,5 +3072,24 @@ export const companyUpdatesRelations = relations(companyUpdates, ({ one, many })
   company: one(companies, {
     fields: [companyUpdates.companyId],
     references: [companies.id],
+  }),
+}));
+
+export const boardConsentsRelations = relations(boardConsents, ({ one }) => ({
+  company: one(companies, {
+    fields: [boardConsents.companyId],
+    references: [companies.id],
+  }),
+  companyInvestor: one(companyInvestors, {
+    fields: [boardConsents.companyInvestorId],
+    references: [companyInvestors.id],
+  }),
+  document: one(documents, {
+    fields: [boardConsents.documentId],
+    references: [documents.id],
+  }),
+  equityAllocation: one(equityAllocations, {
+    fields: [boardConsents.equityAllocationId],
+    references: [equityAllocations.id],
   }),
 }));

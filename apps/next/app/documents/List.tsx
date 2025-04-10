@@ -20,6 +20,7 @@ const typeLabels = {
   [DocumentType.TaxDocument]: "Tax form",
   [DocumentType.ExerciseNotice]: "Exercise notice",
   [DocumentType.EquityPlanContract]: "Equity plan",
+  [DocumentType.BoardConsent]: "Board consent",
 };
 
 type Document = RouterOutput["documents"]["list"]["documents"][number];
@@ -38,8 +39,13 @@ function DocumentStatus({ document }: { document: Document }) {
     case DocumentType.ShareCertificate:
     case DocumentType.ExerciseNotice:
       return <Status variant="success">Issued</Status>;
+    case DocumentType.BoardConsent:
     case DocumentType.ConsultingContract:
     case DocumentType.EquityPlanContract:
+      if (document.type === DocumentType.BoardConsent && !document.lawyerApproved) {
+        return <Status variant="secondary">Waiting approval</Status>;
+      }
+
       return document.completedAt ? (
         <Status variant="success">Signed</Status>
       ) : (
@@ -59,10 +65,26 @@ const List = ({ userId, documents }: { userId: string | null; documents: Documen
   );
   const [signDocumentParam] = useQueryState("sign");
   const [signDocumentId, setSignDocumentId] = useState<bigint | null>(null);
-  const isSignable = (document: Document): document is SignableDocument =>
-    !!document.docusealSubmissionId &&
-    ((document.user.id === user.id && !document.contractorSignature) ||
-      (user.activeRole === "administrator" && !document.administratorSignature));
+  const isSignable = (document: Document): document is SignableDocument => {
+    if (document.type === DocumentType.BoardConsent && !document.lawyerApproved) {
+      return false;
+    }
+
+    if (
+      document.type === DocumentType.BoardConsent &&
+      user.activeRole === "administrator" &&
+      !user.roles.administrator?.isBoardMember
+    ) {
+      return false;
+    }
+
+    return (
+      !!document.docusealSubmissionId &&
+      ((document.user.id === user.id && !document.contractorSignature) ||
+        (user.activeRole === "administrator" && !document.administratorSignature))
+    );
+  };
+
   const signDocument = signDocumentId
     ? documents.find((document): document is SignableDocument => document.id === signDocumentId && isSignable(document))
     : null;
@@ -88,6 +110,19 @@ const List = ({ userId, documents }: { userId: string | null; documents: Documen
           id: "actions",
           cell: (info) => {
             const document = info.row.original;
+
+            if (
+              document.type === DocumentType.BoardConsent &&
+              user.activeRole === "lawyer" &&
+              !document.lawyerApproved
+            ) {
+              return (
+                <Button variant="outline" small onClick={() => setSignDocumentId(document.id)}>
+                  Approve
+                </Button>
+              );
+            }
+
             return (
               <>
                 {isSignable(document) ? (
@@ -136,6 +171,12 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
     companyId: company.id,
   });
   const trpcUtils = trpc.useUtils();
+  const documentLawyerApproval = trpc.documents.approveByLawyer.useMutation({
+    onSuccess: async () => {
+      await trpcUtils.documents.list.refetch();
+      onClose();
+    },
+  });
   const signDocument = trpc.documents.sign.useMutation({
     onSuccess: async () => {
       await trpcUtils.documents.list.refetch();
@@ -147,9 +188,24 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
 
   return (
     <Modal open onClose={onClose}>
+      {user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent && (
+        <header className="flex justify-end gap-4">
+          <Button
+            onClick={() =>
+              documentLawyerApproval.mutate({
+                companyId: company.id,
+                id: document.id,
+              })
+            }
+          >
+            Approve
+          </Button>
+        </header>
+      )}
       <DocusealForm
         src={`https://docuseal.com/s/${slug}`}
         readonlyFields={readonlyFields}
+        preview={user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent}
         onComplete={() =>
           signDocument.mutate({
             companyId: company.id,

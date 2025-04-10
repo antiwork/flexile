@@ -104,11 +104,10 @@ const CompanyGrantList = () => {
     >
       {templates.length === 0 ? (
         <Notice>
-          To create a new option grant, you need to{" "}
           <Link href="/document_templates" className={linkClasses}>
-            create an equity plan contract template
+            Create equity plan contract and board consent templates
           </Link>{" "}
-          first.
+          before adding new option grants.
         </Notice>
       ) : null}
       {data.total > 0 ? (

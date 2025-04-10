@@ -158,7 +158,8 @@ class Invoice < ApplicationRecord
       status.in?([APPROVED, FAILED, PAYMENT_PENDING]) &&
       (created_by_user? || accepted_at.present?) &&
       invoice_approvals_count >= company.required_invoice_approval_count &&
-      tax_requirements_met?
+      tax_requirements_met? &&
+      equity_requirements_met?
   end
 
   def immediately_payable?
@@ -175,6 +176,10 @@ class Invoice < ApplicationRecord
 
   def tax_requirements_met?
     !company.irs_tax_forms? || user.tax_information_confirmed_at.present?
+  end
+
+  def equity_requirements_met?
+    !company.equity_compensation_enabled? || company_worker.equity_allocation_for(invoice_date.year)&.approved?
   end
 
   def payment_expected_by

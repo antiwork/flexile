@@ -8,7 +8,10 @@ FactoryBot.define do
                   company: company_investor.company,
                   name: company_investor.user.legal_name
     end
-    option_pool
+    option_pool do
+      association :option_pool,
+                  company: company_investor.company
+    end
     sequence(:name) { |n| "GUM-#{n}" }
     number_of_shares { 100 }
     share_price_usd { 10 }

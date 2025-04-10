@@ -1,5 +1,5 @@
 "use client";
-import { FilePlusIcon, FileTextIcon, PercentIcon } from "lucide-react";
+import { FilePlusIcon, FileTextIcon, GavelIcon, PercentIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -19,6 +19,7 @@ type Template = RouterOutput["documents"]["templates"]["list"][number];
 const typeLabels = {
   [DocumentTemplateType.ConsultingContract]: "Agreement",
   [DocumentTemplateType.EquityPlanContract]: "Equity plan",
+  [DocumentTemplateType.BoardConsent]: "Board consent",
 };
 
 const columnHelper = createColumnHelper<Template>();
@@ -78,7 +79,7 @@ export default function TemplatesPage() {
                   </Link>{" "}
                   for more details.
                 </Notice>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <MutationButton
                     idleVariant="outline"
                     className="h-auto rounded-md p-6"
@@ -107,6 +108,21 @@ export default function TemplatesPage() {
                     <div className="flex flex-col items-center">
                       <PercentIcon className="size-6" />
                       <span className="mt-2">Equity grant contract</span>
+                    </div>
+                  </MutationButton>
+                  <MutationButton
+                    idleVariant="outline"
+                    className="h-auto rounded-md p-6"
+                    mutation={create}
+                    param={{
+                      companyId: company.id,
+                      name: "Option grant board consent",
+                      type: DocumentTemplateType.BoardConsent,
+                    }}
+                  >
+                    <div className="flex flex-col items-center">
+                      <GavelIcon className="size-6" />
+                      <span className="mt-2 whitespace-normal">Option grant board consent</span>
                     </div>
                   </MutationButton>
                 </div>

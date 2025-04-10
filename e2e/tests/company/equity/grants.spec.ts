@@ -46,16 +46,14 @@ test.describe("New Contractor", () => {
     await page.getByRole("link", { name: "Equity" }).click();
     await page.getByRole("tab", { name: "Options" }).click();
     await expect(page.getByRole("link", { name: "New option grant" })).not.toBeVisible();
-    await expect(
-      page.getByText("To create a new option grant, you need to create an equity plan contract template first."),
-    ).toBeVisible();
+    await expect(page.getByText("Create equity plan contract and board consent templates")).toBeVisible();
 
     await documentTemplatesFactory.create({
       companyId: company.id,
       type: DocumentTemplateType.EquityPlanContract,
     });
     await page.reload();
-    await expect(page.getByText("create an equity plan contract template first")).not.toBeVisible();
+    await expect(page.getByText("Create equity plan contract and board consent templates")).not.toBeVisible();
     await page.getByRole("link", { name: "New option grant" }).click();
     await page.getByLabel("Recipient").selectOption(contractorUser.preferredName);
     await page.getByLabel("Number of options").fill("10");
