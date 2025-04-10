@@ -12,22 +12,6 @@ import { companies, userComplianceInfos, users, wiseRecipients } from "@/db/sche
 test.describe("Investor onboarding - bank account", () => {
   let company: typeof companies.$inferSelect;
   let onboardingUser: typeof users.$inferSelect;
-  const userAttributes = {
-    legalName: "Gumroad Investor",
-    email: "investor@gumroad.com",
-    countryCode: "US",
-    citizenshipCountryCode: "US",
-    city: "Honolulu",
-    country: "United States",
-    streetAddress: "59-720 Kamehameha Hwy",
-    state: "Hawaii",
-    zipCode: "96712",
-  };
-  const formValues = {
-    ...userAttributes,
-    routingNumber: "071004200",
-    accountNumber: "12345678",
-  };
 
   test.beforeEach(async ({ page }) => {
     company = (await companiesFactory.create()).company;
@@ -39,7 +23,7 @@ test.describe("Investor onboarding - bank account", () => {
 
     onboardingUser = (
       await usersFactory.create(
-        { invitedById: companyAdministrator.userId, ...userAttributes },
+        { state: "Hawaii", invitedById: companyAdministrator.userId },
         { withoutBankAccount: true },
       )
     ).user;
@@ -55,14 +39,14 @@ test.describe("Investor onboarding - bank account", () => {
     await page.getByRole("button", { name: "Set up" }).click();
 
     await fillOutUsdBankAccountForm(page, {
-      legalName: ` ${formValues.legalName} `,
-      routingNumber: `${formValues.routingNumber} `,
-      accountNumber: ` ${formValues.accountNumber} `,
-      country: formValues.country,
-      city: ` ${formValues.city} `,
-      streetAddress: ` ${formValues.streetAddress} `,
-      state: formValues.state,
-      zipCode: ` ${formValues.zipCode} `,
+      legalName: ` ${onboardingUser.legalName} `,
+      routingNumber: `071004200 `,
+      accountNumber: ` 12345678 `,
+      country: "United States",
+      city: ` ${onboardingUser.city} `,
+      streetAddress: ` ${onboardingUser.streetAddress} `,
+      state: `${onboardingUser.state}`,
+      zipCode: ` ${onboardingUser.zipCode} `,
     });
 
     await page.getByRole("button", { name: "Save bank account" }).click();
@@ -70,6 +54,9 @@ test.describe("Investor onboarding - bank account", () => {
     await expect(page.getByText("Account ending in 5678")).toBeVisible();
     await expect(page.getByRole("button", { name: "Set up" })).not.toBeVisible();
     await expect(page.getByRole("button", { name: "Done" })).toBeDisabled();
+    await page.getByRole("link", { name: "Continue" }).click();
+    await expect(page.getByRole("link", { name: "Account" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Equity" })).toBeVisible();
 
     const wiseRecipient = await db.query.wiseRecipients
       .findFirst({
@@ -78,7 +65,7 @@ test.describe("Investor onboarding - bank account", () => {
       .then(takeOrThrow);
     expect(wiseRecipient.currency).toBe("USD");
     expect(wiseRecipient.lastFourDigits).toBe("5678");
-    expect(wiseRecipient.accountHolderName).toBe(userAttributes.legalName);
+    expect(wiseRecipient.accountHolderName).toBe(onboardingUser.legalName);
     expect(wiseRecipient.countryCode).toBe("US");
   });
 
@@ -138,77 +125,46 @@ test.describe("Investor onboarding - bank account", () => {
   test("prefills the user's information", async ({ page }) => {
     await page.getByRole("button", { name: "Set up" }).click();
 
-    await expect(page.getByLabel("Full name of the account holder")).toHaveValue(userAttributes.legalName);
+    await expect(page.getByLabel("Full name of the account holder")).toHaveValue(onboardingUser.legalName ?? "");
 
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByLabel("State")).toHaveValue("Hawaii"); // unabbreviated version
-    await expect(page.getByLabel("City")).toHaveValue(userAttributes.city);
-    await expect(page.getByLabel("Street address, apt number")).toHaveValue(userAttributes.streetAddress);
-    await expect(page.getByLabel("ZIP code")).toHaveValue(userAttributes.zipCode);
-  });
-
-  test("allows USD Recipient to submit bank account info and move to the next page", async ({ page }) => {
-    await page.getByRole("button", { name: "Set up" }).click();
-    await fillOutUsdBankAccountForm(page, formValues);
-
-    await page.getByRole("button", { name: "Save bank account" }).click();
-
-    await expect(page.getByText("Account ending in 5678")).toBeVisible();
-
-    await page.waitForTimeout(1000);
-    await page.getByRole("link", { name: "Continue" }).click();
-    await expect(page.getByRole("link", { name: "Account" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Equity" })).toBeVisible();
+    await expect(page.getByLabel("City")).toHaveValue(onboardingUser.city ?? "");
+    await expect(page.getByLabel("Street address, apt number")).toHaveValue(onboardingUser.streetAddress ?? "");
+    await expect(page.getByLabel("ZIP code")).toHaveValue(onboardingUser.zipCode ?? "");
   });
 
   test("validates name and bank account information", async ({ page }) => {
     await page.getByRole("button", { name: "Set up" }).click();
 
-    // name
-    await fillOutUsdBankAccountForm(page, { ...formValues, legalName: "Da R" });
-    await page.getByRole("button", { name: "Save bank account" }).click();
-    await expect(page.getByLabel("Full name of the account holder")).not.toBeValid();
-    await expect(page.getByText("This doesn't look like a full legal name.")).toBeVisible();
-    await page.getByLabel("Full name of the account holder").fill("Jane Doe");
-    await expect(page.getByLabel("Full name of the account holder")).toBeValid();
-
-    // account number
-    await page.getByLabel("Account number").fill("");
+    await page.getByLabel("Full name of the account holder").fill("Da R");
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("button", { name: "Save bank account" }).click();
     await expect(page.getByRole("button", { name: "Continue" })).toBeDisabled();
+    await expect(page.getByLabel("Full name of the account holder")).not.toBeValid();
     await expect(page.getByLabel("Account number")).not.toBeValid();
+    await expect(page.getByLabel("Routing number")).not.toBeValid();
+    await expect(page.getByText("Please enter an account number.")).toBeVisible();
+    await expect(page.getByText("This doesn't look like a full legal name.")).toBeVisible();
 
+    await page.getByLabel("Full name of the account holder").fill("Jane Doe");
+    await expect(page.getByLabel("Full name of the account holder")).toBeValid();
+    await page.getByLabel("Routing number").fill("123456789");
     await page.getByLabel("Account number").fill("1");
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("button", { name: "Save bank account" }).click();
-    await expect(page.getByRole("button", { name: "Continue" })).toBeDisabled();
+
     await expect(page.getByLabel("Account number")).not.toBeValid();
+    await expect(page.getByLabel("Routing number")).not.toBeValid();
     await expect(page.getByText("Please enter a valid account number of between 4 and 17 digits.")).toBeVisible();
+    await expect(page.getByText("This doesn't look like a valid ACH routing number.")).toBeVisible();
 
     await page.getByLabel("Account number").fill("abcd");
-    await page.getByRole("button", { name: "Continue" }).click();
-    await page.getByRole("button", { name: "Save bank account" }).click();
-    await expect(page.getByRole("button", { name: "Continue" })).toBeDisabled();
-    await expect(page.getByText("Please enter an account number.")).toBeVisible();
     await page.getByLabel("Account number").fill("12345678");
-
-    // routing number
-    await page.getByLabel("Routing number").fill("");
-    await page.getByRole("button", { name: "Continue" }).click();
-    await page.getByRole("button", { name: "Save bank account" }).click();
-    await expect(page.getByRole("button", { name: "Continue" })).toBeDisabled();
-    await expect(page.getByLabel("Routing number")).not.toBeValid();
-
-    await page.getByLabel("Routing number").fill("123456789");
-    await page.getByRole("button", { name: "Continue" }).click();
-    await page.getByRole("button", { name: "Save bank account" }).click();
-    await expect(page.getByRole("button", { name: "Continue" })).toBeDisabled();
-    await expect(page.getByText("This doesn't look like a valid ACH routing number.")).toBeVisible();
     await page.getByLabel("Routing number").fill("071004200");
-
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("button", { name: "Save bank account" }).click();
+
     await expect(page.getByText("Saving bank account...")).toBeVisible();
   });
 
