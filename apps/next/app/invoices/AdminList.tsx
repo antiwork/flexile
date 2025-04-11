@@ -179,7 +179,7 @@ export default function AdminList() {
         </div>
       )}
 
-      {!company.isTrusted && data.invoices.length > 0 && (
+      {company.completedPaymentMethodSetup && !company.isTrusted && data.invoices.length > 0 && (
         <Notice variant="critical">
           <strong>Payments to contractors may take up to 10 business days to process.</strong>{" "}
           <span>
