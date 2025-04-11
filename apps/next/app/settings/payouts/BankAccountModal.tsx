@@ -4,13 +4,13 @@ import { set } from "lodash-es";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import Button from "@/components/Button";
-import ComboBox from "@/components/ComboBox";
 import Input from "@/components/Input";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import RadioButtons from "@/components/RadioButtons";
 import Select from "@/components/Select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Command, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import {
   CURRENCIES,
   type Currency,
@@ -422,19 +422,41 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
         if (field.type === "select" || field.type === "radio") {
           if (!field.valuesAllowed || field.valuesAllowed.length > 5) {
             return (
-              <ComboBox
-                key={field.key}
-                value={details.get(field.key) ?? ""}
-                onChange={(value) => {
-                  setDetails((prev) => prev.set(field.key, value));
-                  setTimeout(() => fieldUpdated(field), 0);
-                }}
-                options={field.valuesAllowed ?? []}
-                invalid={errors.has(field.key)}
-                disabled={isPending}
-                label={field.name}
-                help={errors.get(field.key)}
-              />
+              <div className="relative">
+                <Command className="border">
+                  <CommandInput
+                    value={details.get(field.key) ? field.valuesAllowed?.find(option => option.key === details.get(field.key))?.name || "" : ""}
+                    onValueChange={(value) => {
+                      if (field.valuesAllowed?.some(option => option.name === value)) {
+                        const matchedValue = field.valuesAllowed.find(option => option.name === value)?.key;
+                        if (matchedValue) {
+                          setDetails((prev) => prev.set(field.key, matchedValue));
+                          setTimeout(() => fieldUpdated(field), 0);
+                        }
+                      }
+                    }}
+                    placeholder={field.name}
+                    disabled={isPending}
+                  />
+                  <CommandList>
+                    <CommandGroup>
+                      {field.valuesAllowed?.map((option) => (
+                        <CommandItem
+                          key={option.key}
+                          value={option.name}
+                          onSelect={() => {
+                            setDetails((prev) => prev.set(field.key, option.key));
+                            setTimeout(() => fieldUpdated(field), 0);
+                          }}
+                        >
+                          {option.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+                {errors.has(field.key) && <div className="text-red-500 text-sm mt-1">{errors.get(field.key)}</div>}
+              </div>
             );
           }
 

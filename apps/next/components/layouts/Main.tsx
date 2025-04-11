@@ -11,7 +11,6 @@ import {
   DocumentCurrencyDollarIcon,
   DocumentDuplicateIcon,
   DocumentTextIcon,
-  MagnifyingGlassIcon,
   MegaphoneIcon,
   UserGroupIcon,
   UserIcon,
@@ -43,6 +42,7 @@ import { z } from "zod";
 import { navLinks as equityNavLinks } from "@/app/equity";
 import InvoiceStatus, { invoiceSchema } from "@/app/invoices/LegacyStatus";
 import { Badge } from "@/components/ui/badge";
+import { Command, CommandGroup, CommandInput } from "@/components/ui/command";
 import Input from "@/components/Input";
 import { linkClasses } from "@/components/Link";
 import { useCurrentUser, useUserStore } from "@/global";
@@ -219,48 +219,49 @@ export default function MainLayout({
               <div className="grid max-w-(--breakpoint-xl) gap-y-8">
                 {user.companies.length > 0 && (
                   <search className="relative print:hidden">
-                    <Input
-                      ref={searchInputRef}
-                      value={query}
-                      onChange={setQuery}
-                      className="rounded-full! border-0"
-                      placeholder={isRole("administrator") ? "Search invoices, people..." : "Search invoices"}
-                      role="combobox"
-                      aria-autocomplete="list"
-                      aria-expanded={
-                        !!searchFocused &&
-                        (searchResults?.invoices.length || 0) + (searchResults?.users.length || 0) > 0
-                      }
-                      prefix={<MagnifyingGlassIcon className="size-4" />}
-                      aria-controls={`${uid}results`}
-                      onFocus={() => setSearchFocused(true)}
-                      onBlur={() => setSearchFocused(false)}
-                      onKeyDown={(e) => {
-                        switch (e.key) {
-                          case "Enter":
-                            if ((searchResults?.invoices.length || 0) > 0 || (searchResults?.users.length || 0) > 0) {
-                              const links = searchResultsRef.current?.querySelectorAll("a");
-                              links?.[selectedResultIndex]?.click();
+                    <div className="relative">
+                      <Command className="rounded-full border-0">
+                        <CommandInput
+                          ref={searchInputRef}
+                          value={query}
+                          onValueChange={setQuery}
+                          placeholder={isRole("administrator") ? "Search invoices, people..." : "Search invoices"}
+                          aria-autocomplete="list"
+                          aria-expanded={
+                            !!searchFocused &&
+                            (searchResults?.invoices.length || 0) + (searchResults?.users.length || 0) > 0
+                          }
+                          aria-controls={`${uid}results`}
+                          onFocus={() => setSearchFocused(true)}
+                          onBlur={() => setSearchFocused(false)}
+                          onKeyDown={(e) => {
+                            switch (e.key) {
+                              case "Enter":
+                                if ((searchResults?.invoices.length || 0) > 0 || (searchResults?.users.length || 0) > 0) {
+                                  const links = searchResultsRef.current?.querySelectorAll("a");
+                                  links?.[selectedResultIndex]?.click();
+                                }
+                                break;
+                              case "Escape":
+                                cancelSearch();
+                                break;
+                              case "ArrowDown":
+                                e.preventDefault();
+                                setSelectedResultIndex((prev) =>
+                                  prev < (searchResults?.invoices.length || 0) + (searchResults?.users.length || 0) - 1
+                                    ? prev + 1
+                                    : prev,
+                                );
+                                break;
+                              case "ArrowUp":
+                                e.preventDefault();
+                                setSelectedResultIndex((prev) => (prev > 0 ? prev - 1 : prev));
+                                break;
                             }
-                            break;
-                          case "Escape":
-                            cancelSearch();
-                            break;
-                          case "ArrowDown":
-                            e.preventDefault();
-                            setSelectedResultIndex((prev) =>
-                              prev < (searchResults?.invoices.length || 0) + (searchResults?.users.length || 0) - 1
-                                ? prev + 1
-                                : prev,
-                            );
-                            break;
-                          case "ArrowUp":
-                            e.preventDefault();
-                            setSelectedResultIndex((prev) => (prev > 0 ? prev - 1 : prev));
-                            break;
-                        }
-                      }}
-                    />
+                          }}
+                        />
+                      </Command>
+                    </div>
 
                     {searchResults &&
                     searchFocused &&
