@@ -5,7 +5,7 @@ import { CheckIcon } from "@heroicons/react/16/solid";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
-import Badge from "@/components/Badge";
+import { Badge } from "@/components/ui/badge";
 import Button from "@/components/Button";
 import { useCurrentUser } from "@/global";
 import logo from "@/images/flexile-logo.svg";
@@ -39,7 +39,7 @@ const OnboardingLayout = ({
           <ol className="flex list-none justify-center gap-2">
             {steps.map((name, index) => (
               <li key={name} className="flex items-center gap-2">
-                <Badge color={index <= stepIndex ? "blue" : "gray"}>
+                <Badge variant={index <= stepIndex ? "default" : "outline"}>
                   {index < stepIndex ? <CheckIcon /> : <span>{index + 1}</span>}
                 </Badge>
                 <span className="name hidden md:inline">{name}</span>

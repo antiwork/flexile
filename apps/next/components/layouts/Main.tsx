@@ -42,7 +42,7 @@ import { useDebounce } from "use-debounce";
 import { z } from "zod";
 import { navLinks as equityNavLinks } from "@/app/equity";
 import InvoiceStatus, { invoiceSchema } from "@/app/invoices/LegacyStatus";
-import Badge from "@/components/Badge";
+import { Badge } from "@/components/ui/badge";
 import Input from "@/components/Input";
 import { linkClasses } from "@/components/Link";
 import { useCurrentUser, useUserStore } from "@/global";

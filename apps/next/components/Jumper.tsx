@@ -1,6 +1,6 @@
 "use client";
 import React, { useRef } from "react";
-import Badge from "@/components/Badge";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/utils";
 
 const Jumper = ({
@@ -26,8 +26,7 @@ const Jumper = ({
           onClick={() => setActiveIndex?.(index)}
         >
           <Badge
-            color={index === activeIndex ? "blue" : "gray"}
-            outline={index !== activeIndex}
+            variant={index === activeIndex ? "default" : "outline"}
             className="mr-1 shrink-0"
           >
             {index + 1}
