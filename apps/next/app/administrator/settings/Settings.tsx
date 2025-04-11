@@ -8,6 +8,7 @@ import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import MutationButton from "@/components/MutationButton";
 import { Editor } from "@/components/RichText";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";
 import defaultLogo from "@/images/default-company-logo.svg";
@@ -108,7 +109,10 @@ export default function Settings({ githubOauthUrl }: { githubOauthUrl: string })
                     }
                   }}
                 />
-                <img id="avatar" className="size-12 rounded-md" src={logoUrl} alt="" />
+                <Avatar className="size-12 rounded-md">
+                  <AvatarImage src={logoUrl} alt="Company logo" />
+                  <AvatarFallback>Logo</AvatarFallback>
+                </Avatar>
                 <span className="ml-2">Upload...</span>
               </label>
             </div>
