@@ -76,9 +76,6 @@ export default function RolePage({ countryCode }: { countryCode: string }) {
     },
   });
 
-  const isAdditionalSupportedCountry = (countryCode: string) =>
-    company.additionalSupportedCountries.includes(countryCode);
-
   if (step === "sent") {
     return (
       <div className="flex h-full flex-col items-center justify-center text-center">
@@ -250,23 +247,14 @@ export default function RolePage({ countryCode }: { countryCode: string }) {
               <Select
                 value={values.countryCode}
                 onChange={(countryCode) => updateValues({ countryCode })}
-                options={Object.entries(countryInfos).map(([code, info]) => {
-                  const isSupported = info.supportsWisePayout || isAdditionalSupportedCountry(code);
-                  return {
-                    value: code,
-                    disabled: !isSupported,
-                    label: `${info.countryName}${isSupported ? "" : " (unsupported)"}`,
-                  };
-                })}
+                options={Object.entries(countryInfos).map(([code, info]) => ({
+                  value: code,
+                  disabled: !info.supportsWisePayout,
+                  label: `${info.countryName}${info.supportsWisePayout ? "" : " (unsupported)"}`,
+                }))}
                 label="Country (where you'll usually work from)"
                 invalid={errors.has("countryCode")}
               />
-
-              {values.countryCode && isAdditionalSupportedCountry(values.countryCode) ? (
-                <Notice variant="critical">
-                  You'll need a bank account outside of {countries.get(values.countryCode)} to receive payments.
-                </Notice>
-              ) : null}
 
               {role.payRateType === PayRateType.Hourly && (
                 <>

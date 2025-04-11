@@ -16,7 +16,7 @@ class CompanyRoleApplication < ApplicationRecord
 
   validates_format_of :email, with: URI::MailTo::EMAIL_REGEXP
   validates :name, presence: true
-  validates :country_code, presence: true, inclusion: { in: :supported_country_codes }
+  validates :country_code, presence: true, inclusion: { in: SUPPORTED_COUNTRY_CODES }
   validates :description, presence: true
   validates :hours_per_week, numericality: { greater_than_or_equal_to: 0, only_integer: true }, presence: true, if: :hourly?
   validates :weeks_per_year, numericality: { greater_than_or_equal_to: 0, only_integer: true }, presence: true, if: :hourly?
@@ -25,9 +25,4 @@ class CompanyRoleApplication < ApplicationRecord
   def display_country
     ISO3166::Country[country_code].common_name
   end
-
-  private
-    def supported_country_codes
-      SUPPORTED_COUNTRY_CODES + Array(company&.additional_supported_countries)
-    end
 end
