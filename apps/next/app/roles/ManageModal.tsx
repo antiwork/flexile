@@ -1,4 +1,5 @@
-import { TrashIcon } from "@heroicons/react/24/outline";
+import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
+import { InformationCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { pick } from "lodash-es";
 import { useEffect, useState } from "react";
@@ -9,12 +10,12 @@ import Delta from "@/components/Delta";
 import Input from "@/components/Input";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import Notice from "@/components/Notice";
 import NumberInput from "@/components/NumberInput";
 import RadioButtons from "@/components/RadioButtons";
 import { Editor as RichTextEditor } from "@/components/RichText";
 import Select from "@/components/Select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
 import { PayRateType } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
@@ -193,11 +194,14 @@ const ManageModal = ({
         {role.id && contractorsToUpdate.length > 0 ? (
           <>
             {!updateContractorRates && (
-              <Notice>
-                {contractorsToUpdate.length}{" "}
-                {contractorsToUpdate.length === 1 ? "contractor has a" : "contractors have"} different{" "}
-                {pluralize("rate", contractorsToUpdate.length)} that won't be updated.
-              </Notice>
+              <Alert>
+                <InformationCircleIcon />
+                <AlertDescription>
+                  {contractorsToUpdate.length}{" "}
+                  {contractorsToUpdate.length === 1 ? "contractor has a" : "contractors have"} different{" "}
+                  {pluralize("rate", contractorsToUpdate.length)} that won't be updated.
+                </AlertDescription>
+              </Alert>
             )}
             <Checkbox
               checked={updateContractorRates}
@@ -239,7 +243,10 @@ const ManageModal = ({
           />
         ) : null}
         {role.id && !role.expenseCardEnabled && role.expenseCardsCount > 0 ? (
-          <Notice variant="critical">{role.expenseCardsCount} issued cards will no longer be usable.</Notice>
+          <Alert variant="critical">
+            <ExclamationTriangleIcon />
+            <AlertDescription>{role.expenseCardsCount} issued cards will no longer be usable.</AlertDescription>
+          </Alert>
         ) : null}
         {role.id ? (
           <RichTextEditor

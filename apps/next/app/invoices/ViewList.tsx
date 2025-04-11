@@ -1,4 +1,4 @@
-import { CurrencyDollarIcon, PencilIcon, PlusIcon } from "@heroicons/react/20/solid";
+import { CurrencyDollarIcon, ExclamationTriangleIcon, PencilIcon, PlusIcon } from "@heroicons/react/20/solid";
 import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { formatISO } from "date-fns";
@@ -14,10 +14,10 @@ import DurationInput from "@/components/DurationInput";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
 import { linkClasses } from "@/components/Link";
-import Notice from "@/components/Notice";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assert } from "@/utils/assert";
@@ -106,18 +106,21 @@ export default function ViewList() {
       }
     >
       {unsignedContractId ? (
-        <Notice variant="critical">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>You have an unsigned contract. Please sign it before creating new invoices.</div>
-            <Button asChild variant="outline" small disabled={!!unsignedContractId}>
-              <Link
-                href={`/documents?${new URLSearchParams({ sign: unsignedContractId.toString(), next: "/invoices" })}`}
-              >
-                Review & sign
-              </Link>
-            </Button>
-          </div>
-        </Notice>
+        <Alert variant="critical">
+          <ExclamationTriangleIcon />
+          <AlertDescription>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>You have an unsigned contract. Please sign it before creating new invoices.</div>
+              <Button asChild variant="outline" small disabled={!!unsignedContractId}>
+                <Link
+                  href={`/documents?${new URLSearchParams({ sign: unsignedContractId.toString(), next: "/invoices" })}`}
+                >
+                  Review & sign
+                </Link>
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
       ) : null}
 
       <QuickInvoiceSection disabled={!!unsignedContractId} />

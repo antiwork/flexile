@@ -1,5 +1,6 @@
 "use client";
 import { CheckIcon, XMarkIcon } from "@heroicons/react/16/solid";
+import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import {
   CheckCircleIcon,
   CurrencyDollarIcon,
@@ -30,7 +31,6 @@ import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import Notice from "@/components/Notice";
 import NumberInput from "@/components/NumberInput";
 import PaginationSection from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
@@ -38,6 +38,7 @@ import Status from "@/components/Status";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
 import Tabs from "@/components/Tabs";
 import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from "@/components/Tooltip";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Slider } from "@/components/ui/slider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { DEFAULT_WORKING_HOURS_PER_WEEK, MAXIMUM_EQUITY_PERCENTAGE, MINIMUM_EQUITY_PERCENTAGE } from "@/models";
@@ -512,16 +513,19 @@ const DetailsTab = ({
       <FormSection title="Contract">
         <CardRow className="grid gap-4">
           {contractor.endedAt ? (
-            <Notice variant="critical">
-              <div className="flex items-center justify-between">
-                Contract {isFuture(contractor.endedAt) ? "ends" : "ended"} on {formatDate(contractor.endedAt)}.
-                {isFuture(contractor.endedAt) && (
-                  <Button variant="outline" onClick={() => setCancelModalOpen(true)}>
-                    Cancel contract end
-                  </Button>
-                )}
-              </div>
-            </Notice>
+            <Alert variant="critical">
+              <ExclamationTriangleIcon />
+              <AlertDescription>
+                <div className="flex items-center justify-between">
+                  Contract {isFuture(contractor.endedAt) ? "ends" : "ended"} on {formatDate(contractor.endedAt)}.
+                  {isFuture(contractor.endedAt) && (
+                    <Button variant="outline" onClick={() => setCancelModalOpen(true)}>
+                      Cancel contract end
+                    </Button>
+                  )}
+                </div>
+              </AlertDescription>
+            </Alert>
           ) : null}
           <RoleSelector value={selectedRoleId} onChange={setSelectedRoleId} />
           <div className="grid items-start gap-4 md:grid-cols-2">
