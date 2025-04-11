@@ -51,7 +51,7 @@
   },
   "BW": { "countryName": "Botswana", "supportsWisePayout": true, "sanctioned": false, "hasTaxTreaty": false },
   "BV": { "countryName": "Bouvet Island", "supportsWisePayout": true, "sanctioned": false, "hasTaxTreaty": false },
-  "BR": { "countryName": "Brazil", "supportsWisePayout": false, "sanctioned": false, "hasTaxTreaty": false },
+  "BR": { "countryName": "Brazil", "supportsWisePayout": true, "sanctioned": false, "hasTaxTreaty": false },
   "IO": {
     "countryName": "British Indian Ocean Territory",
     "supportsWisePayout": true,
