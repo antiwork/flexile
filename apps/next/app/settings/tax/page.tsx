@@ -1,5 +1,7 @@
 "use client";
 
+import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Map } from "immutable";
 import { iso31662 } from "iso-3166";
@@ -12,10 +14,10 @@ import Button from "@/components/Button";
 import { CardRow } from "@/components/Card";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
-import Notice from "@/components/Notice";
 import RadioButtons from "@/components/RadioButtons";
 import Select from "@/components/Select";
 import Status from "@/components/Status";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { BusinessType, TaxClassification } from "@/db/enums";
 import { useCurrentUser } from "@/global";
 import { countries } from "@/models/constants";
@@ -192,18 +194,24 @@ export default function TaxPage() {
       >
         <CardRow className="grid gap-4">
           {!isTaxInfoConfirmed && (
-            <Notice variant="critical">
-              Confirm your tax information to avoid delays on your payments or additional tax withholding.
-            </Notice>
+            <Alert variant="critical">
+              <ExclamationTriangleIcon />
+              <AlertDescription>
+                Confirm your tax information to avoid delays on your payments or additional tax withholding.
+              </AlertDescription>
+            </Alert>
           )}
 
           {formData.tax_id_status === "invalid" && (
-            <Notice>
-              <strong>Review your tax information</strong>
-              Since there's a mismatch between the legal name and {tinName} you provided and your government records,
-              please note that your payments could experience a tax withholding rate of 24%. If you think this may be
-              due to a typo or recent changes to your name or legal entity, please update your information.
-            </Notice>
+            <Alert>
+              <InformationCircleIcon />
+              <AlertDescription>
+                <strong>Review your tax information</strong>
+                Since there's a mismatch between the legal name and {tinName} you provided and your government records,
+                please note that your payments could experience a tax withholding rate of 24%. If you think this may be
+                due to a typo or recent changes to your name or legal entity, please update your information.
+              </AlertDescription>
+            </Alert>
           )}
 
           <Input

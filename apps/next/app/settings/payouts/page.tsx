@@ -1,5 +1,6 @@
 "use client";
 
+import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Check } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
@@ -10,8 +11,8 @@ import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import Notice from "@/components/Notice";
 import NumberInput from "@/components/NumberInput";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { currencyCodes, sanctionedCountries, supportedCountries } from "@/models/constants";
 import { trpc } from "@/trpc/client";
@@ -191,11 +192,14 @@ const BankAccountsSection = () => {
     <FormSection title="Payout method">
       {isFromSanctionedCountry ? (
         <CardRow>
-          <Notice variant="critical">
-            <strong>Payouts are disabled</strong>
-            Unfortunately, due to regulatory restrictions and compliance with international sanctions, individuals from
-            sanctioned countries are unable to receive payments through our platform.
-          </Notice>
+          <Alert variant="critical">
+            <ExclamationTriangleIcon />
+            <AlertDescription>
+              <strong>Payouts are disabled</strong> Unfortunately, due to regulatory restrictions and compliance with
+              international sanctions, individuals from sanctioned countries are unable to receive payments through our
+              platform.
+            </AlertDescription>
+          </Alert>
         </CardRow>
       ) : (
         <>
@@ -337,9 +341,12 @@ const WalletAddressModal = ({
         and Flexile will cover network fees.
       </div>
 
-      <Notice variant="critical">
-        Ethereum transactions are irreversible. Please double-check your address before saving.
-      </Notice>
+      <Alert variant="critical">
+        <ExclamationTriangleIcon />
+        <AlertDescription>
+          Ethereum transactions are irreversible. Please double-check your address before saving.
+        </AlertDescription>
+      </Alert>
 
       <Input
         ref={inputRef}

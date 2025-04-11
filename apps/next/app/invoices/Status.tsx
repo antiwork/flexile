@@ -1,10 +1,11 @@
 import { CheckCircleIcon } from "@heroicons/react/16/solid";
-import { ClockIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
+import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
+import { ClockIcon, CurrencyDollarIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
 import { addDays, isWeekend, nextMonday } from "date-fns";
 import React from "react";
-import Notice from "@/components/Notice";
 import Status, { type Variant } from "@/components/Status";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -130,5 +131,10 @@ export const StatusNotice = ({ invoice }: { invoice?: Invoice | null }) => {
   const details = statusNoticeText(invoice);
   if (!details) return null;
 
-  return <Notice variant={invoice.status === "rejected" ? "critical" : undefined}>{details}</Notice>;
+  return (
+    <Alert variant={invoice.status === "rejected" ? "critical" : undefined}>
+      {invoice.status === "rejected" ? <ExclamationTriangleIcon /> : <InformationCircleIcon />}
+      <AlertDescription>{details}</AlertDescription>
+    </Alert>
+  );
 };
