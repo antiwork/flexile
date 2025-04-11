@@ -18,6 +18,7 @@ import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
 import Select from "@/components/Select";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
+import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
@@ -510,10 +511,9 @@ const Edit = () => {
           {canManageExpenses ? <Table table={expenseTable} /> : null}
 
           <footer className="flex flex-col gap-3 lg:flex-row lg:justify-between">
-            <Input
+            <Textarea
               value={notes}
-              onChange={setNotes}
-              type="textarea"
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value)}
               placeholder="Enter notes about your invoice (optional)"
               className="w-full border-dashed border-gray-100 lg:w-96"
             />

@@ -5,7 +5,7 @@ import { Map } from "immutable";
 import { useEffect, useState } from "react";
 import { CardRow } from "@/components/Card";
 import FormSection from "@/components/FormSection";
-import Input from "@/components/Input";
+import { Input } from "@/components/ui/input";
 import MutationButton from "@/components/MutationButton";
 import Select from "@/components/Select";
 import { useCurrentCompany } from "@/global";
@@ -64,7 +64,7 @@ export default function Details() {
         <Input value={name} onChange={setName} label="Company's legal name" invalid={errors.has("name")} autoFocus />
         <Input
           value={taxId}
-          onChange={(value) => setTaxId(formatTaxId(value))}
+          onChange={(value: string) => setTaxId(formatTaxId(value))}
           label="EIN"
           placeholder="XX-XXXXXXX"
           invalid={errors.has("taxId")}
@@ -72,7 +72,7 @@ export default function Details() {
         />
         <Input
           value={phoneNumber}
-          onChange={(value) => setPhoneNumber(formatPhoneNumber(value))}
+          onChange={(value: string) => setPhoneNumber(formatPhoneNumber(value))}
           label="Phone number"
           placeholder="(000) 000-0000"
           invalid={errors.has("phoneNumber")}

@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CardRow } from "@/components/Card";
 import ColorPicker from "@/components/ColorPicker";
 import FormSection from "@/components/FormSection";
-import Input from "@/components/Input";
+import { Input } from "@/components/ui/input";
 import MutationButton from "@/components/MutationButton";
 import { Editor } from "@/components/RichText";
 import { Switch } from "@/components/ui/switch";
