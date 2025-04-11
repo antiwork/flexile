@@ -8,9 +8,8 @@ export default clerkMiddleware((_, req) => {
     .toString("utf-8")
     .slice(0, -1);
   const { NODE_ENV } = process.env; // destructure to prevent inlining
-  const s3Urls = [env.S3_PRIVATE_BUCKET, env.S3_PUBLIC_BUCKET]
-    .map((bucket) => `https://${bucket}.s3.${env.AWS_REGION}.amazonaws.com`)
-    .join(" ");
+  const publicS3Url = `https://${env.S3_PUBLIC_BUCKET}.s3.${env.AWS_REGION}.amazonaws.com`;
+  const privateS3Url = `https://${env.S3_PRIVATE_BUCKET}.s3.${env.AWS_REGION}.amazonaws.com`;
 
   const cspHeader = `
     default-src 'self';
@@ -18,8 +17,8 @@ export default clerkMiddleware((_, req) => {
       NODE_ENV === "production" ? "" : `'unsafe-eval'` // required by Clerk, as is style-src 'unsafe-inline' and worker-src blob:.
     };
     style-src 'self' 'unsafe-inline';
-    connect-src 'self' ${clerkFapiUrl} https://docuseal.com ${s3Urls};
-    img-src 'self' https://img.clerk.com https://docuseal.s3.amazonaws.com;
+    connect-src 'self' ${clerkFapiUrl} https://docuseal.com ${publicS3Url} ${privateS3Url};
+    img-src 'self' https://img.clerk.com https://docuseal.s3.amazonaws.com ${publicS3Url};
     worker-src 'self' blob:;
     font-src 'self';
     base-uri 'self';
