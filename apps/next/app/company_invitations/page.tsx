@@ -1,10 +1,10 @@
 "use client";
 import { BriefcaseIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import Button from "@/components/Button";
 import MainLayout from "@/components/layouts/Main";
 import Placeholder from "@/components/Placeholder";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
+import { Button } from "@/components/ui/button";
 import { trpc } from "@/trpc/client";
 
 type InvitedCompany = {

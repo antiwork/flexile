@@ -4,10 +4,10 @@ import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
-import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import Status from "@/components/Status";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
+import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { DocumentType, trpc } from "@/trpc/client";
@@ -91,19 +91,19 @@ const List = ({ userId, documents }: { userId: string | null; documents: Documen
             return (
               <>
                 {isSignable(document) ? (
-                  <Button variant="outline" small onClick={() => setSignDocumentId(document.id)}>
+                  <Button variant="outline" size="small" onClick={() => setSignDocumentId(document.id)}>
                     Review & sign
                   </Button>
                 ) : null}
                 {document.attachment ? (
-                  <Button variant="outline" small asChild>
+                  <Button variant="outline" size="small" asChild>
                     <a href={document.attachment} download>
                       <ArrowDownTrayIcon className="size-4" />
                       Download
                     </a>
                   </Button>
                 ) : document.docusealSubmissionId && document.completedAt ? (
-                  <Button variant="outline" small onClick={() => setDownloadDocument(document.id)}>
+                  <Button variant="outline" size="small" onClick={() => setDownloadDocument(document.id)}>
                     <ArrowDownTrayIcon className="size-4" />
                     Download
                   </Button>

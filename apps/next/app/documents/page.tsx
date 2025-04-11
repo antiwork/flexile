@@ -3,7 +3,6 @@ import { BriefcaseIcon, CheckCircleIcon, PaperAirplaneIcon } from "@heroicons/re
 import { useMutation } from "@tanstack/react-query";
 import { parseAsInteger, useQueryState } from "nuqs";
 import React, { useState } from "react";
-import Button from "@/components/Button";
 import Input from "@/components/Input";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
@@ -11,6 +10,7 @@ import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Select from "@/components/Select";
 import Sheet from "@/components/Sheet";
+import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";

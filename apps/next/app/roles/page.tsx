@@ -1,12 +1,12 @@
 "use client";
 import { BriefcaseIcon, LinkIcon } from "@heroicons/react/24/outline";
 import React, { useMemo, useState } from "react";
-import Button from "@/components/Button";
 import CopyButton from "@/components/CopyButton";
 import MainLayout from "@/components/layouts/Main";
 import Placeholder from "@/components/Placeholder";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
 import Tabs from "@/components/Tabs";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { PayRateType } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
@@ -83,7 +83,7 @@ export default function RolesPage() {
               <LinkIcon className="size-4" />
               Copy link
             </CopyButton>
-            <Button small variant="outline" onClick={() => setEditingRole(info.row.original)}>
+            <Button size="small" variant="outline" onClick={() => setEditingRole(info.row.original)}>
               Edit
             </Button>
           </div>
@@ -122,7 +122,7 @@ export default function RolesPage() {
         <div>
           <Placeholder icon={BriefcaseIcon}>
             Create a role to publish job listings and hire contractors.
-            <Button small onClick={() => setEditingRole({ id: null })}>
+            <Button size="small" onClick={() => setEditingRole({ id: null })}>
               Create role
             </Button>
           </Placeholder>

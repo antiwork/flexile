@@ -1,6 +1,6 @@
 import { type UseMutationResult } from "@tanstack/react-query";
 import React from "react";
-import Button from "@/components/Button";
+import { Button } from "@/components/ui/button";
 import { e } from "@/utils";
 
 const MutationButton = <T extends unknown>({
@@ -12,6 +12,7 @@ const MutationButton = <T extends unknown>({
   mutation,
   param,
   idleVariant,
+  asChild = false,
   ...buttonProps
 }: {
   disabled?: boolean;
@@ -32,6 +33,7 @@ const MutationButton = <T extends unknown>({
       disabled={mutation.isPending || !!success || !!error || disabled}
       variant={success ? "success" : error ? "critical" : idleVariant}
       {...buttonProps}
+      asChild={asChild}
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- TS isn't smart enough for this
       onClick={e(() => mutation.mutate(param as T), "prevent")}
     >
