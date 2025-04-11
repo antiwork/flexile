@@ -238,7 +238,7 @@ const InvestorGrantList = () => {
                       {exerciseInProgress.numberOfOptions.toLocaleString()} options.
                     </span>
                     <MutationButton
-                      small
+                      size="small"
                       mutation={resendPaymentInstructions}
                       param={exerciseInProgress.id}
                       successText="Payment instructions sent!"

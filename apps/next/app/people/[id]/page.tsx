@@ -578,7 +578,7 @@ const DetailsTab = ({
         {!contractor.endedAt && (
           <CardRow>
             <MutationButton
-              small
+              size="small"
               mutation={updateContractor}
               param={{
                 companyId: company.id,
@@ -841,7 +841,7 @@ function ExercisesTab({ investorId }: { investorId: string }) {
         id: "actions",
         cell: (info) =>
           info.row.original.status === "signed" ? (
-            <MutationButton mutation={confirmPaymentMutation} param={info.row.original.id} small>
+            <MutationButton mutation={confirmPaymentMutation} param={info.row.original.id} size="small">
               Confirm payment
             </MutationButton>
           ) : undefined,
