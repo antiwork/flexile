@@ -186,7 +186,7 @@ const EditableCompanyWorkerUpdate = ({ data }: { data: TeamMemberData }) => {
             Log time off
           </Button>
           {savingError ? (
-            <Alert variant="critical">
+            <Alert variant="destructive">
               <ExclamationTriangleIcon />
               <AlertDescription>{savingError}</AlertDescription>
             </Alert>
