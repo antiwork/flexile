@@ -1,6 +1,7 @@
 "use client";
 
 import { LinkIcon } from "@heroicons/react/16/solid";
+import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { Set } from "immutable";
@@ -13,10 +14,10 @@ import { Card, CardRow } from "@/components/Card";
 import Input from "@/components/Input";
 import SimpleLayout from "@/components/layouts/Simple";
 import MutationButton from "@/components/MutationButton";
-import Notice from "@/components/Notice";
 import RangeInput from "@/components/RangeInput";
 import RichText, { Editor as RichTextEditor } from "@/components/RichText";
 import Select from "@/components/Select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DEFAULT_WORKING_HOURS_PER_WEEK, MAX_WORKING_HOURS_PER_WEEK, WORKING_WEEKS_PER_YEAR } from "@/models";
 import { countryInfos } from "@/models/constants";
 import { PayRateType, trpc } from "@/trpc/client";
@@ -203,9 +204,12 @@ export default function RolePage({ countryCode }: { countryCode: string }) {
           </Card>
 
           {role.trialEnabled ? (
-            <Notice variant="critical">
-              This role has a trial period with a rate of {formatMoneyFromCents(role.trialPayRateInSubunits)} / hour.
-            </Notice>
+            <Alert variant="critical">
+              <ExclamationTriangleIcon />
+              <AlertDescription>
+                This role has a trial period with a rate of {formatMoneyFromCents(role.trialPayRateInSubunits)} / hour.
+              </AlertDescription>
+            </Alert>
           ) : null}
 
           <Button disabled={!role.activelyHiring} onClick={() => void setStep("applying")}>

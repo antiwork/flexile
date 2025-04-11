@@ -1,12 +1,13 @@
 "use client";
 
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import React, { useState } from "react";
 import SettingsLayout from "@/app/settings/Layout";
 import { Card, CardRow } from "@/components/Card";
 import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
-import Notice from "@/components/Notice";
 import RangeInput from "@/components/RangeInput";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import { trpc } from "@/trpc/client";
@@ -53,7 +54,12 @@ export default function Equity() {
 
   return (
     <SettingsLayout>
-      {noticeMessage ? <Notice>{noticeMessage}</Notice> : null}
+      {noticeMessage ? (
+        <Alert>
+          <InformationCircleIcon />
+          <AlertDescription>{noticeMessage}</AlertDescription>
+        </Alert>
+      ) : null}
 
       <div title="Equity split">
         <Card>

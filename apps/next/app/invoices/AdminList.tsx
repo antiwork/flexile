@@ -1,4 +1,4 @@
-import { ArrowDownTrayIcon } from "@heroicons/react/20/solid";
+import { ArrowDownTrayIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import { partition } from "lodash-es";
 import Link from "next/link";
@@ -21,12 +21,12 @@ import Checkbox from "@/components/Checkbox";
 import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import Notice from "@/components/Notice";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Sheet from "@/components/Sheet";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
 import Tabs from "@/components/Tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -150,17 +150,36 @@ export default function AdminList() {
       {data.invoices.length > 0 && (
         <div className="grid gap-4">
           {!company.completedPaymentMethodSetup && (
-            <Notice variant="critical">
-              <strong>Bank account setup incomplete.</strong> We're waiting for your bank details to be confirmed. Once
-              done, you'll be able to start approving invoices and paying contractors.
-            </Notice>
+            <Alert variant="destructive">
+              <ExclamationTriangleIcon />
+              <AlertDescription>
+                <strong>Bank account setup incomplete.</strong> We're waiting for your bank details to be confirmed.
+                Once done, you'll be able to start approving invoices and paying contractors.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {company.completedPaymentMethodSetup && !company.isTrusted && (
+            <Alert variant="destructive">
+              <ExclamationTriangleIcon />
+              <AlertDescription>
+                <strong>Payments to contractors may take up to 10 business days to process.</strong>{" "}
+                <span>
+                  Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete additional
+                  verification steps.
+                </span>
+              </AlertDescription>
+            </Alert>
           )}
 
           {invoiceFilter === "actionable" && data.invoices.some((invoice) => !areTaxRequirementsMet(invoice)) && (
-            <Notice variant="critical">
-              <strong>Missing tax information.</strong> Some invoices are not payable until contractors provide tax
-              information.
-            </Notice>
+            <Alert variant="critical">
+              <ExclamationTriangleIcon />
+              <AlertDescription>
+                <strong>Missing tax information.</strong> Some invoices are not payable until contractors provide tax
+                information.
+              </AlertDescription>
+            </Alert>
           )}
 
           <div className="flex justify-between md:hidden">
@@ -177,16 +196,6 @@ export default function AdminList() {
           <Table table={table} onRowClicked={setDetailInvoice} />
           <PaginationSection total={data.total} perPage={perPage} />
         </div>
-      )}
-
-      {company.completedPaymentMethodSetup && !company.isTrusted && data.invoices.length > 0 && (
-        <Notice variant="critical">
-          <strong>Payments to contractors may take up to 10 business days to process.</strong>{" "}
-          <span>
-            Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete additional
-            verification steps.
-          </span>
-        </Notice>
       )}
 
       {data.invoices.length === 0 && <Placeholder icon={CheckCircleIcon}>No invoices to display.</Placeholder>}
