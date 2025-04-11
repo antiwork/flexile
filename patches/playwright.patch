@@ -1,0 +1,15 @@
+diff --git a/lib/common/process.js b/lib/common/process.js
+index 1fde97528c9a87ab61a28df5814869e2486b9394..be635961239962351586470ceb1ff9f29c37757c 100644
+--- a/lib/common/process.js
++++ b/lib/common/process.js
+@@ -133,7 +133,10 @@ async function gracefullyCloseAndExit(forceExit) {
+ }
+ function sendMessageToParent(message) {
+   try {
++    const originalToJSON = BigInt.prototype.toJSON;
++    BigInt.prototype.toJSON = (b) => b.toString();
+     process.send(message);
++    BigInt.prototype.toJSON = originalToJSON;
+   } catch (e) {
+     // Can throw when closing.
+   }

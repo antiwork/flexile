@@ -43,7 +43,7 @@ if [ ! -f ".env" ]; then
     if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
         pnpx vercel link && pnpx vercel env pull .env
     else
-      cp .env.sample .env
+      cp .env.example .env
       echo "A sample .env file has been created. Please fill it in with your own keys."
     fi
 fi

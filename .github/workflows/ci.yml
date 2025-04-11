@@ -1,17 +1,20 @@
-name: Rspec CI
+name: CI
 on:
   push:
     branches:
       - main
-  pull_request:
+  pull_request_target:
+permissions:
+  contents: read
 
-# Cancel builds for previous commits on the same branch unless the branch is "main"
 concurrency:
-  group: ${{ github.ref }}-rspec
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  group: ${{ github.head_ref || github.ref }}-ci
+  cancel-in-progress: ${{ !!github.head_ref }}
 
 env:
   CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
   RAILS_ENV: test
   STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
   WISE_API_KEY: ${{ secrets.WISE_API_KEY }}
@@ -19,7 +22,6 @@ env:
 
 jobs:
   rspec:
-    name: Tests
     runs-on: ubicloud-standard-2
 
     services:
@@ -49,7 +51,15 @@ jobs:
         ci_node_index: [0, 1]
 
     steps:
+      - uses: actions-cool/check-user-permission@7b90a27f92f3961b368376107661682c441f6103
+        with:
+          require: write
+          username: ${{ github.triggering_actor }}
+          error-if-missing: true
+
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Build setup
         uses: ./.github/common/
@@ -66,3 +76,64 @@ jobs:
           KNAPSACK_PRO_LOG_LEVEL: info
         run: cd apps/rails && bundle exec rake "knapsack_pro:queue:rspec[--format RSpec::Github::Formatter --tag ~skip --tag ~type:system --format progress]"
         timeout-minutes: 20
+
+  playwright:
+    name: Tests
+    runs-on: ubicloud-standard-4
+
+    steps:
+      - uses: actions-cool/check-user-permission@7b90a27f92f3961b368376107661682c441f6103
+        with:
+          require: write
+          username: ${{ github.triggering_actor }}
+          error-if-missing: true
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Build setup
+        uses: ./.github/common/
+
+      - run: node docker/createCertificate.js
+
+      - name: Run docker compose
+        run: docker compose -f docker/docker-compose-local-linux.yml up -d
+
+      - name: Cache Next build
+        id: next-cache
+        uses: actions/cache@v4
+        with:
+          path: apps/next/.next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('apps/next/**/*.{ts,tsx}') }}
+          restore-keys: |
+            next-${{ runner.os }}-
+
+      - run: NODE_ENV=test pnpm run build-next --no-lint
+        shell: bash
+
+      - name: Install foreman
+        run: gem install foreman
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright Browsers
+        run: pnpm playwright install --with-deps chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+
+      - name: Run Playwright tests
+        run: pnpm playwright test
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

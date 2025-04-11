@@ -630,24 +630,4 @@ RSpec.describe Company do
       expect(company.display_country).to eq("Romania")
     end
   end
-
-  describe "#additional_supported_countries" do
-    let(:company) { build(:company, is_gumroad: is_gumroad) }
-
-    context "when the company is Gumroad" do
-      let(:is_gumroad) { true }
-
-      it "returns the additional supported countries for Gumroad" do
-        expect(company.additional_supported_countries).to eq ["BR"]
-      end
-    end
-
-    context "when the company is not Gumroad" do
-      let(:is_gumroad) { false }
-
-      it "returns an empty array" do
-        expect(company.additional_supported_countries).to eq []
-      end
-    end
-  end
 end

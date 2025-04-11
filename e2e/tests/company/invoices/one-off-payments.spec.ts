@@ -10,7 +10,7 @@ import { login } from "@test/helpers/auth";
 import { findRequiredTableRow } from "@test/helpers/matchers";
 import { expect, test } from "@test/index";
 import { format } from "date-fns";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { companies, equityGrants, invoices } from "@/db/schema";
 
 type User = Awaited<ReturnType<typeof usersFactory.create>>["user"];
@@ -65,7 +65,7 @@ test.describe("One-off payments", () => {
       await expect(invoiceRow.getByText("Awaiting approval (1/2)")).toBeVisible();
 
       const invoice = await db.query.invoices.findFirst({
-        where: eq(invoices.invoiceNumber, "O-0001"),
+        where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
       });
       expect(invoice).toEqual(
         expect.objectContaining({
@@ -154,7 +154,7 @@ test.describe("One-off payments", () => {
         await expect(invoiceRow.getByText("Awaiting approval (1/2)")).toBeVisible();
 
         const invoice = await db.query.invoices.findFirst({
-          where: eq(invoices.invoiceNumber, "O-0001"),
+          where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
         });
         expect(invoice).toEqual(
           expect.objectContaining({
@@ -235,7 +235,7 @@ test.describe("One-off payments", () => {
         await expect(invoiceRow.getByText("Awaiting approval (1/2)")).toBeVisible();
 
         const invoice = await db.query.invoices.findFirst({
-          where: eq(invoices.invoiceNumber, "O-0001"),
+          where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
         });
         expect(invoice).toEqual(
           expect.objectContaining({
@@ -333,11 +333,7 @@ test.describe("One-off payments", () => {
         await expect(page.getByRole("button", { name: "Confirm 25% split" })).not.toBeVisible();
 
         await page.waitForLoadState("networkidle");
-        expect(
-          await db.query.invoices.findFirst({
-            where: eq(invoices.invoiceNumber, invoice.invoiceNumber),
-          }),
-        ).toEqual(
+        expect(await db.query.invoices.findFirst({ where: eq(invoices.id, invoice.id) })).toEqual(
           expect.objectContaining({
             totalAmountInUsdCents: 50000n,
             equityPercentage: 25,

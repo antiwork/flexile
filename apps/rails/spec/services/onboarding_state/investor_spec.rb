@@ -119,7 +119,7 @@ RSpec.describe OnboardingState::Investor do
     it "returns true if the bank account is missing but the user is from a restricted payout country and has a wallet address" do
       user.bank_accounts.destroy_all
       user.create_wallet(wallet_address: "0x1234f5ea0ba39494ce839613fffba74279579268")
-      user.update!(country_code: "BR")
+      user.update!(country_code: "NG")
 
       expect(service.complete?).to eq(true)
     end
@@ -178,7 +178,7 @@ RSpec.describe OnboardingState::Investor do
 
     it "returns the path to the bank account page if the user is from a restricted payout country and is missing a wallet address" do
       user.bank_accounts.destroy_all
-      user.update!(country_code: "BR")
+      user.update!(country_code: "NG")
 
       expect(service.redirect_path).to eq(spa_company_investor_onboarding_bank_account_path(company.external_id))
     end
@@ -193,7 +193,7 @@ RSpec.describe OnboardingState::Investor do
     it "returns nil if the user is from a restricted payout country and has a wallet address" do
       user.bank_accounts.destroy_all
       user.create_wallet(wallet_address: "0x1234f5ea0ba39494ce839613fffba74279579268")
-      user.update!(country_code: "BR")
+      user.update!(country_code: "NG")
 
       expect(service.redirect_path).to be_nil
     end

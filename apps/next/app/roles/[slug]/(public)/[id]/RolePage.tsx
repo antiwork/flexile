@@ -19,7 +19,7 @@ import RichText, { Editor as RichTextEditor } from "@/components/RichText";
 import Select from "@/components/Select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DEFAULT_WORKING_HOURS_PER_WEEK, MAX_WORKING_HOURS_PER_WEEK, WORKING_WEEKS_PER_YEAR } from "@/models";
-import { countries, countryInfos } from "@/models/constants";
+import { countryInfos } from "@/models/constants";
 import { PayRateType, trpc } from "@/trpc/client";
 import { toSlug } from "@/utils";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
@@ -76,9 +76,6 @@ export default function RolePage({ countryCode }: { countryCode: string }) {
       await setStep("sent");
     },
   });
-
-  const isAdditionalSupportedCountry = (countryCode: string) =>
-    company.additionalSupportedCountries.includes(countryCode);
 
   if (step === "sent") {
     return (
@@ -254,26 +251,14 @@ export default function RolePage({ countryCode }: { countryCode: string }) {
               <Select
                 value={values.countryCode}
                 onChange={(countryCode) => updateValues({ countryCode })}
-                options={Object.entries(countryInfos).map(([code, info]) => {
-                  const isSupported = info.supportsWisePayout || isAdditionalSupportedCountry(code);
-                  return {
-                    value: code,
-                    disabled: !isSupported,
-                    label: `${info.countryName}${isSupported ? "" : " (unsupported)"}`,
-                  };
-                })}
+                options={Object.entries(countryInfos).map(([code, info]) => ({
+                  value: code,
+                  disabled: !info.supportsWisePayout,
+                  label: `${info.countryName}${info.supportsWisePayout ? "" : " (unsupported)"}`,
+                }))}
                 label="Country (where you'll usually work from)"
                 invalid={errors.has("countryCode")}
               />
-
-              {values.countryCode && isAdditionalSupportedCountry(values.countryCode) ? (
-                <Alert variant="critical">
-                  <ExclamationTriangleIcon />
-                  <AlertDescription>
-                    You'll need a bank account outside of {countries.get(values.countryCode)} to receive payments.
-                  </AlertDescription>
-                </Alert>
-              ) : null}
 
               {role.payRateType === PayRateType.Hourly && (
                 <>

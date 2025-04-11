@@ -4,11 +4,12 @@ import { faker } from "@faker-js/faker";
 import { db, takeOrThrow } from "@test/db";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
-import { users } from "@/db/schema";
+import { companies, users } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 
 test.describe("Company administrator signup", () => {
   test("successfully signs up the company", async ({ page }) => {
+    test.skip(); // Skipped until Clerk is removed
     const email = "admin-signup+clerk_test@example.com";
     const clerk = createClerkClient({ secretKey: assertDefined(process.env.CLERK_SECRET_KEY) });
     const [clerkUser] = (await clerk.users.getUserList({ emailAddress: [email] })).data;
@@ -46,7 +47,7 @@ test.describe("Company administrator signup", () => {
 
     await expect(page.getByText("Link your bank account")).toBeVisible();
 
-    const company = await db.query.companies.findFirst().then(takeOrThrow);
+    const company = await db.query.companies.findFirst({ where: eq(companies.name, companyName) }).then(takeOrThrow);
     expect(company.name).toBe(companyName);
     expect(company.streetAddress).toBe(streetAddress);
     expect(company.city).toBe(city);

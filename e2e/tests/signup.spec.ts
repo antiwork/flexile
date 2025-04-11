@@ -7,6 +7,7 @@ import { users } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 
 test("contractor signup flow", async ({ page }) => {
+  test.skip(); // Skipped until Clerk is removed
   const clerk = createClerkClient({ secretKey: assertDefined(process.env.CLERK_SECRET_KEY) });
   const email = "signup+clerk_test@example.com";
   const [clerkUser] = (await clerk.users.getUserList({ emailAddress: [email] })).data;
