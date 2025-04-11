@@ -18,7 +18,7 @@ import RangeInput from "@/components/RangeInput";
 import RichText, { Editor as RichTextEditor } from "@/components/RichText";
 import Select from "@/components/Select";
 import { DEFAULT_WORKING_HOURS_PER_WEEK, MAX_WORKING_HOURS_PER_WEEK, WORKING_WEEKS_PER_YEAR } from "@/models";
-import { countries, countryInfos } from "@/models/constants";
+import { countryInfos } from "@/models/constants";
 import { PayRateType, trpc } from "@/trpc/client";
 import { toSlug } from "@/utils";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
