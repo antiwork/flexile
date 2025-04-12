@@ -34,10 +34,8 @@ test("contractor signup flow", async ({ page }) => {
   await page.getByLabel("Freelancer").check();
   await page.getByLabel("Full legal name").fill("John Doe");
   await page.getByLabel("Preferred name (visible to others)").fill("John");
-  await page.getByLabel("Country of citizenship").click();
-  await page.getByRole("option", { name: "United States" }).click();
-  await page.getByLabel("Country of residence").click();
-  await page.getByRole("option", { name: "United States" }).click();
+  await page.getByLabel("Country of citizenship").selectOption("United States");
+  await page.getByLabel("Country of residence").selectOption("United States");
   await page.getByRole("button", { name: "Continue" }).click();
 
   // Billing info page
@@ -45,16 +43,14 @@ test("contractor signup flow", async ({ page }) => {
   await page.getByLabel("I'm an individual").check();
   await page.getByLabel("Residential address (street name, number, apartment)").fill("123 Main St");
   await page.getByLabel("City").fill("New York");
-  await page.getByLabel("State").click();
-  await page.getByRole("option", { name: "New York" }).click();
+  await page.getByLabel("State").selectOption("New York");
   await page.getByLabel("Zip code").fill("10001");
   await page.getByRole("button", { name: "Continue" }).click();
 
   // Bank account setup
   await expect(page.getByText("Get Paid Fast")).toBeVisible();
   await page.getByRole("button", { name: "Set up" }).click();
-  await page.getByLabel("Currency").click();
-  await page.getByRole("option", { name: "USD (United States Dollar)" }).click();
+  await page.getByLabel("Currency").selectOption("USD (United States Dollar)");
   await page.getByLabel("Full name of the account holder").fill("John Doe");
   await page.getByLabel("Routing number").fill("071004200");
   await page.getByLabel("Account number").fill("12345678");

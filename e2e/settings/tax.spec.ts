@@ -55,10 +55,10 @@ test.describe("Tax settings", () => {
         page.getByText(`Changes to your tax information may trigger a new contract with ${company.name}`),
       ).toBeVisible();
 
-      await page.getByLabel("Country of citizenship").click();
-      await page.getByRole("option", { name: "Mexico" }).click();
+      await page.getByLabel("Country of citizenship").selectOption("MX");
       await expect(page.getByText("Confirm your tax information")).toBeVisible();
       await expect(page.getByLabel("Individual")).toBeChecked();
+      await expect(page.getByLabel("Country of residence")).toHaveValue("US");
 
       await page.getByLabel("Full legal name (must match your ID)").fill("Janet");
       await page.getByLabel("Tax ID (SSN or ITIN)").fill("");
@@ -77,25 +77,20 @@ test.describe("Tax settings", () => {
       await page.getByRole("button", { name: "Save changes" }).click();
       await expect(page.getByText("Please check that your SSN or ITIN is 9 numbers long.")).toBeVisible();
 
-      await page.getByLabel("Country of residence").click();
-      await page.getByRole("option", { name: "United Kingdom" }).click();
+      await page.getByLabel("Country of residence").selectOption("GB");
       await page.getByRole("button", { name: "Save changes" }).click();
       await expect(page.getByLabel("Province")).toBeEnabled();
 
-      await page.getByLabel("Country of residence").click();
-      await page.getByRole("option", { name: "American Samoa" }).click();
+      await page.getByLabel("Country of residence").selectOption("AS");
       await page.getByRole("button", { name: "Save changes" }).click();
       await expect(page.getByLabel("Province")).not.toBeEnabled();
-      await page.getByLabel("Country of citizenship").click();
-      await page.getByRole("option", { name: "American Samoa" }).click();
+      await page.getByLabel("Country of citizenship").selectOption("AS");
 
       await page.getByRole("radio", { name: "Business" }).check();
       await expect(page.getByText("Please select a business type.")).not.toBeVisible();
       await expect(page.getByText("Please select a tax classification.")).not.toBeVisible();
-      await page.getByLabel("Country of citizenship").click();
-      await page.getByRole("option", { name: "Mexico" }).click();
-      await page.getByLabel("Country of incorporation").click();
-      await page.getByRole("option", { name: "United States" }).first().click();
+      await page.getByLabel("Country of citizenship").selectOption("MX");
+      await page.getByLabel("Country of incorporation").selectOption("US");
       await page.getByLabel("Tax ID (EIN)").fill("111111111");
 
       await page.getByRole("button", { name: "Save changes" }).click();
@@ -109,8 +104,7 @@ test.describe("Tax settings", () => {
       await expect(page.getByText("Please select a business type.")).toBeVisible();
 
       await page.getByRole("button", { name: "Save changes" }).click();
-      await page.getByLabel("Type").click();
-      await page.getByRole("option", { name: "LLC" }).click();
+      await page.getByLabel("Type").selectOption(BusinessType.LLC.toString());
       await page.getByRole("button", { name: "Save changes" }).click();
 
       await expect(page.getByText("Please select a tax classification.")).toBeVisible();
@@ -119,13 +113,11 @@ test.describe("Tax settings", () => {
 
       await page.getByLabel("Full legal name (must match your ID)").fill("Janet Flexile");
       await page.getByLabel("Business legal name").fill("Flexile Inc.");
-      await page.getByLabel("Tax classification").click();
-      await page.getByRole("option", { name: "Partnership" }).click();
+      await page.getByLabel("Tax classification").selectOption(TaxClassification.Partnership.toString());
       await page.getByLabel("Tax ID (EIN)").fill("55-5666789");
       await page.getByLabel("Date of incorporation (optional)").fill("1980-06-07");
       await page.getByLabel("Residential address (street name, number, apartment)").fill("123 Grove St");
-      await page.getByLabel("State").click();
-      await page.getByRole("option", { name: "New York" }).click();
+      await page.getByLabel("State").selectOption("New York");
       await page.getByLabel("City").fill("New York");
       await page.getByLabel("ZIP code").fill("10001");
       await page.getByRole("button", { name: "Save changes" }).click();
@@ -271,10 +263,8 @@ test.describe("Tax settings", () => {
         await page.getByLabel("Tax ID (SSN or ITIN)").fill("987-65-4321");
         await page.getByLabel("Residential address (street name, number, apartment)").fill("123 Sydney St");
         await page.getByLabel("City").fill("Sydney");
-        if (await page.getByLabel("Province").isEnabled()) {
-          await page.getByLabel("Province").click();
-          await page.getByRole("option", { name: "New South Wales" }).click();
-        }
+        if (await page.getByLabel("Province").isEnabled())
+          await page.getByLabel("Province").selectOption("New South Wales");
 
         await page.getByLabel("Postal code").fill("1234");
         await page.getByRole("button", { name: "Save changes" }).click();
@@ -346,8 +336,7 @@ test.describe("Tax settings", () => {
       await page.getByLabel("Full legal name (must match your ID)").fill("Hans Schmidt");
       await page.getByLabel("Residential address (street name, number, apartment)").fill("123 Berlin St");
       await page.getByLabel("City").fill("Berlin");
-      await page.getByLabel("Province").click();
-      await page.getByRole("option", { name: "Berlin" }).click();
+      await page.getByLabel("Province").selectOption("Berlin");
       await page.getByLabel("Postal code").fill("10115");
 
       await page.getByRole("button", { name: "Save changes" }).click();
@@ -394,10 +383,8 @@ test.describe("Tax settings", () => {
 
       await page.getByRole("radio", { name: "Business" }).check();
       await page.getByLabel("Business legal name").fill("Test Business LLC");
-      await page.getByLabel("Type").click();
-      await page.getByRole("option", { name: "LLC" }).click();
-      await page.getByLabel("Tax classification").click();
-      await page.getByRole("option", { name: "Partnership" }).click();
+      await page.getByLabel("Type").selectOption(BusinessType.LLC.toString());
+      await page.getByLabel("Tax classification").selectOption(TaxClassification.Partnership.toString());
 
       await page.getByLabel("Tax ID (EIN)").fill("123456789");
 
@@ -418,10 +405,8 @@ test.describe("Tax settings", () => {
       await page.getByLabel("Tax ID (SSN or ITIN)").fill("123456789");
       await expect(page.getByLabel("Tax ID (SSN or ITIN)")).toHaveValue("123-45-6789");
 
-      await page.getByLabel("Country of citizenship").click();
-      await page.getByRole("option", { name: "DE" }).click();
-      await page.getByLabel("Country of residence").click();
-      await page.getByRole("option", { name: "DE" }).click();
+      await page.getByLabel("Country of citizenship").selectOption("DE");
+      await page.getByLabel("Country of residence").selectOption("DE");
 
       await expect(page.getByText("Foreign tax ID")).toBeVisible();
 
@@ -430,10 +415,8 @@ test.describe("Tax settings", () => {
       await page.getByLabel("Foreign tax ID").fill("DE-123/456.789");
       await expect(page.getByLabel("Foreign tax ID")).toHaveValue("DE123456789");
 
-      await page.getByLabel("Country of citizenship").click();
-      await page.getByRole("option", { name: "US" }).click();
-      await page.getByLabel("Country of residence").click();
-      await page.getByRole("option", { name: "US" }).click();
+      await page.getByLabel("Country of citizenship").selectOption("US");
+      await page.getByLabel("Country of residence").selectOption("US");
 
       await expect(page.getByText("Tax ID (SSN or ITIN)")).toBeVisible();
 

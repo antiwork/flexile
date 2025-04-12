@@ -268,16 +268,14 @@ test.describe("Contractor onboarding - legal details", () => {
   const fillInUSAddress = async (page: Page) => {
     await page.getByLabel("Residential address (street name, number, apartment)").fill("123 Main St");
     await page.getByLabel("City").fill("New York");
-    await page.getByLabel("State").click();
-    await page.getByRole("option", { name: "New York" }).click();
+    await page.getByLabel("State").selectOption("New York");
     await page.getByLabel("Zip code").fill("12345");
   };
 
   const fillInFranceAddress = async (page: Page) => {
     await page.getByLabel("Residential address (street name, number, apartment)").fill("15 Rue de la Paix");
     await page.getByLabel("City").fill("Paris");
-    await page.getByLabel("State").click();
-    await page.getByRole("option", { name: "Île-de-France" }).click();
+    await page.getByLabel("State").selectOption("Île-de-France");
     await page.getByLabel("Postal code").fill("75002");
   };
 

@@ -33,8 +33,7 @@ test.describe("Company updates page", () => {
     await page.getByRole("link", { name: "New update" }).click();
 
     await page.getByLabel("Title").fill("some news!");
-    await page.getByLabel("Financial overview").click();
-    await page.getByRole("option", { name: "month" }).click();
+    await page.getByLabel("Financial overview").selectOption("month");
 
     const financialOverview = page.locator("div:has(> h2)", { hasText: "Financial overview" }).locator("h2 + div");
     await expect(financialOverview).toContainText("Revenue $150 -25%", { useInnerText: true });
@@ -76,14 +75,12 @@ test.describe("Company updates page", () => {
 
     const financialOverview = page.locator("div:has(> h2)", { hasText: "Financial overview" }).locator("h2 + div");
 
-    await page.getByLabel("Financial overview").click();
-    await page.getByRole("option", { name: "month" }).click();
+    await page.getByLabel("Financial overview").selectOption("month");
     await expect(financialOverview).toContainText("Revenue $10 25%", { useInnerText: true });
     await expect(financialOverview).toContainText("Net income $100 -16.67%", { useInnerText: true });
 
     // doesn't show YoY when there is no data for that period on the previous year
-    await page.getByLabel("Financial overview").click();
-    await page.getByRole("option", { name: "quarter" }).click();
+    await page.getByLabel("Financial overview").selectOption("quarter");
     await expect(financialOverview).toContainText("Revenue $30", { useInnerText: true });
     await expect(financialOverview).toContainText("Net income $300", { useInnerText: true });
     await expect(financialOverview).not.toContainText("%");
@@ -100,15 +97,13 @@ test.describe("Company updates page", () => {
     });
 
     await page.reload();
-    await page.getByLabel("Financial overview").click();
-    await page.getByRole("option", { name: "quarter" }).click();
+    await page.getByLabel("Financial overview").selectOption("quarter");
     await expect(financialOverview).toContainText("Revenue $30", { useInnerText: true });
     await expect(financialOverview).toContainText("Net income $300", { useInnerText: true });
     await expect(financialOverview).toContainText("%");
 
     // don't show the financial overview when we don't have all the data for the period
-    await page.getByLabel("Financial overview").click();
-    await page.getByRole("option", { name: "year" }).click();
+    await page.getByLabel("Financial overview").selectOption("year");
     await expect(financialOverview).not.toBeVisible();
   });
 });
