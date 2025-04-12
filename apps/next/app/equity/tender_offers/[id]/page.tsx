@@ -214,7 +214,7 @@ export default function TenderOfferView() {
         ]}
       />
       {user.activeRole === "contractorOrInvestor" && user.roles.investor?.investedInAngelListRuv ? (
-        <Alert variant="critical">
+        <Alert variant="destructive">
           <ExclamationTriangleIcon />
           <AlertDescription>
             Note: As an investor through an AngelList RUV, your bids will be submitted on your behalf by the RUV itself.
@@ -324,7 +324,7 @@ export default function TenderOfferView() {
                     <strong>Total amount:</strong> {formatMoney(totalAmount)}
                   </div>
                 )}
-                <Alert variant="critical">
+                <Alert variant="destructive">
                   <ExclamationTriangleIcon />
                   <AlertDescription>
                     <strong>Important:</strong> Please note that once submitted, commitments cannot be withdrawn or

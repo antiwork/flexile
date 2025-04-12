@@ -204,7 +204,7 @@ export default function RolePage({ countryCode }: { countryCode: string }) {
           </Card>
 
           {role.trialEnabled ? (
-            <Alert variant="critical">
+            <Alert variant="destructive">
               <ExclamationTriangleIcon />
               <AlertDescription>
                 This role has a trial period with a rate of {formatMoneyFromCents(role.trialPayRateInSubunits)} / hour.
