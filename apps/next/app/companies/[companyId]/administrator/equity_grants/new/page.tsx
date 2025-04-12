@@ -126,19 +126,19 @@ export default function NewEquityGrant() {
 
   const [errorInfo, setErrorInfo] = useState<ErrorInfo | null>(null);
 
-  const recipientRef = useRef<HTMLButtonElement>(null);
-  const optionPoolRef = useRef<HTMLButtonElement>(null);
+  const recipientRef = useRef<HTMLSelectElement>(null);
+  const optionPoolRef = useRef<HTMLSelectElement>(null);
   const numberOfSharesRef = useRef<HTMLInputElement>(null);
-  const relationshipRef = useRef<HTMLButtonElement>(null);
-  const grantTypeRef = useRef<HTMLButtonElement>(null);
+  const relationshipRef = useRef<HTMLSelectElement>(null);
+  const grantTypeRef = useRef<HTMLSelectElement>(null);
   const expiryRef = useRef<HTMLInputElement>(null);
   const boardApprovalRef = useRef<HTMLInputElement>(null);
-  const vestingTriggerRef = useRef<HTMLButtonElement>(null);
-  const vestingScheduleRef = useRef<HTMLButtonElement>(null);
+  const vestingTriggerRef = useRef<HTMLSelectElement>(null);
+  const vestingScheduleRef = useRef<HTMLSelectElement>(null);
   const vestingCommencementRef = useRef<HTMLInputElement>(null);
   const totalVestingDurationRef = useRef<HTMLInputElement>(null);
   const cliffDurationRef = useRef<HTMLInputElement>(null);
-  const vestingFrequencyRef = useRef<HTMLButtonElement>(null);
+  const vestingFrequencyRef = useRef<HTMLSelectElement>(null);
   const voluntaryTerminationRef = useRef<HTMLInputElement>(null);
   const involuntaryTerminationRef = useRef<HTMLInputElement>(null);
   const terminationWithCauseRef = useRef<HTMLInputElement>(null);
