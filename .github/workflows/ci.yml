@@ -5,7 +5,7 @@ on:
       - main
   workflow_run:
     workflows: [autofix.ci]
-    types: [in_progress]
+    types: [requested]
 
 permissions:
   contents: read
