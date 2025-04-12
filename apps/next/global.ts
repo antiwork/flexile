@@ -23,7 +23,7 @@ export const useUserStore = create(
     }),
   ),
 );
-
+// hello
 export const useCurrentUser = () => {
   const pathname = usePathname();
   const { user, setRedirected } = useUserStore((state) => state);
