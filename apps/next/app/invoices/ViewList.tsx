@@ -106,7 +106,7 @@ export default function ViewList() {
       }
     >
       {unsignedContractId ? (
-        <Alert variant="critical">
+        <Alert variant="destructive">
           <ExclamationTriangleIcon />
           <AlertDescription>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">

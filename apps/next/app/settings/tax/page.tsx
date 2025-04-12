@@ -17,7 +17,7 @@ import Input from "@/components/Input";
 import RadioButtons from "@/components/RadioButtons";
 import Select from "@/components/Select";
 import Status from "@/components/Status";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { BusinessType, TaxClassification } from "@/db/enums";
 import { useCurrentUser } from "@/global";
 import { countries } from "@/models/constants";
@@ -194,7 +194,7 @@ export default function TaxPage() {
       >
         <CardRow className="grid gap-4">
           {!isTaxInfoConfirmed && (
-            <Alert variant="critical">
+            <Alert variant="destructive">
               <ExclamationTriangleIcon />
               <AlertDescription>
                 Confirm your tax information to avoid delays on your payments or additional tax withholding.
@@ -205,8 +205,8 @@ export default function TaxPage() {
           {formData.tax_id_status === "invalid" && (
             <Alert>
               <InformationCircleIcon />
+              <AlertTitle>Review your tax information</AlertTitle>
               <AlertDescription>
-                <strong>Review your tax information</strong>
                 Since there's a mismatch between the legal name and {tinName} you provided and your government records,
                 please note that your payments could experience a tax withholding rate of 24%. If you think this may be
                 due to a typo or recent changes to your name or legal entity, please update your information.

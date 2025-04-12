@@ -12,7 +12,7 @@ import Input from "@/components/Input";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { currencyCodes, sanctionedCountries, supportedCountries } from "@/models/constants";
 import { trpc } from "@/trpc/client";
@@ -192,12 +192,12 @@ const BankAccountsSection = () => {
     <FormSection title="Payout method">
       {isFromSanctionedCountry ? (
         <CardRow>
-          <Alert variant="critical">
+          <Alert variant="destructive">
             <ExclamationTriangleIcon />
+            <AlertTitle>Payouts are disabled</AlertTitle>
             <AlertDescription>
-              <strong>Payouts are disabled</strong> Unfortunately, due to regulatory restrictions and compliance with
-              international sanctions, individuals from sanctioned countries are unable to receive payments through our
-              platform.
+              Unfortunately, due to regulatory restrictions and compliance with international sanctions, individuals
+              from sanctioned countries are unable to receive payments through our platform.
             </AlertDescription>
           </Alert>
         </CardRow>
@@ -341,7 +341,7 @@ const WalletAddressModal = ({
         and Flexile will cover network fees.
       </div>
 
-      <Alert variant="critical">
+      <Alert variant="destructive">
         <ExclamationTriangleIcon />
         <AlertDescription>
           Ethereum transactions are irreversible. Please double-check your address before saving.

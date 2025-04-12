@@ -243,7 +243,7 @@ const ManageModal = ({
           />
         ) : null}
         {role.id && !role.expenseCardEnabled && role.expenseCardsCount > 0 ? (
-          <Alert variant="critical">
+          <Alert variant="destructive">
             <ExclamationTriangleIcon />
             <AlertDescription>{role.expenseCardsCount} issued cards will no longer be usable.</AlertDescription>
           </Alert>

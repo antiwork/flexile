@@ -513,7 +513,7 @@ const DetailsTab = ({
       <FormSection title="Contract">
         <CardRow className="grid gap-4">
           {contractor.endedAt ? (
-            <Alert variant="critical">
+            <Alert variant="destructive">
               <ExclamationTriangleIcon />
               <AlertDescription>
                 <div className="flex items-center justify-between">

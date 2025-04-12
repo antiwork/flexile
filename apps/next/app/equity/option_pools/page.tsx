@@ -19,7 +19,7 @@ const columns = [
   columnHelper.display({
     id: "progress",
     cell: (info) => (
-      <Progress value={Number((info.row.original.issuedShares * BigInt(100)) / info.row.original.authorizedShares)} />
+      <Progress max={Number(info.row.original.authorizedShares)} value={Number(info.row.original.issuedShares)} />
     ),
   }),
   columnHelper.simple("availableShares", "Available shares", (value) => value.toLocaleString(), "numeric"),
