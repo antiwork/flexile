@@ -17,7 +17,7 @@ export default function Select({
   placeholder,
   value,
   onChange,
-  ref, // Kept for API compatibility but not used with shadcn/ui Select
+  ref,
 }: {
   id?: string;
   className?: string;
@@ -30,7 +30,7 @@ export default function Select({
   placeholder?: string;
   value: string | null | undefined;
   onChange: (value: string) => void;
-  ref?: React.RefObject<HTMLSelectElement | null>; // Kept for API compatibility
+  ref?: React.Ref<HTMLButtonElement>;
 }) {
   const uid = useId();
   const selectId = id ?? uid;
@@ -45,6 +45,7 @@ export default function Select({
       <ShadcnSelect value={value ?? ""} onValueChange={onChange} disabled={disabled} name={selectId}>
         <SelectTrigger
           id={selectId}
+          ref={ref}
           className={cn("w-full focus:outline-hidden", invalid && "border-red", disabled && "bg-gray-100 opacity-50")}
           aria-label={ariaLabel}
           aria-invalid={invalid}
