@@ -2,8 +2,8 @@
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import React from "react";
 import Placeholder from "@/components/Placeholder";
-import { Progress } from "@/components/ui/progress";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
+import { Progress } from "@/components/ui/progress";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
