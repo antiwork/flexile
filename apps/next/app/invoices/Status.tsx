@@ -1,11 +1,9 @@
 import { CheckCircleIcon } from "@heroicons/react/16/solid";
-import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { ClockIcon, CurrencyDollarIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
+import { ClockIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import { addDays, isWeekend, nextMonday } from "date-fns";
 import React from "react";
 import Status, { type Variant } from "@/components/Status";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -108,33 +106,5 @@ export const StatusWithTooltip = ({ invoice }: { invoice: Invoice }) => {
       </TooltipTrigger>
       <TooltipContent>{details}</TooltipContent>
     </Tooltip>
-  );
-};
-
-const statusNoticeText = (invoice: Invoice) => {
-  if (invoice.status === "approved" && invoice.approvals.length > 0) {
-    return `Approved by ${invoice.approvals.map((approval) => `${approval.approver.name} on ${formatDate(approval.approvedAt, { time: true })}`).join(", ")}`;
-  }
-
-  if (invoice.status === "rejected") {
-    let text = "Rejected";
-    if (invoice.rejector) text += ` by ${invoice.rejector.name}`;
-    if (invoice.rejectedAt) text += ` on ${formatDate(invoice.rejectedAt)}`;
-    if (invoice.rejectionReason) text += `: "${invoice.rejectionReason}"`;
-    return text;
-  }
-};
-
-export const StatusNotice = ({ invoice }: { invoice?: Invoice | null }) => {
-  if (!invoice) return null;
-
-  const details = statusNoticeText(invoice);
-  if (!details) return null;
-
-  return (
-    <Alert variant={invoice.status === "rejected" ? "critical" : undefined}>
-      {invoice.status === "rejected" ? <ExclamationTriangleIcon /> : <InformationCircleIcon />}
-      <AlertDescription>{details}</AlertDescription>
-    </Alert>
   );
 };

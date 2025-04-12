@@ -12,7 +12,7 @@ import { linkClasses } from "@/components/Link";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -185,17 +185,15 @@ export default function InvoicePage() {
       ) : null}
       <div className="flex flex-col gap-4">
         {!taxRequirementsMet(invoice) && (
-          <Alert variant="critical">
+          <Alert variant="destructive">
             <ExclamationTriangleIcon />
-            <AlertDescription>
-              <strong>Missing tax information.</strong>
-              Invoice is not payable until contractor provides tax information.
-            </AlertDescription>
+            <AlertTitle>Missing tax information.</AlertTitle>
+            <AlertDescription>Invoice is not payable until contractor provides tax information.</AlertDescription>
           </Alert>
         )}
 
         {details ? (
-          <Alert variant={invoice.status === "rejected" ? "critical" : undefined}>
+          <Alert variant={invoice.status === "rejected" ? "destructive" : undefined}>
             <AlertDescription>{details}</AlertDescription>
           </Alert>
         ) : null}

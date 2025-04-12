@@ -1,7 +1,5 @@
-import React, { useId } from "react";
-import { formGroupClasses, formHelpClasses } from "@/components/Input";
-import { Select as ShadcnSelect, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/utils";
+import React, { useEffect, useId, useRef } from "react";
+import { formControlClasses, formGroupClasses, formHelpClasses } from "@/components/Input";
 
 export type Option = Readonly<{ label: string; value: string }>;
 
@@ -17,7 +15,7 @@ export default function Select({
   placeholder,
   value,
   onChange,
-  ref, // Kept for API compatibility but not used with shadcn/ui Select
+  ref,
 }: {
   id?: string;
   className?: string;
@@ -30,36 +28,48 @@ export default function Select({
   placeholder?: string;
   value: string | null | undefined;
   onChange: (value: string) => void;
-  ref?: React.RefObject<HTMLSelectElement | null>; // Kept for API compatibility
+  ref?: React.RefObject<HTMLSelectElement | null>;
 }) {
   const uid = useId();
-  const selectId = id ?? uid;
+  const selectRef = useRef<HTMLSelectElement>(null);
+
+  useEffect(() => {
+    if (selectRef.current) {
+      selectRef.current.setCustomValidity(invalid ? (help ?? "Please select a valid option.") : "");
+    }
+  }, [invalid, help]);
 
   return (
-    <div className={cn(formGroupClasses, className)}>
+    <div className={`${formGroupClasses} ${className || ""}`}>
       {label ? (
-        <label htmlFor={selectId} className="cursor-pointer">
+        <label htmlFor={id ?? uid} className="cursor-pointer">
           {label}
         </label>
       ) : null}
-      <ShadcnSelect value={value ?? ""} onValueChange={onChange} disabled={disabled} name={selectId}>
-        <SelectTrigger
-          id={selectId}
-          className={cn("w-full focus:outline-hidden", invalid && "border-red", disabled && "bg-gray-100 opacity-50")}
-          aria-label={ariaLabel}
-          aria-invalid={invalid}
-        >
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </ShadcnSelect>
-      {help ? <div className={formHelpClasses}>{help}</div> : null}
+      <select
+        id={id ?? uid}
+        ref={(element) => {
+          selectRef.current = element;
+          if (ref && element) ref.current = element;
+        }}
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={ariaLabel}
+        disabled={disabled}
+        className={`${formControlClasses} invalid:border-red w-full p-2 focus:outline-hidden disabled:bg-gray-100 disabled:opacity-50`}
+      >
+        {placeholder ? (
+          <option value="" disabled>
+            {placeholder}
+          </option>
+        ) : null}
+        {options.map((option, index) => (
+          <option key={index} value={String(option.value)}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      {help ? <div className={formHelpClasses}> {help}</div> : null}
     </div>
   );
 }

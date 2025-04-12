@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { z } from "zod";
 import OnboardingLayout from "@/components/layouts/Onboarding";
 import MutationButton from "@/components/MutationButton";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import env from "@/env/client";
 import { useCurrentCompany } from "@/global";
 import { request } from "@/utils/request";
@@ -143,12 +143,10 @@ const Form = () => {
       />
       <Alert>
         <InformationCircleIcon />
+        <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
         <AlertDescription>
-          <strong>Payments to contractors may take up to 10 business days to process.</strong>
-          <span>
-            Want faster payments? Email us at <a href="mailto:support@flexile.com">support@flexile.com</a> to complete
-            additional verification steps.
-          </span>
+          Want faster payments? Email us at <a href="mailto:support@flexile.com">support@flexile.com</a> to complete
+          additional verification steps.
         </AlertDescription>
       </Alert>
       <MutationButton
