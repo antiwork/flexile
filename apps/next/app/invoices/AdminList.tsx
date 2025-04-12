@@ -15,7 +15,6 @@ import {
 } from "@/app/invoices/index";
 import { StatusWithTooltip } from "@/app/invoices/Status";
 import { Task } from "@/app/updates/team/Task";
-import Button from "@/components/Button";
 import { Card, CardRow } from "@/components/Card";
 import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
@@ -26,6 +25,7 @@ import Sheet from "@/components/Sheet";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
 import Tabs from "@/components/Tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -333,7 +333,7 @@ const TasksModal = ({
           <Card className="mt-3">
             <CardRow className="flex justify-between gap-2">
               <div>Net amount in cash</div>
-              <div>{formatMoneyFromCents(invoice.cashAmountInCents ?? 0n)}</div>
+              <div>{formatMoneyFromCents(invoice.cashAmountInCents)}</div>
             </CardRow>
             {invoice.equityAmountInCents ? (
               <CardRow className="flex justify-between gap-2">
@@ -343,7 +343,7 @@ const TasksModal = ({
             ) : null}
             <CardRow className="flex justify-between gap-2 font-bold">
               <div>Payout total</div>
-              <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents ?? 0n)}</div>
+              <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
             </CardRow>
           </Card>
         </section>
