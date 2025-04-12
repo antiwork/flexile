@@ -7,6 +7,12 @@ GIT
       capybara (~> 3.36)
 
 GEM
+  remote: https://gems.contribsys.com/
+  specs:
+    sidekiq-pro (8.0.1)
+      sidekiq (>= 8.0.0, < 9)
+
+GEM
   remote: https://rubygems.org/
   specs:
     actioncable (8.0.2)
@@ -544,11 +550,11 @@ GEM
       rspec-support (~> 3.13)
     rspec-retry (0.6.2)
       rspec-core (> 3.3)
-    rspec-sidekiq (5.0.0)
+    rspec-sidekiq (5.1.0)
       rspec-core (~> 3.0)
       rspec-expectations (~> 3.0)
       rspec-mocks (~> 3.0)
-      sidekiq (>= 5, < 8)
+      sidekiq (>= 5, < 9)
     rspec-support (3.13.2)
     rubocop (1.75.2)
       json (~> 2.3)
@@ -613,12 +619,12 @@ GEM
       websocket (~> 1.0)
     shoulda-matchers (6.4.0)
       activesupport (>= 5.2.0)
-    sidekiq (7.3.9)
-      base64
-      connection_pool (>= 2.3.0)
-      logger
-      rack (>= 2.2.4)
-      redis-client (>= 0.22.2)
+    sidekiq (8.0.2)
+      connection_pool (>= 2.5.0)
+      json (>= 2.9.0)
+      logger (>= 1.6.2)
+      rack (>= 3.1.0)
+      redis-client (>= 0.23.2)
     sidekiq-cron (2.1.0)
       cronex (>= 0.13.0)
       fugit (~> 1.8, >= 1.11.1)
@@ -744,7 +750,7 @@ DEPENDENCIES
   rspec-github (~> 3.0.0)
   rspec-rails (~> 7.0)
   rspec-retry (~> 0.6)
-  rspec-sidekiq (~> 5.0)
+  rspec-sidekiq (~> 5.1)
   rubocop (~> 1.75.0)
   rubocop-performance (~> 1.24.0)
   rubocop-rails (~> 2.30.0)
@@ -754,8 +760,9 @@ DEPENDENCIES
   rubyXL (~> 3.4)
   selenium-webdriver (~> 4.30.0)
   shoulda-matchers (~> 6.0)
-  sidekiq (~> 7)
+  sidekiq (~> 8)
   sidekiq-cron (~> 2.0)
+  sidekiq-pro (~> 8)!
   slack-notifier (~> 2.4)
   sprockets (~> 4.0)
   sprockets-rails (~> 3.4)
