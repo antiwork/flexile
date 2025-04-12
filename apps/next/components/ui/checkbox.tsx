@@ -1,5 +1,6 @@
 import { CheckIcon } from "lucide-react";
 import * as React from "react";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/utils";
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
 
@@ -18,7 +19,7 @@ function Checkbox({
   const title = invalid ? `Please ${checked ? "uncheck" : "check"} this field.` : "";
 
   return (
-    <label className={cn("relative flex cursor-pointer items-center gap-2", invalid && "text-red", className)}>
+    <Label className={cn("relative flex cursor-pointer items-center gap-2", invalid && "text-red", className)}>
       <CheckboxPrimitive.Root
         data-slot="checkbox"
         checked={checked}
@@ -35,7 +36,7 @@ function Checkbox({
         </CheckboxPrimitive.Indicator>
       </CheckboxPrimitive.Root>
       {label ? <div className="grow">{label}</div> : null}
-    </label>
+    </Label>
   );
 }
 

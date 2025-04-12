@@ -6,6 +6,7 @@ import Button from "@/components/Button";
 import Input, { formGroupClasses } from "@/components/Input";
 import { linkClasses } from "@/components/Link";
 import Modal from "@/components/Modal";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/utils";
 import { richTextExtensions } from "@/utils/richText";
 
@@ -97,9 +98,9 @@ export const Editor = ({
   return (
     <div className={formGroupClasses}>
       {label ? (
-        <label htmlFor={id} className="cursor-pointer">
+        <Label htmlFor={id} className="cursor-pointer">
           {label}
-        </label>
+        </Label>
       ) : null}
       <div className={cn("rounded-md border", { "border-red": invalid })}>
         <div className={cn("flex border-b", { "border-red": invalid })}>

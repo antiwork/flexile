@@ -1,5 +1,6 @@
 import * as SwitchPrimitive from "@radix-ui/react-switch";
 import * as React from "react";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/utils";
 
 function Switch({
@@ -8,7 +9,7 @@ function Switch({
   ...props
 }: React.ComponentProps<typeof SwitchPrimitive.Root> & { label?: React.ReactNode }) {
   return (
-    <label className="has-invalid:text-red relative flex cursor-pointer items-center gap-2">
+    <Label className="has-invalid:text-red relative flex cursor-pointer items-center gap-2">
       <SwitchPrimitive.Root
         data-slot="switch"
         className={cn(
@@ -25,7 +26,7 @@ function Switch({
         />
       </SwitchPrimitive.Root>
       {label ? <div className="grow">{label}</div> : null}
-    </label>
+    </Label>
   );
 }
 

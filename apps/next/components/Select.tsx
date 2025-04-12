@@ -1,5 +1,6 @@
 import React, { useId } from "react";
 import { formGroupClasses, formHelpClasses } from "@/components/Input";
+import { Label } from "@/components/ui/label";
 import { Select as ShadcnSelect, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/utils";
 
@@ -38,9 +39,9 @@ export default function Select({
   return (
     <div className={cn(formGroupClasses, className)}>
       {label ? (
-        <label htmlFor={selectId} className="cursor-pointer">
+        <Label htmlFor={selectId} className="cursor-pointer">
           {label}
-        </label>
+        </Label>
       ) : null}
       <ShadcnSelect value={value ?? ""} onValueChange={onChange} disabled={disabled} name={selectId}>
         <SelectTrigger

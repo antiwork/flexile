@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 export const formGroupClasses = "group grid gap-2";
@@ -52,9 +53,9 @@ const Input = ({
   return (
     <div className={formGroupClasses}>
       {label || props.children ? (
-        <label htmlFor={inputId} className="cursor-pointer">
+        <Label htmlFor={inputId} className="cursor-pointer">
           {label || props.children}
-        </label>
+        </Label>
       ) : null}
       <div
         className={`has-invalid:border-red flex items-center has-disabled:bg-gray-100 has-disabled:opacity-50 ${formControlClasses} ${className}`}

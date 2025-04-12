@@ -39,6 +39,7 @@ import Table, { createColumnHelper, useTable } from "@/components/Table";
 import Tabs from "@/components/Tabs";
 import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { DEFAULT_WORKING_HOURS_PER_WEEK, MAXIMUM_EQUITY_PERCENTAGE, MINIMUM_EQUITY_PERCENTAGE } from "@/models";
@@ -366,7 +367,7 @@ export default function ContractorPage() {
           {company.flags.includes("equity_compensation") ? (
             <div className="space-y-4">
               <div className="flex flex-col gap-2">
-                <label className="flex items-center gap-2">
+                <Label className="flex items-center gap-2">
                   <input
                     type="radio"
                     name="equityType"
@@ -375,8 +376,8 @@ export default function ContractorPage() {
                     className="h-4 w-4"
                   />
                   Fixed equity percentage
-                </label>
-                <label className="flex items-center gap-2">
+                </Label>
+                <Label className="flex items-center gap-2">
                   <input
                     type="radio"
                     name="equityType"
@@ -385,7 +386,7 @@ export default function ContractorPage() {
                     className="h-4 w-4"
                   />
                   Equity percentage range
-                </label>
+                </Label>
               </div>
 
               {equityType === "fixed" ? (
