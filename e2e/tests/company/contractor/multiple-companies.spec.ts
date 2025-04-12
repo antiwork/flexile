@@ -114,7 +114,8 @@ test.describe("Contractor for multiple companies", () => {
     await page.getByLabel("Your company's legal name").fill("Test Company");
     await page.getByLabel("Street address, apt number").fill("123 Main St");
     await page.getByLabel("City").fill("Anytown");
-    await page.getByLabel("State").selectOption("Missouri");
+    await page.getByLabel("State").click();
+    await page.getByRole("option", { name: "Missouri" }).click();
     await page.getByLabel("ZIP code").fill("12345");
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByRole("button", { name: "Start using Flexile" })).toBeDisabled();

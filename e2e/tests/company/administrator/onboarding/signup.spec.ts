@@ -41,7 +41,8 @@ test.describe("Company administrator signup", () => {
     await page.getByLabel("Your company's legal name").fill(companyName);
     await page.getByLabel("Street address, apt number").fill(streetAddress);
     await page.getByLabel("City").fill(city);
-    await page.getByLabel("State").selectOption(state);
+    await page.getByLabel("State").click();
+    await page.getByRole("option", { name: state }).click();
     await page.getByLabel("ZIP code").fill(zipCode);
     await page.getByRole("button", { name: "Continue" }).click();
 

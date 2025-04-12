@@ -47,7 +47,8 @@ test.describe("Edit contractor", () => {
     await expect(page.getByLabel("Legal name")).toHaveValue(contractor.legalName);
     await expect(page.getByLabel("Legal name")).toBeDisabled();
 
-    await page.getByLabel("Role").selectOption(otherRole.name);
+    await page.getByLabel("Role").click();
+    await page.getByRole("option", { name: otherRole.name }).click();
     await page.getByLabel("Rate").fill("107");
     await page.getByLabel("Average hours").fill("24");
     await page.getByRole("button", { name: "Save changes" }).click();
@@ -107,7 +108,8 @@ test.describe("Edit contractor", () => {
     await page.getByRole("heading", { name: projectBasedUser.preferredName }).click();
     await expect(page.getByLabel("Role")).toContainText(projectBasedRole.name);
 
-    await page.getByLabel("Role").selectOption(otherProjectBasedRole.name);
+    await page.getByLabel("Role").click();
+    await page.getByRole("option", { name: otherProjectBasedRole.name }).click();
     await page.getByLabel("Rate").fill("2000");
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByRole("button", { name: "Sign now" })).toBeVisible();
@@ -151,7 +153,8 @@ test.describe("Edit contractor", () => {
     await page.getByLabel("New role").getByLabel("Rate", { exact: true }).fill("200");
     await page.getByRole("button", { name: "Create", exact: true }).click();
 
-    await page.getByLabel("RoleCreate New").selectOption("Example Role");
+    await page.getByLabel("RoleCreate New").click();
+    await page.getByRole("option", { name: "Example Role" }).click();
     await expect(page.getByLabel("RoleCreate New")).toContainText("Example Role");
     await expect(page.getByLabel("Rate")).toHaveValue("200");
     await page.getByRole("button", { name: "Save changes" }).click();

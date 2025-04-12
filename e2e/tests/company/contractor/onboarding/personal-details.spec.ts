@@ -55,8 +55,10 @@ test.describe("Company worker onboarding - personal details", () => {
 
     await page.getByLabel("Full legal name").fill("Wade Wilson");
     await page.getByLabel("Preferred name (visible to others)").fill("Wade");
-    await page.getByLabel("Country of citizenship").selectOption("Canada");
-    await page.getByLabel("Country of residence").selectOption("Canada");
+    await page.getByLabel("Country of citizenship").click();
+    await page.getByRole("option", { name: "Canada" }).click();
+    await page.getByLabel("Country of residence").click();
+    await page.getByRole("option", { name: "Canada" }).click();
 
     await page.getByRole("button", { name: "Continue" }).click();
 
@@ -78,8 +80,10 @@ test.describe("Company worker onboarding - personal details", () => {
 
     await page.getByLabel("Full legal name").fill("Wade Wilson");
     await page.getByLabel("Preferred name (visible to others)").fill("Wade");
-    await page.getByLabel("Country of citizenship").selectOption("Canada");
-    await page.getByLabel("Country of residence").selectOption("Cuba");
+    await page.getByLabel("Country of citizenship").click();
+    await page.getByRole("option", { name: "Canada" }).click();
+    await page.getByLabel("Country of residence").click();
+    await page.getByRole("option", { name: "Cuba" }).click();
 
     await page.getByRole("button", { name: "Continue" }).click();
 

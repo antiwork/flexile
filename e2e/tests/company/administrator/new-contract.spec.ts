@@ -94,7 +94,8 @@ test.describe("New Contractor", () => {
         'Maximum fee payable to Contractor on this Project Assignment, including all items in the first two paragraphs above is $152,460 (the "Maximum Fee").',
     });
     const { email, date } = await fillForm(page);
-    await page.getByLabel("Role").selectOption("Hourly Role 1");
+    await page.getByLabel("Role").click();
+    await page.getByRole("option", { name: "Hourly Role 1" }).click();
     await page.getByLabel("Average hours").fill("25");
     await page.getByLabel("Rate").fill("99");
 
@@ -137,7 +138,8 @@ test.describe("New Contractor", () => {
     });
     await mockForm(page);
     const { email, date } = await fillForm(page);
-    await page.getByLabel("Role").selectOption("Project-based Role");
+    await page.getByLabel("Role").click();
+    await page.getByRole("option", { name: "Project-based Role" }).click();
     await page.getByLabel("Rate").fill("1000");
 
     await page.getByRole("button", { name: "Send invite" }).click();
@@ -171,7 +173,8 @@ test.describe("New Contractor", () => {
 
   test("allows inviting a salary-based contractor", async ({ page }) => {
     const { email, date } = await fillForm(page);
-    await page.getByLabel("Role").selectOption("Salaried Role");
+    await page.getByLabel("Role").click();
+    await page.getByRole("option", { name: "Salaried Role" }).click();
     await page.getByLabel("Rate").fill("120000");
 
     await page.getByRole("button", { name: "Send invite" }).click();

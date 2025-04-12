@@ -54,8 +54,14 @@ test.describe("Investor onboarding - personal details", () => {
 
     await page.getByLabel("Full legal name").fill("Wade Wilson");
     await page.getByLabel("Preferred name (visible to others)").fill("Wade");
-    await page.getByLabel("Country of citizenship").selectOption("Canada");
-    await page.getByLabel("Country of residence").selectOption("Canada");
+    await page.getByLabel("Birthday").fill("1980-06-27");
+    await page.getByLabel("Personal address (street name, number, apartment)").fill("123 Main St");
+    await page.getByLabel("City").fill("Anytown");
+    await page.getByLabel("ZIP code").fill("12345");
+    await page.getByLabel("Country of citizenship").click();
+    await page.getByRole("option", { name: "Canada" }).click();
+    await page.getByLabel("Country of residence").click();
+    await page.getByRole("option", { name: "Canada" }).click();
 
     await page.getByRole("button", { name: "Continue" }).click();
 
@@ -77,8 +83,10 @@ test.describe("Investor onboarding - personal details", () => {
 
     await page.getByLabel("Full legal name").fill("Wade Wilson");
     await page.getByLabel("Preferred name (visible to others)").fill("Wade");
-    await page.getByLabel("Country of citizenship").selectOption("Canada");
-    await page.getByLabel("Country of residence").selectOption("Cuba");
+    await page.getByLabel("Country of citizenship").click();
+    await page.getByRole("option", { name: "Canada" }).click();
+    await page.getByLabel("Country of residence").click();
+    await page.getByRole("option", { name: "Cuba" }).click();
 
     await page.getByRole("button", { name: "Continue" }).click();
 
@@ -123,8 +131,10 @@ test.describe("Investor onboarding - personal details", () => {
 
     await page.getByLabel("Full legal name").fill("Wade Wilson");
     await page.getByLabel("Preferred name (visible to others)").fill("Wade");
-    await page.getByLabel("Country of citizenship").selectOption("Canada");
-    await page.getByLabel("Country of residence").selectOption("Canada");
+    await page.getByLabel("Country of citizenship").click();
+    await page.getByRole("option", { name: "Canada" }).click();
+    await page.getByLabel("Country of residence").click();
+    await page.getByRole("option", { name: "Canada" }).click();
 
     await page.getByRole("button", { name: "Continue" }).click();
 

@@ -57,9 +57,11 @@ test.describe("New Contractor", () => {
     await page.reload();
     await expect(page.getByText("create an equity plan contract template first")).not.toBeVisible();
     await page.getByRole("link", { name: "New option grant" }).click();
-    await page.getByLabel("Recipient").selectOption(contractorUser.preferredName);
+    await page.getByLabel("Recipient").click();
+    await page.getByRole("option", { name: contractorUser.preferredName }).click();
     await page.getByLabel("Number of options").fill("10");
-    await page.getByLabel("Relationship to company").selectOption("Consultant");
+    await page.getByLabel("Relationship to company").click();
+    await page.getByRole("option", { name: "Consultant" }).click();
     await page.getByRole("button", { name: "Create option grant" }).click();
     await withinModal(
       async (modal) => {
@@ -86,9 +88,11 @@ test.describe("New Contractor", () => {
 
     submitters = { "Company Representative": adminUser, Signer: projectBasedUser };
     await page.getByRole("link", { name: "New option grant" }).click();
-    await page.getByLabel("Recipient").selectOption(projectBasedUser.preferredName);
+    await page.getByLabel("Recipient").click();
+    await page.getByRole("option", { name: projectBasedUser.preferredName }).click();
     await page.getByLabel("Number of options").fill("20");
-    await page.getByLabel("Relationship to company").selectOption("Consultant");
+    await page.getByLabel("Relationship to company").click();
+    await page.getByRole("option", { name: "Consultant" }).click();
     await page.getByRole("button", { name: "Create option grant" }).click();
     await withinModal(
       async (modal) => {
