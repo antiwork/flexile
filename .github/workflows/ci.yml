@@ -3,7 +3,10 @@ on:
   push:
     branches:
       - main
-  pull_request_target:
+  workflow_run:
+    workflows: [autofix.ci]
+    types: [requested]
+
 permissions:
   contents: read
 
