@@ -10,7 +10,7 @@ import MutationButton from "@/components/MutationButton";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Select from "@/components/Select";
-import Sheet from "@/components/Sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
@@ -128,11 +128,16 @@ function Documents({ year }: { year: number }) {
 
       {company.flags.includes("irs_tax_forms") && user.activeRole === "administrator" && isFilingDueDateApproaching ? (
         <Sheet>
-          <h2 className="text-xl font-bold">Upcoming filing dates for 1099-NEC, 1099-DIV, and 1042-S</h2>
-          <p>
-            We will submit form 1099-NEC to the IRS on {formatDate(filingDueDateFor1099NEC)}, form 1042-S on{" "}
-            {formatDate(filingDueDateFor1042S)}, and form 1099-DIV on {formatDate(filingDueDateFor1099DIV)}.
-          </p>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Upcoming filing dates for 1099-NEC, 1099-DIV, and 1042-S</SheetTitle>
+            </SheetHeader>
+
+            <SheetDescription>
+              We will submit form 1099-NEC to the IRS on {formatDate(filingDueDateFor1099NEC)}, form 1042-S on{" "}
+              {formatDate(filingDueDateFor1042S)}, and form 1099-DIV on {formatDate(filingDueDateFor1099DIV)}.
+            </SheetDescription>
+          </SheetContent>
         </Sheet>
       ) : null}
     </>

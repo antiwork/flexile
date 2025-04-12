@@ -2,14 +2,14 @@
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import { useSearchParams } from "next/navigation";
 import React, { useMemo } from "react";
-import CopyButton from "@/components/CopyButton";
+// import CopyButton from "@/components/CopyButton";
 import { linkClasses } from "@/components/Link";
 import Placeholder from "@/components/Placeholder";
-import Sheet from "@/components/Sheet";
+import {Sheet, SheetContent } from "@/components/ui/sheet";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import {
-  fetchInvestorEmail,
+  // fetchInvestorEmail,
   fetchInvestorId,
   fetchInvestorUserId,
   isInvestor,
@@ -132,10 +132,10 @@ export default function CapTable() {
   });
 
   const selectedInvestors = investorsTable.getSelectedRowModel().rows.map((row) => row.original);
-  const selectedInvestorEmails = selectedInvestors
-    .map(fetchInvestorEmail)
-    .filter((email): email is string => !!email)
-    .join(", ");
+  // const selectedInvestorEmails = selectedInvestors
+  //   .map(fetchInvestorEmail)
+  //   .filter((email): email is string => !!email)
+  //   .join(", ");
 
   const shareClassColumnHelper = createColumnHelper<Data["shareClasses"][number]>();
   const shareClassesColumns = useMemo(
@@ -175,8 +175,10 @@ export default function CapTable() {
     <EquityLayout
       footer={
         selectedInvestors.length > 0 && (
-          <Sheet primary actions={<CopyButton copyText={selectedInvestorEmails}>Contact selected</CopyButton>}>
-            <b>{selectedInvestors.length} selected</b>
+          <Sheet
+            // actions={<CopyButton copyText={selectedInvestorEmails}>Contact selected</CopyButton>}
+          >
+            <SheetContent>{selectedInvestors.length} selected</SheetContent>
           </Sheet>
         )
       }

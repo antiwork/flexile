@@ -22,7 +22,8 @@ import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
-import Sheet from "@/components/Sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+
 import Table, { createColumnHelper, useTable } from "@/components/Table";
 import Tabs from "@/components/Tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -55,6 +56,7 @@ export default function AdminList() {
     page,
     invoiceFilter,
   });
+  console.log('** data', data);
 
   const approveInvoices = useApproveInvoices(() => {
     setOpenModal(null);
@@ -121,19 +123,18 @@ export default function AdminList() {
         invoiceFilter === "actionable" &&
         selectedInvoices.length > 0 && (
           <Sheet
-            primary
-            actions={
-              <>
-                <Button disabled={!company.completedPaymentMethodSetup} onClick={() => setOpenModal("approve")}>
-                  Approve selected
-                </Button>
-                <Button variant="outline" onClick={() => setOpenModal("reject")}>
-                  Reject selected
-                </Button>
-              </>
-            }
+            // actions={
+            //   <>
+            //     <Button disabled={!company.completedPaymentMethodSetup} onClick={() => setOpenModal("approve")}>
+            //       Approve selected
+            //     </Button>
+            //     <Button variant="outline" onClick={() => setOpenModal("reject")}>
+            //       Reject selected
+            //     </Button>
+            //   </>
+            // }
           >
-            <b>{selectedInvoices.length} selected</b>
+            <SheetContent>{selectedInvoices.length} selected</SheetContent>
           </Sheet>
         )
       }
