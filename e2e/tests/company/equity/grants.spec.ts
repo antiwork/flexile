@@ -58,7 +58,7 @@ test.describe("New Contractor", () => {
     await expect(page.getByText("create an equity plan contract template first")).not.toBeVisible();
     await page.getByRole("link", { name: "New option grant" }).click();
     await page.getByLabel("Recipient").click();
-    await page.getByRole("option", { name: contractorUser.preferredName }).click();
+    await page.getByRole("option", { name: assertDefined(contractorUser.preferredName) }).click();
     await page.getByLabel("Number of options").fill("10");
     await page.getByLabel("Relationship to company").click();
     await page.getByRole("option", { name: "Consultant" }).click();
@@ -89,7 +89,7 @@ test.describe("New Contractor", () => {
     submitters = { "Company Representative": adminUser, Signer: projectBasedUser };
     await page.getByRole("link", { name: "New option grant" }).click();
     await page.getByLabel("Recipient").click();
-    await page.getByRole("option", { name: projectBasedUser.preferredName }).click();
+    await page.getByRole("option", { name: assertDefined(projectBasedUser.preferredName) }).click();
     await page.getByLabel("Number of options").fill("20");
     await page.getByLabel("Relationship to company").click();
     await page.getByRole("option", { name: "Consultant" }).click();
