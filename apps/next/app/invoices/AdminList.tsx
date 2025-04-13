@@ -22,7 +22,7 @@ import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetFooter, SheetTitle } from "@/components/ui/sheet";
 
 import Table, { createColumnHelper, useTable } from "@/components/Table";
 import Tabs from "@/components/Tabs";
@@ -56,7 +56,6 @@ export default function AdminList() {
     page,
     invoiceFilter,
   });
-  console.log('** data', data);
 
   const approveInvoices = useApproveInvoices(() => {
     setOpenModal(null);
@@ -122,19 +121,22 @@ export default function AdminList() {
       footer={
         invoiceFilter === "actionable" &&
         selectedInvoices.length > 0 && (
-          <Sheet
-            // actions={
-            //   <>
-            //     <Button disabled={!company.completedPaymentMethodSetup} onClick={() => setOpenModal("approve")}>
-            //       Approve selected
-            //     </Button>
-            //     <Button variant="outline" onClick={() => setOpenModal("reject")}>
-            //       Reject selected
-            //     </Button>
-            //   </>
-            // }
-          >
-            <SheetContent>{selectedInvoices.length} selected</SheetContent>
+          <Sheet open modal={false}>
+            <SheetContent side="bottom">
+              <SheetFooter>
+                <div className="flex flex-row items-center justify-between">
+                  <SheetTitle>{selectedInvoices.length} selected</SheetTitle>
+                  <div className="flex flex-row flex-wrap gap-3 sm:flex-row-reverse">
+                    <Button disabled={!company.completedPaymentMethodSetup} onClick={() => setOpenModal("approve")}>
+                      Approve selected
+                    </Button>
+                    <Button variant="outline" onClick={() => setOpenModal("reject")}>
+                      Reject selected
+                    </Button>
+                  </div>
+                </div>
+              </SheetFooter>
+            </SheetContent>
           </Sheet>
         )
       }
