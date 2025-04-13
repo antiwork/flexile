@@ -1,16 +1,14 @@
 import React, { type ReactNode } from "react";
 import { cn } from "@/utils";
 
-export const Card = (
-  {
+export const Card = ({
   children,
-  className
-  ,
+  className,
   disabled,
 }: {
-  children: ReactNode   ;
-  className  ?: string;
-  disabled?   : boolean  ;
+  children: ReactNode;
+  className?: string;
+  disabled?: boolean;
 }) => (
   <div className={cn("rounded-2xl border border-solid", disabled ? "pointer-events-none opacity-50" : "", className)}>
     {children}
