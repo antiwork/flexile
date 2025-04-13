@@ -52,13 +52,13 @@ jobs:
 
     steps:
       - uses: actions-cool/check-user-permission@7b90a27f92f3961b368376107661682c441f6103
-        if: ${{ github.event.pull_request && github.event.pull_request.head.repo.organization != 'antiwork' }}
+        if: ${{ github.event.pull_request && github.event.pull_request.head.user.login != 'antiwork' }}
         with:
           require: write
           username: ${{ github.triggering_actor }}
           error-if-missing: true
 
-      - run: echo "${{ github.event.pull_request.base.user.name }} ${{ github.event.pull_request.base.user.login }} ${{ github.event.pull_request.base.repo.organization }}  ${{ github.event.pull_request.base.repo.fork }}  ${{ github.event.pull_request.head.repo.fork }}  ${{ github.event.pull_request.head.repo.owner.login }} ${{ github.event.pull_request.base.repo.organization }}"
+      - run: echo "${{ github.event.pull_request.head.user.login }}"
 
       - uses: actions/checkout@v4
         with:
