@@ -27,7 +27,6 @@ class User < ApplicationRecord
 
   has_many :company_workers
   has_many :clients, -> { order(CompanyWorker.arel_table[:created_at]) }, through: :company_workers, source: :company
-  has_one :contractor_profile
   has_many :contracts
   has_many :documents
 
