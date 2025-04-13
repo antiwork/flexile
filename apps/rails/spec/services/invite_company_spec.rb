@@ -93,7 +93,6 @@ RSpec.describe InviteCompany do
         .and not_change { CompanyRole.count }
         .and not_change { CompanyRoleRate.count }
         .and not_change { CompanyWorker.count }
-
         .and not_change { Document.count }
 
       expect(result).to eq({ success: false, errors: { "company_worker.pay_rate_type" => "Pay rate type is not included in the list" } })
@@ -119,7 +118,6 @@ RSpec.describe InviteCompany do
         .and not_change { CompanyRole.count }
         .and not_change { CompanyRoleRate.count }
         .and not_change { CompanyWorker.count }
-
         .and not_change { Document.count }
 
       expect(result).to eq(

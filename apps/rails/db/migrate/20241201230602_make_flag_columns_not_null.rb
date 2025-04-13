@@ -31,6 +31,7 @@ class MakeFlagColumnsNotNull < ActiveRecord::Migration[7.2]
     change_column_null :contracts, :equity_options_plan, false
     change_column_null :contracts, :certificate, false
 
+    change_column_null :contractor_profiles, :available_for_hire, false
 
     change_column_null :investor_dividend_rounds, :sanctioned_country_email_sent, false
     change_column_null :investor_dividend_rounds, :payout_below_threshold_email_sent, false

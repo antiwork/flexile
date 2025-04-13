@@ -121,7 +121,6 @@ export default function RolesPage() {
           </Placeholder>
         </div>
       )}
-
       {editingRole ? <ManageModal open onClose={() => setEditingRole(null)} id={editingRole.id} /> : null}
     </MainLayout>
   );
