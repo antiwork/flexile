@@ -122,7 +122,7 @@ export default function AdminList() {
         invoiceFilter === "actionable" &&
         selectedInvoices.length > 0 && (
           <Sheet open modal={false}>
-            <SheetContent side="bottom" hideCloseButton primary>
+            <SheetContent side="bottom" hideCloseButton primary modal={false} className="relative w-full border-t">
               <SheetFooter>
                 <div className="flex flex-row items-center justify-between">
                   <SheetTitle>{selectedInvoices.length} selected</SheetTitle>
@@ -265,10 +265,10 @@ export default function AdminList() {
 }
 
 const TasksModal = ({
-  invoice,
-  onClose,
-  onReject,
-}: {
+                      invoice,
+                      onClose,
+                      onReject,
+                    }: {
   invoice: Invoice | null;
   onClose: () => void;
   onReject: () => void;
