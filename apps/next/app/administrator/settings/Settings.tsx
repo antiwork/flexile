@@ -9,6 +9,7 @@ import Input from "@/components/Input";
 import MutationButton from "@/components/MutationButton";
 import { Editor } from "@/components/RichText";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";
 import defaultLogo from "@/images/default-company-logo.svg";
@@ -97,7 +98,7 @@ export default function Settings({ githubOauthUrl }: { githubOauthUrl: string })
           <div className="grid gap-3 md:grid-cols-2">
             <div className="grid gap-2">
               <div>Logo</div>
-              <label className="flex cursor-pointer items-center">
+              <Label className="flex cursor-pointer items-center">
                 <input
                   type="file"
                   className="hidden"
@@ -114,7 +115,7 @@ export default function Settings({ githubOauthUrl }: { githubOauthUrl: string })
                   <AvatarFallback>Logo</AvatarFallback>
                 </Avatar>
                 <span className="ml-2">Upload...</span>
-              </label>
+              </Label>
             </div>
             <ColorPicker label="Brand color" value={brandColor} onChange={setBrandColor} />
           </div>

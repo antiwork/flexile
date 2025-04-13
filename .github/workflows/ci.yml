@@ -3,10 +3,7 @@ on:
   push:
     branches:
       - main
-  workflow_run:
-    workflows: [autofix.ci]
-    types: [in_progress]
-
+  pull_request_target:
 permissions:
   contents: read
 
@@ -54,6 +51,13 @@ jobs:
         ci_node_index: [0, 1]
 
     steps:
+      - uses: actions-cool/check-user-permission@7b90a27f92f3961b368376107661682c441f6103
+        if: ${{ github.event.pull_request && github.event.pull_request.head.repo.organization != 'antiwork' }}
+        with:
+          require: write
+          username: ${{ github.triggering_actor }}
+          error-if-missing: true
+
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
