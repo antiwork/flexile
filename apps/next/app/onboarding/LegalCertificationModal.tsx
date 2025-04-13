@@ -37,7 +37,7 @@ const LegalCertificationModal = ({
   return (
     <Modal
       open={open}
-      title={`${certificateType} Certification and Tax Forms Delivery`}
+      title={`${certificateType} Certificatio and Tax Forms Delivery`}
       sticky={sticky}
       onClose={onClose}
     >
