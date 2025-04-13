@@ -109,7 +109,6 @@ export default function RolesPage() {
         </>
       }
     >
-
       {roles.length ? (
         <Table table={table} />
       ) : (
