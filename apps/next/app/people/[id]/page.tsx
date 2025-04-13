@@ -23,7 +23,6 @@ import InvoiceStatus from "@/app/invoices/Status";
 import RoleSelector from "@/app/roles/Selector";
 import { formatAbsencesForUpdate } from "@/app/updates/team/CompanyWorkerUpdate";
 import { Task as CompanyWorkerTask } from "@/app/updates/team/Task";
-import Button from "@/components/Button";
 import { Card, CardRow } from "@/components/Card";
 import DecimalInput from "@/components/DecimalInput";
 import FormSection from "@/components/FormSection";
@@ -39,6 +38,7 @@ import Table, { createColumnHelper, useTable } from "@/components/Table";
 import Tabs from "@/components/Tabs";
 import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -514,7 +514,7 @@ const DetailsTab = ({
       <FormSection title="Contract">
         <CardRow className="grid gap-4">
           {contractor.endedAt ? (
-            <Alert variant="critical">
+            <Alert variant="destructive">
               <ExclamationTriangleIcon />
               <AlertDescription>
                 <div className="flex items-center justify-between">
@@ -583,7 +583,7 @@ const DetailsTab = ({
         {!contractor.endedAt && (
           <CardRow>
             <MutationButton
-              small
+              size="small"
               mutation={updateContractor}
               param={{
                 companyId: company.id,
@@ -846,7 +846,7 @@ function ExercisesTab({ investorId }: { investorId: string }) {
         id: "actions",
         cell: (info) =>
           info.row.original.status === "signed" ? (
-            <MutationButton mutation={confirmPaymentMutation} param={info.row.original.id} small>
+            <MutationButton mutation={confirmPaymentMutation} param={info.row.original.id} size="small">
               Confirm payment
             </MutationButton>
           ) : undefined,
