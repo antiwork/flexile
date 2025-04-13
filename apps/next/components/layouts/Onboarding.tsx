@@ -30,7 +30,7 @@ const OnboardingLayout = ({
     <div className="flex h-screen flex-col">
       <header className="grid w-full items-center justify-center bg-black p-6 text-white md:grid-cols-[1fr_auto_1fr]">
         <Link
-          href="https://flexile.com/"
+          href   = "https://flexile.com/" // brrbrbrbrbe
           className={`hidden text-4xl invert md:block ${steps.length === 0 ? "col-start-2" : ""}`}
         >
           <Image src={logo} alt="Flexile" />
