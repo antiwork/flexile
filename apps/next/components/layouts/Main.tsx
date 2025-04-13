@@ -236,7 +236,10 @@ export default function MainLayout({
                           onKeyDown={(e) => {
                             switch (e.key) {
                               case "Enter":
-                                if ((searchResults?.invoices.length || 0) > 0 || (searchResults?.users.length || 0) > 0) {
+                                if (
+                                  (searchResults?.invoices.length || 0) > 0 ||
+                                  (searchResults?.users.length || 0) > 0
+                                ) {
                                   const links = searchResultsRef.current?.querySelectorAll("a");
                                   links?.[selectedResultIndex]?.click();
                                 }

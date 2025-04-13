@@ -425,10 +425,14 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
               <div key={field.key} className="relative">
                 <Command className="border">
                   <CommandInput
-                    value={details.get(field.key) ? field.valuesAllowed?.find(option => option.key === details.get(field.key))?.name || "" : ""}
+                    value={
+                      details.get(field.key)
+                        ? field.valuesAllowed?.find((option) => option.key === details.get(field.key))?.name || ""
+                        : ""
+                    }
                     onValueChange={(value) => {
-                      if (field.valuesAllowed?.some(option => option.name === value)) {
-                        const matchedValue = field.valuesAllowed.find(option => option.name === value)?.key;
+                      if (field.valuesAllowed?.some((option) => option.name === value)) {
+                        const matchedValue = field.valuesAllowed.find((option) => option.name === value)?.key;
                         if (matchedValue) {
                           setDetails((prev) => prev.set(field.key, matchedValue));
                           setTimeout(() => fieldUpdated(field), 0);
@@ -455,7 +459,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
                     </CommandGroup>
                   </CommandList>
                 </Command>
-                {errors.has(field.key) && <div className="text-red-500 text-sm mt-1">{errors.get(field.key)}</div>}
+                {errors.has(field.key) && <div className="mt-1 text-sm text-red-500">{errors.get(field.key)}</div>}
               </div>
             );
           }
