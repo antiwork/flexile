@@ -31,7 +31,6 @@ RSpec.describe InviteCompany do
       .and change { CompanyRole.count }.by(1)
       .and change { CompanyRoleRate.count }.by(1)
       .and change { CompanyWorker.count }.by(1)
-      .and change { ContractorProfile.count }.by(1)
       .and change { CompanyAdministrator.count }.by(1)
       .and change { Document.count }.by(1)
       .and have_enqueued_job(ActionMailer::MailDeliveryJob).exactly(:once)
@@ -66,9 +65,7 @@ RSpec.describe InviteCompany do
     expect(company_worker.pay_rate_type).to eq("hourly")
     expect(company_worker.hours_per_week).to eq(40)
 
-    contractor_profile = ContractorProfile.find_by(user: worker)
-    expect(contractor_profile).to be_present
-    expect(contractor_profile.available_hours_per_week).to eq(1)
+
 
     contract = company_worker.documents.consulting_contract.first
     expect(contract.completed_at).to eq(nil)
@@ -96,7 +93,7 @@ RSpec.describe InviteCompany do
         .and not_change { CompanyRole.count }
         .and not_change { CompanyRoleRate.count }
         .and not_change { CompanyWorker.count }
-        .and not_change { ContractorProfile.count }
+
         .and not_change { Document.count }
 
       expect(result).to eq({ success: false, errors: { "company_worker.pay_rate_type" => "Pay rate type is not included in the list" } })
@@ -122,7 +119,7 @@ RSpec.describe InviteCompany do
         .and not_change { CompanyRole.count }
         .and not_change { CompanyRoleRate.count }
         .and not_change { CompanyWorker.count }
-        .and not_change { ContractorProfile.count }
+
         .and not_change { Document.count }
 
       expect(result).to eq(
