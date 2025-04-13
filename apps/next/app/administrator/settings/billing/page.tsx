@@ -2,10 +2,10 @@
 
 import { ArrowDownTrayIcon, ArrowPathIcon, CurrencyDollarIcon } from "@heroicons/react/16/solid";
 import { DocumentCurrencyDollarIcon } from "@heroicons/react/24/solid";
-import Button from "@/components/Button";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
+import { Button } from "@/components/ui/button";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -49,7 +49,7 @@ const columns = [
     cell: (info) => {
       const receiptUrl = info.getValue();
       return receiptUrl ? (
-        <Button asChild variant="outline" small>
+        <Button asChild variant="outline" size="small">
           <a href={receiptUrl} download>
             <ArrowDownTrayIcon className="size-4" /> Download
           </a>

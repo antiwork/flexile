@@ -4,13 +4,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Set } from "immutable";
 import { Check, ChevronsUpDown, User, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import Button from "@/components/Button";
 import { CardRow } from "@/components/Card";
 import DecimalInput from "@/components/DecimalInput";
 import FormSection from "@/components/FormSection";
 import MutationButton from "@/components/MutationButton";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useCurrentCompany } from "@/global";
 import { MAX_FILES_PER_CAP_TABLE_UPLOAD } from "@/models";
@@ -275,7 +276,7 @@ export default function Equity() {
         >
           <CardRow className="grid gap-4">
             <div className="grid gap-2">
-              <label htmlFor="cap-table-files">Upload files (maximum {MAX_FILES_PER_CAP_TABLE_UPLOAD} files)</label>
+              <Label htmlFor="cap-table-files">Upload files (maximum {MAX_FILES_PER_CAP_TABLE_UPLOAD} files)</Label>
               <input
                 ref={fileInputRef}
                 id="cap-table-files"

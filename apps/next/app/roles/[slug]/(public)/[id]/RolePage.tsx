@@ -9,7 +9,6 @@ import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useEffect, useState } from "react";
-import Button from "@/components/Button";
 import { Card, CardRow } from "@/components/Card";
 import Input from "@/components/Input";
 import SimpleLayout from "@/components/layouts/Simple";
@@ -18,6 +17,7 @@ import RangeInput from "@/components/RangeInput";
 import RichText, { Editor as RichTextEditor } from "@/components/RichText";
 import Select from "@/components/Select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { DEFAULT_WORKING_HOURS_PER_WEEK, MAX_WORKING_HOURS_PER_WEEK, WORKING_WEEKS_PER_YEAR } from "@/models";
 import { countryInfos } from "@/models/constants";
 import { PayRateType, trpc } from "@/trpc/client";
@@ -204,7 +204,7 @@ export default function RolePage({ countryCode }: { countryCode: string }) {
           </Card>
 
           {role.trialEnabled ? (
-            <Alert variant="critical">
+            <Alert variant="destructive">
               <ExclamationTriangleIcon />
               <AlertDescription>
                 This role has a trial period with a rate of {formatMoneyFromCents(role.trialPayRateInSubunits)} / hour.

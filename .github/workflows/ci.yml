@@ -52,6 +52,7 @@ jobs:
 
     steps:
       - uses: actions-cool/check-user-permission@7b90a27f92f3961b368376107661682c441f6103
+        if: ${{ github.event.pull_request && github.event.pull_request.head.user.login != 'antiwork' }}
         with:
           require: write
           username: ${{ github.triggering_actor }}
@@ -83,6 +84,7 @@ jobs:
 
     steps:
       - uses: actions-cool/check-user-permission@7b90a27f92f3961b368376107661682c441f6103
+        if: ${{ github.event.pull_request && github.event.pull_request.head.user.login != 'antiwork' }}
         with:
           require: write
           username: ${{ github.triggering_actor }}
