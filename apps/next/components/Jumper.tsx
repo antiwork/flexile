@@ -25,10 +25,7 @@ const Jumper = ({
           className={`flex items-center no-underline ${index !== activeIndex ? "text-gray-500" : ""}`}
           onClick={() => setActiveIndex?.(index)}
         >
-          <Badge
-            variant={index === activeIndex ? "default" : "outline"}
-            className="mr-1 shrink-0"
-          >
+          <Badge variant={index === activeIndex ? "default" : "outline"} className="mr-1 shrink-0">
             {index + 1}
           </Badge>
           <span className="truncate">{section}</span>

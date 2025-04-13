@@ -6,7 +6,6 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { addMonths, isFuture, isPast } from "date-fns";
 import { useParams } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
-import Button from "@/components/Button";
 import { Card, CardRow } from "@/components/Card";
 import DecimalInput from "@/components/DecimalInput";
 import Figures from "@/components/Figures";
@@ -20,6 +19,7 @@ import Status from "@/components/Status";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -214,7 +214,7 @@ export default function TenderOfferView() {
         ]}
       />
       {user.activeRole === "contractorOrInvestor" && user.roles.investor?.investedInAngelListRuv ? (
-        <Alert variant="critical">
+        <Alert variant="destructive">
           <ExclamationTriangleIcon />
           <AlertDescription>
             Note: As an investor through an AngelList RUV, your bids will be submitted on your behalf by the RUV itself.
@@ -324,7 +324,7 @@ export default function TenderOfferView() {
                     <strong>Total amount:</strong> {formatMoney(totalAmount)}
                   </div>
                 )}
-                <Alert variant="critical">
+                <Alert variant="destructive">
                   <ExclamationTriangleIcon />
                   <AlertDescription>
                     <strong>Important:</strong> Please note that once submitted, commitments cannot be withdrawn or

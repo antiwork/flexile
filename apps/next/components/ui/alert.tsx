@@ -3,14 +3,13 @@ import * as React from "react";
 import { cn } from "@/utils";
 
 const alertVariants = cva(
-  "relative w-full rounded-xl px-4 py-3 [&>svg]:size-5 [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-[calc(50%-10px)] [&>svg~*]:pl-7",
+  "relative w-full rounded-lg border px-4 py-3 text-sm grid has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-3 gap-y-0.5 items-start [&>svg]:size-5 [&>svg]:translate-y-0.5 [&>svg]:text-current",
   {
     variants: {
       variant: {
-        default: "bg-gray-100 text-black",
-        success: "bg-green text-white",
-        critical: "bg-red text-white",
-        destructive: "bg-white border-1 border-destructive/50 text-destructive [&>svg]:text-destructive ",
+        default: "bg-card text-card-foreground",
+        destructive:
+          "text-destructive bg-card [&>svg]:text-current *:data-[slot=alert-description]:text-destructive/90",
       },
     },
     defaultVariants: {
@@ -19,16 +18,28 @@ const alertVariants = cva(
   },
 );
 
-const Alert = ({ className, variant, ...props }: React.ComponentProps<"div"> & VariantProps<typeof alertVariants>) => (
-  <div role="alert" className={cn(alertVariants({ variant }), className)} {...props} />
-);
+function Alert({ className, variant, ...props }: React.ComponentProps<"div"> & VariantProps<typeof alertVariants>) {
+  return <div data-slot="alert" role="alert" className={cn(alertVariants({ variant }), className)} {...props} />;
+}
 
-const AlertTitle = ({ className, ...props }: React.ComponentProps<"h5">) => (
-  <h5 className={cn("leading-none font-medium tracking-tight [&+div]:mt-1", className)} {...props} />
-);
+function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="alert-title"
+      className={cn("col-start-2 line-clamp-1 min-h-4 font-medium tracking-tight", className)}
+      {...props}
+    />
+  );
+}
 
-const AlertDescription = ({ className, ...props }: React.ComponentProps<"div">) => (
-  <div className={cn("[&_p]:leading-relaxed", className)} {...props} />
-);
+function AlertDescription({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="alert-description"
+      className={cn("text-muted-foreground col-start-2 text-sm [&_p]:leading-relaxed", className)}
+      {...props}
+    />
+  );
+}
 
 export { Alert, AlertDescription, AlertTitle };
