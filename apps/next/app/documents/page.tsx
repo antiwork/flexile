@@ -127,16 +127,16 @@ function Documents({ year }: { year: number }) {
       )}
 
       {company.flags.includes("irs_tax_forms") && user.activeRole === "administrator" && isFilingDueDateApproaching ? (
-        <Sheet>
-          <SheetContent>
+        <Sheet open modal={false}>
+          <SheetContent side="bottom" hideCloseButton primary modal={false} className="relative w-full">
             <SheetHeader>
               <SheetTitle>Upcoming filing dates for 1099-NEC, 1099-DIV, and 1042-S</SheetTitle>
-            </SheetHeader>
 
-            <SheetDescription>
-              We will submit form 1099-NEC to the IRS on {formatDate(filingDueDateFor1099NEC)}, form 1042-S on{" "}
-              {formatDate(filingDueDateFor1042S)}, and form 1099-DIV on {formatDate(filingDueDateFor1099DIV)}.
-            </SheetDescription>
+              <SheetDescription>
+                We will submit form 1099-NEC to the IRS on {formatDate(filingDueDateFor1099NEC)}, form 1042-S on{" "}
+                {formatDate(filingDueDateFor1042S)}, and form 1099-DIV on {formatDate(filingDueDateFor1099DIV)}.
+              </SheetDescription>
+            </SheetHeader>
           </SheetContent>
         </Sheet>
       ) : null}

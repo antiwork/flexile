@@ -122,7 +122,7 @@ export default function AdminList() {
         invoiceFilter === "actionable" &&
         selectedInvoices.length > 0 && (
           <Sheet open modal={false}>
-            <SheetContent side="bottom" hideCloseButton primary modal={false} className="relative w-full border-t">
+            <SheetContent side="bottom" hideCloseButton primary modal={false} className="relative w-full">
               <SheetFooter>
                 <div className="flex flex-row items-center justify-between">
                   <SheetTitle>{selectedInvoices.length} selected</SheetTitle>
