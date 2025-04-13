@@ -58,7 +58,7 @@ jobs:
           username: ${{ github.triggering_actor }}
           error-if-missing: true
 
-      - run: echo "${{ github.event.pull_request.head.repo.organization }} ${{ github.event.pull_request.base.repo.organization }}"
+      - run: echo "${{ github.event.pull_request.head.repo.organization }} ${{ github.event.pull_request.head.repo.url }}  ${{ github.event.pull_request.head.repo.owner }} ${{ github.event.pull_request.base.repo.organization }}"
 
       - uses: actions/checkout@v4
         with:
