@@ -128,7 +128,7 @@ function Documents({ year }: { year: number }) {
 
       {company.flags.includes("irs_tax_forms") && user.activeRole === "administrator" && isFilingDueDateApproaching ? (
         <Sheet open modal={false}>
-          <SheetContent side="bottom" hideCloseButton primary modal={false} className="relative w-full">
+          <SheetContent side="bottom" hideCloseButton modal={false} className="relative w-full">
             <SheetHeader>
               <SheetTitle>Upcoming filing dates for 1099-NEC, 1099-DIV, and 1042-S</SheetTitle>
 
