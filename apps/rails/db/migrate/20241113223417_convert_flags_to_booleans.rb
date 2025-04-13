@@ -47,9 +47,6 @@ class ConvertFlagsToBooleans < ActiveRecord::Migration[7.2]
       t.boolean :certificate, default: false
     end
 
-    change_table :contractor_profiles do |t|
-      t.boolean :available_for_hire, default: false
-    end
 
     change_table :investor_dividend_rounds do |t|
       t.boolean :sanctioned_country_email_sent, default: false

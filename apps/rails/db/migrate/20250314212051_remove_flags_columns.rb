@@ -4,7 +4,6 @@ class RemoveFlagsColumns < ActiveRecord::Migration[8.0]
     remove_column :company_contractors, :flags, :bigint
     remove_column :company_updates, :flags, :bigint
     remove_column :contracts, :flags, :bigint
-    remove_column :contractor_profiles, :flags, :bigint
     remove_column :equity_allocations, :flags, :bigint
     remove_column :company_roles, :flags, :bigint
     remove_column :company_investors, :flags, :bigint
