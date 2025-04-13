@@ -2,14 +2,14 @@
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import { useSearchParams } from "next/navigation";
 import React, { useMemo } from "react";
-// import CopyButton from "@/components/CopyButton";
+import CopyButton from "@/components/CopyButton";
 import { linkClasses } from "@/components/Link";
 import Placeholder from "@/components/Placeholder";
-import {Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetFooter, SheetTitle } from "@/components/ui/sheet";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import {
-  // fetchInvestorEmail,
+  fetchInvestorEmail,
   fetchInvestorId,
   fetchInvestorUserId,
   isInvestor,
@@ -132,10 +132,10 @@ export default function CapTable() {
   });
 
   const selectedInvestors = investorsTable.getSelectedRowModel().rows.map((row) => row.original);
-  // const selectedInvestorEmails = selectedInvestors
-  //   .map(fetchInvestorEmail)
-  //   .filter((email): email is string => !!email)
-  //   .join(", ");
+  const selectedInvestorEmails = selectedInvestors
+    .map(fetchInvestorEmail)
+    .filter((email): email is string => !!email)
+    .join(", ");
 
   const shareClassColumnHelper = createColumnHelper<Data["shareClasses"][number]>();
   const shareClassesColumns = useMemo(
@@ -175,10 +175,16 @@ export default function CapTable() {
     <EquityLayout
       footer={
         selectedInvestors.length > 0 && (
-          <Sheet
-            // actions={<CopyButton copyText={selectedInvestorEmails}>Contact selected</CopyButton>}
-          >
-            <SheetContent>{selectedInvestors.length} selected</SheetContent>
+          <Sheet open modal={false}>
+            <SheetContent side="bottom" hideCloseButton primary modal={false} className="relative w-full border-t">
+              <SheetFooter>
+                <div className="flex flex-row items-center justify-between">
+                  <SheetTitle>{selectedInvestors.length} selected</SheetTitle>
+
+                  <CopyButton copyText={selectedInvestorEmails}>Contact selected</CopyButton>
+                </div>
+              </SheetFooter>
+            </SheetContent>
           </Sheet>
         )
       }
