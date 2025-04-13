@@ -31,6 +31,8 @@
     "next-env.d.ts",
     "app/**/*.tsx",
     "app/**/*.ts",
+    "components/**/*.tsx",
+    "components/**/*.ts",
     "trpc/**/*.ts",
     ".next/types/**/*.ts",
     "types.d.ts",

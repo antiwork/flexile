@@ -422,7 +422,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
         if (field.type === "select" || field.type === "radio") {
           if (!field.valuesAllowed || field.valuesAllowed.length > 5) {
             return (
-              <div className="relative">
+              <div key={field.key} className="relative">
                 <Command className="border">
                   <CommandInput
                     value={details.get(field.key) ? field.valuesAllowed?.find(option => option.key === details.get(field.key))?.name || "" : ""}
