@@ -7,8 +7,8 @@ import { Map } from "immutable";
 import React, { useEffect, useState } from "react";
 import { CardRow } from "@/components/Card";
 import FormSection from "@/components/FormSection";
-import Input from "@/components/Input";
 import MutationButton from "@/components/MutationButton";
+import SimpleInput from "@/components/SimpleInput";
 import { useCurrentUser } from "@/global";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
 import { trpc } from "@/trpc/client";
@@ -43,13 +43,19 @@ const DetailsSection = () => {
   return (
     <FormSection title="Personal details" onSubmit={e(() => handleSubmit.mutate(), "prevent")}>
       <CardRow className="grid gap-4">
-        <Input value={email} onChange={setEmail} label="Email" minLength={MIN_EMAIL_LENGTH} />
-        <Input
-          value={preferredName}
-          onChange={setPreferredName}
+        <SimpleInput
+          label="Email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          minLength={MIN_EMAIL_LENGTH}
+        />
+        <SimpleInput
           label="Preferred name (visible to others)"
           placeholder="Enter preferred name"
           maxLength={MAX_PREFERRED_NAME_LENGTH}
+          value={preferredName}
+          onChange={(e) => setPreferredName(e.target.value)}
         />
       </CardRow>
       <CardRow>
@@ -98,30 +104,45 @@ const PasswordSection = () => {
   return (
     <FormSection title="Password" onSubmit={e(() => saveMutation.mutate(), "prevent")}>
       <CardRow className="grid gap-4">
-        <Input
-          value={currentPassword}
+        <SimpleInput
           label="Old password"
           type="password"
-          invalid={errors.has("current_password")}
-          help={errors.get("current_password")}
-          onChange={setCurrentPassword}
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+          aria-invalid={errors.has("current_password")}
+          aria-describedby={errors.has("current_password") ? "current_password_error" : undefined}
         />
-        <Input
-          value={password}
+        {errors.has("current_password") && (
+          <p id="current_password_error" className="text-destructive text-sm">
+            {errors.get("current_password")}
+          </p>
+        )}
+        <SimpleInput
           label="New password"
           type="password"
-          invalid={errors.has("password")}
-          help={errors.get("password")}
-          onChange={setPassword}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          aria-invalid={errors.has("password")}
+          aria-describedby={errors.has("password") ? "password_error" : undefined}
         />
-        <Input
-          value={confirmPassword}
+        {errors.has("password") && (
+          <p id="password_error" className="text-destructive text-sm">
+            {errors.get("password")}
+          </p>
+        )}
+        <SimpleInput
           label="Confirm new password"
           type="password"
-          invalid={errors.has("confirm_password")}
-          help={errors.get("confirm_password")}
-          onChange={setConfirmPassword}
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          aria-invalid={errors.has("confirm_password")}
+          aria-describedby={errors.has("confirm_password") ? "confirm_password_error" : undefined}
         />
+        {errors.has("confirm_password") && (
+          <p id="confirm_password_error" className="text-destructive text-sm">
+            {errors.get("confirm_password")}
+          </p>
+        )}
       </CardRow>
       <CardRow>
         <MutationButton type="submit" mutation={saveMutation} loadingText="Saving...">

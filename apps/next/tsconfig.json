@@ -34,7 +34,8 @@
     "trpc/**/*.ts",
     ".next/types/**/*.ts",
     "types.d.ts",
-    "middleware.ts"
+    "middleware.ts",
+    "components/**/*.tsx"
   ],
   "exclude": ["node_modules"]
 }
