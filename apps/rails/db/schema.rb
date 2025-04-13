@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_03_21_231056) do
+ActiveRecord::Schema[8.0].define(version: 2025_04_13_205549) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -391,18 +391,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_03_21_231056) do
     t.string "status", default: "initial", null: false
     t.string "bank_account_last_four"
     t.index ["consolidated_invoice_id"], name: "index_consolidated_payments_on_consolidated_invoice_id"
-  end
-
-  create_table "contractor_profiles", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.text "description"
-    t.integer "available_hours_per_week", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.string "external_id", null: false
-    t.boolean "available_for_hire", default: false, null: false
-    t.index ["external_id"], name: "index_contractor_profiles_on_external_id", unique: true
-    t.index ["user_id"], name: "index_contractor_profiles_on_user_id", unique: true
   end
 
   create_table "contracts", force: :cascade do |t|
