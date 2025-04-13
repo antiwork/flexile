@@ -110,12 +110,7 @@ export default function RolesPage() {
         </>
       }
     >
-      <Tabs
-        links={[
-          { label: "Roles", route: "/roles" },
-          { label: "Talent pool", route: "/talent_pool" },
-        ]}
-      />
+      <Tabs links={[{ label: "Roles", route: "/roles" }]} />
       {roles.length ? (
         <Table table={table} />
       ) : (
