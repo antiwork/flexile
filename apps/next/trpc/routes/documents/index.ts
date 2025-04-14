@@ -142,6 +142,8 @@ export const documentsRouter = createRouter({
           and(
             eq(documents.id, input.id),
             visibleDocuments(ctx.company.id, input.role === "Company Representative" ? undefined : ctx.user.id),
+            eq(documentSignatures.title, input.role),
+            isNull(documentSignatures.signedAt),
           ),
         )
         .limit(1);
