@@ -760,6 +760,7 @@ DEPENDENCIES
   rubyXL (~> 3.4)
   selenium-webdriver (~> 4.30.0)
   shoulda-matchers (~> 6.0)
+  sidekiq (~> 7)
   sidekiq-cron (~> 2.0)
   sidekiq-pro (~> 7)!
   slack-notifier (~> 2.4)
