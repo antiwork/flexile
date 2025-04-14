@@ -35,7 +35,6 @@ FactoryBot.define do
     end
 
     after :create do |company_worker, evaluator|
-      evaluator.with_unsigned_contract ? :unsigned : :signed
       unless evaluator.without_contract
         create(:document, company: company_worker.company, signed: !evaluator.with_unsigned_contract, signatories: [company_worker.user])
       end
