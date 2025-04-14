@@ -39,7 +39,7 @@ jobs:
           --health-retries 5
 
       redis:
-        image: redis:6.2.3
+        image: redis:7.4.2
         ports:
           - 6389:6379
         options: --entrypoint redis-server
