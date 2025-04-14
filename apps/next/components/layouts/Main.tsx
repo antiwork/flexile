@@ -18,6 +18,8 @@ import {
   UsersIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { ChevronsUpDown } from "lucide-react"
+
 import {
   ArrowPathIcon,
   BriefcaseIcon as SolidBriefcaseIcon,
@@ -56,6 +58,27 @@ import { request } from "@/utils/request";
 import { company_search_path, company_switch_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import { useOnGlobalEvent } from "@/utils/useOnGlobalEvent";
+import "@/components/layouts/sidebar.css";
+
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+} from "@/components/ui/sidebar"
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
 
 type CompanyAccessRole = "administrator" | "worker" | "investor" | "lawyer";
 
@@ -131,6 +154,14 @@ export default function MainLayout({
     setQuery("");
   };
 
+  const setSelectedCompany = async (companyId: string) => {
+    if (user.currentCompanyId !== companyId) {
+      await switchCompany(companyId);
+    }
+  }
+
+  const switchCompany = useSwitchCompanyOrRole();
+
   const toggleButton = (
     <button
       className={cn(linkClasses, "ml-auto md:hidden")}
@@ -143,47 +174,286 @@ export default function MainLayout({
   );
 
   return (
-    <div className={cn("grid md:grid-cols-[14rem_1fr]" /* { "h-full": appConfig.is_demo_mode } */)}>
-      <nav
-        className={cn("inset-0 z-10 bg-black text-gray-400 md:static print:hidden", { fixed: navOpen })}
-        aria-label="Main Menu"
-      >
-        {!navOpen ? (
-          <div className={cn(navItemClasses, "font-bold text-white md:hidden")}>
-            {openCompany ? (
-              <CompanyName company={openCompany} />
-            ) : (
-              <Image src={logo} className="invert" alt="Flexile" />
-            )}
-            {toggleButton}
-          </div>
-        ) : null}
-        <div className={cn("h-full flex-col overflow-y-auto text-gray-400 md:flex", navOpen ? "flex" : "hidden")}>
-          {!user.companies.length ? (
-            <div className="flex items-center gap-3 px-4 py-3">
-              <Image src={logo} className="w-auto invert md:h-14" alt="Flexile" />
-              {toggleButton}
-            </div>
-          ) : null}
-          {user.companies.map((company, i) => (
-            <details key={company.id} open={company.id === openCompanyId}>
-              <summary
-                className={`list-none text-white [&::-webkit-details-marker]:hidden ${navItemClasses} ${company.id === openCompanyId ? "cursor-default" : "cursor-pointer"}`}
-                onClick={e(() => setOpenCompanyId(company.id), "prevent")}
-              >
-                <CompanyName company={company} />
-                {user.companies.length > 1 && (
-                  <ChevronDownIcon
-                    className={cn("size-5 text-white transition-transform md:ml-auto", {
-                      "rotate-180": company.id === openCompanyId,
-                    })}
-                  />
+    <SidebarProvider defaultOpen={true}>
+      <Sidebar className="bg-black text-white">
+        <SidebarHeader>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              {user.companies.length > 1 ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <SidebarMenuButton
+                      size="lg"
+                      className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground py-4 text-base"
+                    >
+                      {openCompany ? (
+                        <CompanyName company={openCompany} />
+                      ) : (
+                        <Image src={logo} className="invert" alt="Flexile" />
+                      )}
+                      <ChevronsUpDown className="ml-auto" />
+                    </SidebarMenuButton>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    className="w-[--radix-dropdown-menu-trigger-width]"
+                    align="start"
+                  >
+                    {user.companies.map((company) => (
+                      <DropdownMenuItem
+                        key={company.id}
+                        onSelect={() => setSelectedCompany(company.id)}
+                        className="flex items-center gap-2"
+                      >
+                        <div className="relative size-5">
+                          <Image src={company.logo_url || defaultCompanyLogo} width={20} height={20} className="rounded-xs" alt="" />
+                        </div>
+                        <span className="line-clamp-1">{company.name}</span>
+                        {company.id === user.currentCompanyId && (
+                          <div className="ml-auto h-2 w-2 rounded-full bg-blue-500"></div>
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <SidebarMenuButton size="lg" className="py-4 text-base">
+                  {openCompany ? (
+                    <CompanyName company={openCompany} />
+                  ) : (
+                    <Image src={logo} className="invert" alt="Flexile" />
+                  )}
+                </SidebarMenuButton>
+              )}
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarHeader>
+        <SidebarContent>
+          {openCompany && (
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu className="space-y-1">
+                  {openCompany.routes.some(route => route.label === "Updates") && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild className="py-3 text-base">
+                        <Link href="/updates" className={pathname.startsWith("/updates") ? "font-bold text-white" : ""}>
+                          {pathname.startsWith("/updates") ? (
+                            <SolidMegaphoneIcon className="size-6 mr-3" />
+                          ) : (
+                            <MegaphoneIcon className="size-6 mr-3" />
+                          )}
+                          <span>Updates</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
+
+                  {openCompany.routes.some(route => route.label === "Invoices") && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild className="py-3 text-base [&>svg]:size-6">
+                        <Link href="/invoices" className={pathname.startsWith("/invoices") ? "font-bold text-white" : ""}>
+                          {pathname.startsWith("/invoices") ? (
+                            <SolidDocumentTextIcon className="mr-3" />
+                          ) : (
+                            <DocumentTextIcon className="mr-3" />
+                          )}
+                          <span>Invoices</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
+
+                  {openCompany.routes.some(route => route.label === "Expenses") && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild className="py-3 text-base [&>svg]:size-6">
+                        <Link href={`/companies/${openCompany.id}/expenses`} className={pathname.startsWith(`/companies/${openCompany.id}/expenses`) ? "font-bold text-white" : ""}>
+                          {pathname.startsWith(`/companies/${openCompany.id}/expenses`) ? (
+                            <SolidCurrencyDollarIcon className="mr-3" />
+                          ) : (
+                            <CurrencyDollarIcon className="mr-3" />
+                          )}
+                          <span>Expenses</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
+
+                  {openCompany.routes.some(route => route.label === "Documents") && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild className="py-3 text-base [&>svg]:size-6">
+                        <Link href="/documents" className={pathname.startsWith("/documents") || pathname.startsWith("/document_templates") ? "font-bold text-white" : ""}>
+                          {pathname.startsWith("/documents") || pathname.startsWith("/document_templates") ? (
+                            <SolidDocumentDuplicateIcon className="mr-3" />
+                          ) : (
+                            <DocumentDuplicateIcon className="mr-3" />
+                          )}
+                          <span>Documents</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
+
+                  {openCompany.routes.some(route => route.label === "People") && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild className="py-3 text-base [&>svg]:size-6">
+                        <Link href="/people" className={pathname.startsWith("/people") || pathname.includes("/investor_entities/") ? "font-bold text-white" : ""}>
+                          {pathname.startsWith("/people") || pathname.includes("/investor_entities/") ? (
+                            <SolidUsersIcon className="mr-3" />
+                          ) : (
+                            <UsersIcon className="mr-3" />
+                          )}
+                          <span>People</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
+
+                  {openCompany.routes.some(route => route.label === "Roles") && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild className="py-3 text-base [&>svg]:size-6">
+                        <Link href="/roles" className={pathname.startsWith("/roles") || pathname.startsWith("/talent_pool") || pathname.startsWith("/role_applications") ? "font-bold text-white" : ""}>
+                          {pathname.startsWith("/roles") || pathname.startsWith("/talent_pool") || pathname.startsWith("/role_applications") ? (
+                            <SolidBriefcaseIcon className="mr-3" />
+                          ) : (
+                            <BriefcaseIcon className="mr-3" />
+                          )}
+                          <span>Roles</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
+
+                  {openCompany.routes.some(route => route.label === "Equity") && equityNavLinks(user, openCompany)[0] && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild className="py-3 text-base [&>svg]:size-6">
+                        <Link href={equityNavLinks(user, openCompany)[0]?.route ?? "#"} className={pathname.startsWith("/equity") || pathname.includes("/equity_grants") ? "font-bold text-white" : ""}>
+                          {pathname.startsWith("/equity") || pathname.includes("/equity_grants") ? (
+                            <SolidChartPieIcon className="mr-3" />
+                          ) : (
+                            <ChartPieIcon className="mr-3" />
+                          )}
+                          <span>Equity</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
+
+                  {openCompany.routes.some(route => route.label === "Settings") && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild className="py-3 text-base [&>svg]:size-6">
+                        <Link href={isRole("administrator") ? `/administrator/settings` : `/settings/equity`} className={pathname.startsWith("/settings") ? "font-bold text-white" : ""}>
+                          {pathname.startsWith("/settings") ? (
+                            <SolidCog6ToothIcon className="mr-3" />
+                          ) : (
+                            <Cog6ToothIcon className="mr-3" />
+                          )}
+                          <span>Settings</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
+
+          {openCompany && openCompany.other_access_roles && openCompany.other_access_roles.length > 0 && (
+            <SidebarGroup className="mt-4">
+              <SidebarGroupContent>
+                <SidebarMenu className="space-y-1">
+                  {openCompany.other_access_roles.map((accessRole) => (
+                    <SidebarMenuItem key={accessRole}>
+                      <SidebarMenuButton
+                        onClick={() => switchCompany(openCompany.id, accessRole)}
+                        className="py-3 text-base"
+                      >
+                        <ArrowPathIcon className="size-6 mr-3" />
+                        <span>Use as {accessRole === "administrator" ? "admin" : accessRole}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
+
+          <SidebarGroup className="mt-auto">
+            <SidebarGroupContent>
+              <SidebarMenu className="space-y-1">
+                {!user.companies.length && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild className="py-3 text-base">
+                      <Link href="/company_invitations" className={pathname.startsWith("/company_invitations") ? "font-bold text-white" : ""}>
+                        <SolidBriefcaseIcon className="size-6 mr-3" />
+                        <span>Invite companies</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 )}
-                {i === 0 && toggleButton}
-              </summary>
-              <NavLinks company={company} />
-            </details>
-          ))}
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild className="py-3 text-base">
+                    <Link href="/settings" className={pathname.startsWith("/settings") ? "font-bold text-white" : ""}>
+                      <SolidUserIcon className="size-6 mr-3" />
+                      <span>Account</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SignOutButton>
+                    <SidebarMenuButton className="py-3 text-base">
+                      <ArrowRightStartOnRectangleIcon className="size-6 mr-3" />
+                      <span>Log out</span>
+                    </SidebarMenuButton>
+                  </SignOutButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+      </Sidebar>
+      <SidebarInset>
+        <div className={cn("grid md:grid-cols-[14rem_1fr]" /* { "h-full": appConfig.is_demo_mode } */)}>
+
+        {/* TODO remove <nav></nav> once fully migrated */}
+          <nav
+            className={cn("inset-0 z-10 bg-black text-gray-400 md:static print:hidden", { fixed: navOpen })}
+            aria-label="Main Menu"
+          >
+            {!navOpen ? (
+              <div className={cn(navItemClasses, "font-bold text-white md:hidden")}>
+                {openCompany ? (
+                  <CompanyName company={openCompany} />
+                ) : (
+                  <Image src={logo} className="invert" alt="Flexile" />
+                )}
+                {toggleButton}
+              </div>
+            ) : null}
+            <div className={cn("h-full flex-col overflow-y-auto text-gray-400 md:flex", navOpen ? "flex" : "hidden")}>
+              {!user.companies.length ? (
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <Image src={logo} className="w-auto invert md:h-14" alt="Flexile" />
+                  {toggleButton}
+                </div>
+              ) : null}
+              {user.companies.map((company, i) => (
+                <details key={company.id} open={company.id === openCompanyId}>
+                  <summary
+                    className={`list-none text-white [&::-webkit-details-marker]:hidden ${navItemClasses} ${company.id === openCompanyId ? "cursor-default" : "cursor-pointer"}`}
+                    onClick={e(() => setOpenCompanyId(company.id), "prevent")}
+                  >
+                    <CompanyName company={company} />
+                    {user.companies.length > 1 && (
+                      <ChevronDownIcon
+                        className={cn("size-5 text-white transition-transform md:ml-auto", {
+                          "rotate-180": company.id === openCompanyId,
+                        })}
+                      />
+                    )}
+                    {i === 0 && toggleButton}
+                  </summary>
+                  <NavLinks company={company} />
+                </details>
+              ))}
           <div className="mt-auto">
             {!user.companies.length && (
               <NavLink
@@ -210,127 +480,129 @@ export default function MainLayout({
               </button>
             </SignOutButton>
           </div>
-        </div>
-      </nav>
-      <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
-        <main className="flex flex-1 flex-col gap-6 pb-4 not-print:overflow-y-auto">
-          <div>
-            <header className="border-b bg-gray-200 px-3 pt-8 pb-4 md:px-16">
-              <div className="grid max-w-(--breakpoint-xl) gap-y-8">
-                {user.companies.length > 0 && (
-                  <search className="relative print:hidden">
-                    <Input
-                      ref={searchInputRef}
-                      value={query}
-                      onChange={setQuery}
-                      className="rounded-full! border-0"
-                      placeholder={isRole("administrator") ? "Search invoices, people..." : "Search invoices"}
-                      role="combobox"
-                      aria-autocomplete="list"
-                      aria-expanded={
-                        !!searchFocused &&
-                        (searchResults?.invoices.length || 0) + (searchResults?.users.length || 0) > 0
-                      }
-                      prefix={<MagnifyingGlassIcon className="size-4" />}
-                      aria-controls={`${uid}results`}
-                      onFocus={() => setSearchFocused(true)}
-                      onBlur={() => setSearchFocused(false)}
-                      onKeyDown={(e) => {
-                        switch (e.key) {
-                          case "Enter":
-                            if ((searchResults?.invoices.length || 0) > 0 || (searchResults?.users.length || 0) > 0) {
-                              const links = searchResultsRef.current?.querySelectorAll("a");
-                              links?.[selectedResultIndex]?.click();
+            </div>
+          </nav>
+          <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
+              <main className="flex flex-1 flex-col gap-6 pb-4 not-print:overflow-y-auto">
+                <div>
+                  <header className="border-b bg-gray-200 px-3 pt-8 pb-4 md:px-16">
+                    <div className="grid max-w-(--breakpoint-xl) gap-y-8">
+                      {user.companies.length > 0 && (
+                        <search className="relative print:hidden">
+                          <Input
+                            ref={searchInputRef}
+                            value={query}
+                            onChange={setQuery}
+                            className="rounded-full! border-0"
+                            placeholder={isRole("administrator") ? "Search invoices, people..." : "Search invoices"}
+                            role="combobox"
+                            aria-autocomplete="list"
+                            aria-expanded={
+                              !!searchFocused &&
+                              (searchResults?.invoices.length || 0) + (searchResults?.users.length || 0) > 0
                             }
-                            break;
-                          case "Escape":
-                            cancelSearch();
-                            break;
-                          case "ArrowDown":
-                            e.preventDefault();
-                            setSelectedResultIndex((prev) =>
-                              prev < (searchResults?.invoices.length || 0) + (searchResults?.users.length || 0) - 1
-                                ? prev + 1
-                                : prev,
-                            );
-                            break;
-                          case "ArrowUp":
-                            e.preventDefault();
-                            setSelectedResultIndex((prev) => (prev > 0 ? prev - 1 : prev));
-                            break;
-                        }
-                      }}
-                    />
+                            prefix={<MagnifyingGlassIcon className="size-4" />}
+                            aria-controls={`${uid}results`}
+                            onFocus={() => setSearchFocused(true)}
+                            onBlur={() => setSearchFocused(false)}
+                            onKeyDown={(e) => {
+                              switch (e.key) {
+                                case "Enter":
+                                  if ((searchResults?.invoices.length || 0) > 0 || (searchResults?.users.length || 0) > 0) {
+                                    const links = searchResultsRef.current?.querySelectorAll("a");
+                                    links?.[selectedResultIndex]?.click();
+                                  }
+                                  break;
+                                case "Escape":
+                                  cancelSearch();
+                                  break;
+                                case "ArrowDown":
+                                  e.preventDefault();
+                                  setSelectedResultIndex((prev) =>
+                                    prev < (searchResults?.invoices.length || 0) + (searchResults?.users.length || 0) - 1
+                                      ? prev + 1
+                                      : prev,
+                                  );
+                                  break;
+                                case "ArrowUp":
+                                  e.preventDefault();
+                                  setSelectedResultIndex((prev) => (prev > 0 ? prev - 1 : prev));
+                                  break;
+                              }
+                            }}
+                          />
 
-                    {searchResults &&
-                    searchFocused &&
-                    searchResults.invoices.length + searchResults.users.length > 0 ? (
-                      <div
-                        id={`${uid}results`}
-                        ref={searchResultsRef}
-                        role="listbox"
-                        className="absolute inset-x-0 top-full z-10 mt-2 rounded-xl border bg-white"
-                        onMouseDown={(e) => e.preventDefault()}
-                      >
-                        <SearchLinks
-                          links={searchResults.invoices}
-                          selectedResultIndex={selectedResultIndex}
-                          setSelectedResultIndex={setSelectedResultIndex}
-                          onClick={resetSearch}
-                          title="Invoices"
-                          className="mt-2"
-                        >
-                          {(invoice) => (
-                            <>
-                              <DocumentCurrencyDollarIcon className="size-6" />
-                              {invoice.title}
-                              <div className="text-xs">&mdash; {formatDate(invoice.invoice_date)}</div>
-                              <InvoiceStatus invoice={invoice} className="ml-auto text-xs" />
-                            </>
-                          )}
-                        </SearchLinks>
-                        <SearchLinks
-                          links={searchResults.users}
-                          selectedResultIndex={selectedResultIndex - searchResults.invoices.length}
-                          setSelectedResultIndex={(i) => setSelectedResultIndex(searchResults.invoices.length + i)}
-                          onClick={resetSearch}
-                          title="People"
-                          className="mt-2"
-                        >
-                          {(user) => (
-                            <>
-                              {user.name}
-                              <div className="text-xs">&mdash; {user.role}</div>
-                            </>
-                          )}
-                        </SearchLinks>
-                        <footer className="rounded-b-xl border-t bg-gray-50 px-3 py-1 text-xs text-gray-400">
-                          Pro tip: open search by pressing the
-                          <kbd className="rounded-full border border-gray-300 bg-white px-2 py-0.5 font-mono text-sm">
-                            /
-                          </kbd>{" "}
-                          key
-                        </footer>
+                          {searchResults &&
+                          searchFocused &&
+                          searchResults.invoices.length + searchResults.users.length > 0 ? (
+                            <div
+                              id={`${uid}results`}
+                              ref={searchResultsRef}
+                              role="listbox"
+                              className="absolute inset-x-0 top-full z-10 mt-2 rounded-xl border bg-white"
+                              onMouseDown={(e) => e.preventDefault()}
+                            >
+                              <SearchLinks
+                                links={searchResults.invoices}
+                                selectedResultIndex={selectedResultIndex}
+                                setSelectedResultIndex={setSelectedResultIndex}
+                                onClick={resetSearch}
+                                title="Invoices"
+                                className="mt-2"
+                              >
+                                {(invoice) => (
+                                  <>
+                                    <DocumentCurrencyDollarIcon className="size-6" />
+                                    {invoice.title}
+                                    <div className="text-xs">&mdash; {formatDate(invoice.invoice_date)}</div>
+                                    <InvoiceStatus invoice={invoice} className="ml-auto text-xs" />
+                                  </>
+                                )}
+                              </SearchLinks>
+                              <SearchLinks
+                                links={searchResults.users}
+                                selectedResultIndex={selectedResultIndex - searchResults.invoices.length}
+                                setSelectedResultIndex={(i) => setSelectedResultIndex(searchResults.invoices.length + i)}
+                                onClick={resetSearch}
+                                title="People"
+                                className="mt-2"
+                              >
+                                {(user) => (
+                                  <>
+                                    {user.name}
+                                    <div className="text-xs">&mdash; {user.role}</div>
+                                  </>
+                                )}
+                              </SearchLinks>
+                              <footer className="rounded-b-xl border-t bg-gray-50 px-3 py-1 text-xs text-gray-400">
+                                Pro tip: open search by pressing the
+                                <kbd className="rounded-full border border-gray-300 bg-white px-2 py-0.5 font-mono text-sm">
+                                  /
+                                </kbd>{" "}
+                                key
+                              </footer>
+                            </div>
+                          ) : null}
+                        </search>
+                      )}
+                      <div className="grid items-center justify-between gap-3 md:flex">
+                        <div>
+                          <h1 className="text-3xl/[2.75rem] font-bold">{title}</h1>
+                          {subtitle}
+                        </div>
+                        {headerActions ? <div className="flex items-center gap-3 print:hidden">{headerActions}</div> : null}
                       </div>
-                    ) : null}
-                  </search>
-                )}
-                <div className="grid items-center justify-between gap-3 md:flex">
-                  <div>
-                    <h1 className="text-3xl/[2.75rem] font-bold">{title}</h1>
-                    {subtitle}
-                  </div>
-                  {headerActions ? <div className="flex items-center gap-3 print:hidden">{headerActions}</div> : null}
+                    </div>
+                  </header>
+                  {subheader ? <div className="border-b bg-gray-200/50">{subheader}</div> : null}
                 </div>
-              </div>
-            </header>
-            {subheader ? <div className="border-b bg-gray-200/50">{subheader}</div> : null}
+                <div className="mx-3 flex max-w-(--breakpoint-xl) flex-col gap-6 md:mx-16">{children}</div>
+              </main>
+            {footer ? <div className="mt-auto">{footer}</div> : null}
           </div>
-          <div className="mx-3 flex max-w-(--breakpoint-xl) flex-col gap-6 md:mx-16">{children}</div>
-        </main>
-        {footer ? <div className="mt-auto">{footer}</div> : null}
-      </div>
-    </div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
 
