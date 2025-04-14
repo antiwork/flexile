@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Input, { formGroupClasses } from "@/components/Input";
+import { Label } from "@/components/ui/label";
 
 const RangeInput = ({
   min,
@@ -48,9 +49,9 @@ const RangeInput = ({
   return (
     <div className={formGroupClasses}>
       {label ? (
-        <label className="cursor-pointer" htmlFor={id ?? uid}>
+        <Label className="cursor-pointer" htmlFor={id ?? uid}>
           {label}
-        </label>
+        </Label>
       ) : null}
       <div className="grid grid-cols-[1fr_6rem] gap-4">
         <div className="grid">

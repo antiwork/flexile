@@ -85,7 +85,7 @@ export const usersRouter = createRouter({
     const { documentIds } = z.object({ documentIds: z.array(z.number()) }).parse(await response.json());
     const createdDocuments = await db.query.documents.findMany({
       where: inArray(documents.id, documentIds.map(BigInt)),
-      with: { administrator: { with: { user: true } } },
+      with: { signatures: { with: { user: true } } },
     });
     for (const document of createdDocuments) {
       // TODO store which template was used for the previous contract
@@ -96,13 +96,13 @@ export const usersRouter = createRouter({
         ),
         orderBy: desc(documentTemplates.createdAt),
       });
-      const admin = assertDefined(document.administrator);
-      const submission = await createSubmission(ctx, assertDefined(template).docusealId, admin.user, "Signer");
+      const user = assertDefined(document.signatures.find((s) => s.title === "Company Representative")?.user);
+      const submission = await createSubmission(ctx, assertDefined(template).docusealId, user, "Signer");
       await db.update(documents).set({ docusealSubmissionId: submission.id }).where(eq(documents.id, document.id));
 
       await sendEmail({
         from: `Flexile <support@${env.DOMAIN}>`,
-        to: admin.user.email,
+        to: user.email,
         subject: `${userDisplayName(ctx.user)} has updated their tax information`,
         react: TaxSettingsChanged({
           host: ctx.host,

@@ -18,6 +18,7 @@ import MainLayout from "@/components/layouts/Main";
 import Select from "@/components/Select";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
@@ -290,7 +291,7 @@ const Edit = () => {
               </Button>
               {data.company.expenses.enabled ? (
                 <Button variant="link" asChild>
-                  <label className={canManageExpenses ? "hidden" : ""}>
+                  <Label className={canManageExpenses ? "hidden" : ""}>
                     <ArrowUpTrayIcon className="inline size-4" />
                     Add expense
                     <input
@@ -301,7 +302,7 @@ const Edit = () => {
                       multiple
                       onChange={createNewExpenseEntries}
                     />
-                  </label>
+                  </Label>
                 </Button>
               ) : null}
             </div>

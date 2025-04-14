@@ -6,7 +6,6 @@ RSpec.describe CompanyWorker do
     it { is_expected.to belong_to(:user) }
     it { is_expected.to belong_to(:company_role) }
     it { is_expected.to have_many(:contracts) }
-    it { is_expected.to have_many(:documents) }
     it { is_expected.to have_many(:company_worker_updates) }
     it { is_expected.to have_many(:equity_allocations) }
     it { is_expected.to have_many(:integration_records) }
@@ -15,15 +14,6 @@ RSpec.describe CompanyWorker do
     it { is_expected.to have_one(:active_expense_card) }
     it { is_expected.to have_one(:quickbooks_integration_record) }
     it { is_expected.to have_many(:company_worker_absences) }
-
-    it "has many uncompleted contracts" do
-      company_worker = create(:company_worker)
-      create(:document, :signed, company_worker:)
-      create(:equity_plan_contract_doc, company_worker:, completed_at: nil)
-      uncompleted_contracts = create_list(:document, 2, company_worker:, completed_at: nil)
-
-      expect(company_worker.uncompleted_contracts).to match_array(uncompleted_contracts)
-    end
   end
 
   describe "validations" do
@@ -114,9 +104,7 @@ RSpec.describe CompanyWorker do
         create(:company_worker, company: @active_contractor.company, with_unsigned_contract: true)
 
         company_worker_with_new_document = create(:company_worker, without_contract: true)
-        create(:document, :signed, user: company_worker_with_new_document.user,
-                                   company: company_worker_with_new_document.company,
-                                   company_worker: company_worker_with_new_document)
+        create(:document, company: company_worker_with_new_document.company, signed: true, signatories: [company_worker_with_new_document.user])
 
         result = described_class.with_signed_contract
         expected_collection = [

@@ -613,7 +613,8 @@ class SeedDataGeneratorFromTemplate
               ).process
               raise Error, error_message if error_message.present?
 
-              company_worker.uncompleted_contracts.reload.first.update!(contractor_signature: contractor.legal_name, completed_at: Time.current)
+              document = contractor.documents.unsigned_contracts.reload.first
+              document.signatures.where(user: contractor).update!(signed_at: Time.current)
               user_legal_params = user_attributes.slice("street_address", "city", "state", "zip_code")
               error_message = UpdateUser.new(
                 user: contractor,
@@ -627,15 +628,6 @@ class SeedDataGeneratorFromTemplate
               print_message("Created #{contractor.email} (#{contractor.bank_accounts.alive.any? ? "onboarded" : "not onboarded"})")
 
               if OnboardingState::Worker.new(user: contractor.reload, company:).complete?
-                contractor.contractor_profile.update!(
-                  company_worker_data.fetch(
-                    "contractor_profile_attributes",
-                    {
-                      available_hours_per_week: 1,
-                      available_for_hire: false,
-                    }
-                  )
-                )
                 create_company_worker_invoices!(company_worker, ended_at:)
                 # if company_worker_data.key?("equity_allocation_attributes")
                 #   company_worker.equity_allocations.create!(company_worker_data.fetch("equity_allocation_attributes"))

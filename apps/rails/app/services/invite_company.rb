@@ -49,7 +49,6 @@ class InviteCompany
       company_administrator = company.company_administrators.find_by(user: administrator)
 
       document = CreateConsultingContract.new(company_worker:, company_administrator:, current_user: company_worker.user).perform!
-      ContractorProfile.find_or_create_by!(user: worker, available_hours_per_week: 1)
       CompanyWorkerMailer.invite_company(company_worker_id: company_worker.id, url: administrator.create_clerk_invitation).deliver_later
 
       { success: true, administrator:, company_administrator:, document: }

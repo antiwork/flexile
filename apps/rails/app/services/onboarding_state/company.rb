@@ -46,7 +46,7 @@ class OnboardingState::Company
     end
 
     def needs_contract_details?
-      company.company_workers.first!.uncompleted_contracts.exists?
+      company.company_workers.first!.user.unsigned_contracts.exists?
     end
 
     def completed_redirect_path
