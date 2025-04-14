@@ -8,10 +8,7 @@ export const slackClient = new WebClient(env.SLACK_TOKEN, {
   },
 });
 
-export const verifySlackRequest = async (
-  body: string,
-  headers: Headers
-): Promise<boolean> => {
+export const verifySlackRequest = async (body: string, headers: Headers): Promise<boolean> => {
   const timestamp = headers.get("x-slack-request-timestamp");
   const signature = headers.get("x-slack-signature");
 
@@ -28,8 +25,5 @@ export const verifySlackRequest = async (
   const data = `v0:${timestamp}:${body}`;
   const checkSignature = `v0=${hmac.update(data).digest("hex")}`;
 
-  return Promise.resolve(crypto.timingSafeEqual(
-    Buffer.from(checkSignature),
-    Buffer.from(signature)
-  ));
+  return Promise.resolve(crypto.timingSafeEqual(Buffer.from(checkSignature), Buffer.from(signature)));
 };

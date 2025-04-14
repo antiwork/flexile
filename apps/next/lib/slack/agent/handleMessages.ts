@@ -164,7 +164,7 @@ const executeAction = async (
         
         type WorkerRoles = { worker?: { payRateType?: string; payRateInSubunits?: number } };
         const roles: WorkerRoles | undefined = contractor.user.roles as unknown as WorkerRoles;
-        const isProjectBased = roles?.worker?.payRateType === "project_based";
+        const isProjectBased = roles.worker?.payRateType === "project_based";
         const invoiceDate = action.payload.date || formatISO(new Date(), { representation: "date" });
         const totalAmountInCents = Math.round(action.payload.amount * 100);
         const description = action.payload.description || (isProjectBased ? "Project work" : "Hours worked");
@@ -178,10 +178,7 @@ const executeAction = async (
             invoice_line_items: [
               isProjectBased
                 ? { description, total_amount_cents: totalAmountInCents }
-                : { 
-                    description, 
-                    minutes: Math.round((totalAmountInCents / (roles?.worker?.payRateInSubunits || 1)) * 60) 
-                  },
+                : { description, minutes: Math.round((totalAmountInCents / (roles.worker?.payRateInSubunits || 1)) * 60) },
             ],
           },
         });
