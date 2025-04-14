@@ -1,5 +1,6 @@
 import Bugsnag from "@bugsnag/js";
 import { utc } from "@date-fns/utc";
+import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { differenceInDays, format } from "date-fns";
 import { List } from "immutable";
 import debounce from "lodash-es/debounce";
@@ -7,9 +8,9 @@ import { CalendarClockIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import AbsencesModal from "@/app/updates/team/AbsencesModal";
 import { Task, TaskInput } from "@/app/updates/team/Task";
-import Button from "@/components/Button";
 import { Card } from "@/components/Card";
-import Notice from "@/components/Notice";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { useCurrentCompany } from "@/global";
 import type { RouterInput, RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -184,7 +185,12 @@ const EditableCompanyWorkerUpdate = ({ data }: { data: TeamMemberData }) => {
             <CalendarClockIcon className="mr-2 h-5 w-5 text-gray-600" />
             Log time off
           </Button>
-          {savingError ? <Notice variant="critical">{savingError}</Notice> : null}
+          {savingError ? (
+            <Alert variant="destructive">
+              <ExclamationTriangleIcon />
+              <AlertDescription>{savingError}</AlertDescription>
+            </Alert>
+          ) : null}
         </footer>
       </Card>
       <AbsencesModal

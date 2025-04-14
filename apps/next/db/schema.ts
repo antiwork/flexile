@@ -2107,27 +2107,6 @@ export const contracts = pgTable(
   ],
 );
 
-export const contractorProfiles = pgTable(
-  "contractor_profiles",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    userId: bigint("user_id", { mode: "bigint" }).notNull(),
-    description: text(),
-    availableHoursPerWeek: integer("available_hours_per_week").notNull(),
-
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-    externalId: varchar("external_id").$default(nanoid).notNull(),
-    availableForHire: boolean("available_for_hire").notNull().default(false),
-  },
-  (table) => [
-    index("index_contractor_profiles_on_external_id").using("btree", table.externalId.asc().nullsLast().op("text_ops")),
-    index("index_contractor_profiles_on_user_id").using("btree", table.userId.asc().nullsLast().op("int8_ops")),
-  ],
-);
-
 export const investorDividendRounds = pgTable(
   "investor_dividend_rounds",
   {
@@ -2597,13 +2576,6 @@ export const consolidatedPaymentsRelations = relations(consolidatedPayments, ({ 
     references: [consolidatedInvoices.id],
   }),
   balanceTransactions: many(balanceTransactions),
-}));
-
-export const contractorProfilesRelations = relations(contractorProfiles, ({ one }) => ({
-  user: one(users, {
-    fields: [contractorProfiles.userId],
-    references: [users.id],
-  }),
 }));
 
 export const convertibleInvestmentsRelations = relations(convertibleInvestments, ({ one, many }) => ({

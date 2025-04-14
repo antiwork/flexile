@@ -1,13 +1,13 @@
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyRolesFactory } from "@test/factories/companyRoles";
-import { contractorProfilesFactory } from "@test/factories/contractorProfiles";
+import { contractsFactory } from "@test/factories/contracts";
 import { documentsFactory } from "@test/factories/documents";
 import { usersFactory } from "@test/factories/users";
 import { subDays } from "date-fns";
 import { eq } from "drizzle-orm";
 import { PayRateType } from "@/db/enums";
-import { companyAdministrators, companyContractors, contractorProfiles } from "@/db/schema";
+import { companyAdministrators, companyContractors } from "@/db/schema";
 import { assert } from "@/utils/assert";
 
 type CreateOptions = {
@@ -36,19 +36,6 @@ export const companyContractorsFactory = {
       })
       .returning();
     assert(createdContractor !== undefined);
-
-    const [existingProfile] = await db
-      .select()
-      .from(contractorProfiles)
-      .where(eq(contractorProfiles.userId, userId))
-      .limit(1);
-
-    if (!existingProfile) {
-      await contractorProfilesFactory.create({
-        userId,
-        availableHoursPerWeek: 1,
-      });
-    }
 
     const administrator = await db.query.companyAdministrators.findFirst({
       where: eq(companyAdministrators.companyId, companyId),

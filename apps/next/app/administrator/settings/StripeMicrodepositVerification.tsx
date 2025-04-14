@@ -4,12 +4,12 @@ import { fromUnixTime } from "date-fns";
 import { Map } from "immutable";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import Button from "@/components/Button";
 import DecimalInput from "@/components/DecimalInput";
 import Input from "@/components/Input";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import Notice from "@/components/Notice";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assert } from "@/utils/assert";
@@ -80,11 +80,13 @@ const StripeMicrodepositVerification = () => {
 
   return !microdepositVerificationDetails || verifyMicrodeposit.isSuccess ? null : (
     <>
-      <Notice hideIcon>
-        <h2 className="text-xl font-bold">Verify your bank account to enable contractor payments</h2>
-        <p>To ensure seamless payments to your contractors, we need to confirm your bank account details.</p>
-        <Button onClick={() => setShowVerificationModal(true)}>Verify bank account</Button>
-      </Notice>
+      <Alert>
+        <AlertTitle>Verify your bank account to enable contractor payments</AlertTitle>
+        <AlertDescription>
+          <p>To ensure seamless payments to your contractors, we need to confirm your bank account details.</p>
+          <Button onClick={() => setShowVerificationModal(true)}>Verify bank account</Button>
+        </AlertDescription>
+      </Alert>
 
       <Modal
         open={showVerificationModal}

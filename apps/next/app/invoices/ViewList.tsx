@@ -1,4 +1,4 @@
-import { CurrencyDollarIcon, PencilIcon, PlusIcon } from "@heroicons/react/20/solid";
+import { CurrencyDollarIcon, ExclamationTriangleIcon, PencilIcon, PlusIcon } from "@heroicons/react/20/solid";
 import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { formatISO } from "date-fns";
@@ -7,17 +7,17 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import EquityPercentageLockModal from "@/app/invoices/EquityPercentageLockModal";
 import { StatusWithTooltip } from "@/app/invoices/Status";
-import Button from "@/components/Button";
 import { Card, CardRow } from "@/components/Card";
 import DecimalInput from "@/components/DecimalInput";
 import DurationInput from "@/components/DurationInput";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
 import { linkClasses } from "@/components/Link";
-import Notice from "@/components/Notice";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assert } from "@/utils/assert";
@@ -96,7 +96,7 @@ export default function ViewList() {
       title="Invoicing"
       headerActions={
         !unsignedContractId ? (
-          <Button asChild variant="outline" small>
+          <Button asChild variant="outline" size="small">
             <Link href="/invoices/new">
               <PlusIcon className="size-4" />
               New invoice
@@ -106,18 +106,21 @@ export default function ViewList() {
       }
     >
       {unsignedContractId ? (
-        <Notice variant="critical">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>You have an unsigned contract. Please sign it before creating new invoices.</div>
-            <Button asChild variant="outline" small disabled={!!unsignedContractId}>
-              <Link
-                href={`/documents?${new URLSearchParams({ sign: unsignedContractId.toString(), next: "/invoices" })}`}
-              >
-                Review & sign
-              </Link>
-            </Button>
-          </div>
-        </Notice>
+        <Alert variant="destructive">
+          <ExclamationTriangleIcon />
+          <AlertDescription>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>You have an unsigned contract. Please sign it before creating new invoices.</div>
+              <Button asChild variant="outline" size="small" disabled={!!unsignedContractId}>
+                <Link
+                  href={`/documents?${new URLSearchParams({ sign: unsignedContractId.toString(), next: "/invoices" })}`}
+                >
+                  Review & sign
+                </Link>
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
       ) : null}
 
       <QuickInvoiceSection disabled={!!unsignedContractId} />
@@ -131,7 +134,7 @@ export default function ViewList() {
         <div>
           <Placeholder icon={CurrencyDollarIcon}>
             Create a new invoice to get started.
-            <Button asChild variant="outline" small disabled={!!unsignedContractId}>
+            <Button asChild variant="outline" size="small" disabled={!!unsignedContractId}>
               <a inert={!!unsignedContractId} href="/invoices/new">
                 <PlusIcon className="size-4" />
                 New invoice

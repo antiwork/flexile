@@ -3,13 +3,14 @@ import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import Button from "@/components/Button";
 import { CardRow } from "@/components/Card";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { md5Checksum } from "@/utils";
@@ -81,7 +82,7 @@ export default function NewTenderOffer() {
             prefix="$"
           />
           <div className="grid gap-2">
-            <label htmlFor="attachment">Attachment</label>
+            <Label htmlFor="attachment">Attachment</Label>
             <input
               id="attachment"
               type="file"

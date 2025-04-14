@@ -1,4 +1,6 @@
 import React, { useEffect, useRef } from "react";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 export const formGroupClasses = "group grid gap-2";
 export const formControlClasses = "rounded-md border bg-white focus-within:ring-3 focus-within:ring-blue-50";
@@ -34,7 +36,7 @@ const Input = ({
   ...props
 }: InputProps) => {
   const inputId = id ?? React.useId();
-  const inputRef = useRef<HTMLInputElement & HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     inputRef.current?.setCustomValidity(
@@ -48,31 +50,42 @@ const Input = ({
     );
   }, [invalid, help, value]);
 
-  const InputComponent = type === "textarea" ? "textarea" : "input";
-
   return (
     <div className={formGroupClasses}>
       {label || props.children ? (
-        <label htmlFor={inputId} className="cursor-pointer">
+        <Label htmlFor={inputId} className="cursor-pointer">
           {label || props.children}
-        </label>
+        </Label>
       ) : null}
       <div
         className={`has-invalid:border-red flex items-center has-disabled:bg-gray-100 has-disabled:opacity-50 ${formControlClasses} ${className}`}
       >
         {prefix ? <div className="ml-2 flex items-center text-gray-600">{prefix}</div> : null}
-        <InputComponent
-          id={inputId}
-          ref={(e: HTMLInputElement & HTMLTextAreaElement) => {
-            inputRef.current = e;
-            if (ref) ref.current = e;
-          }}
-          type={type !== "textarea" ? type : undefined}
-          value={value ?? ""}
-          onChange={(e) => onChange?.(e.target.value)}
-          className="h-full w-0 flex-1 rounded-md bg-transparent p-2 focus:outline-hidden"
-          {...props}
-        />
+        {type === "textarea" ? (
+          <Textarea
+            id={inputId}
+            ref={(e: HTMLTextAreaElement) => {
+              if (ref) ref.current = e;
+            }}
+            value={value ?? ""}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange?.(e.target.value)}
+            className="h-full w-0 flex-1 rounded-md bg-transparent p-2 focus:outline-hidden"
+            {...props}
+          />
+        ) : (
+          <input
+            id={inputId}
+            ref={(e: HTMLInputElement) => {
+              inputRef.current = e;
+              if (ref) ref.current = e;
+            }}
+            type={type}
+            value={value ?? ""}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange?.(e.target.value)}
+            className="h-full w-0 flex-1 rounded-md bg-transparent p-2 focus:outline-hidden"
+            {...props}
+          />
+        )}
         {suffix ? <div className="mr-2 flex items-center text-gray-600">{suffix}</div> : null}
       </div>
       {help ? <div className={formHelpClasses}>{help}</div> : null}

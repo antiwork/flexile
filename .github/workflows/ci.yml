@@ -52,6 +52,7 @@ jobs:
 
     steps:
       - uses: actions-cool/check-user-permission@7b90a27f92f3961b368376107661682c441f6103
+        if: ${{ github.event.pull_request && github.event.pull_request.head.user.login != 'antiwork' }}
         with:
           require: write
           username: ${{ github.triggering_actor }}
@@ -74,6 +75,8 @@ jobs:
           KNAPSACK_PRO_CI_NODE_TOTAL: ${{ matrix.ci_node_total }}
           KNAPSACK_PRO_CI_NODE_INDEX: ${{ matrix.ci_node_index }}
           KNAPSACK_PRO_LOG_LEVEL: info
+          GITHUB_REF: ${{ github.event.pull_request.head.ref }}
+          GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
         run: cd apps/rails && bundle exec rake "knapsack_pro:queue:rspec[--format RSpec::Github::Formatter --tag ~skip --tag ~type:system --format progress]"
         timeout-minutes: 20
 
@@ -83,6 +86,7 @@ jobs:
 
     steps:
       - uses: actions-cool/check-user-permission@7b90a27f92f3961b368376107661682c441f6103
+        if: ${{ github.event.pull_request && github.event.pull_request.head.user.login != 'antiwork' }}
         with:
           require: write
           username: ${{ github.triggering_actor }}

@@ -12,7 +12,6 @@ RSpec.describe User do
 
     it { is_expected.to have_many(:company_workers) }
     it { is_expected.to have_many(:clients).through(:company_workers).source(:company) }
-    it { is_expected.to have_one(:contractor_profile) }
 
     it { is_expected.to have_many(:company_investors) }
     it { is_expected.to have_many(:portfolio_companies).through(:company_investors).source(:company) }

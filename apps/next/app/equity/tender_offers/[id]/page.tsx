@@ -1,24 +1,25 @@
 "use client";
+import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { ArrowDownTrayIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { addMonths, isFuture, isPast } from "date-fns";
 import { useParams } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
-import Button from "@/components/Button";
 import { Card, CardRow } from "@/components/Card";
 import DecimalInput from "@/components/DecimalInput";
 import Figures from "@/components/Figures";
 import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import Notice from "@/components/Notice";
 import NumberInput from "@/components/NumberInput";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Select from "@/components/Select";
 import Status from "@/components/Status";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -213,10 +214,13 @@ export default function TenderOfferView() {
         ]}
       />
       {user.activeRole === "contractorOrInvestor" && user.roles.investor?.investedInAngelListRuv ? (
-        <Notice variant="critical">
-          Note: As an investor through an AngelList RUV, your bids will be submitted on your behalf by the RUV itself.
-          Please contact them for more information about this process.
-        </Notice>
+        <Alert variant="destructive">
+          <ExclamationTriangleIcon />
+          <AlertDescription>
+            Note: As an investor through an AngelList RUV, your bids will be submitted on your behalf by the RUV itself.
+            Please contact them for more information about this process.
+          </AlertDescription>
+        </Alert>
       ) : null}
 
       {isOpen && holdings.length ? (
@@ -320,10 +324,13 @@ export default function TenderOfferView() {
                     <strong>Total amount:</strong> {formatMoney(totalAmount)}
                   </div>
                 )}
-                <Notice variant="critical">
-                  <strong>Important:</strong> Please note that once submitted, commitments cannot be withdrawn or
-                  changed. Make sure all information is correct before proceeding.
-                </Notice>
+                <Alert variant="destructive">
+                  <ExclamationTriangleIcon />
+                  <AlertDescription>
+                    <strong>Important:</strong> Please note that once submitted, commitments cannot be withdrawn or
+                    changed. Make sure all information is correct before proceeding.
+                  </AlertDescription>
+                </Alert>
               </CardRow>
               <CardRow>
                 <Tooltip>
