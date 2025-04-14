@@ -1,18 +1,19 @@
 "use client";
 
-import { PaperClipIcon, PencilIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
+import { InformationCircleIcon, PaperClipIcon, PencilIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
-import Button from "@/components/Button";
 import { Card, CardRow } from "@/components/Card";
 import MainLayout from "@/components/layouts/Main";
 import { linkClasses } from "@/components/Link";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import Notice from "@/components/Notice";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -184,24 +185,28 @@ export default function InvoicePage() {
       ) : null}
       <div className="flex flex-col gap-4">
         {!taxRequirementsMet(invoice) && (
-          <Notice variant="critical">
-            <strong>Missing tax information.</strong>
-            Invoice is not payable until contractor provides tax information.
-          </Notice>
+          <Alert variant="destructive">
+            <ExclamationTriangleIcon />
+            <AlertTitle>Missing tax information.</AlertTitle>
+            <AlertDescription>Invoice is not payable until contractor provides tax information.</AlertDescription>
+          </Alert>
         )}
 
         {details ? (
-          <Notice variant={invoice.status === "rejected" ? "critical" : undefined} hideIcon>
-            {details}
-          </Notice>
+          <Alert variant={invoice.status === "rejected" ? "destructive" : undefined}>
+            <AlertDescription>{details}</AlertDescription>
+          </Alert>
         ) : null}
       </div>
 
       {invoice.equityAmountInCents > 0 ? (
-        <Notice className="print:hidden">
-          When this invoice is paid, you'll receive an additional {formatMoneyFromCents(invoice.equityAmountInCents)} in
-          equity. This amount is separate from the total shown below.
-        </Notice>
+        <Alert className="print:hidden">
+          <InformationCircleIcon />
+          <AlertDescription>
+            When this invoice is paid, you'll receive an additional {formatMoneyFromCents(invoice.equityAmountInCents)}{" "}
+            in equity. This amount is separate from the total shown below.
+          </AlertDescription>
+        </Alert>
       ) : null}
 
       <section>

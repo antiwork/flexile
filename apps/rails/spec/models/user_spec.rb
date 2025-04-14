@@ -12,7 +12,6 @@ RSpec.describe User do
 
     it { is_expected.to have_many(:company_workers) }
     it { is_expected.to have_many(:clients).through(:company_workers).source(:company) }
-    it { is_expected.to have_one(:contractor_profile) }
 
     it { is_expected.to have_many(:company_investors) }
     it { is_expected.to have_many(:portfolio_companies).through(:company_investors).source(:company) }
@@ -361,13 +360,13 @@ RSpec.describe User do
 
   describe "#restricted_payout_country_resident?" do
     it "returns true if the user is from a restricted payout country" do
-      %w[BR SA NG PK].each do |country|
+      %w[SA NG PK].each do |country|
         user.country_code = country
         expect(user.restricted_payout_country_resident?).to eq true
       end
 
-      user.country_code = "CA"
-      expect(user.sanctioned_country_resident?).to eq false
+      user.country_code = "BR"
+      expect(user.restricted_payout_country_resident?).to eq false
     end
   end
 

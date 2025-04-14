@@ -10,7 +10,6 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import EquityPercentageLockModal from "@/app/invoices/EquityPercentageLockModal";
-import Button from "@/components/Button";
 import { Card, CardRow } from "@/components/Card";
 import DecimalInput from "@/components/DecimalInput";
 import DurationInput from "@/components/DurationInput";
@@ -18,6 +17,8 @@ import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
 import Select from "@/components/Select";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
@@ -290,7 +291,7 @@ const Edit = () => {
               </Button>
               {data.company.expenses.enabled ? (
                 <Button variant="link" asChild>
-                  <label className={canManageExpenses ? "hidden" : ""}>
+                  <Label className={canManageExpenses ? "hidden" : ""}>
                     <ArrowUpTrayIcon className="inline size-4" />
                     Add expense
                     <input
@@ -301,7 +302,7 @@ const Edit = () => {
                       multiple
                       onChange={createNewExpenseEntries}
                     />
-                  </label>
+                  </Label>
                 </Button>
               ) : null}
             </div>

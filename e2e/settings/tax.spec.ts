@@ -25,7 +25,6 @@ test.describe("Tax settings", () => {
       await usersFactory.createWithoutComplianceInfo({
         legalName: "Caro Example",
         preferredName: "Caro",
-        email: "caro@example.com",
         birthDate: "1980-06-27",
       })
     ).user;

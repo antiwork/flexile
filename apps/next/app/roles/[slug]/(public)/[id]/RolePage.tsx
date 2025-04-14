@@ -1,6 +1,7 @@
 "use client";
 
 import { LinkIcon } from "@heroicons/react/16/solid";
+import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { Set } from "immutable";
@@ -8,17 +9,17 @@ import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useEffect, useState } from "react";
-import Button from "@/components/Button";
 import { Card, CardRow } from "@/components/Card";
 import Input from "@/components/Input";
 import SimpleLayout from "@/components/layouts/Simple";
 import MutationButton from "@/components/MutationButton";
-import Notice from "@/components/Notice";
 import RangeInput from "@/components/RangeInput";
 import RichText, { Editor as RichTextEditor } from "@/components/RichText";
 import Select from "@/components/Select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { DEFAULT_WORKING_HOURS_PER_WEEK, MAX_WORKING_HOURS_PER_WEEK, WORKING_WEEKS_PER_YEAR } from "@/models";
-import { countries, countryInfos } from "@/models/constants";
+import { countryInfos } from "@/models/constants";
 import { PayRateType, trpc } from "@/trpc/client";
 import { toSlug } from "@/utils";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
@@ -75,9 +76,6 @@ export default function RolePage({ countryCode }: { countryCode: string }) {
       await setStep("sent");
     },
   });
-
-  const isAdditionalSupportedCountry = (countryCode: string) =>
-    company.additionalSupportedCountries.includes(countryCode);
 
   if (step === "sent") {
     return (
@@ -206,9 +204,12 @@ export default function RolePage({ countryCode }: { countryCode: string }) {
           </Card>
 
           {role.trialEnabled ? (
-            <Notice variant="critical">
-              This role has a trial period with a rate of {formatMoneyFromCents(role.trialPayRateInSubunits)} / hour.
-            </Notice>
+            <Alert variant="destructive">
+              <ExclamationTriangleIcon />
+              <AlertDescription>
+                This role has a trial period with a rate of {formatMoneyFromCents(role.trialPayRateInSubunits)} / hour.
+              </AlertDescription>
+            </Alert>
           ) : null}
 
           <Button disabled={!role.activelyHiring} onClick={() => void setStep("applying")}>
@@ -250,23 +251,14 @@ export default function RolePage({ countryCode }: { countryCode: string }) {
               <Select
                 value={values.countryCode}
                 onChange={(countryCode) => updateValues({ countryCode })}
-                options={Object.entries(countryInfos).map(([code, info]) => {
-                  const isSupported = info.supportsWisePayout || isAdditionalSupportedCountry(code);
-                  return {
-                    value: code,
-                    disabled: !isSupported,
-                    label: `${info.countryName}${isSupported ? "" : " (unsupported)"}`,
-                  };
-                })}
+                options={Object.entries(countryInfos).map(([code, info]) => ({
+                  value: code,
+                  disabled: !info.supportsWisePayout,
+                  label: `${info.countryName}${info.supportsWisePayout ? "" : " (unsupported)"}`,
+                }))}
                 label="Country (where you'll usually work from)"
                 invalid={errors.has("countryCode")}
               />
-
-              {values.countryCode && isAdditionalSupportedCountry(values.countryCode) ? (
-                <Notice variant="critical">
-                  You'll need a bank account outside of {countries.get(values.countryCode)} to receive payments.
-                </Notice>
-              ) : null}
 
               {role.payRateType === PayRateType.Hourly && (
                 <>

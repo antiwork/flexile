@@ -30,6 +30,8 @@ const env = z
     SLACK_TOKEN: z.string(),
     SLACK_CHANNEL_ID: z.string(),
     VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
+    WISE_PROFILE_ID: z.string(),
+    WISE_API_KEY: z.string(),
   })
   .parse(process.env);
 

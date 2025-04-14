@@ -1,14 +1,15 @@
 "use client";
 import { DocusealBuilder } from "@docuseal/react";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { z } from "zod";
-import Button from "@/components/Button";
 import MainLayout from "@/components/layouts/Main";
 import MutationButton from "@/components/MutationButton";
-import Notice from "@/components/Notice";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { useCurrentCompany } from "@/global";
 import { DocumentTemplateType, trpc } from "@/trpc/client";
 
@@ -166,27 +167,35 @@ export default function EditTemplatePage() {
     >
       <div className="grid gap-6">
         {template.companyId === null ? (
-          <Notice>
-            <div className="flex items-center justify-between gap-4">
-              <p>This is our default template. Replace it with your own to fully customize it.</p>
-              <MutationButton
-                mutation={trpc.documents.templates.create.useMutation({
-                  onSuccess: (id) => {
-                    router.push(`/document_templates/${id}`);
-                  },
-                })}
-                param={{
-                  companyId: company.id,
-                  name: template.name,
-                  type: template.type,
-                }}
-              >
-                Replace default template
-              </MutationButton>
-            </div>
-          </Notice>
+          <Alert>
+            <InformationCircleIcon />
+            <AlertDescription>
+              <div className="flex items-center justify-between gap-4">
+                <p>This is our default template. Replace it with your own to fully customize it.</p>
+                <MutationButton
+                  mutation={trpc.documents.templates.create.useMutation({
+                    onSuccess: (id) => {
+                      router.push(`/document_templates/${id}`);
+                    },
+                  })}
+                  param={{
+                    companyId: company.id,
+                    name: template.name,
+                    type: template.type,
+                  }}
+                >
+                  Replace default template
+                </MutationButton>
+              </div>
+            </AlertDescription>
+          </Alert>
         ) : docusealTemplate?.documents.length && !isSignable(docusealTemplate) ? (
-          <Notice>To use this template, add at least the signature fields for both parties below.</Notice>
+          <Alert>
+            <InformationCircleIcon />
+            <AlertDescription>
+              To use this template, add at least the signature fields for both parties below.
+            </AlertDescription>
+          </Alert>
         ) : null}
         <DocusealBuilder
           token={token}

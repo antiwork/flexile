@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { formControlClasses, formHelpClasses } from "@/components/Input";
+import { Label } from "@/components/ui/label";
 
 function RadioButtons<T extends string | number>({
   options,
@@ -31,7 +32,7 @@ function RadioButtons<T extends string | number>({
       {label ? <legend className="mb-2">{label}</legend> : null}
       <div ref={ref} role="radiogroup" className="grid auto-cols-fr gap-2 md:grid-flow-col">
         {options.map((option) => (
-          <label
+          <Label
             key={option.label}
             className={`has-invalid:border-red flex cursor-pointer items-center gap-2 p-3 has-disabled:cursor-not-allowed has-disabled:opacity-50 ${formControlClasses}`}
           >
@@ -51,7 +52,7 @@ function RadioButtons<T extends string | number>({
             ) : (
               option.label
             )}
-          </label>
+          </Label>
         ))}
       </div>
       {help ? <div className={`mt-2 ${formHelpClasses}`}>{help}</div> : null}

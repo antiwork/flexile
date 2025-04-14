@@ -18,7 +18,6 @@ class UserDashboard < Administrate::BaseDashboard
     time_entries: Field::HasMany,
     id: Field::Number,
     email: Field::String,
-    contractor_profile: Field::HasOne,
     encrypted_password: Field::String,
     reset_password_token: Field::String,
     reset_password_sent_at: Field::DateTime,
@@ -53,7 +52,6 @@ class UserDashboard < Administrate::BaseDashboard
   SHOW_PAGE_ATTRIBUTES = %i[
     id
     email
-    contractor_profile
     encrypted_password
     reset_password_token
     reset_password_sent_at
@@ -77,7 +75,6 @@ class UserDashboard < Administrate::BaseDashboard
   FORM_ATTRIBUTES = %i[
     email
     encrypted_password
-    contractor_profile
     reset_password_token
     reset_password_sent_at
     remember_created_at

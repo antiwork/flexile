@@ -86,43 +86,7 @@ RSpec.describe "User settings" do
     end
   end
 
-  describe "Contractor profile section" do
-    let(:contractor) { create(:company_worker, user: create(:user, preferred_name: "John Doe")) }
-    let(:user) { contractor.user }
-    let(:contractor_profile) { user.contractor_profile }
 
-    before do
-      sign_in user
-    end
-
-    it "shows page and allows the contractor to update their profile settings when feature is enabled" do
-      visit spa_settings_path
-      expect(page).to have_text("Jobs profile")
-      expect(page).to have_text("If enabled, other Flexile companies will be able to hire you.")
-      expect(page).to have_text("Your name, role, email, hourly rate, and country will be visible to other Flexile companies.")
-
-      check "Available for hire"
-      fill_in "Availability", with: "20"
-      fill_in_rich_text_editor "Profile description", with: "Experienced contractor available for new projects."
-      click_on "Save profile"
-      wait_for_ajax
-      expect(contractor_profile.reload.available_for_hire).to be true
-      expect(contractor_profile.available_hours_per_week).to eq 20
-      expect(contractor_profile.description).to eq "<p>Experienced contractor available for new projects.</p>"
-    end
-
-    it "displays an error message if the update fails" do
-      visit spa_settings_path
-      fill_in "Availability", with: "0"
-      click_on "Save profile"
-      expect(page).to have_field("Availability", valid: false)
-      expect(page).to have_text("Available hours per week must be greater than 0")
-
-      fill_in "Availability", with: "10"
-      click_on "Save profile"
-      expect(page).to have_field("Availability", valid: true)
-    end
-  end
 
   describe "Password section" do
     let(:user) { create(:user) }

@@ -12,9 +12,10 @@ import {
   shareClasses,
   users,
 } from "@/db/schema";
-import { inngest } from "@/inngest/client";
+import env from "@/env";
 import { MAX_FILES_PER_CAP_TABLE_UPLOAD } from "@/models";
 import { companyProcedure, createRouter, getS3Url } from "@/trpc";
+import { assert } from "@/utils/assert";
 
 const COMPLETED_STATUSES = ["completed", "canceled"] as const;
 
@@ -103,10 +104,17 @@ export const capTableUploadsRouter = createRouter({
           `New cap table upload requested by ${ctx.user.email} of ${ctx.company.name}.`,
           `View all cap table uploads at https://${ctx.host}/cap_table_uploads`,
         ].join("\n");
-        await inngest.send({
-          name: "slack.message.send",
-          data: { text: messageText, username: "Cap Table Bot" },
+
+        const response = await fetch(`https://hooks.slack.com/services/${env.SLACK_WEBHOOK_URL}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            text: messageText,
+            channel: env.SLACK_WEBHOOK_CHANNEL,
+            username: "Cap Table Bot",
+          }),
         });
+        assert(response.ok);
 
         return upload;
       });
@@ -137,6 +145,7 @@ export const capTableUploadsRouter = createRouter({
         .innerJoin(companies, eq(companies.id, capTableUploads.companyId))
         .where(
           and(
+            eq(companies.externalId, input.companyId),
             notInArray(capTableUploads.status, [...COMPLETED_STATUSES]),
             ...(input.onlyCurrentUser ? [eq(capTableUploads.userId, ctx.user.id)] : []),
           ),

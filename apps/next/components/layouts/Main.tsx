@@ -44,9 +44,9 @@ import { useDebounce } from "use-debounce";
 import { z } from "zod";
 import { navLinks as equityNavLinks } from "@/app/equity";
 import InvoiceStatus, { invoiceSchema } from "@/app/invoices/LegacyStatus";
-import Badge from "@/components/Badge";
 import Input from "@/components/Input";
 import { linkClasses } from "@/components/Link";
+import { Badge } from "@/components/ui/badge";
 import { useCurrentUser, useUserStore } from "@/global";
 import defaultCompanyLogo from "@/images/default-company-logo.svg";
 import logo from "@/images/flexile-logo.svg";
@@ -732,12 +732,7 @@ const NavLinks = ({ company }: { company: Company }) => {
           href="/roles"
           icon={BriefcaseIcon}
           filledIcon={SolidBriefcaseIcon}
-          active={
-            !!active &&
-            (pathname.startsWith("/roles") ||
-              pathname.startsWith("/talent_pool") ||
-              pathname.startsWith("/role_applications"))
-          }
+          active={!!active && (pathname.startsWith("/roles") || pathname.startsWith("/role_applications"))}
         >
           Roles
         </NavLink>

@@ -31,7 +31,7 @@ You'll need:
 - [Docker](https://docs.docker.com/engine/install/)
 - [Node.js](https://nodejs.org/en/download) (see [`.node-version`](.node-version))
 
-The easiest way to set up the development environment is to use [the `bin/setup` script](bin/setup) script, but feel free to run the commands in it yourself to:
+The easiest way to set up the development environment is to use the [`bin/setup` script](bin/setup), but feel free to run the commands in it yourself to:
 
 - Set up Ruby (ideally using `rbenv`/`rvm`) and PostgreSQL
 - Install dependencies using `pnpm i` and `cd apps/rails && bundle i`
