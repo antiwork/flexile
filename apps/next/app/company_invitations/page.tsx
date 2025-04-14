@@ -3,7 +3,7 @@ import { BriefcaseIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import MainLayout from "@/components/layouts/Main";
 import Placeholder from "@/components/Placeholder";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/trpc/client";
 
@@ -35,7 +35,7 @@ export default function CompanyInvitationsPage() {
     >
       {invitedCompanies.length > 0 ? (
         <section>
-          <Table table={table} />
+          <DataTable table={table} />
         </section>
       ) : (
         <Placeholder>

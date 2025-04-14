@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { parseAsString, useQueryState } from "nuqs";
 import MainLayout from "@/components/layouts/Main";
 import Placeholder from "@/components/Placeholder";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Tabs from "@/components/Tabs";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";

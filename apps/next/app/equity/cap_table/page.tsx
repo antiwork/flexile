@@ -6,7 +6,7 @@ import CopyButton from "@/components/CopyButton";
 import { linkClasses } from "@/components/Link";
 import Placeholder from "@/components/Placeholder";
 import Sheet from "@/components/Sheet";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import {
   fetchInvestorEmail,

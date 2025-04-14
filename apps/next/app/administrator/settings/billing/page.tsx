@@ -4,7 +4,7 @@ import { ArrowDownTrayIcon, ArrowPathIcon, CurrencyDollarIcon } from "@heroicons
 import { DocumentCurrencyDollarIcon } from "@heroicons/react/24/solid";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -66,7 +66,7 @@ export default function Billing() {
   const table = useTable({ columns, data });
 
   return data.length > 0 ? (
-    <Table table={table} />
+    <DataTable table={table} />
   ) : (
     <Placeholder icon={DocumentCurrencyDollarIcon}>Invoices will appear here.</Placeholder>
   );

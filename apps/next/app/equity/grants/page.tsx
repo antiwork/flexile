@@ -12,7 +12,7 @@ import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DocumentTemplateType } from "@/db/enums";

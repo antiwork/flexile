@@ -3,7 +3,7 @@
 import { ArrowDownTrayIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import MainLayout from "@/components/layouts/Main";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
@@ -72,7 +72,7 @@ export default function CapTableUploadsPage() {
           </div>
         ) : (
           <>
-            <Table table={table} />
+            <DataTable table={table} />
             <PaginationSection total={data.total} perPage={perPage} />
           </>
         )}

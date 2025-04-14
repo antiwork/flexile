@@ -16,7 +16,7 @@ import NumberInput from "@/components/NumberInput";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Select from "@/components/Select";
 import Status from "@/components/Status";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";

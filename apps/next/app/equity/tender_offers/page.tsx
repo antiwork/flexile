@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
@@ -49,7 +49,7 @@ export default function TenderOffers() {
     >
       {data.tenderOffers.length ? (
         <>
-          <Table table={table} onRowClicked={(row) => router.push(`/equity/tender_offers/${row.id}`)} />
+          <DataTable table={table} onRowClicked={(row) => router.push(`/equity/tender_offers/${row.id}`)} />
           <PaginationSection total={data.total} perPage={perPage} />
         </>
       ) : (

@@ -11,7 +11,7 @@ import MainLayout from "@/components/layouts/Main";
 import { linkClasses } from "@/components/Link";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";

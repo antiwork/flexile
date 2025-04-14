@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import React, { useMemo } from "react";
 import MainLayout from "@/components/layouts/Main";
 import Placeholder from "@/components/Placeholder";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { useCurrentCompany } from "@/global";
 import { PayRateType, trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";

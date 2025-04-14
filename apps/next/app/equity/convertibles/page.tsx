@@ -4,7 +4,7 @@ import React from "react";
 import Figures from "@/components/Figures";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -56,7 +56,7 @@ export default function Convertibles() {
       ) : null}
       {data.convertibleSecurities.length > 0 ? (
         <>
-          <Table table={table} />
+          <DataTable table={table} />
           <PaginationSection total={data.totalCount} perPage={perPage} />
         </>
       ) : (

@@ -14,6 +14,7 @@ import {
 } from "@tanstack/react-table";
 import React, { useMemo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/utils";
 import {
   Table as ShadcnTable,
   TableBody,
@@ -24,10 +25,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { cn } from "@/utils";
 
 declare module "@tanstack/react-table" {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface ColumnMeta<TData extends RowData, TValue> {
     numeric?: boolean;
   }
@@ -67,7 +66,7 @@ interface TableProps<T> {
   onRowClicked?: ((row: T) => void) | undefined;
 }
 
-export default function Table<T extends RowData>({ table, caption, hoverable, onRowClicked }: TableProps<T>) {
+export default function DataTable<T extends RowData>({ table, caption, hoverable, onRowClicked }: TableProps<T>) {
   const data = useMemo(() => {
     const headers = table
       .getHeaderGroups()
