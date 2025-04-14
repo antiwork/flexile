@@ -86,7 +86,7 @@ gem "devise_invitable", "~> 2.0"
 
 gem "money", "~> 6.16"
 
-group :sidekiq_pro, optional: true do
+if ENV["BUNDLE_GEMS__CONTRIBSYS__COM"]
   gem "sidekiq-pro", "~> 7", source: "https://gems.contribsys.com/"
 end
 
