@@ -138,6 +138,7 @@ export const documentsRouter = createRouter({
       const [document] = await db
         .select()
         .from(documents)
+        .innerJoin(documentSignatures, eq(documents.id, documentSignatures.documentId))
         .where(
           and(
             eq(documents.id, input.id),
