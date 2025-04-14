@@ -135,18 +135,16 @@ export const documentsRouter = createRouter({
     .mutation(async ({ ctx, input }) => {
       if (input.role === "Company Representative" && !ctx.companyAdministrator && !ctx.companyLawyer)
         throw new TRPCError({ code: "FORBIDDEN" });
-      const document = await db.query.documents.findFirst({
-        where: eq(documents.id, input.id),
-        with: {
-          signatures: {
-            where: and(
-              eq(documentSignatures.userId, ctx.user.id),
-              eq(documentSignatures.title, input.role),
-              isNull(documentSignatures.signedAt),
-            ),
-          },
-        },
-      });
+      const [document] = await db
+        .select()
+        .from(documents)
+        .where(
+          and(
+            eq(documents.id, input.id),
+            visibleDocuments(ctx.company.id, input.role === "Company Representative" ? undefined : ctx.user.id),
+          ),
+        )
+        .limit(1);
       if (!document) throw new TRPCError({ code: "NOT_FOUND" });
 
       await db
