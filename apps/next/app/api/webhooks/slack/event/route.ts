@@ -25,7 +25,7 @@ export const POST = async (request: Request) => {
     return NextResponse.json({ error: "Signature verification failed" }, { status: 403 });
   }
 
-  const data: SlackEvent = JSON.parse(body);
+  const data = JSON.parse(body) as SlackEvent;
 
   if (data.type === "url_verification" && data.challenge) {
     return NextResponse.json({ challenge: data.challenge });
@@ -51,7 +51,7 @@ export const POST = async (request: Request) => {
       });
 
       return new Response(null, { status: 200 });
-    } catch (error) {
+    } catch (_error) {
       return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
   }

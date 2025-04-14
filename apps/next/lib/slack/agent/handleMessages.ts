@@ -74,7 +74,7 @@ export const handleSlackMessage = async (message: SlackMessage) => {
     if (response.action) {
       await executeAction(response.action, contractor, message.companyId);
     }
-  } catch (error) {
+  } catch (_error) {
     await sendSlackReply(
       message,
       "Sorry, I encountered an error processing your request."
@@ -116,7 +116,7 @@ const executeAction = async (
         );
         
         const taskNames = action.payload.content
-          .split(/\n|;/)
+          .split(/\n|;/u)
           .map(task => task.trim())
           .filter(Boolean);
         
@@ -162,7 +162,8 @@ const executeAction = async (
       case "SUBMIT_INVOICE": {
         if (!action.payload.amount) return;
         
-        const roles = contractor.user.roles as { worker?: { payRateType?: string; payRateInSubunits?: number } } | undefined;
+        type WorkerRoles = { worker?: { payRateType?: string; payRateInSubunits?: number } };
+        const roles: WorkerRoles | undefined = contractor.user.roles as unknown as WorkerRoles;
         const isProjectBased = roles?.worker?.payRateType === "project_based";
         const invoiceDate = action.payload.date || formatISO(new Date(), { representation: "date" });
         const totalAmountInCents = Math.round(action.payload.amount * 100);
@@ -190,6 +191,6 @@ const executeAction = async (
       
       default:
     }
-  } catch (error) {
+  } catch (_error) {
   }
 };
