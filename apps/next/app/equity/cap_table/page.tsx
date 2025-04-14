@@ -191,7 +191,7 @@ export default function CapTable() {
 
       {data.investors.length > 0 && data.shareClasses.length > 0 && (
         <div className="overflow-x-auto">
-          <Table table={shareClassesTable} caption="Share Classes" />
+          <DataTable table={shareClassesTable} caption="Share Classes" />
         </div>
       )}
     </EquityLayout>
