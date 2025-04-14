@@ -26,8 +26,8 @@ export const generateAgentResponse = ({
     const lowerCaseMessage = message.toLowerCase();
 
     if (lowerCaseMessage.includes("update my weekly update")) {
-      const contentMatch = message.match(/(?:to contain|to include|with|to say)[:\s]+(.+)/iu);
-      if (contentMatch && contentMatch[1]) {
+      const contentMatch = /(?:to contain|to include|with|to say)[:\s]+(.+)/iu.exec(message);
+      if (contentMatch?.[1]) {
         const content = contentMatch[1].trim();
         return {
           message: `I've updated your weekly update with: "${content}"`,
@@ -38,31 +38,30 @@ export const generateAgentResponse = ({
             },
           },
         };
-      } else {
-        return {
-          message: "I couldn't understand what content you wanted to add to your weekly update. Please try again with 'Update my weekly update to contain [your update content]'.",
-        };
       }
+      return {
+        message: "I couldn't understand what content you wanted to add to your weekly update. Please try again with 'Update my weekly update to contain [your update content]'.",
+      };
     }
 
     if (lowerCaseMessage.includes("submit invoice")) {
-      const amountMatch = message.match(/\$\s*([0-9,]+(?:\.[0-9]{2})?)/u);
-      if (amountMatch && amountMatch[1]) {
+      const amountMatch = /\$\s*([0-9,]+(?:\.[0-9]{2})?)/u.exec(message);
+      if (amountMatch?.[1]) {
         const amount = parseFloat(amountMatch[1].replace(/,/g, ""));
         
         let description;
-        const descriptionMatch = message.match(/for\s+(.+?)(?:\s+on\s+|\s*$)/iu);
-        if (descriptionMatch && descriptionMatch[1] && !descriptionMatch[1].match(/\$[0-9,.]+/u)) {
+        const descriptionMatch = /for\s+(.+?)(?:\s+on\s+|\s*$)/iu.exec(message);
+        if (descriptionMatch?.[1] && !(/\$[0-9,.]+/u.exec(descriptionMatch[1]))) {
           description = descriptionMatch[1].trim();
         }
         
         let date;
-        const dateMatch = message.match(/on\s+(\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{2,4})/iu);
-        if (dateMatch && dateMatch[1]) {
-          const dateParts = dateMatch[1].match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/u);
-          if (dateParts && dateParts[1] && dateParts[2] && dateParts[3]) {
+        const dateMatch = /on\s+(\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{2,4})/iu.exec(message);
+        if (dateMatch?.[1]) {
+          const dateParts = /(\d{1,2})\/(\d{1,2})\/(\d{2,4})/u.exec(dateMatch[1]);
+          if (dateParts?.[1] && dateParts[2] && dateParts[3]) {
             const year = dateParts[3].length === 2 ? `20${dateParts[3]}` : dateParts[3];
-            date = `${year}-${dateParts[1].padStart(2, '0')}-${dateParts[2].padStart(2, '0')}`;
+            date = `${year}-${dateParts[1].padStart(2, "0")}-${dateParts[2].padStart(2, "0")}`;
           } else {
             date = dateMatch[1]; // Already in ISO format
           }
@@ -79,11 +78,10 @@ export const generateAgentResponse = ({
             },
           },
         };
-      } else {
-        return {
-          message: "I couldn't understand the invoice amount. Please try again with 'Submit invoice for $[amount]'.",
-        };
       }
+      return {
+        message: "I couldn't understand the invoice amount. Please try again with 'Submit invoice for $[amount]'.",
+      };
     }
 
     return {
