@@ -127,7 +127,7 @@ export default function ViewList() {
 
       {data.invoices.length > 0 ? (
         <>
-          <Table table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
+          <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
           <PaginationSection total={data.total} perPage={perPage} />
         </>
       ) : (

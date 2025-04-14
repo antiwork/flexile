@@ -194,7 +194,7 @@ export default function AdminList() {
             />
           </div>
 
-          <Table table={table} onRowClicked={setDetailInvoice} />
+          <DataTable table={table} onRowClicked={setDetailInvoice} />
           <PaginationSection total={data.total} perPage={perPage} />
         </div>
       )}

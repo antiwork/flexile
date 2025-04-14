@@ -121,7 +121,7 @@ export default function TemplatesPage() {
       }
     >
       <div className="overflow-x-auto">
-        <Table table={table} hoverable />
+        <DataTable table={table} hoverable />
       </div>
     </DocumentsLayout>
   );

@@ -87,7 +87,7 @@ export default function FinancingRounds() {
   return (
     <EquityLayout>
       {data.length > 0 ? (
-        <Table table={table} />
+        <DataTable table={table} />
       ) : (
         <Placeholder icon={CheckCircleIcon}>There are no financing rounds recorded yet.</Placeholder>
       )}

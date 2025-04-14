@@ -54,7 +54,7 @@ export default function RoleApplicationsPage() {
   return (
     <MainLayout title={role.name}>
       {applications.length ? (
-        <Table table={table} onRowClicked={(row) => router.push(rowLink(row))} />
+        <DataTable table={table} onRowClicked={(row) => router.push(rowLink(row))} />
       ) : (
         <div>
           <Placeholder icon={CircleCheck}>No candidates to review.</Placeholder>

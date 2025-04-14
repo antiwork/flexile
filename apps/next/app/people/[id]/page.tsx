@@ -667,7 +667,7 @@ const InvoicesTab = ({ data }: { data: RouterOutput["invoices"]["list"] }) => {
 
   return data.invoices.length > 0 ? (
     <>
-      <Table table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
+      <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
       <PaginationSection total={data.total} perPage={50} />
     </>
   ) : (

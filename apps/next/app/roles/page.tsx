@@ -110,7 +110,7 @@ export default function RolesPage() {
       }
     >
       {roles.length ? (
-        <Table table={table} />
+        <DataTable table={table} />
       ) : (
         <div>
           <Placeholder icon={BriefcaseIcon}>

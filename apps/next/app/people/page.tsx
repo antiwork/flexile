@@ -118,7 +118,7 @@ export default function People() {
 
       {data.workers.length > 0 ? (
         <>
-          <Table table={table} onRowClicked={user.activeRole === "administrator" ? () => "" : undefined} />
+          <DataTable table={table} onRowClicked={user.activeRole === "administrator" ? () => "" : undefined} />
           <PaginationSection total={data.total} perPage={perPage} />
         </>
       ) : (

@@ -103,7 +103,7 @@ const AdminList = () => {
 
   return (
     <>
-      <Table table={table} onRowClicked={(row) => router.push(`/updates/company/${row.id}/edit`)} />
+      <DataTable table={table} onRowClicked={(row) => router.push(`/updates/company/${row.id}/edit`)} />
       <Modal open={!!deletingUpdate} title="Delete update?" onClose={() => setDeletingUpdate(null)}>
         <p>
           "{data.updates.find((update) => update.id === deletingUpdate)?.title}" will be permanently deleted and cannot

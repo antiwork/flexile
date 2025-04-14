@@ -183,7 +183,7 @@ export default function CapTable() {
     >
       {data.investors.length > 0 ? (
         <div className="overflow-x-auto">
-          <Table table={investorsTable} caption="Investors" />
+          <DataTable table={investorsTable} caption="Investors" />
         </div>
       ) : (
         <Placeholder icon={CheckCircleIcon}>There are no active investors right now.</Placeholder>

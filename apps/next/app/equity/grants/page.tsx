@@ -124,7 +124,7 @@ const CompanyGrantList = () => {
             ].filter((item) => !!item)}
           />
 
-          <Table table={table} onRowClicked={(row) => router.push(`/people/${row.user.id}`)} />
+          <DataTable table={table} onRowClicked={(row) => router.push(`/people/${row.user.id}`)} />
           <PaginationSection total={data.total} perPage={perPage} />
 
           <Table table={optionHolderCountriesTable} />

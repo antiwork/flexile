@@ -272,7 +272,7 @@ export default function TenderOfferView() {
                 </div>
                 <h2 className="text-xl font-bold">Tender offer details</h2>
                 <div className="overflow-x-auto">
-                  <Table table={financialDataTable} caption="Company financials (unaudited)" />
+                  <DataTable table={financialDataTable} caption="Company financials (unaudited)" />
                 </div>
                 <p className="mt-5">
                   <Button variant="outline" asChild>

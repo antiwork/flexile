@@ -52,7 +52,7 @@ function SharesTab({ shares }: { shares: ShareHolding[] }) {
   const sharesTable = useTable({ data: shares, columns: sharesColumns });
 
   return shares.length > 0 ? (
-    <Table table={sharesTable} />
+    <DataTable table={sharesTable} />
   ) : (
     <Placeholder icon={CheckCircleIcon}>This investor entity does not hold any shares.</Placeholder>
   );
@@ -77,7 +77,7 @@ function OptionsTab({ grants }: { grants: EquityGrant[] }) {
   const optionsTable = useTable({ data: grants, columns: optionsColumns });
 
   return grants.length > 0 ? (
-    <Table table={optionsTable} />
+    <DataTable table={optionsTable} />
   ) : (
     <Placeholder icon={CheckCircleIcon}>This investor entity does not have any option grants.</Placeholder>
   );

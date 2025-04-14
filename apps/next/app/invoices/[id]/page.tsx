@@ -246,7 +246,7 @@ export default function InvoicePage() {
               </div>
             </div>
 
-            {invoice.lineItems.length > 0 ? <Table table={table} /> : null}
+            {invoice.lineItems.length > 0 ? <DataTable table={table} /> : null}
 
             {invoice.expenses.length > 0 && (
               <Card>

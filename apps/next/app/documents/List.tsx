@@ -129,7 +129,7 @@ const List = ({ userId, documents }: { userId: string | null; documents: Documen
 
   return (
     <>
-      <Table table={table} />
+      <DataTable table={table} />
       {signDocument ? <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} /> : null}
     </>
   );
