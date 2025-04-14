@@ -5,19 +5,33 @@ import { companies } from "@/db/schema";
 import { verifySlackRequest } from "@/lib/slack/client";
 import { handleSlackMessage } from "@/lib/slack/agent/handleMessages";
 
+interface SlackEvent {
+  type: string;
+  challenge?: string;
+  event?: {
+    type: string;
+    text: string;
+    user: string;
+    channel: string;
+    ts: string;
+    thread_ts?: string;
+    bot_id?: string;
+  };
+}
+
 export const POST = async (request: Request) => {
   const body = await request.text();
   if (!(await verifySlackRequest(body, request.headers))) {
     return NextResponse.json({ error: "Signature verification failed" }, { status: 403 });
   }
 
-  const data = JSON.parse(body);
+  const data: SlackEvent = JSON.parse(body);
 
-  if (data.type === "url_verification") {
+  if (data.type === "url_verification" && data.challenge) {
     return NextResponse.json({ challenge: data.challenge });
   }
 
-  if (data.type === "event_callback" && data.event.type === "message" && !data.event.bot_id) {
+  if (data.type === "event_callback" && data.event?.type === "message" && !data.event.bot_id) {
     try {
       const company = await db.query.companies.findFirst({
         where: eq(companies.isGumroad, true),
@@ -33,12 +47,11 @@ export const POST = async (request: Request) => {
         channelId: data.event.channel,
         companyId: company.id,
         ts: data.event.ts,
-        threadTs: data.event.thread_ts,
+        threadTs: data.event.thread_ts || undefined,
       });
 
       return new Response(null, { status: 200 });
     } catch (error) {
-      console.error("Error handling Slack message:", error);
       return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
   }

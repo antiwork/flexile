@@ -1,6 +1,6 @@
 interface AgentResponseParams {
   message: string;
-  contractor: any; // Contractor info
+  contractor: Record<string, unknown>; // Contractor info
   companyId: bigint;
 }
 
@@ -9,23 +9,23 @@ interface AgentResponse {
   action?: {
     type: "UPDATE_WEEKLY" | "SUBMIT_INVOICE";
     payload: {
-      content?: string;
-      amount?: number;
-      date?: string;
-      description?: string;
+      content?: string | undefined;
+      amount?: number | undefined;
+      date?: string | undefined;
+      description?: string | undefined;
     };
   };
 }
 
 export const generateAgentResponse = async ({
   message,
-  contractor,
-  companyId,
+  contractor: _contractor,
+  companyId: _companyId,
 }: AgentResponseParams): Promise<AgentResponse> => {
   const lowerCaseMessage = message.toLowerCase();
 
   if (lowerCaseMessage.includes("update my weekly update")) {
-    const contentMatch = message.match(/(?:to contain|to include|with|to say)[:\s]+(.+)/i);
+    const contentMatch = message.match(/(?:to contain|to include|with|to say)[:\s]+(.+)/iu);
     if (contentMatch && contentMatch[1]) {
       const content = contentMatch[1].trim();
       return {
@@ -45,21 +45,21 @@ export const generateAgentResponse = async ({
   }
 
   if (lowerCaseMessage.includes("submit invoice")) {
-    const amountMatch = message.match(/\$\s*([0-9,]+(?:\.[0-9]{2})?)/);
+    const amountMatch = message.match(/\$\s*([0-9,]+(?:\.[0-9]{2})?)/u);
     if (amountMatch && amountMatch[1]) {
       const amount = parseFloat(amountMatch[1].replace(/,/g, ""));
       
       let description;
-      const descriptionMatch = message.match(/for\s+(.+?)(?:\s+on\s+|\s*$)/i);
-      if (descriptionMatch && descriptionMatch[1] && !descriptionMatch[1].match(/\$[0-9,.]+/)) {
+      const descriptionMatch = message.match(/for\s+(.+?)(?:\s+on\s+|\s*$)/iu);
+      if (descriptionMatch && descriptionMatch[1] && !descriptionMatch[1].match(/\$[0-9,.]+/u)) {
         description = descriptionMatch[1].trim();
       }
       
       let date;
-      const dateMatch = message.match(/on\s+(\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{2,4})/i);
+      const dateMatch = message.match(/on\s+(\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{2,4})/iu);
       if (dateMatch && dateMatch[1]) {
-        const dateParts = dateMatch[1].match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
-        if (dateParts) {
+        const dateParts = dateMatch[1].match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/u);
+        if (dateParts && dateParts[1] && dateParts[2] && dateParts[3]) {
           const year = dateParts[3].length === 2 ? `20${dateParts[3]}` : dateParts[3];
           date = `${year}-${dateParts[1].padStart(2, '0')}-${dateParts[2].padStart(2, '0')}`;
         } else {

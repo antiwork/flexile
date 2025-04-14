@@ -19,7 +19,7 @@ interface SlackMessage {
   channelId: string;
   companyId: bigint;
   ts: string;
-  threadTs?: string;
+  threadTs?: string | undefined;
 }
 
 export const handleSlackMessage = async (message: SlackMessage) => {
@@ -75,7 +75,6 @@ export const handleSlackMessage = async (message: SlackMessage) => {
       await executeAction(response.action, contractor, message.companyId);
     }
   } catch (error) {
-    console.error("Error handling message:", error);
     await sendSlackReply(
       message,
       "Sorry, I encountered an error processing your request."
@@ -94,16 +93,16 @@ const sendSlackReply = async (message: SlackMessage, text: string) => {
 interface AgentAction {
   type: "UPDATE_WEEKLY" | "SUBMIT_INVOICE";
   payload: {
-    content?: string;
-    amount?: number; // For invoice amount in USD
-    date?: string; // ISO date string
-    description?: string;
+    content?: string | undefined;
+    amount?: number | undefined; // For invoice amount in USD
+    date?: string | undefined; // ISO date string
+    description?: string | undefined;
   };
 }
 
 const executeAction = async (
   action: AgentAction,
-  contractor: any,
+  contractor: { id: bigint; user: Record<string, unknown> },
   companyId: bigint
 ) => {
   try {
@@ -163,7 +162,8 @@ const executeAction = async (
       case "SUBMIT_INVOICE": {
         if (!action.payload.amount) return;
         
-        const isProjectBased = contractor.user.roles?.worker?.payRateType === "project_based";
+        const roles = contractor.user.roles as { worker?: { payRateType?: string; payRateInSubunits?: number } } | undefined;
+        const isProjectBased = roles?.worker?.payRateType === "project_based";
         const invoiceDate = action.payload.date || formatISO(new Date(), { representation: "date" });
         const totalAmountInCents = Math.round(action.payload.amount * 100);
         const description = action.payload.description || (isProjectBased ? "Project work" : "Hours worked");
@@ -179,7 +179,7 @@ const executeAction = async (
                 ? { description, total_amount_cents: totalAmountInCents }
                 : { 
                     description, 
-                    minutes: Math.round((totalAmountInCents / (contractor.user.roles?.worker?.payRateInSubunits || 1)) * 60) 
+                    minutes: Math.round((totalAmountInCents / (roles?.worker?.payRateInSubunits || 1)) * 60) 
                   },
             ],
           },
@@ -189,9 +189,7 @@ const executeAction = async (
       }
       
       default:
-        console.error("Unknown action type:", action.type);
     }
   } catch (error) {
-    console.error("Error executing action:", error);
   }
 };
