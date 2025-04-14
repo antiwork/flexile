@@ -106,7 +106,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: apps/next/.next/cache
-          key: next-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('apps/next/**/*.{ts,tsx}') }}
+          key: next-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml', 'apps/*/pnpm-lock.yaml') }}-${{ hashFiles('apps/next/**/*.{ts,tsx}') }}
           restore-keys: |
             next-${{ runner.os }}-
 
@@ -121,7 +121,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'apps/*/pnpm-lock.yaml') }}
           restore-keys: |
             playwright-${{ runner.os }}-
 
@@ -129,11 +129,12 @@ jobs:
         run: pnpm playwright install --with-deps chromium
         if: steps.playwright-cache.outputs.cache-hit != 'true'
 
-      - name: Run docker compose
-        run: docker compose -f docker/docker-compose-local-linux.yml up -d
+      - run: docker compose -f docker/docker-compose-local-linux.yml up -d
 
       - name: Run Playwright tests
         run: pnpm playwright test
+
+      - run: docker compose -f docker/docker-compose-local-linux.yml stop
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
