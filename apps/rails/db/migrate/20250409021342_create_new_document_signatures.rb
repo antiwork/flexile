@@ -15,7 +15,11 @@ class CreateNewDocumentSignatures < ActiveRecord::Migration[8.0]
         documents.id,
         company_administrators.user_id,
         'Company Representative',
-        documents.completed_at
+        CASE
+          WHEN documents.administrator_signature IS NOT NULL
+          THEN COALESCE(documents.completed_at, CURRENT_TIMESTAMP)
+          ELSE null
+        END
       FROM documents
       JOIN company_administrators ON company_administrators.id = documents.company_administrator_id
       WHERE documents.company_administrator_id IS NOT NULL
@@ -26,7 +30,11 @@ class CreateNewDocumentSignatures < ActiveRecord::Migration[8.0]
         documents.id,
         documents.user_id,
         'Signer',
-        documents.completed_at
+        CASE
+          WHEN documents.contractor_signature IS NOT NULL
+          THEN COALESCE(documents.completed_at, CURRENT_TIMESTAMP)
+          ELSE null
+        END
       FROM documents
       WHERE documents.deleted_at IS NULL;
     SQL

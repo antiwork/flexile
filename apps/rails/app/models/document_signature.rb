@@ -13,7 +13,6 @@ class DocumentSignature < ApplicationRecord
       return unless document.consulting_contract?
 
       company_worker = user.company_worker_for(document.company)
-      puts "company_worker: #{company_worker.inspect}"
       QuickbooksDataSyncJob.perform_async(company_worker.company_id, company_worker.class.name, company_worker.id) if company_worker.present?
     end
 end

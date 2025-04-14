@@ -27,7 +27,11 @@ type Document = RouterOutput["documents"]["list"]["documents"][number];
 
 function DocumentStatus({ document }: { document: Document }) {
   const completedAt = document.signatories.every((signatory) => signatory.signedAt)
-    ? assertDefined(document.signatories[0]).signedAt
+    ? document.signatories.reduce<Date | null>(
+        (acc, signatory) =>
+          acc ? (signatory.signedAt && signatory.signedAt > acc ? signatory.signedAt : acc) : signatory.signedAt,
+        null,
+      )
     : undefined;
 
   switch (document.type) {
@@ -75,19 +79,17 @@ const List = ({ userId, documents }: { userId: string | null; documents: Documen
   const columns = useMemo(
     () =>
       [
-        userId
+        userId && user.activeRole === "contractorOrInvestor"
           ? null
           : columnHelper.display({
-              id: "signer",
               header: "Signer",
               cell: (info) =>
-                assertDefined(info.row.original.signatories.find((signatory) => signatory.id !== user.id)).name,
+                assertDefined(info.row.original.signatories.find((signatory) => signatory.title === "Signer")).name,
             }),
         columnHelper.simple("name", "Document"),
         columnHelper.simple("type", "Type", (value) => typeLabels[value]),
         columnHelper.simple("createdAt", "Date", formatDate),
         columnHelper.display({
-          id: "status",
           header: "Status",
           cell: (info) => <DocumentStatus document={info.row.original} />,
         }),
@@ -157,16 +159,17 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
       <DocusealForm
         src={`https://docuseal.com/s/${slug}`}
         readonlyFields={readonlyFields}
-        onComplete={() =>
+        onComplete={() => {
+          const userIsSigner = document.signatories.some(
+            (signatory) => signatory.id === user.id && signatory.title === "Signer",
+          );
+          const role = userIsSigner ? "Signer" : "Company Representative";
           signDocument.mutate({
             companyId: company.id,
             id: document.id,
-            role:
-              assertDefined(document.signatories.find((signatory) => signatory.id === user.id)).title === "Signer"
-                ? "Signer"
-                : "Company Representative",
-          })
-        }
+            role,
+          });
+        }}
       />
     </Modal>
   );

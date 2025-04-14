@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { isFuture } from "date-fns";
-import { and, asc, desc, eq, gt, gte, inArray, isNotNull, isNull, lt, not, or } from "drizzle-orm";
+import { and, asc, desc, eq, exists, gt, gte, isNotNull, isNull, lt, not, or, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
@@ -221,17 +221,21 @@ export const contractorsRouter = createRouter({
         if (input.payRateInSubunits != null && input.payRateInSubunits !== contractor.payRateInSubunits) {
           const payRateType = input.payRateType ?? contractor.payRateType;
           if (payRateType !== PayRateType.Salary) {
-            const signatures = await tx.query.documentSignatures.findMany({
-              where: and(eq(documentSignatures.userId, contractor.userId), isNull(documentSignatures.signedAt)),
-              columns: { documentId: true },
-            });
             await tx.delete(documents).where(
               and(
-                inArray(
-                  documents.id,
-                  signatures.map((s) => s.documentId),
-                ),
                 eq(documents.type, DocumentType.ConsultingContract),
+                exists(
+                  tx
+                    .select({ _: sql`1` })
+                    .from(documentSignatures)
+                    .where(
+                      and(
+                        eq(documentSignatures.documentId, documents.id),
+                        eq(documentSignatures.userId, contractor.userId),
+                        isNull(documentSignatures.signedAt),
+                      ),
+                    ),
+                ),
               ),
             );
             // TODO store which template was used for the previous contract
