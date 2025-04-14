@@ -68,7 +68,7 @@ function CompanyExpenses() {
     <MainLayout title="Expenses">
       {data.items.length ? (
         <>
-          <Table table={table} />
+          <DataTable table={table} />
           <PaginationSection total={data.total} perPage={perPage} />
         </>
       ) : (
@@ -211,7 +211,7 @@ function ContractorExpenses() {
 
       {expenseCardCharges.items.length ? (
         <>
-          <Table table={table} />
+          <DataTable table={table} />
           <PaginationSection total={expenseCardCharges.total} perPage={perPage} />
         </>
       ) : (
