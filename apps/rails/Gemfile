@@ -57,7 +57,7 @@ end
 group :test do
   gem "capybara", "~> 3.38"
   gem "rails-controller-testing", "~> 1.0"
-  gem "rspec-sidekiq", "~> 5.1"
+  gem "rspec-sidekiq", "~> 5.0"
   gem "rspec-retry", "~> 0.6"
   gem "selenium-webdriver", "~> 4.30.0"
   gem "shoulda-matchers", "~> 6.0"
@@ -68,10 +68,6 @@ group :test do
                                        ref: "161b8c5b1a0a5408af914d7544956372e9da2c9e"
   gem "rspec-github", "~> 3.0.0", require: false
   gem "super_diff", "~> 0.15.0", require: "super_diff/rspec-rails"
-end
-
-group :sidekiq_pro, optional: true do
-  gem "sidekiq-pro", "~> 8", source: "https://gems.contribsys.com/"
 end
 
 gem "faker", "~> 3.1"
@@ -89,6 +85,10 @@ gem "dotenv-rails", "~> 3.0"
 gem "devise_invitable", "~> 2.0"
 
 gem "money", "~> 6.16"
+
+group :sidekiq_pro, optional: true do
+  gem "sidekiq-pro", "~> 8", source: "https://gems.contribsys.com/"
+end
 
 gem "sidekiq", "~> 8"
 

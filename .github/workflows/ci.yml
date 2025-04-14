@@ -101,9 +101,6 @@ jobs:
 
       - run: node docker/createCertificate.js
 
-      - name: Run docker compose
-        run: docker compose -f docker/docker-compose-local-linux.yml up -d
-
       - name: Cache Next build
         id: next-cache
         uses: actions/cache@v4
@@ -131,6 +128,9 @@ jobs:
       - name: Install Playwright Browsers
         run: pnpm playwright install --with-deps chromium
         if: steps.playwright-cache.outputs.cache-hit != 'true'
+
+      - name: Run docker compose
+        run: docker compose -f docker/docker-compose-local-linux.yml up -d
 
       - name: Run Playwright tests
         run: pnpm playwright test
