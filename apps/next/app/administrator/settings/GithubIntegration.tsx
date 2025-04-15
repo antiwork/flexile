@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
-import { CardRow } from "@/components/Card";
 import MutationButton from "@/components/MutationButton";
 import Status from "@/components/Status";
+import { CardRow } from "@/components/ui/card";
 import { useCurrentCompany } from "@/global";
 import githubLogo from "@/images/github.svg";
 import { trpc } from "@/trpc/client";

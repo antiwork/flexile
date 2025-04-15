@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { z } from "zod";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
-import { CardRow } from "@/components/Card";
 import DecimalInput from "@/components/DecimalInput";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
@@ -14,6 +13,7 @@ import MainLayout from "@/components/layouts/Main";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import RadioButtons from "@/components/RadioButtons";
+import { CardRow } from "@/components/ui/card";
 import { DocumentTemplateType, PayRateType } from "@/db/enums";
 import { trpc } from "@/trpc/client";
 

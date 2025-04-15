@@ -2,13 +2,13 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { CardRow } from "@/components/Card";
 import ColorPicker from "@/components/ColorPicker";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import MutationButton from "@/components/MutationButton";
 import { Editor } from "@/components/RichText";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { CardRow } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";

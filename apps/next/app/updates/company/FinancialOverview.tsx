@@ -1,6 +1,6 @@
 import { addMonths, format, parseISO } from "date-fns";
-import { Card, CardRow } from "@/components/Card";
 import Delta from "@/components/Delta";
+import { Card, CardRow } from "@/components/ui/card";
 import type { RouterOutput } from "@/trpc";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatMonth } from "@/utils/time";

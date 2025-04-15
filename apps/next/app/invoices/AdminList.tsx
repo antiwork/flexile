@@ -15,7 +15,6 @@ import {
 } from "@/app/invoices/index";
 import { StatusWithTooltip } from "@/app/invoices/Status";
 import { Task } from "@/app/updates/team/Task";
-import { Card, CardRow } from "@/components/Card";
 import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
@@ -26,6 +25,7 @@ import Table, { createColumnHelper, useTable } from "@/components/Table";
 import Tabs from "@/components/Tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardRow } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";

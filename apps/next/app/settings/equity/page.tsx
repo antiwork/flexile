@@ -3,11 +3,11 @@
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import React, { useState } from "react";
 import SettingsLayout from "@/app/settings/Layout";
-import { Card, CardRow } from "@/components/Card";
 import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
 import RangeInput from "@/components/RangeInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardRow } from "@/components/ui/card";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import { trpc } from "@/trpc/client";
