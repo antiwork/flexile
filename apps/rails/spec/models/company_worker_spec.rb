@@ -106,6 +106,11 @@ RSpec.describe CompanyWorker do
         company_worker_with_new_document = create(:company_worker, without_contract: true)
         create(:document, company: company_worker_with_new_document.company, signed: true, signatories: [company_worker_with_new_document.user])
 
+        # Company worker without fully signed document
+        company_worker_without_fully_signed_document = create(:company_worker, without_contract: true)
+        document = create(:document, company: company_worker_without_fully_signed_document.company, signed: false, signatories: [company_worker_without_fully_signed_document.user, create(:company_administrator, company: company_worker_without_fully_signed_document.company).user])
+        document.signatures.find_by(user: company_worker_without_fully_signed_document.user).update!(signed_at: Time.current)
+
         result = described_class.with_signed_contract
         expected_collection = [
           @active_contractor, @onboarding_contractor, @alumni_contractor_1, company_worker_with_new_document

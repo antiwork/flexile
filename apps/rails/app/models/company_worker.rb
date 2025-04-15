@@ -56,15 +56,19 @@ class CompanyWorker < ApplicationRecord
 
     joins(join).where(invoices: { id: nil })
   }
-  scope :with_signed_contract, -> {
-    joins("JOIN document_signatures ON document_signatures.user_id = company_contractors.user_id AND " \
-            "document_signatures.signed_at IS NOT NULL").
-      joins("JOIN documents ON documents.id = document_signatures.document_id AND " \
-            "documents.deleted_at IS NULL AND " \
-            "documents.company_id = company_contractors.company_id AND " \
-            "documents.document_type = #{Document.document_types[:consulting_contract]}").
-      distinct
-  }
+  scope :with_signed_contract, -> do
+    joins(user: { document_signatures: :document })
+      .where(documents: {
+        company_id: pluck(:company_id),
+        deleted_at: nil,
+        document_type: Document.document_types[:consulting_contract]
+      })
+      .where.not(
+        DocumentSignature.where("document_signatures.document_id = documents.id")
+                        .where(signed_at: nil).arel.exists
+      )
+      .distinct
+  end
   scope :with_required_tax_info_for, -> (tax_year:) do
     invoices_subquery = Invoice.select("company_contractor_id")
                                .for_tax_year(tax_year)
