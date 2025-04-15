@@ -2,9 +2,9 @@
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import React from "react";
 import DividendStatusIndicator from "@/app/equity/DividendStatusIndicator";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
-import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";

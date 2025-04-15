@@ -2,9 +2,9 @@
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import { useParams } from "next/navigation";
 import { parseAsString, useQueryState } from "nuqs";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
 import Placeholder from "@/components/Placeholder";
-import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Tabs from "@/components/Tabs";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";

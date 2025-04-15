@@ -1,10 +1,10 @@
 "use client";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import React from "react";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Figures from "@/components/Figures";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
-import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";

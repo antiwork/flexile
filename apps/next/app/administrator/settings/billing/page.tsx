@@ -2,9 +2,9 @@
 
 import { ArrowDownTrayIcon, ArrowPathIcon, CurrencyDollarIcon } from "@heroicons/react/16/solid";
 import { DocumentCurrencyDollarIcon } from "@heroicons/react/24/solid";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
-import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";

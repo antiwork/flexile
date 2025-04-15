@@ -1,8 +1,8 @@
 "use client";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import React from "react";
-import Placeholder from "@/components/Placeholder";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
+import Placeholder from "@/components/Placeholder";
 import { Progress } from "@/components/ui/progress";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";

@@ -3,10 +3,10 @@ import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import { useSearchParams } from "next/navigation";
 import React, { useMemo } from "react";
 import CopyButton from "@/components/CopyButton";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
 import Placeholder from "@/components/Placeholder";
 import Sheet from "@/components/Sheet";
-import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import {
   fetchInvestorEmail,

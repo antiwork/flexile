@@ -1,9 +1,9 @@
 "use client";
 
 import { ArrowDownTrayIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
-import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
