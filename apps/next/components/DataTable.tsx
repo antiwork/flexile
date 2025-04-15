@@ -83,7 +83,7 @@ export default function DataTable<T extends RowData>({ table, caption, hoverable
     return { headers, rows, footers, firstRow, lastRow, sortable, selectable };
   }, [table.getState()]);
 
-  const rowClasses = "gap-3 p-4 not-print:max-md:grid";
+  const rowClasses = "py-2 not-print:max-md:grid";
   const cellClasses = (column: Column<T> | null, type?: "header" | "footer") => {
     const numeric = column?.columnDef.meta?.numeric;
     return cn(
