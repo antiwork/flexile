@@ -1,6 +1,6 @@
 import docuseal from "@docuseal/api";
 import { TRPCError } from "@trpc/server";
-import { and, count, desc, eq, inArray, isNotNull, isNull, not, type SQLWrapper } from "drizzle-orm";
+import { and, countDistinct, desc, eq, inArray, isNotNull, isNull, type SQLWrapper } from "drizzle-orm";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db, paginate, paginationSchema } from "@/db";
@@ -40,18 +40,19 @@ export const documentsRouter = createRouter({
       );
       const rows = await paginate(
         db
-          .selectDistinctOn([documents.id], {
+          .select({
             ...pick(documents, "id", "name", "createdAt", "docusealSubmissionId", "type"),
           })
           .from(documents)
           .innerJoin(documentSignatures, eq(documents.id, documentSignatures.documentId))
           .innerJoin(users, eq(documentSignatures.userId, users.id))
           .where(where)
-          .orderBy(desc(documents.createdAt), documents.id),
+          .orderBy(desc(documents.createdAt))
+          .groupBy(documents.id),
         input,
       );
       const totalResult = await db
-        .selectDistinct({ count: count(documents.id) })
+        .selectDistinct({ count: countDistinct(documents.id) })
         .from(documents)
         .innerJoin(documentSignatures, eq(documents.id, documentSignatures.documentId))
         .where(where);
