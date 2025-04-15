@@ -61,7 +61,7 @@ class CompanyWorker < ApplicationRecord
       .where(documents: {
         company_id: pluck(:company_id),
         deleted_at: nil,
-        document_type: Document.document_types[:consulting_contract]
+        document_type: Document.document_types[:consulting_contract],
       })
       .where.not(
         DocumentSignature.where("document_signatures.document_id = documents.id")
