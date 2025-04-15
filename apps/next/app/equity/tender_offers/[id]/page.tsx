@@ -8,7 +8,7 @@ import { addMonths, isFuture, isPast } from "date-fns";
 import { useParams } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import { Card, CardRow } from "@/components/Card";
-import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
+import { createColumnHelper } from "@/components/DataTable";
 import DecimalInput from "@/components/DecimalInput";
 import Figures from "@/components/Figures";
 import MainLayout from "@/components/layouts/Main";
@@ -198,10 +198,6 @@ export default function TenderOfferView() {
     [user.activeRole],
   );
 
-  const financialDataTable = useTable({ data: financialData, columns: financialDataColumns });
-
-  const tenderedHoldingsTable = useTable({ data: tenderedHoldings, columns: holdingsColumns });
-  const holdingsTable = useTable({ data: holdings, columns: holdingsColumns });
   const bidsTable = useTable({ data: bids.bids, columns });
 
   const buttonTooltip = !signed ? "Please sign the letter of transmittal before submitting a bid" : null;
@@ -280,27 +276,31 @@ export default function TenderOfferView() {
                     </TableCaption>
                     <TableHeader>
                       <TableRow>
-                        {financialDataTable.getHeaderGroups()[0]?.headers.map((header) => (
+                        <TableHead>
+                          {financialDataColumns[0].header}
+                        </TableHead>
+                        {financialDataColumns.slice(1).map((column, index) => (
                           <TableHead
-                            key={header.id}
-                            className={header.column.columnDef.meta?.numeric ? "text-right" : ""}
+                            key={index}
+                            className="text-right"
                           >
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(header.column.columnDef.header, header.getContext())}
+                            {column.header}
                           </TableHead>
                         ))}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {financialDataTable.getRowModel().rows.map((row) => (
-                        <TableRow key={row.id}>
-                          {row.getVisibleCells().map((cell) => (
+                      {financialData.map((row, rowIndex) => (
+                        <TableRow key={rowIndex}>
+                          <TableCell>
+                            {row[0]}
+                          </TableCell>
+                          {(row[1] as (string | number)[]).map((cell, cellIndex) => (
                             <TableCell
-                              key={cell.id}
-                              className={cell.column.columnDef.meta?.numeric ? "text-right tabular-nums" : ""}
+                              key={cellIndex}
+                              className="text-right tabular-nums"
                             >
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                              {typeof cell === "number" ? formatMoney(cell) : cell}
                             </TableCell>
                           ))}
                         </TableRow>
@@ -324,29 +324,15 @@ export default function TenderOfferView() {
                     </TableCaption>
                     <TableHeader>
                       <TableRow>
-                        {tenderedHoldingsTable.getHeaderGroups()[0]?.headers.map((header) => (
-                          <TableHead
-                            key={header.id}
-                            className={header.column.columnDef.meta?.numeric ? "text-right" : ""}
-                          >
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(header.column.columnDef.header, header.getContext())}
-                          </TableHead>
-                        ))}
+                        <TableHead>Share class</TableHead>
+                        <TableHead className="text-right">Number of shares</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {tenderedHoldingsTable.getRowModel().rows.map((row) => (
-                        <TableRow key={row.id}>
-                          {row.getVisibleCells().map((cell) => (
-                            <TableCell
-                              key={cell.id}
-                              className={cell.column.columnDef.meta?.numeric ? "text-right tabular-nums" : ""}
-                            >
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </TableCell>
-                          ))}
+                      {tenderedHoldings.map((holding, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{holding.className}</TableCell>
+                          <TableCell className="text-right tabular-nums">{holding.count.toLocaleString()}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -356,29 +342,15 @@ export default function TenderOfferView() {
                   <TableCaption className="mb-2 text-left text-lg font-bold text-black">Holdings</TableCaption>
                   <TableHeader>
                     <TableRow>
-                      {holdingsTable.getHeaderGroups()[0]?.headers.map((header) => (
-                        <TableHead
-                          key={header.id}
-                          className={header.column.columnDef.meta?.numeric ? "text-right" : ""}
-                        >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
-                        </TableHead>
-                      ))}
+                      <TableHead>Share class</TableHead>
+                      <TableHead className="text-right">Number of shares</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {holdingsTable.getRowModel().rows.map((row) => (
-                      <TableRow key={row.id}>
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell
-                            key={cell.id}
-                            className={cell.column.columnDef.meta?.numeric ? "text-right tabular-nums" : ""}
-                          >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </TableCell>
-                        ))}
+                    {holdings.map((holding, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{holding.className}</TableCell>
+                        <TableCell className="text-right tabular-nums">{holding.count.toLocaleString()}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
