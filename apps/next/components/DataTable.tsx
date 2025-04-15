@@ -14,7 +14,6 @@ import {
 } from "@tanstack/react-table";
 import React, { useMemo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { cn } from "@/utils";
 import {
   Table as ShadcnTable,
   TableBody,
@@ -25,8 +24,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/utils";
 
 declare module "@tanstack/react-table" {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface ColumnMeta<TData extends RowData, TValue> {
     numeric?: boolean;
   }
@@ -82,47 +83,36 @@ export default function DataTable<T extends RowData>({ table, caption, hoverable
     return { headers, rows, footers, firstRow, lastRow, sortable, selectable };
   }, [table.getState()]);
 
-  const cellClasses = (row: unknown, column: Column<T> | null, type?: "header" | "footer") => {
-    const index = column?.getIndex() ?? -1;
-    const isFirst = row === data.firstRow && type !== "footer";
-    const isLast = row === data.lastRow && (data.footers.length === 0 || type === "footer");
+  const rowClasses = "gap-3 p-4 not-print:max-md:grid";
+  const cellClasses = (column: Column<T> | null, type?: "header" | "footer") => {
     const numeric = column?.columnDef.meta?.numeric;
     return cn(
-      "md:p-2 print:p-2 text-nowrap",
-      type === "header" && "font-normal text-gray-500 text-left",
       numeric && "md:text-right print:text-right",
       numeric && type !== "header" && "tabular-nums",
       !numeric && "print:text-wrap",
-      !isLast && "md:border-b print:border-b",
-      isFirst && index === (data.selectable ? -1 : 0) && "rounded-tl-xl",
-      isFirst && index === table.getAllColumns().length - 1 && "rounded-tr-xl",
-      isLast && index === (data.selectable ? -1 : 0) && "rounded-bl-xl",
-      isLast && index === table.getAllColumns().length - 1 && "rounded-br-xl",
     );
   };
 
   return (
-    <ShadcnTable className="w-full border-separate border-spacing-0 gap-4 rounded-xl not-print:max-md:grid md:border print:border">
-      {caption ? <TableCaption className="mb-2 text-left text-lg font-bold">{caption}</TableCaption> : null}
+    <ShadcnTable className="caption-top not-print:max-md:grid">
+      {caption ? <TableCaption className="mb-2 text-left text-lg font-bold text-black">{caption}</TableCaption> : null}
       <TableHeader className="not-print:max-md:hidden">
         {data.headers.map((headerGroup) => (
           <TableRow key={headerGroup.id}>
             {data.selectable ? (
-              <TableHead className={cellClasses(headerGroup, null, "header")}>
-                <div className="grid items-center">
-                  <Checkbox
-                    checked={table.getIsAllRowsSelected()}
-                    aria-label="Select all"
-                    onCheckedChange={(checked) => table.toggleAllRowsSelected(checked === true)}
-                  />
-                </div>
+              <TableHead className={cellClasses(null, "header")}>
+                <Checkbox
+                  checked={table.getIsAllRowsSelected()}
+                  aria-label="Select all"
+                  onCheckedChange={(checked) => table.toggleAllRowsSelected(checked === true)}
+                />
               </TableHead>
             ) : null}
             {headerGroup.headers.map((header) => (
               <TableHead
                 key={header.id}
                 colSpan={header.colSpan}
-                className={`${cellClasses(headerGroup, header.column, "header")} ${data.sortable && header.column.getCanSort() ? "cursor-pointer" : ""}`}
+                className={`${cellClasses(header.column, "header")} ${data.sortable && header.column.getCanSort() ? "cursor-pointer" : ""}`}
                 aria-sort={
                   header.column.getIsSorted() === "asc"
                     ? "ascending"
@@ -132,11 +122,9 @@ export default function DataTable<T extends RowData>({ table, caption, hoverable
                 }
                 onClick={() => data.sortable && header.column.getCanSort() && header.column.toggleSorting()}
               >
-                <div className="inline-flex items-center gap-1">
-                  {!header.isPlaceholder && flexRender(header.column.columnDef.header, header.getContext())}
-                  {header.column.getIsSorted() === "asc" && <ChevronUpIcon className="size-5" />}
-                  {header.column.getIsSorted() === "desc" && <ChevronDownIcon className="size-5" />}
-                </div>
+                {!header.isPlaceholder && flexRender(header.column.columnDef.header, header.getContext())}
+                {header.column.getIsSorted() === "asc" && <ChevronUpIcon className="size-5" />}
+                {header.column.getIsSorted() === "desc" && <ChevronDownIcon className="size-5" />}
               </TableHead>
             ))}
           </TableRow>
@@ -146,25 +134,23 @@ export default function DataTable<T extends RowData>({ table, caption, hoverable
         {data.rows.map((row) => (
           <TableRow
             key={row.id}
-            className={`translate-x-0 gap-3 border p-4 not-print:max-md:grid not-print:max-md:rounded-xl ${onRowClicked || hoverable ? "cursor-pointer hover:bg-gray-50" : ""} ${data.selectable ? "bg-linear-to-r from-blue-100 from-50% via-transparent via-50% bg-[length:200%] transition-all" : ""} ${!row.getIsSelected() ? "bg-[100%]" : ""}`}
+            className={`translate-x-0 ${rowClasses} ${onRowClicked || hoverable ? "cursor-pointer hover:bg-gray-50" : ""} ${data.selectable ? "bg-linear-to-r from-blue-100 from-50% via-transparent via-50% bg-[length:200%] transition-all" : ""} ${!row.getIsSelected() ? "bg-[100%]" : ""}`}
             onClick={() => onRowClicked?.(row.original)}
           >
             {data.selectable ? (
-              <TableCell className={cellClasses(row, null)} onClick={(e) => e.stopPropagation()}>
-                <div className="grid items-center">
-                  <Checkbox
-                    checked={row.getIsSelected()}
-                    aria-label="Select row"
-                    disabled={!row.getCanSelect()}
-                    onCheckedChange={row.getToggleSelectedHandler()}
-                  />
-                </div>
+              <TableCell className={cellClasses(null)} onClick={(e) => e.stopPropagation()}>
+                <Checkbox
+                  checked={row.getIsSelected()}
+                  aria-label="Select row"
+                  disabled={!row.getCanSelect()}
+                  onCheckedChange={row.getToggleSelectedHandler()}
+                />
               </TableCell>
             ) : null}
             {row.getVisibleCells().map((cell) => (
               <TableCell
                 key={cell.id}
-                className={`${cellClasses(row, cell.column)} ${cell.column.columnDef.meta?.numeric ? "tabular-nums md:text-right print:text-right" : ""} ${cell.column.id === "actions" ? "md:text-right print:hidden" : ""}`}
+                className={`${cellClasses(cell.column)} ${cell.column.id === "actions" ? "md:text-right print:hidden" : ""}`}
                 onClick={(e) => cell.column.id === "actions" && e.stopPropagation()}
               >
                 {typeof cell.column.columnDef.header === "string" && (
@@ -181,15 +167,20 @@ export default function DataTable<T extends RowData>({ table, caption, hoverable
       {data.footers.length > 0 && (
         <TableFooter>
           {data.footers.map((footerGroup) => (
-            <TableRow key={footerGroup.id}>
-              {data.selectable ? <TableCell className={cellClasses(footerGroup, null, "footer")} /> : null}
+            <TableRow key={footerGroup.id} className={rowClasses}>
+              {data.selectable ? <TableCell className={cellClasses(null, "footer")} /> : null}
               {footerGroup.headers.map((header) => (
-                <TableCell
-                  key={header.id}
-                  className={cellClasses(footerGroup, header.column, "footer")}
-                  colSpan={header.colSpan}
-                >
-                  {!header.isPlaceholder && flexRender(header.column.columnDef.footer, header.getContext())}
+                <TableCell key={header.id} className={cellClasses(header.column, "footer")} colSpan={header.colSpan}>
+                  {header.isPlaceholder ? null : (
+                    <>
+                      {typeof header.column.columnDef.header === "string" && (
+                        <div className="text-gray-500 md:hidden print:hidden" aria-hidden>
+                          {header.column.columnDef.header}
+                        </div>
+                      )}
+                      {flexRender(header.column.columnDef.footer, header.getContext())}
+                    </>
+                  )}
                 </TableCell>
               ))}
             </TableRow>

@@ -7,12 +7,12 @@ import { Decimal } from "decimal.js";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Figures from "@/components/Figures";
 import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
-import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DocumentTemplateType } from "@/db/enums";
@@ -127,7 +127,7 @@ const CompanyGrantList = () => {
           <DataTable table={table} onRowClicked={(row) => router.push(`/people/${row.user.id}`)} />
           <PaginationSection total={data.total} perPage={perPage} />
 
-          <Table table={optionHolderCountriesTable} />
+          <DataTable table={optionHolderCountriesTable} />
         </>
       ) : (
         <Placeholder icon={CheckCircleIcon}>There are no option grants right now.</Placeholder>
@@ -260,7 +260,7 @@ const InvestorGrantList = () => {
             </>
           )}
 
-          <Table table={table} caption={pluralizeGrants(data.total)} onRowClicked={setSelectedEquityGrant} />
+          <DataTable table={table} caption={pluralizeGrants(data.total)} onRowClicked={setSelectedEquityGrant} />
           <PaginationSection total={data.total} perPage={perPage} />
 
           {selectedEquityGrant ? (

@@ -7,6 +7,7 @@ import { addMonths, isFuture, isPast } from "date-fns";
 import { useParams } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import { Card, CardRow } from "@/components/Card";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import DecimalInput from "@/components/DecimalInput";
 import Figures from "@/components/Figures";
 import MainLayout from "@/components/layouts/Main";
@@ -16,7 +17,6 @@ import NumberInput from "@/components/NumberInput";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Select from "@/components/Select";
 import Status from "@/components/Status";
-import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -283,8 +283,10 @@ export default function TenderOfferView() {
                   </Button>
                 </p>
                 <h2 className="text-xl font-bold">Submit a bid</h2>
-                {tenderedHoldings.length ? <Table table={tenderedHoldingsTable} caption="Tendered Holdings" /> : null}
-                <Table table={holdingsTable} caption="Holdings" />
+                {tenderedHoldings.length ? (
+                  <DataTable table={tenderedHoldingsTable} caption="Tendered Holdings" />
+                ) : null}
+                <DataTable table={holdingsTable} caption="Holdings" />
                 <Select
                   value={newBid.shareClass}
                   onChange={(value) => setNewBid({ ...newBid, shareClass: value })}
@@ -349,7 +351,7 @@ export default function TenderOfferView() {
 
       {bids.total > 0 ? (
         <>
-          <Table table={bidsTable} />
+          <DataTable table={bidsTable} />
           <PaginationSection total={bids.total} perPage={perPage} />
         </>
       ) : null}
