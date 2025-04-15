@@ -129,12 +129,11 @@ jobs:
         run: pnpm playwright install --with-deps chromium
         if: steps.playwright-cache.outputs.cache-hit != 'true'
 
-      - run: docker compose -f docker/docker-compose-local-linux.yml up -d
+      - name: Run docker compose
+        run: docker compose -f docker/docker-compose-local-linux.yml up -d
 
       - name: Run Playwright tests
         run: pnpm playwright test
-
-      - run: docker compose -f docker/docker-compose-local-linux.yml stop
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
