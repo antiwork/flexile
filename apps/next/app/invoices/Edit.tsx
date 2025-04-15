@@ -7,16 +7,13 @@ import { formatISO } from "date-fns";
 import { List } from "immutable";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { z } from "zod";
 import EquityPercentageLockModal from "@/app/invoices/EquityPercentageLockModal";
 import { Card, CardRow } from "@/components/Card";
-import { createColumnHelper } from "@/components/DataTable";
 import DecimalInput from "@/components/DecimalInput";
-import DurationInput from "@/components/DurationInput";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
-import Select from "@/components/Select";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -270,177 +267,6 @@ const Edit = () => {
       }),
     );
 
-  const invoiceColumnHelper = createColumnHelper<InvoiceFormLineItem>();
-  const invoiceColumns = useMemo(
-    () =>
-      [
-        invoiceColumnHelper.accessor("description", {
-          header: data.user.project_based ? "Project" : "Line item",
-          cell: (info) => (
-            <Input
-              value={info.getValue()}
-              placeholder="Description"
-              invalid={info.row.original.errors?.includes("description")}
-              onChange={(value) => updateLineItem(info.row.index, { description: value })}
-            />
-          ),
-          footer: () => (
-            <div className="flex gap-3">
-              <Button variant="link" onClick={addLineItem}>
-                <PlusIcon className="inline size-4" />
-                Add line item
-              </Button>
-              {data.company.expenses.enabled ? (
-                <Button variant="link" asChild>
-                  <Label className={canManageExpenses ? "hidden" : ""}>
-                    <ArrowUpTrayIcon className="inline size-4" />
-                    Add expense
-                    <input
-                      ref={uploadExpenseRef}
-                      type="file"
-                      className="hidden"
-                      accept="application/pdf, image/*"
-                      multiple
-                      onChange={createNewExpenseEntries}
-                    />
-                  </Label>
-                </Button>
-              ) : null}
-            </div>
-          ),
-        }),
-        !data.user.project_based
-          ? invoiceColumnHelper.accessor("minutes", {
-              header: "Hours",
-              cell: (info) => (
-                <DurationInput
-                  value={info.row.original.minutes}
-                  aria-label="Hours"
-                  invalid={info.row.original.errors?.includes("minutes")}
-                  onChange={(value) =>
-                    updateLineItem(info.row.index, {
-                      minutes: value,
-                      total_amount_cents: Math.ceil(info.row.original.pay_rate_in_subunits * ((value ?? 0) / 60)),
-                    })
-                  }
-                />
-              ),
-            })
-          : null,
-        !data.user.project_based
-          ? invoiceColumnHelper.simple(
-              "pay_rate_in_subunits",
-              "Rate",
-              (value) => `${formatMoneyFromCents(value)} / hour`,
-              "numeric",
-            )
-          : null,
-        invoiceColumnHelper.accessor("total_amount_cents", {
-          header: "Amount",
-          cell: (info) =>
-            data.user.project_based ? (
-              <DecimalInput
-                value={info.getValue() / 100}
-                onChange={(value) => updateLineItem(info.row.index, { total_amount_cents: (value ?? 0) * 100 })}
-                aria-label="Amount"
-                placeholder="0"
-                prefix="$"
-              />
-            ) : (
-              formatMoneyFromCents(info.getValue())
-            ),
-          meta: { numeric: true },
-        }),
-        invoiceColumnHelper.display({
-          id: "actions",
-          cell: (info) => (
-            <Button
-              variant="link"
-              aria-label="Remove"
-              onClick={() => setLineItems((lineItems) => lineItems.delete(info.row.index))}
-            >
-              <TrashIcon className="size-4" />
-            </Button>
-          ),
-        }),
-      ].filter((column) => !!column),
-    [canManageExpenses],
-  );
-
-  const expenseColumnHelper = createColumnHelper<InvoiceFormExpense>();
-  const expenseColumns = useMemo(
-    () => [
-      expenseColumnHelper.accessor("attachment", {
-        header: "Expense",
-        cell: (info) => (
-          <a href={info.getValue().url} download>
-            <PaperClipIcon className="inline size-4" />
-            {info.getValue().name}
-          </a>
-        ),
-        footer: () => (
-          <Button variant="link" onClick={() => uploadExpenseRef.current?.click()}>
-            <PlusIcon className="inline size-4" />
-            Add expense
-          </Button>
-        ),
-      }),
-      expenseColumnHelper.accessor("description", {
-        header: "Merchant",
-        cell: (info) => (
-          <Input
-            value={info.row.original.description}
-            aria-label="Merchant"
-            invalid={info.row.original.errors?.includes("description")}
-            onChange={(description) => updateExpense(info.row.index, { description })}
-          />
-        ),
-      }),
-      expenseColumnHelper.accessor("category_id", {
-        header: "Category",
-        cell: (info) => (
-          <Select
-            value={info.row.original.category_id.toString()}
-            options={data.company.expenses.categories.map((category) => ({
-              value: category.id.toString(),
-              label: category.name,
-            }))}
-            aria-label="Category"
-            invalid={info.row.original.errors?.includes("category")}
-            onChange={(value) => updateExpense(info.row.index, { category_id: Number(value) })}
-          />
-        ),
-      }),
-      expenseColumnHelper.accessor("total_amount_in_cents", {
-        header: "Amount",
-        cell: (info) => (
-          <DecimalInput
-            value={info.getValue() / 100}
-            placeholder="0"
-            onChange={(value) => updateExpense(info.row.index, { total_amount_in_cents: (value ?? 0) * 100 })}
-            aria-label="Amount"
-            invalid={info.row.original.errors?.includes("amount")}
-            prefix="$"
-          />
-        ),
-      }),
-      expenseColumnHelper.display({
-        id: "actions",
-        cell: (info) => (
-          <Button
-            variant="link"
-            aria-label="Remove"
-            onClick={() => setExpenses((expenses) => expenses.delete(info.row.index))}
-          >
-            <TrashIcon className="size-4" />
-          </Button>
-        ),
-      }),
-    ],
-    [],
-  );
-
-
   return (
     <MainLayout
       title={data.invoice.id ? "Edit invoice" : "New invoice"}
@@ -509,46 +335,73 @@ const Edit = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                {invoiceColumns.map((column, index) => (
-                  <TableHead 
-                    key={index} 
-                    className={column.meta?.numeric ? "text-right" : ""}
-                  >
-                    {typeof column.header === 'function' ? column.header({} as any) : column.header}
-                  </TableHead>
-                ))}
+                <TableHead>{data.user.project_based ? "Project" : "Line item"}</TableHead>
+                {!data.user.project_based && <TableHead>Hours</TableHead>}
+                {!data.user.project_based && <TableHead className="text-right">Rate</TableHead>}
+                <TableHead className="text-right">Amount</TableHead>
+                <TableHead></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {lineItems.toArray().map((item, rowIndex) => (
                 <TableRow key={rowIndex}>
-                  {invoiceColumns.map((column, cellIndex) => {
-                    const value = column.id && column.id in item ? item[column.id as keyof typeof item] : undefined;
-                    return (
-                      <TableCell
-                        key={cellIndex}
-                        className={column.meta?.numeric ? "text-right tabular-nums" : ""}
-                        onClick={(e) => column.id === "actions" && e.stopPropagation()}
-                      >
-                        {value !== null && value !== undefined ? String(value) : ""}
-                      </TableCell>
-                    );
-                  })}
+                  <TableCell>{item.description}</TableCell>
+                  {!data.user.project_based && (
+                    <TableCell>{item.minutes}</TableCell>
+                  )}
+                  {!data.user.project_based && (
+                    <TableCell className="text-right tabular-nums">{`${formatMoneyFromCents(item.pay_rate_in_subunits)} / hour`}</TableCell>
+                  )}
+                  <TableCell className="text-right tabular-nums">
+                    {data.user.project_based 
+                      ? <DecimalInput
+                          value={item.total_amount_cents / 100}
+                          onChange={(value) => updateLineItem(rowIndex, { total_amount_cents: (value ?? 0) * 100 })}
+                          aria-label="Amount"
+                          placeholder="0"
+                          prefix="$"
+                        />
+                      : formatMoneyFromCents(item.total_amount_cents)
+                    }
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="link"
+                      aria-label="Remove"
+                      onClick={() => setLineItems((lineItems) => lineItems.delete(rowIndex))}
+                    >
+                      <TrashIcon className="size-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
             <TableFooter>
               <TableRow>
-                {invoiceColumns.map((column, index) => (
-                  <TableCell
-                    key={index}
-                    className={column.meta?.numeric ? "text-right tabular-nums" : ""}
-                  >
-                    {column.footer && typeof column.footer === 'function' 
-                      ? column.footer({} as any)
-                      : null}
-                  </TableCell>
-                ))}
+                <TableCell colSpan={data.user.project_based ? 2 : 4}>
+                  <div className="flex gap-3">
+                    <Button variant="link" onClick={addLineItem}>
+                      <PlusIcon className="inline size-4" />
+                      Add line item
+                    </Button>
+                    {data.company.expenses.enabled ? (
+                      <Button variant="link" asChild>
+                        <Label className={canManageExpenses ? "hidden" : ""}>
+                          <ArrowUpTrayIcon className="inline size-4" />
+                          Add expense
+                          <input
+                            ref={uploadExpenseRef}
+                            type="file"
+                            className="hidden"
+                            accept="application/pdf, image/*"
+                            multiple
+                            onChange={createNewExpenseEntries}
+                          />
+                        </Label>
+                      </Button>
+                    ) : null}
+                  </div>
+                </TableCell>
               </TableRow>
             </TableFooter>
           </Table>
@@ -556,46 +409,54 @@ const Edit = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  {expenseColumns.map((column, index) => (
-                    <TableHead 
-                      key={index}
-                      className={column.meta?.numeric ? "text-right" : ""}
-                    >
-                      {typeof column.header === 'function' ? column.header({} as any) : column.header}
-                    </TableHead>
-                  ))}
+                  <TableHead>Expense</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Receipt</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {expenses.toArray().map((expense, rowIndex) => (
                   <TableRow key={rowIndex}>
-                    {expenseColumns.map((column, cellIndex) => {
-                      const value = column.id && column.id in expense ? expense[column.id as keyof typeof expense] : undefined;
-                      return (
-                        <TableCell 
-                          key={cellIndex}
-                          className={column.meta?.numeric ? "text-right tabular-nums" : ""}
-                          onClick={(e) => column.id === "actions" && e.stopPropagation()}
-                        >
-                          {value !== null && value !== undefined ? String(value) : ""}
-                        </TableCell>
-                      );
-                    })}
+                    <TableCell>{expense.description}</TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      <DecimalInput
+                        value={expense.total_amount_in_cents / 100}
+                        onChange={(value) => updateExpense(rowIndex, { total_amount_in_cents: (value ?? 0) * 100 })}
+                        aria-label="Amount"
+                        placeholder="0"
+                        prefix="$"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {expense.attachment ? (
+                        <Button variant="link" asChild>
+                          <a href={expense.attachment.url} target="_blank" rel="noreferrer">
+                            <PaperClipIcon className="inline size-4" />
+                            {expense.attachment.name}
+                          </a>
+                        </Button>
+                      ) : null}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="link"
+                        aria-label="Remove"
+                        onClick={() => setExpenses((expenses) => expenses.delete(rowIndex))}
+                      >
+                        <TrashIcon className="size-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
               <TableFooter>
                 <TableRow>
-                  {expenseColumns.map((column, index) => (
-                    <TableCell 
-                      key={index}
-                      className={column.meta?.numeric ? "text-right tabular-nums" : ""}
-                    >
-                      {column.footer && typeof column.footer === 'function' 
-                        ? column.footer({} as any)
-                        : null}
-                    </TableCell>
-                  ))}
+                  <TableCell>Total</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {formatMoneyFromCents(expenses.toArray().reduce((sum, expense) => sum + (expense.total_amount_in_cents || 0), 0))}
+                  </TableCell>
+                  <TableCell colSpan={2}></TableCell>
                 </TableRow>
               </TableFooter>
             </Table>
