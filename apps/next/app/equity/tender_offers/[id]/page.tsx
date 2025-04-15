@@ -280,7 +280,7 @@ export default function TenderOfferView() {
                     </TableCaption>
                     <TableHeader>
                       <TableRow>
-                        {financialDataTable.getHeaderGroups()[0].headers.map((header) => (
+                        {financialDataTable.getHeaderGroups()[0]?.headers.map((header) => (
                           <TableHead
                             key={header.id}
                             className={header.column.columnDef.meta?.numeric ? "text-right" : ""}
@@ -324,7 +324,7 @@ export default function TenderOfferView() {
                     </TableCaption>
                     <TableHeader>
                       <TableRow>
-                        {tenderedHoldingsTable.getHeaderGroups()[0].headers.map((header) => (
+                        {tenderedHoldingsTable.getHeaderGroups()[0]?.headers.map((header) => (
                           <TableHead
                             key={header.id}
                             className={header.column.columnDef.meta?.numeric ? "text-right" : ""}
@@ -356,7 +356,7 @@ export default function TenderOfferView() {
                   <TableCaption className="mb-2 text-left text-lg font-bold text-black">Holdings</TableCaption>
                   <TableHeader>
                     <TableRow>
-                      {holdingsTable.getHeaderGroups()[0].headers.map((header) => (
+                      {holdingsTable.getHeaderGroups()[0]?.headers.map((header) => (
                         <TableHead
                           key={header.id}
                           className={header.column.columnDef.meta?.numeric ? "text-right" : ""}
