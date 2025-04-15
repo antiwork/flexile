@@ -47,7 +47,7 @@ export const documentsRouter = createRouter({
           .innerJoin(documentSignatures, eq(documents.id, documentSignatures.documentId))
           .innerJoin(users, eq(documentSignatures.userId, users.id))
           .where(where)
-          .orderBy(documents.id, desc(documents.createdAt)),
+          .orderBy(desc(documents.createdAt), documents.id),
         input,
       );
       const totalResult = await db
