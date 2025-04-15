@@ -63,11 +63,10 @@ export const useTable = <T extends RowData>(
 interface TableProps<T> {
   table: Table<T>;
   caption?: string;
-  hoverable?: boolean;
   onRowClicked?: ((row: T) => void) | undefined;
 }
 
-export default function DataTable<T extends RowData>({ table, caption, hoverable, onRowClicked }: TableProps<T>) {
+export default function DataTable<T extends RowData>({ table, caption, onRowClicked }: TableProps<T>) {
   const data = useMemo(() => {
     const headers = table
       .getHeaderGroups()
@@ -134,7 +133,8 @@ export default function DataTable<T extends RowData>({ table, caption, hoverable
         {data.rows.map((row) => (
           <TableRow
             key={row.id}
-            className={`translate-x-0 ${rowClasses} ${onRowClicked || hoverable ? "cursor-pointer hover:bg-gray-50" : ""} ${data.selectable ? "bg-linear-to-r from-blue-100 from-50% via-transparent via-50% bg-[length:200%] transition-all" : ""} ${!row.getIsSelected() ? "bg-[100%]" : ""}`}
+            className={`translate-x-0 ${rowClasses}`}
+            data-state={row.getIsSelected() ? "selected" : undefined}
             onClick={() => onRowClicked?.(row.original)}
           >
             {data.selectable ? (
