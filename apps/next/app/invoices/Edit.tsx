@@ -3,6 +3,7 @@
 import { ArrowUpTrayIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { PaperAirplaneIcon, PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { flexRender } from "@tanstack/react-table";
 import { formatISO } from "date-fns";
 import { List } from "immutable";
 import Link from "next/link";
@@ -11,7 +12,7 @@ import { useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import EquityPercentageLockModal from "@/app/invoices/EquityPercentageLockModal";
 import { Card, CardRow } from "@/components/Card";
-import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
+import { createColumnHelper, useTable } from "@/components/DataTable";
 import DecimalInput from "@/components/DecimalInput";
 import DurationInput from "@/components/DurationInput";
 import Input from "@/components/Input";
@@ -19,6 +20,7 @@ import MainLayout from "@/components/layouts/Main";
 import Select from "@/components/Select";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
@@ -507,8 +509,88 @@ const Edit = () => {
             </div>
           </div>
 
-          <DataTable table={invoiceTable} />
-          {canManageExpenses ? <DataTable table={expenseTable} /> : null}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {invoiceTable.getHeaderGroups()[0]?.headers.map((header) => (
+                  <TableHead key={header.id} className={header.column.columnDef.meta?.numeric ? "text-right" : ""}>
+                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {invoiceTable.getRowModel().rows.map((row) => (
+                <TableRow key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className={cell.column.columnDef.meta?.numeric ? "text-right tabular-nums" : ""}
+                      onClick={(e) => cell.column.id === "actions" && e.stopPropagation()}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+            <TableFooter>
+              {invoiceTable.getFooterGroups().map((footerGroup) => (
+                <TableRow key={footerGroup.id}>
+                  {footerGroup.headers.map((header) => (
+                    <TableCell
+                      key={header.id}
+                      className={header.column.columnDef.meta?.numeric ? "text-right tabular-nums" : ""}
+                    >
+                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.footer, header.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableFooter>
+          </Table>
+          {canManageExpenses ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {expenseTable.getHeaderGroups()[0]?.headers.map((header) => (
+                    <TableHead key={header.id} className={header.column.columnDef.meta?.numeric ? "text-right" : ""}>
+                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {expenseTable.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        className={cell.column.columnDef.meta?.numeric ? "text-right tabular-nums" : ""}
+                        onClick={(e) => cell.column.id === "actions" && e.stopPropagation()}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+              <TableFooter>
+                {expenseTable.getFooterGroups().map((footerGroup) => (
+                  <TableRow key={footerGroup.id}>
+                    {footerGroup.headers.map((header) => (
+                      <TableCell
+                        key={header.id}
+                        className={header.column.columnDef.meta?.numeric ? "text-right tabular-nums" : ""}
+                      >
+                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.footer, header.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableFooter>
+            </Table>
+          ) : null}
 
           <footer className="flex flex-col gap-3 lg:flex-row lg:justify-between">
             <Input

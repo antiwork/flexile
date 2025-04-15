@@ -3,6 +3,7 @@ import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { ArrowDownTrayIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
+import { flexRender } from "@tanstack/react-table";
 import { addMonths, isFuture, isPast } from "date-fns";
 import { useParams } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
@@ -20,6 +21,7 @@ import Status from "@/components/Status";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -272,7 +274,39 @@ export default function TenderOfferView() {
                 </div>
                 <h2 className="text-xl font-bold">Tender offer details</h2>
                 <div className="overflow-x-auto">
-                  <DataTable table={financialDataTable} caption="Company financials (unaudited)" />
+                  <Table>
+                    <TableCaption className="mb-2 text-left text-lg font-bold text-black">
+                      Company financials (unaudited)
+                    </TableCaption>
+                    <TableHeader>
+                      <TableRow>
+                        {financialDataTable.getHeaderGroups()[0].headers.map((header) => (
+                          <TableHead
+                            key={header.id}
+                            className={header.column.columnDef.meta?.numeric ? "text-right" : ""}
+                          >
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(header.column.columnDef.header, header.getContext())}
+                          </TableHead>
+                        ))}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {financialDataTable.getRowModel().rows.map((row) => (
+                        <TableRow key={row.id}>
+                          {row.getVisibleCells().map((cell) => (
+                            <TableCell
+                              key={cell.id}
+                              className={cell.column.columnDef.meta?.numeric ? "text-right tabular-nums" : ""}
+                            >
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
                 <p className="mt-5">
                   <Button variant="outline" asChild>
@@ -284,9 +318,71 @@ export default function TenderOfferView() {
                 </p>
                 <h2 className="text-xl font-bold">Submit a bid</h2>
                 {tenderedHoldings.length ? (
-                  <DataTable table={tenderedHoldingsTable} caption="Tendered Holdings" />
+                  <Table>
+                    <TableCaption className="mb-2 text-left text-lg font-bold text-black">
+                      Tendered Holdings
+                    </TableCaption>
+                    <TableHeader>
+                      <TableRow>
+                        {tenderedHoldingsTable.getHeaderGroups()[0].headers.map((header) => (
+                          <TableHead
+                            key={header.id}
+                            className={header.column.columnDef.meta?.numeric ? "text-right" : ""}
+                          >
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(header.column.columnDef.header, header.getContext())}
+                          </TableHead>
+                        ))}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {tenderedHoldingsTable.getRowModel().rows.map((row) => (
+                        <TableRow key={row.id}>
+                          {row.getVisibleCells().map((cell) => (
+                            <TableCell
+                              key={cell.id}
+                              className={cell.column.columnDef.meta?.numeric ? "text-right tabular-nums" : ""}
+                            >
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 ) : null}
-                <DataTable table={holdingsTable} caption="Holdings" />
+                <Table>
+                  <TableCaption className="mb-2 text-left text-lg font-bold text-black">Holdings</TableCaption>
+                  <TableHeader>
+                    <TableRow>
+                      {holdingsTable.getHeaderGroups()[0].headers.map((header) => (
+                        <TableHead
+                          key={header.id}
+                          className={header.column.columnDef.meta?.numeric ? "text-right" : ""}
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(header.column.columnDef.header, header.getContext())}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {holdingsTable.getRowModel().rows.map((row) => (
+                      <TableRow key={row.id}>
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell
+                            key={cell.id}
+                            className={cell.column.columnDef.meta?.numeric ? "text-right tabular-nums" : ""}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
                 <Select
                   value={newBid.shareClass}
                   onChange={(value) => setNewBid({ ...newBid, shareClass: value })}
