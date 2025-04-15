@@ -1,6 +1,6 @@
 import docuseal from "@docuseal/api";
 import { TRPCError } from "@trpc/server";
-import { and, countDistinct, desc, eq, inArray, isNotNull, isNull, type SQLWrapper } from "drizzle-orm";
+import { and, countDistinct, desc, eq, inArray, isNotNull, isNull, not, type SQLWrapper } from "drizzle-orm";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db, paginate, paginationSchema } from "@/db";
