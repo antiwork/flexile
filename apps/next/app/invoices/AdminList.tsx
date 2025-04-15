@@ -3,7 +3,7 @@ import { CheckCircleIcon, InformationCircleIcon } from "@heroicons/react/24/outl
 import { partition } from "lodash-es";
 import Link from "next/link";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
-import React, { useMemo, useState } from "react";
+import React, { Fragment, useMemo, useState } from "react";
 import StripeMicrodepositVerification from "@/app/administrator/settings/StripeMicrodepositVerification";
 import {
   ApproveButton,
@@ -15,7 +15,6 @@ import {
 } from "@/app/invoices/index";
 import { StatusWithTooltip } from "@/app/invoices/Status";
 import { Task } from "@/app/updates/team/Task";
-import { Card, CardRow } from "@/components/Card";
 import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
@@ -26,7 +25,9 @@ import Table, { createColumnHelper, useTable } from "@/components/Table";
 import Tabs from "@/components/Tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { HorizontalDivider } from "@/components/ui/divider";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -232,12 +233,17 @@ export default function AdminList() {
           </div>
         )}
         <Card>
-          {selectedInvoices.slice(0, 5).map((invoice) => (
-            <CardRow key={invoice.id} className="flex justify-between gap-2">
-              <b>{invoice.billFrom}</b>
-              <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
-            </CardRow>
-          ))}
+          <CardContent className="px-0">
+            {selectedInvoices.slice(0, 5).map((invoice, index, array) => (
+              <Fragment key={invoice.id}>
+                <div className="flex justify-between gap-2 px-4">
+                  <b>{invoice.billFrom}</b>
+                  <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
+                </div>
+                <HorizontalDivider omit={index === array.length - 1} />
+              </Fragment>
+            ))}
+          </CardContent>
         </Card>
         {selectedInvoices.length > 6 && <div>and {data.invoices.length - 6} more</div>}
       </Modal>
@@ -331,20 +337,26 @@ const TasksModal = ({
             </Button>
           </header>
           <Card className="mt-3">
-            <CardRow className="flex justify-between gap-2">
-              <div>Net amount in cash</div>
-              <div>{formatMoneyFromCents(invoice.cashAmountInCents)}</div>
-            </CardRow>
-            {invoice.equityAmountInCents ? (
-              <CardRow className="flex justify-between gap-2">
-                <div>Swapped for equity ({invoice.equityPercentage}%)</div>
-                <div>{formatMoneyFromCents(invoice.equityAmountInCents)}</div>
-              </CardRow>
-            ) : null}
-            <CardRow className="flex justify-between gap-2 font-bold">
-              <div>Payout total</div>
-              <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
-            </CardRow>
+            <CardContent className="px-0">
+              <div className="flex justify-between gap-2 px-4">
+                <div>Net amount in cash</div>
+                <div>{formatMoneyFromCents(invoice.cashAmountInCents)}</div>
+              </div>
+              <HorizontalDivider />
+              {invoice.equityAmountInCents ? (
+                <>
+                  <div className="flex justify-between gap-2 px-4">
+                    <div>Swapped for equity ({invoice.equityPercentage}%)</div>
+                    <div>{formatMoneyFromCents(invoice.equityAmountInCents)}</div>
+                  </div>
+                  <HorizontalDivider />
+                </>
+              ) : null}
+              <div className="flex justify-between gap-2 px-4 font-bold">
+                <div>Payout total</div>
+                <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
+              </div>
+            </CardContent>
           </Card>
         </section>
         {company.flags.includes("team_updates") ? (
@@ -354,12 +366,14 @@ const TasksModal = ({
             </header>
 
             {tasks && tasks.length > 0 ? (
-              <Card className="mt-3 max-w-full overflow-hidden p-4">
-                <ul className="space-y-2">
-                  {tasks.map((task) => (
-                    <Task key={task.id} task={task} />
-                  ))}
-                </ul>
+              <Card className="mt-3 max-w-full">
+                <CardContent className="overflow-hidden">
+                  <ul className="space-y-2">
+                    {tasks.map((task) => (
+                      <Task key={task.id} task={task} />
+                    ))}
+                  </ul>
+                </CardContent>
               </Card>
             ) : (
               <Placeholder icon={CheckCircleIcon}>No tasks to display yet!</Placeholder>

@@ -1,11 +1,11 @@
 "use client";
-import { InformationCircleIcon } from "@heroicons/react/24/outline";
+import { ArrowRightIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
-import CardLink from "@/components/CardLink";
 import SimpleLayout from "@/components/layouts/Simple";
 import Placeholder from "@/components/Placeholder";
+import { Card, CardContent } from "@/components/ui/card";
 import logo from "@/images/flexile-logo.svg";
 import { trpc } from "@/trpc/client";
 import { toSlug } from "@/utils";
@@ -29,7 +29,14 @@ export default function RolesPage() {
     >
       <title>{`Open roles at ${company.name}`}</title>
       {roles.map((role) => (
-        <CardLink key={role.id} href={`/roles/${companySlug}/${toSlug(role.name)}-${role.id}`} title={role.name} />
+        <Link key={role.id} href={`/roles/${companySlug}/${toSlug(role.name)}-${role.id}`} className="rounded-2xl">
+          <Card>
+            <CardContent className="flex items-center justify-between">
+              <h4 className="text-xl font-bold">{role.name}</h4>
+              <ArrowRightIcon className="size-7" />
+            </CardContent>
+          </Card>
+        </Link>
       ))}
       {!roles.length && (
         <Placeholder>

@@ -1,5 +1,4 @@
 import { useMutation } from "@tanstack/react-query";
-import { CardRow } from "@/components/Card";
 import MutationButton from "@/components/MutationButton";
 import Status from "@/components/Status";
 import { useCurrentCompany } from "@/global";
@@ -30,7 +29,7 @@ export default function GithubIntegration({ oauthUrl }: { oauthUrl: string }) {
   });
 
   return (
-    <CardRow className="flex justify-between gap-2">
+    <div className="flex justify-between gap-2 px-4">
       <div>
         <div className="flex items-center gap-2">
           <h2 className="text-xl font-bold">
@@ -61,6 +60,6 @@ export default function GithubIntegration({ oauthUrl }: { oauthUrl: string }) {
           </MutationButton>
         )}
       </div>
-    </CardRow>
+    </div>
   );
 }

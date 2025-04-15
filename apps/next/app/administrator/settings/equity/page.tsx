@@ -4,12 +4,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Set } from "immutable";
 import { Check, ChevronsUpDown, User, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { CardRow } from "@/components/Card";
 import DecimalInput from "@/components/DecimalInput";
 import FormSection from "@/components/FormSection";
 import MutationButton from "@/components/MutationButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { CardContent, CardFooter } from "@/components/ui/card";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -43,72 +43,74 @@ const BoardMembersSection = () => {
 
   return (
     <FormSection title="Board members" description="Select company administrators who are board members.">
-      <CardRow className="grid gap-4">
-        Choose board members from your existing administrators.
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={open}
-              className="w-full justify-between rounded-md"
-            >
-              {boardMemberIds.size > 0
-                ? `${boardMemberIds.size} member${boardMemberIds.size > 1 ? "s" : ""} selected`
-                : "Select members..."}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="p-0">
-            <Command className="w-full">
-              <CommandInput placeholder="Search administrators..." />
-              <CommandList>
-                <CommandEmpty>No administrator found.</CommandEmpty>
-                <CommandGroup>
-                  {administrators.map((admin) => (
-                    <CommandItem
-                      key={admin.id}
-                      onSelect={() =>
-                        setBoardMemberIds(boardMemberIds[boardMemberIds.has(admin.id) ? "delete" : "add"](admin.id))
-                      }
-                      className="flex items-center gap-2"
+      <CardContent>
+        <div className="grid gap-4">
+          Choose board members from your existing administrators.
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={open}
+                className="w-full justify-between rounded-md"
+              >
+                {boardMemberIds.size > 0
+                  ? `${boardMemberIds.size} member${boardMemberIds.size > 1 ? "s" : ""} selected`
+                  : "Select members..."}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0">
+              <Command className="w-full">
+                <CommandInput placeholder="Search administrators..." />
+                <CommandList>
+                  <CommandEmpty>No administrator found.</CommandEmpty>
+                  <CommandGroup>
+                    {administrators.map((admin) => (
+                      <CommandItem
+                        key={admin.id}
+                        onSelect={() =>
+                          setBoardMemberIds(boardMemberIds[boardMemberIds.has(admin.id) ? "delete" : "add"](admin.id))
+                        }
+                        className="flex items-center gap-2"
+                      >
+                        <User className="text-muted-foreground h-5 w-5" />
+                        <span>{admin.name}</span>
+                        <Check className={cn("ml-auto h-4 w-4", { invisible: !boardMemberIds.has(admin.id) })} />
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          {boardMemberIds.size > 0 ? (
+            <div className="flex flex-wrap">
+              {administrators
+                .filter((admin) => boardMemberIds.has(admin.id))
+                .map((member) => (
+                  <Badge key={member.id} variant="secondary" className="flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    {member.name}
+                    <Button
+                      variant="link"
+                      className="text-muted-foreground hover:text-foreground h-auto p-0"
+                      onClick={() => setBoardMemberIds(boardMemberIds.delete(member.id))}
                     >
-                      <User className="text-muted-foreground h-5 w-5" />
-                      <span>{admin.name}</span>
-                      <Check className={cn("ml-auto h-4 w-4", { invisible: !boardMemberIds.has(admin.id) })} />
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-        {boardMemberIds.size > 0 ? (
-          <div className="flex flex-wrap">
-            {administrators
-              .filter((admin) => boardMemberIds.has(admin.id))
-              .map((member) => (
-                <Badge key={member.id} variant="secondary" className="flex items-center gap-1">
-                  <User className="h-3 w-3" />
-                  {member.name}
-                  <Button
-                    variant="link"
-                    className="text-muted-foreground hover:text-foreground h-auto p-0"
-                    onClick={() => setBoardMemberIds(boardMemberIds.delete(member.id))}
-                  >
-                    <X className="h-3 w-3" />
-                    <span className="sr-only">Remove</span>
-                  </Button>
-                </Badge>
-              ))}
-          </div>
-        ) : null}
-      </CardRow>
-      <CardRow>
+                      <X className="h-3 w-3" />
+                      <span className="sr-only">Remove</span>
+                    </Button>
+                  </Badge>
+                ))}
+            </div>
+          ) : null}
+        </div>
+      </CardContent>
+      <CardFooter>
         <MutationButton mutation={updateMutation} disabled={updateMutation.isPending} loadingText="Saving...">
           Save board members
         </MutationButton>
-      </CardRow>
+      </CardFooter>
     </FormSection>
   );
 };
@@ -220,38 +222,39 @@ export default function Equity() {
         title="Equity"
         description="These details will be used for equity-related calculations and reporting."
       >
-        <CardRow className="grid gap-4">
-          <DecimalInput
-            value={sharePriceInUsd ?? null}
-            onChange={setSharePriceInUsd}
-            label="Current share price (USD)"
-            invalid={errors.has("sharePriceInUsd")}
-            prefix="$"
-            minimumFractionDigits={2}
-          />
-          <DecimalInput
-            value={fmvPerShareInUsd ?? null}
-            onChange={setFmvPerShareInUsd}
-            label="Current 409A valuation (USD per share)"
-            invalid={errors.has("fmvPerShareInUsd")}
-            prefix="$"
-            minimumFractionDigits={2}
-          />
-          <DecimalInput
-            value={conversionSharePriceUsd ?? null}
-            onChange={setConversionSharePriceUsd}
-            label="Conversion share price (USD)"
-            invalid={errors.has("conversionSharePriceUsd")}
-            prefix="$"
-            minimumFractionDigits={2}
-          />
-        </CardRow>
-
-        <CardRow>
+        <CardContent>
+          <div className="grid gap-4">
+            <DecimalInput
+              value={sharePriceInUsd ?? null}
+              onChange={setSharePriceInUsd}
+              label="Current share price (USD)"
+              invalid={errors.has("sharePriceInUsd")}
+              prefix="$"
+              minimumFractionDigits={2}
+            />
+            <DecimalInput
+              value={fmvPerShareInUsd ?? null}
+              onChange={setFmvPerShareInUsd}
+              label="Current 409A valuation (USD per share)"
+              invalid={errors.has("fmvPerShareInUsd")}
+              prefix="$"
+              minimumFractionDigits={2}
+            />
+            <DecimalInput
+              value={conversionSharePriceUsd ?? null}
+              onChange={setConversionSharePriceUsd}
+              label="Conversion share price (USD)"
+              invalid={errors.has("conversionSharePriceUsd")}
+              prefix="$"
+              minimumFractionDigits={2}
+            />
+          </div>
+        </CardContent>
+        <CardFooter>
           <MutationButton mutation={saveMutation} loadingText="Saving..." successText="Changes saved">
             Save changes
           </MutationButton>
-        </CardRow>
+        </CardFooter>
       </FormSection>
 
       <BoardMembersSection />
@@ -261,56 +264,58 @@ export default function Equity() {
           title="Import equity documents"
           description="We are currently processing your equity documents. Please check back later."
         >
-          <CardRow>
+          <CardContent>
             <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
               <p className="text-blue-700">
                 Your equity documents are being imported. We will notify you when it is complete.
               </p>
             </div>
-          </CardRow>
+          </CardContent>
         </FormSection>
       ) : canCreateCapTableUpload ? (
         <FormSection
           title="Import equity documents"
           description="Upload your cap table, ESOP, or related documents to view your cap table in Flexile or pay contractors with equity."
         >
-          <CardRow className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="cap-table-files">Upload files (maximum {MAX_FILES_PER_CAP_TABLE_UPLOAD} files)</Label>
-              <input
-                ref={fileInputRef}
-                id="cap-table-files"
-                type="file"
-                multiple
-                disabled={uploadMutation.isPending}
-                onChange={(e) => {
-                  const selectedFiles = Array.from(e.target.files || []);
-                  if (selectedFiles.length > MAX_FILES_PER_CAP_TABLE_UPLOAD) {
-                    if (fileInputRef.current) {
-                      fileInputRef.current.value = "";
-                    }
-                    setFiles([]);
-                    setFileError(`You can only upload up to ${MAX_FILES_PER_CAP_TABLE_UPLOAD} files`);
-                    return;
-                  }
-                  setFileError(null);
-                  setFiles(selectedFiles);
-                }}
-              />
-              {fileError ? <small className="text-red">{fileError}</small> : null}
-            </div>
-            {files.length > 0 && (
+          <CardContent>
+            <div className="grid gap-4">
               <div className="grid gap-2">
-                <h3 className="font-medium">Selected files:</h3>
-                <ul className="list-inside list-disc">
-                  {files.map((file) => (
-                    <li key={file.name}>{file.name}</li>
-                  ))}
-                </ul>
+                <Label htmlFor="cap-table-files">Upload files (maximum {MAX_FILES_PER_CAP_TABLE_UPLOAD} files)</Label>
+                <input
+                  ref={fileInputRef}
+                  id="cap-table-files"
+                  type="file"
+                  multiple
+                  disabled={uploadMutation.isPending}
+                  onChange={(e) => {
+                    const selectedFiles = Array.from(e.target.files || []);
+                    if (selectedFiles.length > MAX_FILES_PER_CAP_TABLE_UPLOAD) {
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                      }
+                      setFiles([]);
+                      setFileError(`You can only upload up to ${MAX_FILES_PER_CAP_TABLE_UPLOAD} files`);
+                      return;
+                    }
+                    setFileError(null);
+                    setFiles(selectedFiles);
+                  }}
+                />
+                {fileError ? <small className="text-red">{fileError}</small> : null}
               </div>
-            )}
-          </CardRow>
-          <CardRow>
+              {files.length > 0 && (
+                <div className="grid gap-2">
+                  <h3 className="font-medium">Selected files:</h3>
+                  <ul className="list-inside list-disc">
+                    {files.map((file) => (
+                      <li key={file.name}>{file.name}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </CardContent>
+          <CardFooter>
             <MutationButton
               mutation={uploadMutation}
               disabled={files.length === 0 || uploadMutation.isPending}
@@ -319,7 +324,7 @@ export default function Equity() {
             >
               Upload files
             </MutationButton>
-          </CardRow>
+          </CardFooter>
         </FormSection>
       ) : null}
     </>

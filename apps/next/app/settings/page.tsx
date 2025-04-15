@@ -5,10 +5,10 @@ import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { useMutation } from "@tanstack/react-query";
 import { Map } from "immutable";
 import React, { useEffect, useState } from "react";
-import { CardRow } from "@/components/Card";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import MutationButton from "@/components/MutationButton";
+import { CardContent, CardFooter } from "@/components/ui/card";
 import { useCurrentUser } from "@/global";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
 import { trpc } from "@/trpc/client";
@@ -42,7 +42,7 @@ const DetailsSection = () => {
 
   return (
     <FormSection title="Personal details" onSubmit={e(() => handleSubmit.mutate(), "prevent")}>
-      <CardRow className="grid gap-4">
+      <CardContent className="grid gap-4">
         <Input value={email} onChange={setEmail} label="Email" minLength={MIN_EMAIL_LENGTH} />
         <Input
           value={preferredName}
@@ -51,12 +51,12 @@ const DetailsSection = () => {
           placeholder="Enter preferred name"
           maxLength={MAX_PREFERRED_NAME_LENGTH}
         />
-      </CardRow>
-      <CardRow>
+      </CardContent>
+      <CardFooter>
         <MutationButton type="submit" mutation={handleSubmit} loadingText="Saving..." successText="Saved!">
           Save
         </MutationButton>
-      </CardRow>
+      </CardFooter>
     </FormSection>
   );
 };
@@ -97,7 +97,7 @@ const PasswordSection = () => {
 
   return (
     <FormSection title="Password" onSubmit={e(() => saveMutation.mutate(), "prevent")}>
-      <CardRow className="grid gap-4">
+      <CardContent className="grid gap-4">
         <Input
           value={currentPassword}
           label="Old password"
@@ -122,12 +122,12 @@ const PasswordSection = () => {
           help={errors.get("confirm_password")}
           onChange={setConfirmPassword}
         />
-      </CardRow>
-      <CardRow>
+      </CardContent>
+      <CardFooter>
         <MutationButton type="submit" mutation={saveMutation} loadingText="Saving...">
           Save
         </MutationButton>
-      </CardRow>
+      </CardFooter>
     </FormSection>
   );
 };

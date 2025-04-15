@@ -6,7 +6,6 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { addMonths, isFuture, isPast } from "date-fns";
 import { useParams } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
-import { Card, CardRow } from "@/components/Card";
 import DecimalInput from "@/components/DecimalInput";
 import Figures from "@/components/Figures";
 import MainLayout from "@/components/layouts/Main";
@@ -20,6 +19,8 @@ import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { HorizontalDivider } from "@/components/ui/divider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -230,109 +231,116 @@ export default function TenderOfferView() {
           </h2>
           <form>
             <Card>
-              <CardRow>
-                THIS DOCUMENT AND THE INFORMATION REFERENCED HEREIN OR PROVIDED TO YOU IN CONNECTION WITH THIS OFFER TO
-                PURCHASE CONSTITUTES CONFIDENTIAL INFORMATION REGARDING GUMROAD, INC., A DELAWARE CORPORATION (THE
-                "COMPANY"). BY OPENING OR READING THIS DOCUMENT, YOU HEREBY AGREE TO MAINTAIN THE CONFIDENTIALITY OF
-                SUCH INFORMATION AND NOT TO DISCLOSE IT TO ANY PERSON (OTHER THAN TO YOUR LEGAL, FINANCIAL AND TAX
-                ADVISORS, AND THEN ONLY IF THEY HAVE SIMILARLY AGREED TO MAINTAIN THE CONFIDENTIALITY OF SUCH
-                INFORMATION), AND SUCH INFORMATION SHALL BE SUBJECT TO THE CONFIDENTIALITY OBLIGATIONS UNDER [THE
-                NON-DISCLOSURE AGREEMENT INCLUDED] ON THE PLATFORM (AS DEFINED BELOW) AND ANY OTHER AGREEMENT YOU HAVE
-                WITH THE COMPANY, INCLUDING ANY "INVENTION AND NON-DISCLOSURE AGREEMENT", "CONFIDENTIALITY, INVENTION
-                AND NON-SOLICITATION AGREEMENT" OR OTHER NONDISCLOSURE AGREEMENT. BY YOU ACCEPTING TO RECEIVE THIS OFFER
-                TO PURCHASE, YOU ACKNOWLEDGE AND AGREE TO THE FOREGOING RESTRICTIONS.
-              </CardRow>
-              <CardRow className="flex flex-col gap-4">
-                <div className="h-96 overflow-y-auto rounded-md border p-4">
-                  <div className="prose max-w-none">
-                    <LetterOfTransmissal />
-                  </div>
+              <CardContent className="px-0">
+                <div className="px-4">
+                  THIS DOCUMENT AND THE INFORMATION REFERENCED HEREIN OR PROVIDED TO YOU IN CONNECTION WITH THIS OFFER
+                  TO PURCHASE CONSTITUTES CONFIDENTIAL INFORMATION REGARDING GUMROAD, INC., A DELAWARE CORPORATION (THE
+                  "COMPANY"). BY OPENING OR READING THIS DOCUMENT, YOU HEREBY AGREE TO MAINTAIN THE CONFIDENTIALITY OF
+                  SUCH INFORMATION AND NOT TO DISCLOSE IT TO ANY PERSON (OTHER THAN TO YOUR LEGAL, FINANCIAL AND TAX
+                  ADVISORS, AND THEN ONLY IF THEY HAVE SIMILARLY AGREED TO MAINTAIN THE CONFIDENTIALITY OF SUCH
+                  INFORMATION), AND SUCH INFORMATION SHALL BE SUBJECT TO THE CONFIDENTIALITY OBLIGATIONS UNDER [THE
+                  NON-DISCLOSURE AGREEMENT INCLUDED] ON THE PLATFORM (AS DEFINED BELOW) AND ANY OTHER AGREEMENT YOU HAVE
+                  WITH THE COMPANY, INCLUDING ANY "INVENTION AND NON-DISCLOSURE AGREEMENT", "CONFIDENTIALITY, INVENTION
+                  AND NON-SOLICITATION AGREEMENT" OR OTHER NONDISCLOSURE AGREEMENT. BY YOU ACCEPTING TO RECEIVE THIS
+                  OFFER TO PURCHASE, YOU ACKNOWLEDGE AND AGREE TO THE FOREGOING RESTRICTIONS.
                 </div>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <div className="grid gap-2">
-                    <div className="font-signature border-b text-3xl">{company.primaryAdminName}</div>
-                    <Status variant="success">Chief Executive Officer</Status>
+                <HorizontalDivider />
+                <div className="flex flex-col gap-4 px-4">
+                  <div className="h-96 overflow-y-auto rounded-md border p-4">
+                    <div className="prose max-w-none">
+                      <LetterOfTransmissal />
+                    </div>
                   </div>
-                  <div className="grid gap-2">
-                    {signed ? (
-                      <div className="font-signature border-b text-3xl">{user.legalName}</div>
-                    ) : (
-                      <Button variant="dashed" onClick={() => setSigned(true)}>
-                        Add your signature
-                      </Button>
-                    )}
-                    <Status variant={signed ? "success" : undefined} className={signed ? "text-gray-500" : ""}>
-                      Investor
-                    </Status>
-                    <p className="text-gray-500">
-                      By clicking the button above, you agree to using an electronic representation of your signature
-                      for all purposes within Flexile, just the same as a pen-and-paper signature.
-                    </p>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="grid gap-2">
+                      <div className="font-signature border-b text-3xl">{company.primaryAdminName}</div>
+                      <Status variant="success">Chief Executive Officer</Status>
+                    </div>
+                    <div className="grid gap-2">
+                      {signed ? (
+                        <div className="font-signature border-b text-3xl">{user.legalName}</div>
+                      ) : (
+                        <Button variant="dashed" onClick={() => setSigned(true)}>
+                          Add your signature
+                        </Button>
+                      )}
+                      <Status variant={signed ? "success" : undefined} className={signed ? "text-gray-500" : ""}>
+                        Investor
+                      </Status>
+                      <p className="text-gray-500">
+                        By clicking the button above, you agree to using an electronic representation of your signature
+                        for all purposes within Flexile, just the same as a pen-and-paper signature.
+                      </p>
+                    </div>
                   </div>
+                  <h2 className="text-xl font-bold">Tender offer details</h2>
+                  <div className="overflow-x-auto">
+                    <Table table={financialDataTable} caption="Company financials (unaudited)" />
+                  </div>
+                  <p className="mt-5">
+                    <Button variant="outline" asChild>
+                      <a href={data.attachment ?? ""}>
+                        <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
+                        Download tender offer documents
+                      </a>
+                    </Button>
+                  </p>
+                  <h2 className="text-xl font-bold">Submit a bid</h2>
+                  {tenderedHoldings.length ? <Table table={tenderedHoldingsTable} caption="Tendered Holdings" /> : null}
+                  <Table table={holdingsTable} caption="Holdings" />
+                  <Select
+                    value={newBid.shareClass}
+                    onChange={(value) => setNewBid({ ...newBid, shareClass: value })}
+                    label="Share class"
+                    invalid={!newBid.shareClass && submitMutation.isError}
+                    help={!newBid.shareClass && submitMutation.isError ? "Please select a share class" : ""}
+                    options={holdings.map((holding) => ({
+                      value: holding.className,
+                      label: `${holding.className} (${holding.count.toLocaleString()} shares)`,
+                    }))}
+                  />
+                  <NumberInput
+                    value={newBid.numberOfShares}
+                    onChange={(value) => setNewBid({ ...newBid, numberOfShares: value ?? 0 })}
+                    label="Number of shares"
+                    invalid={
+                      (newBid.numberOfShares <= 0 || newBid.numberOfShares > maxShares) && submitMutation.isError
+                    }
+                    help={
+                      (newBid.numberOfShares <= 0 || newBid.numberOfShares > maxShares) && submitMutation.isError
+                        ? `Number of shares must be between 1 and ${maxShares.toLocaleString()}`
+                        : ""
+                    }
+                  />
+                  <DecimalInput
+                    value={newBid.pricePerShare}
+                    onChange={(value) => setNewBid({ ...newBid, pricePerShare: value ?? 0 })}
+                    min={11.38}
+                    label="Price per share"
+                    invalid={newBid.pricePerShare <= 0 && submitMutation.isError}
+                    help={
+                      newBid.pricePerShare <= 0 && submitMutation.isError
+                        ? "Price per share must be greater than 0"
+                        : ""
+                    }
+                    className={newBid.pricePerShare <= 0 && submitMutation.isError ? "error" : ""}
+                    prefix="$"
+                  />
+                  {totalAmount > 0 && (
+                    <div className="info">
+                      <strong>Total amount:</strong> {formatMoney(totalAmount)}
+                    </div>
+                  )}
+                  <Alert variant="destructive">
+                    <ExclamationTriangleIcon />
+                    <AlertDescription>
+                      <strong>Important:</strong> Please note that once submitted, commitments cannot be withdrawn or
+                      changed. Make sure all information is correct before proceeding.
+                    </AlertDescription>
+                  </Alert>
                 </div>
-                <h2 className="text-xl font-bold">Tender offer details</h2>
-                <div className="overflow-x-auto">
-                  <Table table={financialDataTable} caption="Company financials (unaudited)" />
-                </div>
-                <p className="mt-5">
-                  <Button variant="outline" asChild>
-                    <a href={data.attachment ?? ""}>
-                      <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
-                      Download tender offer documents
-                    </a>
-                  </Button>
-                </p>
-                <h2 className="text-xl font-bold">Submit a bid</h2>
-                {tenderedHoldings.length ? <Table table={tenderedHoldingsTable} caption="Tendered Holdings" /> : null}
-                <Table table={holdingsTable} caption="Holdings" />
-                <Select
-                  value={newBid.shareClass}
-                  onChange={(value) => setNewBid({ ...newBid, shareClass: value })}
-                  label="Share class"
-                  invalid={!newBid.shareClass && submitMutation.isError}
-                  help={!newBid.shareClass && submitMutation.isError ? "Please select a share class" : ""}
-                  options={holdings.map((holding) => ({
-                    value: holding.className,
-                    label: `${holding.className} (${holding.count.toLocaleString()} shares)`,
-                  }))}
-                />
-                <NumberInput
-                  value={newBid.numberOfShares}
-                  onChange={(value) => setNewBid({ ...newBid, numberOfShares: value ?? 0 })}
-                  label="Number of shares"
-                  invalid={(newBid.numberOfShares <= 0 || newBid.numberOfShares > maxShares) && submitMutation.isError}
-                  help={
-                    (newBid.numberOfShares <= 0 || newBid.numberOfShares > maxShares) && submitMutation.isError
-                      ? `Number of shares must be between 1 and ${maxShares.toLocaleString()}`
-                      : ""
-                  }
-                />
-                <DecimalInput
-                  value={newBid.pricePerShare}
-                  onChange={(value) => setNewBid({ ...newBid, pricePerShare: value ?? 0 })}
-                  min={11.38}
-                  label="Price per share"
-                  invalid={newBid.pricePerShare <= 0 && submitMutation.isError}
-                  help={
-                    newBid.pricePerShare <= 0 && submitMutation.isError ? "Price per share must be greater than 0" : ""
-                  }
-                  className={newBid.pricePerShare <= 0 && submitMutation.isError ? "error" : ""}
-                  prefix="$"
-                />
-                {totalAmount > 0 && (
-                  <div className="info">
-                    <strong>Total amount:</strong> {formatMoney(totalAmount)}
-                  </div>
-                )}
-                <Alert variant="destructive">
-                  <ExclamationTriangleIcon />
-                  <AlertDescription>
-                    <strong>Important:</strong> Please note that once submitted, commitments cannot be withdrawn or
-                    changed. Make sure all information is correct before proceeding.
-                  </AlertDescription>
-                </Alert>
-              </CardRow>
-              <CardRow>
+              </CardContent>
+              <CardFooter>
                 <Tooltip>
                   <TooltipTrigger asChild={signed}>
                     <MutationButton mutation={submitMutation} disabled={!signed}>
@@ -341,7 +349,7 @@ export default function TenderOfferView() {
                   </TooltipTrigger>
                   <TooltipContent>{buttonTooltip}</TooltipContent>
                 </Tooltip>
-              </CardRow>
+              </CardFooter>
             </Card>
           </form>
         </>

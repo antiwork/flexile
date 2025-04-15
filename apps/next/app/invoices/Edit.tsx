@@ -10,7 +10,6 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import EquityPercentageLockModal from "@/app/invoices/EquityPercentageLockModal";
-import { Card, CardRow } from "@/components/Card";
 import DecimalInput from "@/components/DecimalInput";
 import DurationInput from "@/components/DurationInput";
 import Input from "@/components/Input";
@@ -18,6 +17,8 @@ import MainLayout from "@/components/layouts/Main";
 import Select from "@/components/Select";
 import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { HorizontalDivider } from "@/components/ui/divider";
 import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
@@ -519,37 +520,46 @@ const Edit = () => {
               className="w-full border-dashed border-gray-100 lg:w-96"
             />
             <Card className="md:self-start">
-              {canManageExpenses || equityCalculation.amountInCents > 0 ? (
-                <CardRow className="flex justify-between gap-2">
-                  <strong>Total services</strong>
-                  <span>{formatMoneyFromCents(totalServicesAmountInCents)}</span>
-                </CardRow>
-              ) : null}
-              {canManageExpenses ? (
-                <CardRow className="flex justify-between gap-2">
-                  <strong>Total expenses</strong>
-                  <span>{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
-                </CardRow>
-              ) : null}
-              {equityCalculation.amountInCents > 0 ? (
-                <>
-                  <CardRow className="flex justify-between gap-2">
-                    <strong>Swapped for equity (not paid in cash)</strong>
-                    <span>{formatMoneyFromCents(equityCalculation.amountInCents)}</span>
-                  </CardRow>
-                  <CardRow className="flex justify-between gap-2">
-                    <strong>Net amount in cash</strong>
-                    <span className="numeric">
-                      {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.amountInCents)}
-                    </span>
-                  </CardRow>
-                </>
-              ) : (
-                <CardRow className="flex justify-between gap-2">
-                  <strong>Total</strong>
-                  <span className="numeric">{formatMoneyFromCents(totalInvoiceAmountInCents)}</span>
-                </CardRow>
-              )}
+              <CardContent className="px-0">
+                {canManageExpenses || equityCalculation.amountInCents > 0 ? (
+                  <>
+                    <div className="flex justify-between gap-2 px-4">
+                      <strong>Total services</strong>
+                      <span>{formatMoneyFromCents(totalServicesAmountInCents)}</span>
+                    </div>
+                    <HorizontalDivider />
+                  </>
+                ) : null}
+                {canManageExpenses ? (
+                  <>
+                    <div className="flex justify-between gap-2 px-4">
+                      <strong>Total expenses</strong>
+                      <span>{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
+                    </div>
+                    <HorizontalDivider />
+                  </>
+                ) : null}
+                {equityCalculation.amountInCents > 0 ? (
+                  <>
+                    <div className="flex justify-between gap-2 px-4">
+                      <strong>Swapped for equity (not paid in cash)</strong>
+                      <span>{formatMoneyFromCents(equityCalculation.amountInCents)}</span>
+                    </div>
+                    <HorizontalDivider />
+                    <div className="flex justify-between gap-2 px-4">
+                      <strong>Net amount in cash</strong>
+                      <span className="numeric">
+                        {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.amountInCents)}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex justify-between gap-2 px-4">
+                    <strong>Total</strong>
+                    <span className="numeric">{formatMoneyFromCents(totalInvoiceAmountInCents)}</span>
+                  </div>
+                )}
+              </CardContent>
             </Card>
           </footer>
         </div>
