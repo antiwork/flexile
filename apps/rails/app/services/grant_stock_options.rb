@@ -72,9 +72,9 @@ class GrantStockOptions
                                                            retirement_exercise_months:)
                                                       .process
     if equity_grant_creation_result.success?
-      return { success: true, equity_grant_id: equity_grant_creation_result.equity_grant.external_id }
+      { success: true, equity_grant_id: equity_grant_creation_result.equity_grant.external_id }
     else
-      return { success: false, error: equity_grant_creation_result.error }
+      { success: false, error: equity_grant_creation_result.error }
     end
   end
 
