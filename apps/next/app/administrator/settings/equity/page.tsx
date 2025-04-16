@@ -2,30 +2,32 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Set } from "immutable";
-import { Check, ChevronsUpDown, User, X } from "lucide-react";
+import { User, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
 import DecimalInput from "@/components/DecimalInput";
 import FormSection from "@/components/FormSection";
 import MutationButton from "@/components/MutationButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardFooter } from "@/components/ui/card";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Combobox } from "@/components/ui/combobox";
+import { FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useCurrentCompany } from "@/global";
 import { MAX_FILES_PER_CAP_TABLE_UPLOAD } from "@/models";
 import { trpc } from "@/trpc/client";
-import { cn, md5Checksum } from "@/utils";
+import { md5Checksum } from "@/utils";
 
 const BoardMembersSection = () => {
   const company = useCurrentCompany();
-  const [open, setOpen] = useState(false);
   const [administrators] = trpc.companyAdministrators.list.useSuspenseQuery({ companyId: company.id });
   const [boardMemberIds, setBoardMemberIds] = useState(
     Set(administrators.flatMap((admin) => (admin.boardMember ? [admin.id] : []))),
   );
   const updateBoardMembers = trpc.companyAdministrators.update.useMutation();
+
+  const form = useForm();
 
   const updateMutation = useMutation({
     mutationFn: async () => {
@@ -43,74 +45,75 @@ const BoardMembersSection = () => {
 
   return (
     <FormSection title="Board members" description="Select company administrators who are board members.">
-      <CardContent>
-        <div className="grid gap-4">
-          Choose board members from your existing administrators.
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={open}
-                className="w-full justify-between rounded-md"
-              >
-                {boardMemberIds.size > 0
-                  ? `${boardMemberIds.size} member${boardMemberIds.size > 1 ? "s" : ""} selected`
-                  : "Select members..."}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="p-0">
-              <Command className="w-full">
-                <CommandInput placeholder="Search administrators..." />
-                <CommandList>
-                  <CommandEmpty>No administrator found.</CommandEmpty>
-                  <CommandGroup>
-                    {administrators.map((admin) => (
-                      <CommandItem
-                        key={admin.id}
-                        onSelect={() =>
-                          setBoardMemberIds(boardMemberIds[boardMemberIds.has(admin.id) ? "delete" : "add"](admin.id))
-                        }
-                        className="flex items-center gap-2"
-                      >
-                        <User className="text-muted-foreground h-5 w-5" />
-                        <span>{admin.name}</span>
-                        <Check className={cn("ml-auto h-4 w-4", { invisible: !boardMemberIds.has(admin.id) })} />
-                      </CommandItem>
+      <FormProvider {...form}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            updateMutation.mutate();
+          }}
+        >
+          <CardContent>
+            <div className="grid gap-4">
+              <FormField
+                control={form.control}
+                name="boardMembers"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>Board members</FormLabel>
+                    <FormControl>
+                      <Combobox
+                        options={administrators.map((admin: { id: string; name: string }) => ({
+                          value: admin.id,
+                          label: admin.name,
+                        }))}
+                        value={boardMemberIds.toArray().join(",")}
+                        onSelect={(value) => {
+                          if (!value) return;
+                          const [id] = value.split(",");
+                          if (!id) return;
+                          setBoardMemberIds(boardMemberIds[boardMemberIds.has(id) ? "delete" : "add"](id));
+                        }}
+                        placeholder="Select members..."
+                        emptyMessage="No administrator found."
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              {boardMemberIds.size > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {administrators
+                    .filter((admin) => boardMemberIds.has(admin.id))
+                    .map((member) => (
+                      <Badge key={member.id} variant="secondary" className="flex items-center gap-1">
+                        <User className="h-3 w-3" />
+                        {member.name}
+                        <Button
+                          variant="link"
+                          className="text-muted-foreground hover:text-foreground h-auto p-0"
+                          onClick={() => setBoardMemberIds(boardMemberIds.delete(member.id))}
+                        >
+                          <X className="h-3 w-3" />
+                          <span className="sr-only">Remove</span>
+                        </Button>
+                      </Badge>
                     ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-          {boardMemberIds.size > 0 ? (
-            <div className="flex flex-wrap">
-              {administrators
-                .filter((admin) => boardMemberIds.has(admin.id))
-                .map((member) => (
-                  <Badge key={member.id} variant="secondary" className="flex items-center gap-1">
-                    <User className="h-3 w-3" />
-                    {member.name}
-                    <Button
-                      variant="link"
-                      className="text-muted-foreground hover:text-foreground h-auto p-0"
-                      onClick={() => setBoardMemberIds(boardMemberIds.delete(member.id))}
-                    >
-                      <X className="h-3 w-3" />
-                      <span className="sr-only">Remove</span>
-                    </Button>
-                  </Badge>
-                ))}
+                </div>
+              ) : null}
             </div>
-          ) : null}
-        </div>
-      </CardContent>
-      <CardFooter>
-        <MutationButton mutation={updateMutation} disabled={updateMutation.isPending} loadingText="Saving...">
-          Save board members
-        </MutationButton>
-      </CardFooter>
+          </CardContent>
+          <CardFooter>
+            <MutationButton
+              type="submit"
+              mutation={updateMutation}
+              disabled={updateMutation.isPending}
+              loadingText="Saving..."
+            >
+              Save board members
+            </MutationButton>
+          </CardFooter>
+        </form>
+      </FormProvider>
     </FormSection>
   );
 };
