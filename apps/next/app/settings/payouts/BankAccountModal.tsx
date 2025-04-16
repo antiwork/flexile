@@ -11,7 +11,7 @@ import Select from "@/components/Select";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Combobox } from "@/components/ui/combobox";
-import { FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import {
   CURRENCIES,
   type Currency,
@@ -19,6 +19,7 @@ import {
   currencyCodes,
   supportedCountries,
 } from "@/models/constants";
+import { cn } from "@/utils";
 import { request } from "@/utils/request";
 import { save_bank_account_onboarding_path, wise_account_requirements_path } from "@/utils/routes";
 
@@ -106,11 +107,9 @@ interface Props {
   onClose: () => void;
 }
 
-const countryOptions = [...supportedCountries].map(([countryCode, name]) => ({ key: countryCode, name }));
+const countryOptions = [...supportedCountries].map(([countryCode, name]) => ({ name, key: countryCode }));
 
 const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClose }: Props) => {
-  // TODO (techdebt): Consider migrating to react-hook-form once we have a clearer
-  // pattern for handling Wise's dynamic form requirements and async validation
   const [showBillingDetails, setShowBillingDetails] = useState(false);
   const defaultCurrency = bankAccount?.currency ?? currencyByCountryCode.get(billingDetails.country_code) ?? "USD";
   const [currency, setCurrency] = useState<Currency>(defaultCurrency);
@@ -121,6 +120,8 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
   detailsRef.current = details;
   const [errors, setErrors] = useState(new Map<string, string>());
   const previousForms = useRef<Form[] | null>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
   const nestedDetails = () => {
     const result = {};
     const values =
@@ -394,140 +395,94 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
   }, [allFields, billingDetails]);
 
   return (
-    <Modal open={open} onClose={onClose} title="Bank account">
-      <FormField
-        name="currency"
-        render={() => (
-          <FormItem>
-            <FormLabel>Currency</FormLabel>
-            <FormControl>
-              <Select
-                value={currency}
-                onChange={(value) => setCurrency(z.enum(currencyCodes).parse(value))}
-                options={CURRENCIES.map(({ value, name }) => ({ value, label: name }))}
-              />
-            </FormControl>
-          </FormItem>
-        )}
+    <Modal ref={dialogRef} open={open} onClose={onClose} title="Bank account">
+      <Select
+        value={currency}
+        onChange={(value) => setCurrency(z.enum(currencyCodes).parse(value))}
+        options={CURRENCIES.map(({ value, name }) => ({ value, label: name }))}
+        label="Currency"
       />
 
       {formSwitch ? (
-        <FormField
-          name="formSwitch"
-          render={() => (
-            <FormItem>
-              <FormControl>
-                <Checkbox
-                  checked={(selectedFormIndex !== defaultFormIndex) !== formSwitch.defaultOn}
-                  role="switch"
-                  label={formSwitch.label}
-                  disabled={isPending}
-                  onCheckedChange={() => setSelectedFormIndex((prev) => (prev + 1) % 2)}
-                />
-              </FormControl>
-            </FormItem>
-          )}
+        <Checkbox
+          checked={(selectedFormIndex !== defaultFormIndex) !== formSwitch.defaultOn}
+          role="switch"
+          label={formSwitch.label}
+          disabled={isPending}
+          onCheckedChange={() => setSelectedFormIndex((prev) => (prev + 1) % 2)}
         />
       ) : forms.length > 2 ? (
-        <FormField
-          name="accountType"
-          render={() => (
-            <FormItem>
-              <FormLabel>Account Type</FormLabel>
-              <FormControl>
-                <Select
-                  value={selectedFormIndex.toString()}
-                  onChange={(value) => setSelectedFormIndex(Number(value))}
-                  placeholder="Choose account type"
-                  options={forms.map((form, i) => ({ value: i.toString(), label: form.title }))}
-                  disabled={isPending}
-                />
-              </FormControl>
-            </FormItem>
-          )}
+        <Select
+          value={selectedFormIndex.toString()}
+          onChange={(value) => setSelectedFormIndex(Number(value))}
+          placeholder="Choose account type"
+          options={forms.map((form, i) => ({ value: i.toString(), label: form.title }))}
+          label="Account Type"
+          disabled={isPending}
         />
       ) : null}
 
       {visibleFields?.map((field) => {
         if (field.type === "select" || field.type === "radio") {
+          const isErrored = errors.has(field.key);
+          const errorMessage = errors.get(field.key);
+          const selectOptions = (field.valuesAllowed ?? []).map(({ key, name }) => ({ value: key, label: name }));
+
           if (!field.valuesAllowed || field.valuesAllowed.length > 5) {
             return (
-              <FormField
-                key={field.key}
-                name={field.key}
-                render={() => (
-                  <FormItem>
-                    <FormLabel>{field.name}</FormLabel>
-                    <FormControl>
-                      <Combobox
-                        options={
-                          field.key === KEY_ADDRESS_COUNTRY
-                            ? countryOptions.map((option) => ({ value: option.key, label: option.name }))
-                            : (field.valuesAllowed?.map((option) => ({ value: option.key, label: option.name })) ?? [])
-                        }
-                        value={details.get(field.key) ?? ""}
-                        onSelect={(value) => {
-                          setDetails((prev) => prev.set(field.key, value));
-                          setTimeout(() => fieldUpdated(field), 0);
-                        }}
-                        placeholder={field.name}
-                        disabled={isPending}
-                        emptyMessage="No options found."
-                      />
-                    </FormControl>
-                    {errors.get(field.key) && <div className="mt-1 text-sm text-red-500">{errors.get(field.key)}</div>}
-                  </FormItem>
-                )}
-              />
+              <div key={field.key} className="grid gap-2">
+                <Label
+                  className="leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  htmlFor={field.key}
+                >
+                  {field.name}
+                </Label>
+                <Combobox
+                  portalContainer={dialogRef.current}
+                  value={details.get(field.key) ?? ""}
+                  onSelect={(value: string) => {
+                    setDetails((prev) => prev.set(field.key, value));
+                    setTimeout(() => fieldUpdated(field), 0);
+                  }}
+                  options={selectOptions}
+                  disabled={isPending}
+                  placeholder={`Select ${field.name}...`}
+                  emptyMessage="Please select an option from the list."
+                  popoverClassName={cn(isErrored && "border-red-500 focus-visible:ring-red-500")}
+                  triggerClassName={cn(isErrored && "border-red-500 focus-visible:ring-red-500")}
+                />
+                {isErrored && errorMessage ? <div className="text-sm text-red-500">{errorMessage}</div> : null}
+              </div>
             );
           }
 
           return (
-            <FormField
+            <RadioButtons
               key={field.key}
-              name={field.key}
-              render={() => (
-                <FormItem>
-                  <FormLabel>{field.name}</FormLabel>
-                  <FormControl>
-                    <RadioButtons
-                      value={details.get(field.key) ?? ""}
-                      onChange={(value) => {
-                        setDetails((prev) => prev.set(field.key, value));
-                        setTimeout(() => fieldUpdated(field), 0);
-                      }}
-                      options={(field.valuesAllowed ?? []).map(({ key, name }) => ({ label: name, value: key }))}
-                      invalid={errors.has(field.key)}
-                      help={errors.get(field.key)}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
+              value={details.get(field.key) ?? ""}
+              onChange={(value) => {
+                setDetails((prev) => prev.set(field.key, value));
+                setTimeout(() => fieldUpdated(field), 0);
+              }}
+              label={field.name}
+              options={selectOptions}
+              invalid={isErrored}
+              help={errorMessage}
             />
           );
         }
 
         return (
-          <FormField
+          <BankAccountField
             key={field.key}
-            name={field.key}
-            render={() => (
-              <FormItem>
-                <FormLabel>{field.name}</FormLabel>
-                <FormControl>
-                  <BankAccountField
-                    value={details.get(field.key) ?? ""}
-                    onChange={(value) => {
-                      setDetails((prev) => prev.set(field.key, value));
-                      setTimeout(() => fieldUpdated(field), 0);
-                    }}
-                    field={field}
-                    invalid={errors.has(field.key)}
-                    help={errors.get(field.key)}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
+            value={details.get(field.key) ?? ""}
+            onChange={(value) => {
+              setDetails((prev) => prev.set(field.key, value));
+              setTimeout(() => fieldUpdated(field), 0);
+            }}
+            field={field}
+            invalid={errors.has(field.key)}
+            help={errors.get(field.key)}
           />
         );
       })}
