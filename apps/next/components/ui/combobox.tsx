@@ -38,7 +38,12 @@ export function Combobox({
         <button
           aria-expanded={open}
           className={cn(
-            "border-input ring-offset-background placeholder:text-muted-foreground focus:ring-ring flex h-9 w-full items-center justify-between rounded-md border bg-transparent px-3 py-2 text-sm shadow-sm focus:ring-1 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+            "flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm",
+            "ring-offset-background",
+            "placeholder:text-muted-foreground",
+            "focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-1 focus-visible:outline-none",
+            "disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-50",
+            "peer",
             triggerClassName,
           )}
           disabled={disabled}
@@ -47,7 +52,7 @@ export function Combobox({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className={cn("w-[200px] p-0", popoverClassName)}>
+      <PopoverContent className={cn("w-[var(--radix-popover-trigger-width)] p-0", popoverClassName)}>
         <Command className={className}>
           <CommandInput placeholder={placeholder} value={searchValue} onValueChange={setSearchValue} />
           <CommandEmpty>{emptyMessage}</CommandEmpty>
