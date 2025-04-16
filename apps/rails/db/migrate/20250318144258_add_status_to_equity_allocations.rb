@@ -1,6 +1,6 @@
 class AddStatusToEquityAllocations < ActiveRecord::Migration[8.0]
   def change
-    create_enum :equity_allocations_status, %w[pending_confirmation pending_approval approved]
+    create_enum :equity_allocations_status, %w[pending_confirmation pending_grant_creation pending_approval approved]
     add_column :equity_allocations, :status, :enum, enum_type: :equity_allocations_status, default: "pending_confirmation"
 
     up_only do

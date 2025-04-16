@@ -5,6 +5,7 @@ class EquityAllocation < ApplicationRecord
 
   enum :status, {
     pending_confirmation: "pending_confirmation",
+    pending_grant_creation: "pending_grant_creation",
     pending_approval: "pending_approval",
     approved: "approved",
   }
