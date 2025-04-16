@@ -17,7 +17,7 @@ import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assert } from "@/utils/assert";
@@ -225,10 +225,8 @@ const QuickInvoiceSection = ({ disabled }: { disabled?: boolean }) => {
 
   return (
     <Card className={disabled ? "pointer-events-none opacity-50" : ""}>
-      <CardHeader className="border-b-0 pb-0">
-        <CardTitle className="text-sm font-normal uppercase">Quick invoice</CardTitle>
-      </CardHeader>
       <CardContent className="grid gap-4">
+        <h4 className="text-sm uppercase">Quick invoice</h4>
         <div className="grid gap-3 md:grid-cols-3">
           <div className="grid gap-2">
             {isProjectBased ? (

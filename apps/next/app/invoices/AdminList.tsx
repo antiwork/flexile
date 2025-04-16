@@ -27,7 +27,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { HorizontalDivider } from "@/components/ui/divider";
+import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -233,14 +233,14 @@ export default function AdminList() {
           </div>
         )}
         <Card>
-          <CardContent className="px-0">
+          <CardContent>
             {selectedInvoices.slice(0, 5).map((invoice, index, array) => (
               <Fragment key={invoice.id}>
-                <div className="flex justify-between gap-2 px-4">
+                <div className="flex justify-between gap-2">
                   <b>{invoice.billFrom}</b>
                   <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
                 </div>
-                <HorizontalDivider omit={index === array.length - 1} />
+                {index !== array.length - 1 && <Separator />}
               </Fragment>
             ))}
           </CardContent>
@@ -337,22 +337,22 @@ const TasksModal = ({
             </Button>
           </header>
           <Card className="mt-3">
-            <CardContent className="px-0">
-              <div className="flex justify-between gap-2 px-4">
+            <CardContent>
+              <div className="flex justify-between gap-2">
                 <div>Net amount in cash</div>
                 <div>{formatMoneyFromCents(invoice.cashAmountInCents)}</div>
               </div>
-              <HorizontalDivider />
+              <Separator />
               {invoice.equityAmountInCents ? (
                 <>
-                  <div className="flex justify-between gap-2 px-4">
+                  <div className="flex justify-between gap-2">
                     <div>Swapped for equity ({invoice.equityPercentage}%)</div>
                     <div>{formatMoneyFromCents(invoice.equityAmountInCents)}</div>
                   </div>
-                  <HorizontalDivider />
+                  <Separator />
                 </>
               ) : null}
-              <div className="flex justify-between gap-2 px-4 font-bold">
+              <div className="flex justify-between gap-2 font-bold">
                 <div>Payout total</div>
                 <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
               </div>

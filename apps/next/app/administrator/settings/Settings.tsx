@@ -9,8 +9,8 @@ import MutationButton from "@/components/MutationButton";
 import { Editor } from "@/components/RichText";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CardContent, CardFooter } from "@/components/ui/card";
-import { HorizontalDivider } from "@/components/ui/divider";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";
 import defaultLogo from "@/images/default-company-logo.svg";
@@ -90,9 +90,9 @@ export default function Settings({ githubOauthUrl }: { githubOauthUrl: string })
       <StripeMicrodepositVerification />
       {company.flags.includes("quickbooks") || company.flags.includes("team_updates") ? (
         <FormSection title="Integrations">
-          <CardContent className="px-0">
+          <CardContent>
             {company.flags.includes("quickbooks") ? <QuickbooksIntegration /> : null}
-            <HorizontalDivider omit={!company.flags.includes("quickbooks")} />
+            <Separator className="first:hidden last:hidden" />
             {company.flags.includes("team_updates") ? <GithubIntegration oauthUrl={githubOauthUrl} /> : null}
           </CardContent>
         </FormSection>

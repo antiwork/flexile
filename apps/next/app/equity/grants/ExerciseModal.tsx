@@ -9,7 +9,7 @@ import RangeInput from "@/components/RangeInput";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { HorizontalDivider } from "@/components/ui/divider";
+import { Separator } from "@/components/ui/separator";
 import env from "@/env/client";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -134,10 +134,10 @@ const ExerciseModal = ({
           />
 
           <Card className="mt-4">
-            <CardContent className="px-0">
+            <CardContent>
               {sortedGrants.map((grant, index) => (
                 <Fragment key={grant.id}>
-                  <div className="flex flex-col px-4">
+                  <div className="flex flex-col">
                     <div className="mb-2 flex items-center justify-between gap-4">
                       {sortedGrants.length > 1 ? (
                         <Checkbox
@@ -175,7 +175,7 @@ const ExerciseModal = ({
                       />
                     </div>
                   </div>
-                  <HorizontalDivider omit={index === sortedGrants.length - 1} />
+                  {index !== sortedGrants.length - 1 && <Separator />}
                 </Fragment>
               ))}
             </CardContent>
@@ -184,18 +184,18 @@ const ExerciseModal = ({
           <div className="mt-4 grid">
             <h3 className="mb-2">Summary</h3>
             <Card>
-              <CardContent className="px-0">
-                <div className="flex justify-between gap-2 px-4 font-bold">
+              <CardContent>
+                <div className="flex justify-between gap-2 font-bold">
                   <div>Exercise cost</div>
                   <div>{formatMoney(totalExerciseCost)}</div>
                 </div>
-                <HorizontalDivider />
-                <div className="flex justify-between gap-2 px-4">
+                <Separator />
+                <div className="flex justify-between gap-2">
                   <div>Payment method</div>
                   <div>Bank transfer</div>
                 </div>
-                <HorizontalDivider />
-                <div className="flex justify-between gap-2 px-4">
+                <Separator />
+                <div className="flex justify-between gap-2">
                   <div>
                     Options value
                     <br />

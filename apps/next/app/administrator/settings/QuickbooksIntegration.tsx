@@ -127,7 +127,7 @@ export default function QuickbooksRow() {
   };
 
   return (
-    <div className="px-4">
+    <div>
       <div className="flex justify-between gap-2">
         <div>
           <div className="flex items-center gap-2">

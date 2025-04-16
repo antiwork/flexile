@@ -129,8 +129,8 @@ const AdminList = () => {
 const ViewList = () => {
   const data = useData();
   return data.updates.map((update) => (
-    <Link key={update.id} href={`/updates/company/${update.id}`}>
-      <Card>
+    <Card key={update.id} asChild>
+      <Link href={`/updates/company/${update.id}`}>
         <CardContent className="grid grid-cols-[1fr_auto] items-center">
           <div className="grid gap-4">
             <h4 className="text-xl font-bold">{update.title}</h4>
@@ -138,7 +138,7 @@ const ViewList = () => {
           </div>
           <ArrowRightIcon className="size-7" />
         </CardContent>
-      </Card>
-    </Link>
+      </Link>
+    </Card>
   ));
 };

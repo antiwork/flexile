@@ -20,7 +20,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { HorizontalDivider } from "@/components/ui/divider";
+import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -231,8 +231,8 @@ export default function TenderOfferView() {
           </h2>
           <form>
             <Card>
-              <CardContent className="px-0">
-                <div className="px-4">
+              <CardContent>
+                <div>
                   THIS DOCUMENT AND THE INFORMATION REFERENCED HEREIN OR PROVIDED TO YOU IN CONNECTION WITH THIS OFFER
                   TO PURCHASE CONSTITUTES CONFIDENTIAL INFORMATION REGARDING GUMROAD, INC., A DELAWARE CORPORATION (THE
                   "COMPANY"). BY OPENING OR READING THIS DOCUMENT, YOU HEREBY AGREE TO MAINTAIN THE CONFIDENTIALITY OF
@@ -244,8 +244,8 @@ export default function TenderOfferView() {
                   AND NON-SOLICITATION AGREEMENT" OR OTHER NONDISCLOSURE AGREEMENT. BY YOU ACCEPTING TO RECEIVE THIS
                   OFFER TO PURCHASE, YOU ACKNOWLEDGE AND AGREE TO THE FOREGOING RESTRICTIONS.
                 </div>
-                <HorizontalDivider />
-                <div className="flex flex-col gap-4 px-4">
+                <Separator />
+                <div className="flex flex-col gap-4">
                   <div className="h-96 overflow-y-auto rounded-md border p-4">
                     <div className="prose max-w-none">
                       <LetterOfTransmissal />

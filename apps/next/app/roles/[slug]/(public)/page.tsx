@@ -29,14 +29,14 @@ export default function RolesPage() {
     >
       <title>{`Open roles at ${company.name}`}</title>
       {roles.map((role) => (
-        <Link key={role.id} href={`/roles/${companySlug}/${toSlug(role.name)}-${role.id}`} className="rounded-2xl">
-          <Card>
+        <Card key={role.id} asChild>
+          <Link href={`/roles/${companySlug}/${toSlug(role.name)}-${role.id}`}>
             <CardContent className="flex items-center justify-between">
               <h4 className="text-xl font-bold">{role.name}</h4>
               <ArrowRightIcon className="size-7" />
             </CardContent>
-          </Card>
-        </Link>
+          </Link>
+        </Card>
       ))}
       {!roles.length && (
         <Placeholder>

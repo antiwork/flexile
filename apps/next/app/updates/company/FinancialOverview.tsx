@@ -1,7 +1,7 @@
 import { addMonths, format, parseISO } from "date-fns";
 import Delta from "@/components/Delta";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { HorizontalDivider } from "@/components/ui/divider";
+import { Separator } from "@/components/ui/separator";
 import type { RouterOutput } from "@/trpc";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatMonth } from "@/utils/time";
@@ -62,9 +62,9 @@ export default function FinancialOverview({
         <CardHeader>
           <CardTitle className="text-gray-500">{formatPeriod(period, periodStartedOn)}</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-[1fr_auto_auto] gap-x-3 px-0">
+        <CardContent className="grid grid-cols-[1fr_auto_auto] gap-x-3">
           {revenue != null ? (
-            <div className="col-span-3 grid grid-cols-subgrid px-4">
+            <div className="col-span-3 grid grid-cols-subgrid">
               <div>{revenueTitle ?? "Revenue"}</div>
               <div className="text-right tabular-nums">{revenue ? formatMoneyFromCents(revenue) : "-"}</div>
               {revenueYoY != null ? (
@@ -75,9 +75,9 @@ export default function FinancialOverview({
               ) : null}
             </div>
           ) : null}
-          <HorizontalDivider className="col-span-full first:hidden last:hidden" />
+          <Separator className="col-span-full first:hidden last:hidden" />
           {netIncome != null ? (
-            <div className="col-span-3 grid grid-cols-subgrid px-4">
+            <div className="col-span-3 grid grid-cols-subgrid">
               <div>{netIncomeTitle ?? "Net income"}</div>
               <div className="text-right tabular-nums">{netIncome ? formatMoneyFromCents(netIncome) : "-"}</div>
               {netIncomeYoY != null ? (

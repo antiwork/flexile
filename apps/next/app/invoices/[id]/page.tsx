@@ -14,7 +14,7 @@ import MutationButton from "@/components/MutationButton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { HorizontalDivider } from "@/components/ui/divider";
+import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -130,10 +130,10 @@ export default function InvoicePage() {
             If everything looks correct, accept the invoice. Then your company administrator can initiate payment.
           </div>
           <Card>
-            <CardContent className="px-0">
+            <CardContent>
               {invoice.minAllowedEquityPercentage !== null && invoice.maxAllowedEquityPercentage !== null ? (
                 <>
-                  <div className="px-4">
+                  <div>
                     <div className="mb-4 flex items-center justify-between">
                       <span className="mb-4 text-gray-600">Cash vs equity split</span>
                       <span className="font-medium">
@@ -160,10 +160,10 @@ export default function InvoicePage() {
                       </span>
                     </div>
                   </div>
-                  <HorizontalDivider />
+                  <Separator />
                 </>
               ) : null}
-              <div className="px-4">
+              <div>
                 <div className="flex items-center justify-between">
                   <span>Cash amount</span>
                   <span className="font-medium">{formatMoneyFromCents(cashAmountInCents)}</span>
@@ -256,15 +256,15 @@ export default function InvoicePage() {
 
             {invoice.expenses.length > 0 && (
               <Card>
-                <CardContent className="px-0">
-                  <div className="flex justify-between gap-2 px-4">
+                <CardContent>
+                  <div className="flex justify-between gap-2">
                     <div>Expense</div>
                     <div>Amount</div>
                   </div>
                   {invoice.expenses.map((expense, i) => (
                     <Fragment key={i}>
-                      <HorizontalDivider />
-                      <div className="flex justify-between gap-2 px-4">
+                      <Separator />
+                      <div className="flex justify-between gap-2">
                         <a href={expense.attachment} download className={linkClasses}>
                           <PaperClipIcon className="inline size-4" />
                           {expenseCategories.find((category) => category.id === expense.expenseCategoryId)?.name} –{" "}
@@ -292,10 +292,10 @@ export default function InvoicePage() {
                 ) : null}
               </div>
               <Card>
-                <CardContent className="px-0">
+                <CardContent>
                   {invoice.lineItems.length > 0 && invoice.expenses.length > 0 && (
                     <>
-                      <div className="flex justify-between gap-2 px-4">
+                      <div className="flex justify-between gap-2">
                         <strong>Total services</strong>
                         <span>
                           {formatMoneyFromCents(
@@ -306,8 +306,8 @@ export default function InvoicePage() {
                           )}
                         </span>
                       </div>
-                      <HorizontalDivider />
-                      <div className="flex justify-between gap-2 px-4">
+                      <Separator />
+                      <div className="flex justify-between gap-2">
                         <strong>Total expenses</strong>
                         <span>
                           {formatMoneyFromCents(
@@ -315,10 +315,10 @@ export default function InvoicePage() {
                           )}
                         </span>
                       </div>
-                      <HorizontalDivider />
+                      <Separator />
                     </>
                   )}
-                  <div className="flex justify-between gap-2 px-4">
+                  <div className="flex justify-between gap-2">
                     <strong>Total</strong>
                     <span>{formatMoneyFromCents(invoice.cashAmountInCents)}</span>
                   </div>

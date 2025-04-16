@@ -13,7 +13,7 @@ import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardFooter } from "@/components/ui/card";
-import { HorizontalDivider } from "@/components/ui/divider";
+import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { currencyCodes, sanctionedCountries, supportedCountries } from "@/models/constants";
 import { trpc } from "@/trpc/client";
@@ -191,9 +191,9 @@ const BankAccountsSection = () => {
 
   return (
     <FormSection title="Payout method">
-      <CardContent className="px-0">
+      <CardContent>
         {isFromSanctionedCountry ? (
-          <div className="px-4">
+          <div>
             <Alert variant="destructive">
               <ExclamationTriangleIcon />
               <AlertTitle>Payouts are disabled</AlertTitle>
@@ -207,7 +207,7 @@ const BankAccountsSection = () => {
           <>
             {showWalletPayoutMethod ? (
               <>
-                <div className="flex justify-between px-4">
+                <div className="flex justify-between">
                   <div>
                     <h2 className="text-xl font-bold">ETH wallet</h2>
                     <div className="text-xs">{walletAddress}</div>
@@ -222,13 +222,13 @@ const BankAccountsSection = () => {
                     onComplete={setWalletAddress}
                   />
                 </div>
-                <HorizontalDivider />
+                <Separator />
               </>
             ) : null}
 
             {bankAccounts.map((bankAccount, index) => (
               <Fragment key={bankAccount.id}>
-                <div className="flex justify-between px-4">
+                <div className="flex justify-between">
                   <div>
                     <h2 className="text-xl font-bold">{bankAccount.currency} bank account</h2>
                     <div className="text-xs">Ending in {bankAccount.last_four_digits}</div>
@@ -288,14 +288,14 @@ const BankAccountsSection = () => {
                     )}
                   </div>
                 </div>
-                <HorizontalDivider omit={index === bankAccounts.length - 1} />
+                {index !== bankAccounts.length - 1 && <Separator />}
               </Fragment>
             ))}
 
             {user.roles.investor ? (
               <>
-                <HorizontalDivider />
-                <div className="px-4">
+                <Separator />
+                <div>
                   {addingBankAccount ? (
                     <BankAccountModal
                       open={addingBankAccount}

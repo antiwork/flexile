@@ -16,7 +16,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { HorizontalDivider } from "@/components/ui/divider";
+import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { PayRateType } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
@@ -310,10 +310,10 @@ const ManageModal = ({
       >
         <div>Rate changes will apply to future invoices.</div>
         <Card>
-          <CardContent className="px-0">
+          <CardContent>
             {contractorsToUpdate.map((contractor, i) => (
               <Fragment key={i}>
-                <div className="flex justify-between gap-2 px-4">
+                <div className="flex justify-between gap-2">
                   <b>{contractor.user.name}</b>
                   <div>
                     <del>{formatMoneyFromCents(contractor.payRateInSubunits)}</del>{" "}
@@ -323,7 +323,7 @@ const ManageModal = ({
                     </span>
                   </div>
                 </div>
-                <HorizontalDivider omit={i === contractorsToUpdate.length - 1} />
+                {i !== contractorsToUpdate.length - 1 && <Separator />}
               </Fragment>
             ))}
           </CardContent>

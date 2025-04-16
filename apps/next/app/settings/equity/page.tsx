@@ -8,7 +8,7 @@ import MutationButton from "@/components/MutationButton";
 import RangeInput from "@/components/RangeInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { HorizontalDivider } from "@/components/ui/divider";
+import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import { trpc } from "@/trpc/client";
@@ -64,8 +64,8 @@ export default function Equity() {
 
       <div title="Equity split">
         <Card>
-          <CardContent className="px-0">
-            <div className="grid gap-4 px-4">
+          <CardContent>
+            <div className="grid gap-4">
               <RangeInput
                 value={equityPercent}
                 onChange={setEquityPercent}
@@ -88,22 +88,22 @@ export default function Equity() {
                 }
               />
             </div>
-            <HorizontalDivider />
-            <div className="flex justify-between gap-2 px-4">
+            <Separator />
+            <div className="flex justify-between gap-2">
               <div>Cash amount</div>
               <div>
                 {formatMoneyFromCents(cashCents)} <span className="text-gray-500">/ hour</span>
               </div>
             </div>
-            <HorizontalDivider />
-            <div className="flex justify-between gap-2 px-4">
+            <Separator />
+            <div className="flex justify-between gap-2">
               <div>Equity value</div>
               <div>
                 {formatMoneyFromCents(equityCents)} <span className="text-gray-500">/ hour</span>
               </div>
             </div>
-            <HorizontalDivider />
-            <div className="flex justify-between gap-2 px-4">
+            <Separator />
+            <div className="flex justify-between gap-2">
               <div>Total amount</div>
               <div>
                 {formatMoneyFromCents(equityCents + cashCents)} <span className="text-gray-500">/ hour</span>

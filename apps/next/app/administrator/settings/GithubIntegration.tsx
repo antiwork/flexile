@@ -29,7 +29,7 @@ export default function GithubIntegration({ oauthUrl }: { oauthUrl: string }) {
   });
 
   return (
-    <div className="flex justify-between gap-2 px-4">
+    <div className="flex justify-between gap-2">
       <div>
         <div className="flex items-center gap-2">
           <h2 className="text-xl font-bold">

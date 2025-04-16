@@ -6,7 +6,7 @@ import { linkClasses } from "@/components/Link";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { HorizontalDivider } from "@/components/ui/divider";
+import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
@@ -176,10 +176,10 @@ const DetailsModal = ({
         <div className="grid gap-4 p-4 pt-0 not-print:overflow-y-auto">
           {boxDetails.map((details, index) => (
             <Card key={index}>
-              <CardContent className="px-0">
+              <CardContent>
                 {details.map((detail, i) => (
                   <Fragment key={i}>
-                    <div className="flex justify-between gap-2 px-4">
+                    <div className="flex justify-between gap-2">
                       <div className="inline-flex gap-1">
                         {detail.label}
                         {detail.tooltip ? (
@@ -193,7 +193,7 @@ const DetailsModal = ({
                       </div>
                       <div>{detail.value}</div>
                     </div>
-                    <HorizontalDivider omit={i === details.length - 1} />
+                    {i !== details.length - 1 && <Separator />}
                   </Fragment>
                 ))}
               </CardContent>
@@ -202,16 +202,16 @@ const DetailsModal = ({
 
           <Card>
             <CardHeader>
-              <CardTitle className="font-normal">Post-termination exercise periods</CardTitle>
+              <CardTitle>Post-termination exercise periods</CardTitle>
             </CardHeader>
-            <CardContent className="px-0">
+            <CardContent>
               {postTerminationExercisePeriods.map((detail, index) => (
                 <Fragment key={index}>
-                  <div className="flex justify-between gap-4 px-4">
+                  <div className="flex justify-between gap-4">
                     <div>{detail.label}</div>
                     <div>{detail.value}</div>
                   </div>
-                  <HorizontalDivider omit={index === postTerminationExercisePeriods.length - 1} />
+                  {index !== postTerminationExercisePeriods.length - 1 && <Separator />}
                 </Fragment>
               ))}
             </CardContent>
@@ -219,16 +219,16 @@ const DetailsModal = ({
 
           <Card>
             <CardHeader>
-              <CardTitle className="font-normal">Compliance Details</CardTitle>
+              <CardTitle>Compliance Details</CardTitle>
             </CardHeader>
-            <CardContent className="px-0">
+            <CardContent>
               {complianceDetails.map((detail, index) => (
                 <Fragment key={index}>
-                  <div className="flex justify-between gap-4 px-4">
+                  <div className="flex justify-between gap-4">
                     <div>{detail.label}</div>
                     <div>{detail.value}</div>
                   </div>
-                  <HorizontalDivider omit={index === complianceDetails.length - 1} />
+                  {index !== complianceDetails.length - 1 && <Separator />}
                 </Fragment>
               ))}
             </CardContent>
@@ -237,7 +237,7 @@ const DetailsModal = ({
           {additionalAgreements.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="font-normal">Additional Agreements</CardTitle>
+                <CardTitle>Additional Agreements</CardTitle>
               </CardHeader>
               <CardContent>
                 <ul>
@@ -256,7 +256,7 @@ const DetailsModal = ({
           {rightsAndPreferences.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="font-normal">Rights and Preferences</CardTitle>
+                <CardTitle>Rights and Preferences</CardTitle>
               </CardHeader>
               <CardContent>
                 <ul>
