@@ -6,11 +6,11 @@ import { useMutation } from "@tanstack/react-query";
 import { Map } from "immutable";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import { CardRow } from "@/components/Card";
 import FormSection from "@/components/FormSection";
 import MutationButton from "@/components/MutationButton";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { CardContent, CardFooter } from "@/components/ui/card";
 import { useCurrentUser } from "@/global";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
 import { trpc } from "@/trpc/client";
@@ -50,7 +50,7 @@ const DetailsSection = () => {
 
   return (
     <FormSection title="Personal details" onSubmit={e(() => handleSubmit.mutate(), "prevent")}>
-      <CardRow className="grid gap-4">
+      <CardContent className="grid gap-4">
         <FormField
           control={form.control}
           name="email"
@@ -78,12 +78,12 @@ const DetailsSection = () => {
             </FormItem>
           )}
         />
-      </CardRow>
-      <CardRow>
+      </CardContent>
+      <CardFooter>
         <MutationButton type="submit" mutation={handleSubmit} loadingText="Saving..." successText="Saved!">
           Save
         </MutationButton>
-      </CardRow>
+      </CardFooter>
     </FormSection>
   );
 };
@@ -128,7 +128,7 @@ const PasswordSection = () => {
 
   return (
     <FormSection title="Password" onSubmit={e(() => saveMutation.mutate(), "prevent")}>
-      <CardRow className="grid gap-4">
+      <CardContent className="grid gap-4">
         <FormField
           control={form.control}
           name="currentPassword"
@@ -180,12 +180,12 @@ const PasswordSection = () => {
             </FormItem>
           )}
         />
-      </CardRow>
-      <CardRow>
+      </CardContent>
+      <CardFooter>
         <MutationButton type="submit" mutation={saveMutation} loadingText="Saving...">
           Save
         </MutationButton>
-      </CardRow>
+      </CardFooter>
     </FormSection>
   );
 };

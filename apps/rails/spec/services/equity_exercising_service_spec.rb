@@ -80,16 +80,15 @@ RSpec.describe EquityExercisingService do
       expect(exercise.bank_account).to eq(equity_exercise_bank_account)
 
       document = Document.last
-      expect(document.company_worker).to eq(company_worker)
-      expect(document.user).to eq(user)
       expect(document.year).to eq(exercise.signed_at.year)
-      expect(document.company_administrator).to eq(company_administrator)
       expect(document.company).to eq(company)
-      expect(document.administrator_signature).to eq(company_administrator.user.legal_name)
       expect(document.name).to eq("Notice of Exercise")
-      expect(document.completed_at).to eq(exercise.signed_at)
-      expect(document.contractor_signature).to eq(user.legal_name)
       expect(document.json_data).to eq({ equity_grant_exercise_id: exercise.id }.as_json)
+      expect(document.signatures.count).to eq(1)
+
+      user_signature = document.signatures.find_by(user:)
+      expect(user_signature.title).to eq("Signer")
+      expect(user_signature.signed_at).to be_present
     end
 
     it "creates the exercise as expected for non-US residents" do

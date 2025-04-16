@@ -13,7 +13,7 @@ services:
       POSTGRES_DB: flexile_development
 
   redis:
-    image: redis:6.2.3
+    image: redis:7.4.2
     command: [ "redis-server", "--appendonly", "yes" ]
     ports:
       - 6389:6379

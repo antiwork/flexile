@@ -3,11 +3,11 @@ import { UserPlusIcon, UsersIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import React, { useMemo } from "react";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import Tabs from "@/components/Tabs";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -118,7 +118,7 @@ export default function People() {
 
       {data.workers.length > 0 ? (
         <>
-          <Table table={table} onRowClicked={user.activeRole === "administrator" ? () => "" : undefined} />
+          <DataTable table={table} onRowClicked={user.activeRole === "administrator" ? () => "" : undefined} />
           <PaginationSection total={data.total} perPage={perPage} />
         </>
       ) : (

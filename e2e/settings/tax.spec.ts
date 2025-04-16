@@ -293,7 +293,6 @@ test.describe("Tax settings", () => {
         const document = await db.query.documents.findFirst({
           where: and(
             eq(documents.companyId, company.id),
-            eq(documents.userId, user.id),
             eq(documents.type, DocumentType.ConsultingContract),
             isNull(documents.deletedAt),
           ),
