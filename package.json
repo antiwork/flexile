@@ -126,7 +126,7 @@
     "resend": "^4.0.1-alpha.0",
     "rsa-pem-from-mod-exp": "^0.8.6",
     "server-only": "^0.0.1",
-    "stripe": "^17.0.0",
+    "stripe": "^18.0.0",
     "superjson": "^2.2.2",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
