@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_03_21_231056) do
+ActiveRecord::Schema[8.0].define(version: 2025_04_13_205549) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -393,18 +393,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_03_21_231056) do
     t.index ["consolidated_invoice_id"], name: "index_consolidated_payments_on_consolidated_invoice_id"
   end
 
-  create_table "contractor_profiles", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.text "description"
-    t.integer "available_hours_per_week", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.string "external_id", null: false
-    t.boolean "available_for_hire", default: false, null: false
-    t.index ["external_id"], name: "index_contractor_profiles_on_external_id", unique: true
-    t.index ["user_id"], name: "index_contractor_profiles_on_user_id", unique: true
-  end
-
   create_table "contracts", force: :cascade do |t|
     t.datetime "signed_at"
     t.bigint "company_contractor_id"
@@ -554,6 +542,17 @@ ActiveRecord::Schema[8.0].define(version: 2025_03_21_231056) do
     t.index ["dividend_payment_id"], name: "index_dividends_dividend_payments_on_dividend_payment_id"
   end
 
+  create_table "document_signatures", force: :cascade do |t|
+    t.bigint "document_id", null: false
+    t.bigint "user_id", null: false
+    t.string "title", null: false
+    t.datetime "signed_at"
+    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "updated_at", null: false
+    t.index ["document_id"], name: "index_document_signatures_on_document_id"
+    t.index ["user_id"], name: "index_document_signatures_on_user_id"
+  end
+
   create_table "document_templates", force: :cascade do |t|
     t.bigint "company_id"
     t.string "name", null: false
@@ -569,30 +568,21 @@ ActiveRecord::Schema[8.0].define(version: 2025_03_21_231056) do
 
   create_table "documents", force: :cascade do |t|
     t.bigint "company_id", null: false
-    t.bigint "user_id", null: false
     t.bigint "user_compliance_info_id"
-    t.bigint "company_administrator_id"
     t.bigint "equity_grant_id"
     t.string "name", null: false
     t.integer "document_type", null: false
     t.integer "year", null: false
-    t.string "contractor_signature"
-    t.string "administrator_signature"
     t.datetime "deleted_at"
     t.datetime "emailed_at"
-    t.datetime "completed_at"
     t.jsonb "json_data"
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
-    t.bigint "company_contractor_id"
     t.integer "docuseal_submission_id"
-    t.index ["company_administrator_id"], name: "index_documents_on_company_administrator_id"
-    t.index ["company_contractor_id"], name: "index_documents_on_company_contractor_id"
     t.index ["company_id"], name: "index_documents_on_company_id"
     t.index ["docuseal_submission_id"], name: "index_documents_on_docuseal_submission_id"
     t.index ["equity_grant_id"], name: "index_documents_on_equity_grant_id"
     t.index ["user_compliance_info_id"], name: "index_documents_on_user_compliance_info_id"
-    t.index ["user_id"], name: "index_documents_on_user_id"
   end
 
   create_table "equity_allocations", force: :cascade do |t|

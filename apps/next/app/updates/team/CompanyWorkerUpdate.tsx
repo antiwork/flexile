@@ -8,9 +8,9 @@ import { CalendarClockIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import AbsencesModal from "@/app/updates/team/AbsencesModal";
 import { Task, TaskInput } from "@/app/updates/team/Task";
-import { Card } from "@/components/Card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useCurrentCompany } from "@/global";
 import type { RouterInput, RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -62,18 +62,20 @@ const ReadableCompanyWorkerUpdate = ({ data }: { data: TeamMemberData }) => {
   const updateAbsence = data.absences.length > 0 ? formatAbsencesForUpdate(data, data.absences) : null;
 
   return (
-    <Card className="overflow-hidden p-6">
-      {data.update?.tasks.length || updateAbsence ? (
-        <ul className="grid gap-1">
-          {updateAbsence ? (
-            <li className="flex">
-              <CalendarClockIcon className="mr-2 h-5 w-5 text-gray-600" />
-              <i>Off {updateAbsence}</i>
-            </li>
-          ) : null}
-          {data.update?.tasks.map((task) => <Task key={task.id} task={task} />)}
-        </ul>
-      ) : null}
+    <Card>
+      <CardContent className="overflow-hidden p-6">
+        {data.update?.tasks.length || updateAbsence ? (
+          <ul className="grid gap-1">
+            {updateAbsence ? (
+              <li className="flex">
+                <CalendarClockIcon className="mr-2 h-5 w-5 text-gray-600" />
+                <i>Off {updateAbsence}</i>
+              </li>
+            ) : null}
+            {data.update?.tasks.map((task) => <Task key={task.id} task={task} />)}
+          </ul>
+        ) : null}
+      </CardContent>
     </Card>
   );
 };
@@ -148,39 +150,40 @@ const EditableCompanyWorkerUpdate = ({ data }: { data: TeamMemberData }) => {
 
   return (
     <form onSubmit={(e) => e.preventDefault()}>
-      <Card className="space-y-4 p-6">
-        <ul className="mt-3 grid gap-1">
-          {absenceSummary ? (
-            <li className="flex">
-              <CalendarClockIcon className="mr-2 h-5 w-5 text-gray-600" />
-              <i>Off {absenceSummary}</i>
-            </li>
-          ) : null}
-          {tasks.map((task, index) => (
-            <TaskInput
-              key={task.id ?? `tmp-${index}`}
-              task={task}
-              focused={focusedIndex === index}
-              onClick={() => setFocusedIndex(index)}
-              onEnter={() => addTask(index)}
-              onChange={(task) => handleTaskUpdate((tasks) => tasks.set(index, task))}
-              onSelectIntegrationRecord={(record) => {
-                setFocusedIndex(index + 1);
-                handleTaskUpdate((tasks) =>
-                  tasks.set(index, {
-                    ...task,
-                    name: `#${record.resource_id}`,
-                    integrationRecord: { ...record, id: null },
-                    completedAt: record.resource_name === "pulls" && record.status === "merged" ? new Date() : null,
-                  }),
-                );
-              }}
-              onRemove={() => removeTask(index)}
-            />
-          ))}
-        </ul>
-
-        <footer className="grid gap-4 pt-4">
+      <Card>
+        <CardContent className="p-6">
+          <ul className="mt-3 grid gap-1">
+            {absenceSummary ? (
+              <li className="flex">
+                <CalendarClockIcon className="mr-2 h-5 w-5 text-gray-600" />
+                <i>Off {absenceSummary}</i>
+              </li>
+            ) : null}
+            {tasks.map((task, index) => (
+              <TaskInput
+                key={task.id ?? `tmp-${index}`}
+                task={task}
+                focused={focusedIndex === index}
+                onClick={() => setFocusedIndex(index)}
+                onEnter={() => addTask(index)}
+                onChange={(task) => handleTaskUpdate((tasks) => tasks.set(index, task))}
+                onSelectIntegrationRecord={(record) => {
+                  setFocusedIndex(index + 1);
+                  handleTaskUpdate((tasks) =>
+                    tasks.set(index, {
+                      ...task,
+                      name: `#${record.resource_id}`,
+                      integrationRecord: { ...record, id: null },
+                      completedAt: record.resource_name === "pulls" && record.status === "merged" ? new Date() : null,
+                    }),
+                  );
+                }}
+                onRemove={() => removeTask(index)}
+              />
+            ))}
+          </ul>
+        </CardContent>
+        <CardFooter className="grid gap-4 border-0 px-6 pb-6">
           <Button variant="link" onClick={() => setShowAbsencesModal(true)}>
             <CalendarClockIcon className="mr-2 h-5 w-5 text-gray-600" />
             Log time off
@@ -191,7 +194,7 @@ const EditableCompanyWorkerUpdate = ({ data }: { data: TeamMemberData }) => {
               <AlertDescription>{savingError}</AlertDescription>
             </Alert>
           ) : null}
-        </footer>
+        </CardFooter>
       </Card>
       <AbsencesModal
         open={showAbsencesModal}

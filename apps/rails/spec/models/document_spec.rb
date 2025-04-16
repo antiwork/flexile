@@ -9,12 +9,11 @@ RSpec.describe Document do
 
   describe "associations" do
     it { is_expected.to belong_to(:company) }
-    it { is_expected.to belong_to(:user) }
     it { is_expected.to belong_to(:user_compliance_info).optional(true) }
-    it { is_expected.to belong_to(:company_worker).optional(true) }
-    it { is_expected.to belong_to(:company_administrator).optional(true) }
     it { is_expected.to belong_to(:equity_grant).optional(true) }
     it { is_expected.to have_many_attached(:attachments) }
+    it { is_expected.to have_many(:signatures).class_name("DocumentSignature") }
+    it { is_expected.to have_many(:signatories).through(:signatures).source(:user) }
   end
 
   describe "validations" do
@@ -22,6 +21,20 @@ RSpec.describe Document do
     it { is_expected.to validate_presence_of(:document_type) }
     it { is_expected.to validate_presence_of(:year) }
     it { is_expected.to validate_numericality_of(:year).only_integer.is_less_than_or_equal_to(Date.today.year) }
+
+    context "signatures" do
+      subject(:document) { build(:document) }
+
+      it "is invalid when signatures are invalid" do
+        document.signatures.build(user: nil, title: "Signer")
+        expect(document).to be_invalid
+      end
+
+      it "is valid when signatures are valid" do
+        document.signatures.build(user: create(:user), title: "Signer")
+        expect(document).to be_valid
+      end
+    end
 
     context "when type is tax_document" do
       subject { build(:tax_doc) }
@@ -76,13 +89,6 @@ RSpec.describe Document do
       subject { build(:equity_plan_contract_doc) }
 
       it { is_expected.to validate_presence_of(:equity_grant_id) }
-    end
-
-    context "when type is exercise_notice" do
-      subject { build(:document, document_type: :exercise_notice) }
-
-      it { is_expected.to validate_presence_of(:company_administrator_id) }
-      it { is_expected.to validate_presence_of(:company_worker) }
     end
   end
 

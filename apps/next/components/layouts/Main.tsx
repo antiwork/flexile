@@ -460,12 +460,7 @@ const NavLinks = ({ company }: { company: Company }) => {
           href="/roles"
           icon={BriefcaseIcon}
           filledIcon={SolidBriefcaseIcon}
-          active={
-            !!active &&
-            (pathname.startsWith("/roles") ||
-              pathname.startsWith("/talent_pool") ||
-              pathname.startsWith("/role_applications"))
-          }
+          active={!!active && (pathname.startsWith("/roles") || pathname.startsWith("/role_applications"))}
         >
           Roles
         </NavLink>

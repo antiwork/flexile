@@ -2,8 +2,7 @@ import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { InformationCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { pick } from "lodash-es";
-import { useEffect, useState } from "react";
-import { Card, CardRow } from "@/components/Card";
+import { Fragment, useEffect, useState } from "react";
 import Delta from "@/components/Delta";
 import Input from "@/components/Input";
 import Modal from "@/components/Modal";
@@ -15,7 +14,9 @@ import Select from "@/components/Select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { PayRateType } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
@@ -309,18 +310,23 @@ const ManageModal = ({
       >
         <div>Rate changes will apply to future invoices.</div>
         <Card>
-          {contractorsToUpdate.map((contractor, i) => (
-            <CardRow key={i} className="flex justify-between gap-2">
-              <b>{contractor.user.name}</b>
-              <div>
-                <del>{formatMoneyFromCents(contractor.payRateInSubunits)}</del>{" "}
-                {formatMoneyFromCents(role.payRateInSubunits)}{" "}
-                <span>
-                  (<Delta diff={role.payRateInSubunits / contractor.payRateInSubunits - 1} />)
-                </span>
-              </div>
-            </CardRow>
-          ))}
+          <CardContent>
+            {contractorsToUpdate.map((contractor, i) => (
+              <Fragment key={i}>
+                <div className="flex justify-between gap-2">
+                  <b>{contractor.user.name}</b>
+                  <div>
+                    <del>{formatMoneyFromCents(contractor.payRateInSubunits)}</del>{" "}
+                    {formatMoneyFromCents(role.payRateInSubunits)}{" "}
+                    <span>
+                      (<Delta diff={role.payRateInSubunits / contractor.payRateInSubunits - 1} />)
+                    </span>
+                  </div>
+                </div>
+                {i !== contractorsToUpdate.length - 1 && <Separator />}
+              </Fragment>
+            ))}
+          </CardContent>
         </Card>
       </Modal>
       <Modal title="Permanently delete role?" open={confirmingDelete} onClose={() => setConfirmingDelete(false)}>

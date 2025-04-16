@@ -512,8 +512,8 @@ RSpec.describe UserComplianceInfo do
       it "marks the user compliance info and corresponding records as deleted" do
         user_compliance_info.mark_deleted!
         expect(user_compliance_info.reload).to be_deleted
-        expect(tax_document.reload).to be_deleted
         expect(form_1099_nec.reload).to be_deleted
+        expect(tax_document.reload).to_not be_deleted
         expect(submitted_1099_nec).to_not be_deleted
       end
 
@@ -525,29 +525,29 @@ RSpec.describe UserComplianceInfo do
         it "marks the user compliance info and corresponding records as deleted" do
           user_compliance_info.mark_deleted!
           expect(user_compliance_info.reload).to be_deleted
-          expect(tax_document.reload).to be_deleted
           expect(form_1099_nec.reload).to be_deleted
+          expect(tax_document.reload).to_not be_deleted
           expect(submitted_1099_nec).to_not be_deleted
           expect(deleted_1099_nec).to be_deleted
         end
       end
 
       context "when there are paid dividends attached to the user compliance info" do
-        let!(:form_1099_div) { create(:tax_doc, :form_1099div, user_compliance_info:, user:) }
+        let!(:form_1099_div) { create(:tax_doc, :form_1099div, user_compliance_info:) }
 
         before { create(:dividend, :paid, user_compliance_info:) }
 
-        it "marks the user compliance info as deleted and only deletes non-dividend tax documents" do
+        it "marks the user compliance info as deleted and only deletes unsigned non-dividend tax documents" do
           user_compliance_info.mark_deleted!
           expect(user_compliance_info.reload).to be_deleted
-          expect(tax_document.reload).to be_deleted
           expect(form_1099_nec.reload).to be_deleted
+          expect(tax_document.reload).to_not be_deleted
           expect(submitted_1099_nec).to_not be_deleted
           expect(form_1099_div.reload).to_not be_deleted
         end
 
         context "with 1042-S forms" do
-          let!(:form_1042_s) { create(:tax_doc, :form_1042s, user_compliance_info:, user:) }
+          let!(:form_1042_s) { create(:tax_doc, :form_1042s, user_compliance_info:) }
 
           it "preserves dividend-related tax documents" do
             user_compliance_info.mark_deleted!
@@ -557,9 +557,9 @@ RSpec.describe UserComplianceInfo do
       end
     end
 
-    let!(:tax_document) { create(:tax_doc, :form_w9, user_compliance_info:, user:) }
-    let!(:form_1099_nec) { create(:tax_doc, :form_1099nec, year: 2023, user_compliance_info:, user:) }
-    let!(:submitted_1099_nec) { create(:tax_doc, :form_1099nec, :submitted, year: 2022, user_compliance_info:, user:) }
+    let!(:tax_document) { create(:tax_doc, :form_w9, user_compliance_info:) }
+    let!(:form_1099_nec) { create(:tax_doc, :form_1099nec, year: 2023, user_compliance_info:, signed: false) }
+    let!(:submitted_1099_nec) { create(:tax_doc, :form_1099nec, year: 2022, user_compliance_info:, signed: true) }
 
     include_examples "common assertions"
   end

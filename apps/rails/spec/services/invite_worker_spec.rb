@@ -30,7 +30,6 @@ RSpec.describe InviteWorker do
       expect(invite_contractor).to eq({ success: true, company_worker: CompanyWorker.last, document: Document.last })
     end.to change { User.count }.by(1)
         .and change { CompanyWorker.count }.by(1)
-        .and change { ContractorProfile.count }.by(1)
         .and change { Document.count }.by(1)
         .and have_enqueued_job(ActionMailer::MailDeliveryJob).exactly(0).times
 
@@ -47,11 +46,9 @@ RSpec.describe InviteWorker do
     expect(contractor.on_trial).to eq(true)
     expect(contractor.company_role).to eq(role)
 
-    contract = contractor.documents.consulting_contract.first
-    expect(contract.completed_at).to eq(nil)
+    contract = user.documents.consulting_contract.first
     expect(contract.company).to eq(company)
-    expect(contract.company_worker).to eq(contractor)
-    expect(contract.company_administrator).to eq(company_administrator)
+    expect(contract.signatories).to match_array([user, company_administrator.user])
   end
 
   context "when a user with the same email address already exists" do
@@ -65,7 +62,6 @@ RSpec.describe InviteWorker do
           expect(invite_contractor).to eq({ success: false, error_message: "Invitee is already working for this company." })
         end.to change { User.count }.by(0)
           .and change { CompanyWorker.count }.by(0)
-          .and change { ContractorProfile.count }.by(0)
           .and change { Document.count }.by(0)
       end
 
@@ -82,7 +78,6 @@ RSpec.describe InviteWorker do
             )
           end.to change { User.count }.by(0)
             .and change { CompanyWorker.count }.by(0)
-            .and change { ContractorProfile.count }.by(0)
             .and change { Document.count }.by(0)
           expect(GenerateContractorInvitationJob).to have_enqueued_sidekiq_job(company_worker.id)
         end
@@ -103,7 +98,6 @@ RSpec.describe InviteWorker do
           expect(invite_contractor).to eq({ success: true, company_worker: CompanyWorker.last, document: Document.last })
         end.to change { User.count }.by(0)
           .and change { CompanyWorker.count }.by(1)
-          .and change { ContractorProfile.count }.by(0)
           .and change { Document.count }.by(1)
           .and change { user.reload.invited_by }.from(other_admin_user).to(current_user)
 
@@ -134,7 +128,6 @@ RSpec.describe InviteWorker do
         expect(invite_contractor).to eq({ success: true, company_worker: company_worker, document: Document.last })
       end.to change { User.count }.by(0)
           .and change { CompanyWorker.count }.by(0)
-          .and change { ContractorProfile.count }.by(0)
           .and change { Document.count }.by(1)
           .and change { user.reload.invited_by }.from(nil).to(current_user)
       expect(GenerateContractorInvitationJob).to have_enqueued_sidekiq_job(CompanyWorker.last.id, true)
@@ -165,7 +158,6 @@ RSpec.describe InviteWorker do
         expect(invite_contractor).to eq({ success: false, error_message: "Hours per week must be greater than 0 and Pay rate in subunits must be greater than 0" })
       end.to change { User.count }.by(0)
          .and change { CompanyWorker.count }.by(0)
-         .and change { ContractorProfile.count }.by(0)
          .and change { Document.count }.by(0)
     end
   end
