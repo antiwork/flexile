@@ -9,7 +9,7 @@ import { useForm } from "react-hook-form";
 import FormSection from "@/components/FormSection";
 import MutationButton from "@/components/MutationButton";
 import { CardContent, CardFooter } from "@/components/ui/card";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useCurrentUser } from "@/global";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
@@ -49,42 +49,44 @@ const DetailsSection = () => {
   });
 
   return (
-    <FormSection title="Personal details" onSubmit={e(() => handleSubmit.mutate(), "prevent")}>
-      <CardContent className="grid gap-4">
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input type="email" minLength={MIN_EMAIL_LENGTH} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <Form {...form}>
+      <FormSection title="Personal details" onSubmit={e(() => handleSubmit.mutate(), "prevent")}>
+        <CardContent className="grid gap-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input type="email" minLength={MIN_EMAIL_LENGTH} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="preferredName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Preferred name (visible to others)</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter preferred name" maxLength={MAX_PREFERRED_NAME_LENGTH} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </CardContent>
-      <CardFooter>
-        <MutationButton type="submit" mutation={handleSubmit} loadingText="Saving..." successText="Saved!">
-          Save
-        </MutationButton>
-      </CardFooter>
-    </FormSection>
+          <FormField
+            control={form.control}
+            name="preferredName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Preferred name (visible to others)</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter preferred name" maxLength={MAX_PREFERRED_NAME_LENGTH} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </CardContent>
+        <CardFooter>
+          <MutationButton type="submit" mutation={handleSubmit} loadingText="Saving..." successText="Saved!">
+            Save
+          </MutationButton>
+        </CardFooter>
+      </FormSection>
+    </Form>
   );
 };
 
@@ -127,65 +129,67 @@ const PasswordSection = () => {
   if (!user) return null;
 
   return (
-    <FormSection title="Password" onSubmit={e(() => saveMutation.mutate(), "prevent")}>
-      <CardContent className="grid gap-4">
-        <FormField
-          control={form.control}
-          name="currentPassword"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Old password</FormLabel>
-              <FormControl>
-                <Input
-                  type="password"
-                  invalid={errors.has("current_password")}
-                  help={errors.get("current_password")}
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <Form {...form}>
+      <FormSection title="Password" onSubmit={e(() => saveMutation.mutate(), "prevent")}>
+        <CardContent className="grid gap-4">
+          <FormField
+            control={form.control}
+            name="currentPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Old password</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    invalid={errors.has("current_password")}
+                    help={errors.get("current_password")}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>New password</FormLabel>
-              <FormControl>
-                <Input type="password" invalid={errors.has("password")} help={errors.get("password")} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>New password</FormLabel>
+                <FormControl>
+                  <Input type="password" invalid={errors.has("password")} help={errors.get("password")} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="confirmPassword"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Confirm new password</FormLabel>
-              <FormControl>
-                <Input
-                  type="password"
-                  invalid={errors.has("confirm_password")}
-                  help={errors.get("confirm_password")}
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </CardContent>
-      <CardFooter>
-        <MutationButton type="submit" mutation={saveMutation} loadingText="Saving...">
-          Save
-        </MutationButton>
-      </CardFooter>
-    </FormSection>
+          <FormField
+            control={form.control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Confirm new password</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    invalid={errors.has("confirm_password")}
+                    help={errors.get("confirm_password")}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </CardContent>
+        <CardFooter>
+          <MutationButton type="submit" mutation={saveMutation} loadingText="Saving...">
+            Save
+          </MutationButton>
+        </CardFooter>
+      </FormSection>
+    </Form>
   );
 };
