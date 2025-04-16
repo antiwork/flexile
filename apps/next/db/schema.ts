@@ -58,6 +58,7 @@ export const taxDocumentsStatus = pgEnum("tax_documents_status", ["initialized",
 export const invoicesInvoiceType = pgEnum("invoices_invoice_type", ["services", "other"]);
 export const equityAllocationsStatus = pgEnum("equity_allocations_status", [
   "pending_confirmation",
+  "pending_grant_creation",
   "pending_approval",
   "approved",
 ]);

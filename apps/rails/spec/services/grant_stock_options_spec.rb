@@ -21,7 +21,7 @@ RSpec.describe GrantStockOptions do
   let(:disability_exercise_months) { nil }
   let(:retirement_exercise_months) { nil }
   subject(:service) do
-    described_class.new(company_worker, option_pool:, board_approval_date:, vesting_commencement_date:,
+    described_class.new(company_worker, option_pool:, vesting_commencement_date:,
                                         number_of_shares:, issue_date_relationship:,
                                         option_grant_type:, option_expiry_months:, vesting_trigger:,
                                         vesting_schedule_params:, voluntary_termination_exercise_months:,
@@ -82,7 +82,6 @@ RSpec.describe GrantStockOptions do
           period_started_at: DateTime.parse("1 Jan 2023").beginning_of_year,
           period_ended_at: DateTime.parse("1 Jan 2023").end_of_year,
           issue_date_relationship:,
-          board_approval_date:,
           option_grant_type:,
           option_expiry_months:,
           vesting_trigger:,
@@ -166,7 +165,6 @@ RSpec.describe GrantStockOptions do
           period_started_at: DateTime.parse("1 Jan 2024").beginning_of_year,
           period_ended_at: DateTime.parse("1 Jan 2024").end_of_year,
           issue_date_relationship: :consultant,
-          board_approval_date:,
           option_grant_type: :nso,
           option_expiry_months:,
           vesting_trigger:,
@@ -265,7 +263,6 @@ RSpec.describe GrantStockOptions do
 
       it "sets period_started_at and period_ended_at correctly when vesting schedule is provided" do
         args_for_new = {
-          board_approval_date:,
           period_started_at: DateTime.parse(vesting_commencement_date).beginning_of_day,
           period_ended_at: DateTime.parse(vesting_commencement_date).end_of_day + vesting_schedule.total_vesting_duration_months.months,
           vesting_schedule:,

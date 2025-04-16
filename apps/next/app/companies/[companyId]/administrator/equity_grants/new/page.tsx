@@ -27,7 +27,6 @@ const fieldAttributeName = z.enum([
   "issue_date_relationship",
   "option_grant_type",
   "expires_at",
-  "board_approval_date",
   "vesting_commencement_date",
   "vesting_trigger",
   "vesting_schedule_id",
@@ -103,7 +102,6 @@ export default function NewEquityGrant() {
   const [issueDateRelationship, setIssueDateRelationship] = useState<IssueDateRelationship | undefined>();
   const [grantType, setGrantType] = useState<OptionGrantType>("nso");
   const [expiryInMonths, setExpiryInMonths] = useState<number | null>(null);
-  const [boardApprovalDate, setBoardApprovalDate] = useState(today);
   const [vestingTrigger, setVestingTrigger] = useState<VestingTrigger | undefined>();
   const [vestingScheduleId, setVestingScheduleId] = useState<string | undefined>();
   const [vestingCommencementDate, setVestingCommencementDate] = useState(today);
@@ -132,7 +130,6 @@ export default function NewEquityGrant() {
   const relationshipRef = useRef<HTMLSelectElement>(null);
   const grantTypeRef = useRef<HTMLSelectElement>(null);
   const expiryRef = useRef<HTMLInputElement>(null);
-  const boardApprovalRef = useRef<HTMLInputElement>(null);
   const vestingTriggerRef = useRef<HTMLSelectElement>(null);
   const vestingScheduleRef = useRef<HTMLSelectElement>(null);
   const vestingCommencementRef = useRef<HTMLInputElement>(null);
@@ -205,7 +202,6 @@ export default function NewEquityGrant() {
       issueDateRelationship,
       grantType,
       expiryInMonths,
-      boardApprovalDate,
       vestingTrigger,
       vestingScheduleId,
       vestingCommencementDate,
@@ -264,12 +260,6 @@ export default function NewEquityGrant() {
     if (expiryInMonths === null || expiryInMonths < 0) {
       setErrorInfo({ error: "Must be present and greater than or equal to 0.", attribute_name: "expires_at" });
       expiryRef.current?.focus();
-      return false;
-    }
-
-    if (!boardApprovalDate || new Date(boardApprovalDate) > new Date()) {
-      setErrorInfo({ error: "Must be present and must not be a future date.", attribute_name: "board_approval_date" });
-      boardApprovalRef.current?.focus();
       return false;
     }
 
@@ -447,7 +437,6 @@ export default function NewEquityGrant() {
         deathExerciseMonths: deathExercisePeriodInMonths ?? 0,
         disabilityExerciseMonths: disabilityExercisePeriodInMonths ?? 0,
         retirementExerciseMonths: retirementExercisePeriodInMonths ?? 0,
-        boardApprovalDate,
         vestingTrigger: vestingTrigger ?? "scheduled",
         vestingScheduleId: isCustomVestingSchedule ? null : (vestingScheduleId ?? ""),
         vestingCommencementDate: vestingTrigger === "scheduled" ? vestingCommencementDate : null,
@@ -545,17 +534,6 @@ export default function NewEquityGrant() {
                 errorInfo,
                 "If not exercised, options will expire after this period.",
               )}
-            />
-          </fieldset>
-          <fieldset>
-            <Input
-              label="Board approval date"
-              type="date"
-              max={today}
-              value={boardApprovalDate}
-              onChange={setBoardApprovalDate}
-              ref={boardApprovalRef}
-              {...invalidFieldAttrs("board_approval_date", errorInfo)}
             />
           </fieldset>
         </CardRow>
