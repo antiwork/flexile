@@ -2,25 +2,22 @@ import docuseal from "@docuseal/api";
 import { and, desc, eq, isNull, or } from "drizzle-orm";
 import { db } from "@/db";
 import { DocumentTemplateType, DocumentType } from "@/db/enums";
-import { companyAdministrators, documents, documentTemplates } from "@/db/schema";
+import { companyAdministrators, documents, documentSignatures, documentTemplates } from "@/db/schema";
 import { inngest } from "@/inngest/client";
+import { assertDefined } from "@/utils/assert";
 
 export default inngest.createFunction(
   { id: "lawyer-board-consent-approval" },
   { event: "board_consent.lawyer_approved" },
   async ({ event, step }) => {
-    const { boardConsentId, userId, companyId } = event.data;
+    const { boardConsentId, companyId, documentId, userId } = event.data;
 
     await step.run("generate-equity-plan-contract", async () => {
-      const document = await db.query.documents.findFirst({
-        where: and(
-          eq(documents.userId, userId),
-          eq(documents.companyId, companyId),
-          eq(documents.type, DocumentType.EquityPlanContract),
-        ),
+      const documentSignature = await db.query.documentSignatures.findFirst({
+        where: and(eq(documentSignatures.documentId, documentId), eq(documentSignatures.userId, userId)),
       });
 
-      if (!document) {
+      if (!documentSignature) {
         const template = await db.query.documentTemplates.findFirst({
           where: and(
             eq(documentTemplates.type, DocumentTemplateType.EquityPlanContract),
@@ -53,14 +50,32 @@ export default inngest.createFunction(
         });
 
         const year = new Date().getFullYear();
-        await db.insert(documents).values({
-          companyId,
-          type: DocumentType.EquityPlanContract,
-          userId,
-          year,
-          name: `Equity Incentive Plan ${year}`,
-          docusealSubmissionId: submission.id,
+        const companyAdministrator = await db.query.companyAdministrators.findFirst({
+          where: eq(companyAdministrators.companyId, companyId),
         });
+        const [doc] = await db
+          .insert(documents)
+          .values({
+            companyId,
+            type: DocumentType.EquityPlanContract,
+            year,
+            name: `Equity Incentive Plan ${year}`,
+            docusealSubmissionId: submission.id,
+          })
+          .returning();
+
+        await db.insert(documentSignatures).values([
+          {
+            documentId: assertDefined(doc).id,
+            userId,
+            title: "Signer",
+          },
+          {
+            documentId: assertDefined(doc).id,
+            userId: assertDefined(companyAdministrator).userId,
+            title: "Company Representative",
+          },
+        ]);
       }
     });
 

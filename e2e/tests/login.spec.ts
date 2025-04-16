@@ -1,15 +1,16 @@
 import { db } from "@test/db";
 import { usersFactory } from "@test/factories/users";
-import { clerkTestEmail, clerkTestId } from "@test/helpers/auth";
+import { setClerkUser } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
 
 test("login", async ({ page }) => {
-  const { user } = await usersFactory.create({ clerkId: clerkTestId, email: clerkTestEmail, invitingCompany: true });
+  const { user } = await usersFactory.create({ invitingCompany: true });
+  const { email } = await setClerkUser(user.id);
 
   await page.goto("/login");
-  await page.getByLabel("Email").fill(clerkTestEmail);
+  await page.getByLabel("Email").fill(email);
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page.getByLabel("Password", { exact: true }).fill("password");
   await page.getByRole("button", { name: "Continue", exact: true }).click();

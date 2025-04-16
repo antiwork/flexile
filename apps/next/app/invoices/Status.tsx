@@ -2,7 +2,6 @@ import { CheckCircleIcon } from "@heroicons/react/16/solid";
 import { ClockIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import { addDays, isWeekend, nextMonday } from "date-fns";
 import React from "react";
-import Notice from "@/components/Notice";
 import Status, { type Variant } from "@/components/Status";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -108,27 +107,4 @@ export const StatusWithTooltip = ({ invoice }: { invoice: Invoice }) => {
       <TooltipContent>{details}</TooltipContent>
     </Tooltip>
   );
-};
-
-const statusNoticeText = (invoice: Invoice) => {
-  if (invoice.status === "approved" && invoice.approvals.length > 0) {
-    return `Approved by ${invoice.approvals.map((approval) => `${approval.approver.name} on ${formatDate(approval.approvedAt, { time: true })}`).join(", ")}`;
-  }
-
-  if (invoice.status === "rejected") {
-    let text = "Rejected";
-    if (invoice.rejector) text += ` by ${invoice.rejector.name}`;
-    if (invoice.rejectedAt) text += ` on ${formatDate(invoice.rejectedAt)}`;
-    if (invoice.rejectionReason) text += `: "${invoice.rejectionReason}"`;
-    return text;
-  }
-};
-
-export const StatusNotice = ({ invoice }: { invoice?: Invoice | null }) => {
-  if (!invoice) return null;
-
-  const details = statusNoticeText(invoice);
-  if (!details) return null;
-
-  return <Notice variant={invoice.status === "rejected" ? "critical" : undefined}>{details}</Notice>;
 };

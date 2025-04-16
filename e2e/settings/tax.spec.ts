@@ -25,7 +25,6 @@ test.describe("Tax settings", () => {
       await usersFactory.createWithoutComplianceInfo({
         legalName: "Caro Example",
         preferredName: "Caro",
-        email: "caro@example.com",
         birthDate: "1980-06-27",
       })
     ).user;
@@ -294,7 +293,6 @@ test.describe("Tax settings", () => {
         const document = await db.query.documents.findFirst({
           where: and(
             eq(documents.companyId, company.id),
-            eq(documents.userId, user.id),
             eq(documents.type, DocumentType.ConsultingContract),
             isNull(documents.deletedAt),
           ),

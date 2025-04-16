@@ -13,7 +13,17 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import React, { useMemo } from "react";
-import Checkbox from "@/components/Checkbox";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Table as ShadcnTable,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { cn } from "@/utils";
 
 declare module "@tanstack/react-table" {
@@ -53,11 +63,10 @@ export const useTable = <T extends RowData>(
 interface TableProps<T> {
   table: Table<T>;
   caption?: string;
-  hoverable?: boolean;
   onRowClicked?: ((row: T) => void) | undefined;
 }
 
-export default function Table<T extends RowData>({ table, caption, hoverable, onRowClicked }: TableProps<T>) {
+export default function DataTable<T extends RowData>({ table, caption, onRowClicked }: TableProps<T>) {
   const data = useMemo(() => {
     const headers = table
       .getHeaderGroups()
@@ -73,47 +82,36 @@ export default function Table<T extends RowData>({ table, caption, hoverable, on
     return { headers, rows, footers, firstRow, lastRow, sortable, selectable };
   }, [table.getState()]);
 
-  const cellClasses = (row: unknown, column: Column<T> | null, type?: "header" | "footer") => {
-    const index = column?.getIndex() ?? -1;
-    const isFirst = row === data.firstRow && type !== "footer";
-    const isLast = row === data.lastRow && (data.footers.length === 0 || type === "footer");
+  const rowClasses = "py-2 not-print:max-md:grid";
+  const cellClasses = (column: Column<T> | null, type?: "header" | "footer") => {
     const numeric = column?.columnDef.meta?.numeric;
     return cn(
-      "md:p-2 print:p-2 text-nowrap",
-      type === "header" && "font-normal text-gray-500 text-left",
       numeric && "md:text-right print:text-right",
       numeric && type !== "header" && "tabular-nums",
       !numeric && "print:text-wrap",
-      !isLast && "md:border-b print:border-b",
-      isFirst && index === (data.selectable ? -1 : 0) && "rounded-tl-xl",
-      isFirst && index === table.getAllColumns().length - 1 && "rounded-tr-xl",
-      isLast && index === (data.selectable ? -1 : 0) && "rounded-bl-xl",
-      isLast && index === table.getAllColumns().length - 1 && "rounded-br-xl",
     );
   };
 
   return (
-    <table className="w-full border-separate border-spacing-0 gap-4 rounded-xl not-print:max-md:grid md:border print:border">
-      {caption ? <caption className="mb-2 text-left text-lg font-bold">{caption}</caption> : null}
-      <thead className="not-print:max-md:hidden">
+    <ShadcnTable className="caption-top not-print:max-md:grid">
+      {caption ? <TableCaption className="mb-2 text-left text-lg font-bold text-black">{caption}</TableCaption> : null}
+      <TableHeader className="not-print:max-md:hidden">
         {data.headers.map((headerGroup) => (
-          <tr key={headerGroup.id}>
+          <TableRow key={headerGroup.id}>
             {data.selectable ? (
-              <th className={cellClasses(headerGroup, null, "header")}>
-                <div className="grid items-center">
-                  <Checkbox
-                    checked={table.getIsAllRowsSelected()}
-                    aria-label="Select all"
-                    onChange={(checked) => table.toggleAllRowsSelected(checked)}
-                  />
-                </div>
-              </th>
+              <TableHead className={cellClasses(null, "header")}>
+                <Checkbox
+                  checked={table.getIsAllRowsSelected()}
+                  aria-label="Select all"
+                  onCheckedChange={(checked) => table.toggleAllRowsSelected(checked === true)}
+                />
+              </TableHead>
             ) : null}
             {headerGroup.headers.map((header) => (
-              <th
+              <TableHead
                 key={header.id}
                 colSpan={header.colSpan}
-                className={`${cellClasses(headerGroup, header.column, "header")} ${data.sortable && header.column.getCanSort() ? "cursor-pointer" : ""}`}
+                className={`${cellClasses(header.column, "header")} ${data.sortable && header.column.getCanSort() ? "cursor-pointer" : ""}`}
                 aria-sort={
                   header.column.getIsSorted() === "asc"
                     ? "ascending"
@@ -123,39 +121,36 @@ export default function Table<T extends RowData>({ table, caption, hoverable, on
                 }
                 onClick={() => data.sortable && header.column.getCanSort() && header.column.toggleSorting()}
               >
-                <div className="inline-flex items-center gap-1">
-                  {!header.isPlaceholder && flexRender(header.column.columnDef.header, header.getContext())}
-                  {header.column.getIsSorted() === "asc" && <ChevronUpIcon className="size-5" />}
-                  {header.column.getIsSorted() === "desc" && <ChevronDownIcon className="size-5" />}
-                </div>
-              </th>
+                {!header.isPlaceholder && flexRender(header.column.columnDef.header, header.getContext())}
+                {header.column.getIsSorted() === "asc" && <ChevronUpIcon className="size-5" />}
+                {header.column.getIsSorted() === "desc" && <ChevronDownIcon className="size-5" />}
+              </TableHead>
             ))}
-          </tr>
+          </TableRow>
         ))}
-      </thead>
-      <tbody className="not-print:max-md:contents">
+      </TableHeader>
+      <TableBody className="not-print:max-md:contents">
         {data.rows.map((row) => (
-          <tr
+          <TableRow
             key={row.id}
-            className={`translate-x-0 gap-3 border p-4 not-print:max-md:grid not-print:max-md:rounded-xl ${onRowClicked || hoverable ? "cursor-pointer hover:bg-gray-50" : ""} ${data.selectable ? "bg-linear-to-r from-blue-100 from-50% via-transparent via-50% bg-[length:200%] transition-all" : ""} ${!row.getIsSelected() ? "bg-[100%]" : ""}`}
+            className={`translate-x-0 ${rowClasses}`}
+            data-state={row.getIsSelected() ? "selected" : undefined}
             onClick={() => onRowClicked?.(row.original)}
           >
             {data.selectable ? (
-              <td className={cellClasses(row, null)} onClick={(e) => e.stopPropagation()}>
-                <div className="grid items-center">
-                  <Checkbox
-                    checked={row.getIsSelected()}
-                    aria-label="Select row"
-                    disabled={!row.getCanSelect()}
-                    onChange={row.getToggleSelectedHandler()}
-                  />
-                </div>
-              </td>
+              <TableCell className={cellClasses(null)} onClick={(e) => e.stopPropagation()}>
+                <Checkbox
+                  checked={row.getIsSelected()}
+                  aria-label="Select row"
+                  disabled={!row.getCanSelect()}
+                  onCheckedChange={row.getToggleSelectedHandler()}
+                />
+              </TableCell>
             ) : null}
             {row.getVisibleCells().map((cell) => (
-              <td
+              <TableCell
                 key={cell.id}
-                className={`${cellClasses(row, cell.column)} ${cell.column.columnDef.meta?.numeric ? "tabular-nums md:text-right print:text-right" : ""} ${cell.column.id === "actions" ? "md:text-right print:hidden" : ""}`}
+                className={`${cellClasses(cell.column)} ${cell.column.id === "actions" ? "md:text-right print:hidden" : ""}`}
                 onClick={(e) => cell.column.id === "actions" && e.stopPropagation()}
               >
                 {typeof cell.column.columnDef.header === "string" && (
@@ -164,29 +159,34 @@ export default function Table<T extends RowData>({ table, caption, hoverable, on
                   </div>
                 )}
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </td>
+              </TableCell>
             ))}
-          </tr>
+          </TableRow>
         ))}
-      </tbody>
+      </TableBody>
       {data.footers.length > 0 && (
-        <tfoot>
+        <TableFooter>
           {data.footers.map((footerGroup) => (
-            <tr key={footerGroup.id}>
-              {data.selectable ? <td className={cellClasses(footerGroup, null, "footer")} /> : null}
+            <TableRow key={footerGroup.id} className={rowClasses}>
+              {data.selectable ? <TableCell className={cellClasses(null, "footer")} /> : null}
               {footerGroup.headers.map((header) => (
-                <td
-                  key={header.id}
-                  className={cellClasses(footerGroup, header.column, "footer")}
-                  colSpan={header.colSpan}
-                >
-                  {!header.isPlaceholder && flexRender(header.column.columnDef.footer, header.getContext())}
-                </td>
+                <TableCell key={header.id} className={cellClasses(header.column, "footer")} colSpan={header.colSpan}>
+                  {header.isPlaceholder ? null : (
+                    <>
+                      {typeof header.column.columnDef.header === "string" && (
+                        <div className="text-gray-500 md:hidden print:hidden" aria-hidden>
+                          {header.column.columnDef.header}
+                        </div>
+                      )}
+                      {flexRender(header.column.columnDef.footer, header.getContext())}
+                    </>
+                  )}
+                </TableCell>
               ))}
-            </tr>
+            </TableRow>
           ))}
-        </tfoot>
+        </TableFooter>
       )}
-    </table>
+    </ShadcnTable>
   );
 }

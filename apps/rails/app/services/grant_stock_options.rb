@@ -81,13 +81,14 @@ class GrantStockOptions
     company_administrator = company.primary_admin
 
     contract_params = {
-      company_administrator:,
       equity_grant:,
       company:,
-      user:,
       name: "Equity Incentive Plan #{Date.current.year}",
     }
-    document = company_worker.documents.create!(**contract_params, year: Date.current.year, document_type: :equity_plan_contract)
+    document = company_worker.user.documents.build(**contract_params, year: Date.current.year, document_type: :equity_plan_contract)
+    document.signatures.build(user:, title: "Signer")
+    document.signatures.build(user: company_administrator.user, title: "Company Representative")
+    document.save!
     CompanyWorkerMailer.equity_grant_issued(equity_grant.id).deliver_later
 
     { success: true, document: }

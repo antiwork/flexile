@@ -3,15 +3,15 @@ import { CheckCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
-import Button from "@/components/Button";
 import CardLink from "@/components/CardLink";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
+import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
@@ -103,7 +103,7 @@ const AdminList = () => {
 
   return (
     <>
-      <Table table={table} onRowClicked={(row) => router.push(`/updates/company/${row.id}/edit`)} />
+      <DataTable table={table} onRowClicked={(row) => router.push(`/updates/company/${row.id}/edit`)} />
       <Modal open={!!deletingUpdate} title="Delete update?" onClose={() => setDeletingUpdate(null)}>
         <p>
           "{data.updates.find((update) => update.id === deletingUpdate)?.title}" will be permanently deleted and cannot

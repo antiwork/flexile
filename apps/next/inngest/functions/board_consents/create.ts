@@ -11,6 +11,7 @@ import {
   companyInvestors,
   companyLawyers,
   documents,
+  documentSignatures,
   documentTemplates,
   equityAllocations,
   equityGrants,
@@ -123,6 +124,7 @@ export default inngest.createFunction(
         with: {
           user: {
             columns: {
+              id: true,
               externalId: true,
               email: true,
               legalName: true,
@@ -164,11 +166,18 @@ export default inngest.createFunction(
           companyId: BigInt(companyId),
           type: DocumentType.BoardConsent,
           year: new Date().getFullYear(),
-          userId: contractor.userId,
           equityGrantId: equityGrant.id,
           docusealSubmissionId: submission.id,
         })
         .returning();
+
+      await db.insert(documentSignatures).values(
+        boardMembers.map((member) => ({
+          documentId: assertDefined(doc).id,
+          userId: member.user.id,
+          title: `Board member ${member.user.preferredName}`,
+        })),
+      );
 
       return assertDefined(doc, "Failed to create document");
     });

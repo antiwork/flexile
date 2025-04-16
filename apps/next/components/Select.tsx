@@ -1,5 +1,6 @@
 import React, { useEffect, useId, useRef } from "react";
 import { formControlClasses, formGroupClasses, formHelpClasses } from "@/components/Input";
+import { Label } from "@/components/ui/label";
 
 export type Option = Readonly<{ label: string; value: string }>;
 
@@ -42,9 +43,9 @@ export default function Select({
   return (
     <div className={`${formGroupClasses} ${className || ""}`}>
       {label ? (
-        <label htmlFor={id ?? uid} className="cursor-pointer">
+        <Label htmlFor={id ?? uid} className="cursor-pointer">
           {label}
-        </label>
+        </Label>
       ) : null}
       <select
         id={id ?? uid}

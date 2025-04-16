@@ -1,13 +1,14 @@
 "use client";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { FilePlusIcon, FileTextIcon, GavelIcon, PercentIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import Button from "@/components/Button";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import Notice from "@/components/Notice";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { DocumentTemplateType } from "@/db/enums";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -71,15 +72,18 @@ export default function TemplatesPage() {
 
             <Modal title="Select template type" open={showTemplateModal} onClose={() => setShowTemplateModal(false)}>
               <div className="grid gap-4">
-                <Notice>
-                  By creating a custom document template, you acknowledge that Flexile shall not be liable for any
-                  claims, liabilities, or damages arising from or related to such documents. See our{" "}
-                  <Link href="/terms" className="text-blue-600 hover:underline">
-                    Terms of Service
-                  </Link>{" "}
-                  for more details.
-                </Notice>
-                <div className="grid grid-cols-3 gap-4">
+                <Alert>
+                  <InformationCircleIcon />
+                  <AlertDescription>
+                    By creating a custom document template, you acknowledge that Flexile shall not be liable for any
+                    claims, liabilities, or damages arising from or related to such documents. See our{" "}
+                    <Link href="/terms" className="text-blue-600 hover:underline">
+                      Terms of Service
+                    </Link>{" "}
+                    for more details.
+                  </AlertDescription>
+                </Alert>
+                <div className="grid grid-cols-2 gap-4">
                   <MutationButton
                     idleVariant="outline"
                     className="h-auto rounded-md p-6"
@@ -133,7 +137,7 @@ export default function TemplatesPage() {
       }
     >
       <div className="overflow-x-auto">
-        <Table table={table} hoverable />
+        <DataTable table={table} />
       </div>
     </DocumentsLayout>
   );

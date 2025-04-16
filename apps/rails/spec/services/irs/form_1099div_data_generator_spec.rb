@@ -113,12 +113,12 @@ RSpec.describe Irs::Form1099divDataGenerator do
   end
 
   def create_new_tax_documents
-    create(:tax_doc, :form_1099div, company:, user: user_compliance_info.user, user_compliance_info:, year: tax_year)
-    create(:tax_doc, :form_1099div, company:, user: user_compliance_info_2.user, user_compliance_info: user_compliance_info_2, year: tax_year)
+    create(:tax_doc, :form_1099div, company:, user_compliance_info:, year: tax_year)
+    create(:tax_doc, :form_1099div, company:, user_compliance_info: user_compliance_info_2, year: tax_year)
   end
 
   def create_tax_doc(trait:, company:, user_compliance_info:, tax_year:)
-    create(:tax_doc, trait, company:, user: user_compliance_info.user, user_compliance_info:, year: tax_year)
+    create(:tax_doc, trait, company:, user_compliance_info:, year: tax_year)
   end
 
   def required_blanks(number) = "".ljust(number)

@@ -1,26 +1,14 @@
 "use client";
 import { BriefcaseIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import Button from "@/components/Button";
 import MainLayout from "@/components/layouts/Main";
 import Placeholder from "@/components/Placeholder";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { trpc } from "@/trpc/client";
-
-type InvitedCompany = {
-  email: string;
-  company: string | null;
-};
-
-const columnHelper = createColumnHelper<InvitedCompany>();
-const columns = [
-  columnHelper.simple("email", "Invited CEO Email"),
-  columnHelper.simple("company", "Company Name", (v) => v || "—"),
-];
 
 export default function CompanyInvitationsPage() {
   const [invitedCompanies] = trpc.companies.list.useSuspenseQuery({ invited: true });
-  const table = useTable({ columns, data: invitedCompanies });
 
   return (
     <MainLayout
@@ -35,7 +23,22 @@ export default function CompanyInvitationsPage() {
     >
       {invitedCompanies.length > 0 ? (
         <section>
-          <Table table={table} />
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Invited CEO Email</TableHead>
+                <TableHead>Company Name</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {invitedCompanies.map((company, index) => (
+                <TableRow key={index}>
+                  <TableCell>{company.email}</TableCell>
+                  <TableCell>{company.company || "—"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </section>
       ) : (
         <Placeholder>

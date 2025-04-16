@@ -7,14 +7,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { stripeMerchantCategoryCodes } from "@/app/companies/[companyId]/expenses";
-import Button from "@/components/Button";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
+import { Button } from "@/components/ui/button";
 import env from "@/env/client";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -68,7 +68,7 @@ function CompanyExpenses() {
     <MainLayout title="Expenses">
       {data.items.length ? (
         <>
-          <Table table={table} />
+          <DataTable table={table} />
           <PaginationSection total={data.total} perPage={perPage} />
         </>
       ) : (
@@ -211,7 +211,7 @@ function ContractorExpenses() {
 
       {expenseCardCharges.items.length ? (
         <>
-          <Table table={table} />
+          <DataTable table={table} />
           <PaginationSection total={expenseCardCharges.total} perPage={perPage} />
         </>
       ) : (

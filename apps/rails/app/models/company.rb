@@ -203,10 +203,6 @@ class Company < ApplicationRecord
     email.split("@").last
   end
 
-  def additional_supported_countries
-    is_gumroad? ? [ISO3166::Country[:BR].alpha2] : []
-  end
-
   def json_flag?(flag)
     json_data&.dig("flags")&.include?(flag)
   end

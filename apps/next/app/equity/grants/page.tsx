@@ -1,20 +1,20 @@
 "use client";
 import { PencilIcon } from "@heroicons/react/16/solid";
-import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import { CheckCircleIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { isFuture } from "date-fns";
 import { Decimal } from "decimal.js";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import Button from "@/components/Button";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Figures from "@/components/Figures";
 import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
-import Notice from "@/components/Notice";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { DocumentTemplateType } from "@/db/enums";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { countries } from "@/models/constants";
@@ -103,12 +103,15 @@ const CompanyGrantList = () => {
       }
     >
       {templates.length === 0 ? (
-        <Notice>
-          <Link href="/document_templates" className={linkClasses}>
-            Create equity plan contract and board consent templates
-          </Link>{" "}
-          before adding new option grants.
-        </Notice>
+        <Alert>
+          <InformationCircleIcon />
+          <AlertDescription>
+            <Link href="/document_templates" className={linkClasses}>
+              Create equity plan contract and board consent templates
+            </Link>{" "}
+            before adding new option grants.
+          </AlertDescription>
+        </Alert>
       ) : null}
       {data.total > 0 ? (
         <>
@@ -120,10 +123,10 @@ const CompanyGrantList = () => {
             ].filter((item) => !!item)}
           />
 
-          <Table table={table} onRowClicked={(row) => router.push(`/people/${row.user.id}`)} />
+          <DataTable table={table} onRowClicked={(row) => router.push(`/people/${row.user.id}`)} />
           <PaginationSection total={data.total} perPage={perPage} />
 
-          <Table table={optionHolderCountriesTable} />
+          <DataTable table={optionHolderCountriesTable} />
         </>
       ) : (
         <Placeholder icon={CheckCircleIcon}>There are no option grants right now.</Placeholder>
@@ -217,40 +220,46 @@ const InvestorGrantList = () => {
           {company.flags.includes("option_exercising") && (
             <>
               {totalUnexercisedVestedShares > 0 && !exerciseInProgress && (
-                <Notice className="mb-4 w-full">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold">
-                      You have {totalUnexercisedVestedShares.toLocaleString()} vested options available for exercise.
-                    </span>
-                    <Button small onClick={openExerciseModal}>
-                      Exercise Options
-                    </Button>
-                  </div>
-                </Notice>
+                <Alert className="mb-4 w-full">
+                  <InformationCircleIcon />
+                  <AlertDescription>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold">
+                        You have {totalUnexercisedVestedShares.toLocaleString()} vested options available for exercise.
+                      </span>
+                      <Button size="small" onClick={openExerciseModal}>
+                        Exercise Options
+                      </Button>
+                    </div>
+                  </AlertDescription>
+                </Alert>
               )}
 
               {exerciseInProgress ? (
-                <Notice className="mb-4 w-full">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold">
-                      We're awaiting a payment of {formatMoneyFromCents(exerciseInProgress.totalCostCents)} to exercise{" "}
-                      {exerciseInProgress.numberOfOptions.toLocaleString()} options.
-                    </span>
-                    <MutationButton
-                      small
-                      mutation={resendPaymentInstructions}
-                      param={exerciseInProgress.id}
-                      successText="Payment instructions sent!"
-                    >
-                      Resend payment instructions
-                    </MutationButton>
-                  </div>
-                </Notice>
+                <Alert className="mb-4 w-full">
+                  <InformationCircleIcon />
+                  <AlertDescription>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold">
+                        We're awaiting a payment of {formatMoneyFromCents(exerciseInProgress.totalCostCents)} to
+                        exercise {exerciseInProgress.numberOfOptions.toLocaleString()} options.
+                      </span>
+                      <MutationButton
+                        size="small"
+                        mutation={resendPaymentInstructions}
+                        param={exerciseInProgress.id}
+                        successText="Payment instructions sent!"
+                      >
+                        Resend payment instructions
+                      </MutationButton>
+                    </div>
+                  </AlertDescription>
+                </Alert>
               ) : null}
             </>
           )}
 
-          <Table table={table} caption={pluralizeGrants(data.total)} onRowClicked={setSelectedEquityGrant} />
+          <DataTable table={table} caption={pluralizeGrants(data.total)} onRowClicked={setSelectedEquityGrant} />
           <PaginationSection total={data.total} perPage={perPage} />
 
           {selectedEquityGrant ? (

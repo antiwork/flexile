@@ -1,7 +1,14 @@
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { BoardConsentStatus, DocumentType } from "@/db/enums";
-import { boardConsents, documents, equityAllocations, equityGrants } from "@/db/schema";
+import {
+  boardConsents,
+  companyAdministrators,
+  documents,
+  documentSignatures,
+  equityAllocations,
+  equityGrants,
+} from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { assertDefined } from "@/utils/assert";
 
@@ -65,7 +72,6 @@ export default inngest.createFunction(
         .values({
           name: `Equity Plan - ${optionGrant.optionHolderName}`,
           companyId: boardConsent.companyId,
-          userId: companyInvestorUser.id,
           type: DocumentType.EquityPlanContract,
           year: new Date().getFullYear(),
           equityGrantId: optionGrant.id,
@@ -78,6 +84,23 @@ export default inngest.createFunction(
           },
         })
         .returning();
+
+      const companyAdministrator = await db.query.companyAdministrators.findFirst({
+        where: eq(companyAdministrators.companyId, boardConsent.companyId),
+      });
+
+      await db.insert(documentSignatures).values([
+        {
+          documentId: assertDefined(newDoc).id,
+          userId: companyInvestorUser.id,
+          title: "Signer",
+        },
+        {
+          documentId: assertDefined(newDoc).id,
+          userId: assertDefined(companyAdministrator).userId,
+          title: "Company Representative",
+        },
+      ]);
 
       return assertDefined(newDoc, "Failed to generate equity plan document");
     });

@@ -1,5 +1,6 @@
 import { useId } from "react";
 import { formGroupClasses } from "@/components/Input";
+import { Label } from "@/components/ui/label";
 
 interface ColorPickerProps {
   label: string;
@@ -12,9 +13,9 @@ export default function ColorPicker({ label, value, onChange }: ColorPickerProps
 
   return (
     <div className={formGroupClasses}>
-      <label className="cursor-pointer" htmlFor={id}>
+      <Label className="cursor-pointer" htmlFor={id}>
         {label}
-      </label>
+      </Label>
       <div className="relative size-12 overflow-hidden rounded-full border">
         <input
           id={id}

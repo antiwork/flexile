@@ -1,5 +1,6 @@
 "use client";
 import { CheckIcon, XMarkIcon } from "@heroicons/react/16/solid";
+import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import {
   CheckCircleIcon,
   CurrencyDollarIcon,
@@ -22,22 +23,23 @@ import InvoiceStatus from "@/app/invoices/Status";
 import RoleSelector from "@/app/roles/Selector";
 import { formatAbsencesForUpdate } from "@/app/updates/team/CompanyWorkerUpdate";
 import { Task as CompanyWorkerTask } from "@/app/updates/team/Task";
-import Button from "@/components/Button";
 import { Card, CardRow } from "@/components/Card";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import DecimalInput from "@/components/DecimalInput";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import Notice from "@/components/Notice";
 import NumberInput from "@/components/NumberInput";
 import PaginationSection from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import Tabs from "@/components/Tabs";
 import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from "@/components/Tooltip";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { DEFAULT_WORKING_HOURS_PER_WEEK, MAXIMUM_EQUITY_PERCENTAGE, MINIMUM_EQUITY_PERCENTAGE } from "@/models";
@@ -365,7 +367,7 @@ export default function ContractorPage() {
           {company.flags.includes("equity_compensation") ? (
             <div className="space-y-4">
               <div className="flex flex-col gap-2">
-                <label className="flex items-center gap-2">
+                <Label className="flex items-center gap-2">
                   <input
                     type="radio"
                     name="equityType"
@@ -374,8 +376,8 @@ export default function ContractorPage() {
                     className="h-4 w-4"
                   />
                   Fixed equity percentage
-                </label>
-                <label className="flex items-center gap-2">
+                </Label>
+                <Label className="flex items-center gap-2">
                   <input
                     type="radio"
                     name="equityType"
@@ -384,7 +386,7 @@ export default function ContractorPage() {
                     className="h-4 w-4"
                   />
                   Equity percentage range
-                </label>
+                </Label>
               </div>
 
               {equityType === "fixed" ? (
@@ -512,16 +514,19 @@ const DetailsTab = ({
       <FormSection title="Contract">
         <CardRow className="grid gap-4">
           {contractor.endedAt ? (
-            <Notice variant="critical">
-              <div className="flex items-center justify-between">
-                Contract {isFuture(contractor.endedAt) ? "ends" : "ended"} on {formatDate(contractor.endedAt)}.
-                {isFuture(contractor.endedAt) && (
-                  <Button variant="outline" onClick={() => setCancelModalOpen(true)}>
-                    Cancel contract end
-                  </Button>
-                )}
-              </div>
-            </Notice>
+            <Alert variant="destructive">
+              <ExclamationTriangleIcon />
+              <AlertDescription>
+                <div className="flex items-center justify-between">
+                  Contract {isFuture(contractor.endedAt) ? "ends" : "ended"} on {formatDate(contractor.endedAt)}.
+                  {isFuture(contractor.endedAt) && (
+                    <Button variant="outline" onClick={() => setCancelModalOpen(true)}>
+                      Cancel contract end
+                    </Button>
+                  )}
+                </div>
+              </AlertDescription>
+            </Alert>
           ) : null}
           <RoleSelector value={selectedRoleId} onChange={setSelectedRoleId} />
           <div className="grid items-start gap-4 md:grid-cols-2">
@@ -578,7 +583,7 @@ const DetailsTab = ({
         {!contractor.endedAt && (
           <CardRow>
             <MutationButton
-              small
+              size="small"
               mutation={updateContractor}
               param={{
                 companyId: company.id,
@@ -662,7 +667,7 @@ const InvoicesTab = ({ data }: { data: RouterOutput["invoices"]["list"] }) => {
 
   return data.invoices.length > 0 ? (
     <>
-      <Table table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
+      <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
       <PaginationSection total={data.total} perPage={50} />
     </>
   ) : (
@@ -765,7 +770,7 @@ function SharesTab({ investorId }: { investorId: string }) {
   const table = useTable({ data: data.shareHoldings, columns: sharesColumns });
 
   return data.shareHoldings.length > 0 ? (
-    <Table table={table} />
+    <DataTable table={table} />
   ) : (
     <Placeholder icon={CheckCircleIcon}>This investor does not hold any shares.</Placeholder>
   );
@@ -796,7 +801,7 @@ function OptionsTab({ investorId, userId }: { investorId: string; userId: string
 
   return data.equityGrants.length > 0 ? (
     <>
-      <Table table={table} onRowClicked={setSelectedEquityGrant} />
+      <DataTable table={table} onRowClicked={setSelectedEquityGrant} />
       {selectedEquityGrant ? (
         <DetailsModal
           equityGrant={selectedEquityGrant}
@@ -841,7 +846,7 @@ function ExercisesTab({ investorId }: { investorId: string }) {
         id: "actions",
         cell: (info) =>
           info.row.original.status === "signed" ? (
-            <MutationButton mutation={confirmPaymentMutation} param={info.row.original.id} small>
+            <MutationButton mutation={confirmPaymentMutation} param={info.row.original.id} size="small">
               Confirm payment
             </MutationButton>
           ) : undefined,
@@ -852,7 +857,7 @@ function ExercisesTab({ investorId }: { investorId: string }) {
   const table = useTable({ data: exercises, columns });
 
   return exercises.length > 0 ? (
-    <Table table={table} />
+    <DataTable table={table} />
   ) : (
     <Placeholder icon={CheckCircleIcon}>This investor has not exercised any options.</Placeholder>
   );
@@ -877,7 +882,7 @@ function ConvertiblesTab({ investorId }: { investorId: string }) {
   const table = useTable({ data: convertibles.convertibleSecurities, columns: convertiblesColumns });
 
   return convertibles.totalCount > 0 ? (
-    <Table table={table} />
+    <DataTable table={table} />
   ) : (
     <Placeholder icon={CheckCircleIcon}>This investor does not hold any convertible securities.</Placeholder>
   );
@@ -915,7 +920,7 @@ function DividendsTab({ investorId }: { investorId: string }) {
   const table = useTable({ data: dividends.dividends, columns: dividendsColumns });
 
   return dividends.total > 0 ? (
-    <Table table={table} />
+    <DataTable table={table} />
   ) : (
     <Placeholder icon={CheckCircleIcon}>This investor hasn't received any dividends yet.</Placeholder>
   );

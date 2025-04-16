@@ -93,7 +93,6 @@ class CompanyRolePresenter
         share_price_usd: company.share_price_in_usd.to_f,
         exercise_price_usd: company.fmv_per_share_in_usd.to_f,
         equity_enabled: company.equity_compensation_enabled?,
-        additional_supported_countries: company.additional_supported_countries,
         expense_cards_enabled: company.expense_cards_enabled?,
       },
       ip_country:,

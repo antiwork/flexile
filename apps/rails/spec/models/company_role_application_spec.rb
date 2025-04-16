@@ -77,25 +77,12 @@ RSpec.describe CompanyRoleApplication do
     end
 
     context "when the country is not in the SUPPORTED_COUNTRY_CODES" do
-      let(:country_code) { "BR" }
+      let(:country_code) { "NG" }
 
       it "is invalid" do
         application = build(:company_role_application, country_code:)
         expect(application).to be_invalid
         expect(application.errors[:country_code]).to include("is not included in the list")
-      end
-
-      context "when company supports additional countries" do
-        let(:company_role) { create(:company_role) }
-
-        before do
-          allow_any_instance_of(Company).to receive(:additional_supported_countries).and_return([country_code])
-        end
-
-        it "is valid" do
-          application = build(:company_role_application, company_role: company_role, country_code:)
-          expect(application).to be_valid
-        end
       end
     end
   end

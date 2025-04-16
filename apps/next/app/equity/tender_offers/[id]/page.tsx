@@ -1,24 +1,25 @@
 "use client";
+import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { ArrowDownTrayIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { addMonths, isFuture, isPast } from "date-fns";
 import { useParams } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
-import Button from "@/components/Button";
 import { Card, CardRow } from "@/components/Card";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import DecimalInput from "@/components/DecimalInput";
 import Figures from "@/components/Figures";
 import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import Notice from "@/components/Notice";
 import NumberInput from "@/components/NumberInput";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Select from "@/components/Select";
 import Status from "@/components/Status";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -213,10 +214,13 @@ export default function TenderOfferView() {
         ]}
       />
       {user.activeRole === "contractorOrInvestor" && user.roles.investor?.investedInAngelListRuv ? (
-        <Notice variant="critical">
-          Note: As an investor through an AngelList RUV, your bids will be submitted on your behalf by the RUV itself.
-          Please contact them for more information about this process.
-        </Notice>
+        <Alert variant="destructive">
+          <ExclamationTriangleIcon />
+          <AlertDescription>
+            Note: As an investor through an AngelList RUV, your bids will be submitted on your behalf by the RUV itself.
+            Please contact them for more information about this process.
+          </AlertDescription>
+        </Alert>
       ) : null}
 
       {isOpen && holdings.length ? (
@@ -268,7 +272,7 @@ export default function TenderOfferView() {
                 </div>
                 <h2 className="text-xl font-bold">Tender offer details</h2>
                 <div className="overflow-x-auto">
-                  <Table table={financialDataTable} caption="Company financials (unaudited)" />
+                  <DataTable table={financialDataTable} caption="Company financials (unaudited)" />
                 </div>
                 <p className="mt-5">
                   <Button variant="outline" asChild>
@@ -279,8 +283,10 @@ export default function TenderOfferView() {
                   </Button>
                 </p>
                 <h2 className="text-xl font-bold">Submit a bid</h2>
-                {tenderedHoldings.length ? <Table table={tenderedHoldingsTable} caption="Tendered Holdings" /> : null}
-                <Table table={holdingsTable} caption="Holdings" />
+                {tenderedHoldings.length ? (
+                  <DataTable table={tenderedHoldingsTable} caption="Tendered Holdings" />
+                ) : null}
+                <DataTable table={holdingsTable} caption="Holdings" />
                 <Select
                   value={newBid.shareClass}
                   onChange={(value) => setNewBid({ ...newBid, shareClass: value })}
@@ -320,10 +326,13 @@ export default function TenderOfferView() {
                     <strong>Total amount:</strong> {formatMoney(totalAmount)}
                   </div>
                 )}
-                <Notice variant="critical">
-                  <strong>Important:</strong> Please note that once submitted, commitments cannot be withdrawn or
-                  changed. Make sure all information is correct before proceeding.
-                </Notice>
+                <Alert variant="destructive">
+                  <ExclamationTriangleIcon />
+                  <AlertDescription>
+                    <strong>Important:</strong> Please note that once submitted, commitments cannot be withdrawn or
+                    changed. Make sure all information is correct before proceeding.
+                  </AlertDescription>
+                </Alert>
               </CardRow>
               <CardRow>
                 <Tooltip>
@@ -342,7 +351,7 @@ export default function TenderOfferView() {
 
       {bids.total > 0 ? (
         <>
-          <Table table={bidsTable} />
+          <DataTable table={bidsTable} />
           <PaginationSection total={bids.total} perPage={perPage} />
         </>
       ) : null}

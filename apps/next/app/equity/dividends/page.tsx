@@ -2,9 +2,9 @@
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import React from "react";
 import DividendStatusIndicator from "@/app/equity/DividendStatusIndicator";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -57,7 +57,7 @@ export default function Dividends() {
     <EquityLayout>
       {data.dividends.length > 0 ? (
         <>
-          <Table table={table} />
+          <DataTable table={table} />
           <PaginationSection total={data.total} perPage={perPage} />
         </>
       ) : (
