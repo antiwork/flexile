@@ -2,19 +2,19 @@
 
 import { useUser } from "@clerk/nextjs";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { Map } from "immutable";
-import React, { useState } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 import FormSection from "@/components/FormSection";
-import MutationButton from "@/components/MutationButton";
+import { MutationStatusButton } from "@/components/MutationButton";
 import { CardContent, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useCurrentUser } from "@/global";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
 import { trpc } from "@/trpc/client";
-import { e } from "@/utils";
 import { assertDefined } from "@/utils/assert";
 import SettingsLayout from "./Layout";
 
@@ -36,21 +36,14 @@ const DetailsSection = () => {
     },
   });
 
-  const saveMutation = trpc.users.update.useMutation();
-  const handleSubmit = useMutation({
-    mutationFn: async () => {
-      const values = form.getValues();
-      await saveMutation.mutateAsync({
-        email: values.email,
-        preferredName: values.preferredName,
-      });
-    },
-    onSuccess: () => setTimeout(() => handleSubmit.reset(), 2000),
+  const saveMutation = trpc.users.update.useMutation({
+    onSuccess: () => setTimeout(() => saveMutation.reset(), 2000),
   });
+  const submit = form.handleSubmit((values) => saveMutation.mutate(values));
 
   return (
     <Form {...form}>
-      <FormSection title="Personal details" onSubmit={e(() => handleSubmit.mutate(), "prevent")}>
+      <FormSection title="Personal details" onSubmit={(e) => void submit(e)}>
         <CardContent className="grid gap-4">
           <FormField
             control={form.control}
@@ -81,38 +74,38 @@ const DetailsSection = () => {
           />
         </CardContent>
         <CardFooter>
-          <MutationButton type="submit" mutation={handleSubmit} loadingText="Saving..." successText="Saved!">
+          <MutationStatusButton type="submit" mutation={saveMutation} loadingText="Saving..." successText="Saved!">
             Save
-          </MutationButton>
+          </MutationStatusButton>
         </CardFooter>
       </FormSection>
     </Form>
   );
 };
 
+const passwordFormSchema = z
+  .object({
+    currentPassword: z.string().min(1, "This field is required"),
+    password: z.string().min(1, "This field is required"),
+    confirmPassword: z.string().min(1, "This field is required"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Passwords do not match.",
+  });
 const PasswordSection = () => {
   const { user } = useUser();
   const form = useForm({
+    resolver: zodResolver(passwordFormSchema),
     defaultValues: {
       currentPassword: "",
       password: "",
       confirmPassword: "",
     },
   });
-  const [errors, setErrors] = useState(Map<string, string>());
 
   const saveMutation = useMutation({
-    mutationFn: async () => {
-      const values = form.getValues();
-      const newErrors = errors.clear().withMutations((errors) => {
-        Object.entries(values).forEach(([key, value]) => {
-          if (!value) errors.set(key, "This field is required.");
-        });
-        if (values.password !== values.confirmPassword) errors.set("confirm_password", "Passwords do not match.");
-      });
-
-      setErrors(newErrors);
-      if (newErrors.size > 0) return;
+    mutationFn: async (values: z.infer<typeof passwordFormSchema>) => {
       try {
         await assertDefined(user).updatePassword({
           currentPassword: values.currentPassword,
@@ -121,16 +114,17 @@ const PasswordSection = () => {
         form.reset();
       } catch (error) {
         if (!isClerkAPIResponseError(error)) throw error;
-        setErrors(errors.set("password", error.message));
+        form.setError("password", { message: error.message });
       }
     },
     onSuccess: () => setTimeout(() => saveMutation.reset(), 2000),
   });
+  const submit = form.handleSubmit((values) => saveMutation.mutate(values));
   if (!user) return null;
 
   return (
     <Form {...form}>
-      <FormSection title="Password" onSubmit={e(() => saveMutation.mutate(), "prevent")}>
+      <FormSection title="Password" onSubmit={(e) => void submit(e)}>
         <CardContent className="grid gap-4">
           <FormField
             control={form.control}
@@ -139,12 +133,7 @@ const PasswordSection = () => {
               <FormItem>
                 <FormLabel>Old password</FormLabel>
                 <FormControl>
-                  <Input
-                    type="password"
-                    invalid={errors.has("current_password")}
-                    help={errors.get("current_password")}
-                    {...field}
-                  />
+                  <Input type="password" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -158,7 +147,7 @@ const PasswordSection = () => {
               <FormItem>
                 <FormLabel>New password</FormLabel>
                 <FormControl>
-                  <Input type="password" invalid={errors.has("password")} help={errors.get("password")} {...field} />
+                  <Input type="password" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -172,12 +161,7 @@ const PasswordSection = () => {
               <FormItem>
                 <FormLabel>Confirm new password</FormLabel>
                 <FormControl>
-                  <Input
-                    type="password"
-                    invalid={errors.has("confirm_password")}
-                    help={errors.get("confirm_password")}
-                    {...field}
-                  />
+                  <Input type="password" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -185,9 +169,9 @@ const PasswordSection = () => {
           />
         </CardContent>
         <CardFooter>
-          <MutationButton type="submit" mutation={saveMutation} loadingText="Saving...">
+          <MutationStatusButton type="submit" mutation={saveMutation} loadingText="Saving...">
             Save
-          </MutationButton>
+          </MutationStatusButton>
         </CardFooter>
       </FormSection>
     </Form>

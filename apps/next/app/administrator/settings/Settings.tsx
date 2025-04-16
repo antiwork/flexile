@@ -1,11 +1,14 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { pick } from "lodash-es";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 import ColorPicker from "@/components/ColorPicker";
 import FormSection from "@/components/FormSection";
-import MutationButton from "@/components/MutationButton";
+import { MutationStatusButton } from "@/components/MutationButton";
 import { Editor } from "@/components/RichText";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CardContent, CardFooter } from "@/components/ui/card";
@@ -17,23 +20,29 @@ import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";
 import defaultLogo from "@/images/default-company-logo.svg";
 import { trpc } from "@/trpc/client";
-import { isValidUrl, md5Checksum } from "@/utils";
+import { md5Checksum } from "@/utils";
 import GithubIntegration from "./GithubIntegration";
 import QuickbooksIntegration from "./QuickbooksIntegration";
 import StripeMicrodepositVerification from "./StripeMicrodepositVerification";
 
+const formSchema = z.object({
+  website: z.string().url(),
+  description: z.string().nullable(),
+  brandColor: z.string().nullable(),
+  showStatsInJobDescriptions: z.boolean(),
+  publicName: z.string(),
+});
 export default function Settings({ githubOauthUrl }: { githubOauthUrl: string }) {
   const company = useCurrentCompany();
   const [settings, { refetch }] = trpc.companies.settings.useSuspenseQuery({ companyId: company.id });
   const queryClient = useQueryClient();
 
   const form = useForm({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       publicName: company.name ?? "",
+      ...pick(settings, "description", "brandColor", "showStatsInJobDescriptions"),
       website: settings.website ?? "",
-      description: settings.description ?? "",
-      brandColor: settings.brandColor ?? "",
-      showStatsInJobDescriptions: settings.showStatsInJobDescriptions,
     },
   });
 
@@ -46,13 +55,7 @@ export default function Settings({ githubOauthUrl }: { githubOauthUrl: string })
   const createUploadUrl = trpc.files.createDirectUploadUrl.useMutation();
   const updateSettings = trpc.companies.update.useMutation();
   const saveMutation = useMutation({
-    mutationFn: async () => {
-      const values = form.getValues();
-      if (values.website && !isValidUrl(values.website)) {
-        form.setError("website", { message: "Invalid URL" });
-        throw new Error("Invalid form data");
-      }
-
+    mutationFn: async (values: z.infer<typeof formSchema>) => {
       let logoKey: string | undefined = undefined;
       if (logoFile) {
         const base64Checksum = await md5Checksum(logoFile);
@@ -78,10 +81,7 @@ export default function Settings({ githubOauthUrl }: { githubOauthUrl: string })
       await updateSettings.mutateAsync({
         companyId: company.id,
         logoKey,
-        showStatsInJobDescriptions: values.showStatsInJobDescriptions,
-        publicName: values.publicName,
-        website: values.website,
-        description: values.description,
+        ...values,
         brandColor: values.brandColor || null,
       });
       await refetch();
@@ -89,6 +89,7 @@ export default function Settings({ githubOauthUrl }: { githubOauthUrl: string })
     },
     onSuccess: () => setTimeout(() => saveMutation.reset(), 2000),
   });
+  const submit = form.handleSubmit((values) => saveMutation.mutate(values));
 
   return (
     <>
@@ -102,7 +103,11 @@ export default function Settings({ githubOauthUrl }: { githubOauthUrl: string })
           </CardContent>
         </FormSection>
       ) : null}
-      <FormSection title="Customization" description="These details will be included in job descriptions.">
+      <FormSection
+        title="Customization"
+        description="These details will be included in job descriptions."
+        onSubmit={(e) => void submit(e)}
+      >
         <Form {...form}>
           <CardContent>
             <div className="grid gap-4">
@@ -213,9 +218,14 @@ export default function Settings({ githubOauthUrl }: { githubOauthUrl: string })
           </CardContent>
 
           <CardFooter>
-            <MutationButton mutation={saveMutation} successText="Changes saved" loadingText="Saving...">
+            <MutationStatusButton
+              mutation={saveMutation}
+              type="submit"
+              successText="Changes saved"
+              loadingText="Saving..."
+            >
               Save changes
-            </MutationButton>
+            </MutationStatusButton>
           </CardFooter>
         </Form>
       </FormSection>
