@@ -338,33 +338,58 @@ const Edit = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>{data.user.project_based ? "Project" : "Line item"}</TableHead>
-                {!data.user.project_based && <TableHead>Hours</TableHead>}
-                {!data.user.project_based && <TableHead className="text-right">Rate</TableHead>}
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead></TableHead>
+                {data.user.project_based ? null : (
+                  <>
+                    <TableHead>Hours</TableHead>
+                    <TableHead>Rate</TableHead>
+                  </>
+                )}
+                <TableHead>Amount</TableHead>
+                <TableHead />
               </TableRow>
             </TableHeader>
             <TableBody>
               {lineItems.toArray().map((item, rowIndex) => (
                 <TableRow key={rowIndex}>
-                  <TableCell>{item.description}</TableCell>
-                  {!data.user.project_based && (
-                    <TableCell>{item.minutes}</TableCell>
-                  )}
-                  {!data.user.project_based && (
-                    <TableCell className="text-right tabular-nums">{`${formatMoneyFromCents(item.pay_rate_in_subunits)} / hour`}</TableCell>
-                  )}
-                  <TableCell className="text-right tabular-nums">
-                    {data.user.project_based 
-                      ? <DecimalInput
-                          value={item.total_amount_cents / 100}
-                          onChange={(value) => updateLineItem(rowIndex, { total_amount_cents: (value ?? 0) * 100 })}
-                          aria-label="Amount"
-                          placeholder="0"
-                          prefix="$"
+                  <TableCell>
+                    {" "}
+                    <Input
+                      value={item.description}
+                      placeholder="Description"
+                      invalid={item.errors?.includes("description")}
+                      onChange={(value) => updateLineItem(rowIndex, { description: value })}
+                    />
+                  </TableCell>
+                  {data.user.project_based ? null : (
+                    <>
+                      <TableCell>
+                        <DurationInput
+                          value={item.minutes}
+                          aria-label="Hours"
+                          invalid={item.errors?.includes("minutes")}
+                          onChange={(value) =>
+                            updateLineItem(rowIndex, {
+                              minutes: value,
+                              total_amount_cents: Math.ceil(item.pay_rate_in_subunits * ((value ?? 0) / 60)),
+                            })
+                          }
                         />
-                      : formatMoneyFromCents(item.total_amount_cents)
-                    }
+                      </TableCell>
+                      <TableCell>{`${formatMoneyFromCents(item.pay_rate_in_subunits)} / hour`}</TableCell>
+                    </>
+                  )}
+                  <TableCell>
+                    {data.user.project_based ? (
+                      <DecimalInput
+                        value={item.total_amount_cents / 100}
+                        onChange={(value) => updateLineItem(rowIndex, { total_amount_cents: (value ?? 0) * 100 })}
+                        aria-label="Amount"
+                        placeholder="0"
+                        prefix="$"
+                      />
+                    ) : (
+                      formatMoneyFromCents(item.total_amount_cents)
+                    )}
                   </TableCell>
                   <TableCell>
                     <Button
@@ -380,7 +405,7 @@ const Edit = () => {
             </TableBody>
             <TableFooter>
               <TableRow>
-                <TableCell colSpan={data.user.project_based ? 2 : 4}>
+                <TableCell colSpan={data.user.project_based ? 3 : 5}>
                   <div className="flex gap-3">
                     <Button variant="link" onClick={addLineItem}>
                       <PlusIcon className="inline size-4" />
@@ -412,33 +437,51 @@ const Edit = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Expense</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead>Receipt</TableHead>
-                  <TableHead></TableHead>
+                  <TableHead>Merchant</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {expenses.toArray().map((expense, rowIndex) => (
                   <TableRow key={rowIndex}>
-                    <TableCell>{expense.description}</TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      <DecimalInput
-                        value={expense.total_amount_in_cents / 100}
-                        onChange={(value) => updateExpense(rowIndex, { total_amount_in_cents: (value ?? 0) * 100 })}
-                        aria-label="Amount"
-                        placeholder="0"
-                        prefix="$"
+                    <TableCell>
+                      <a href={expense.attachment.url} download>
+                        <PaperClipIcon className="inline size-4" />
+                        {expense.attachment.name}
+                      </a>
+                    </TableCell>
+                    <TableCell>
+                      {" "}
+                      <Input
+                        value={expense.description}
+                        aria-label="Merchant"
+                        invalid={expense.errors?.includes("description")}
+                        onChange={(description) => updateExpense(rowIndex, { description })}
                       />
                     </TableCell>
                     <TableCell>
-                      {expense.attachment ? (
-                        <Button variant="link" asChild>
-                          <a href={expense.attachment.url} target="_blank" rel="noreferrer">
-                            <PaperClipIcon className="inline size-4" />
-                            {expense.attachment.name}
-                          </a>
-                        </Button>
-                      ) : null}
+                      <Select
+                        value={expense.category_id.toString()}
+                        options={data.company.expenses.categories.map((category) => ({
+                          value: category.id.toString(),
+                          label: category.name,
+                        }))}
+                        aria-label="Category"
+                        invalid={expense.errors?.includes("category")}
+                        onChange={(value) => updateExpense(rowIndex, { category_id: Number(value) })}
+                      />
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      <DecimalInput
+                        value={expense.total_amount_in_cents / 100}
+                        placeholder="0"
+                        onChange={(value) => updateExpense(rowIndex, { total_amount_in_cents: (value ?? 0) * 100 })}
+                        aria-label="Amount"
+                        invalid={expense.errors?.includes("amount")}
+                        prefix="$"
+                      />
                     </TableCell>
                     <TableCell>
                       <Button
@@ -454,11 +497,12 @@ const Edit = () => {
               </TableBody>
               <TableFooter>
                 <TableRow>
-                  <TableCell>Total</TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatMoneyFromCents(expenses.toArray().reduce((sum, expense) => sum + (expense.total_amount_in_cents || 0), 0))}
+                  <TableCell colSpan={5}>
+                    <Button variant="link" onClick={() => uploadExpenseRef.current?.click()}>
+                      <PlusIcon className="inline size-4" />
+                      Add expense
+                    </Button>
                   </TableCell>
-                  <TableCell colSpan={2}></TableCell>
                 </TableRow>
               </TableFooter>
             </Table>

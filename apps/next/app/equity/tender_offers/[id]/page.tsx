@@ -2,7 +2,6 @@
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { ArrowDownTrayIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
-import type { ColumnDef } from "@tanstack/react-table";
 import { addMonths, isFuture, isPast } from "date-fns";
 import { useParams } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
@@ -53,27 +52,26 @@ const financialData = Object.entries({
   ],
 });
 const startDate = new Date(2023, 6);
-const financialDataColumns = [
-  { id: "header", accessorKey: "0", header: "" },
-  ...(financialData[0]?.[1] ?? []).map(
-    (_, i) =>
-      ({
-        header: formatMonth(addMonths(startDate, i)),
-        accessorKey: `1.${i}`,
-        cell: (info) => {
-          const value = info.getValue();
-          return typeof value === "number" ? formatMoney(value) : value;
-        },
-        meta: { numeric: true },
-      }) satisfies ColumnDef<[string, (string | number)[]]>,
-  ),
-];
 
-const holdingsColumnHelper = createColumnHelper<Holding>();
-const holdingsColumns = [
-  holdingsColumnHelper.simple("className", "Share class"),
-  holdingsColumnHelper.simple("count", "Number of shares", (value) => value.toLocaleString(), "numeric"),
-];
+const HoldingsTable = ({ holdings, caption }: { holdings: Holding[]; caption: string }) => (
+  <Table>
+    <TableCaption>{caption}</TableCaption>
+    <TableHeader>
+      <TableRow>
+        <TableHead>Share class</TableHead>
+        <TableHead className="text-right">Number of shares</TableHead>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      {holdings.map((holding, index) => (
+        <TableRow key={index}>
+          <TableCell>{holding.className}</TableCell>
+          <TableCell className="text-right tabular-nums">{holding.count.toLocaleString()}</TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  </Table>
+);
 
 export default function TenderOfferView() {
   const { id } = useParams<{ id: string }>();
@@ -270,20 +268,13 @@ export default function TenderOfferView() {
                 <h2 className="text-xl font-bold">Tender offer details</h2>
                 <div className="overflow-x-auto">
                   <Table>
-                    <TableCaption className="mb-2 text-left text-lg font-bold text-black">
-                      Company financials (unaudited)
-                    </TableCaption>
+                    <TableCaption>Company financials (unaudited)</TableCaption>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>
-                          {financialDataColumns[0].header}
-                        </TableHead>
-                        {financialDataColumns.slice(1).map((column, index) => (
-                          <TableHead
-                            key={index}
-                            className="text-right"
-                          >
-                            {column.header}
+                        <TableHead />
+                        {(financialData[0]?.[1] ?? []).map((_, index) => (
+                          <TableHead key={index} className="text-right">
+                            {formatMonth(addMonths(startDate, index))}
                           </TableHead>
                         ))}
                       </TableRow>
@@ -291,14 +282,9 @@ export default function TenderOfferView() {
                     <TableBody>
                       {financialData.map((row, rowIndex) => (
                         <TableRow key={rowIndex}>
-                          <TableCell>
-                            {row[0]}
-                          </TableCell>
-                          {(row[1]).map((cell, cellIndex) => (
-                            <TableCell
-                              key={cellIndex}
-                              className="text-right tabular-nums"
-                            >
+                          <TableCell>{row[0]}</TableCell>
+                          {row[1].map((cell, cellIndex) => (
+                            <TableCell key={cellIndex} className="text-right tabular-nums">
                               {typeof cell === "number" ? formatMoney(cell) : cell}
                             </TableCell>
                           ))}
@@ -317,43 +303,9 @@ export default function TenderOfferView() {
                 </p>
                 <h2 className="text-xl font-bold">Submit a bid</h2>
                 {tenderedHoldings.length ? (
-                  <Table>
-                    <TableCaption className="mb-2 text-left text-lg font-bold text-black">
-                      Tendered Holdings
-                    </TableCaption>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Share class</TableHead>
-                        <TableHead className="text-right">Number of shares</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {tenderedHoldings.map((holding, index) => (
-                        <TableRow key={index}>
-                          <TableCell>{holding.className}</TableCell>
-                          <TableCell className="text-right tabular-nums">{holding.count.toLocaleString()}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                  <HoldingsTable holdings={tenderedHoldings} caption="Tendered Holdings" />
                 ) : null}
-                <Table>
-                  <TableCaption className="mb-2 text-left text-lg font-bold text-black">Holdings</TableCaption>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Share class</TableHead>
-                      <TableHead className="text-right">Number of shares</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {holdings.map((holding, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{holding.className}</TableCell>
-                        <TableCell className="text-right tabular-nums">{holding.count.toLocaleString()}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <HoldingsTable holdings={holdings} caption="Holdings" />
                 <Select
                   value={newBid.shareClass}
                   onChange={(value) => setNewBid({ ...newBid, shareClass: value })}
