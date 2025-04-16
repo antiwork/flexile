@@ -10,7 +10,8 @@ import RadioButtons from "@/components/RadioButtons";
 import Select from "@/components/Select";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Command, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Combobox } from "@/components/ui/combobox";
+import { FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import {
   CURRENCIES,
   type Currency,
@@ -105,9 +106,11 @@ interface Props {
   onClose: () => void;
 }
 
-const countryOptions = [...supportedCountries].map(([countryCode, name]) => ({ name, key: countryCode }));
+const countryOptions = [...supportedCountries].map(([countryCode, name]) => ({ key: countryCode, name }));
 
 const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClose }: Props) => {
+  // TODO (techdebt): Consider migrating to react-hook-form once we have a clearer
+  // pattern for handling Wise's dynamic form requirements and async validation
   const [showBillingDetails, setShowBillingDetails] = useState(false);
   const defaultCurrency = bankAccount?.currency ?? currencyByCountryCode.get(billingDetails.country_code) ?? "USD";
   const [currency, setCurrency] = useState<Currency>(defaultCurrency);
@@ -392,29 +395,56 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
 
   return (
     <Modal open={open} onClose={onClose} title="Bank account">
-      <Select
-        value={currency}
-        onChange={(value) => setCurrency(z.enum(currencyCodes).parse(value))}
-        options={CURRENCIES.map(({ value, name }) => ({ value, label: name }))}
-        label="Currency"
+      <FormField
+        name="currency"
+        render={() => (
+          <FormItem>
+            <FormLabel>Currency</FormLabel>
+            <FormControl>
+              <Select
+                value={currency}
+                onChange={(value) => setCurrency(z.enum(currencyCodes).parse(value))}
+                options={CURRENCIES.map(({ value, name }) => ({ value, label: name }))}
+              />
+            </FormControl>
+          </FormItem>
+        )}
       />
 
       {formSwitch ? (
-        <Checkbox
-          checked={(selectedFormIndex !== defaultFormIndex) !== formSwitch.defaultOn}
-          role="switch"
-          label={formSwitch.label}
-          disabled={isPending}
-          onCheckedChange={() => setSelectedFormIndex((prev) => (prev + 1) % 2)}
+        <FormField
+          name="formSwitch"
+          render={() => (
+            <FormItem>
+              <FormControl>
+                <Checkbox
+                  checked={(selectedFormIndex !== defaultFormIndex) !== formSwitch.defaultOn}
+                  role="switch"
+                  label={formSwitch.label}
+                  disabled={isPending}
+                  onCheckedChange={() => setSelectedFormIndex((prev) => (prev + 1) % 2)}
+                />
+              </FormControl>
+            </FormItem>
+          )}
         />
       ) : forms.length > 2 ? (
-        <Select
-          value={selectedFormIndex.toString()}
-          onChange={(value) => setSelectedFormIndex(Number(value))}
-          placeholder="Choose account type"
-          options={forms.map((form, i) => ({ value: i.toString(), label: form.title }))}
-          label="Account Type"
-          disabled={isPending}
+        <FormField
+          name="accountType"
+          render={() => (
+            <FormItem>
+              <FormLabel>Account Type</FormLabel>
+              <FormControl>
+                <Select
+                  value={selectedFormIndex.toString()}
+                  onChange={(value) => setSelectedFormIndex(Number(value))}
+                  placeholder="Choose account type"
+                  options={forms.map((form, i) => ({ value: i.toString(), label: form.title }))}
+                  disabled={isPending}
+                />
+              </FormControl>
+            </FormItem>
+          )}
         />
       ) : null}
 
@@ -422,75 +452,82 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
         if (field.type === "select" || field.type === "radio") {
           if (!field.valuesAllowed || field.valuesAllowed.length > 5) {
             return (
-              <div key={field.key} className="relative">
-                <Command className="border">
-                  <CommandInput
-                    value={
-                      details.get(field.key)
-                        ? field.valuesAllowed?.find((option) => option.key === details.get(field.key))?.name || ""
-                        : ""
-                    }
-                    onValueChange={(value) => {
-                      if (field.valuesAllowed?.some((option) => option.name === value)) {
-                        const matchedValue = field.valuesAllowed.find((option) => option.name === value)?.key;
-                        if (matchedValue) {
-                          setDetails((prev) => prev.set(field.key, matchedValue));
-                          setTimeout(() => fieldUpdated(field), 0);
+              <FormField
+                key={field.key}
+                name={field.key}
+                render={() => (
+                  <FormItem>
+                    <FormLabel>{field.name}</FormLabel>
+                    <FormControl>
+                      <Combobox
+                        options={
+                          field.key === KEY_ADDRESS_COUNTRY
+                            ? countryOptions.map((option) => ({ value: option.key, label: option.name }))
+                            : (field.valuesAllowed?.map((option) => ({ value: option.key, label: option.name })) ?? [])
                         }
-                      }
-                    }}
-                    placeholder={field.name}
-                    disabled={isPending}
-                  />
-                  <CommandList>
-                    <CommandGroup>
-                      {field.valuesAllowed?.map((option) => (
-                        <CommandItem
-                          key={option.key}
-                          value={option.name}
-                          onSelect={() => {
-                            setDetails((prev) => prev.set(field.key, option.key));
-                            setTimeout(() => fieldUpdated(field), 0);
-                          }}
-                        >
-                          {option.name}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-                {errors.has(field.key) && <div className="mt-1 text-sm text-red-500">{errors.get(field.key)}</div>}
-              </div>
+                        value={details.get(field.key) ?? ""}
+                        onSelect={(value) => {
+                          setDetails((prev) => prev.set(field.key, value));
+                          setTimeout(() => fieldUpdated(field), 0);
+                        }}
+                        placeholder={field.name}
+                        disabled={isPending}
+                        emptyMessage="No options found."
+                      />
+                    </FormControl>
+                    {errors.get(field.key) && <div className="mt-1 text-sm text-red-500">{errors.get(field.key)}</div>}
+                  </FormItem>
+                )}
+              />
             );
           }
 
           return (
-            <RadioButtons
+            <FormField
               key={field.key}
-              value={details.get(field.key) ?? ""}
-              onChange={(value) => {
-                setDetails((prev) => prev.set(field.key, value));
-                setTimeout(() => fieldUpdated(field), 0);
-              }}
-              label={field.name}
-              options={field.valuesAllowed.map(({ key, name }) => ({ label: name, value: key }))}
-              invalid={errors.has(field.key)}
-              help={errors.get(field.key)}
+              name={field.key}
+              render={() => (
+                <FormItem>
+                  <FormLabel>{field.name}</FormLabel>
+                  <FormControl>
+                    <RadioButtons
+                      value={details.get(field.key) ?? ""}
+                      onChange={(value) => {
+                        setDetails((prev) => prev.set(field.key, value));
+                        setTimeout(() => fieldUpdated(field), 0);
+                      }}
+                      options={(field.valuesAllowed ?? []).map(({ key, name }) => ({ label: name, value: key }))}
+                      invalid={errors.has(field.key)}
+                      help={errors.get(field.key)}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
             />
           );
         }
 
         return (
-          <BankAccountField
+          <FormField
             key={field.key}
-            value={details.get(field.key) ?? ""}
-            onChange={(value) => {
-              setDetails((prev) => prev.set(field.key, value));
-              setTimeout(() => fieldUpdated(field), 0);
-            }}
-            field={field}
-            invalid={errors.has(field.key)}
-            help={errors.get(field.key)}
+            name={field.key}
+            render={() => (
+              <FormItem>
+                <FormLabel>{field.name}</FormLabel>
+                <FormControl>
+                  <BankAccountField
+                    value={details.get(field.key) ?? ""}
+                    onChange={(value) => {
+                      setDetails((prev) => prev.set(field.key, value));
+                      setTimeout(() => fieldUpdated(field), 0);
+                    }}
+                    field={field}
+                    invalid={errors.has(field.key)}
+                    help={errors.get(field.key)}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
           />
         );
       })}
