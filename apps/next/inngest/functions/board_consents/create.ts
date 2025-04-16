@@ -66,7 +66,7 @@ export default inngest.createFunction(
 
       // Calculate number of shares that would amount to $100,000
       const targetValueUsd = 100_000;
-      const numberOfShares = Math.round(Number(targetValueUsd) / Number(company.sharePriceInUsd));
+      const numberOfShares = Math.round(Number(targetValueUsd) / Number(company.fmvPerShareInUsd));
 
       // Get default values from option pool
       const vestingTrigger = contractor.payRateType === PayRateType.Salary ? "scheduled" : "invoice_paid";
