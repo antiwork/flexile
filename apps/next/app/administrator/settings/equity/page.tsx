@@ -44,75 +44,75 @@ const BoardMembersSection = () => {
   });
 
   return (
-    <FormSection title="Board members" description="Select company administrators who are board members.">
+    <FormSection
+      title="Board members"
+      description="Select company administrators who are board members."
+      onSubmit={(e) => {
+        e.preventDefault();
+        updateMutation.mutate();
+      }}
+    >
       <FormProvider {...form}>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            updateMutation.mutate();
-          }}
-        >
-          <CardContent>
-            <div className="grid gap-4">
-              <FormField
-                control={form.control}
-                name="boardMembers"
-                render={() => (
-                  <FormItem>
-                    <FormLabel>Board members</FormLabel>
-                    <FormControl>
-                      <Combobox
-                        options={administrators.map((admin: { id: string; name: string }) => ({
-                          value: admin.id,
-                          label: admin.name,
-                        }))}
-                        value={boardMemberIds.toArray().join(",")}
-                        onSelect={(value) => {
-                          if (!value) return;
-                          const [id] = value.split(",");
-                          if (!id) return;
-                          setBoardMemberIds(boardMemberIds[boardMemberIds.has(id) ? "delete" : "add"](id));
-                        }}
-                        placeholder="Select members..."
-                        emptyMessage="No administrator found."
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              {boardMemberIds.size > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {administrators
-                    .filter((admin) => boardMemberIds.has(admin.id))
-                    .map((member) => (
-                      <Badge key={member.id} variant="secondary" className="flex items-center gap-1">
-                        <User className="h-3 w-3" />
-                        {member.name}
-                        <Button
-                          variant="link"
-                          className="text-muted-foreground hover:text-foreground h-auto p-0"
-                          onClick={() => setBoardMemberIds(boardMemberIds.delete(member.id))}
-                        >
-                          <X className="h-3 w-3" />
-                          <span className="sr-only">Remove</span>
-                        </Button>
-                      </Badge>
-                    ))}
-                </div>
-              ) : null}
-            </div>
-          </CardContent>
-          <CardFooter>
-            <MutationButton
-              type="submit"
-              mutation={updateMutation}
-              disabled={updateMutation.isPending}
-              loadingText="Saving..."
-            >
-              Save board members
-            </MutationButton>
-          </CardFooter>
-        </form>
+        <CardContent>
+          <div className="grid gap-4">
+            <FormField
+              control={form.control}
+              name="boardMembers"
+              render={() => (
+                <FormItem>
+                  <FormLabel>Board members</FormLabel>
+                  <FormControl>
+                    <Combobox
+                      options={administrators.map((admin: { id: string; name: string }) => ({
+                        value: admin.id,
+                        label: admin.name,
+                      }))}
+                      value={boardMemberIds.toArray().join(",")}
+                      onSelect={(value) => {
+                        if (!value) return;
+                        const [id] = value.split(",");
+                        if (!id) return;
+                        setBoardMemberIds(boardMemberIds[boardMemberIds.has(id) ? "delete" : "add"](id));
+                      }}
+                      placeholder="Select members..."
+                      emptyMessage="No administrator found."
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            {boardMemberIds.size > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {administrators
+                  .filter((admin) => boardMemberIds.has(admin.id))
+                  .map((member) => (
+                    <Badge key={member.id} variant="secondary" className="flex items-center gap-1">
+                      <User className="h-3 w-3" />
+                      {member.name}
+                      <Button
+                        variant="link"
+                        className="text-muted-foreground hover:text-foreground h-auto p-0"
+                        onClick={() => setBoardMemberIds(boardMemberIds.delete(member.id))}
+                      >
+                        <X className="h-3 w-3" />
+                        <span className="sr-only">Remove</span>
+                      </Button>
+                    </Badge>
+                  ))}
+              </div>
+            ) : null}
+          </div>
+        </CardContent>
+        <CardFooter>
+          <MutationButton
+            type="submit"
+            mutation={updateMutation}
+            disabled={updateMutation.isPending}
+            loadingText="Saving..."
+          >
+            Save board members
+          </MutationButton>
+        </CardFooter>
       </FormProvider>
     </FormSection>
   );
