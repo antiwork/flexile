@@ -3,7 +3,6 @@ import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { CardRow } from "@/components/Card";
 import MutationButton from "@/components/MutationButton";
 import Status from "@/components/Status";
 import { Button } from "@/components/ui/button";
@@ -128,7 +127,7 @@ export default function QuickbooksRow() {
   };
 
   return (
-    <CardRow>
+    <div>
       <div className="flex justify-between gap-2">
         <div>
           <div className="flex items-center gap-2">
@@ -241,6 +240,6 @@ export default function QuickbooksRow() {
           </Form>
         </DialogContent>
       </Dialog>
-    </CardRow>
+    </div>
   );
 }

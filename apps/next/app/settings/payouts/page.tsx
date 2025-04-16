@@ -3,9 +3,8 @@
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Check } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { Fragment, useEffect, useRef, useState } from "react";
 import { z } from "zod";
-import { CardRow } from "@/components/Card";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import Modal from "@/components/Modal";
@@ -13,6 +12,8 @@ import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { CardContent, CardFooter } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { currencyCodes, sanctionedCountries, supportedCountries } from "@/models/constants";
 import { trpc } from "@/trpc/client";
@@ -77,7 +78,7 @@ const DividendSection = () => {
 
   return (
     <FormSection title="Dividends" onSubmit={e(() => saveMutation.mutate(), "prevent")}>
-      <CardRow className="grid gap-4">
+      <CardContent className="grid gap-4">
         <NumberInput
           value={minimumDividendPaymentAmount}
           onChange={setMinimumDividendPaymentAmount}
@@ -89,13 +90,13 @@ const DividendSection = () => {
           prefix="$"
           help="Payments below this threshold will be retained."
         />
-      </CardRow>
-      <CardRow className="flex flex-wrap items-center gap-4">
+      </CardContent>
+      <CardFooter className="flex-wrap gap-4">
         <MutationButton type="submit" mutation={saveMutation} loadingText="Saving...">
           Save changes
         </MutationButton>
         <div>This change will affect all companies you invested in through Flexile.</div>
-      </CardRow>
+      </CardFooter>
     </FormSection>
   );
 };
@@ -190,114 +191,129 @@ const BankAccountsSection = () => {
 
   return (
     <FormSection title="Payout method">
-      {isFromSanctionedCountry ? (
-        <CardRow>
-          <Alert variant="destructive">
-            <ExclamationTriangleIcon />
-            <AlertTitle>Payouts are disabled</AlertTitle>
-            <AlertDescription>
-              Unfortunately, due to regulatory restrictions and compliance with international sanctions, individuals
-              from sanctioned countries are unable to receive payments through our platform.
-            </AlertDescription>
-          </Alert>
-        </CardRow>
-      ) : (
-        <>
-          {showWalletPayoutMethod ? (
-            <CardRow className="flex justify-between">
-              <div>
-                <h2 className="text-xl font-bold">ETH wallet</h2>
-                <div className="text-xs">{walletAddress}</div>
-              </div>
-              <Button variant="outline" onClick={() => setEditingWalletPayoutMethod(true)}>
-                Edit
-              </Button>
-              <WalletAddressModal
-                open={editingWalletPayoutMethod}
-                value={walletAddress}
-                onClose={() => setEditingWalletPayoutMethod(false)}
-                onComplete={setWalletAddress}
-              />
-            </CardRow>
-          ) : null}
+      <CardContent>
+        {isFromSanctionedCountry ? (
+          <div>
+            <Alert variant="destructive">
+              <ExclamationTriangleIcon />
+              <AlertTitle>Payouts are disabled</AlertTitle>
+              <AlertDescription>
+                Unfortunately, due to regulatory restrictions and compliance with international sanctions, individuals
+                from sanctioned countries are unable to receive payments through our platform.
+              </AlertDescription>
+            </Alert>
+          </div>
+        ) : (
+          <>
+            {showWalletPayoutMethod ? (
+              <>
+                <div className="flex justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold">ETH wallet</h2>
+                    <div className="text-xs">{walletAddress}</div>
+                  </div>
+                  <Button variant="outline" onClick={() => setEditingWalletPayoutMethod(true)}>
+                    Edit
+                  </Button>
+                  <WalletAddressModal
+                    open={editingWalletPayoutMethod}
+                    value={walletAddress}
+                    onClose={() => setEditingWalletPayoutMethod(false)}
+                    onComplete={setWalletAddress}
+                  />
+                </div>
+                <Separator />
+              </>
+            ) : null}
 
-          {bankAccounts.map((bankAccount) => (
-            <CardRow key={bankAccount.id} className="flex justify-between">
-              <div>
-                <h2 className="text-xl font-bold">{bankAccount.currency} bank account</h2>
-                <div className="text-xs">Ending in {bankAccount.last_four_digits}</div>
-                {bankAccounts.length > 1 && bankAccountUsage(bankAccount)}
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                {bankAccounts.length > 1 ? (
-                  <>
-                    {bankAccount.id !== bankAccountForInvoices && (
-                      <MutationButton
-                        idleVariant="outline"
-                        mutation={useBankAccountMutation}
-                        param={{ bankAccountId: bankAccount.id, useFor: "invoices" as const }}
-                        loadingText={
-                          useBankAccountMutation.variables?.bankAccountId === bankAccount.id ? "Updating..." : undefined
-                        }
-                      >
-                        Use for invoices
-                      </MutationButton>
+            {bankAccounts.map((bankAccount, index) => (
+              <Fragment key={bankAccount.id}>
+                <div className="flex justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold">{bankAccount.currency} bank account</h2>
+                    <div className="text-xs">Ending in {bankAccount.last_four_digits}</div>
+                    {bankAccounts.length > 1 && bankAccountUsage(bankAccount)}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    {bankAccounts.length > 1 ? (
+                      <>
+                        {bankAccount.id !== bankAccountForInvoices && (
+                          <MutationButton
+                            idleVariant="outline"
+                            mutation={useBankAccountMutation}
+                            param={{ bankAccountId: bankAccount.id, useFor: "invoices" as const }}
+                            loadingText={
+                              useBankAccountMutation.variables?.bankAccountId === bankAccount.id
+                                ? "Updating..."
+                                : undefined
+                            }
+                          >
+                            Use for invoices
+                          </MutationButton>
+                        )}
+
+                        {bankAccount.id !== bankAccountForDividends && user.roles.investor ? (
+                          <MutationButton
+                            idleVariant="outline"
+                            mutation={useBankAccountMutation}
+                            param={{ bankAccountId: bankAccount.id, useFor: "dividends" as const }}
+                            loadingText={
+                              useBankAccountMutation.variables?.bankAccountId === bankAccount.id
+                                ? "Updating..."
+                                : undefined
+                            }
+                          >
+                            Use for dividends
+                          </MutationButton>
+                        ) : null}
+                      </>
+                    ) : (
+                      <>
+                        <Button variant="outline" onClick={() => setEditingBankAccount(bankAccount)}>
+                          Edit
+                        </Button>
+                        {editingBankAccount ? (
+                          <BankAccountModal
+                            open={!!editingBankAccount}
+                            billingDetails={data}
+                            bankAccount={editingBankAccount}
+                            onClose={() => setEditingBankAccount(null)}
+                            onComplete={(result) => {
+                              Object.assign(editingBankAccount, result);
+                              setEditingBankAccount(null);
+                            }}
+                          />
+                        ) : null}
+                      </>
                     )}
+                  </div>
+                </div>
+                {index !== bankAccounts.length - 1 && <Separator />}
+              </Fragment>
+            ))}
 
-                    {bankAccount.id !== bankAccountForDividends && user.roles.investor ? (
-                      <MutationButton
-                        idleVariant="outline"
-                        mutation={useBankAccountMutation}
-                        param={{ bankAccountId: bankAccount.id, useFor: "dividends" as const }}
-                        loadingText={
-                          useBankAccountMutation.variables?.bankAccountId === bankAccount.id ? "Updating..." : undefined
-                        }
-                      >
-                        Use for dividends
-                      </MutationButton>
-                    ) : null}
-                  </>
-                ) : (
-                  <>
-                    <Button variant="outline" onClick={() => setEditingBankAccount(bankAccount)}>
-                      Edit
-                    </Button>
-                    {editingBankAccount ? (
-                      <BankAccountModal
-                        open={!!editingBankAccount}
-                        billingDetails={data}
-                        bankAccount={editingBankAccount}
-                        onClose={() => setEditingBankAccount(null)}
-                        onComplete={(result) => {
-                          Object.assign(editingBankAccount, result);
-                          setEditingBankAccount(null);
-                        }}
-                      />
-                    ) : null}
-                  </>
-                )}
-              </div>
-            </CardRow>
-          ))}
-
-          {user.roles.investor ? (
-            <CardRow>
-              {addingBankAccount ? (
-                <BankAccountModal
-                  open={addingBankAccount}
-                  billingDetails={data}
-                  onClose={() => setAddingBankAccount(false)}
-                  onComplete={(result) => {
-                    setBankAccounts((prev) => [...prev, result]);
-                    setAddingBankAccount(false);
-                  }}
-                />
-              ) : null}
-              <Button onClick={() => setAddingBankAccount(true)}>Add bank account</Button>
-            </CardRow>
-          ) : null}
-        </>
-      )}
+            {user.roles.investor ? (
+              <>
+                <Separator />
+                <div>
+                  {addingBankAccount ? (
+                    <BankAccountModal
+                      open={addingBankAccount}
+                      billingDetails={data}
+                      onClose={() => setAddingBankAccount(false)}
+                      onComplete={(result) => {
+                        setBankAccounts((prev) => [...prev, result]);
+                        setAddingBankAccount(false);
+                      }}
+                    />
+                  ) : null}
+                  <Button onClick={() => setAddingBankAccount(true)}>Add bank account</Button>
+                </div>
+              </>
+            ) : null}
+          </>
+        )}
+      </CardContent>
     </FormSection>
   );
 };

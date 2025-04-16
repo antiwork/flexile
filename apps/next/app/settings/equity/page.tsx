@@ -3,11 +3,12 @@
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import React, { useState } from "react";
 import SettingsLayout from "@/app/settings/Layout";
-import { Card, CardRow } from "@/components/Card";
 import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
 import RangeInput from "@/components/RangeInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import { trpc } from "@/trpc/client";
@@ -66,49 +67,54 @@ export default function Equity() {
 
       <div title="Equity split">
         <Card>
-          <CardRow className="grid gap-4">
-            <RangeInput
-              value={equityPercent}
-              onChange={setEquityPercent}
-              min={0}
-              max={MAX_EQUITY_PERCENTAGE}
-              aria-label="Cash vs equity split"
-              unit="%"
-              label={
-                <div className="flex justify-between gap-2">
-                  How much of your rate would you like to swap for equity?
-                  <a
-                    className={linkClasses}
-                    href="https://sahillavingia.com/dividends"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Learn more
-                  </a>
-                </div>
-              }
-            />
-          </CardRow>
-          <CardRow className="flex justify-between gap-2">
-            <div>Cash amount</div>
-            <div>
-              {formatMoneyFromCents(cashCents)} <span className="text-gray-500">/ {worker.payRateType}</span>
+          <CardContent>
+            <div className="grid gap-4">
+              <RangeInput
+                value={equityPercent}
+                onChange={setEquityPercent}
+                min={0}
+                max={MAX_EQUITY_PERCENTAGE}
+                aria-label="Cash vs equity split"
+                unit="%"
+                label={
+                  <div className="flex justify-between gap-2">
+                    How much of your rate would you like to swap for equity?
+                    <a
+                      className={linkClasses}
+                      href="https://sahillavingia.com/dividends"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Learn more
+                    </a>
+                  </div>
+                }
+              />
             </div>
-          </CardRow>
-          <CardRow className="flex justify-between gap-2">
-            <div>Equity value</div>
-            <div>
-              {formatMoneyFromCents(equityCents)} <span className="text-gray-500">/ {worker.payRateType}</span>
+            <Separator />
+            <div className="flex justify-between gap-2">
+              <div>Cash amount</div>
+              <div>
+                {formatMoneyFromCents(cashCents)} <span className="text-gray-500">/ {worker.payRateType}</span>
+              </div>
             </div>
-          </CardRow>
-          <CardRow className="flex justify-between gap-2">
-            <div>Total amount</div>
-            <div>
-              {formatMoneyFromCents(equityCents + cashCents)}{" "}
-              <span className="text-gray-500">/ {worker.payRateType}</span>
+            <Separator />
+            <div className="flex justify-between gap-2">
+              <div>Equity value</div>
+              <div>
+                {formatMoneyFromCents(equityCents)} <span className="text-gray-500">/ {worker.payRateType}</span>
+              </div>
             </div>
-          </CardRow>
-          <CardRow>
+            <Separator />
+            <div className="flex justify-between gap-2">
+              <div>Total amount</div>
+              <div>
+                {formatMoneyFromCents(equityCents + cashCents)}{" "}
+                <span className="text-gray-500">/ {worker.payRateType}</span>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter>
             <MutationButton
               mutation={submitMutation}
               param={{ companyId: company.id, equityPercentage: equityPercent }}
@@ -118,7 +124,7 @@ export default function Equity() {
             >
               Save equity split
             </MutationButton>
-          </CardRow>
+          </CardFooter>
         </Card>
       </div>
     </SettingsLayout>
