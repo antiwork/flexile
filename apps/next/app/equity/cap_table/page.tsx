@@ -175,8 +175,8 @@ export default function CapTable() {
     <EquityLayout
       footer={
         selectedInvestors.length > 0 && (
-          <Sheet open modal={false}>
-            <SheetContent side="bottom" hideCloseButton primary modal={false} className="relative w-full">
+          <Sheet>
+            <SheetContent side="bottom" className="relative w-full">
               <SheetFooter>
                 <div className="flex flex-row items-center justify-between">
                   <SheetTitle>{selectedInvestors.length} selected</SheetTitle>
