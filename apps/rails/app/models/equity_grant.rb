@@ -57,7 +57,6 @@ class EquityGrant < ApplicationRecord
                                          numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :retirement_exercise_months, presence: true,
                                          numericality: { only_integer: true, greater_than_or_equal_to: 0 }
-  validates :board_approval_date, presence: true
 
   validates :option_holder_name, presence: true
   validate :equity_grant_name_must_be_unique_per_company
