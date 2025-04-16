@@ -2,9 +2,9 @@
 import { BriefcaseIcon, LinkIcon } from "@heroicons/react/24/outline";
 import React, { useMemo, useState } from "react";
 import CopyButton from "@/components/CopyButton";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
 import Placeholder from "@/components/Placeholder";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { PayRateType } from "@/db/enums";
@@ -110,7 +110,7 @@ export default function RolesPage() {
       }
     >
       {roles.length ? (
-        <Table table={table} />
+        <DataTable table={table} />
       ) : (
         <div>
           <Placeholder icon={BriefcaseIcon}>

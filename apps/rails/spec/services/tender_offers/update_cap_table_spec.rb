@@ -15,7 +15,7 @@ RSpec.describe TenderOffers::UpdateCapTable do
       share_class: share_class_a,
       number_of_shares: 1_000
     )
-    create(:share_certificate_doc, company:, user: company_investor_1.user)
+    create(:share_certificate_doc, company:, signatories: [company_investor_1.user])
     share_holding
   end
   let!(:share_holding_2) do
@@ -25,7 +25,7 @@ RSpec.describe TenderOffers::UpdateCapTable do
       share_class: share_class_b,
       number_of_shares: 1_000
     )
-    create(:share_certificate_doc, company:, user: company_investor_2.user)
+    create(:share_certificate_doc, company:, signatories: [company_investor_2.user])
     share_holding
   end
   let!(:equity_grant) do

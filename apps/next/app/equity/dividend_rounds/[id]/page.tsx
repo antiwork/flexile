@@ -3,10 +3,10 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import React from "react";
 import DividendStatusIndicator from "@/app/equity/DividendStatusIndicator";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Figures from "@/components/Figures";
 import MainLayout from "@/components/layouts/Main";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -74,7 +74,7 @@ export default function DividendRound() {
           { caption: "Date", value: formatDate(dividendRound.issuedAt) },
         ]}
       />
-      <Table table={table} onRowClicked={(row) => router.push(rowLink(row))} />
+      <DataTable table={table} onRowClicked={(row) => router.push(rowLink(row))} />
       <PaginationSection total={dividendsData.total} perPage={perPage} />
     </MainLayout>
   );

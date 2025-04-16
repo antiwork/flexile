@@ -55,7 +55,7 @@ class SeedDataGeneratorFromTemplate
 
     print_message("Using email #{@config.fetch("email")}.")
     WiseCredential.create!(profile_id: WISE_PROFILE_ID, api_key: WISE_API_KEY)
-    ActiveRecord::Base.connection.exec_query("INSERT INTO document_templates(name, external_id, created_at, updated_at, document_type, docuseal_id, signable) VALUES('name', 'Consulting agreement', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, 592723, true)")
+    ActiveRecord::Base.connection.exec_query("INSERT INTO document_templates(name, external_id, created_at, updated_at, document_type, docuseal_id, signable) VALUES('Consulting agreement', 'ex1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, 592723, true), ('Equity grant contract', 'ex2', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1, 613787, true)")
     Wise::AccountBalance.create_usd_balance_if_needed
     top_up_wise_account_if_needed
 
@@ -613,7 +613,8 @@ class SeedDataGeneratorFromTemplate
               ).process
               raise Error, error_message if error_message.present?
 
-              company_worker.uncompleted_contracts.reload.first.update!(contractor_signature: contractor.legal_name, completed_at: Time.current)
+              document = contractor.documents.unsigned_contracts.reload.first
+              document.signatures.where(user: contractor).update!(signed_at: Time.current)
               user_legal_params = user_attributes.slice("street_address", "city", "state", "zip_code")
               error_message = UpdateUser.new(
                 user: contractor,

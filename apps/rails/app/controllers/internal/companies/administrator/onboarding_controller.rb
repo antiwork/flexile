@@ -51,7 +51,7 @@ class Internal::Companies::Administrator::OnboardingController < Internal::Compa
       stripe_public_key: GlobalConfig.get("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"),
       name: Current.company.name,
       email: Current.user.email,
-      unsigned_document_id: Current.company.documents.where(completed_at: nil).where.not(docuseal_submission_id: nil).first&.id,
+      unsigned_document_id: Current.company.documents.unsigned.where.not(docuseal_submission_id: nil).first&.id,
     }
   end
 

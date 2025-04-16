@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import EquityPercentageLockModal from "@/app/invoices/EquityPercentageLockModal";
 import { StatusWithTooltip } from "@/app/invoices/Status";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import DecimalInput from "@/components/DecimalInput";
 import DurationInput from "@/components/DurationInput";
 import Input from "@/components/Input";
@@ -14,7 +15,6 @@ import MainLayout from "@/components/layouts/Main";
 import { linkClasses } from "@/components/Link";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -127,7 +127,7 @@ export default function ViewList() {
 
       {data.invoices.length > 0 ? (
         <>
-          <Table table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
+          <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
           <PaginationSection total={data.total} perPage={perPage} />
         </>
       ) : (

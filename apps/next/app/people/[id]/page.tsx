@@ -23,6 +23,7 @@ import InvoiceStatus from "@/app/invoices/Status";
 import RoleSelector from "@/app/roles/Selector";
 import { formatAbsencesForUpdate } from "@/app/updates/team/CompanyWorkerUpdate";
 import { Task as CompanyWorkerTask } from "@/app/updates/team/Task";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import DecimalInput from "@/components/DecimalInput";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
@@ -33,7 +34,6 @@ import NumberInput from "@/components/NumberInput";
 import PaginationSection from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import Tabs from "@/components/Tabs";
 import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -671,7 +671,7 @@ const InvoicesTab = ({ data }: { data: RouterOutput["invoices"]["list"] }) => {
 
   return data.invoices.length > 0 ? (
     <>
-      <Table table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
+      <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
       <PaginationSection total={data.total} perPage={50} />
     </>
   ) : (
@@ -778,7 +778,7 @@ function SharesTab({ investorId }: { investorId: string }) {
   const table = useTable({ data: data.shareHoldings, columns: sharesColumns });
 
   return data.shareHoldings.length > 0 ? (
-    <Table table={table} />
+    <DataTable table={table} />
   ) : (
     <Placeholder icon={CheckCircleIcon}>This investor does not hold any shares.</Placeholder>
   );
@@ -809,7 +809,7 @@ function OptionsTab({ investorId, userId }: { investorId: string; userId: string
 
   return data.equityGrants.length > 0 ? (
     <>
-      <Table table={table} onRowClicked={setSelectedEquityGrant} />
+      <DataTable table={table} onRowClicked={setSelectedEquityGrant} />
       {selectedEquityGrant ? (
         <DetailsModal
           equityGrant={selectedEquityGrant}
@@ -865,7 +865,7 @@ function ExercisesTab({ investorId }: { investorId: string }) {
   const table = useTable({ data: exercises, columns });
 
   return exercises.length > 0 ? (
-    <Table table={table} />
+    <DataTable table={table} />
   ) : (
     <Placeholder icon={CheckCircleIcon}>This investor has not exercised any options.</Placeholder>
   );
@@ -890,7 +890,7 @@ function ConvertiblesTab({ investorId }: { investorId: string }) {
   const table = useTable({ data: convertibles.convertibleSecurities, columns: convertiblesColumns });
 
   return convertibles.totalCount > 0 ? (
-    <Table table={table} />
+    <DataTable table={table} />
   ) : (
     <Placeholder icon={CheckCircleIcon}>This investor does not hold any convertible securities.</Placeholder>
   );
@@ -928,7 +928,7 @@ function DividendsTab({ investorId }: { investorId: string }) {
   const table = useTable({ data: dividends.dividends, columns: dividendsColumns });
 
   return dividends.total > 0 ? (
-    <Table table={table} />
+    <DataTable table={table} />
   ) : (
     <Placeholder icon={CheckCircleIcon}>This investor hasn't received any dividends yet.</Placeholder>
   );

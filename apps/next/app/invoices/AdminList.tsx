@@ -15,13 +15,13 @@ import {
 } from "@/app/invoices/index";
 import { StatusWithTooltip } from "@/app/invoices/Status";
 import { Task } from "@/app/updates/team/Task";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Sheet from "@/components/Sheet";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import Tabs from "@/components/Tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -195,7 +195,7 @@ export default function AdminList() {
             />
           </div>
 
-          <Table table={table} onRowClicked={setDetailInvoice} />
+          <DataTable table={table} onRowClicked={setDetailInvoice} />
           <PaginationSection total={data.total} perPage={perPage} />
         </div>
       )}
