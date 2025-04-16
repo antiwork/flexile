@@ -1924,7 +1924,7 @@ export const equityGrants = pgTable(
       .generatedAlwaysAs(sql`((vested_shares)::numeric * share_price_usd)`),
     exercisePriceUsd: numeric("exercise_price_usd").notNull(),
     issueDateRelationship: equityGrantsIssueDateRelationship("issue_date_relationship").default("consultant").notNull(),
-    boardApprovalDate: date("board_approval_date", { mode: "string" }).notNull(),
+    boardApprovalDate: date("board_approval_date", { mode: "string" }),
     optionGrantType: equityGrantsOptionGrantType("option_grant_type").default("nso").notNull(),
     voluntaryTerminationExerciseMonths: integer("voluntary_termination_exercise_months").notNull(),
     involuntaryTerminationExerciseMonths: integer("involuntary_termination_exercise_months").notNull(),

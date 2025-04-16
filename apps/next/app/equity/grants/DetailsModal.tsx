@@ -135,7 +135,7 @@ const DetailsModal = ({
     () => [
       {
         label: "Board approval date",
-        value: formatDate(equityGrant.boardApprovalDate),
+        value: equityGrant.boardApprovalDate ? formatDate(equityGrant.boardApprovalDate) : "N/A",
       },
       {
         label: "State/Country of Residency",

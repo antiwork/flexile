@@ -211,7 +211,7 @@ export const templatesRouter = createRouter({
 
       Object.assign(values, {
         __name: equityGrant.optionHolderName,
-        __boardApprovalDate: equityGrant.boardApprovalDate,
+        __boardApprovalDate: equityGrant.boardApprovalDate ?? "",
         __quantity: equityGrant.numberOfShares.toString(),
         __relationship: equityGrant.issueDateRelationship,
         __grantType: equityGrant.optionGrantType === "iso" ? "Incentive Stock Option" : "Nonstatutory Stock Option",
