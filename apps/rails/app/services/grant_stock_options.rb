@@ -98,7 +98,7 @@ class GrantStockOptions
                 :issue_date_relationship, :option_expiry_months, :vesting_trigger, :vesting_schedule_params,
                 :voluntary_termination_exercise_months, :involuntary_termination_exercise_months,
                 :termination_with_cause_exercise_months, :death_exercise_months, :disability_exercise_months,
-                :death_exercise_months, :disability_exercise_months, :retirement_exercise_months
+                :retirement_exercise_months
 
     def calculate_number_of_shares(period_started_at, period_ended_at)
       days_in_period = (period_ended_at.to_date - period_started_at.to_date).to_i + 1
