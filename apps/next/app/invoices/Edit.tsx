@@ -353,7 +353,6 @@ const Edit = () => {
               {lineItems.toArray().map((item, rowIndex) => (
                 <TableRow key={rowIndex}>
                   <TableCell>
-                    {" "}
                     <Input
                       value={item.description}
                       placeholder="Description"
@@ -412,9 +411,9 @@ const Edit = () => {
                       <PlusIcon className="inline size-4" />
                       Add line item
                     </Button>
-                    {data.company.expenses.enabled ? (
+                    {data.company.expenses.enabled && canManageExpenses ? (
                       <Button variant="link" asChild>
-                        <Label className={canManageExpenses ? "hidden" : ""}>
+                        <Label>
                           <ArrowUpTrayIcon className="inline size-4" />
                           Add expense
                           <input
@@ -454,7 +453,6 @@ const Edit = () => {
                       </a>
                     </TableCell>
                     <TableCell>
-                      {" "}
                       <Input
                         value={expense.description}
                         aria-label="Merchant"
