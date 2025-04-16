@@ -885,8 +885,9 @@ class SeedDataGeneratorFromTemplate
       Timecop.travel(option_pool_created_at) do
         GrantStockOptions.new(
           company_worker,
-          board_approval_date: option_pool_created_at,
         ).process
+        equity_grant = EquityGrant.last
+        equity_grant.update!(board_approval_date: option_pool_created_at)
         CreateOrUpdateEquityAllocation.new(
           company_worker,
           equity_percentage: equity_grant_data.fetch("equity_allocation").fetch("equity_percentage")
@@ -941,7 +942,6 @@ class SeedDataGeneratorFromTemplate
           vested_shares: equity_grant_data.fetch("vested_shares"),
           period_started_at:,
           period_ended_at:,
-          board_approval_date: equity_grant_data.fetch("board_approval_date"),
           issue_date_relationship: equity_grant_data.fetch("issue_date_relationship"),
           vesting_trigger: "invoice_paid",
           vesting_schedule: nil,
@@ -952,7 +952,7 @@ class SeedDataGeneratorFromTemplate
           disability_exercise_months: equity_grant_data.fetch("disability_exercise_months", nil),
           retirement_exercise_months: equity_grant_data.fetch("retirement_exercise_months", nil),
         ).process
-        result.equity_grant.update!(equity_grant_data.fetch("model_attributes"))
+        result.equity_grant.update!(equity_grant_data.fetch("model_attributes"), board_approval_date: equity_grant_data.fetch("board_approval_date"))
 
         if equity_grant_data.key?("equity_grant_exercise")
           EquityExercisingService.create_request(

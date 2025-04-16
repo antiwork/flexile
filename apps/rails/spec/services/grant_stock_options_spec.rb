@@ -6,7 +6,6 @@ RSpec.describe GrantStockOptions do
   let(:company_worker) { create(:company_worker, user:, company:, pay_rate_in_subunits: 193_00) }
   let!(:option_pool) { create(:option_pool, company:, authorized_shares: 10_000_000, issued_shares: 50_000) }
   let!(:administrator) { create(:company_administrator, company:) }
-  let(:board_approval_date) { "2020-08-01" }
   let(:vesting_commencement_date) { "2020-01-01" }
   let(:number_of_shares) { :calculate }
   let(:issue_date_relationship) { :consultant }
@@ -60,7 +59,6 @@ RSpec.describe GrantStockOptions do
 
     context "when company_investor exists" do
       let(:investor) { create(:company_investor, company:, user:) }
-      let(:board_approval_date) { "2024-01-01" }
       let(:option_grant_type) { :iso }
       let(:issue_date_relationship) { :employee }
 
@@ -107,7 +105,7 @@ RSpec.describe GrantStockOptions do
         expect(equity_grant.company_investor).to eq(investor)
         expect(equity_grant.name).to eq("ACM-1")
         expect(equity_grant.issue_date_relationship_employee?).to be(true)
-        expect(equity_grant.board_approval_date).to eq(Date.parse(board_approval_date))
+        expect(equity_grant.board_approval_date).to eq(nil)
         expect(equity_grant.option_grant_type_iso?).to be(true)
         expect(equity_grant.period_started_at).to eq(DateTime.parse("1 Jan 2023").beginning_of_year)
         expect(equity_grant.period_ended_at).to be_within(2.second).of(DateTime.parse("1 Jan 2023").end_of_year)
@@ -194,7 +192,7 @@ RSpec.describe GrantStockOptions do
         expect(equity_grant.company_investor).to eq(investor)
         expect(equity_grant.name).to eq("ACM-1")
         expect(equity_grant.issue_date_relationship_consultant?).to be(true)
-        expect(equity_grant.board_approval_date).to eq(Date.parse(board_approval_date))
+        expect(equity_grant.board_approval_date).to eq(nil)
         expect(equity_grant.option_grant_type_nso?).to be(true)
 
         contract = Document.equity_plan_contract.last
