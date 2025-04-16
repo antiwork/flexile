@@ -62,7 +62,7 @@ class UserComplianceInfo < ApplicationRecord
   end
 
   def mark_deleted!
-    docs = documents.tax_document.where(completed_at: nil)
+    docs = documents.tax_document.unsigned
     docs = docs.where.not(name: [TaxDocument::FORM_1099_DIV, TaxDocument::FORM_1042_S]) if dividends.paid.any?
     docs.each(&:mark_deleted!)
     super

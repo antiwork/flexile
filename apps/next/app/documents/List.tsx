@@ -4,13 +4,14 @@ import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Modal from "@/components/Modal";
 import Status from "@/components/Status";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { DocumentType, trpc } from "@/trpc/client";
+import { assertDefined } from "@/utils/assert";
 import { formatDate } from "@/utils/time";
 import DocusealForm from "./DocusealForm";
 
@@ -25,14 +26,18 @@ const typeLabels = {
 type Document = RouterOutput["documents"]["list"]["documents"][number];
 
 function DocumentStatus({ document }: { document: Document }) {
+  const completedAt = document.signatories.every((signatory) => signatory.signedAt)
+    ? document.signatories.reduce<Date | null>(
+        (acc, signatory) =>
+          acc ? (signatory.signedAt && signatory.signedAt > acc ? signatory.signedAt : acc) : signatory.signedAt,
+        null,
+      )
+    : undefined;
+
   switch (document.type) {
     case DocumentType.TaxDocument:
-      if (document.name.startsWith("W-") || document.completedAt) {
-        return (
-          <Status variant="success">
-            {document.completedAt ? `Filed on ${formatDate(document.completedAt)}` : "Signed"}
-          </Status>
-        );
+      if (document.name.startsWith("W-") || completedAt) {
+        return <Status variant="success">{completedAt ? `Filed on ${formatDate(completedAt)}` : "Signed"}</Status>;
       }
       return <Status>Ready for filing</Status>;
     case DocumentType.ShareCertificate:
@@ -40,7 +45,7 @@ function DocumentStatus({ document }: { document: Document }) {
       return <Status variant="success">Issued</Status>;
     case DocumentType.ConsultingContract:
     case DocumentType.EquityPlanContract:
-      return document.completedAt ? (
+      return completedAt ? (
         <Status variant="success">Signed</Status>
       ) : (
         <Status variant="critical">Signature required</Status>
@@ -60,9 +65,7 @@ const List = ({ userId, documents }: { userId: string | null; documents: Documen
   const [signDocumentParam] = useQueryState("sign");
   const [signDocumentId, setSignDocumentId] = useState<bigint | null>(null);
   const isSignable = (document: Document): document is SignableDocument =>
-    !!document.docusealSubmissionId &&
-    ((document.user.id === user.id && !document.contractorSignature) ||
-      (user.activeRole === "administrator" && !document.administratorSignature));
+    !!document.docusealSubmissionId && document.signatories.some((signatory) => !signatory.signedAt);
   const signDocument = signDocumentId
     ? documents.find((document): document is SignableDocument => document.id === signDocumentId && isSignable(document))
     : null;
@@ -76,11 +79,17 @@ const List = ({ userId, documents }: { userId: string | null; documents: Documen
   const columns = useMemo(
     () =>
       [
-        userId ? null : columnHelper.accessor("user.name", { header: "Signer" }),
+        userId && user.activeRole === "contractorOrInvestor"
+          ? null
+          : columnHelper.display({
+              header: "Signer",
+              cell: (info) =>
+                assertDefined(info.row.original.signatories.find((signatory) => signatory.title === "Signer")).name,
+            }),
         columnHelper.simple("name", "Document"),
         columnHelper.simple("type", "Type", (value) => typeLabels[value]),
         columnHelper.simple("createdAt", "Date", formatDate),
-        columnHelper.accessor("completedAt", {
+        columnHelper.display({
           header: "Status",
           cell: (info) => <DocumentStatus document={info.row.original} />,
         }),
@@ -102,7 +111,7 @@ const List = ({ userId, documents }: { userId: string | null; documents: Documen
                       Download
                     </a>
                   </Button>
-                ) : document.docusealSubmissionId && document.completedAt ? (
+                ) : document.docusealSubmissionId && document.signatories.every((signatory) => signatory.signedAt) ? (
                   <Button variant="outline" size="small" onClick={() => setDownloadDocument(document.id)}>
                     <ArrowDownTrayIcon className="size-4" />
                     Download
@@ -120,7 +129,7 @@ const List = ({ userId, documents }: { userId: string | null; documents: Documen
 
   return (
     <>
-      <Table table={table} />
+      <DataTable table={table} />
       {signDocument ? <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} /> : null}
     </>
   );
@@ -150,13 +159,17 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
       <DocusealForm
         src={`https://docuseal.com/s/${slug}`}
         readonlyFields={readonlyFields}
-        onComplete={() =>
+        onComplete={() => {
+          const userIsSigner = document.signatories.some(
+            (signatory) => signatory.id === user.id && signatory.title === "Signer",
+          );
+          const role = userIsSigner ? "Signer" : "Company Representative";
           signDocument.mutate({
             companyId: company.id,
             id: document.id,
-            role: document.user.id === user.id && !document.contractorSignature ? "Signer" : "Company Representative",
-          })
-        }
+            role,
+          });
+        }}
       />
     </Modal>
   );

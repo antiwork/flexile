@@ -35,13 +35,8 @@ FactoryBot.define do
     end
 
     after :create do |company_worker, evaluator|
-      create(:contractor_profile, user: company_worker.user, available_hours_per_week: 1) if company_worker.user.contractor_profile.blank?
-
-      signing_trait = evaluator.with_unsigned_contract ? :unsigned : :signed
       unless evaluator.without_contract
-        create(:contract, signing_trait, company_worker:)
-        create(:document, signing_trait, company_worker:, company: company_worker.company,
-                                         user: company_worker.user)
+        create(:document, company: company_worker.company, signed: !evaluator.with_unsigned_contract, signatories: [company_worker.user])
       end
 
       if evaluator.equity_percentage
