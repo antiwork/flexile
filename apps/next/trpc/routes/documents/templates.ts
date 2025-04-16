@@ -118,7 +118,7 @@ export const templatesRouter = createRouter({
         requiredFields = boardMembers.map((_, index) => ({
           name: `__boardMemberSignature${index + 1}`,
           title: `Board member signature`,
-          role: `Board member ${index + 1}`,
+          role: `Signer`,
           type: "signature",
         }));
       }

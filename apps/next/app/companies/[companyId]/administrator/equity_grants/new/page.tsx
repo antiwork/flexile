@@ -2,7 +2,6 @@
 
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
@@ -16,6 +15,7 @@ import Select from "@/components/Select";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { useCurrentCompany } from "@/global";
+import { inngest } from "@/inngest/client";
 import { DocumentTemplateType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
 const MAX_VESTING_DURATION_IN_MONTHS = 120;
@@ -66,7 +66,6 @@ const isLiteralValue = <T extends string>(value: string, literalValues: Record<T
 
 export default function NewEquityGrant() {
   const today = assertDefined(new Date().toISOString().split("T")[0]);
-  const router = useRouter();
   const trpcUtils = trpc.useUtils();
   const company = useCurrentCompany();
   const [data] = trpc.equityGrants.new.useSuspenseQuery({
@@ -397,8 +396,14 @@ export default function NewEquityGrant() {
       await trpcUtils.equityGrants.totals.invalidate();
       await trpcUtils.equityGrants.byCountry.invalidate();
       await trpcUtils.capTable.show.invalidate();
-      await trpcUtils.documents.list.invalidate();
-      router.push(`/documents?${new URLSearchParams({ sign: data.documentId.toString(), next: "/equity/grants" })}`);
+
+      await inngest.send({
+        name: "board_consent.created",
+        data: {
+          equityGrantId: data.equityGrantId,
+          companyWorkerId: assertDefined(recipientId),
+        },
+      });
     },
     onError: (error) => {
       const errorInfoSchema = z.object({
