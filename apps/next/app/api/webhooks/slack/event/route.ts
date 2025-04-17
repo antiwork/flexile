@@ -5,7 +5,6 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { companies } from "@/db/schema";
 import { disconnectSlack } from "@/lib/data/company";
-import { findCompanyForEvent } from "@/lib/slack/agent/findCompanyForEvent";
 import { handleAssistantThreadMessage, handleMessage, isAgentThread } from "@/lib/slack/agent/handleMessages";
 import { verifySlackRequest } from "@/lib/slack/client";
 
@@ -45,13 +44,13 @@ export const POST = async (request: Request) => {
   if (!userId) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
   const company = await db.query.companies.findFirst({
-    where: eq(companies.slackBotUserId, userId),
+    where: eq(companies.slackBotUserId, userId as string),
   });
   if (!company) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
   if (
     event.type === "app_mention" ||
-    (event.type === "message" && (event.channel_type === "im" || (await isAgentThread(event, companyInfo))))
+    (event.type === "message" && (event.channel_type === "im" || (await isAgentThread(event, company))))
   ) {
     waitUntil(handleMessage(event, company));
     return new Response("Success!", { status: 200 });

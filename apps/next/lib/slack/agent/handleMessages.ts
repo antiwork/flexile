@@ -1,17 +1,11 @@
 import { AppMentionEvent, AssistantThreadStartedEvent, GenericMessageEvent, WebClient } from "@slack/web-api";
 import { CoreMessage } from "ai";
-import { SlackCompanyInfo, WHICH_COMPANY_MESSAGE } from "@/lib/slack/agent/findCompanyForEvent";
 import { generateAgentResponse } from "@/lib/slack/agent/generateAgentResponse";
 import { getThreadMessages } from "@/lib/slack/client";
 import { assertDefined } from "@/utils/assert";
 
-export async function handleMessage(event: GenericMessageEvent | AppMentionEvent, companyInfo: SlackCompanyInfo) {
-  if (!companyInfo.currentCompany) {
-    await askWhichCompany(event, companyInfo.companies);
-    return;
-  }
-  const company = companyInfo.currentCompany;
-  if (event.bot_id || event.bot_id === company.slackBotUserId || event.bot_profile) return;
+export async function handleMessage(event: GenericMessageEvent | AppMentionEvent, company) {
+  if (!company.slackBotUserId || event.bot_id || event.bot_id === company.slackBotUserId || event.bot_profile) return;
 
   const { thread_ts, channel } = event;
   const { showStatus, showResult } = await replyHandler(new WebClient(assertDefined(company.slackBotToken)), event);
@@ -28,8 +22,8 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
   showResult(result);
 }
 
-export async function handleAssistantThreadMessage(event: AssistantThreadStartedEvent, companyInfo: SlackCompanyInfo) {
-  const client = new WebClient(assertDefined(companyInfo.companies[0]?.slackBotToken));
+export async function handleAssistantThreadMessage(event: AssistantThreadStartedEvent, company) {
+  const client = new WebClient(assertDefined(company.slackBotToken));
   const { channel_id, thread_ts } = event.assistant_thread;
 
   await client.chat.postMessage({
@@ -58,9 +52,8 @@ export async function handleAssistantThreadMessage(event: AssistantThreadStarted
   });
 }
 
-export const isAgentThread = async (event: GenericMessageEvent, companyInfo: SlackCompanyInfo) => {
-  const company = companyInfo.companies[0];
-  if (!company?.slackBotToken || !company.slackBotUserId || !event.thread_ts || event.thread_ts === event.ts) {
+export const isAgentThread = async (event: GenericMessageEvent, company) => {
+  if (!company.slackBotToken || !company.slackBotUserId || !event.thread_ts || event.thread_ts === event.ts) {
     return false;
   }
 
@@ -84,7 +77,7 @@ const replyHandler = async (
   client: WebClient,
   event: { channel: string; thread_ts?: string; ts: string; text?: string },
 ) => {
-  const debug = event.text && /(?:^|\s)!debug(?:$|\s)/.test(event.text);
+  const debug = event.text && /(?:^|\s)!debug(?:$|\s)/u.test(event.text);
   const statusMessage = await client.chat.postMessage({
     channel: event.channel,
     thread_ts: event.thread_ts ?? event.ts,
@@ -93,7 +86,7 @@ const replyHandler = async (
 
   if (!statusMessage.ts) throw new Error("Failed to post initial message");
 
-  const showStatus = async (status: string | null, debugContent?: any) => {
+  const showStatus = async (status: string | null, debugContent?: unknown) => {
     if (debug) {
       await client.chat.postMessage({
         channel: event.channel,
@@ -105,7 +98,7 @@ const replyHandler = async (
     } else if (status) {
       await client.chat.update({
         channel: event.channel,
-        ts: statusMessage.ts!,
+        ts: statusMessage.ts,
         text: `_${status}_`,
       });
     }
@@ -120,19 +113,10 @@ const replyHandler = async (
     if (!debug) {
       await client.chat.delete({
         channel: event.channel,
-        ts: statusMessage.ts!,
+        ts: statusMessage.ts,
       });
     }
   };
 
   return { showStatus, showResult };
-};
-
-const askWhichCompany = async (event: GenericMessageEvent | AppMentionEvent, companies: Company[]) => {
-  const client = new WebClient(assertDefined(companies[0]?.slackBotToken));
-  await client.chat.postMessage({
-    channel: event.channel,
-    thread_ts: event.thread_ts ?? event.ts,
-    text: `${WHICH_COMPANY_MESSAGE} (${companies.map((c) => c.name).join("/")})`,
-  });
 };
