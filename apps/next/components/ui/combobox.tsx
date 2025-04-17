@@ -17,6 +17,7 @@ interface ComboboxProps {
   disabled?: boolean;
   triggerClassName?: string;
   portalContainer?: HTMLElement | null;
+  id?: string;
 }
 
 export function Combobox({
@@ -30,14 +31,17 @@ export function Combobox({
   disabled = false,
   triggerClassName,
   portalContainer,
+  id,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [searchValue, setSearchValue] = React.useState("");
+  const buttonId = id ?? React.useId();
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
+          id={buttonId}
           aria-expanded={open}
           className={cn(
             "flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm",

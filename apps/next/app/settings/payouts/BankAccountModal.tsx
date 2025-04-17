@@ -438,6 +438,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
                   {field.name}
                 </Label>
                 <Combobox
+                  id={field.key}
                   portalContainer={dialogRef.current}
                   value={details.get(field.key) ?? ""}
                   onSelect={(value: string) => {
