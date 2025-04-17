@@ -568,23 +568,20 @@ const SidebarNavItem = ({
   badge?: number | undefined;
 }) => {
   const Icon = isActive ? activeIcon : icon;
-
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild className={cn("py-3 text-base [&>svg]:size-6", className)}>
         <Link href={href as Route} className={isActive ? "font-bold text-white" : ""}>
-          <div className="relative">
-            <Icon className="mr-3" />
-            {badge && badge > 0 ? (
+          <Icon className="mr-3" />
+          <span>{label}</span>
+          {badge && badge > 0 ? (
               <Badge
                 role="status"
-                className="absolute -top-2 -right-1 h-4 w-auto min-w-4 translate-x-1/4 px-1 text-xs bg-blue-500 text-white"
+                className="h-4 w-auto min-w-4 px-1 text-xs bg-blue-500 text-white"
               >
                 {badge > 10 ? "10+" : badge}
               </Badge>
             ) : null}
-          </div>
-          <span>{label}</span>
         </Link>
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -684,7 +681,7 @@ const InvoicesNavItem = ({ companyId, isActive, isAdmin }: { companyId: string; 
       activeIcon={SolidDocumentTextIcon}
       isActive={isActive}
       label="Invoices"
-      badge={isAdmin && !isLoading ? data?.total : undefined}
+      badge={isAdmin && !isLoading ? data?.total : 10}
     />
   );
 }
