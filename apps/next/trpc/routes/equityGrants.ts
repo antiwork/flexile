@@ -228,7 +228,7 @@ export const equityGrantsRouter = createRouter({
       );
 
       if (!response.ok) throw new TRPCError({ code: "BAD_REQUEST", message: await response.text() });
-      const { equity_grant_id } = z.object({ equity_grant_id: z.string() }).parse(await response.json());
+      const { equity_grant_id } = z.object({ equity_grant_id: z.bigint() }).parse(await response.json());
 
       await inngest.send({
         name: "board_consent.created",
