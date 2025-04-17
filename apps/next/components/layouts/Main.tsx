@@ -5,7 +5,6 @@ import {
   BriefcaseIcon,
   BuildingOfficeIcon,
   ChartPieIcon,
-  ChevronDownIcon,
   Cog6ToothIcon,
   CurrencyDollarIcon,
   DocumentCurrencyDollarIcon,
@@ -14,7 +13,6 @@ import {
   MagnifyingGlassIcon,
   MegaphoneIcon,
   UserGroupIcon,
-  UserIcon,
   UsersIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
@@ -45,7 +43,6 @@ import { z } from "zod";
 import { navLinks as equityNavLinks } from "@/app/equity";
 import InvoiceStatus, { invoiceSchema } from "@/app/invoices/LegacyStatus";
 import Input from "@/components/Input";
-import { linkClasses } from "@/components/Link";
 import { Badge } from "@/components/ui/badge";
 import { useCurrentUser, useUserStore } from "@/global";
 import defaultCompanyLogo from "@/images/default-company-logo.svg";
@@ -71,6 +68,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
+  SidebarTrigger,
+  useSidebar
 } from "@/components/ui/sidebar"
 
 import {
@@ -162,21 +161,11 @@ export default function MainLayout({
 
   const switchCompany = useSwitchCompanyOrRole();
 
-  const toggleButton = (
-    <button
-      className={cn(linkClasses, "ml-auto md:hidden")}
-      aria-label="Toggle Main Menu"
-      aria-expanded={navOpen}
-      onClick={() => setNavOpen(!navOpen)}
-    >
-      {navOpen ? <XMarkIcon className="size-6" /> : <Bars3Icon className="size-6" />}
-    </button>
-  );
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <Sidebar className="bg-black text-white">
-        <SidebarHeader>
+    <SidebarProvider>
+      <Sidebar className="bg-black text-white" collapsible="offcanvas">
+        <SidebarHeader className="bg-black text-white">
           <SidebarMenu>
             <SidebarMenuItem>
               {user.companies.length > 1 ? (
@@ -227,7 +216,7 @@ export default function MainLayout({
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>
-        <SidebarContent>
+        <SidebarContent className="bg-black text-white">
           {openCompany && (
             <SidebarGroup>
               <SidebarGroupContent>
@@ -411,195 +400,138 @@ export default function MainLayout({
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <div className={cn("grid md:grid-cols-[14rem_1fr]" /* { "h-full": appConfig.is_demo_mode } */)}>
 
-        {/* TODO remove <nav></nav> once fully migrated */}
-          <nav
-            className={cn("inset-0 z-10 bg-black text-gray-400 md:static print:hidden", { fixed: navOpen })}
-            aria-label="Main Menu"
-          >
-            {!navOpen ? (
-              <div className={cn(navItemClasses, "font-bold text-white md:hidden")}>
-                {openCompany ? (
-                  <CompanyName company={openCompany} />
-                ) : (
-                  <Image src={logo} className="invert" alt="Flexile" />
-                )}
-                {toggleButton}
-              </div>
-            ) : null}
-            <div className={cn("h-full flex-col overflow-y-auto text-gray-400 md:flex", navOpen ? "flex" : "hidden")}>
-              {!user.companies.length ? (
-                <div className="flex items-center gap-3 px-4 py-3">
-                  <Image src={logo} className="w-auto invert md:h-14" alt="Flexile" />
-                  {toggleButton}
-                </div>
-              ) : null}
-              {user.companies.map((company, i) => (
-                <details key={company.id} open={company.id === openCompanyId}>
-                  <summary
-                    className={`list-none text-white [&::-webkit-details-marker]:hidden ${navItemClasses} ${company.id === openCompanyId ? "cursor-default" : "cursor-pointer"}`}
-                    onClick={e(() => setOpenCompanyId(company.id), "prevent")}
-                  >
-                    <CompanyName company={company} />
-                    {user.companies.length > 1 && (
-                      <ChevronDownIcon
-                        className={cn("size-5 text-white transition-transform md:ml-auto", {
-                          "rotate-180": company.id === openCompanyId,
-                        })}
-                      />
-                    )}
-                    {i === 0 && toggleButton}
-                  </summary>
-                  <NavLinks company={company} />
-                </details>
-              ))}
-          <div className="mt-auto">
-            {!user.companies.length && (
-              <NavLink
-                href="/company_invitations"
-                icon={BriefcaseIcon}
-                filledIcon={SolidBriefcaseIcon}
-                active={pathname.startsWith("/company_invitations")}
-              >
-                Invite companies
-              </NavLink>
-            )}
-            <NavLink
-              href="/settings"
-              icon={UserIcon}
-              filledIcon={SolidUserIcon}
-              active={pathname.startsWith("/settings")}
-            >
-              Account
-            </NavLink>
-            <SignOutButton>
-              <button className={cn(navLinkClasses, "w-full")}>
-                <ArrowRightStartOnRectangleIcon className="h-6 w-8" />
-                Log out
-              </button>
-            </SignOutButton>
-          </div>
+        {/* Mobile Only Nav Header */}
+        <nav
+          className={cn("inset-0 z-10 bg-black text-gray-400 md:hidden print:hidden")}
+          aria-label="Main Menu"
+        >
+          <div className="flex items-center justify-between px-3 py-2">
+            <div className={cn(navItemClasses, "font-bold text-white md:hidden")}>
+              {openCompany ? (
+                <CompanyName company={openCompany} />
+              ) : (
+                <Image src={logo} className="invert" alt="Flexile" />
+              )}
             </div>
-          </nav>
-          <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
-              <main className="flex flex-1 flex-col gap-6 pb-4 not-print:overflow-y-auto">
-                <div>
-                  <header className="border-b bg-gray-200 px-3 pt-8 pb-4 md:px-16">
-                    <div className="grid max-w-(--breakpoint-xl) gap-y-8">
-                      {user.companies.length > 0 && (
-                        <search className="relative print:hidden">
-                          <Input
-                            ref={searchInputRef}
-                            value={query}
-                            onChange={setQuery}
-                            className="rounded-full! border-0"
-                            placeholder={isRole("administrator") ? "Search invoices, people..." : "Search invoices"}
-                            role="combobox"
-                            aria-autocomplete="list"
-                            aria-expanded={
-                              !!searchFocused &&
-                              (searchResults?.invoices.length || 0) + (searchResults?.users.length || 0) > 0
-                            }
-                            prefix={<MagnifyingGlassIcon className="size-4" />}
-                            aria-controls={`${uid}results`}
-                            onFocus={() => setSearchFocused(true)}
-                            onBlur={() => setSearchFocused(false)}
-                            onKeyDown={(e) => {
-                              switch (e.key) {
-                                case "Enter":
-                                  if ((searchResults?.invoices.length || 0) > 0 || (searchResults?.users.length || 0) > 0) {
-                                    const links = searchResultsRef.current?.querySelectorAll("a");
-                                    links?.[selectedResultIndex]?.click();
-                                  }
-                                  break;
-                                case "Escape":
-                                  cancelSearch();
-                                  break;
-                                case "ArrowDown":
-                                  e.preventDefault();
-                                  setSelectedResultIndex((prev) =>
-                                    prev < (searchResults?.invoices.length || 0) + (searchResults?.users.length || 0) - 1
-                                      ? prev + 1
-                                      : prev,
-                                  );
-                                  break;
-                                case "ArrowUp":
-                                  e.preventDefault();
-                                  setSelectedResultIndex((prev) => (prev > 0 ? prev - 1 : prev));
-                                  break;
-                              }
-                            }}
-                          />
-
-                          {searchResults &&
-                          searchFocused &&
-                          searchResults.invoices.length + searchResults.users.length > 0 ? (
-                            <div
-                              id={`${uid}results`}
-                              ref={searchResultsRef}
-                              role="listbox"
-                              className="absolute inset-x-0 top-full z-10 mt-2 rounded-xl border bg-white"
-                              onMouseDown={(e) => e.preventDefault()}
-                            >
-                              <SearchLinks
-                                links={searchResults.invoices}
-                                selectedResultIndex={selectedResultIndex}
-                                setSelectedResultIndex={setSelectedResultIndex}
-                                onClick={resetSearch}
-                                title="Invoices"
-                                className="mt-2"
-                              >
-                                {(invoice) => (
-                                  <>
-                                    <DocumentCurrencyDollarIcon className="size-6" />
-                                    {invoice.title}
-                                    <div className="text-xs">&mdash; {formatDate(invoice.invoice_date)}</div>
-                                    <InvoiceStatus invoice={invoice} className="ml-auto text-xs" />
-                                  </>
-                                )}
-                              </SearchLinks>
-                              <SearchLinks
-                                links={searchResults.users}
-                                selectedResultIndex={selectedResultIndex - searchResults.invoices.length}
-                                setSelectedResultIndex={(i) => setSelectedResultIndex(searchResults.invoices.length + i)}
-                                onClick={resetSearch}
-                                title="People"
-                                className="mt-2"
-                              >
-                                {(user) => (
-                                  <>
-                                    {user.name}
-                                    <div className="text-xs">&mdash; {user.role}</div>
-                                  </>
-                                )}
-                              </SearchLinks>
-                              <footer className="rounded-b-xl border-t bg-gray-50 px-3 py-1 text-xs text-gray-400">
-                                Pro tip: open search by pressing the
-                                <kbd className="rounded-full border border-gray-300 bg-white px-2 py-0.5 font-mono text-sm">
-                                  /
-                                </kbd>{" "}
-                                key
-                              </footer>
-                            </div>
-                          ) : null}
-                        </search>
-                      )}
-                      <div className="grid items-center justify-between gap-3 md:flex">
-                        <div>
-                          <h1 className="text-3xl/[2.75rem] font-bold">{title}</h1>
-                          {subtitle}
-                        </div>
-                        {headerActions ? <div className="flex items-center gap-3 print:hidden">{headerActions}</div> : null}
-                      </div>
-                    </div>
-                  </header>
-                  {subheader ? <div className="border-b bg-gray-200/50">{subheader}</div> : null}
-                </div>
-                <div className="mx-3 flex max-w-(--breakpoint-xl) flex-col gap-6 md:mx-16">{children}</div>
-              </main>
-            {footer ? <div className="mt-auto">{footer}</div> : null}
+            <CustomSidebarTrigger />
           </div>
+        </nav>
+        <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
+          <header className="flex items-center border-b bg-gray-200 px-3 pt-8 pb-4 md:px-16">
+            <div className="grid max-w-(--breakpoint-xl) gap-y-8 w-full">
+              {user.companies.length > 0 && (
+                <search className="relative print:hidden">
+                  <Input
+                    ref={searchInputRef}
+                    value={query}
+                    onChange={setQuery}
+                    className="rounded-full! border-0"
+                    placeholder={isRole("administrator") ? "Search invoices, people..." : "Search invoices"}
+                    role="combobox"
+                    aria-autocomplete="list"
+                    aria-expanded={
+                      !!searchFocused &&
+                      (searchResults?.invoices.length || 0) + (searchResults?.users.length || 0) > 0
+                    }
+                    prefix={<MagnifyingGlassIcon className="size-4" />}
+                    aria-controls={`${uid}results`}
+                    onFocus={() => setSearchFocused(true)}
+                    onBlur={() => setSearchFocused(false)}
+                    onKeyDown={(e) => {
+                      switch (e.key) {
+                        case "Enter":
+                          if ((searchResults?.invoices.length || 0) > 0 || (searchResults?.users.length || 0) > 0) {
+                            const links = searchResultsRef.current?.querySelectorAll("a");
+                            links?.[selectedResultIndex]?.click();
+                          }
+                          break;
+                        case "Escape":
+                          cancelSearch();
+                          break;
+                        case "ArrowDown":
+                          e.preventDefault();
+                          setSelectedResultIndex((prev) =>
+                            prev < (searchResults?.invoices.length || 0) + (searchResults?.users.length || 0) - 1
+                              ? prev + 1
+                              : prev,
+                          );
+                          break;
+                        case "ArrowUp":
+                          e.preventDefault();
+                          setSelectedResultIndex((prev) => (prev > 0 ? prev - 1 : prev));
+                          break;
+                      }
+                    }}
+                  />
+
+                  {searchResults &&
+                  searchFocused &&
+                  searchResults.invoices.length + searchResults.users.length > 0 ? (
+                    <div
+                      id={`${uid}results`}
+                      ref={searchResultsRef}
+                      role="listbox"
+                      className="absolute inset-x-0 top-full z-10 mt-2 rounded-xl border bg-white"
+                      onMouseDown={(e) => e.preventDefault()}
+                    >
+                      <SearchLinks
+                        links={searchResults.invoices}
+                        selectedResultIndex={selectedResultIndex}
+                        setSelectedResultIndex={setSelectedResultIndex}
+                        onClick={resetSearch}
+                        title="Invoices"
+                        className="mt-2"
+                      >
+                        {(invoice) => (
+                          <>
+                            <DocumentCurrencyDollarIcon className="size-6" />
+                            {invoice.title}
+                            <div className="text-xs">&mdash; {formatDate(invoice.invoice_date)}</div>
+                            <InvoiceStatus invoice={invoice} className="ml-auto text-xs" />
+                          </>
+                        )}
+                      </SearchLinks>
+                      <SearchLinks
+                        links={searchResults.users}
+                        selectedResultIndex={selectedResultIndex - searchResults.invoices.length}
+                        setSelectedResultIndex={(i) => setSelectedResultIndex(searchResults.invoices.length + i)}
+                        onClick={resetSearch}
+                        title="People"
+                        className="mt-2"
+                      >
+                        {(user) => (
+                          <>
+                            {user.name}
+                            <div className="text-xs">&mdash; {user.role}</div>
+                          </>
+                        )}
+                      </SearchLinks>
+                      <footer className="rounded-b-xl border-t bg-gray-50 px-3 py-1 text-xs text-gray-400">
+                        Pro tip: open search by pressing the
+                        <kbd className="rounded-full border border-gray-300 bg-white px-2 py-0.5 font-mono text-sm">
+                          /
+                        </kbd>{" "}
+                        key
+                      </footer>
+                    </div>
+                  ) : null}
+                </search>
+              )}
+              <div className="grid items-center justify-between gap-3 md:flex">
+                <div>
+                  <h1 className="text-3xl/[2.75rem] font-bold">{title}</h1>
+                  {subtitle}
+                </div>
+                {headerActions ? <div className="flex items-center gap-3 print:hidden">{headerActions}</div> : null}
+              </div>
+            </div>
+          </header>
+          {subheader ? <div className="border-b bg-gray-200/50">{subheader}</div> : null}
+          <main className="flex flex-1 flex-col gap-6 pb-4 mt-6 not-print:overflow-y-auto">
+            <div className="mx-3 flex max-w-(--breakpoint-xl) flex-col gap-6 md:mx-16">{children}</div>
+          </main>
+          {footer ? <div className="mt-auto">{footer}</div> : null}
         </div>
       </SidebarInset>
     </SidebarProvider>
@@ -888,3 +820,21 @@ const SearchLinks = <T extends { url: string }>({
     ))}
   </div>
 );
+
+const CustomSidebarTrigger = () => {
+  const { open, isMobile, openMobile, setOpenMobile } = useSidebar();
+  return (
+    <> {isMobile && (
+      <button
+        onClick={() => setOpenMobile(!openMobile)}
+        aria-label={open ? "Close sidebar" : "Open sidebar"}
+    >
+      {openMobile ? (
+        <XMarkIcon className="size-5" />
+      ) : (
+        <Bars3Icon className="size-5" />
+      )}
+    </button>)}
+    </>
+  );
+};
