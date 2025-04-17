@@ -29,12 +29,12 @@ import {
   users,
   vestingSchedules,
 } from "@/db/schema";
+import { inngest } from "@/inngest/client";
 import { DEFAULT_VESTING_SCHEDULE_OPTIONS } from "@/models";
 import { type CompanyContext, companyProcedure, createRouter } from "@/trpc";
 import { simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
 import { company_administrator_equity_grants_url } from "@/utils/routes";
-import { inngest } from "@/inngest/client";
 
 export type EquityGrant = typeof equityGrants.$inferSelect;
 export const equityGrantsRouter = createRouter({
