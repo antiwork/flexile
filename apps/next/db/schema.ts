@@ -660,46 +660,49 @@ export const documents = pgTable(
   {
     id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
     companyId: bigint("company_id", { mode: "bigint" }).notNull(),
-    userId: bigint("user_id", { mode: "bigint" }).notNull(),
     userComplianceInfoId: bigint("user_compliance_info_id", { mode: "bigint" }),
-    companyAdministratorId: bigint("company_administrator_id", { mode: "bigint" }),
     equityGrantId: bigint("equity_grant_id", { mode: "bigint" }),
     name: varchar().notNull(),
     type: integer("document_type").$type<DocumentType>().notNull(),
     year: integer().notNull(),
-    contractorSignature: varchar("contractor_signature"),
-    administratorSignature: varchar("administrator_signature"),
     deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
     emailedAt: timestamp("emailed_at", { precision: 6, mode: "date" }),
-    completedAt: timestamp("completed_at", { precision: 6, mode: "date" }),
     jsonData: jsonb("json_data"),
     createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
       .$onUpdate(() => new Date())
       .notNull(),
-    companyContractorId: bigint("company_contractor_id", { mode: "bigint" }),
     docusealSubmissionId: integer("docuseal_submission_id"),
   },
   (table) => [
-    index("index_documents_on_company_administrator_id").using(
-      "btree",
-      table.companyAdministratorId.asc().nullsLast().op("int8_ops"),
-    ),
-    index("index_documents_on_company_contractor_id").using(
-      "btree",
-      table.companyContractorId.asc().nullsLast().op("int8_ops"),
-    ),
     index("index_documents_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
     index("index_documents_on_equity_grant_id").using("btree", table.equityGrantId.asc().nullsLast().op("int8_ops")),
     index("index_documents_on_user_compliance_info_id").using(
       "btree",
       table.userComplianceInfoId.asc().nullsLast().op("int8_ops"),
     ),
-    index("index_documents_on_user_id").using("btree", table.userId.asc().nullsLast().op("int8_ops")),
     index("index_documents_on_docuseal_submission_id").using(
       "btree",
       table.docusealSubmissionId.asc().nullsLast().op("int4_ops"),
     ),
+  ],
+);
+
+export const documentSignatures = pgTable(
+  "document_signatures",
+  {
+    documentId: bigint("document_id", { mode: "bigint" }).notNull(),
+    userId: bigint("user_id", { mode: "bigint" }).notNull(),
+    title: varchar("title").notNull(),
+    signedAt: timestamp("signed_at", { precision: 6, mode: "date" }),
+    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("index_document_signatures_on_document_id").using("btree", table.documentId.asc().nullsLast().op("int8_ops")),
+    index("index_document_signatures_on_user_id").using("btree", table.userId.asc().nullsLast().op("int8_ops")),
   ],
 );
 
@@ -2330,6 +2333,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   tosAgreements: many(tosAgreements),
   userComplianceInfos: many(userComplianceInfos),
   wallets: many(wallets),
+  documentSignatures: many(documentSignatures),
 }));
 
 export const companiesRelations = relations(companies, ({ many }) => ({
@@ -2384,26 +2388,26 @@ export const companyContractorUpdatesRelations = relations(companyContractorUpda
   tasks: many(companyContractorUpdateTasks),
 }));
 
-export const documentsRelations = relations(documents, ({ one }) => ({
+export const documentsRelations = relations(documents, ({ one, many }) => ({
   company: one(companies, {
     fields: [documents.companyId],
     references: [companies.id],
   }),
-  user: one(users, {
-    fields: [documents.userId],
-    references: [users.id],
-  }),
-  administrator: one(companyAdministrators, {
-    fields: [documents.companyAdministratorId],
-    references: [companyAdministrators.id],
-  }),
-  contractor: one(companyContractors, {
-    fields: [documents.companyContractorId],
-    references: [companyContractors.id],
-  }),
   equityGrant: one(equityGrants, {
     fields: [documents.equityGrantId],
     references: [equityGrants.id],
+  }),
+  signatures: many(documentSignatures),
+}));
+
+export const documentSignaturesRelations = relations(documentSignatures, ({ one }) => ({
+  document: one(documents, {
+    fields: [documentSignatures.documentId],
+    references: [documents.id],
+  }),
+  user: one(users, {
+    fields: [documentSignatures.userId],
+    references: [users.id],
   }),
 }));
 

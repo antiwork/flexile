@@ -25,7 +25,8 @@ class CheckTinValidityJob
       .where(compliance_info: { tax_id_status: nil })
       .order(:id)
       .distinct.limit(4_500).each do |user|
-      name = user.billing_entity_name.delete("'").gsub(/[^a-zA-Z0-9 \-&]/, " ")
+      name = user.billing_entity_name.delete("'").gsub(/[^a-zA-Z0-9 \-&]/, " ")[0, 70]
+      # The TINM API limits billing entity names to 70 characters. Names are truncated after removing unsupported characters.
       # The TINM API punishes checking the same TINs and names multiple times in a day, so preventing duplicates.
       # For duplicate requests, an error would be returned at first, and after four times, we would get locked out for 96 hours.
       next unless checked_names.add?(name) && checked_tins.add?(user.tax_id)

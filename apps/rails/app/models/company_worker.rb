@@ -10,8 +10,6 @@ class CompanyWorker < ApplicationRecord
   belongs_to :company_role
 
   has_many :contracts, foreign_key: :company_contractor_id
-  has_many :documents, foreign_key: :company_contractor_id
-  has_many :uncompleted_contracts, -> { consulting_contract.alive.where(completed_at: nil) }, class_name: "Document", foreign_key: :company_contractor_id
   has_many :equity_allocations, foreign_key: :company_contractor_id
   has_many :invoices, foreign_key: :company_contractor_id
   has_many :company_worker_updates, foreign_key: :company_contractor_id
@@ -58,16 +56,28 @@ class CompanyWorker < ApplicationRecord
 
     joins(join).where(invoices: { id: nil })
   }
-  # Find records associated with signed consulting contracts from the `contracts` OR `documents` table
-  scope :with_signed_contract, -> {
-    joins("LEFT OUTER JOIN contracts ON contracts.company_contractor_id = company_contractors.id AND " \
-          "contracts.signed_at IS NOT NULL").
-      joins("LEFT OUTER JOIN documents ON documents.company_contractor_id = company_contractors.id AND " \
-            "documents.completed_at IS NOT NULL AND " \
-            "documents.document_type = #{Document.document_types[:consulting_contract]}").
-      where("contracts.id IS NOT NULL OR documents.id IS NOT NULL").
-      distinct
-  }
+  scope :with_signed_contract, -> do
+    documents = Document.arel_table
+    document_signatures = DocumentSignature.arel_table
+    company_workers = self.arel_table
+
+    unsigned_signatures_exist = DocumentSignature.select(1)
+      .where(document_signatures[:document_id].eq(documents[:id]))
+      .where(document_signatures[:signed_at].eq(nil))
+      .arel.exists
+
+    signed_document_ids = Document.select(:id)
+      .where(documents[:document_type].eq(Document.document_types[:consulting_contract]))
+      .where(documents[:deleted_at].eq(nil))
+      .where(unsigned_signatures_exist.not)
+
+    joins(user: :document_signatures)
+      .joins("INNER JOIN documents ON documents.id = document_signatures.document_id")
+      .where.not(document_signatures: { signed_at: nil })
+      .where(documents: { id: signed_document_ids })
+      .where(documents[:company_id].eq(company_workers[:company_id]))
+      .distinct
+  end
   scope :with_required_tax_info_for, -> (tax_year:) do
     invoices_subquery = Invoice.select("company_contractor_id")
                                .for_tax_year(tax_year)

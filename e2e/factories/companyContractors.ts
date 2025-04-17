@@ -1,7 +1,6 @@
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyRolesFactory } from "@test/factories/companyRoles";
-import { contractsFactory } from "@test/factories/contracts";
 import { documentsFactory } from "@test/factories/documents";
 import { usersFactory } from "@test/factories/users";
 import { subDays } from "date-fns";
@@ -42,25 +41,18 @@ export const companyContractorsFactory = {
     });
 
     if (!options.withoutContract) {
-      await contractsFactory.create(
-        {
-          companyContractorId: createdContractor.id,
-          ...(administrator ? { companyAdministratorId: administrator.id } : {}),
-        },
-        {
-          signed: !options.withUnsignedContract,
-        },
-      );
-
       await documentsFactory.create(
         {
-          companyContractorId: createdContractor.id,
-          ...(administrator ? { companyAdministratorId: administrator.id } : {}),
           companyId,
-          userId,
         },
         {
           signed: !options.withUnsignedContract,
+          signatures: !options.withUnsignedContract
+            ? [
+                ...(administrator ? [{ userId: administrator.userId, title: "Company Representative" as const }] : []),
+                { userId, title: "Signer" as const },
+              ]
+            : [],
         },
       );
     }

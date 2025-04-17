@@ -3,8 +3,8 @@ import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/20/solid";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import { getExpandedRowModel } from "@tanstack/react-table";
 import React, { useMemo } from "react";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -87,7 +87,7 @@ export default function FinancingRounds() {
   return (
     <EquityLayout>
       {data.length > 0 ? (
-        <Table table={table} />
+        <DataTable table={table} />
       ) : (
         <Placeholder icon={CheckCircleIcon}>There are no financing rounds recorded yet.</Placeholder>
       )}

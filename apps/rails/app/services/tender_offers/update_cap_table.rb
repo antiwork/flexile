@@ -35,9 +35,7 @@ class TenderOffers::UpdateCapTable
 
       share_holdings.map(&:company_investor_id).uniq.each do |company_investor_id|
         company_investor = CompanyInvestor.find(company_investor_id)
-        Document.share_certificate
-                .where(user_id: company_investor.user_id, company_id: company_investor.company_id)
-                .destroy_all
+        company_investor.user.documents.share_certificate.where(company_id: company_investor.company_id).destroy_all
         company_investor.share_holdings.find_each(&:create_share_certificate)
       end
     end

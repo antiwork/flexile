@@ -1,8 +1,8 @@
 "use client";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import React from "react";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { Progress } from "@/components/ui/progress";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -34,7 +34,7 @@ export default function OptionPools() {
   return (
     <EquityLayout>
       {data.length > 0 ? (
-        <Table table={table} />
+        <DataTable table={table} />
       ) : (
         <Placeholder icon={CheckCircleIcon}>The company does not have any option pools.</Placeholder>
       )}

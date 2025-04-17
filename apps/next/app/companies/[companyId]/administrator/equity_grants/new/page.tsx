@@ -7,7 +7,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import { optionGrantTypeDisplayNames, relationshipDisplayNames, vestingTriggerDisplayNames } from "@/app/equity/grants";
-import { CardRow } from "@/components/Card";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
@@ -15,6 +14,7 @@ import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import Select from "@/components/Select";
 import { Button } from "@/components/ui/button";
+import { CardContent } from "@/components/ui/card";
 import { useCurrentCompany } from "@/global";
 import { DocumentTemplateType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
@@ -469,7 +469,7 @@ export default function NewEquityGrant() {
       }
     >
       <FormSection title="Grant details">
-        <CardRow className="grid gap-4">
+        <CardContent className="grid gap-4">
           <fieldset>
             <Select
               label="Recipient"
@@ -558,10 +558,10 @@ export default function NewEquityGrant() {
               {...invalidFieldAttrs("board_approval_date", errorInfo)}
             />
           </fieldset>
-        </CardRow>
+        </CardContent>
       </FormSection>
       <FormSection title="Vesting details">
-        <CardRow className="grid gap-4">
+        <CardContent className="grid gap-4">
           <fieldset>
             <Select
               label="Shares will vest"
@@ -635,10 +635,10 @@ export default function NewEquityGrant() {
               ) : null}
             </>
           ) : null}
-        </CardRow>
+        </CardContent>
       </FormSection>
       <FormSection title="Post-termination exercise periods">
-        <CardRow className="grid gap-4">
+        <CardContent className="grid gap-4">
           <fieldset>
             <NumberInput
               label="Voluntary termination exercise period"
@@ -711,7 +711,7 @@ export default function NewEquityGrant() {
             companyId={company.id}
             type={DocumentTemplateType.EquityPlanContract}
           />
-        </CardRow>
+        </CardContent>
       </FormSection>
       <div className="grid gap-x-5 gap-y-3 md:grid-cols-[25%_1fr]">
         <div></div>

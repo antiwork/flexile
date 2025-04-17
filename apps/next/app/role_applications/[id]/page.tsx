@@ -4,12 +4,12 @@ import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, Check, X } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Card, CardRow } from "@/components/Card";
 import MainLayout from "@/components/layouts/Main";
 import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
 import RichText from "@/components/RichText";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
 import { PayRateType, trpc } from "@/trpc/client";
@@ -110,7 +110,7 @@ export default function RoleApplicationPage() {
       }
     >
       <Card>
-        <CardRow className="grid gap-4">
+        <CardContent className="grid gap-4">
           <h1 className="text-3xl font-bold">{application.name}</h1>
           <div className="grid gap-3 md:grid-cols-2">
             <div>
@@ -166,7 +166,7 @@ export default function RoleApplicationPage() {
               {application.equityPercent}%
             </div>
           )}
-        </CardRow>
+        </CardContent>
       </Card>
     </MainLayout>
   );

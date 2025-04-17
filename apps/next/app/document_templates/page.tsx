@@ -4,9 +4,9 @@ import { FilePlusIcon, FileTextIcon, PercentIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DocumentTemplateType } from "@/db/enums";
@@ -121,7 +121,7 @@ export default function TemplatesPage() {
       }
     >
       <div className="overflow-x-auto">
-        <Table table={table} hoverable />
+        <DataTable table={table} />
       </div>
     </DocumentsLayout>
   );
