@@ -357,14 +357,6 @@ export default function MainLayout({
                   isActive={pathname.startsWith("/settings")}
                   label="Account"
                 />
-                {/* <SidebarMenuItem>
-                  <SidebarMenuButton asChild className="py-3 text-base">
-                    <Link href="/settings" className={pathname.startsWith("/settings") ? "font-bold text-white" : ""}>
-                      <SolidUserIcon className="size-6 mr-3" />
-                      <span>Account</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem> */}
                 <SidebarMenuItem>
                   <SignOutButton>
                     <SidebarMenuButton className="py-3 text-base hover:font-bold hover:text-white cursor-pointer">
