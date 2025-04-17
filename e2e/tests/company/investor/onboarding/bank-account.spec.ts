@@ -5,6 +5,8 @@ import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { fillOutUsdBankAccountForm } from "@test/helpers/bankAccountOnboarding";
+import { checkComboboxVisible } from "../../../../helpers/checkComboboxVisible";
+import { fillCombobox } from "../../../../helpers/combobox";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
 import { companies, userComplianceInfos, users, wiseRecipients } from "@/db/schema";
@@ -191,7 +193,7 @@ test.describe("Investor onboarding - bank account", () => {
     await page.getByRole("button", { name: "Set up" }).click();
     await page.getByLabel("Currency").selectOption("KRW (South Korean Won)");
     await expect(page.getByLabel("Date of birth")).toBeVisible();
-    await expect(page.getByLabel("Bank name")).toBeVisible();
+    await checkComboboxVisible(page, "Bank name");
     await expect(page.getByLabel("Account number (KRW accounts only)")).toBeVisible();
   });
 
@@ -210,7 +212,7 @@ test.describe("Investor onboarding - bank account", () => {
       await page.getByRole("button", { name: "Set up" }).click();
       await page.getByLabel("Currency").selectOption("KRW (South Korean Won)");
       await expect(page.getByLabel("Name of the business / organisation")).toBeVisible();
-      await expect(page.getByLabel("Bank name")).toBeVisible();
+      await checkComboboxVisible(page, "Bank name");
       await expect(page.getByLabel("Account number (KRW accounts only)")).toBeVisible();
     });
 
@@ -349,7 +351,7 @@ test.describe("Investor onboarding - bank account", () => {
         await page.getByLabel("Currency").selectOption("HKD (Hong Kong Dollar)");
         await page.getByLabel("I'd prefer to use FPS ID").click();
         await expect(page.getByLabel("Full name of the account holder")).toBeVisible();
-        await expect(page.getByLabel("Bank name")).toBeVisible();
+        await checkComboboxVisible(page, "Bank name");
         await expect(page.getByLabel("Account number")).toBeVisible();
         await expect(page.getByLabel("I'd prefer to use FPS ID")).toBeVisible();
         await expect(page.getByLabel("Account Type")).not.toBeVisible();
@@ -366,7 +368,7 @@ test.describe("Investor onboarding - bank account", () => {
       test("shows local bank account when the currency is IDR", async ({ page }) => {
         await page.getByLabel("Currency").selectOption("IDR (Indonesian Rupiah)");
         await expect(page.getByLabel("Full name of the account holder")).toBeVisible();
-        await expect(page.getByLabel("Bank name")).toBeVisible();
+        await checkComboboxVisible(page, "Bank name");
         await expect(page.getByLabel("Account number (IDR accounts only)")).toBeVisible();
         await expect(page.getByLabel("Account Type")).not.toBeVisible();
       });
@@ -374,7 +376,7 @@ test.describe("Investor onboarding - bank account", () => {
       test("shows local bank account when the currency is KES", async ({ page }) => {
         await page.getByLabel("Currency").selectOption("KES (Kenyan Shilling)");
         await expect(page.getByLabel("Full name of the account holder")).toBeVisible();
-        await expect(page.getByLabel("Bank name")).toBeVisible();
+        await checkComboboxVisible(page, "Bank name");
         await expect(page.getByLabel("Account number")).toBeVisible();
         await expect(page.getByLabel("Account Type")).not.toBeVisible();
       });
@@ -382,7 +384,7 @@ test.describe("Investor onboarding - bank account", () => {
       test("shows local bank account when the currency is PHP", async ({ page }) => {
         await page.getByLabel("Currency").selectOption("PHP (Philippine Peso)");
         await expect(page.getByLabel("Full name of the account holder")).toBeVisible();
-        await expect(page.getByLabel("Bank name")).toBeVisible();
+        await checkComboboxVisible(page, "Bank name");
         await expect(page.getByLabel("Account number (PHP accounts only)")).toBeVisible();
         await expect(page.getByLabel("Account Type")).not.toBeVisible();
       });
