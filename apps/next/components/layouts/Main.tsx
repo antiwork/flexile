@@ -37,7 +37,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { capitalize } from "lodash-es";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { z } from "zod";
