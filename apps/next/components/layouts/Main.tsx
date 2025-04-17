@@ -314,9 +314,6 @@ export default function MainLayout({
                       label="Settings"
                     />
                   )}
-                  {openCompany.other_access_roles.map((accessRole) => (
-                    <SwitchRoleNavLink key={accessRole} accessRole={accessRole} companyId={openCompany.id} />
-                  ))}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -330,7 +327,7 @@ export default function MainLayout({
                     <SidebarMenuItem key={accessRole}>
                       <SidebarMenuButton
                         onClick={() => switchCompany(openCompany.id, accessRole)}
-                        className="py-3 text-base"
+                        className="py-3 text-base hover:font-bold hover:text-white cursor-pointer"
                       >
                         <ArrowPathIcon className="size-6 mr-3" />
                         <span>Use as {accessRole === "administrator" ? "admin" : accessRole}</span>
@@ -370,7 +367,7 @@ export default function MainLayout({
                 </SidebarMenuItem> */}
                 <SidebarMenuItem>
                   <SignOutButton>
-                    <SidebarMenuButton className="py-3 text-base">
+                    <SidebarMenuButton className="py-3 text-base hover:font-bold hover:text-white cursor-pointer">
                       <ArrowRightStartOnRectangleIcon className="size-6 mr-3" />
                       <span>Log out</span>
                     </SidebarMenuButton>
@@ -570,7 +567,7 @@ const SidebarNavItem = ({
   const Icon = isActive ? activeIcon : icon;
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild className={cn("py-3 text-base [&>svg]:size-6", className)}>
+      <SidebarMenuButton asChild className={cn("py-3 text-base [&>svg]:size-6 hover:font-bold hover:text-white", className)}>
         <Link href={href as Route} className={isActive ? "font-bold text-white" : ""}>
           <Icon className="mr-3" />
           <span>{label}</span>
@@ -587,26 +584,6 @@ const SidebarNavItem = ({
     </SidebarMenuItem>
   );
 };
-
-function SwitchRoleNavLink({ accessRole, companyId }: { accessRole: CompanyAccessRole; companyId: string }) {
-  const router = useRouter();
-  const switchCompany = useSwitchCompanyOrRole();
-
-  const handleSwitchRole = (e: React.MouseEvent) => {
-    e.preventDefault();
-    void (async () => {
-      await switchCompany(companyId, accessRole);
-      router.push("/dashboard");
-    })();
-  };
-
-  const roleLabel = accessRole === "administrator" ? "admin" : accessRole;
-  return (
-    <div onClick={handleSwitchRole}>
-      <SidebarNavItem href="/" icon={ArrowPathIcon} activeIcon={ArrowPathIcon} isActive={false} label={`Use as ${roleLabel}`} />
-    </div>
-  );
-}
 
 const SearchLinks = <T extends { url: string }>({
   links,
@@ -681,7 +658,7 @@ const InvoicesNavItem = ({ companyId, isActive, isAdmin }: { companyId: string; 
       activeIcon={SolidDocumentTextIcon}
       isActive={isActive}
       label="Invoices"
-      badge={isAdmin && !isLoading ? data?.total : 10}
+      badge={isAdmin && !isLoading ? data?.total : undefined}
     />
   );
 }
