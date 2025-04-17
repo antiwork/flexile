@@ -4,11 +4,13 @@ import { useUser } from "@clerk/nextjs";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { useMutation } from "@tanstack/react-query";
 import { Map } from "immutable";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
 import FormSection from "@/components/FormSection";
-import Input from "@/components/Input";
 import MutationButton from "@/components/MutationButton";
 import { CardContent, CardFooter } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { useCurrentUser } from "@/global";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
 import { trpc } from "@/trpc/client";
@@ -27,65 +29,96 @@ export default function SettingsPage() {
 
 const DetailsSection = () => {
   const user = useCurrentUser();
-  const [email, setEmail] = useState(user.email);
-  const [preferredName, setPreferredName] = useState(user.preferredName || "");
+  const form = useForm({
+    defaultValues: {
+      email: user.email,
+      preferredName: user.preferredName || "",
+    },
+  });
+
   const saveMutation = trpc.users.update.useMutation();
   const handleSubmit = useMutation({
     mutationFn: async () => {
+      const values = form.getValues();
       await saveMutation.mutateAsync({
-        email,
-        preferredName,
+        email: values.email,
+        preferredName: values.preferredName,
       });
     },
     onSuccess: () => setTimeout(() => handleSubmit.reset(), 2000),
   });
 
   return (
-    <FormSection title="Personal details" onSubmit={e(() => handleSubmit.mutate(), "prevent")}>
-      <CardContent className="grid gap-4">
-        <Input value={email} onChange={setEmail} label="Email" minLength={MIN_EMAIL_LENGTH} />
-        <Input
-          value={preferredName}
-          onChange={setPreferredName}
-          label="Preferred name (visible to others)"
-          placeholder="Enter preferred name"
-          maxLength={MAX_PREFERRED_NAME_LENGTH}
-        />
-      </CardContent>
-      <CardFooter>
-        <MutationButton type="submit" mutation={handleSubmit} loadingText="Saving..." successText="Saved!">
-          Save
-        </MutationButton>
-      </CardFooter>
-    </FormSection>
+    <Form {...form}>
+      <FormSection title="Personal details" onSubmit={e(() => handleSubmit.mutate(), "prevent")}>
+        <CardContent className="grid gap-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input type="email" minLength={MIN_EMAIL_LENGTH} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="preferredName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Preferred name (visible to others)</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter preferred name" maxLength={MAX_PREFERRED_NAME_LENGTH} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </CardContent>
+        <CardFooter>
+          <MutationButton type="submit" mutation={handleSubmit} loadingText="Saving..." successText="Saved!">
+            Save
+          </MutationButton>
+        </CardFooter>
+      </FormSection>
+    </Form>
   );
 };
 
 const PasswordSection = () => {
   const { user } = useUser();
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const form = useForm({
+    defaultValues: {
+      currentPassword: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
   const [errors, setErrors] = useState(Map<string, string>());
-  const data = { currentPassword, password, confirmPassword };
-  Object.entries(data).forEach(([key, value]) => useEffect(() => setErrors(errors.delete(key)), [value]));
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      const values = form.getValues();
       const newErrors = errors.clear().withMutations((errors) => {
-        Object.entries(data).forEach(([key, value]) => {
+        Object.entries(values).forEach(([key, value]) => {
           if (!value) errors.set(key, "This field is required.");
         });
-        if (data.password !== data.confirmPassword) errors.set("confirm_password", "Passwords do not match.");
+        if (values.password !== values.confirmPassword) errors.set("confirm_password", "Passwords do not match.");
       });
 
       setErrors(newErrors);
       if (newErrors.size > 0) return;
       try {
-        await assertDefined(user).updatePassword({ currentPassword, newPassword: password });
-        setCurrentPassword("");
-        setPassword("");
-        setConfirmPassword("");
+        await assertDefined(user).updatePassword({
+          currentPassword: values.currentPassword,
+          newPassword: values.password,
+        });
+        form.reset();
       } catch (error) {
         if (!isClerkAPIResponseError(error)) throw error;
         setErrors(errors.set("password", error.message));
@@ -96,38 +129,67 @@ const PasswordSection = () => {
   if (!user) return null;
 
   return (
-    <FormSection title="Password" onSubmit={e(() => saveMutation.mutate(), "prevent")}>
-      <CardContent className="grid gap-4">
-        <Input
-          value={currentPassword}
-          label="Old password"
-          type="password"
-          invalid={errors.has("current_password")}
-          help={errors.get("current_password")}
-          onChange={setCurrentPassword}
-        />
-        <Input
-          value={password}
-          label="New password"
-          type="password"
-          invalid={errors.has("password")}
-          help={errors.get("password")}
-          onChange={setPassword}
-        />
-        <Input
-          value={confirmPassword}
-          label="Confirm new password"
-          type="password"
-          invalid={errors.has("confirm_password")}
-          help={errors.get("confirm_password")}
-          onChange={setConfirmPassword}
-        />
-      </CardContent>
-      <CardFooter>
-        <MutationButton type="submit" mutation={saveMutation} loadingText="Saving...">
-          Save
-        </MutationButton>
-      </CardFooter>
-    </FormSection>
+    <Form {...form}>
+      <FormSection title="Password" onSubmit={e(() => saveMutation.mutate(), "prevent")}>
+        <CardContent className="grid gap-4">
+          <FormField
+            control={form.control}
+            name="currentPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Old password</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    invalid={errors.has("current_password")}
+                    help={errors.get("current_password")}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>New password</FormLabel>
+                <FormControl>
+                  <Input type="password" invalid={errors.has("password")} help={errors.get("password")} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Confirm new password</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    invalid={errors.has("confirm_password")}
+                    help={errors.get("confirm_password")}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </CardContent>
+        <CardFooter>
+          <MutationButton type="submit" mutation={saveMutation} loadingText="Saving...">
+            Save
+          </MutationButton>
+        </CardFooter>
+      </FormSection>
+    </Form>
   );
 };

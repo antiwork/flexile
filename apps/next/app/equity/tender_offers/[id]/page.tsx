@@ -2,7 +2,6 @@
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { ArrowDownTrayIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
-import type { ColumnDef } from "@tanstack/react-table";
 import { addMonths, isFuture, isPast } from "date-fns";
 import { useParams } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
@@ -21,6 +20,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -53,27 +53,26 @@ const financialData = Object.entries({
   ],
 });
 const startDate = new Date(2023, 6);
-const financialDataColumns = [
-  { id: "header", accessorKey: "0", header: "" },
-  ...(financialData[0]?.[1] ?? []).map(
-    (_, i) =>
-      ({
-        header: formatMonth(addMonths(startDate, i)),
-        accessorKey: `1.${i}`,
-        cell: (info) => {
-          const value = info.getValue();
-          return typeof value === "number" ? formatMoney(value) : value;
-        },
-        meta: { numeric: true },
-      }) satisfies ColumnDef<[string, (string | number)[]]>,
-  ),
-];
 
-const holdingsColumnHelper = createColumnHelper<Holding>();
-const holdingsColumns = [
-  holdingsColumnHelper.simple("className", "Share class"),
-  holdingsColumnHelper.simple("count", "Number of shares", (value) => value.toLocaleString(), "numeric"),
-];
+const HoldingsTable = ({ holdings, caption }: { holdings: Holding[]; caption: string }) => (
+  <Table>
+    <TableCaption>{caption}</TableCaption>
+    <TableHeader>
+      <TableRow>
+        <TableHead>Share class</TableHead>
+        <TableHead className="text-right">Number of shares</TableHead>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      {holdings.map((holding, index) => (
+        <TableRow key={index}>
+          <TableCell>{holding.className}</TableCell>
+          <TableCell className="text-right tabular-nums">{holding.count.toLocaleString()}</TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  </Table>
+);
 
 export default function TenderOfferView() {
   const { id } = useParams<{ id: string }>();
@@ -197,10 +196,6 @@ export default function TenderOfferView() {
     [user.activeRole],
   );
 
-  const financialDataTable = useTable({ data: financialData, columns: financialDataColumns });
-
-  const tenderedHoldingsTable = useTable({ data: tenderedHoldings, columns: holdingsColumns });
-  const holdingsTable = useTable({ data: holdings, columns: holdingsColumns });
   const bidsTable = useTable({ data: bids.bids, columns });
 
   const buttonTooltip = !signed ? "Please sign the letter of transmittal before submitting a bid" : null;
@@ -275,7 +270,31 @@ export default function TenderOfferView() {
                   </div>
                   <h2 className="text-xl font-bold">Tender offer details</h2>
                   <div className="overflow-x-auto">
-                    <DataTable table={financialDataTable} caption="Company financials (unaudited)" />
+                    <Table>
+                      <TableCaption>Company financials (unaudited)</TableCaption>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead />
+                          {(financialData[0]?.[1] ?? []).map((_, index) => (
+                            <TableHead key={index} className="text-right">
+                              {formatMonth(addMonths(startDate, index))}
+                            </TableHead>
+                          ))}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {financialData.map((row, rowIndex) => (
+                          <TableRow key={rowIndex}>
+                            <TableCell>{row[0]}</TableCell>
+                            {row[1].map((cell, cellIndex) => (
+                              <TableCell key={cellIndex} className="text-right tabular-nums">
+                                {typeof cell === "number" ? formatMoney(cell) : cell}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
                   <p className="mt-5">
                     <Button variant="outline" asChild>
@@ -287,9 +306,9 @@ export default function TenderOfferView() {
                   </p>
                   <h2 className="text-xl font-bold">Submit a bid</h2>
                   {tenderedHoldings.length ? (
-                    <DataTable table={tenderedHoldingsTable} caption="Tendered Holdings" />
+                    <HoldingsTable holdings={tenderedHoldings} caption="Tendered Holdings" />
                   ) : null}
-                  <DataTable table={holdingsTable} caption="Holdings" />
+                  <HoldingsTable holdings={holdings} caption="Holdings" />
                   <Select
                     value={newBid.shareClass}
                     onChange={(value) => setNewBid({ ...newBid, shareClass: value })}
