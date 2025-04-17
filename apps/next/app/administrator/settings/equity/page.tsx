@@ -60,9 +60,10 @@ const BoardMembersSection = () => {
               name="boardMembers"
               render={() => (
                 <FormItem>
-                  <FormLabel>Board members</FormLabel>
+                  <FormLabel htmlFor="board-members">Board members</FormLabel>
                   <FormControl>
                     <Combobox
+                      id="board-members"
                       options={administrators.map((admin: { id: string; name: string }) => ({
                         value: admin.id,
                         label: admin.name,
