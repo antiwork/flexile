@@ -12,21 +12,12 @@ type ModalProps = {
   sidebar?: boolean | undefined;
   children: React.ReactNode;
   footer?: React.ReactNode;
-  ref?: React.Ref<HTMLDialogElement>;
-} & Omit<ComponentPropsWithoutRef<"dialog">, "open" | "aria-label" | "onClick" | "ref">;
+} & Omit<ComponentPropsWithoutRef<"dialog">, "open" | "aria-label" | "onClick">;
 
-const Modal = ({ open, onClose, title, sticky, sidebar, children, footer, className, ref, ...props }: ModalProps) => {
-  const internalDialogRef = useRef<HTMLDialogElement>(null);
+const Modal = ({ open, onClose, title, sticky, sidebar, children, footer, className, ...props }: ModalProps) => {
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
-  useEffect(() => {
-    if (typeof ref === "function") {
-      ref(internalDialogRef.current);
-    } else if (ref) {
-      ref.current = internalDialogRef.current;
-    }
-  }, [ref]);
-
-  useEffect(() => internalDialogRef.current?.[open ? "showModal" : "close"](), [open]);
+  useEffect(() => dialogRef.current?.[open ? "showModal" : "close"](), [open]);
   useOnGlobalEvent("keydown", (event) => {
     if (event.key === "Escape") onClose?.();
   });
@@ -34,7 +25,7 @@ const Modal = ({ open, onClose, title, sticky, sidebar, children, footer, classN
   return createPortal(
     <dialog
       {...props}
-      ref={internalDialogRef}
+      ref={dialogRef}
       className={cn(
         "w-max gap-4 overflow-visible border-none accent-blue-600 transition-transform duration-300 backdrop:bg-black/50 backdrop:transition-opacity backdrop:duration-300 open:flex",
         open ? "scale-100 backdrop:opacity-100" : "backdrop:opacity-0 motion-safe:scale-0",

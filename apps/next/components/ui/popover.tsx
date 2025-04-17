@@ -10,19 +10,14 @@ function PopoverTrigger({ ...props }: React.ComponentProps<typeof PopoverPrimiti
   return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />;
 }
 
-interface PopoverContentProps extends React.ComponentProps<typeof PopoverPrimitive.Content> {
-  container?: HTMLElement | null | undefined;
-}
-
 function PopoverContent({
   className,
   align = "center",
   sideOffset = 4,
-  container, // Destructure container
   ...props
-}: PopoverContentProps) {
+}: React.ComponentProps<typeof PopoverPrimitive.Content>) {
   return (
-    <PopoverPrimitive.Portal container={container}>
+    <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
         data-slot="popover-content"
         align={align}

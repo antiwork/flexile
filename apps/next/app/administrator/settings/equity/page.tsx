@@ -2,17 +2,12 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Set } from "immutable";
-import { User, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { FormProvider, useForm } from "react-hook-form";
+import ComboBox from "@/components/ComboBox";
 import DecimalInput from "@/components/DecimalInput";
 import FormSection from "@/components/FormSection";
 import MutationButton from "@/components/MutationButton";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardFooter } from "@/components/ui/card";
-import { Combobox } from "@/components/ui/combobox";
-import { FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import { MAX_FILES_PER_CAP_TABLE_UPLOAD } from "@/models";
@@ -26,8 +21,6 @@ const BoardMembersSection = () => {
     Set(administrators.flatMap((admin) => (admin.boardMember ? [admin.id] : []))),
   );
   const updateBoardMembers = trpc.companyAdministrators.update.useMutation();
-
-  const form = useForm();
 
   const updateMutation = useMutation({
     mutationFn: async () => {
@@ -44,77 +37,23 @@ const BoardMembersSection = () => {
   });
 
   return (
-    <FormSection
-      title="Board members"
-      description="Select company administrators who are board members."
-      onSubmit={(e) => {
-        e.preventDefault();
-        updateMutation.mutate();
-      }}
-    >
-      <FormProvider {...form}>
-        <CardContent>
-          <div className="grid gap-4">
-            <FormField
-              control={form.control}
-              name="boardMembers"
-              render={() => (
-                <FormItem>
-                  <FormLabel htmlFor="board-members">Board members</FormLabel>
-                  <FormControl>
-                    <Combobox
-                      id="board-members"
-                      options={administrators.map((admin: { id: string; name: string }) => ({
-                        value: admin.id,
-                        label: admin.name,
-                      }))}
-                      value={boardMemberIds.toArray().join(",")}
-                      onSelect={(value) => {
-                        if (!value) return;
-                        const [id] = value.split(",");
-                        if (!id) return;
-                        setBoardMemberIds(boardMemberIds[boardMemberIds.has(id) ? "delete" : "add"](id));
-                      }}
-                      placeholder="Select members..."
-                      emptyMessage="No administrator found."
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            {boardMemberIds.size > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {administrators
-                  .filter((admin) => boardMemberIds.has(admin.id))
-                  .map((member) => (
-                    <Badge key={member.id} variant="secondary" className="flex items-center gap-1">
-                      <User className="h-3 w-3" />
-                      {member.name}
-                      <Button
-                        variant="link"
-                        className="text-muted-foreground hover:text-foreground h-auto p-0"
-                        onClick={() => setBoardMemberIds(boardMemberIds.delete(member.id))}
-                      >
-                        <X className="h-3 w-3" />
-                        <span className="sr-only">Remove</span>
-                      </Button>
-                    </Badge>
-                  ))}
-              </div>
-            ) : null}
-          </div>
-        </CardContent>
-        <CardFooter>
-          <MutationButton
-            type="submit"
-            mutation={updateMutation}
-            disabled={updateMutation.isPending}
-            loadingText="Saving..."
-          >
-            Save board members
-          </MutationButton>
-        </CardFooter>
-      </FormProvider>
+    <FormSection title="Board members" description="Select company administrators who are board members.">
+      <CardContent>
+        <div className="grid gap-4">
+          Choose board members from your existing administrators.
+          <ComboBox
+            options={administrators.map((admin) => ({ value: admin.id, label: admin.name }))}
+            value={boardMemberIds.toArray()}
+            onChange={(value) => setBoardMemberIds(Set(value))}
+            multiple
+          />
+        </div>
+      </CardContent>
+      <CardFooter>
+        <MutationButton mutation={updateMutation} disabled={updateMutation.isPending} loadingText="Saving...">
+          Save board members
+        </MutationButton>
+      </CardFooter>
     </FormSection>
   );
 };
