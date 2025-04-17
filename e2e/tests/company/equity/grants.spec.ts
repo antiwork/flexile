@@ -11,9 +11,9 @@ import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { DocumentTemplateType } from "@/db/enums";
-import { documents } from "@/db/schema";
+import { companyInvestors, documents, equityGrants } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 
 test.describe("New Contractor", () => {
@@ -23,7 +23,7 @@ test.describe("New Contractor", () => {
       conversionSharePriceUsd: "1",
     });
     const { user: contractorUser } = await usersFactory.create();
-    let submitters = { "Company Representative": adminUser, Signer: contractorUser };
+    const submitters = { "Company Representative": adminUser, Signer: contractorUser };
     const { mockForm } = mockDocuseal(next, { submitters: () => submitters });
     await mockForm(page);
     await companyContractorsFactory.create({
@@ -52,6 +52,10 @@ test.describe("New Contractor", () => {
       companyId: company.id,
       type: DocumentTemplateType.EquityPlanContract,
     });
+    await documentTemplatesFactory.create({
+      companyId: company.id,
+      type: DocumentTemplateType.BoardConsent,
+    });
     await page.reload();
     await expect(page.getByText("Create equity plan contract and board consent templates")).not.toBeVisible();
     await page.getByRole("link", { name: "New option grant" }).click();
@@ -59,15 +63,6 @@ test.describe("New Contractor", () => {
     await page.getByLabel("Number of options").fill("10");
     await page.getByLabel("Relationship to company").selectOption("Consultant");
     await page.getByRole("button", { name: "Create option grant" }).click();
-    await withinModal(
-      async (modal) => {
-        await modal.getByRole("button", { name: "Sign now" }).click();
-        await modal.getByRole("link", { name: "Type" }).click();
-        await modal.getByPlaceholder("Type signature here...").fill("Admin Admin");
-        await modal.getByRole("button", { name: "Sign and complete" }).click();
-      },
-      { page },
-    );
 
     await expect(page.getByRole("table")).toHaveCount(2);
     let rows = page.getByRole("table").first().getByRole("row");
@@ -75,28 +70,21 @@ test.describe("New Contractor", () => {
     let row = rows.nth(1);
     await expect(row).toContainText(contractorUser.legalName ?? "");
     await expect(row).toContainText("10");
+    const companyInvestor = await db.query.companyInvestors.findFirst({
+      where: and(eq(companyInvestors.companyId, company.id), eq(companyInvestors.userId, contractorUser.id)),
+    });
     assertDefined(
-      await db.query.documents.findFirst({
-        where: eq(documents.companyId, company.id),
-        orderBy: desc(documents.createdAt),
+      await db.query.equityGrants.findFirst({
+        where: eq(equityGrants.companyInvestorId, assertDefined(companyInvestor).id),
+        orderBy: desc(equityGrants.createdAt),
       }),
     );
 
-    submitters = { "Company Representative": adminUser, Signer: projectBasedUser };
     await page.getByRole("link", { name: "New option grant" }).click();
     await page.getByLabel("Recipient").selectOption(projectBasedUser.preferredName);
     await page.getByLabel("Number of options").fill("20");
     await page.getByLabel("Relationship to company").selectOption("Consultant");
     await page.getByRole("button", { name: "Create option grant" }).click();
-    await withinModal(
-      async (modal) => {
-        await modal.getByRole("button", { name: "Sign now" }).click();
-        await modal.getByRole("link", { name: "Type" }).click();
-        await modal.getByPlaceholder("Type signature here...").fill("Admin Admin");
-        await modal.getByRole("button", { name: "Sign and complete" }).click();
-      },
-      { page },
-    );
 
     await expect(page.getByRole("table")).toHaveCount(2);
     rows = page.getByRole("table").first().getByRole("row");
@@ -104,38 +92,58 @@ test.describe("New Contractor", () => {
     row = rows.nth(1);
     await expect(row).toContainText(projectBasedUser.legalName ?? "");
     await expect(row).toContainText("20");
+    const projectBasedCompanyInvestor = await db.query.companyInvestors.findFirst({
+      where: and(eq(companyInvestors.companyId, company.id), eq(companyInvestors.userId, projectBasedUser.id)),
+    });
     assertDefined(
-      await db.query.documents.findFirst({
-        where: eq(documents.companyId, company.id),
-        orderBy: desc(documents.createdAt),
+      await db.query.equityGrants.findFirst({
+        where: eq(equityGrants.companyInvestorId, assertDefined(projectBasedCompanyInvestor).id),
+        orderBy: desc(equityGrants.createdAt),
       }),
     );
 
-    submitters = { "Company Representative": adminUser, Signer: contractorUser };
     await clerk.signOut({ page });
     await login(page, contractorUser);
+    await page.goto("/settings/equity");
+    await expect(
+      page.getByText(
+        "Your allocation is pending board approval. You can submit invoices for this year, but they're only going to be paid once the allocation is approved.",
+      ),
+    ).toBeVisible();
     await page.goto("/invoices");
-    await expect(page.getByText("You have an unsigned contract")).toBeVisible();
-    await expect(page.getByRole("link", { name: "New invoice" })).toHaveAttribute("inert");
-    await page.getByRole("link", { name: "Review & sign" }).click();
-    await page.getByRole("button", { name: "Sign now" }).click();
-    await page.getByRole("link", { name: "Type" }).click();
-    await page.getByPlaceholder("Type signature here...").fill("Flexy Bob");
-    await page.getByRole("button", { name: "Complete" }).click();
-    await expect(page.getByRole("heading", { name: "Invoicing" })).toBeVisible();
+    await page.getByRole("link", { name: "New invoice" }).click();
+    await page.getByLabel("Invoice ID").fill("CUSTOM-1");
+    await page.getByLabel("Date").fill("2024-10-15");
+    await page.getByPlaceholder("HH:MM").first().fill("05:30");
+    await page.waitForTimeout(500); // TODO (techdebt): avoid this
+    await page.getByPlaceholder("Description").fill("Software development work");
+    await page.getByRole("button", { name: "Send invoice" }).click();
 
-    submitters = { "Company Representative": adminUser, Signer: projectBasedUser };
+    await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
+    await expect(page.locator("tbody")).toContainText("Oct 15, 2024");
+    await expect(page.locator("tbody")).toContainText("05:30");
+    await expect(page.locator("tbody")).toContainText("Awaiting approval");
+
     await clerk.signOut({ page });
     await login(page, projectBasedUser);
+    await page.goto("/settings/equity");
+    await expect(
+      page.getByText(
+        "Your allocation is pending board approval. You can submit invoices for this year, but they're only going to be paid once the allocation is approved.",
+      ),
+    ).toBeVisible();
     await page.goto("/invoices");
-    await expect(page.getByText("You have an unsigned contract")).toBeVisible();
-    await expect(page.getByRole("link", { name: "New invoice" })).toHaveAttribute("inert");
-    await page.getByRole("link", { name: "Review & sign" }).click();
-    await page.getByRole("button", { name: "Sign now" }).click();
-    await page.getByRole("link", { name: "Type" }).click();
-    await page.getByPlaceholder("Type signature here...").fill("Flexy Bob");
-    await page.getByRole("button", { name: "Complete" }).click();
-    await expect(page.getByRole("heading", { name: "Invoicing" })).toBeVisible();
+    await page.getByRole("link", { name: "New invoice" }).click();
+    await page.getByLabel("Invoice ID").fill("CUSTOM-2");
+    await page.getByLabel("Date").fill("2024-11-01");
+    await page.getByPlaceholder("Amount").first().fill("1000");
+    await page.getByPlaceholder("Description").fill("Promotional video production work");
+    await page.getByRole("button", { name: "Send invoice" }).click();
+
+    await expect(page.getByRole("cell", { name: "CUSTOM-2" })).toBeVisible();
+    await expect(page.locator("tbody")).toContainText("Nov 1, 2024");
+    await expect(page.locator("tbody")).toContainText("1000");
+    await expect(page.locator("tbody")).toContainText("Awaiting approval");
   });
 
   test("allows exercising options", async ({ page, next }) => {

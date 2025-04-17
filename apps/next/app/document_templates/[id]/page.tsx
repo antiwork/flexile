@@ -46,31 +46,34 @@ export default function EditTemplatePage() {
     });
   };
 
-  const fields = [
-    {
-      name: "__companyName",
-      type: "text",
-      title: "Company name (auto-filled)",
-      role: "Company Representative",
-    },
-    {
-      name: "__companyEmail",
-      type: "text",
-      title: "Company representative email (auto-filled)",
-      role: "Company Representative",
-    },
-    {
-      name: "__companyRepresentativeName",
-      type: "text",
-      title: "Company representative name (auto-filled)",
-      role: "Company Representative",
-    },
-    { name: "__signerName", type: "text", title: "Signer name (auto-filled)", role: "Signer" },
-    { name: "__signerLegalEntity", type: "text", title: "Signer legal entity (auto-filled)", role: "Signer" },
-    { name: "__signerEmail", type: "text", title: "Signer email (auto-filled)", role: "Signer" },
-    { name: "__signerAddress", type: "text", title: "Signer address (auto-filled)", role: "Signer" },
-    { name: "__signerCountry", type: "text", title: "Signer country (auto-filled)", role: "Signer" },
-  ];
+  const fields =
+    template.type === DocumentTemplateType.BoardConsent
+      ? []
+      : [
+          {
+            name: "__companyName",
+            type: "text",
+            title: "Company name (auto-filled)",
+            role: "Company Representative",
+          },
+          {
+            name: "__companyEmail",
+            type: "text",
+            title: "Company representative email (auto-filled)",
+            role: "Company Representative",
+          },
+          {
+            name: "__companyRepresentativeName",
+            type: "text",
+            title: "Company representative name (auto-filled)",
+            role: "Company Representative",
+          },
+          { name: "__signerName", type: "text", title: "Signer name (auto-filled)", role: "Signer" },
+          { name: "__signerLegalEntity", type: "text", title: "Signer legal entity (auto-filled)", role: "Signer" },
+          { name: "__signerEmail", type: "text", title: "Signer email (auto-filled)", role: "Signer" },
+          { name: "__signerAddress", type: "text", title: "Signer address (auto-filled)", role: "Signer" },
+          { name: "__signerCountry", type: "text", title: "Signer country (auto-filled)", role: "Signer" },
+        ];
   switch (template.type) {
     case DocumentTemplateType.ConsultingContract:
       fields.push(
@@ -94,47 +97,53 @@ export default function EditTemplatePage() {
     case DocumentTemplateType.BoardConsent:
       fields.push(
         {
+          name: "__companyName",
+          type: "text",
+          title: "Company name (auto-filled)",
+          role: "Board member",
+        },
+        {
           name: "__boardApprovalDate",
           type: "date",
           title: "Board approval date (auto-filled)",
-          role: "Board member 1",
+          role: "Board member",
         },
-        { name: "__grantType", type: "text", title: "Grant type (auto-filled)", role: "Company Representative" },
+        { name: "__grantType", type: "text", title: "Grant type (auto-filled)", role: "Board member" },
         {
           name: "__quantity",
           type: "number",
           title: "Number of options (auto-filled)",
-          role: "Board member 1",
+          role: "Board member",
         },
         {
           name: "__exercisePrice",
           type: "number",
           title: "Exercise price per share (auto-filled)",
-          role: "Board member 1",
+          role: "Board member",
         },
         {
           name: "__optionholderName",
           type: "text",
           title: "Optionholder name (auto-filled)",
-          role: "Board member 1",
+          role: "Board member",
         },
         {
           name: "__optionholderAddress",
           type: "text",
           title: "Optionholder address (auto-filled)",
-          role: "Board member 1",
+          role: "Board member",
         },
         {
           name: "__vestingCommencementDate",
           type: "date",
           title: "Vesting commencement date (auto-filled)",
-          role: "Board member 1",
+          role: "Board member",
         },
         {
           name: "__vestingSchedule",
           type: "text",
           title: "Vesting schedule (auto-filled)",
-          role: "Board member 1",
+          role: "Board member",
         },
       );
       break;
@@ -247,7 +256,7 @@ export default function EditTemplatePage() {
           token={token}
           withSendButton={false}
           withSignYourselfButton={false}
-          roles={["Company Representative", "Signer"]}
+          roles={Array.from(new Set(requiredFields.map((field) => field.role)))}
           fieldTypes={["text", "date", "checkbox"]}
           fields={fields}
           requiredFields={requiredFields}

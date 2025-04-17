@@ -183,7 +183,6 @@ export const equityGrantsRouter = createRouter({
           totalVestingDurationMonths: z.number().nullable(),
           cliffDurationMonths: z.number().nullable(),
           vestingFrequencyMonths: z.string().nullable(),
-          docusealTemplateId: z.string(),
         }),
     )
     .mutation(async ({ input, ctx }) => {
@@ -228,12 +227,12 @@ export const equityGrantsRouter = createRouter({
       );
 
       if (!response.ok) throw new TRPCError({ code: "BAD_REQUEST", message: await response.text() });
-      const { equity_grant_id } = z.object({ equity_grant_id: z.bigint() }).parse(await response.json());
+      const { equity_grant_id } = z.object({ equity_grant_id: z.number() }).parse(await response.json());
 
       await inngest.send({
         name: "board_consent.created",
         data: {
-          equityGrantId: equity_grant_id,
+          equityGrantId: BigInt(equity_grant_id),
           companyId: ctx.company.id,
           companyWorkerId: worker.id,
         },

@@ -2,9 +2,9 @@
 
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
-import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import { optionGrantTypeDisplayNames, relationshipDisplayNames, vestingTriggerDisplayNames } from "@/app/equity/grants";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
@@ -15,8 +15,9 @@ import Select from "@/components/Select";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { useCurrentCompany } from "@/global";
-import { DocumentTemplateType, trpc } from "@/trpc/client";
+import { trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
+
 const MAX_VESTING_DURATION_IN_MONTHS = 120;
 
 const fieldAttributeName = z.enum([
@@ -65,6 +66,7 @@ const isLiteralValue = <T extends string>(value: string, literalValues: Record<T
 
 export default function NewEquityGrant() {
   const today = assertDefined(new Date().toISOString().split("T")[0]);
+  const router = useRouter();
   const trpcUtils = trpc.useUtils();
   const company = useCurrentCompany();
   const [data] = trpc.equityGrants.new.useSuspenseQuery({
@@ -118,7 +120,6 @@ export default function NewEquityGrant() {
   const [deathExercisePeriodInMonths, setDeathExercisePeriodInMonths] = useState<number | null>(null);
   const [disabilityExercisePeriodInMonths, setDisabilityExercisePeriodInMonths] = useState<number | null>(null);
   const [retirementExercisePeriodInMonths, setRetirementExercisePeriodInMonths] = useState<number | null>(null);
-  const [docusealTemplateId, setDocusealTemplateId] = useState<string | null>(null);
 
   const [errorInfo, setErrorInfo] = useState<ErrorInfo | null>(null);
 
@@ -396,6 +397,7 @@ export default function NewEquityGrant() {
       await trpcUtils.equityGrants.byCountry.invalidate();
       await trpcUtils.capTable.show.invalidate();
       await trpcUtils.documents.list.invalidate();
+      router.push(`/equity/grants`);
     },
     onError: (error) => {
       const errorInfoSchema = z.object({
@@ -440,7 +442,6 @@ export default function NewEquityGrant() {
         totalVestingDurationMonths: isCustomVestingSchedule ? totalVestingDurationMonths : null,
         cliffDurationMonths: isCustomVestingSchedule ? cliffDurationMonths : null,
         vestingFrequencyMonths: isCustomVestingSchedule ? vestingFrequencyMonths : null,
-        docusealTemplateId: docusealTemplateId ?? "",
       });
     },
   });
@@ -680,12 +681,6 @@ export default function NewEquityGrant() {
               {...invalidFieldAttrs("retirement_exercise_months", errorInfo)}
             />
           </fieldset>
-          <TemplateSelector
-            selected={docusealTemplateId}
-            setSelected={setDocusealTemplateId}
-            companyId={company.id}
-            type={DocumentTemplateType.EquityPlanContract}
-          />
         </CardContent>
       </FormSection>
       <div className="grid gap-x-5 gap-y-3 md:grid-cols-[25%_1fr]">

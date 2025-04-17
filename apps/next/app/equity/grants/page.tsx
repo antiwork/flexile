@@ -78,9 +78,14 @@ const CompanyGrantList = () => {
   const [totals] = trpc.equityGrants.totals.useSuspenseQuery({ companyId: company.id });
 
   const table = useTable({ columns: companyGrantColumns, data: data.equityGrants });
-  const [templates] = trpc.documents.templates.list.useSuspenseQuery({
+  const [equityPlanContractTemplates] = trpc.documents.templates.list.useSuspenseQuery({
     companyId: company.id,
     type: DocumentTemplateType.EquityPlanContract,
+    signable: true,
+  });
+  const [boardConsentTemplates] = trpc.documents.templates.list.useSuspenseQuery({
+    companyId: company.id,
+    type: DocumentTemplateType.BoardConsent,
     signable: true,
   });
 
@@ -92,7 +97,7 @@ const CompanyGrantList = () => {
   return (
     <EquityLayout
       headerActions={
-        templates.length > 0 ? (
+        equityPlanContractTemplates.length > 0 && boardConsentTemplates.length > 0 ? (
           <Button asChild>
             <Link href={`/companies/${company.id}/administrator/equity_grants/new`}>
               <PencilIcon className="size-4" />
@@ -102,7 +107,7 @@ const CompanyGrantList = () => {
         ) : null
       }
     >
-      {templates.length === 0 ? (
+      {equityPlanContractTemplates.length === 0 || boardConsentTemplates.length === 0 ? (
         <Alert>
           <InformationCircleIcon />
           <AlertDescription>

@@ -27,10 +27,6 @@ export default function Equity() {
   assert(worker != null);
   const company = useCurrentCompany();
   const [{ allocation }] = trpc.equitySettings.get.useSuspenseQuery({ companyId: company.id });
-  const [{ grant: equityGrant }] = trpc.equityGrants.getUniqueUnvested.useSuspenseQuery({
-    companyId: company.id,
-    year: new Date().getFullYear(),
-  });
 
   const [equityPercent, setEquityPercent] = useState(allocation?.equityPercentage ?? 0);
 
@@ -47,9 +43,6 @@ export default function Equity() {
     }
     if (allocation?.status === "pending_grant_creation" || allocation?.status === "pending_approval") {
       return "Your allocation is pending board approval. You can submit invoices for this year, but they're only going to be paid once the allocation is approved.";
-    }
-    if (!equityGrant) {
-      return "You'll be able to select an equity split once your option grant has been issued.";
     }
     return null;
   };

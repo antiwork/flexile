@@ -13,7 +13,7 @@ class Internal::Companies::Administrator::EquityGrantsController < Internal::Com
     ).process
 
     if result[:success]
-      render json: { document_id: result[:document].id }
+      render json: { equity_grant_id: result[:equity_grant_id] }
     else
       render_error_response(result[:error])
     end
@@ -38,7 +38,6 @@ class Internal::Companies::Administrator::EquityGrantsController < Internal::Com
         :retirement_exercise_months,
         :board_approval_date,
         :vesting_commencement_date,
-        :docuseal_submission_id,
       )
     end
 

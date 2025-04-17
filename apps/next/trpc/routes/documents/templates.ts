@@ -101,7 +101,7 @@ export const templatesRouter = createRouter({
 
     if (template.type === DocumentTemplateType.BoardConsent) {
       const boardMembers = await db.query.companyAdministrators.findMany({
-        where: eq(companyAdministrators.companyId, ctx.company.id),
+        where: and(eq(companyAdministrators.companyId, ctx.company.id), eq(companyAdministrators.boardMember, true)),
         with: {
           user: {
             columns: {
@@ -114,14 +114,16 @@ export const templatesRouter = createRouter({
         },
       });
 
-      if (boardMembers.length > 0) {
-        requiredFields = boardMembers.map((_, index) => ({
-          name: `__boardMemberSignature${index + 1}`,
-          title: `Board member signature`,
-          role: `Signer`,
-          type: "signature",
-        }));
+      if (boardMembers.length === 0) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "No board members found for this company" });
       }
+
+      requiredFields = boardMembers.map((_, index) => ({
+        name: `__boardMemberSignature${index + 1}`,
+        title: `Board member signature`,
+        role: index === 0 ? `Board member` : `Board member ${index + 1}`,
+        type: "signature",
+      }));
     }
 
     return { template, token, requiredFields };
@@ -211,6 +213,7 @@ export const templatesRouter = createRouter({
 
       Object.assign(values, {
         __name: equityGrant.optionHolderName,
+        __companyName: ctx.company.name ?? "",
         __boardApprovalDate: equityGrant.boardApprovalDate ?? "",
         __quantity: equityGrant.numberOfShares.toString(),
         __relationship: equityGrant.issueDateRelationship,

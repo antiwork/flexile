@@ -5,7 +5,6 @@ import { db } from "@/db";
 import { companyContractors, equityAllocations } from "@/db/schema";
 import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import { companyProcedure, createRouter } from "@/trpc";
-import { getUniqueUnvestedEquityGrantForYear } from "./equityGrants";
 
 export const equitySettingsRouter = createRouter({
   get: companyProcedure.query(async ({ ctx }) => {
@@ -23,13 +22,8 @@ export const equitySettingsRouter = createRouter({
 
       const equityAllocation = await getEquityAllocation(ctx.companyContractor.id);
       if (equityAllocation?.locked) throw new TRPCError({ code: "FORBIDDEN" });
-      if (equityAllocation?.status !== "pending_confirmation") throw new TRPCError({ code: "FORBIDDEN" });
-
-      const unvestedEquityGrant = await getUniqueUnvestedEquityGrantForYear(
-        ctx.companyContractor,
-        new Date().getFullYear(),
-      );
-      if (!unvestedEquityGrant) throw new TRPCError({ code: "FORBIDDEN" });
+      if (equityAllocation && equityAllocation.status !== "pending_confirmation")
+        throw new TRPCError({ code: "FORBIDDEN" });
 
       await db
         .insert(equityAllocations)
@@ -37,11 +31,11 @@ export const equitySettingsRouter = createRouter({
           companyContractorId: ctx.companyContractor.id,
           year: new Date().getFullYear(),
           equityPercentage: input.equityPercentage,
-          status: "pending_approval",
+          status: "pending_grant_creation",
         })
         .onConflictDoUpdate({
           target: [equityAllocations.companyContractorId, equityAllocations.year],
-          set: { equityPercentage: input.equityPercentage },
+          set: { equityPercentage: input.equityPercentage, status: "pending_grant_creation" },
         });
     }),
 });

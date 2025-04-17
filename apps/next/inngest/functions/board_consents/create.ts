@@ -12,10 +12,8 @@ import {
   documentSignatures,
   documentTemplates,
   equityAllocations,
-  equityGrants,
 } from "@/db/schema";
 import { inngest } from "@/inngest/client";
-import { assertDefined } from "@/utils/assert";
 
 export default inngest.createFunction(
   { id: "board-consent-creation" },
@@ -24,33 +22,28 @@ export default inngest.createFunction(
     const { equityGrantId, companyId, companyWorkerId } = event.data;
 
     const data = await step.run("fetch-required-data", async () => {
-      const [equityGrant, companyContractor] = await Promise.all([
-        assertDefined(
-          await db.query.equityGrants.findFirst({
-            where: eq(equityGrants.id, equityGrantId),
-          }),
-        ),
-        assertDefined(
-          await db.query.companyContractors.findFirst({
-            where: eq(companyContractors.id, companyWorkerId),
-            with: {
-              user: true,
-              equityAllocations: {
-                where: eq(equityAllocations.year, new Date().getFullYear()),
-              },
-            },
-          }),
-        ),
-      ]);
+      const companyContractor = await db.query.companyContractors.findFirst({
+        where: eq(companyContractors.id, companyWorkerId),
+        with: {
+          user: true,
+          equityAllocations: {
+            where: eq(equityAllocations.year, new Date().getFullYear()),
+          },
+        },
+      });
 
-      return { equityGrant, companyContractor };
+      if (!companyContractor) return null;
+
+      return { companyContractor };
     });
 
-    const { equityGrant, companyContractor } = data;
+    if (!data) return { message: "Company contractor not found" };
 
-    const equityAllocation = assertDefined(companyContractor.equityAllocations[0]);
-    if (equityAllocation.status !== "pending_grant_creation") {
-      throw new Error("Equity allocation is not pending grant creation");
+    const { companyContractor } = data;
+
+    const equityAllocation = companyContractor.equityAllocations[0];
+    if (equityAllocation?.status !== "pending_grant_creation") {
+      return { message: "Equity allocation is not pending grant creation" };
     }
 
     const boardMembers = await step.run("fetch-board-members", async () => {
@@ -81,7 +74,7 @@ export default inngest.createFunction(
         orderBy: desc(documentTemplates.createdAt),
       });
 
-      if (!template) throw new Error("Board consent document template not found");
+      if (!template) return null;
 
       const submission = await docuseal.createSubmission({
         template_id: Number(template.docusealId),
@@ -100,21 +93,25 @@ export default inngest.createFunction(
           companyId,
           type: DocumentType.BoardConsent,
           year: new Date().getFullYear(),
-          equityGrantId: equityGrant.id,
+          equityGrantId,
           docusealSubmissionId: submission.id,
         })
         .returning();
 
+      if (!doc) return null;
+
       await db.insert(documentSignatures).values(
         boardMembers.map((member) => ({
-          documentId: assertDefined(doc).id,
+          documentId: doc.id,
           userId: member.user.id,
           title: `Board member ${member.user.preferredName}`,
         })),
       );
 
-      return assertDefined(doc, "Failed to create document");
+      return doc;
     });
+
+    if (!document) return { message: "Failed to create document" };
 
     // Create board consent
     const boardConsent = await step.run("create-board-consent", async () => {
@@ -124,19 +121,24 @@ export default inngest.createFunction(
           id: true,
         },
       });
+
+      if (!companyInvestor) return null;
+
       const [newConsent] = await db
         .insert(boardConsents)
         .values({
           equityAllocationId: equityAllocation.id,
           companyId: companyContractor.companyId,
-          companyInvestorId: assertDefined(companyInvestor).id,
+          companyInvestorId: companyInvestor.id,
           documentId: document.id,
           status: BoardConsentStatus.Pending,
         })
         .returning();
 
-      return assertDefined(newConsent, "Failed to create board consent");
+      return newConsent;
     });
+
+    if (!boardConsent) return { message: "Failed to create board consent" };
 
     // Update equity allocation status
     await step.run("update-equity-allocation", async () => {
