@@ -102,7 +102,16 @@ test.describe("Contractor onboarding - bank account", () => {
   test("shows error message in dynamic form datalist input if invalid option is selected", async ({ page }) => {
     await page.getByRole("button", { name: "Set up" }).click();
     await page.getByRole("button", { name: "Continue" }).click();
-    await page.getByLabel("Country").fill("Garbage\t");
+    
+    const countryLabel = page.getByText("Country", { exact: true });
+    const htmlFor = await countryLabel.getAttribute("for");
+    if (htmlFor) {
+      await page.locator(`button#${htmlFor}`).click();
+    } else {
+      await page.locator('label:has-text("Country") + div button, label:has-text("Country") ~ div button').first().click();
+    }
+    
+    await page.locator('[cmdk-input], [role="searchbox"], [role="combobox"]').first().fill("Garbage");
     await page.keyboard.press("Tab");
 
     await expect(page.getByText("Please select an option from the list.")).toBeVisible();
