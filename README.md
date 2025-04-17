@@ -55,7 +55,7 @@ bundle exec rails generate migration AddSlackBotUserIdToCompanies slack_bot_user
 rails db:migrate
 ```
 
-Then add this to the `schema.ts` for the Next app to understand:
+Then add this to the `apps/next/db/schema.ts` for the Next app to understand:
 
 ```
 export const companies = pgTable(
@@ -65,6 +65,16 @@ export const companies = pgTable(
     slackBotUserId: varchar("slack_bot_user_id"),
     ...
   }
+```
+
+You can access this in this way:
+
+```
+type Company = typeof companies.$inferSelect;
+...
+export async function handleMessage(event: GenericMessageEvent | AppMentionEvent, company: Company) {
+...
+company.slackBotUserId
 ```
 
 ## Testing

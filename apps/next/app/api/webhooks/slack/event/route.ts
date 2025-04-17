@@ -1,6 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { SlackEvent } from "@slack/web-api";
 import { waitUntil } from "@vercel/functions";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { companies } from "@/db/schema";
@@ -14,7 +17,7 @@ export const POST = async (request: Request) => {
     return NextResponse.json({ error: "Signature verification failed" }, { status: 403 });
   }
 
-  const data = JSON.parse(body) as SlackEvent;
+  const data = JSON.parse(body);
 
   if (data.type === "url_verification") {
     return NextResponse.json({ challenge: data.challenge });
@@ -23,7 +26,7 @@ export const POST = async (request: Request) => {
   if (data.type === "event_callback" && data.event.type === "tokens_revoked") {
     for (const userId of data.event.tokens.bot) {
       const company = await db.query.companies.findFirst({
-        where: eq(companies.slackTeamId, data.team_id) && eq(companies.slackBotUserId, userId),
+        where: and(eq(companies.slackTeamId, data.team_id), eq(companies.slackBotUserId, userId)),
       });
 
       if (company) await disconnectSlack(company.id);
@@ -40,11 +43,8 @@ export const POST = async (request: Request) => {
     return new Response("Success!", { status: 200 });
   }
 
-  const userId = data.event.tokens.bot;
-  if (!userId) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-
   const company = await db.query.companies.findFirst({
-    where: eq(companies.slackBotUserId, userId as string),
+    where: eq(companies.slackTeamId, event.team),
   });
   if (!company) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 

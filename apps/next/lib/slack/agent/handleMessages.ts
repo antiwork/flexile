@@ -1,10 +1,13 @@
 import { AppMentionEvent, AssistantThreadStartedEvent, GenericMessageEvent, WebClient } from "@slack/web-api";
 import { CoreMessage } from "ai";
+import { companies } from "@/db/schema";
 import { generateAgentResponse } from "@/lib/slack/agent/generateAgentResponse";
 import { getThreadMessages } from "@/lib/slack/client";
 import { assertDefined } from "@/utils/assert";
 
-export async function handleMessage(event: GenericMessageEvent | AppMentionEvent, company) {
+type Company = typeof companies.$inferSelect;
+
+export async function handleMessage(event: GenericMessageEvent | AppMentionEvent, company: Company) {
   if (!company.slackBotUserId || event.bot_id || event.bot_id === company.slackBotUserId || event.bot_profile) return;
 
   const { thread_ts, channel } = event;
@@ -22,7 +25,7 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
   showResult(result);
 }
 
-export async function handleAssistantThreadMessage(event: AssistantThreadStartedEvent, company) {
+export async function handleAssistantThreadMessage(event: AssistantThreadStartedEvent, company: Company) {
   const client = new WebClient(assertDefined(company.slackBotToken));
   const { channel_id, thread_ts } = event.assistant_thread;
 
@@ -52,7 +55,7 @@ export async function handleAssistantThreadMessage(event: AssistantThreadStarted
   });
 }
 
-export const isAgentThread = async (event: GenericMessageEvent, company) => {
+export const isAgentThread = async (event: GenericMessageEvent, company: Company) => {
   if (!company.slackBotToken || !company.slackBotUserId || !event.thread_ts || event.thread_ts === event.ts) {
     return false;
   }
