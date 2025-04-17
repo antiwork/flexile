@@ -5,10 +5,10 @@ import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { fillOutUsdBankAccountForm } from "@test/helpers/bankAccountOnboarding";
-import { checkComboboxVisible } from "../../../../helpers/checkComboboxVisible";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
 import { companies, userComplianceInfos, users, wiseRecipients } from "@/db/schema";
+import { checkComboboxVisible } from "../../../../helpers/checkComboboxVisible";
 
 test.describe("Investor onboarding - bank account", () => {
   let company: typeof companies.$inferSelect;

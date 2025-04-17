@@ -8,8 +8,8 @@ import { type Page } from "../index";
  */
 export async function fillCombobox(page: Page, label: string, value: string) {
   await page.getByLabel(label).click();
-  
+
   await page.getByRole("combobox").fill(value);
-  
+
   await page.getByRole("option").filter({ hasText: value }).click();
 }
