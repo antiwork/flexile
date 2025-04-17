@@ -130,7 +130,9 @@ test.describe("Investor onboarding - bank account", () => {
     await expect(page.getByLabel("Checking [cuenta corriente]")).toBeVisible();
     await expect(page.getByLabel("Savings [cuenta de ahorro]")).toBeVisible();
     await expect(page.getByLabel("Demand [cuenta vista]")).toBeVisible();
-    await expect(page.locator('label:has-text("Account type") + div button, label:has-text("Account type") ~ div button')).not.toBeVisible();
+    await expect(
+      page.locator('label:has-text("Account type") + div button, label:has-text("Account type") ~ div button'),
+    ).not.toBeVisible();
   });
 
   test("prefills the user's information", async ({ page }) => {

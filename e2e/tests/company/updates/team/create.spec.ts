@@ -76,10 +76,10 @@ test.describe("Team member updates page", () => {
     // GitHub search
     await thisWeekUpdate.getByPlaceholder("Describe your task").last().fill("#issues");
 
-    await expect(thisWeekUpdate.locator('[cmdk-list]')).toBeVisible();
-    await expect(thisWeekUpdate.locator('[cmdk-item]')).toHaveCount(5);
+    await expect(thisWeekUpdate.locator("[cmdk-list]")).toBeVisible();
+    await expect(thisWeekUpdate.locator("[cmdk-item]")).toHaveCount(5);
     await thisWeekUpdate.getByText("#3 Closed issue").click();
-    await expect(thisWeekUpdate.locator('[cmdk-list]')).not.toBeVisible();
+    await expect(thisWeekUpdate.locator("[cmdk-list]")).not.toBeVisible();
     await expect(thisWeekUpdate.getByRole("link", { name: "#3 Closed issue" })).toHaveAttribute(
       "href",
       "https://github.com/anti-work-test/flexile/issues/3",

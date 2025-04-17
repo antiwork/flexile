@@ -35,7 +35,7 @@ test.describe("Board members management", () => {
     // Make admin1 sole board member
     const admin1Name = admin1.legalName || admin1.email;
     const admin2Name = admin2.legalName || admin2.email;
-    const admin1Option = page.locator('[cmdk-item]').filter({ hasText: admin1Name });
+    const admin1Option = page.locator("[cmdk-item]").filter({ hasText: admin1Name });
     await expect(admin1Option).toBeVisible();
     await admin1Option.click();
 
@@ -51,8 +51,8 @@ test.describe("Board members management", () => {
 
     // Make admin2 sole board member
     await page.getByText("1 member selected").click();
-    await page.locator('[cmdk-item]').filter({ hasText: admin1Name }).click();
-    await page.locator('[cmdk-item]').filter({ hasText: admin2Name }).click();
+    await page.locator("[cmdk-item]").filter({ hasText: admin1Name }).click();
+    await page.locator("[cmdk-item]").filter({ hasText: admin2Name }).click();
     await page.getByRole("button", { name: "Save board members" }).click();
     await expect(page.getByText("1 member selected")).toBeVisible();
     await page.waitForLoadState("networkidle");
@@ -71,7 +71,7 @@ test.describe("Board members management", () => {
 
     // Make both board members
     await page.getByText("1 member selected").click();
-    await page.locator('[cmdk-item]').filter({ hasText: admin1Name }).click();
+    await page.locator("[cmdk-item]").filter({ hasText: admin1Name }).click();
     await page.getByRole("button", { name: "Save board members" }).click();
     await expect(page.getByText("2 members selected")).toBeVisible();
     await page.waitForLoadState("networkidle");
@@ -91,8 +91,8 @@ test.describe("Board members management", () => {
 
     // Remove all board members
     await page.getByText("2 members selected").click();
-    await page.locator('[cmdk-item]').filter({ hasText: admin1Name }).click();
-    await page.locator('[cmdk-item]').filter({ hasText: admin2Name }).click();
+    await page.locator("[cmdk-item]").filter({ hasText: admin1Name }).click();
+    await page.locator("[cmdk-item]").filter({ hasText: admin2Name }).click();
     await page.getByRole("button", { name: "Save board members" }).click();
     await expect(page.getByText("Select members...")).toBeVisible();
     await page.waitForLoadState("networkidle");
