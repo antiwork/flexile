@@ -40,7 +40,8 @@ export const generateAgentResponse = ({
         };
       }
       return {
-        message: "I couldn't understand what content you wanted to add to your weekly update. Please try again with 'Update my weekly update to contain [your update content]'.",
+        message:
+          "I couldn't understand what content you wanted to add to your weekly update. Please try again with 'Update my weekly update to contain [your update content]'.",
       };
     }
 
@@ -48,13 +49,13 @@ export const generateAgentResponse = ({
       const amountMatch = /\$\s*([0-9,]+(?:\.[0-9]{2})?)/u.exec(message);
       if (amountMatch?.[1]) {
         const amount = parseFloat(amountMatch[1].replace(/,/g, ""));
-        
+
         let description;
         const descriptionMatch = /for\s+(.+?)(?:\s+on\s+|\s*$)/iu.exec(message);
-        if (descriptionMatch?.[1] && !(/\$[0-9,.]+/u.exec(descriptionMatch[1]))) {
+        if (descriptionMatch?.[1] && !/\$[0-9,.]+/u.exec(descriptionMatch[1])) {
           description = descriptionMatch[1].trim();
         }
-        
+
         let date;
         const dateMatch = /on\s+(\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{2,4})/iu.exec(message);
         if (dateMatch?.[1]) {
@@ -66,7 +67,7 @@ export const generateAgentResponse = ({
             date = dateMatch[1]; // Already in ISO format
           }
         }
-        
+
         return {
           message: `I've submitted an invoice for $${amount}${description ? ` for "${description}"` : ""}${date ? ` dated ${date}` : ""}. You can view it in your invoices dashboard.`,
           action: {
@@ -85,9 +86,10 @@ export const generateAgentResponse = ({
     }
 
     return {
-      message: "I can help you update your weekly update or submit an invoice. Try saying 'Update my weekly update to contain [content]' or 'Submit invoice for $[amount]'.",
+      message:
+        "I can help you update your weekly update or submit an invoice. Try saying 'Update my weekly update to contain [content]' or 'Submit invoice for $[amount]'.",
     };
   };
-  
+
   return Promise.resolve(processMessage());
 };

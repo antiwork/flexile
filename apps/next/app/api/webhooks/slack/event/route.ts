@@ -1,23 +1,14 @@
+import { SlackEvent } from "@slack/web-api";
+import { waitUntil } from "@vercel/functions";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { companies } from "@/db/schema";
+//import { disconnectSlack } from "@/lib/data/mailbox";
+//import { captureExceptionAndLog } from "@/lib/shared/sentry";
+import { findCompanyForEvent } from "@/lib/slack/agent/findCompanyForEvent";
+import { handleAssistantThreadMessage, handleMessage, isAgentThread } from "@/lib/slack/agent/handleMessages";
 import { verifySlackRequest } from "@/lib/slack/client";
-import { handleSlackMessage } from "@/lib/slack/agent/handleMessages";
-
-interface SlackEvent {
-  type: string;
-  challenge?: string;
-  event?: {
-    type: string;
-    text: string;
-    user: string;
-    channel: string;
-    ts: string;
-    thread_ts?: string;
-    bot_id?: string;
-  };
-}
 
 export const POST = async (request: Request) => {
   const body = await request.text();
@@ -27,34 +18,61 @@ export const POST = async (request: Request) => {
 
   const data = JSON.parse(body) as SlackEvent;
 
-  if (data.type === "url_verification" && data.challenge) {
+  if (data.type === "url_verification") {
     return NextResponse.json({ challenge: data.challenge });
   }
 
-  if (data.type === "event_callback" && data.event?.type === "message" && !data.event.bot_id) {
-    try {
+  if (data.type === "event_callback" && data.event.type === "tokens_revoked") {
+    for (const userId of data.event.tokens.bot) {
       const company = await db.query.companies.findFirst({
-        where: eq(companies.isGumroad, true),
-      });
-      
-      if (!company) {
-        return NextResponse.json({ error: "Company not found" }, { status: 404 });
-      }
-
-      await handleSlackMessage({
-        text: data.event.text,
-        userId: data.event.user,
-        channelId: data.event.channel,
-        companyId: company.id,
-        ts: data.event.ts,
-        threadTs: data.event.thread_ts || undefined,
+        where: eq(companies.slackTeamId, data.team_id) && eq(companies.slackBotUserId, userId),
       });
 
-      return new Response(null, { status: 200 });
-    } catch (_error) {
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+      if (company) await disconnectSlack(company.id);
     }
+    return new Response(null, { status: 200 });
   }
 
-  return NextResponse.json({ error: "Unsupported event type" }, { status: 400 });
+  const event = data.event as SlackEvent | undefined;
+
+  if (!event) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+
+  if (event.type === "message" && (event.subtype || event.bot_id || event.bot_profile)) {
+    // Not messages we need to handle
+    return new Response("Success!", { status: 200 });
+  }
+
+  const companyInfo = await handleSlackErrors(findCompanyForEvent(event));
+  if (!companyInfo?.companies.length) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+
+  if (
+    event.type === "app_mention" ||
+    (event.type === "message" &&
+      (event.channel_type === "im" || (await handleSlackErrors(isAgentThread(event, mailboxInfo)))))
+  ) {
+    waitUntil(handleSlackErrors(handleMessage(event, mailboxInfo)));
+    return new Response("Success!", { status: 200 });
+  }
+
+  if (event.type === "assistant_thread_started") {
+    waitUntil(handleSlackErrors(handleAssistantThreadMessage(event, mailboxInfo)));
+    return new Response("Success!", { status: 200 });
+  }
+
+  return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+};
+
+const handleSlackErrors = async <T>(operation: Promise<T>) => {
+  try {
+    return await operation;
+  } catch (error) {
+    if (error instanceof Error && "data" in error) {
+      captureExceptionAndLog(error, {
+        extra: {
+          slackResponse: error.data,
+        },
+      });
+    }
+    captureExceptionAndLog(error);
+  }
 };

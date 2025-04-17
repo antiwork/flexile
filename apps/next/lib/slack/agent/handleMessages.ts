@@ -1,193 +1,139 @@
-import { formatISO, endOfWeek, startOfWeek } from "date-fns";
-import { utc } from "@date-fns/utc";
-import { eq } from "drizzle-orm";
-import { db } from "@/db";
-import { 
-  companyContractors, 
-  companyContractorUpdates, 
-  companyContractorUpdateTasks,
-  users
-} from "@/db/schema";
-import { slackClient } from "@/lib/slack/client";
-import { generateAgentResponse } from "./generateAgentResponse";
-import { request } from "@/utils/request";
-import { company_invoices_path } from "@/utils/routes";
+import { AppMentionEvent, AssistantThreadStartedEvent, GenericMessageEvent, WebClient } from "@slack/web-api";
+import { CoreMessage } from "ai";
+import { assertDefined } from "@/components/utils/assert";
+import { Company } from "@/lib/data/company";
+import { SlackCompanyInfo, WHICH_COMPANY_MESSAGE } from "@/lib/slack/agent/findCompanyForEvent";
+import { generateAgentResponse } from "@/lib/slack/agent/generateAgentResponse";
+import { getThreadMessages } from "@/lib/slack/client";
 
-interface SlackMessage {
-  text: string;
-  userId: string;
-  channelId: string;
-  companyId: bigint;
-  ts: string;
-  threadTs?: string | undefined;
+export async function handleMessage(event: GenericMessageEvent | AppMentionEvent, companyInfo: SlackCompanyInfo) {
+  if (!companyInfo.currentCompany) {
+    await askWhichCompany(event, companyInfo.companies);
+    return;
+  }
+  const company = companyInfo.currentCompany;
+  if (event.bot_id || event.bot_id === company.slackBotUserId || event.bot_profile) return;
+
+  const { thread_ts, channel } = event;
+  const { showStatus, showResult } = await replyHandler(new WebClient(assertDefined(company.slackBotToken)), event);
+
+  const messages = thread_ts
+    ? await getThreadMessages(
+        assertDefined(company.slackBotToken),
+        channel,
+        thread_ts,
+        assertDefined(company.slackBotUserId),
+      )
+    : ([{ role: "user", content: event.text ?? "" }] satisfies CoreMessage[]);
+  const result = await generateAgentResponse(messages, company, event.user, showStatus);
+  showResult(result);
 }
 
-export const handleSlackMessage = async (message: SlackMessage) => {
-  try {
-    const userInfo = await slackClient.users.info({
-      user: message.userId,
-    });
+export async function handleAssistantThreadMessage(event: AssistantThreadStartedEvent, companyInfo: SlackCompanyInfo) {
+  const client = new WebClient(assertDefined(companyInfo.companies[0]?.slackBotToken));
+  const { channel_id, thread_ts } = event.assistant_thread;
 
-    if (!userInfo.user?.profile?.email) {
-      await sendSlackReply(
-        message,
-        "Sorry, I couldn't find your email address in your Slack profile."
-      );
-      return;
-    }
-
-    const user = await db.query.users.findFirst({
-      where: eq(users.email, userInfo.user.profile.email),
-    });
-    
-    if (!user) {
-      await sendSlackReply(
-        message,
-        "Sorry, I couldn't find a user account with your Slack email."
-      );
-      return;
-    }
-    
-    const contractor = await db.query.companyContractors.findFirst({
-      where: eq(companyContractors.userId, user.id),
-      with: {
-        user: true,
-      },
-    });
-
-    if (!contractor) {
-      await sendSlackReply(
-        message,
-        "Sorry, I couldn't find your contractor account associated with this Slack email."
-      );
-      return;
-    }
-
-    const response = await generateAgentResponse({
-      message: message.text,
-      contractor,
-      companyId: message.companyId,
-    });
-
-    await sendSlackReply(message, response.message);
-
-    if (response.action) {
-      await executeAction(response.action, contractor, message.companyId);
-    }
-  } catch (_error) {
-    await sendSlackReply(
-      message,
-      "Sorry, I encountered an error processing your request."
-    );
-  }
-};
-
-const sendSlackReply = async (message: SlackMessage, text: string) => {
-  await slackClient.chat.postMessage({
-    channel: message.channelId,
-    text,
-    thread_ts: message.threadTs || message.ts,
+  await client.chat.postMessage({
+    channel: channel_id,
+    thread_ts,
+    text: "Hello, I'm an AI assistant to help you work with Flexile!",
   });
-};
 
-interface AgentAction {
-  type: "UPDATE_WEEKLY" | "SUBMIT_INVOICE";
-  payload: {
-    content?: string | undefined;
-    amount?: number | undefined; // For invoice amount in USD
-    date?: string | undefined; // ISO date string
-    description?: string | undefined;
-  };
+  await client.assistant.threads.setSuggestedPrompts({
+    channel_id,
+    thread_ts,
+    prompts: [
+      {
+        title: "Get weekly update",
+        message: "What's my weekly update?",
+      },
+      {
+        title: "Submit invoice",
+        message: "Submit an invoice for $1000 for services rendered on 4/15/2025",
+      },
+      {
+        title: "Update weekly update",
+        message: "Update my weekly update to include that I'm working on the payments page",
+      },
+    ],
+  });
 }
 
-const executeAction = async (
-  action: AgentAction,
-  contractor: { id: bigint; user: Record<string, unknown> },
-  companyId: bigint
-) => {
-  try {
-    switch (action.type) {
-      case "UPDATE_WEEKLY": {
-        if (!action.payload.content) return;
-        
-        const periodStartsOn = formatISO(
-          startOfWeek(new Date(), { in: utc }), 
-          { representation: "date" }
-        );
-        
-        const taskNames = action.payload.content
-          .split(/\n|;/u)
-          .map(task => task.trim())
-          .filter(Boolean);
-        
-        await db.transaction(async (tx) => {
-          const [update] = await tx
-            .insert(companyContractorUpdates)
-            .values({
-              companyId,
-              periodStartsOn,
-              periodEndsOn: formatISO(endOfWeek(new Date(periodStartsOn)), { representation: "date" }),
-              companyContractorId: contractor.id,
-              publishedAt: new Date(),
-            })
-            .onConflictDoUpdate({
-              target: [companyContractorUpdates.companyContractorId, companyContractorUpdates.periodStartsOn],
-              set: { publishedAt: new Date() },
-            })
-            .returning();
-          
-          if (!update) throw new Error("Failed to create or update weekly update");
-          
-          await tx
-            .delete(companyContractorUpdateTasks)
-            .where(
-              eq(companyContractorUpdateTasks.companyContractorUpdateId, update.id)
-            );
-          
-          for (const [index, taskName] of taskNames.entries()) {
-            await tx
-              .insert(companyContractorUpdateTasks)
-              .values({
-                companyContractorUpdateId: update.id,
-                position: index,
-                name: taskName,
-                completedAt: new Date(),
-              });
-          }
-        });
-        
-        break;
-      }
-      
-      case "SUBMIT_INVOICE": {
-        if (!action.payload.amount) return;
-        
-        type WorkerRoles = { worker?: { payRateType?: string; payRateInSubunits?: number } };
-        const roles: WorkerRoles | undefined = contractor.user.roles as unknown as WorkerRoles;
-        const isProjectBased = roles.worker?.payRateType === "project_based";
-        const invoiceDate = action.payload.date || formatISO(new Date(), { representation: "date" });
-        const totalAmountInCents = Math.round(action.payload.amount * 100);
-        const description = action.payload.description || (isProjectBased ? "Project work" : "Hours worked");
-        
-        await request({
-          method: "POST",
-          url: company_invoices_path(companyId),
-          accept: "json",
-          jsonData: {
-            invoice: { invoice_date: invoiceDate },
-            invoice_line_items: [
-              isProjectBased
-                ? { description, total_amount_cents: totalAmountInCents }
-                : { description, minutes: Math.round((totalAmountInCents / (roles.worker?.payRateInSubunits || 1)) * 60) },
-            ],
-          },
-        });
-        
-        break;
-      }
-      
-      default:
-    }
-  } catch (_error) {
+export const isAgentThread = async (event: GenericMessageEvent, companyInfo: SlackCompanyInfo) => {
+  const company = companyInfo.companies[0];
+  if (!company?.slackBotToken || !company.slackBotUserId || !event.thread_ts || event.thread_ts === event.ts) {
+    return false;
   }
+
+  if (event.text?.includes("(aside)")) return false;
+
+  const client = new WebClient(company.slackBotToken);
+  const { messages } = await client.conversations.replies({
+    channel: event.channel,
+    ts: event.thread_ts,
+    limit: 50,
+  });
+
+  for (const message of messages ?? []) {
+    if (message.user === company.slackBotUserId) return true;
+  }
+
+  return false;
+};
+
+const replyHandler = async (
+  client: WebClient,
+  event: { channel: string; thread_ts?: string; ts: string; text?: string },
+) => {
+  const debug = event.text && /(?:^|\s)!debug(?:$|\s)/.test(event.text);
+  const statusMessage = await client.chat.postMessage({
+    channel: event.channel,
+    thread_ts: event.thread_ts ?? event.ts,
+    text: "_Thinking..._",
+  });
+
+  if (!statusMessage?.ts) throw new Error("Failed to post initial message");
+
+  const showStatus = async (status: string | null, debugContent?: any) => {
+    if (debug) {
+      await client.chat.postMessage({
+        channel: event.channel,
+        thread_ts: event.thread_ts ?? event.ts,
+        text: debugContent
+          ? `_${status ?? "..."}_\n\n*Debug:*\n\`\`\`\n${JSON.stringify(debugContent, null, 2)}\n\`\`\``
+          : `_${status ?? "..."}_`,
+      });
+    } else if (status) {
+      await client.chat.update({
+        channel: event.channel,
+        ts: statusMessage.ts!,
+        text: `_${status}_`,
+      });
+    }
+  };
+
+  const showResult = async (result: string) => {
+    await client.chat.postMessage({
+      channel: event.channel,
+      thread_ts: event.thread_ts ?? event.ts,
+      text: result,
+    });
+    if (!debug) {
+      await client.chat.delete({
+        channel: event.channel,
+        ts: statusMessage.ts!,
+      });
+    }
+  };
+
+  return { showStatus, showResult };
+};
+
+const askWhichCompany = async (event: GenericMessageEvent | AppMentionEvent, companies: Company[]) => {
+  const client = new WebClient(assertDefined(companies[0]?.slackBotToken));
+  await client.chat.postMessage({
+    channel: event.channel,
+    thread_ts: event.thread_ts ?? event.ts,
+    text: `${WHICH_COMPANY_MESSAGE} (${companies.map((c) => c.name).join("/")})`,
+  });
 };

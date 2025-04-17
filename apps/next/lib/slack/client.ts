@@ -8,22 +8,23 @@ export const slackClient = new WebClient(env.SLACK_TOKEN, {
   },
 });
 
-export const verifySlackRequest = async (body: string, headers: Headers): Promise<boolean> => {
+export const verifySlackRequest = (body: string, headers: Headers): Promise<boolean> => {
+  const slackSignature = headers.get("x-slack-signature");
   const timestamp = headers.get("x-slack-request-timestamp");
-  const signature = headers.get("x-slack-signature");
+  const slackSigningSecret = env.SLACK_SIGNING_SECRET;
 
-  if (!timestamp || !signature || !env.SLACK_TOKEN) {
+  if (
+    !slackSignature ||
+    !slackSigningSecret ||
+    !timestamp ||
+    new Date(Number(timestamp) * 1000).getTime() < Date.now() - 300 * 1000
+  ) {
     return Promise.resolve(false);
   }
 
-  const fiveMinutesAgo = Math.floor(Date.now() / 1000) - 60 * 5;
-  if (parseInt(timestamp, 10) < fiveMinutesAgo) {
-    return Promise.resolve(false);
-  }
+  const baseString = `v0:${timestamp}:${body}`;
+  const hmac = crypto.createHmac("sha256", slackSigningSecret);
+  const computedSignature = `v0=${hmac.update(baseString).digest("hex")}`;
 
-  const hmac = crypto.createHmac("sha256", env.SLACK_TOKEN);
-  const data = `v0:${timestamp}:${body}`;
-  const checkSignature = `v0=${hmac.update(data).digest("hex")}`;
-
-  return Promise.resolve(crypto.timingSafeEqual(Buffer.from(checkSignature), Buffer.from(signature)));
+  return Promise.resolve(crypto.timingSafeEqual(Buffer.from(computedSignature), Buffer.from(slackSignature)));
 };

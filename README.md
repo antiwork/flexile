@@ -28,7 +28,7 @@ Payroll & equity for everyone.
 
 You'll need:
 
-- [Docker](https://docs.docker.com/engine/install/)
+- [Docker](https://docs.docker.com/desktop/)
 - [Node.js](https://nodejs.org/en/download) (see [`.node-version`](.node-version))
 
 The easiest way to set up the development environment is to use the [`bin/setup` script](bin/setup), but feel free to run the commands in it yourself to:

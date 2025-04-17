@@ -52,4 +52,4 @@ ln -sf $PWD/.env ./apps/next/.env
 
 gem install foreman
 
-echo "✨ Setup complete! You can now start the development server."
+echo "✨ Setup complete! You can now start the development server by running bin/dev"

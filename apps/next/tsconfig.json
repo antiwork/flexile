@@ -19,7 +19,6 @@
       "@/*": ["./*"]
     },
     "resolveJsonModule": true,
-    "verbatimModuleSyntax": true,
     "jsx": "preserve",
     "skipLibCheck": true,
     "incremental": true,
