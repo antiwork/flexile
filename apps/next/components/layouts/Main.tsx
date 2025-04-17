@@ -13,6 +13,7 @@ import {
   MagnifyingGlassIcon,
   MegaphoneIcon,
   UserGroupIcon,
+  UserIcon,
   UsersIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
@@ -49,7 +50,7 @@ import defaultCompanyLogo from "@/images/default-company-logo.svg";
 import logo from "@/images/flexile-logo.svg";
 import { type Company } from "@/models/user";
 import { trpc } from "@/trpc/client";
-import { cn, e } from "@/utils";
+import { cn } from "@/utils";
 import { assertDefined } from "@/utils/assert";
 import { request } from "@/utils/request";
 import { company_search_path, company_switch_path } from "@/utils/routes";
@@ -68,7 +69,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarTrigger,
   useSidebar
 } from "@/components/ui/sidebar"
 
@@ -78,6 +78,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
+import type { Route } from "next";
 
 type CompanyAccessRole = "administrator" | "worker" | "investor" | "lawyer";
 
@@ -85,9 +86,6 @@ const searchResultsSchema = z.object({
   invoices: z.array(invoiceSchema),
   users: z.array(z.object({ name: z.string(), role: z.string(), url: z.string() })),
 });
-
-const navItemClasses = "flex items-center gap-3 px-4 py-3";
-const navLinkClasses = "flex items-center gap-3 px-4 py-3 no-underline hover:font-bold hover:text-white cursor-pointer";
 
 export default function MainLayout({
   children,
@@ -106,7 +104,6 @@ export default function MainLayout({
 }) {
   const user = useCurrentUser();
   const isRole = (...roles: (typeof user.activeRole)[]) => roles.includes(user.activeRole);
-  const [navOpen, setNavOpen] = useState(false);
   const [openCompanyId, setOpenCompanyId] = useState(user.currentCompanyId);
   useEffect(() => setOpenCompanyId(user.currentCompanyId), [user.currentCompanyId]);
   const openCompany = user.companies.find((company) => company.id === openCompanyId);
@@ -222,124 +219,104 @@ export default function MainLayout({
               <SidebarGroupContent>
                 <SidebarMenu className="space-y-1">
                   {openCompany.routes.some(route => route.label === "Updates") && (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="py-3 text-base">
-                        <Link href="/updates" className={pathname.startsWith("/updates") ? "font-bold text-white" : ""}>
-                          {pathname.startsWith("/updates") ? (
-                            <SolidMegaphoneIcon className="size-6 mr-3" />
-                          ) : (
-                            <MegaphoneIcon className="size-6 mr-3" />
-                          )}
-                          <span>Updates</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    <>
+                      <SidebarNavItem
+                        href="/updates"
+                        icon={MegaphoneIcon}
+                        activeIcon={SolidMegaphoneIcon}
+                        isActive={pathname.startsWith("/updates")}
+                        label="Updates"
+                      />
+                      {openCompany.routes.some(route => route.label === "Company") &&
+                       openCompany.routes.some(route => route.label === "Team") && (
+                        <>
+                          <SidebarNavItem
+                            href="/updates/company"
+                            icon={BuildingOfficeIcon}
+                            activeIcon={SolidBuildingOfficeIcon}
+                            isActive={pathname.startsWith("/updates/company")}
+                            label="Company"
+                            className="ml-4"
+                          />
+                          <SidebarNavItem
+                            href="/updates/team"
+                            icon={UserGroupIcon}
+                            activeIcon={SolidUserGroupIcon}
+                            isActive={pathname.startsWith("/updates/team")}
+                            label="Team"
+                            className="ml-4"
+                          />
+                        </>
+                      )}
+                    </>
                   )}
 
                   {openCompany.routes.some(route => route.label === "Invoices") && (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="py-3 text-base [&>svg]:size-6">
-                        <Link href="/invoices" className={pathname.startsWith("/invoices") ? "font-bold text-white" : ""}>
-                          {pathname.startsWith("/invoices") ? (
-                            <SolidDocumentTextIcon className="mr-3" />
-                          ) : (
-                            <DocumentTextIcon className="mr-3" />
-                          )}
-                          <span>Invoices</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    <InvoicesNavItem companyId={openCompany.id} isActive={pathname.startsWith("/invoices")} isAdmin={isRole("administrator")} />
                   )}
 
                   {openCompany.routes.some(route => route.label === "Expenses") && (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="py-3 text-base [&>svg]:size-6">
-                        <Link href={`/companies/${openCompany.id}/expenses`} className={pathname.startsWith(`/companies/${openCompany.id}/expenses`) ? "font-bold text-white" : ""}>
-                          {pathname.startsWith(`/companies/${openCompany.id}/expenses`) ? (
-                            <SolidCurrencyDollarIcon className="mr-3" />
-                          ) : (
-                            <CurrencyDollarIcon className="mr-3" />
-                          )}
-                          <span>Expenses</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    <SidebarNavItem
+                      href={`/companies/${openCompany.id}/expenses`}
+                      icon={CurrencyDollarIcon}
+                      activeIcon={SolidCurrencyDollarIcon}
+                      isActive={pathname.startsWith(`/companies/${openCompany.id}/expenses`)}
+                      label="Expenses"
+                    />
                   )}
 
                   {openCompany.routes.some(route => route.label === "Documents") && (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="py-3 text-base [&>svg]:size-6">
-                        <Link href="/documents" className={pathname.startsWith("/documents") || pathname.startsWith("/document_templates") ? "font-bold text-white" : ""}>
-                          {pathname.startsWith("/documents") || pathname.startsWith("/document_templates") ? (
-                            <SolidDocumentDuplicateIcon className="mr-3" />
-                          ) : (
-                            <DocumentDuplicateIcon className="mr-3" />
-                          )}
-                          <span>Documents</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    <SidebarNavItem
+                      href="/documents"
+                      icon={DocumentDuplicateIcon}
+                      activeIcon={SolidDocumentDuplicateIcon}
+                      isActive={pathname.startsWith("/documents") || pathname.startsWith("/document_templates")}
+                      label="Documents"
+                    />
                   )}
 
                   {openCompany.routes.some(route => route.label === "People") && (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="py-3 text-base [&>svg]:size-6">
-                        <Link href="/people" className={pathname.startsWith("/people") || pathname.includes("/investor_entities/") ? "font-bold text-white" : ""}>
-                          {pathname.startsWith("/people") || pathname.includes("/investor_entities/") ? (
-                            <SolidUsersIcon className="mr-3" />
-                          ) : (
-                            <UsersIcon className="mr-3" />
-                          )}
-                          <span>People</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    <SidebarNavItem
+                      href="/people"
+                      icon={UsersIcon}
+                      activeIcon={SolidUsersIcon}
+                      isActive={pathname.startsWith("/people") || pathname.includes("/investor_entities/")}
+                      label="People"
+                    />
                   )}
 
                   {openCompany.routes.some(route => route.label === "Roles") && (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="py-3 text-base [&>svg]:size-6">
-                        <Link href="/roles" className={pathname.startsWith("/roles") || pathname.startsWith("/talent_pool") || pathname.startsWith("/role_applications") ? "font-bold text-white" : ""}>
-                          {pathname.startsWith("/roles") || pathname.startsWith("/talent_pool") || pathname.startsWith("/role_applications") ? (
-                            <SolidBriefcaseIcon className="mr-3" />
-                          ) : (
-                            <BriefcaseIcon className="mr-3" />
-                          )}
-                          <span>Roles</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    <SidebarNavItem
+                      href="/roles"
+                      icon={BriefcaseIcon}
+                      activeIcon={SolidBriefcaseIcon}
+                      isActive={pathname.startsWith("/roles") || pathname.startsWith("/talent_pool") || pathname.startsWith("/role_applications")}
+                      label="Roles"
+                    />
                   )}
 
                   {openCompany.routes.some(route => route.label === "Equity") && equityNavLinks(user, openCompany)[0] && (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="py-3 text-base [&>svg]:size-6">
-                        <Link href={equityNavLinks(user, openCompany)[0]?.route ?? "#"} className={pathname.startsWith("/equity") || pathname.includes("/equity_grants") ? "font-bold text-white" : ""}>
-                          {pathname.startsWith("/equity") || pathname.includes("/equity_grants") ? (
-                            <SolidChartPieIcon className="mr-3" />
-                          ) : (
-                            <ChartPieIcon className="mr-3" />
-                          )}
-                          <span>Equity</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    <SidebarNavItem
+                      href={equityNavLinks(user, openCompany)[0]?.route ?? "#"}
+                      icon={ChartPieIcon}
+                      activeIcon={SolidChartPieIcon}
+                      isActive={pathname.startsWith("/equity") || pathname.includes("/equity_grants")}
+                      label="Equity"
+                    />
                   )}
 
                   {openCompany.routes.some(route => route.label === "Settings") && (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="py-3 text-base [&>svg]:size-6">
-                        <Link href={isRole("administrator") ? `/administrator/settings` : `/settings/equity`} className={pathname.startsWith("/settings") ? "font-bold text-white" : ""}>
-                          {pathname.startsWith("/settings") ? (
-                            <SolidCog6ToothIcon className="mr-3" />
-                          ) : (
-                            <Cog6ToothIcon className="mr-3" />
-                          )}
-                          <span>Settings</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    <SidebarNavItem
+                      href={isRole("administrator") ? `/administrator/settings` : `/settings/equity`}
+                      icon={Cog6ToothIcon}
+                      activeIcon={SolidCog6ToothIcon}
+                      isActive={pathname.startsWith("/settings")}
+                      label="Settings"
+                    />
                   )}
+                  {openCompany.other_access_roles.map((accessRole) => (
+                    <SwitchRoleNavLink key={accessRole} accessRole={accessRole} companyId={openCompany.id} />
+                  ))}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -369,23 +346,28 @@ export default function MainLayout({
             <SidebarGroupContent>
               <SidebarMenu className="space-y-1">
                 {!user.companies.length && (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild className="py-3 text-base">
-                      <Link href="/company_invitations" className={pathname.startsWith("/company_invitations") ? "font-bold text-white" : ""}>
-                        <SolidBriefcaseIcon className="size-6 mr-3" />
-                        <span>Invite companies</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                    <SidebarNavItem
+                    href="/company_invitations"
+                    icon={UserIcon}
+                    activeIcon={SolidUserIcon}
+                    isActive={pathname.startsWith("/company_invitations")}
+                    label="Invite companies" />
                 )}
-                <SidebarMenuItem>
+                <SidebarNavItem
+                  href="/settings"
+                  icon={UserIcon}
+                  activeIcon={SolidUserIcon}
+                  isActive={pathname.startsWith("/settings")}
+                  label="Account"
+                />
+                {/* <SidebarMenuItem>
                   <SidebarMenuButton asChild className="py-3 text-base">
                     <Link href="/settings" className={pathname.startsWith("/settings") ? "font-bold text-white" : ""}>
                       <SolidUserIcon className="size-6 mr-3" />
                       <span>Account</span>
                     </Link>
                   </SidebarMenuButton>
-                </SidebarMenuItem>
+                </SidebarMenuItem> */}
                 <SidebarMenuItem>
                   <SignOutButton>
                     <SidebarMenuButton className="py-3 text-base">
@@ -407,7 +389,7 @@ export default function MainLayout({
           aria-label="Main Menu"
         >
           <div className="flex items-center justify-between px-3 py-2">
-            <div className={cn(navItemClasses, "font-bold text-white md:hidden")}>
+            <div className="flex items-center gap-3 px-4 py-3 font-bold text-white md:hidden">
               {openCompany ? (
                 <CompanyName company={openCompany} />
               ) : (
@@ -568,202 +550,46 @@ const useSwitchCompanyOrRole = () => {
   };
 };
 
-const NavLinks = ({ company }: { company: Company }) => {
-  const user = useCurrentUser();
-  const pathname = usePathname();
-  const active = user.currentCompanyId === company.id;
-  const routes = new Set(
-    company.routes.flatMap((route) => [route.label, ...(route.subLinks?.map((subLink) => subLink.label) || [])]),
-  );
-  const updatesPath = company.routes.find((route) => route.label === "Updates")?.name;
-  const switchCompany = useSwitchCompanyOrRole();
-  const isRole = (...roles: (typeof user.activeRole)[]) => roles.includes(user.activeRole);
-  const equityNavLink = equityNavLinks(user, company)[0];
-
-  return (
-    <div
-      onClick={() => {
-        if (user.currentCompanyId !== company.id) {
-          void switchCompany(company.id);
-        }
-      }}
-    >
-      {updatesPath ? (
-        <>
-          <NavLink
-            href={updatesPath === "company_updates_company_index" ? "/updates/company" : "/updates/team"}
-            icon={MegaphoneIcon}
-            filledIcon={SolidMegaphoneIcon}
-            active={!!active && pathname.startsWith("/updates")}
-          >
-            Updates
-          </NavLink>
-          {routes.has("Company") && routes.has("Team") ? (
-            <>
-              <NavLink
-                href="/updates/company"
-                icon={BuildingOfficeIcon}
-                filledIcon={SolidBuildingOfficeIcon}
-                className="ml-4"
-                active={!!active && pathname.startsWith("/updates/company")}
-              >
-                Company
-              </NavLink>
-              <NavLink
-                href="/updates/team"
-                icon={UserGroupIcon}
-                filledIcon={SolidUserGroupIcon}
-                className="ml-4"
-                active={!!active && pathname.startsWith("/updates/team")}
-              >
-                Team
-              </NavLink>
-            </>
-          ) : null}
-        </>
-      ) : null}
-      {routes.has("Invoices") && (
-        <InvoicesNavLink
-          companyId={company.id}
-          active={!!active && pathname.startsWith("/invoices")}
-          isAdmin={isRole("administrator")}
-        />
-      )}
-      {routes.has("Expenses") && (
-        <NavLink
-          href={`/companies/${company.id}/expenses`}
-          icon={CurrencyDollarIcon}
-          filledIcon={SolidCurrencyDollarIcon}
-          active={!!active && pathname.startsWith(`/companies/${company.id}/expenses`)}
-        >
-          Expenses
-        </NavLink>
-      )}
-      {routes.has("Documents") && (
-        <NavLink
-          href="/documents"
-          icon={DocumentDuplicateIcon}
-          filledIcon={SolidDocumentDuplicateIcon}
-          active={!!active && (pathname.startsWith("/documents") || pathname.startsWith("/document_templates"))}
-        >
-          Documents
-        </NavLink>
-      )}
-      {routes.has("People") && (
-        <NavLink
-          href="/people"
-          icon={UsersIcon}
-          filledIcon={SolidUsersIcon}
-          active={!!active && (pathname.startsWith("/people") || pathname.includes("/investor_entities/"))}
-        >
-          People
-        </NavLink>
-      )}
-      {routes.has("Roles") && (
-        <NavLink
-          href="/roles"
-          icon={BriefcaseIcon}
-          filledIcon={SolidBriefcaseIcon}
-          active={!!active && (pathname.startsWith("/roles") || pathname.startsWith("/role_applications"))}
-        >
-          Roles
-        </NavLink>
-      )}
-
-      {routes.has("Equity") && equityNavLink ? (
-        <NavLink
-          href={equityNavLink.route}
-          icon={ChartPieIcon}
-          filledIcon={SolidChartPieIcon}
-          active={!!active && (pathname.startsWith("/equity") || pathname.includes("/equity_grants"))}
-        >
-          Equity
-        </NavLink>
-      ) : null}
-      {routes.has("Settings") && (
-        <NavLink
-          href={isRole("administrator") ? `/administrator/settings` : `/settings/equity`}
-          active={!!active && pathname.startsWith("/settings")}
-          icon={Cog6ToothIcon}
-          filledIcon={SolidCog6ToothIcon}
-        >
-          Settings
-        </NavLink>
-      )}
-      {company.other_access_roles.map((accessRole) => (
-        <SwitchRoleNavLink key={accessRole} accessRole={accessRole} companyId={company.id} />
-      ))}
-    </div>
-  );
-};
-
-const NavLink = ({
-  icon,
-  filledIcon,
-  children,
-  className,
+const SidebarNavItem = ({
   href,
-  active,
-  badge,
+  icon,
+  activeIcon,
+  isActive,
+  label,
+  className,
+  badge
 }: {
-  children: React.ReactNode;
+  href: string;
+  icon: React.ElementType;
+  activeIcon: React.ElementType;
+  isActive: boolean;
+  label: string;
   className?: string;
-  href: string; // TODO use Route<T> here once all of them are migrated
-  active?: boolean;
-  icon: React.ComponentType<{ className: string }>;
-  filledIcon?: React.ComponentType<{ className: string }>;
   badge?: number | undefined;
 }) => {
-  const Icon = active && filledIcon ? filledIcon : icon;
+  const Icon = isActive ? activeIcon : icon;
+
   return (
-    <Link
-      className={cn(navLinkClasses, { "font-bold text-white": active }, className)}
-      // @ts-expect-error see the above comment
-      href={href}
-    >
-      <div className="relative">
-        <Icon className="h-6 w-8" />
-        {badge && badge > 0 ? (
-          <Badge
-            role="status"
-            color="blue"
-            className="absolute -top-2 right-0 h-4 w-auto min-w-4 translate-x-1/4 px-1 text-xs"
-          >
-            {badge > 10 ? "10+" : badge}
-          </Badge>
-        ) : null}
-      </div>
-      <span className="truncate">{children}</span>
-    </Link>
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild className={cn("py-3 text-base [&>svg]:size-6", className)}>
+        <Link href={href as Route} className={isActive ? "font-bold text-white" : ""}>
+          <div className="relative">
+            <Icon className="mr-3" />
+            {badge && badge > 0 ? (
+              <Badge
+                role="status"
+                className="absolute -top-2 -right-1 h-4 w-auto min-w-4 translate-x-1/4 px-1 text-xs bg-blue-500 text-white"
+              >
+                {badge > 10 ? "10+" : badge}
+              </Badge>
+            ) : null}
+          </div>
+          <span>{label}</span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   );
 };
-
-function InvoicesNavLink({ companyId, active, isAdmin }: { companyId: string; active: boolean; isAdmin: boolean }) {
-  const { data, isLoading } = trpc.invoices.list.useQuery(
-    {
-      companyId,
-      invoiceFilter: "actionable",
-      perPage: 1,
-      page: 1,
-    },
-    {
-      refetchInterval: 30_000,
-      enabled: isAdmin,
-    },
-  );
-
-  return (
-    <NavLink
-      href="/invoices"
-      icon={DocumentTextIcon}
-      filledIcon={SolidDocumentTextIcon}
-      active={active}
-      badge={isAdmin && !isLoading ? data?.total : undefined}
-    >
-      Invoices
-    </NavLink>
-  );
-}
 
 function SwitchRoleNavLink({ accessRole, companyId }: { accessRole: CompanyAccessRole; companyId: string }) {
   const router = useRouter();
@@ -780,9 +606,7 @@ function SwitchRoleNavLink({ accessRole, companyId }: { accessRole: CompanyAcces
   const roleLabel = accessRole === "administrator" ? "admin" : accessRole;
   return (
     <div onClick={handleSwitchRole}>
-      <NavLink href="/" icon={ArrowPathIcon}>
-        <span className="truncate">Use as {roleLabel}</span>
-      </NavLink>
+      <SidebarNavItem href="/" icon={ArrowPathIcon} activeIcon={ArrowPathIcon} isActive={false} label={`Use as ${roleLabel}`} />
     </div>
   );
 }
@@ -838,3 +662,29 @@ const CustomSidebarTrigger = () => {
     </>
   );
 };
+
+const InvoicesNavItem = ({ companyId, isActive, isAdmin }: { companyId: string; isActive: boolean; isAdmin: boolean }) => {
+  const { data, isLoading } = trpc.invoices.list.useQuery(
+    {
+      companyId,
+      invoiceFilter: "actionable",
+      perPage: 1,
+      page: 1,
+    },
+    {
+      refetchInterval: 30_000,
+      enabled: isAdmin,
+    },
+  );
+
+  return (
+    <SidebarNavItem
+      href="/invoices"
+      icon={DocumentTextIcon}
+      activeIcon={SolidDocumentTextIcon}
+      isActive={isActive}
+      label="Invoices"
+      badge={isAdmin && !isLoading ? data?.total : undefined}
+    />
+  );
+}
