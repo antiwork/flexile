@@ -120,9 +120,7 @@ test.describe("Investor onboarding - bank account", () => {
     await page.getByRole("button", { name: "Set up" }).click();
     await page.getByRole("button", { name: "Continue" }).click();
 
-    await expect(page.getByLabel("Country")).toBeVisible();
-    await expect(page.getByRole("combobox", { name: "Country" })).toBeVisible();
-    await expect(page.getByRole("listbox", { name: "Country" })).not.toBeVisible();
+    await checkComboboxVisible(page, "Country");
   });
 
   test("replaces select field with radio field for fields with 5 or fewer choices", async ({ page }) => {

@@ -124,8 +124,7 @@ test.describe("Contractor onboarding - bank account", () => {
     await page.getByRole("button", { name: "Set up" }).click();
     await page.getByRole("button", { name: "Continue" }).click();
 
-    await expect(page.getByLabel("Country")).toBeVisible();
-    await expect(page.getByRole("combobox", { name: "Country" })).toBeVisible();
+    await checkComboboxVisible(page, "Country");
   });
 
   test("prefills the user's information", async ({ page }) => {
