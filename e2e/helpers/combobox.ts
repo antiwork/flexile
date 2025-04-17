@@ -14,10 +14,13 @@ export async function fillCombobox(page: Page, label: string, value: string) {
   if (htmlFor) {
     await page.locator(`button#${htmlFor}`).click();
   } else {
-    await labelElement.click();
+    await page.locator(`label:has-text("${label}") + div button, label:has-text("${label}") ~ div button`).first().click();
   }
-
-  await page.getByRole("textbox").fill(value);
-
-  await page.getByRole("option").filter({ hasText: value }).click();
+  
+  await page.waitForSelector('[role="dialog"], [cmdk-input]');
+  
+  const input = page.locator('[cmdk-input], [role="searchbox"], [role="combobox"]').first();
+  await input.fill(value);
+  
+  await page.locator('[cmdk-item], [role="option"]').filter({ hasText: value }).first().click();
 }
