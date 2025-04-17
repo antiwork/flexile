@@ -16,7 +16,9 @@ export async function checkComboboxVisible(page: Page, label: string) {
     await expect(page.locator(`button#${htmlFor}`)).toBeVisible();
   } else {
     await expect(
-      page.locator(`label:has-text("${label}") + div button, label:has-text("${label}") ~ div button, div:has(label:has-text("${label}")) button`),
+      page.locator(
+        `label:has-text("${label}") + div button, label:has-text("${label}") ~ div button, div:has(label:has-text("${label}")) button`,
+      ),
     ).toBeVisible();
   }
 }
