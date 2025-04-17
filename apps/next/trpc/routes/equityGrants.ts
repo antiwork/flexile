@@ -34,6 +34,7 @@ import { type CompanyContext, companyProcedure, createRouter } from "@/trpc";
 import { simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
 import { company_administrator_equity_grants_url } from "@/utils/routes";
+import { inngest } from "@/inngest/client";
 
 export type EquityGrant = typeof equityGrants.$inferSelect;
 export const equityGrantsRouter = createRouter({
@@ -228,7 +229,15 @@ export const equityGrantsRouter = createRouter({
 
       if (!response.ok) throw new TRPCError({ code: "BAD_REQUEST", message: await response.text() });
       const { equity_grant_id } = z.object({ equity_grant_id: z.string() }).parse(await response.json());
-      return { equityGrantId: equity_grant_id };
+
+      await inngest.send({
+        name: "board_consent.created",
+        data: {
+          equityGrantId: equity_grant_id,
+          companyId: ctx.company.id,
+          companyWorkerId: worker.id,
+        },
+      });
     }),
   totals: companyProcedure.query(async ({ ctx }) => {
     if (!ctx.companyAdministrator && !ctx.companyLawyer) throw new TRPCError({ code: "FORBIDDEN" });

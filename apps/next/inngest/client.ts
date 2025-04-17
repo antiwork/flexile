@@ -30,8 +30,9 @@ export const inngest = new Inngest({
     },
     "board_consent.created": {
       data: z.object({
-        equityGrantId: z.string(),
-        companyWorkerId: z.string(),
+        equityGrantId: z.bigint(),
+        companyId: z.bigint(),
+        companyWorkerId: z.bigint(),
       }),
     },
     "board_consent.lawyer_approved": {

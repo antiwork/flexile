@@ -15,7 +15,6 @@ import Select from "@/components/Select";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { useCurrentCompany } from "@/global";
-import { inngest } from "@/inngest/client";
 import { DocumentTemplateType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
 const MAX_VESTING_DURATION_IN_MONTHS = 120;
@@ -391,19 +390,12 @@ export default function NewEquityGrant() {
   };
 
   const createEquityGrant = trpc.equityGrants.create.useMutation({
-    onSuccess: async (data) => {
+    onSuccess: async () => {
       await trpcUtils.equityGrants.list.invalidate();
       await trpcUtils.equityGrants.totals.invalidate();
       await trpcUtils.equityGrants.byCountry.invalidate();
       await trpcUtils.capTable.show.invalidate();
-
-      await inngest.send({
-        name: "board_consent.created",
-        data: {
-          equityGrantId: data.equityGrantId,
-          companyWorkerId: assertDefined(recipientId),
-        },
-      });
+      await trpcUtils.documents.list.invalidate();
     },
     onError: (error) => {
       const errorInfoSchema = z.object({

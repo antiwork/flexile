@@ -21,18 +21,18 @@ export default inngest.createFunction(
   { id: "board-consent-creation" },
   { event: "board_consent.created" },
   async ({ event, step }) => {
-    const { equityGrantId, companyWorkerId } = event.data;
+    const { equityGrantId, companyId, companyWorkerId } = event.data;
 
     const data = await step.run("fetch-required-data", async () => {
       const [equityGrant, companyContractor] = await Promise.all([
         assertDefined(
           await db.query.equityGrants.findFirst({
-            where: eq(equityGrants.externalId, equityGrantId),
+            where: eq(equityGrants.id, equityGrantId),
           }),
         ),
         assertDefined(
           await db.query.companyContractors.findFirst({
-            where: eq(companyContractors.externalId, companyWorkerId),
+            where: eq(companyContractors.id, companyWorkerId),
             with: {
               user: true,
               equityAllocations: {
@@ -48,7 +48,6 @@ export default inngest.createFunction(
 
     const { equityGrant, companyContractor } = data;
 
-    const companyId = companyContractor.companyId;
     const equityAllocation = assertDefined(companyContractor.equityAllocations[0]);
     if (equityAllocation.status !== "pending_grant_creation") {
       throw new Error("Equity allocation is not pending grant creation");

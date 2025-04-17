@@ -96,9 +96,9 @@ RSpec.describe GrantStockOptions do
         expect do
           service.process
         end.to change { CompanyInvestor.count }.by(0)
+           .and change { Document.equity_plan_contract.count }.by(0)
+           .and change { DocumentSignature.count }.by(0)
            .and change { EquityGrant.count }.by(1)
-           .and change { Document.equity_plan_contract.count }.by(1)
-           .and change { DocumentSignature.count }.by(2)
 
         equity_grant = EquityGrant.last
         expect(equity_grant.option_pool).to eq(option_pool)
@@ -118,18 +118,6 @@ RSpec.describe GrantStockOptions do
         expect(equity_grant.death_exercise_months).to eq(120)
         expect(equity_grant.disability_exercise_months).to eq(120)
         expect(equity_grant.retirement_exercise_months).to eq(120)
-
-        contract = Document.equity_plan_contract.last
-        expect(contract.company).to eq(company)
-        expect(contract.year).to eq(Date.current.year)
-        expect(contract.equity_grant).to eq(equity_grant)
-        expect(contract.name).to eq("Equity Incentive Plan #{Date.current.year}")
-
-        expect(contract.signatures.count).to eq(2)
-        expect(contract.signatures.first.user).to eq(user)
-        expect(contract.signatures.first.title).to eq("Signer")
-        expect(contract.signatures.last.user).to eq(administrator.user)
-        expect(contract.signatures.last.title).to eq("Company Representative")
       end
 
       context "when number of shares is provided" do
@@ -180,8 +168,8 @@ RSpec.describe GrantStockOptions do
           service.process
         end.to change { CompanyInvestor.count }.by(1)
            .and change { EquityGrant.count }.by(1)
-           .and change { Document.equity_plan_contract.count }.by(1)
-           .and change { DocumentSignature.count }.by(2)
+           .and change { Document.equity_plan_contract.count }.by(0)
+           .and change { DocumentSignature.count }.by(0)
         investor = CompanyInvestor.last
         expect(investor.company).to eq(company)
         expect(investor.user).to eq(user)
@@ -194,18 +182,6 @@ RSpec.describe GrantStockOptions do
         expect(equity_grant.issue_date_relationship_consultant?).to be(true)
         expect(equity_grant.board_approval_date).to eq(nil)
         expect(equity_grant.option_grant_type_nso?).to be(true)
-
-        contract = Document.equity_plan_contract.last
-        expect(contract.company).to eq(company)
-        expect(contract.year).to eq(Date.current.year)
-        expect(contract.equity_grant).to eq(equity_grant)
-        expect(contract.name).to eq("Equity Incentive Plan #{Date.current.year}")
-
-        expect(contract.signatures.count).to eq(2)
-        expect(contract.signatures.first.user).to eq(user)
-        expect(contract.signatures.first.title).to eq("Signer")
-        expect(contract.signatures.last.user).to eq(administrator.user)
-        expect(contract.signatures.last.title).to eq("Company Representative")
       end
 
       it "does not grant options and returns an error when the user's residence country " \
@@ -242,7 +218,6 @@ RSpec.describe GrantStockOptions do
         service.process
       end.to change { CompanyInvestor.count }.by(1)
          .and change { EquityGrant.count }.by(1)
-         .and have_enqueued_mail(CompanyWorkerMailer, :equity_grant_issued)
 
       investor = CompanyInvestor.last
       expect(investor.company).to eq(company)
@@ -269,7 +244,7 @@ RSpec.describe GrantStockOptions do
 
         expect do
           result = service.process
-          expect(result).to eq(success: true, document: Document.last)
+          expect(result).to eq(success: true, equity_grant_id: EquityGrant.last.id)
         end.to change { EquityGrant.count }.by(1)
 
         equity_grant = EquityGrant.last
@@ -291,8 +266,8 @@ RSpec.describe GrantStockOptions do
 
           expect do
             result = service.process
-            expect(result).to eq(success: true, document: Document.last)
             equity_grant = EquityGrant.last
+            expect(result).to eq(success: true, equity_grant_id: equity_grant.id)
             expect(equity_grant.vesting_schedule).to have_attributes(vesting_schedule_params.except(:vesting_schedule_id).to_h.symbolize_keys)
           end.to change { VestingSchedule.count }.by(1)
         end
