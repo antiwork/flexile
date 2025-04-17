@@ -78,7 +78,6 @@ export default [
     },
     rules: {
       "@typescript-eslint/no-unnecessary-condition": ["error", { allowConstantLoopConditions: true }],
-      "@typescript-eslint/consistent-type-assertions": ["error", { assertionStyle: "never" }],
       "@typescript-eslint/consistent-type-definitions": "off",
       "@typescript-eslint/no-confusing-void-expression": "off",
       "@typescript-eslint/no-unused-vars": [

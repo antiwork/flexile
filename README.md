@@ -46,6 +46,27 @@ Once the local services are up and running, the application will be available at
 
 Check [the seeds](apps/rails/config/data/seed_templates/gumroad.json) for default data created during setup.
 
+## Migrations
+
+Make sure to do this from the `apps/rails` folder:
+
+```
+bundle exec rails generate migration AddSlackBotUserIdToCompanies slack_bot_user_id:string
+rails db:migrate
+```
+
+Then add this to the `schema.ts` for the Next app to understand:
+
+```
+export const companies = pgTable(
+  "companies",
+  {
+    ...
+    slackBotUserId: varchar("slack_bot_user_id"),
+    ...
+  }
+```
+
 ## Testing
 
 ```shell

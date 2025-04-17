@@ -33,6 +33,7 @@ export const useCurrentUser = () => {
   useEffect(setRedirected, []);
   return user;
 };
+
 export const useCurrentCompany = () => {
   const user = useCurrentUser();
   return assertDefined(user.companies.find((c) => c.id === user.currentCompanyId));

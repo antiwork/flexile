@@ -2188,7 +2188,7 @@ export const companies = pgTable(
       .notNull()
       .$onUpdate(() => new Date()),
     stripeCustomerId: varchar("stripe_customer_id"),
-
+    slackBotUserId: varchar("slack_bot_user_id"),
     requiredInvoiceApprovalCount: integer("required_invoice_approval_count").default(1).notNull(),
     valuationInDollars: bigint("valuation_in_dollars", { mode: "bigint" }).default(0n).notNull(),
     fullyDilutedShares: bigint("fully_diluted_shares", { mode: "bigint" }).default(0n).notNull(),

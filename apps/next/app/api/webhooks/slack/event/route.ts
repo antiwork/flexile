@@ -4,8 +4,7 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { companies } from "@/db/schema";
-//import { disconnectSlack } from "@/lib/data/mailbox";
-//import { captureExceptionAndLog } from "@/lib/shared/sentry";
+import { disconnectSlack } from "@/lib/data/company";
 import { findCompanyForEvent } from "@/lib/slack/agent/findCompanyForEvent";
 import { handleAssistantThreadMessage, handleMessage, isAgentThread } from "@/lib/slack/agent/handleMessages";
 import { verifySlackRequest } from "@/lib/slack/client";
@@ -42,37 +41,26 @@ export const POST = async (request: Request) => {
     return new Response("Success!", { status: 200 });
   }
 
-  const companyInfo = await handleSlackErrors(findCompanyForEvent(event));
-  if (!companyInfo?.companies.length) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  const userId = data.event.tokens.bot;
+  if (!userId) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+
+  const company = await db.query.companies.findFirst({
+    where: eq(companies.slackBotUserId, userId),
+  });
+  if (!company) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
   if (
     event.type === "app_mention" ||
-    (event.type === "message" &&
-      (event.channel_type === "im" || (await handleSlackErrors(isAgentThread(event, mailboxInfo)))))
+    (event.type === "message" && (event.channel_type === "im" || (await isAgentThread(event, companyInfo))))
   ) {
-    waitUntil(handleSlackErrors(handleMessage(event, mailboxInfo)));
+    waitUntil(handleMessage(event, company));
     return new Response("Success!", { status: 200 });
   }
 
   if (event.type === "assistant_thread_started") {
-    waitUntil(handleSlackErrors(handleAssistantThreadMessage(event, mailboxInfo)));
+    waitUntil(handleAssistantThreadMessage(event, company));
     return new Response("Success!", { status: 200 });
   }
 
   return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-};
-
-const handleSlackErrors = async <T>(operation: Promise<T>) => {
-  try {
-    return await operation;
-  } catch (error) {
-    if (error instanceof Error && "data" in error) {
-      captureExceptionAndLog(error, {
-        extra: {
-          slackResponse: error.data,
-        },
-      });
-    }
-    captureExceptionAndLog(error);
-  }
 };

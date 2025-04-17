@@ -1,10 +1,9 @@
 import { AppMentionEvent, AssistantThreadStartedEvent, GenericMessageEvent, WebClient } from "@slack/web-api";
 import { CoreMessage } from "ai";
-import { assertDefined } from "@/components/utils/assert";
-import { Company } from "@/lib/data/company";
 import { SlackCompanyInfo, WHICH_COMPANY_MESSAGE } from "@/lib/slack/agent/findCompanyForEvent";
 import { generateAgentResponse } from "@/lib/slack/agent/generateAgentResponse";
 import { getThreadMessages } from "@/lib/slack/client";
+import { assertDefined } from "@/utils/assert";
 
 export async function handleMessage(event: GenericMessageEvent | AppMentionEvent, companyInfo: SlackCompanyInfo) {
   if (!companyInfo.currentCompany) {
@@ -92,7 +91,7 @@ const replyHandler = async (
     text: "_Thinking..._",
   });
 
-  if (!statusMessage?.ts) throw new Error("Failed to post initial message");
+  if (!statusMessage.ts) throw new Error("Failed to post initial message");
 
   const showStatus = async (status: string | null, debugContent?: any) => {
     if (debug) {

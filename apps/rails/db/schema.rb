@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_13_205549) do
+ActiveRecord::Schema[8.0].define(version: 2025_04_17_181614) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -135,6 +135,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_13_205549) do
     t.boolean "equity_compensation_enabled", default: false, null: false
     t.boolean "team_updates_enabled", default: false, null: false
     t.jsonb "json_data", default: {"flags" => []}, null: false
+    t.string "slack_bot_user_id"
     t.index ["external_id"], name: "index_companies_on_external_id", unique: true
   end
 
