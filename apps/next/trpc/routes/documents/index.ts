@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { and, countDistinct, desc, eq, inArray, isNotNull, isNull, not, type SQLWrapper } from "drizzle-orm";
 import { pick } from "lodash-es";
 import { z } from "zod";
-import { byExternalId, db, paginate, paginationSchema } from "@/db";
+import { byExternalId, db } from "@/db";
 import { activeStorageAttachments, activeStorageBlobs, documents, documentSignatures, users } from "@/db/schema";
 import env from "@/env";
 import { companyProcedure, createRouter, getS3Url } from "@/trpc";
@@ -21,11 +21,7 @@ const visibleDocuments = (companyId: bigint, userId: bigint | SQLWrapper | undef
   );
 export const documentsRouter = createRouter({
   list: companyProcedure
-    .input(
-      paginationSchema.and(
-        z.object({ userId: z.string().nullable(), year: z.number().optional(), signable: z.boolean().optional() }),
-      ),
-    )
+    .input(z.object({ userId: z.string().nullable(), year: z.number().optional(), signable: z.boolean().optional() }))
     .query(async ({ ctx, input }) => {
       if (input.userId !== ctx.user.externalId && !ctx.companyAdministrator && !ctx.companyLawyer)
         throw new TRPCError({ code: "FORBIDDEN" });
@@ -38,19 +34,17 @@ export const documentsRouter = createRouter({
         input.year ? eq(documents.year, input.year) : undefined,
         input.signable != null ? (input.signable ? signable : not(signable)) : undefined,
       );
-      const rows = await paginate(
-        db
-          .select({
-            ...pick(documents, "id", "name", "createdAt", "docusealSubmissionId", "type"),
-          })
-          .from(documents)
-          .innerJoin(documentSignatures, eq(documents.id, documentSignatures.documentId))
-          .innerJoin(users, eq(documentSignatures.userId, users.id))
-          .where(where)
-          .orderBy(desc(documents.createdAt))
-          .groupBy(documents.id),
-        input,
-      );
+      const rows = await db
+        .select({
+          ...pick(documents, "id", "name", "createdAt", "docusealSubmissionId", "type"),
+        })
+        .from(documents)
+        .innerJoin(documentSignatures, eq(documents.id, documentSignatures.documentId))
+        .innerJoin(users, eq(documentSignatures.userId, users.id))
+        .where(where)
+        .orderBy(desc(documents.createdAt))
+        .groupBy(documents.id);
+
       const totalResult = await db
         .selectDistinct({ count: countDistinct(documents.id) })
         .from(documents)
@@ -98,7 +92,6 @@ export const documentsRouter = createRouter({
               signedAt: signature.signedAt,
             })),
         })),
-        total,
       };
     }),
   years: companyProcedure.input(z.object({ userId: z.string().nullable() })).query(async ({ ctx, input }) => {

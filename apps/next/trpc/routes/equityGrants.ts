@@ -18,7 +18,7 @@ import {
 import { createInsertSchema } from "drizzle-zod";
 import { omit, pick } from "lodash-es";
 import { z } from "zod";
-import { byExternalId, db, paginationSchema } from "@/db";
+import { byExternalId, db } from "@/db";
 import { DocumentTemplateType, PayRateType } from "@/db/enums";
 import {
   companyContractors,
@@ -84,14 +84,12 @@ export const equityGrantsRouter = createRouter({
   }),
   list: companyProcedure
     .input(
-      paginationSchema.and(
-        z.object({
-          investorId: z.string().optional(),
-          accepted: z.boolean().optional(),
-          eventuallyExercisable: z.boolean().optional(),
-          orderBy: z.enum(["issuedAt", "periodEndedAt"]).default("issuedAt"),
-        }),
-      ),
+      z.object({
+        investorId: z.string().optional(),
+        accepted: z.boolean().optional(),
+        eventuallyExercisable: z.boolean().optional(),
+        orderBy: z.enum(["issuedAt", "periodEndedAt"]).default("issuedAt"),
+      }),
     )
     .query(async ({ input, ctx }) => {
       if (!ctx.company.equityGrantsEnabled) throw new TRPCError({ code: "FORBIDDEN" });

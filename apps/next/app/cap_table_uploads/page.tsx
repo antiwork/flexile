@@ -7,7 +7,6 @@ import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
 
-
 export default function CapTableUploadsPage() {
   const company = useCurrentCompany();
   const [data] = trpc.capTableUploads.list.useSuspenseQuery({ companyId: company.id });
@@ -42,7 +41,7 @@ export default function CapTableUploadsPage() {
       header: "Files",
       cell: (info) => (
         <div className="flex flex-col gap-2">
-          {info.getValue().map((attachment: { url: string; filename: string }) => (
+          {info.getValue().map((attachment) => (
             <a
               key={attachment.url}
               href={attachment.url}

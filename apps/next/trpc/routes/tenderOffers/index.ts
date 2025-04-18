@@ -3,7 +3,7 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
-import { db, paginationSchema } from "@/db";
+import { db } from "@/db";
 import { activeStorageAttachments, activeStorageBlobs, companies, tenderOffers } from "@/db/schema";
 import { companyProcedure, createRouter, getS3Url } from "@/trpc";
 import { tenderOffersBidsRouter } from "./bids";
@@ -46,7 +46,7 @@ export const tenderOffersRouter = createRouter({
     });
   }),
 
-  list: companyProcedure.input(paginationSchema).query(async ({ ctx, input }) => {
+  list: companyProcedure.query(async ({ ctx }) => {
     if (!ctx.company.tenderOffersEnabled || (!ctx.companyAdministrator && !ctx.companyInvestor))
       throw new TRPCError({ code: "FORBIDDEN" });
 

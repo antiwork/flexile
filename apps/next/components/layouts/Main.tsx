@@ -539,8 +539,6 @@ function InvoicesNavLink({ companyId, active, isAdmin }: { companyId: string; ac
     {
       companyId,
       invoiceFilter: "actionable",
-      perPage: 1,
-      page: 1,
     },
     {
       refetchInterval: 30_000,

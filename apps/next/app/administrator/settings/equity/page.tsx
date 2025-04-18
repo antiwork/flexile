@@ -125,8 +125,6 @@ export default function Equity() {
   const [canCreateCapTableUpload] = trpc.capTableUploads.canCreate.useSuspenseQuery({ companyId: company.id });
   const [{ total }] = trpc.capTableUploads.list.useSuspenseQuery({
     companyId: company.id,
-    page: 1,
-    perPage: 1,
     onlyCurrentUser: true,
   });
   const hasInProgressUpload = total > 0;

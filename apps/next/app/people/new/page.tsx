@@ -29,8 +29,6 @@ function Create() {
   const [{ workers }] = trpc.contractors.list.useSuspenseQuery({
     companyId: company.id,
     order: "desc",
-    page: 1,
-    perPage: 1,
   });
   const lastContractor = workers[0];
   const { data: application } = trpc.roles.applications.get.useQuery(

@@ -4,7 +4,7 @@ import { and, asc, desc, eq, exists, gt, gte, isNotNull, isNull, lt, not, or, sq
 import { createInsertSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
-import { byExternalId, db, pagination, paginationSchema } from "@/db";
+import { byExternalId, db } from "@/db";
 import { DocumentTemplateType, DocumentType, PayRateType } from "@/db/enums";
 import {
   companyContractors,
@@ -36,13 +36,11 @@ type CompanyContractor = typeof companyContractors.$inferSelect;
 export const contractorsRouter = createRouter({
   list: companyProcedure
     .input(
-      paginationSchema.and(
-        z.object({
-          type: z.enum(["onboarding", "alumni", "active", "not_alumni"]).optional(),
-          roleId: z.string().optional(),
-          order: z.enum(["asc", "desc"]).default("asc"),
-        }),
-      ),
+      z.object({
+        type: z.enum(["onboarding", "alumni", "active", "not_alumni"]).optional(),
+        roleId: z.string().optional(),
+        order: z.enum(["asc", "desc"]).default("asc"),
+      }),
     )
     .query(async ({ ctx, input }) => {
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
@@ -72,7 +70,6 @@ export const contractorsRouter = createRouter({
           role: true,
         },
         orderBy: (input.order === "asc" ? asc : desc)(companyContractors.id),
-        ...pagination(input),
       });
       const total = await db.$count(companyContractors, where);
       const workers = rows.map((worker) => ({

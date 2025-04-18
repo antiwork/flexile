@@ -21,14 +21,3 @@ export const byExternalId = (
     .select(pick(table, "id"))
     .from(table)
     .where(and(eq(table.externalId, externalId), where));
-
-export const paginationSchema = z.object({ page: z.number(), perPage: z.number() }).or(z.object({}));
-export const pagination = (obj: z.infer<typeof paginationSchema>) => ({
-  ...("page" in obj ? { offset: (obj.page - 1) * obj.perPage, limit: obj.perPage } : {}),
-});
-export const paginate = <T>(
-  query: T,
-  _obj: z.infer<typeof paginationSchema>,
-): T => {
-  return query;
-};

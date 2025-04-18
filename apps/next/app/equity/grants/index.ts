@@ -25,7 +25,6 @@ export const useInvestorQueryParams = () => {
   return {
     companyId: company.id,
     investorId,
-    perPage: 50,
     orderBy: "periodEndedAt" as const,
     eventuallyExercisable: true,
     accepted: true,

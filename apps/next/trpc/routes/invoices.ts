@@ -5,7 +5,7 @@ import { union } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
-import { byExternalId, db, pagination, paginationSchema } from "@/db";
+import { byExternalId, db } from "@/db";
 import {
   activeStorageAttachments,
   activeStorageBlobs,
@@ -343,14 +343,12 @@ export const invoicesRouter = createRouter({
 
   list: companyProcedure
     .input(
-      paginationSchema.and(
-        z.object({
-          contractorId: z.string().optional(),
-          invoiceFilter: z.enum(["history", "actionable"]).optional(),
-          after: z.string().optional(),
-          before: z.string().optional(),
-        }),
-      ),
+      z.object({
+        contractorId: z.string().optional(),
+        invoiceFilter: z.enum(["history", "actionable"]).optional(),
+        after: z.string().optional(),
+        before: z.string().optional(),
+      }),
     )
     .query(async ({ ctx, input }) => {
       if (
@@ -395,7 +393,6 @@ export const invoicesRouter = createRouter({
         },
         where,
         orderBy: [desc(invoices.invoiceDate), desc(invoices.createdAt)],
-        ...pagination(input),
       });
       const count = await db.$count(invoices, where);
       return {
