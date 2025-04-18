@@ -55,6 +55,16 @@ export default inngest.createFunction(
         .innerJoin(users, eq(users.id, companyInvestors.userId))
         .where(and(eq(boardConsents.id, BigInt(boardConsentId)), eq(companyInvestors.companyId, BigInt(companyId))));
       if (!companyInvestor) throw new NonRetriableError("Company investor not found");
+
+      const boardConsentDocument = await db.query.documents.findFirst({
+        where: and(
+          eq(documents.id, BigInt(documentId)),
+          eq(documents.type, DocumentType.BoardConsent),
+          eq(documents.year, year),
+        ),
+      });
+      if (!boardConsentDocument) throw new NonRetriableError("Board consent document not found");
+
       const submission = await docuseal.createSubmission({
         template_id: Number(template.docusealId),
         send_email: false,
@@ -78,6 +88,7 @@ export default inngest.createFunction(
           type: DocumentType.EquityPlanContract,
           year,
           name: `Equity Incentive Plan ${year}`,
+          equityGrantId: boardConsentDocument.equityGrantId,
           docusealSubmissionId: submission.id,
         })
         .returning();

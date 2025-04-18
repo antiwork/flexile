@@ -101,7 +101,7 @@ export const sendLawyerApprovalEmails = inngest.createFunction(
             companyName: assertDefined(company),
           }),
         },
-        lawyerEmails,
+        env.DOMAIN === "flexile.com" ? lawyerEmails : [{ email: "delivered@resend.dev" }],
       );
     });
 
@@ -172,7 +172,7 @@ export const sendBoardSigningEmails = inngest.createFunction(
             documentUrl,
           }),
         },
-        boardMemberEmails,
+        env.DOMAIN === "flexile.com" ? boardMemberEmails : [{ email: "delivered@resend.dev" }],
       );
     });
 
@@ -258,7 +258,7 @@ export const sendEquityPlanSigningEmail = inngest.createFunction(
               documentUrl,
             }),
           },
-          companyAdminEmails,
+          env.DOMAIN === "flexile.com" ? companyAdminEmails : [{ email: "delivered@resend.dev" }],
         ),
         sendEmails(
           {
@@ -271,7 +271,7 @@ export const sendEquityPlanSigningEmail = inngest.createFunction(
               signGrantUrl,
             }),
           },
-          [{ email: userEmail }],
+          env.DOMAIN === "flexile.com" ? [{ email: userEmail }] : [{ email: "delivered@resend.dev" }],
         ),
       ]);
 

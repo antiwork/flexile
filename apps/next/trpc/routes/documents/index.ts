@@ -178,6 +178,12 @@ export const documentsRouter = createRouter({
           eq(documentSignatures.title, input.role),
         ),
       );
+
+    // Check if all signatures for this document have been signed
+    const allSignatures = await db.select().from(documentSignatures).where(eq(documentSignatures.documentId, input.id));
+    const allSigned = allSignatures.every((signature) => signature.signedAt !== null);
+
+    return { documentId: input.id, complete: allSigned };
   }),
   approveByLawyer: companyProcedure.input(z.object({ id: z.bigint() })).mutation(async ({ ctx, input }) => {
     if (!ctx.companyLawyer) throw new TRPCError({ code: "FORBIDDEN" });
@@ -218,9 +224,9 @@ export const documentsRouter = createRouter({
     });
 
     if (!document) throw new TRPCError({ code: "NOT_FOUND" });
-    if (document.type !== DocumentType.BoardConsent) throw new TRPCError({ code: "BAD_REQUEST" });
+    if (document.type !== DocumentType.BoardConsent) return null;
 
-    const boardConsent = document.boardConsents.find((consent) => consent.status === "pending");
+    const boardConsent = document.boardConsents.find((consent) => consent.status === "lawyer_approved");
     if (!boardConsent) throw new TRPCError({ code: "BAD_REQUEST" });
 
     await db

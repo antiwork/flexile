@@ -187,20 +187,26 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
   const trpcUtils = trpc.useUtils();
   const documentLawyerApproval = trpc.documents.approveByLawyer.useMutation({
     onSuccess: async () => {
-      await trpcUtils.documents.list.refetch();
+      await trpcUtils.documents.list.invalidate();
       router.push("/documents");
       onClose();
     },
   });
   const documentMemberApproval = trpc.documents.approveByMember.useMutation({
     onSuccess: async () => {
-      await trpcUtils.documents.list.refetch();
+      await trpcUtils.documents.list.invalidate();
       router.push("/documents");
       onClose();
     },
   });
   const signDocument = trpc.documents.sign.useMutation({
-    onSuccess: async () => {
+    onSuccess: async (data) => {
+      if (data.complete) {
+        documentMemberApproval.mutate({
+          companyId: company.id,
+          id: data.documentId,
+        });
+      }
       await trpcUtils.documents.list.refetch();
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- not ideal, but there's no good way to assert this right now
       if (redirectUrl) router.push(redirectUrl as Route);
@@ -244,16 +250,6 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
             id: document.id,
             role,
           });
-
-          if (
-            document.type === DocumentType.BoardConsent &&
-            document.signatories.every((signatory) => signatory.signedAt)
-          ) {
-            documentMemberApproval.mutate({
-              companyId: company.id,
-              id: document.id,
-            });
-          }
         }}
       />
     </Modal>
