@@ -34,15 +34,6 @@ export function download(type: string, filename: string, contents: string) {
   window.URL.revokeObjectURL(url);
 }
 
-export function isValidUrl(url: string) {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 export function toSlug(str: string) {
   return str
     .trim()

@@ -6,10 +6,9 @@ import React, { useState } from "react";
 import Input from "@/components/Input";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Select from "@/components/Select";
-import Sheet from "@/components/Sheet";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
@@ -21,8 +20,8 @@ export default function DocumentsPage() {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const [_, setPage] = usePage();
   const userId = user.activeRole === "administrator" || user.activeRole === "lawyer" ? null : user.id;
+
   const [years] = trpc.documents.years.useSuspenseQuery({ companyId: company.id, userId });
   const defaultYear = years[0] ?? new Date().getFullYear();
   const [year, setYear] = useQueryState("year", parseAsInteger.withDefault(defaultYear));
@@ -60,7 +59,6 @@ export default function DocumentsPage() {
               options={years.map((year) => ({ label: year.toString(), value: year.toString() }))}
               onChange={(value) => {
                 void setYear(parseInt(value, 10));
-                void setPage(1);
               }}
             />
           </div>
@@ -93,13 +91,11 @@ export default function DocumentsPage() {
   );
 }
 
-const perPage = 50;
 const useQuery = (year: number) => {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const userId = user.activeRole === "administrator" || user.activeRole === "lawyer" ? null : user.id;
-  const [page] = usePage();
-  return trpc.documents.list.useSuspenseQuery({ companyId: company.id, userId, year, perPage, page });
+  return trpc.documents.list.useSuspenseQuery({ companyId: company.id, userId, year });
 };
 
 function Documents({ year }: { year: number }) {
@@ -107,7 +103,7 @@ function Documents({ year }: { year: number }) {
   const company = useCurrentCompany();
   const currentYear = new Date().getFullYear();
   const userId = user.activeRole === "administrator" || user.activeRole === "lawyer" ? null : user.id;
-  const [{ documents, total }] = useQuery(year);
+  const [documents] = useQuery(year);
 
   const filingDueDateFor1099NEC = new Date(currentYear, 0, 31);
   const filingDueDateFor1042S = new Date(currentYear, 2, 15);
@@ -117,24 +113,21 @@ function Documents({ year }: { year: number }) {
 
   return (
     <>
+      {company.flags.includes("irs_tax_forms") && user.activeRole === "administrator" && isFilingDueDateApproaching ? (
+        <Alert className="mb-4">
+          <AlertTitle>Upcoming filing dates for 1099-NEC, 1099-DIV, and 1042-S</AlertTitle>
+          <AlertDescription>
+            We will submit form 1099-NEC to the IRS on {formatDate(filingDueDateFor1099NEC)}, form 1042-S on{" "}
+            {formatDate(filingDueDateFor1042S)}, and form 1099-DIV on {formatDate(filingDueDateFor1099DIV)}.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       {documents.length > 0 ? (
-        <>
-          <DocumentsList userId={userId} documents={documents} />
-          <PaginationSection total={total} perPage={perPage} />
-        </>
+        <DocumentsList userId={userId} documents={documents} />
       ) : (
         <Placeholder icon={CheckCircleIcon}>No documents for {year}.</Placeholder>
       )}
-
-      {company.flags.includes("irs_tax_forms") && user.activeRole === "administrator" && isFilingDueDateApproaching ? (
-        <Sheet>
-          <h2 className="text-xl font-bold">Upcoming filing dates for 1099-NEC, 1099-DIV, and 1042-S</h2>
-          <p>
-            We will submit form 1099-NEC to the IRS on {formatDate(filingDueDateFor1099NEC)}, form 1042-S on{" "}
-            {formatDate(filingDueDateFor1042S)}, and form 1099-DIV on {formatDate(filingDueDateFor1099DIV)}.
-          </p>
-        </Sheet>
-      ) : null}
     </>
   );
 }

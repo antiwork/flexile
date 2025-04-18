@@ -1,7 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import {
   and,
-  count,
   countDistinct,
   desc,
   eq,
@@ -18,7 +17,7 @@ import {
 import { createInsertSchema } from "drizzle-zod";
 import { omit, pick } from "lodash-es";
 import { z } from "zod";
-import { byExternalId, db, paginate, paginationSchema } from "@/db";
+import { byExternalId, db } from "@/db";
 import { PayRateType } from "@/db/enums";
 import {
   companyContractors,
@@ -82,14 +81,12 @@ export const equityGrantsRouter = createRouter({
   }),
   list: companyProcedure
     .input(
-      paginationSchema.and(
-        z.object({
-          investorId: z.string().optional(),
-          accepted: z.boolean().optional(),
-          eventuallyExercisable: z.boolean().optional(),
-          orderBy: z.enum(["issuedAt", "periodEndedAt"]).default("issuedAt"),
-        }),
-      ),
+      z.object({
+        investorId: z.string().optional(),
+        accepted: z.boolean().optional(),
+        eventuallyExercisable: z.boolean().optional(),
+        orderBy: z.enum(["issuedAt", "periodEndedAt"]).default("issuedAt"),
+      }),
     )
     .query(async ({ input, ctx }) => {
       if (!ctx.company.equityGrantsEnabled) throw new TRPCError({ code: "FORBIDDEN" });
@@ -112,7 +109,7 @@ export const equityGrantsRouter = createRouter({
             )
           : undefined,
       );
-      const query = db
+      return await db
         .select({
           ...pick(
             equityGrants,
@@ -151,15 +148,6 @@ export const equityGrantsRouter = createRouter({
         .leftJoin(equityGrantExercises, eq(equityGrants.activeExerciseId, equityGrantExercises.id))
         .where(where)
         .orderBy(desc(equityGrants[input.orderBy]));
-
-      const [total] = await db
-        .select({ total: count() })
-        .from(equityGrants)
-        .innerJoin(companyInvestors, eq(equityGrants.companyInvestorId, companyInvestors.id))
-        .innerJoin(optionPools, eq(equityGrants.optionPoolId, optionPools.id))
-        .where(where);
-
-      return { equityGrants: await paginate(query, input), total: assertDefined(total).total };
     }),
   create: companyProcedure
     .input(

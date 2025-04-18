@@ -1,4 +1,3 @@
-import { usePage } from "@/components/PaginationSection";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 
 export const relationshipDisplayNames = {
@@ -21,14 +20,11 @@ export const vestingTriggerDisplayNames = {
 export const useInvestorQueryParams = () => {
   const company = useCurrentCompany();
   const user = useCurrentUser();
-  const [page] = usePage();
   const investorId =
     user.activeRole === "contractorOrInvestor" && "investor" in user.roles ? user.roles.investor?.id : "";
   return {
     companyId: company.id,
     investorId,
-    perPage: 50,
-    page,
     orderBy: "periodEndedAt" as const,
     eventuallyExercisable: true,
     accepted: true,

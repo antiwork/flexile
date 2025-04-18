@@ -19,9 +19,7 @@ import DataTable, { createColumnHelper, useTable } from "@/components/DataTable"
 import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
-import Sheet from "@/components/Sheet";
 import Tabs from "@/components/Tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -36,8 +34,7 @@ import { pluralize } from "@/utils/pluralize";
 import { export_company_invoices_path } from "@/utils/routes";
 import { formatDate, formatDuration } from "@/utils/time";
 
-type Invoice = RouterOutput["invoices"]["list"]["invoices"][number];
-const perPage = 50;
+type Invoice = RouterOutput["invoices"]["list"][number];
 export default function AdminList() {
   const company = useCurrentCompany();
   const [invoiceFilter] = useQueryState(
@@ -46,14 +43,11 @@ export default function AdminList() {
   );
   const [openModal, setOpenModal] = useState<"approve" | "reject" | null>(null);
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
-  const [page] = usePage();
   const isActionable = useIsActionable();
   const isPayable = useIsPayable();
   const areTaxRequirementsMet = useAreTaxRequirementsMet();
   const [data, { refetch }] = trpc.invoices.list.useSuspenseQuery({
     companyId: company.id,
-    perPage,
-    page,
     invoiceFilter,
   });
 
@@ -63,7 +57,7 @@ export default function AdminList() {
     void refetch();
   });
 
-  const columnHelper = createColumnHelper<(typeof data.invoices)[number]>();
+  const columnHelper = createColumnHelper<(typeof data)[number]>();
   const columns = useMemo(
     () => [
       columnHelper.accessor("billFrom", {
@@ -97,12 +91,13 @@ export default function AdminList() {
 
   const table = useTable({
     columns,
-    data: data.invoices,
+    data,
     getRowId: (invoice) => invoice.id,
     enableRowSelection: invoiceFilter === "actionable",
   });
 
-  const selectedInvoices = table.getSelectedRowModel().rows.map((row) => row.original);
+  const selectedRows = table.getSelectedRowModel().rows;
+  const selectedInvoices = selectedRows.map((row) => row.original);
   const [selectedPayableInvoices, selectedApprovableInvoices] = partition(selectedInvoices, isPayable);
 
   return (
@@ -118,26 +113,6 @@ export default function AdminList() {
           </Button>
         )
       }
-      footer={
-        invoiceFilter === "actionable" &&
-        selectedInvoices.length > 0 && (
-          <Sheet
-            primary
-            actions={
-              <>
-                <Button disabled={!company.completedPaymentMethodSetup} onClick={() => setOpenModal("approve")}>
-                  Approve selected
-                </Button>
-                <Button variant="outline" onClick={() => setOpenModal("reject")}>
-                  Reject selected
-                </Button>
-              </>
-            }
-          >
-            <b>{selectedInvoices.length} selected</b>
-          </Sheet>
-        )
-      }
     >
       <Tabs
         links={[
@@ -148,7 +123,7 @@ export default function AdminList() {
 
       <StripeMicrodepositVerification />
 
-      {data.invoices.length > 0 && (
+      {data.length > 0 && (
         <div className="grid gap-4">
           {!company.completedPaymentMethodSetup && (
             <Alert variant="destructive">
@@ -164,29 +139,44 @@ export default function AdminList() {
           {company.completedPaymentMethodSetup && !company.isTrusted ? (
             <Alert variant="destructive">
               <ExclamationTriangleIcon />
+              <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
               <AlertDescription>
-                <strong>Payments to contractors may take up to 10 business days to process.</strong>{" "}
-                <span>
-                  Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete additional
-                  verification steps.
-                </span>
+                Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete additional
+                verification steps.
               </AlertDescription>
             </Alert>
           ) : null}
 
-          {invoiceFilter === "actionable" && data.invoices.some((invoice) => !areTaxRequirementsMet(invoice)) && (
+          {invoiceFilter === "actionable" && data.some((invoice) => !areTaxRequirementsMet(invoice)) && (
             <Alert variant="destructive">
               <ExclamationTriangleIcon />
+              <AlertTitle>Missing tax information.</AlertTitle>
               <AlertDescription>
-                <strong>Missing tax information.</strong> Some invoices are not payable until contractors provide tax
-                information.
+                Some invoices are not payable until contractors provide tax information.
               </AlertDescription>
+            </Alert>
+          )}
+
+          {invoiceFilter === "actionable" && selectedRows.length > 0 && (
+            <Alert className="fixed right-0 bottom-0 left-0 z-50 flex items-center justify-between rounded-none border-r-0 border-b-0 border-l-0">
+              <div className="flex items-center gap-2">
+                <InformationCircleIcon className="size-4" />
+                <AlertTitle>{selectedRows.length} selected</AlertTitle>
+              </div>
+              <div className="flex flex-row flex-wrap gap-3">
+                <Button variant="outline" onClick={() => setOpenModal("reject")}>
+                  Reject selected
+                </Button>
+                <Button disabled={!company.completedPaymentMethodSetup} onClick={() => setOpenModal("approve")}>
+                  Approve selected
+                </Button>
+              </div>
             </Alert>
           )}
 
           <div className="flex justify-between md:hidden">
             <h2 className="text-xl font-bold">
-              {data.invoices.length} {pluralize("invoice", data.invoices.length)}
+              {data.length} {pluralize("invoice", data.length)}
             </h2>
             <Checkbox
               checked={table.getIsAllRowsSelected()}
@@ -196,11 +186,10 @@ export default function AdminList() {
           </div>
 
           <DataTable table={table} onRowClicked={setDetailInvoice} />
-          <PaginationSection total={data.total} perPage={perPage} />
         </div>
       )}
 
-      {data.invoices.length === 0 && <Placeholder icon={CheckCircleIcon}>No invoices to display.</Placeholder>}
+      {data.length === 0 && <Placeholder icon={CheckCircleIcon}>No invoices to display.</Placeholder>}
 
       <Modal
         open={openModal === "approve"}
@@ -245,7 +234,7 @@ export default function AdminList() {
             ))}
           </CardContent>
         </Card>
-        {selectedInvoices.length > 6 && <div>and {data.invoices.length - 6} more</div>}
+        {selectedInvoices.length > 6 && <div>and {data.length - 6} more</div>}
       </Modal>
 
       {detailInvoice && detailInvoice.invoiceType !== "other" ? (

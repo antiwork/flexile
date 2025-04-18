@@ -1,9 +1,9 @@
 import docuseal from "@docuseal/api";
 import { TRPCError } from "@trpc/server";
-import { and, countDistinct, desc, eq, inArray, isNotNull, isNull, not, sql, type SQLWrapper } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull, not, sql, type SQLWrapper } from "drizzle-orm";
 import { pick } from "lodash-es";
 import { z } from "zod";
-import { byExternalId, db, paginate, paginationSchema } from "@/db";
+import { byExternalId, db } from "@/db";
 import { DocumentType } from "@/db/enums";
 import {
   activeStorageAttachments,
@@ -30,11 +30,7 @@ const visibleDocuments = (companyId: bigint, userId: bigint | SQLWrapper | undef
   );
 export const documentsRouter = createRouter({
   list: companyProcedure
-    .input(
-      paginationSchema.and(
-        z.object({ userId: z.string().nullable(), year: z.number().optional(), signable: z.boolean().optional() }),
-      ),
-    )
+    .input(z.object({ userId: z.string().nullable(), year: z.number().optional(), signable: z.boolean().optional() }))
     .query(async ({ ctx, input }) => {
       if (input.userId !== ctx.user.externalId && !ctx.companyAdministrator && !ctx.companyLawyer)
         throw new TRPCError({ code: "FORBIDDEN" });
@@ -47,27 +43,19 @@ export const documentsRouter = createRouter({
         input.year ? eq(documents.year, input.year) : undefined,
         input.signable != null ? (input.signable ? signable : not(signable)) : undefined,
       );
-      const rows = await paginate(
-        db
-          .select({
-            ...pick(documents, "id", "name", "createdAt", "docusealSubmissionId", "type"),
-            lawyerApproved: sql<boolean>`${boardConsents.lawyerApprovedAt} IS NOT NULL`,
-          })
-          .from(documents)
-          .innerJoin(documentSignatures, eq(documents.id, documentSignatures.documentId))
-          .innerJoin(users, eq(documentSignatures.userId, users.id))
-          .leftJoin(boardConsents, eq(documents.id, boardConsents.documentId))
-          .where(where)
-          .orderBy(desc(documents.createdAt))
-          .groupBy(documents.id, boardConsents.lawyerApprovedAt),
-        input,
-      );
-      const totalResult = await db
-        .selectDistinct({ count: countDistinct(documents.id) })
+      const rows = await db
+        .select({
+          ...pick(documents, "id", "name", "createdAt", "docusealSubmissionId", "type"),
+          lawyerApproved: sql<boolean>`${boardConsents.lawyerApprovedAt} IS NOT NULL`,
+        })
         .from(documents)
         .innerJoin(documentSignatures, eq(documents.id, documentSignatures.documentId))
-        .where(where);
-      const total = totalResult[0]?.count ?? 0;
+        .innerJoin(users, eq(documentSignatures.userId, users.id))
+        .leftJoin(boardConsents, eq(documents.id, boardConsents.documentId))
+        .where(where)
+        .orderBy(desc(documents.createdAt))
+        .groupBy(documents.id, boardConsents.lawyerApprovedAt);
+
       const signatories = await db.query.documentSignatures.findMany({
         columns: { documentId: true, title: true, signedAt: true },
         where: and(
@@ -98,20 +86,17 @@ export const documentsRouter = createRouter({
         ),
       );
 
-      return {
-        documents: rows.map((document) => ({
-          ...pick(document, "id", "name", "createdAt", "docusealSubmissionId", "type", "lawyerApproved"),
-          attachment: attachments.get(document.id),
-          signatories: signatories
-            .filter((signature) => signature.documentId === document.id)
-            .map((signature) => ({
-              ...simpleUser(signature.user),
-              title: signature.title,
-              signedAt: signature.signedAt,
-            })),
-        })),
-        total,
-      };
+      return rows.map((document) => ({
+        ...pick(document, "id", "name", "createdAt", "docusealSubmissionId", "type", "lawyerApproved"),
+        attachment: attachments.get(document.id),
+        signatories: signatories
+          .filter((signature) => signature.documentId === document.id)
+          .map((signature) => ({
+            ...simpleUser(signature.user),
+            title: signature.title,
+            signedAt: signature.signedAt,
+          })),
+      }));
     }),
   years: companyProcedure.input(z.object({ userId: z.string().nullable() })).query(async ({ ctx, input }) => {
     if (input.userId !== ctx.user.externalId && !ctx.companyAdministrator && !ctx.companyLawyer)

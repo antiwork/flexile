@@ -12,7 +12,6 @@ import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Select from "@/components/Select";
 import Status from "@/components/Status";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
@@ -29,9 +28,8 @@ import { formatDate, formatMonth } from "@/utils/time";
 import { VESTED_SHARES_CLASS } from "../";
 import LetterOfTransmissal from "./LetterOfTransmissal";
 
-type Bid = RouterOutput["tenderOffers"]["bids"]["list"]["bids"][number];
+type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
 type Holding = RouterOutput["shareHoldings"]["sumByShareClass"][number];
-const perPage = 50;
 
 const financialData = Object.entries({
   Cash: [
@@ -78,7 +76,6 @@ export default function TenderOfferView() {
   const { id } = useParams<{ id: string }>();
   const company = useCurrentCompany();
   const user = useCurrentUser();
-  const [page] = usePage();
   const [data] = trpc.tenderOffers.get.useSuspenseQuery({ companyId: company.id, id });
   const isOpen = isPast(data.startsAt) && isFuture(data.endsAt);
   const investorId = user.activeRole === "administrator" ? undefined : user.roles.investor?.id;
@@ -86,8 +83,6 @@ export default function TenderOfferView() {
     companyId: company.id,
     tenderOfferId: id,
     investorId,
-    perPage,
-    page,
   });
   const { data: ownShareHoldings } = trpc.shareHoldings.sumByShareClass.useQuery(
     { companyId: company.id, investorId },
@@ -196,7 +191,7 @@ export default function TenderOfferView() {
     [user.activeRole],
   );
 
-  const bidsTable = useTable({ data: bids.bids, columns });
+  const bidsTable = useTable({ data: bids, columns });
 
   const buttonTooltip = !signed ? "Please sign the letter of transmittal before submitting a bid" : null;
 
@@ -376,12 +371,7 @@ export default function TenderOfferView() {
         </>
       ) : null}
 
-      {bids.total > 0 ? (
-        <>
-          <DataTable table={bidsTable} />
-          <PaginationSection total={bids.total} perPage={perPage} />
-        </>
-      ) : null}
+      {bids.length > 0 ? <DataTable table={bidsTable} /> : null}
 
       {cancelingBid ? (
         <Modal

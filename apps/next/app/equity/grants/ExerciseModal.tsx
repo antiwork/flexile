@@ -19,7 +19,7 @@ import { formatMoney } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_equity_grant_exercises_path } from "@/utils/routes";
 
-type EquityGrant = RouterOutput["equityGrants"]["list"]["equityGrants"][number];
+type EquityGrant = RouterOutput["equityGrants"]["list"][number];
 
 const ExerciseModal = ({
   equityGrants,

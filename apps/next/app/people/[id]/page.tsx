@@ -31,7 +31,6 @@ import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
-import PaginationSection from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
 import Tabs from "@/components/Tabs";
@@ -84,15 +83,13 @@ export default function ContractorPage() {
     { companyId: company.id, investorId: investor?.id ?? "" },
     { enabled: !!investor },
   );
-  const { data: convertibles } = trpc.convertibleSecurities.list.useQuery(
+  const { data: convertiblesData } = trpc.convertibleSecurities.list.useQuery(
     { companyId: company.id, investorId: investor?.id ?? "" },
     { enabled: !!investor },
   );
   const [invoicesData, { refetch: refetchInvoices }] = trpc.invoices.list.useSuspenseQuery({
     companyId: company.id,
     contractorId: contractor?.id ?? "",
-    perPage: 50,
-    page: 1,
   });
 
   const [selectedRoleId, setSelectedRoleId] = useState(contractor?.role ?? "");
@@ -132,11 +129,11 @@ export default function ContractorPage() {
   const tabs = [
     contractor && ({ label: "Details", tab: `details` } as const),
     contractor && ({ label: "Invoices", tab: `invoices` } as const),
-    equityGrants?.total ? ({ label: "Options", tab: `options` } as const) : null,
-    shareHoldings?.total ? ({ label: "Shares", tab: `shares` } as const) : null,
-    convertibles?.totalCount ? ({ label: "Convertibles", tab: `convertibles` } as const) : null,
+    equityGrants?.length ? ({ label: "Options", tab: `options` } as const) : null,
+    shareHoldings?.length ? ({ label: "Shares", tab: `shares` } as const) : null,
+    convertiblesData?.convertibleSecurities.length ? ({ label: "Convertibles", tab: `convertibles` } as const) : null,
     equityGrantExercises?.length ? ({ label: "Exercises", tab: `exercises` } as const) : null,
-    dividends?.total ? ({ label: "Dividends", tab: `dividends` } as const) : null,
+    dividends?.length ? ({ label: "Dividends", tab: `dividends` } as const) : null,
     (contractor || investor) && ({ label: "Documents", tab: `documents` } as const),
     contractor && company.flags.includes("team_updates") ? ({ label: "Updates", tab: `updates` } as const) : null,
   ].filter((link) => !!link);
@@ -452,8 +449,8 @@ export default function ContractorPage() {
             return investor ? <DividendsTab investorId={investor.id} /> : null;
           case "documents":
             return documents ? (
-              documents.documents.length > 0 ? (
-                <DocumentsList userId={id} documents={documents.documents} />
+              documents.length > 0 ? (
+                <DocumentsList userId={id} documents={documents} />
               ) : (
                 <Placeholder icon={CheckCircleIcon}>All documents will show up here.</Placeholder>
               )
@@ -649,7 +646,7 @@ const DetailsTab = ({
   );
 };
 
-type Invoice = RouterOutput["invoices"]["list"]["invoices"][number];
+type Invoice = RouterOutput["invoices"]["list"][number];
 const invoicesColumnHelper = createColumnHelper<Invoice>();
 const invoicesColumns = [
   invoicesColumnHelper.accessor("invoiceNumber", {
@@ -667,13 +664,10 @@ const invoicesColumns = [
 ];
 const InvoicesTab = ({ data }: { data: RouterOutput["invoices"]["list"] }) => {
   const router = useRouter();
-  const table = useTable({ columns: invoicesColumns, data: data.invoices });
+  const table = useTable({ columns: invoicesColumns, data });
 
-  return data.invoices.length > 0 ? (
-    <>
-      <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
-      <PaginationSection total={data.total} perPage={50} />
-    </>
+  return data.length > 0 ? (
+    <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
   ) : (
     <Placeholder icon={InboxIcon}>Invoices issued by this contractor will show up here.</Placeholder>
   );
@@ -770,14 +764,14 @@ const sharesColumns = [
   sharesColumnHelper.simple("totalAmountInCents", "Cost", formatMoneyFromCents, "numeric"),
 ];
 
-type ShareHolding = RouterOutput["shareHoldings"]["list"]["shareHoldings"][number];
+type ShareHolding = RouterOutput["shareHoldings"]["list"][number];
 function SharesTab({ investorId }: { investorId: string }) {
   const company = useCurrentCompany();
-  const [data] = trpc.shareHoldings.list.useSuspenseQuery({ companyId: company.id, investorId });
+  const [shareHoldings] = trpc.shareHoldings.list.useSuspenseQuery({ companyId: company.id, investorId });
 
-  const table = useTable({ data: data.shareHoldings, columns: sharesColumns });
+  const table = useTable({ data: shareHoldings, columns: sharesColumns });
 
-  return data.shareHoldings.length > 0 ? (
+  return shareHoldings.length > 0 ? (
     <DataTable table={table} />
   ) : (
     <Placeholder icon={CheckCircleIcon}>This investor does not hold any shares.</Placeholder>
@@ -799,15 +793,15 @@ const optionsColumns = [
   ),
 ];
 
-type EquityGrant = RouterOutput["equityGrants"]["list"]["equityGrants"][number];
+type EquityGrant = RouterOutput["equityGrants"]["list"][number];
 function OptionsTab({ investorId, userId }: { investorId: string; userId: string }) {
   const company = useCurrentCompany();
-  const [data] = trpc.equityGrants.list.useSuspenseQuery({ companyId: company.id, investorId });
-  const table = useTable({ data: data.equityGrants, columns: optionsColumns });
+  const [equityGrants] = trpc.equityGrants.list.useSuspenseQuery({ companyId: company.id, investorId });
+  const table = useTable({ data: equityGrants, columns: optionsColumns });
 
   const [selectedEquityGrant, setSelectedEquityGrant] = useState<EquityGrant | null>(null);
 
-  return data.equityGrants.length > 0 ? (
+  return equityGrants.length > 0 ? (
     <>
       <DataTable table={table} onRowClicked={setSelectedEquityGrant} />
       {selectedEquityGrant ? (
@@ -896,7 +890,7 @@ function ConvertiblesTab({ investorId }: { investorId: string }) {
   );
 }
 
-type Dividend = RouterOutput["dividends"]["list"]["dividends"][number];
+type Dividend = RouterOutput["dividends"]["list"][number];
 const dividendsColumnHelper = createColumnHelper<Dividend>();
 const dividendsColumns = [
   dividendsColumnHelper.simple("dividendRound.issuedAt", "Issue date", formatDate),
@@ -925,9 +919,9 @@ const dividendsColumns = [
 function DividendsTab({ investorId }: { investorId: string }) {
   const company = useCurrentCompany();
   const [dividends] = trpc.dividends.list.useSuspenseQuery({ companyId: company.id, investorId });
-  const table = useTable({ data: dividends.dividends, columns: dividendsColumns });
+  const table = useTable({ data: dividends, columns: dividendsColumns });
 
-  return dividends.total > 0 ? (
+  return dividends.length > 0 ? (
     <DataTable table={table} />
   ) : (
     <Placeholder icon={CheckCircleIcon}>This investor hasn't received any dividends yet.</Placeholder>

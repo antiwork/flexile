@@ -11,7 +11,6 @@ import DataTable, { createColumnHelper, useTable } from "@/components/DataTable"
 import Figures from "@/components/Figures";
 import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -31,10 +30,9 @@ import ExerciseModal from "./ExerciseModal";
 import { useInvestorQueryParams } from "./";
 
 type EquityGrantList = RouterOutput["equityGrants"]["list"];
-type EquityGrant = EquityGrantList["equityGrants"][number];
+type EquityGrant = EquityGrantList[number];
 type OptionHolderCountry = RouterOutput["equityGrants"]["byCountry"][number];
 
-const perPage = 50;
 const countryColumnHelper = createColumnHelper<OptionHolderCountry>();
 const countryColumns = [
   countryColumnHelper.simple("countryCode", "Country", (v) => countries.get(v ?? "") ?? v),
@@ -72,12 +70,11 @@ const companyGrantColumns = [
 
 const CompanyGrantList = () => {
   const router = useRouter();
-  const [page] = usePage();
   const company = useCurrentCompany();
-  const [data] = trpc.equityGrants.list.useSuspenseQuery({ companyId: company.id, perPage, page });
+  const [data] = trpc.equityGrants.list.useSuspenseQuery({ companyId: company.id });
   const [totals] = trpc.equityGrants.totals.useSuspenseQuery({ companyId: company.id });
 
-  const table = useTable({ columns: companyGrantColumns, data: data.equityGrants });
+  const table = useTable({ columns: companyGrantColumns, data });
   const [equityPlanContractTemplates] = trpc.documents.templates.list.useSuspenseQuery({
     companyId: company.id,
     type: DocumentTemplateType.EquityPlanContract,
@@ -118,7 +115,7 @@ const CompanyGrantList = () => {
           </AlertDescription>
         </Alert>
       ) : null}
-      {data.total > 0 ? (
+      {data.length > 0 ? (
         <>
           <Figures
             items={[
@@ -129,8 +126,6 @@ const CompanyGrantList = () => {
           />
 
           <DataTable table={table} onRowClicked={(row) => router.push(`/people/${row.user.id}`)} />
-          <PaginationSection total={data.total} perPage={perPage} />
-
           <DataTable table={optionHolderCountriesTable} />
         </>
       ) : (
@@ -163,22 +158,22 @@ const InvestorGrantList = () => {
   const [exercisableGrants, setExercisableGrants] = useState<EquityGrant[]>([]);
   const [showExerciseModal, setShowExerciseModal] = useState(false);
 
-  const totalShares = data.equityGrants.reduce((acc, grant) => acc + grant.numberOfShares, 0);
-  const equityValueUsd = data.equityGrants.reduce((acc, grant) => acc.add(grant.vestedAmountUsd), new Decimal(0));
+  const totalShares = data.reduce((acc, grant) => acc + grant.numberOfShares, 0);
+  const equityValueUsd = data.reduce((acc, grant) => acc.add(grant.vestedAmountUsd), new Decimal(0));
   const equityValueLabel = `Vested equity value ($${(company.valuationInDollars ?? 0).toLocaleString([], { notation: "compact" })} valuation)`;
 
-  const table = useTable({ columns: investorGrantColumns, data: data.equityGrants });
+  const table = useTable({ columns: investorGrantColumns, data });
 
-  const totalUnexercisedVestedShares = data.equityGrants.reduce((acc, grant) => {
+  const totalUnexercisedVestedShares = data.reduce((acc, grant) => {
     if (!grant.activeExercise && isFuture(new Date(grant.expiresAt))) {
       return acc + grant.vestedShares;
     }
     return acc;
   }, 0);
-  const exerciseInProgress = data.equityGrants.find((grant) => grant.activeExercise)?.activeExercise;
+  const exerciseInProgress = data.find((grant) => grant.activeExercise)?.activeExercise;
 
   const openExerciseModal = () => {
-    const grants = data.equityGrants.filter(
+    const grants = data.filter(
       (grant) => !grant.activeExercise && grant.vestedShares > 0 && isFuture(new Date(grant.expiresAt)),
     );
 
@@ -210,7 +205,7 @@ const InvestorGrantList = () => {
 
   return (
     <EquityLayout>
-      {data.total === 0 ? (
+      {data.length === 0 ? (
         <Placeholder icon={CheckCircleIcon}>You don't have any option grants right now.</Placeholder>
       ) : (
         <>
@@ -264,8 +259,7 @@ const InvestorGrantList = () => {
             </>
           )}
 
-          <DataTable table={table} caption={pluralizeGrants(data.total)} onRowClicked={setSelectedEquityGrant} />
-          <PaginationSection total={data.total} perPage={perPage} />
+          <DataTable table={table} caption={pluralizeGrants(data.length)} onRowClicked={setSelectedEquityGrant} />
 
           {selectedEquityGrant ? (
             <DetailsModal

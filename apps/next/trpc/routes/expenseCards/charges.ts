@@ -2,14 +2,18 @@ import { TRPCError } from "@trpc/server";
 import { and, desc, eq } from "drizzle-orm";
 import { pick } from "lodash-es";
 import { z } from "zod";
-import { db, paginate, paginationSchema } from "@/db";
+import { db } from "@/db";
 import { companyContractors, companyRoles, expenseCardCharges, expenseCards, users } from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 import { simpleUser } from "@/trpc/routes/users";
 
 export const expenseCardChargesRouter = createRouter({
   list: companyProcedure
-    .input(paginationSchema.and(z.object({ contractorId: z.string().optional() })))
+    .input(
+      z.object({
+        contractorId: z.string().optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       if (!ctx.company.expenseCardsEnabled) {
         throw new TRPCError({ code: "FORBIDDEN" });
@@ -18,7 +22,7 @@ export const expenseCardChargesRouter = createRouter({
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
-      const query = db
+      const rows = await db
         .select({
           expenseCardCharge: pick(expenseCardCharges, [
             "id",
@@ -45,9 +49,7 @@ export const expenseCardChargesRouter = createRouter({
           ),
         );
 
-      const total = await db.$count(query.as("expenseCardCharges"));
-
-      const items = (await paginate(query, input)).map((row) => ({
+      return rows.map((row) => ({
         ...row.expenseCardCharge,
         contractor: {
           id: row.contractor.externalId,
@@ -55,7 +57,5 @@ export const expenseCardChargesRouter = createRouter({
           user: simpleUser(row.user),
         },
       }));
-
-      return { items, total };
     }),
 });
