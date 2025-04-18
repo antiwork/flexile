@@ -163,7 +163,7 @@ export default function AdminList() {
           )}
 
           {invoiceFilter === "actionable" && selectedRows.length > 0 && (
-            <Alert className="flex items-center justify-between">
+            <Alert className="fixed right-0 bottom-0 left-0 z-50 flex items-center justify-between rounded-none border-r-0 border-b-0 border-l-0">
               <div className="flex items-center gap-2">
                 <InformationCircleIcon className="size-4" />
                 <AlertTitle>{selectedRows.length} selected</AlertTitle>
