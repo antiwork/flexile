@@ -1,9 +1,11 @@
+import { formatISO } from "date-fns";
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { NonRetriableError } from "inngest";
 import { db } from "@/db";
 import { DocumentType } from "@/db/enums";
 import { boardConsents, documents, equityAllocations, equityGrants } from "@/db/schema";
 import { inngest } from "@/inngest/client";
+import { assertDefined } from "@/utils/assert";
 
 export default inngest.createFunction(
   { id: "handle-board-approval" },
@@ -56,8 +58,16 @@ export default inngest.createFunction(
       const equityPlanDocument = grant.documents[0];
       if (!equityPlanDocument) throw new NonRetriableError(`Equity plan document for ${grant.id} not found`);
 
+      // Update the board approval date
+      const [updatedGrant] = await db
+        .update(equityGrants)
+        .set({ boardApprovalDate: formatISO(assertDefined(boardConsent.boardApprovedAt), { representation: "date" }) })
+        .where(eq(equityGrants.id, grant.id))
+        .returning();
+
+      if (!updatedGrant) throw new NonRetriableError(`Equity grant ${grant.id} not updated`);
       return {
-        optionGrant: grant,
+        optionGrant: updatedGrant,
         equityPlanDocument,
       };
     });

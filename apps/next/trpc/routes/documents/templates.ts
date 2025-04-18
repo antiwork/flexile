@@ -171,7 +171,7 @@ export const templatesRouter = createRouter({
       (s) =>
         (((s.role === "Company Representative" || s.role.startsWith("Board member")) &&
           (ctx.companyAdministrator || ctx.companyLawyer)) ||
-          s.external_id === String(ctx.user.id)) &&
+          s.external_id === String(ctx.user.externalId)) &&
         (s.status === "awaiting" || s.status === "opened"),
     );
     if (!submitter) throw new TRPCError({ code: "NOT_FOUND" });
