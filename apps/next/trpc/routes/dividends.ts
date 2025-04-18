@@ -38,10 +38,6 @@ export const dividendsRouter = createRouter({
         where,
         orderBy: [desc(dividends.id)],
       });
-      const total = await db.$count(dividends, where);
-      return {
-        dividends: rows.map((row) => ({ ...row, investor: { user: simpleUser(row.investor.user) } })),
-        total,
-      };
+      return rows.map((row) => ({ ...row, investor: { user: simpleUser(row.investor.user) } }));
     }),
 });

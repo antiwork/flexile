@@ -34,7 +34,7 @@ import { pluralize } from "@/utils/pluralize";
 import { export_company_invoices_path } from "@/utils/routes";
 import { formatDate, formatDuration } from "@/utils/time";
 
-type Invoice = RouterOutput["invoices"]["list"]["invoices"][number];
+type Invoice = RouterOutput["invoices"]["list"][number];
 export default function AdminList() {
   const company = useCurrentCompany();
   const [invoiceFilter] = useQueryState(
@@ -57,7 +57,7 @@ export default function AdminList() {
     void refetch();
   });
 
-  const columnHelper = createColumnHelper<(typeof data.invoices)[number]>();
+  const columnHelper = createColumnHelper<(typeof data)[number]>();
   const columns = useMemo(
     () => [
       columnHelper.accessor("billFrom", {
@@ -91,7 +91,7 @@ export default function AdminList() {
 
   const table = useTable({
     columns,
-    data: data.invoices,
+    data,
     getRowId: (invoice) => invoice.id,
     enableRowSelection: invoiceFilter === "actionable",
   });
@@ -123,7 +123,7 @@ export default function AdminList() {
 
       <StripeMicrodepositVerification />
 
-      {data.invoices.length > 0 && (
+      {data.length > 0 && (
         <div className="grid gap-4">
           {!company.completedPaymentMethodSetup && (
             <Alert variant="destructive">
@@ -147,7 +147,7 @@ export default function AdminList() {
             </Alert>
           ) : null}
 
-          {invoiceFilter === "actionable" && data.invoices.some((invoice) => !areTaxRequirementsMet(invoice)) && (
+          {invoiceFilter === "actionable" && data.some((invoice) => !areTaxRequirementsMet(invoice)) && (
             <Alert variant="destructive">
               <ExclamationTriangleIcon />
               <AlertTitle>Missing tax information.</AlertTitle>
@@ -176,7 +176,7 @@ export default function AdminList() {
 
           <div className="flex justify-between md:hidden">
             <h2 className="text-xl font-bold">
-              {data.invoices.length} {pluralize("invoice", data.invoices.length)}
+              {data.length} {pluralize("invoice", data.length)}
             </h2>
             <Checkbox
               checked={table.getIsAllRowsSelected()}
@@ -189,7 +189,7 @@ export default function AdminList() {
         </div>
       )}
 
-      {data.invoices.length === 0 && <Placeholder icon={CheckCircleIcon}>No invoices to display.</Placeholder>}
+      {data.length === 0 && <Placeholder icon={CheckCircleIcon}>No invoices to display.</Placeholder>}
 
       <Modal
         open={openModal === "approve"}
@@ -234,7 +234,7 @@ export default function AdminList() {
             ))}
           </CardContent>
         </Card>
-        {selectedInvoices.length > 6 && <div>and {data.invoices.length - 6} more</div>}
+        {selectedInvoices.length > 6 && <div>and {data.length - 6} more</div>}
       </Modal>
 
       {detailInvoice && detailInvoice.invoiceType !== "other" ? (

@@ -13,7 +13,7 @@ import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 
-type Dividend = RouterOutput["dividends"]["list"]["dividends"][number];
+type Dividend = RouterOutput["dividends"]["list"][number];
 const rowLink = (row: Dividend) => `/people/${row.investor.user.id}?tab=dividends` as const;
 const columnHelper = createColumnHelper<Dividend>();
 const columns = [
@@ -53,12 +53,12 @@ export default function DividendRound() {
   const company = useCurrentCompany();
   const router = useRouter();
   const [dividendRound] = trpc.dividendRounds.get.useSuspenseQuery({ companyId: company.id, id: Number(id) });
-  const [dividendsData] = trpc.dividends.list.useSuspenseQuery({
+  const [data] = trpc.dividends.list.useSuspenseQuery({
     companyId: company.id,
     dividendRoundId: Number(id),
   });
 
-  const table = useTable({ columns, data: dividendsData.dividends });
+  const table = useTable({ columns, data });
 
   return (
     <MainLayout title="Dividend">

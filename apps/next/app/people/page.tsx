@@ -24,7 +24,7 @@ export default function People() {
     "type",
     parseAsStringLiteral(["onboarding", "alumni", "active"] as const).withDefault("active"),
   );
-  const [data] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id, type });
+  const [{ workers }] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id, type });
 
   const columnHelper = createColumnHelper<Contractor>();
   const columns = useMemo(
@@ -47,7 +47,7 @@ export default function People() {
         columnHelper.simple("user.countryCode", "Country", (v) => v && countries.get(v)),
         columnHelper.simple("startedAt", "Start Date", formatDate),
         ...(type === "active" &&
-        data.workers.some((person) => {
+        workers.some((person) => {
           const endDate = person.endedAt;
           return endDate && new Date(endDate) > new Date();
         })
@@ -89,7 +89,7 @@ export default function People() {
     [type],
   );
 
-  const table = useTable({ columns, data: data.workers });
+  const table = useTable({ columns, data: workers });
 
   return (
     <MainLayout
@@ -113,7 +113,7 @@ export default function People() {
         ]}
       />
 
-      {data.workers.length > 0 ? (
+      {workers.length > 0 ? (
         <DataTable table={table} onRowClicked={user.activeRole === "administrator" ? () => "" : undefined} />
       ) : (
         <Placeholder icon={UsersIcon}>Contractors will show up here.</Placeholder>

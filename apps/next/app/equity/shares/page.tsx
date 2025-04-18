@@ -12,7 +12,7 @@ import { formatOwnershipPercentage } from "@/utils/numbers";
 import { formatDate } from "@/utils/time";
 import EquityLayout from "../Layout";
 
-const columnHelper = createColumnHelper<RouterOutput["shareHoldings"]["list"]["shareHoldings"][number]>();
+const columnHelper = createColumnHelper<RouterOutput["shareHoldings"]["list"][number]>();
 const columns = [
   columnHelper.simple("issuedAt", "Issue date", formatDate),
   columnHelper.simple("shareClassName", "Type"),
@@ -24,14 +24,14 @@ const columns = [
 export default function Shares() {
   const company = useCurrentCompany();
   const user = useCurrentUser();
-  const [data] = trpc.shareHoldings.list.useSuspenseQuery({
+  const [shareHoldings] = trpc.shareHoldings.list.useSuspenseQuery({
     companyId: company.id,
     investorId: user.roles.investor?.id ?? "",
   });
 
-  const table = useTable({ data: data.shareHoldings, columns });
+  const table = useTable({ data: shareHoldings, columns });
 
-  const totalShares = data.shareHoldings.reduce((acc, share) => acc + share.numberOfShares, 0);
+  const totalShares = shareHoldings.reduce((acc, share) => acc + share.numberOfShares, 0);
   const equityValueUsd =
     company.valuationInDollars && company.fullyDilutedShares
       ? (company.valuationInDollars / company.fullyDilutedShares) * totalShares
@@ -41,7 +41,7 @@ export default function Shares() {
 
   return (
     <EquityLayout>
-      {data.shareHoldings.length > 0 ? (
+      {shareHoldings.length > 0 ? (
         <>
           <Figures
             items={[

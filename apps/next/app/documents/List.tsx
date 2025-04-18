@@ -23,7 +23,7 @@ const typeLabels = {
   [DocumentType.EquityPlanContract]: "Equity plan",
 };
 
-type Document = RouterOutput["documents"]["list"]["documents"][number];
+type Document = RouterOutput["documents"]["list"][number];
 
 function DocumentStatus({ document }: { document: Document }) {
   const completedAt = document.signatories.every((signatory) => signatory.signedAt)

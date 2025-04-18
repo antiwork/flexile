@@ -30,13 +30,13 @@ const columns = [
 export default function DividendRounds() {
   const company = useCurrentCompany();
   const router = useRouter();
-  const [data] = trpc.dividendRounds.list.useSuspenseQuery({ companyId: company.id });
+  const [{ dividendRounds }] = trpc.dividendRounds.list.useSuspenseQuery({ companyId: company.id });
 
-  const table = useTable({ columns, data: data.dividendRounds });
+  const table = useTable({ columns, data: dividendRounds });
 
   return (
     <EquityLayout>
-      {data.dividendRounds.length > 0 ? (
+      {dividendRounds.length > 0 ? (
         <DataTable table={table} onRowClicked={(row) => router.push(`/equity/dividend_rounds/${row.id}`)} />
       ) : (
         <Placeholder icon={CheckCircleIcon}>You have not issued any dividends yet.</Placeholder>

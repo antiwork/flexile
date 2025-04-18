@@ -1,7 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import {
   and,
-  count,
   countDistinct,
   desc,
   eq,
@@ -112,7 +111,7 @@ export const equityGrantsRouter = createRouter({
             )
           : undefined,
       );
-      const query = db
+      return await db
         .select({
           ...pick(
             equityGrants,
@@ -151,15 +150,6 @@ export const equityGrantsRouter = createRouter({
         .leftJoin(equityGrantExercises, eq(equityGrants.activeExerciseId, equityGrantExercises.id))
         .where(where)
         .orderBy(desc(equityGrants[input.orderBy]));
-
-      const [total] = await db
-        .select({ total: count() })
-        .from(equityGrants)
-        .innerJoin(companyInvestors, eq(equityGrants.companyInvestorId, companyInvestors.id))
-        .innerJoin(optionPools, eq(equityGrants.optionPoolId, optionPools.id))
-        .where(where);
-
-      return { equityGrants: await query, total: assertDefined(total).total };
     }),
   create: companyProcedure
     .input(

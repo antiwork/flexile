@@ -394,40 +394,36 @@ export const invoicesRouter = createRouter({
         where,
         orderBy: [desc(invoices.invoiceDate), desc(invoices.createdAt)],
       });
-      const count = await db.$count(invoices, where);
-      return {
-        invoices: rows.map((invoice) => ({
-          ...pick(
-            invoice,
-            "createdAt",
-            "invoiceNumber",
-            "invoiceDate",
-            "totalAmountInUsdCents",
-            "totalMinutes",
-            "paidAt",
-            "rejectedAt",
-            "rejectionReason",
-            "billFrom",
-            "status",
-            "cashAmountInCents",
-            "equityAmountInCents",
-            "equityPercentage",
-            "invoiceType",
-          ),
-          requiresAcceptanceByPayee: requiresAcceptanceByPayee(invoice),
-          id: invoice.externalId,
-          approvals: invoice.approvals.map((approval) => ({
-            approvedAt: approval.approvedAt,
-            approver: simpleUser(approval.approver),
-          })),
-          contractor: {
-            ...pick(invoice.contractor, "role"),
-            user: { complianceInfo: invoice.contractor.user.userComplianceInfos[0] },
-          },
-          rejector: invoice.rejector && simpleUser(invoice.rejector),
+      return rows.map((invoice) => ({
+        ...pick(
+          invoice,
+          "createdAt",
+          "invoiceNumber",
+          "invoiceDate",
+          "totalAmountInUsdCents",
+          "totalMinutes",
+          "paidAt",
+          "rejectedAt",
+          "rejectionReason",
+          "billFrom",
+          "status",
+          "cashAmountInCents",
+          "equityAmountInCents",
+          "equityPercentage",
+          "invoiceType",
+        ),
+        requiresAcceptanceByPayee: requiresAcceptanceByPayee(invoice),
+        id: invoice.externalId,
+        approvals: invoice.approvals.map((approval) => ({
+          approvedAt: approval.approvedAt,
+          approver: simpleUser(approval.approver),
         })),
-        total: count,
-      };
+        contractor: {
+          ...pick(invoice.contractor, "role"),
+          user: { complianceInfo: invoice.contractor.user.userComplianceInfos[0] },
+        },
+        rejector: invoice.rejector && simpleUser(invoice.rejector),
+      }));
     }),
 
   get: companyProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {

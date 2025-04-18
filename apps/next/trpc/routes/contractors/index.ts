@@ -71,7 +71,6 @@ export const contractorsRouter = createRouter({
         },
         orderBy: (input.order === "asc" ? asc : desc)(companyContractors.id),
       });
-      const total = await db.$count(companyContractors, where);
       const workers = rows.map((worker) => ({
         ...pick(worker, ["startedAt", "payRateInSubunits", "hoursPerWeek", "onTrial", "endedAt"]),
         id: worker.externalId,
@@ -82,7 +81,7 @@ export const contractorsRouter = createRouter({
         } as const,
         role: { id: worker.role.externalId, name: worker.role.name },
       }));
-      return { workers, total };
+      return { workers };
     }),
   listForTeamUpdates: companyProcedure.query(async ({ ctx }) => {
     if (!ctx.companyAdministrator && !isActive(ctx.companyContractor)) throw new TRPCError({ code: "FORBIDDEN" });

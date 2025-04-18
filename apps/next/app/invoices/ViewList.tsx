@@ -47,8 +47,8 @@ export default function ViewList() {
     userId: user.id,
     signable: true,
   });
-  const unsignedContractId = documents.documents[0]?.id;
-  const columnHelper = createColumnHelper<(typeof data.invoices)[number]>();
+  const unsignedContractId = documents[0]?.id;
+  const columnHelper = createColumnHelper<(typeof data)[number]>();
   const columns = useMemo(
     () =>
       [
@@ -84,7 +84,7 @@ export default function ViewList() {
     [data],
   );
 
-  const table = useTable({ columns, data: data.invoices });
+  const table = useTable({ columns, data });
 
   return (
     <MainLayout
@@ -120,7 +120,7 @@ export default function ViewList() {
 
       <QuickInvoiceSection disabled={!!unsignedContractId} />
 
-      {data.invoices.length > 0 ? (
+      {data.length > 0 ? (
         <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
       ) : (
         <div>

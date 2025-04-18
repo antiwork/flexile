@@ -15,7 +15,7 @@ export const shareHoldingsRouter = createRouter({
     )
       throw new TRPCError({ code: "FORBIDDEN" });
 
-    const query = db
+    return await db
       .select({
         shareClassName: shareClasses.name,
         ...pick(shareHoldings, "numberOfShares", "sharePriceUsd", "totalAmountInCents", "issuedAt"),
@@ -25,9 +25,6 @@ export const shareHoldingsRouter = createRouter({
       .innerJoin(shareClasses, eq(shareHoldings.shareClassId, shareClasses.id))
       .where(and(eq(shareClasses.companyId, ctx.company.id), eq(companyInvestors.externalId, input.investorId)))
       .orderBy(desc(shareHoldings.id));
-    const total = await db.$count(query.as("shareHoldings"));
-
-    return { shareHoldings: await query, total };
   }),
   sumByShareClass: companyProcedure
     .input(z.object({ investorId: z.string().optional() }))

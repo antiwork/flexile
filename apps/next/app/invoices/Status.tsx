@@ -10,7 +10,7 @@ import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
 
 type Invoice = Pick<
-  RouterOutput["invoices"]["list"]["invoices"][number],
+  RouterOutput["invoices"]["list"][number],
   "status" | "approvals" | "rejector" | "rejectedAt" | "rejectionReason" | "paidAt"
 >;
 const MID_PAYMENT_INVOICE_STATES: Invoice["status"][] = ["payment_pending", "processing"];

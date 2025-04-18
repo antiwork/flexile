@@ -16,8 +16,7 @@ export const dividendRoundsRouter = createRouter({
       where,
       orderBy: [desc(dividendRounds.id)],
     });
-    const count = await db.$count(dividendRounds, where);
-    return { dividendRounds: rows, total: count };
+    return { dividendRounds: rows };
   }),
 
   get: companyProcedure.input(z.object({ id: z.number() })).query(async ({ ctx, input }) => {

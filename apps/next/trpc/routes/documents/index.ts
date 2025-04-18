@@ -1,6 +1,6 @@
 import docuseal from "@docuseal/api";
 import { TRPCError } from "@trpc/server";
-import { and, countDistinct, desc, eq, inArray, isNotNull, isNull, not, type SQLWrapper } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull, not, type SQLWrapper } from "drizzle-orm";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
@@ -45,12 +45,6 @@ export const documentsRouter = createRouter({
         .orderBy(desc(documents.createdAt))
         .groupBy(documents.id);
 
-      const totalResult = await db
-        .selectDistinct({ count: countDistinct(documents.id) })
-        .from(documents)
-        .innerJoin(documentSignatures, eq(documents.id, documentSignatures.documentId))
-        .where(where);
-      const total = totalResult[0]?.count ?? 0;
       const signatories = await db.query.documentSignatures.findMany({
         columns: { documentId: true, title: true, signedAt: true },
         where: and(
@@ -80,20 +74,17 @@ export const documentsRouter = createRouter({
           attachmentRows.map(async (attachment) => [attachment.recordId, await getUrl(attachment.blob)] as const),
         ),
       );
-      return {
-        documents: rows.map((document) => ({
-          ...pick(document, "id", "name", "createdAt", "docusealSubmissionId", "type"),
-          attachment: attachments.get(document.id),
-          signatories: signatories
-            .filter((signature) => signature.documentId === document.id)
-            .map((signature) => ({
-              ...simpleUser(signature.user),
-              title: signature.title,
-              signedAt: signature.signedAt,
-            })),
-        })),
-        total,
-      };
+      return rows.map((document) => ({
+        ...pick(document, "id", "name", "createdAt", "docusealSubmissionId", "type"),
+        attachment: attachments.get(document.id),
+        signatories: signatories
+          .filter((signature) => signature.documentId === document.id)
+          .map((signature) => ({
+            ...simpleUser(signature.user),
+            title: signature.title,
+            signedAt: signature.signedAt,
+          })),
+      }));
     }),
   years: companyProcedure.input(z.object({ userId: z.string().nullable() })).query(async ({ ctx, input }) => {
     if (input.userId !== ctx.user.externalId && !ctx.companyAdministrator && !ctx.companyLawyer)

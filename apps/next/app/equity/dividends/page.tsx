@@ -12,7 +12,7 @@ import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 import EquityLayout from "../Layout";
 
-type Dividend = RouterOutput["dividends"]["list"]["dividends"][number];
+type Dividend = RouterOutput["dividends"]["list"][number];
 const columnHelper = createColumnHelper<Dividend>();
 const columns = [
   columnHelper.simple("dividendRound.issuedAt", "Issue date", formatDate),
@@ -46,11 +46,11 @@ export default function Dividends() {
     investorId: user.roles.investor?.id,
   });
 
-  const table = useTable({ columns, data: data.dividends });
+  const table = useTable({ columns, data });
 
   return (
     <EquityLayout>
-      {data.dividends.length > 0 ? (
+      {data.length > 0 ? (
         <DataTable table={table} />
       ) : (
         <Placeholder icon={CheckCircleIcon}>You have not been issued any dividends yet.</Placeholder>

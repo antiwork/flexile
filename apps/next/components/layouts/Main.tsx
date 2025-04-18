@@ -552,7 +552,7 @@ function InvoicesNavLink({ companyId, active, isAdmin }: { companyId: string; ac
       icon={DocumentTextIcon}
       filledIcon={SolidDocumentTextIcon}
       active={active}
-      badge={isAdmin && !isLoading ? data?.total : undefined}
+      badge={isAdmin && !isLoading ? data?.length : undefined}
     >
       Invoices
     </NavLink>

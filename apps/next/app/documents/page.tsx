@@ -102,7 +102,7 @@ function Documents({ year }: { year: number }) {
   const company = useCurrentCompany();
   const currentYear = new Date().getFullYear();
   const userId = user.activeRole === "administrator" ? null : user.id;
-  const [{ documents }] = useQuery(year);
+  const [documents] = useQuery(year);
 
   const filingDueDateFor1099NEC = new Date(currentYear, 0, 31);
   const filingDueDateFor1042S = new Date(currentYear, 2, 15);
