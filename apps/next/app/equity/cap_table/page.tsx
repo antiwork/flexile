@@ -6,7 +6,7 @@ import CopyButton from "@/components/CopyButton";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
 import Placeholder from "@/components/Placeholder";
-import { Sheet, SheetContent, SheetFooter, SheetTitle } from "@/components/ui/sheet";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import {
   fetchInvestorEmail,
@@ -172,23 +172,18 @@ export default function CapTable() {
   const shareClassesTable = useTable({ data: shareClassesData, columns: shareClassesColumns });
 
   return (
-    <EquityLayout
-      footer={
-        selectedInvestors.length > 0 && (
-          <Sheet>
-            <SheetContent side="bottom" className="relative w-full">
-              <SheetFooter>
-                <div className="flex flex-row items-center justify-between">
-                  <SheetTitle>{selectedInvestors.length} selected</SheetTitle>
+    <EquityLayout>
+      {selectedInvestors.length > 0 && (
+        <Alert className="mb-4">
+          <AlertDescription className="flex items-center justify-between">
+            <span>
+              <strong>{selectedInvestors.length}</strong> selected
+            </span>
+            <CopyButton copyText={selectedInvestorEmails}>Contact selected</CopyButton>
+          </AlertDescription>
+        </Alert>
+      )}
 
-                  <CopyButton copyText={selectedInvestorEmails}>Contact selected</CopyButton>
-                </div>
-              </SheetFooter>
-            </SheetContent>
-          </Sheet>
-        )
-      }
-    >
       {data.investors.length > 0 ? (
         <div className="overflow-x-auto">
           <DataTable table={investorsTable} caption="Investors" />
