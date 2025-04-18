@@ -3,7 +3,6 @@ import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import React from "react";
 import DividendStatusIndicator from "@/app/equity/DividendStatusIndicator";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -39,16 +38,12 @@ const columns = [
     ),
   }),
 ];
-const perPage = 50;
 export default function Dividends() {
   const company = useCurrentCompany();
   const user = useCurrentUser();
-  const [page] = usePage();
   const [data] = trpc.dividends.list.useSuspenseQuery({
     companyId: company.id,
     investorId: user.roles.investor?.id,
-    perPage,
-    page,
   });
 
   const table = useTable({ columns, data: data.dividends });
@@ -58,7 +53,6 @@ export default function Dividends() {
       {data.dividends.length > 0 ? (
         <>
           <DataTable table={table} />
-          <PaginationSection total={data.total} perPage={perPage} />
         </>
       ) : (
         <Placeholder icon={CheckCircleIcon}>You have not been issued any dividends yet.</Placeholder>

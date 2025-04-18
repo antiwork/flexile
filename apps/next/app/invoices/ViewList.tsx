@@ -13,7 +13,6 @@ import DurationInput from "@/components/DurationInput";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
 import { linkClasses } from "@/components/Link";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -30,16 +29,12 @@ import { EDITABLE_INVOICE_STATES } from ".";
 const useData = () => {
   const company = useCurrentCompany();
   const user = useCurrentUser();
-  const [page] = usePage();
   return trpc.invoices.list.useSuspenseQuery({
     contractorId: user.roles.worker?.id,
     companyId: company.id,
-    perPage,
-    page,
   });
 };
 
-const perPage = 50;
 export default function ViewList() {
   const [data] = useData();
   const router = useRouter();
@@ -128,7 +123,6 @@ export default function ViewList() {
       {data.invoices.length > 0 ? (
         <>
           <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
-          <PaginationSection total={data.total} perPage={perPage} />
         </>
       ) : (
         <div>

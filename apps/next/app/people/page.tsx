@@ -5,7 +5,6 @@ import { parseAsStringLiteral, useQueryState } from "nuqs";
 import React, { useMemo } from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
 import Tabs from "@/components/Tabs";
@@ -26,8 +25,7 @@ export default function People() {
     "type",
     parseAsStringLiteral(["onboarding", "alumni", "active"] as const).withDefault("active"),
   );
-  const [page] = usePage();
-  const [data] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id, type, perPage, page });
+  const [data] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id, type });
 
   const columnHelper = createColumnHelper<Contractor>();
   const columns = useMemo(

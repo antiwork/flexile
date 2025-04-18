@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -14,13 +13,11 @@ import { formatMoney } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 import EquityLayout from "../Layout";
 
-const perPage = 50;
 export default function TenderOffers() {
   const company = useCurrentCompany();
   const router = useRouter();
   const user = useCurrentUser();
-  const [page] = usePage();
-  const [data] = trpc.tenderOffers.list.useSuspenseQuery({ companyId: company.id, page, perPage });
+  const [data] = trpc.tenderOffers.list.useSuspenseQuery({ companyId: company.id });
 
   const columnHelper = createColumnHelper<(typeof data.tenderOffers)[number]>();
   const columns = [
@@ -50,7 +47,6 @@ export default function TenderOffers() {
       {data.tenderOffers.length ? (
         <>
           <DataTable table={table} onRowClicked={(row) => router.push(`/equity/tender_offers/${row.id}`)} />
-          <PaginationSection total={data.total} perPage={perPage} />
         </>
       ) : (
         <Placeholder icon={CheckCircleIcon}>There are no tender offers yet.</Placeholder>

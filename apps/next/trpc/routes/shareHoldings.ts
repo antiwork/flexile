@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { and, desc, eq, sum } from "drizzle-orm";
 import { pick } from "lodash-es";
 import { z } from "zod";
-import { byExternalId, db, paginate, paginationSchema } from "@/db";
+import { byExternalId, db, paginationSchema } from "@/db";
 import { companyInvestors, shareClasses, shareHoldings } from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 
@@ -29,7 +29,7 @@ export const shareHoldingsRouter = createRouter({
         .orderBy(desc(shareHoldings.id));
       const total = await db.$count(query.as("shareHoldings"));
 
-      return { shareHoldings: await paginate(query, input), total };
+      return { shareHoldings: await query, total };
     }),
   sumByShareClass: companyProcedure
     .input(z.object({ investorId: z.string().optional() }))

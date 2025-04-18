@@ -31,7 +31,6 @@ import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
-import PaginationSection from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
 import Tabs from "@/components/Tabs";

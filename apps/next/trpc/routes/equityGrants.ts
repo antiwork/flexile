@@ -18,7 +18,7 @@ import {
 import { createInsertSchema } from "drizzle-zod";
 import { omit, pick } from "lodash-es";
 import { z } from "zod";
-import { byExternalId, db, paginate, paginationSchema } from "@/db";
+import { byExternalId, db, paginationSchema } from "@/db";
 import { DocumentTemplateType, PayRateType } from "@/db/enums";
 import {
   companyContractors,
@@ -161,7 +161,7 @@ export const equityGrantsRouter = createRouter({
         .innerJoin(optionPools, eq(equityGrants.optionPoolId, optionPools.id))
         .where(where);
 
-      return { equityGrants: await paginate(query, input), total: assertDefined(total).total };
+      return { equityGrants: await query, total: assertDefined(total).total };
     }),
   create: companyProcedure
     .input(

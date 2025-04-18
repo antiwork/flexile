@@ -26,9 +26,9 @@ export const paginationSchema = z.object({ page: z.number(), perPage: z.number()
 export const pagination = (obj: z.infer<typeof paginationSchema>) => ({
   ...("page" in obj ? { offset: (obj.page - 1) * obj.perPage, limit: obj.perPage } : {}),
 });
-export const paginate = <T extends { limit: (limit: number) => { offset: (offset: number) => unknown } }>(
+export const paginate = <T>(
   query: T,
-  obj: z.infer<typeof paginationSchema>,
-): T | (T extends { limit: (limit: number) => { offset: (offset: number) => infer R } } ? R : never) =>
-  // @ts-expect-error -- this isn't worth typing correctly, but it works!
-  "page" in obj ? query.limit(obj.perPage).offset((obj.page - 1) * obj.perPage) : query;
+  _obj: z.infer<typeof paginationSchema>,
+): T => {
+  return query;
+};

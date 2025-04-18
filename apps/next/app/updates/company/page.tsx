@@ -7,7 +7,6 @@ import DataTable, { createColumnHelper, useTable } from "@/components/DataTable"
 import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
 import { Button } from "@/components/ui/button";
@@ -16,11 +15,9 @@ import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
 
-const perPage = 50;
 const useData = () => {
   const company = useCurrentCompany();
-  const [page] = usePage();
-  const [data] = trpc.companyUpdates.list.useSuspenseQuery({ companyId: company.id, perPage, page });
+  const [data] = trpc.companyUpdates.list.useSuspenseQuery({ companyId: company.id });
   return data;
 };
 
@@ -42,7 +39,6 @@ export default function CompanyUpdates() {
       {data.updates.length ? (
         <>
           {user.activeRole === "administrator" ? <AdminList /> : <ViewList />}
-          <PaginationSection total={data.total} perPage={perPage} />
         </>
       ) : (
         <Placeholder icon={CheckCircleIcon}>No updates to display.</Placeholder>

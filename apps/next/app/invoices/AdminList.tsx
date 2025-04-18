@@ -19,7 +19,6 @@ import DataTable, { createColumnHelper, useTable } from "@/components/DataTable"
 import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Tabs from "@/components/Tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -37,7 +36,6 @@ import { export_company_invoices_path } from "@/utils/routes";
 import { formatDate, formatDuration } from "@/utils/time";
 
 type Invoice = RouterOutput["invoices"]["list"]["invoices"][number];
-const perPage = 50;
 export default function AdminList() {
   const company = useCurrentCompany();
   const [invoiceFilter] = useQueryState(
@@ -46,14 +44,11 @@ export default function AdminList() {
   );
   const [openModal, setOpenModal] = useState<"approve" | "reject" | null>(null);
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
-  const [page] = usePage();
   const isActionable = useIsActionable();
   const isPayable = useIsPayable();
   const areTaxRequirementsMet = useAreTaxRequirementsMet();
   const [data, { refetch }] = trpc.invoices.list.useSuspenseQuery({
     companyId: company.id,
-    perPage,
-    page,
     invoiceFilter,
   });
 
@@ -198,7 +193,6 @@ export default function AdminList() {
           </div>
 
           <DataTable table={table} onRowClicked={setDetailInvoice} />
-          <PaginationSection total={data.total} perPage={perPage} />
         </div>
       )}
 

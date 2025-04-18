@@ -6,7 +6,6 @@ import DividendStatusIndicator from "@/app/equity/DividendStatusIndicator";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Figures from "@/components/Figures";
 import MainLayout from "@/components/layouts/Main";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -54,13 +53,10 @@ export default function DividendRound() {
   const { id } = useParams<{ id: string }>();
   const company = useCurrentCompany();
   const router = useRouter();
-  const [page] = usePage();
   const [dividendRound] = trpc.dividendRounds.get.useSuspenseQuery({ companyId: company.id, id: Number(id) });
   const [dividendsData] = trpc.dividends.list.useSuspenseQuery({
     companyId: company.id,
     dividendRoundId: Number(id),
-    perPage,
-    page,
   });
 
   const table = useTable({ columns, data: dividendsData.dividends });

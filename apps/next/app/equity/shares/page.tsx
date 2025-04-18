@@ -3,7 +3,6 @@ import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import React from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Figures from "@/components/Figures";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -25,13 +24,9 @@ const columns = [
 export default function Shares() {
   const company = useCurrentCompany();
   const user = useCurrentUser();
-  const [page] = usePage();
-  const perPage = 50;
   const [data] = trpc.shareHoldings.list.useSuspenseQuery({
     companyId: company.id,
     investorId: user.roles.investor?.id ?? "",
-    perPage,
-    page,
   });
 
   const table = useTable({ data: data.shareHoldings, columns });
@@ -56,7 +51,6 @@ export default function Shares() {
             ]}
           />
           <DataTable table={table} />
-          <PaginationSection total={data.total} perPage={perPage} />
         </>
       ) : (
         <Placeholder icon={CheckCircleIcon}>You do not hold any shares.</Placeholder>

@@ -11,7 +11,6 @@ import DataTable, { createColumnHelper, useTable } from "@/components/DataTable"
 import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
 import { Button } from "@/components/ui/button";
@@ -59,9 +58,8 @@ const companyColumns = [
 ];
 
 function CompanyExpenses() {
-  const [page] = usePage();
   const company = useCurrentCompany();
-  const [data] = trpc.expenseCards.charges.list.useSuspenseQuery({ companyId: company.id, page, perPage });
+  const [data] = trpc.expenseCards.charges.list.useSuspenseQuery({ companyId: company.id });
   const table = useTable({ columns: companyColumns, data: data.items });
 
   return (
@@ -69,7 +67,6 @@ function CompanyExpenses() {
       {data.items.length ? (
         <>
           <DataTable table={table} />
-          <PaginationSection total={data.total} perPage={perPage} />
         </>
       ) : (
         <Placeholder icon={CheckCircleIcon}>
@@ -212,7 +209,6 @@ function ContractorExpenses() {
       {expenseCardCharges.items.length ? (
         <>
           <DataTable table={table} />
-          <PaginationSection total={expenseCardCharges.total} perPage={perPage} />
         </>
       ) : (
         <Placeholder icon={CheckCircleIcon}>No expenses to display.</Placeholder>

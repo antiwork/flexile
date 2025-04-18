@@ -11,7 +11,6 @@ import DataTable, { createColumnHelper, useTable } from "@/components/DataTable"
 import Figures from "@/components/Figures";
 import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -34,7 +33,6 @@ type EquityGrantList = RouterOutput["equityGrants"]["list"];
 type EquityGrant = EquityGrantList["equityGrants"][number];
 type OptionHolderCountry = RouterOutput["equityGrants"]["byCountry"][number];
 
-const perPage = 50;
 const countryColumnHelper = createColumnHelper<OptionHolderCountry>();
 const countryColumns = [
   countryColumnHelper.simple("countryCode", "Country", (v) => countries.get(v ?? "") ?? v),
@@ -72,9 +70,8 @@ const companyGrantColumns = [
 
 const CompanyGrantList = () => {
   const router = useRouter();
-  const [page] = usePage();
   const company = useCurrentCompany();
-  const [data] = trpc.equityGrants.list.useSuspenseQuery({ companyId: company.id, perPage, page });
+  const [data] = trpc.equityGrants.list.useSuspenseQuery({ companyId: company.id });
   const [totals] = trpc.equityGrants.totals.useSuspenseQuery({ companyId: company.id });
 
   const table = useTable({ columns: companyGrantColumns, data: data.equityGrants });
@@ -125,8 +122,6 @@ const CompanyGrantList = () => {
           />
 
           <DataTable table={table} onRowClicked={(row) => router.push(`/people/${row.user.id}`)} />
-          <PaginationSection total={data.total} perPage={perPage} />
-
           <DataTable table={optionHolderCountriesTable} />
         </>
       ) : (
@@ -261,7 +256,6 @@ const InvestorGrantList = () => {
           )}
 
           <DataTable table={table} caption={pluralizeGrants(data.total)} onRowClicked={setSelectedEquityGrant} />
-          <PaginationSection total={data.total} perPage={perPage} />
 
           {selectedEquityGrant ? (
             <DetailsModal

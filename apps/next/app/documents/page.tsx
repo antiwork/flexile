@@ -6,7 +6,6 @@ import React, { useState } from "react";
 import Input from "@/components/Input";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Select from "@/components/Select";
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,6 @@ export default function DocumentsPage() {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const [_, setPage] = usePage();
   const userId = user.activeRole === "administrator" ? null : user.id;
   const [years] = trpc.documents.years.useSuspenseQuery({ companyId: company.id, userId });
   const defaultYear = years[0] ?? new Date().getFullYear();
@@ -60,7 +58,6 @@ export default function DocumentsPage() {
               options={years.map((year) => ({ label: year.toString(), value: year.toString() }))}
               onChange={(value) => {
                 void setYear(parseInt(value, 10));
-                void setPage(1);
               }}
             />
           </div>
@@ -93,13 +90,11 @@ export default function DocumentsPage() {
   );
 }
 
-const perPage = 50;
 const useQuery = (year: number) => {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const userId = user.activeRole === "administrator" ? null : user.id;
-  const [page] = usePage();
-  return trpc.documents.list.useSuspenseQuery({ companyId: company.id, userId, year, perPage, page });
+  return trpc.documents.list.useSuspenseQuery({ companyId: company.id, userId, year });
 };
 
 function Documents({ year }: { year: number }) {
@@ -107,7 +102,7 @@ function Documents({ year }: { year: number }) {
   const company = useCurrentCompany();
   const currentYear = new Date().getFullYear();
   const userId = user.activeRole === "administrator" ? null : user.id;
-  const [{ documents, total }] = useQuery(year);
+  const [{ documents }] = useQuery(year);
 
   const filingDueDateFor1099NEC = new Date(currentYear, 0, 31);
   const filingDueDateFor1042S = new Date(currentYear, 2, 15);
@@ -120,7 +115,6 @@ function Documents({ year }: { year: number }) {
       {documents.length > 0 ? (
         <>
           <DocumentsList userId={userId} documents={documents} />
-          <PaginationSection total={total} perPage={perPage} />
         </>
       ) : (
         <Placeholder icon={CheckCircleIcon}>No documents for {year}.</Placeholder>

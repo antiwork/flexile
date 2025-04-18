@@ -12,7 +12,6 @@ import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Select from "@/components/Select";
 import Status from "@/components/Status";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
@@ -78,7 +77,6 @@ export default function TenderOfferView() {
   const { id } = useParams<{ id: string }>();
   const company = useCurrentCompany();
   const user = useCurrentUser();
-  const [page] = usePage();
   const [data] = trpc.tenderOffers.get.useSuspenseQuery({ companyId: company.id, id });
   const isOpen = isPast(data.startsAt) && isFuture(data.endsAt);
   const investorId = user.activeRole === "administrator" ? undefined : user.roles.investor?.id;
@@ -86,8 +84,6 @@ export default function TenderOfferView() {
     companyId: company.id,
     tenderOfferId: id,
     investorId,
-    perPage,
-    page,
   });
   const { data: ownShareHoldings } = trpc.shareHoldings.sumByShareClass.useQuery(
     { companyId: company.id, investorId },
@@ -379,7 +375,6 @@ export default function TenderOfferView() {
       {bids.total > 0 ? (
         <>
           <DataTable table={bidsTable} />
-          <PaginationSection total={bids.total} perPage={perPage} />
         </>
       ) : null}
 
