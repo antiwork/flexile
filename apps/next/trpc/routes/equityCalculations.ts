@@ -4,7 +4,7 @@ import { Decimal } from "decimal.js";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { equityAllocations } from "@/db/schema";
+import { companies, equityAllocations } from "@/db/schema";
 import { type CompanyContext, companyProcedure, createRouter } from "@/trpc";
 import { getUniqueUnvestedEquityGrantForYear } from "@/trpc/routes/equityGrants";
 
@@ -64,18 +64,27 @@ export const calculateInvoiceEquity = async ({
   }
 
   const unvestedGrant = await getUniqueUnvestedEquityGrantForYear(companyContractor, invoiceYear);
+  let sharePriceUsd = unvestedGrant?.sharePriceUsd ?? 0;
   if (equityPercentage !== 0 && !unvestedGrant) {
-    Bugsnag.notify(`calculateInvoiceEquity: Error selecting active grant for CompanyWorker ${companyContractor.id}`);
-    return null;
+    const company = await db.query.companies.findFirst({
+      where: eq(companies.id, companyContractor.companyId),
+      columns: {
+        fmvPerShareInUsd: true,
+      },
+    });
+    if (company?.fmvPerShareInUsd) {
+      sharePriceUsd = company.fmvPerShareInUsd;
+    } else {
+      Bugsnag.notify(`calculateInvoiceEquity: Error determining share price for CompanyWorker ${companyContractor.id}`);
+      return null;
+    }
   }
 
   let equityAmountInCents = Decimal.mul(serviceAmountCentsNumber, equityPercentage).div(100).round().toNumber();
   let equityAmountInOptions = 0;
 
   if (equityPercentage !== 0 && unvestedGrant) {
-    equityAmountInOptions = Decimal.div(equityAmountInCents, Decimal.mul(unvestedGrant.sharePriceUsd, 100))
-      .round()
-      .toNumber();
+    equityAmountInOptions = Decimal.div(equityAmountInCents, Decimal.mul(sharePriceUsd, 100)).round().toNumber();
   }
 
   if (equityAmountInOptions <= 0) {

@@ -5,6 +5,7 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { companyRolesFactory } from "@test/factories/companyRoles";
 import { documentTemplatesFactory } from "@test/factories/documentTemplates";
+import { equityAllocationsFactory } from "@test/factories/equityAllocations";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { optionPoolsFactory } from "@test/factories/optionPools";
 import { usersFactory } from "@test/factories/users";
@@ -26,9 +27,14 @@ test.describe("New Contractor", () => {
     const submitters = { "Company Representative": adminUser, Signer: contractorUser };
     const { mockForm } = mockDocuseal(next, { submitters: () => submitters });
     await mockForm(page);
-    await companyContractorsFactory.create({
+    const { companyContractor } = await companyContractorsFactory.create({
       companyId: company.id,
       userId: contractorUser.id,
+    });
+    await equityAllocationsFactory.create({
+      companyContractorId: companyContractor.id,
+      equityPercentage: 50,
+      status: "pending_grant_creation",
     });
     const { role: projectBasedRole } = await companyRolesFactory.createProjectBased({ companyId: company.id });
     await companyContractorsFactory.createProjectBased({
@@ -36,10 +42,15 @@ test.describe("New Contractor", () => {
       companyRoleId: projectBasedRole.id,
     });
     const { user: projectBasedUser } = await usersFactory.create();
-    await companyContractorsFactory.createProjectBased({
+    const { companyContractor: projectBasedContractor } = await companyContractorsFactory.createProjectBased({
       companyId: company.id,
       companyRoleId: projectBasedRole.id,
       userId: projectBasedUser.id,
+    });
+    await equityAllocationsFactory.create({
+      companyContractorId: projectBasedContractor.id,
+      equityPercentage: 10,
+      status: "pending_grant_creation",
     });
     await optionPoolsFactory.create({ companyId: company.id });
     await login(page, adminUser);
@@ -111,12 +122,13 @@ test.describe("New Contractor", () => {
       ),
     ).toBeVisible();
     await page.goto("/invoices");
-    await page.getByRole("link", { name: "New invoice" }).click();
+    await page.getByRole("link", { name: "New invoice" }).first().click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-1");
     await page.getByLabel("Date").fill("2024-10-15");
     await page.getByPlaceholder("HH:MM").first().fill("05:30");
     await page.waitForTimeout(500); // TODO (techdebt): avoid this
     await page.getByPlaceholder("Description").fill("Software development work");
+    await page.waitForTimeout(500); // TODO (techdebt): avoid this
     await page.getByRole("button", { name: "Send invoice" }).click();
 
     await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
@@ -133,16 +145,18 @@ test.describe("New Contractor", () => {
       ),
     ).toBeVisible();
     await page.goto("/invoices");
-    await page.getByRole("link", { name: "New invoice" }).click();
+    await page.getByRole("link", { name: "New invoice" }).first().click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-2");
     await page.getByLabel("Date").fill("2024-11-01");
-    await page.getByPlaceholder("Amount").first().fill("1000");
+    await page.getByLabel("Amount").fill("1000");
+    await page.waitForTimeout(500); // TODO (techdebt): avoid this
     await page.getByPlaceholder("Description").fill("Promotional video production work");
+    await page.waitForTimeout(500); // TODO (techdebt): avoid this
     await page.getByRole("button", { name: "Send invoice" }).click();
 
     await expect(page.getByRole("cell", { name: "CUSTOM-2" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Nov 1, 2024");
-    await expect(page.locator("tbody")).toContainText("1000");
+    await expect(page.locator("tbody")).toContainText("1,000");
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
   });
 

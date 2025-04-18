@@ -61,6 +61,8 @@ test.describe("invoice creation", () => {
       companyContractorId: companyContractor.id,
       equityPercentage: 20,
       year: 2023,
+      status: "pending_confirmation",
+      locked: false,
     });
 
     const { role: projectBasedRole } = await companyRolesFactory.createProjectBased({ companyId: company.id });
@@ -81,6 +83,8 @@ test.describe("invoice creation", () => {
       companyContractorId: projectBasedContractor.id,
       equityPercentage: 50,
       year: 2023,
+      status: "pending_confirmation",
+      locked: false,
     });
   });
 
@@ -196,6 +200,7 @@ test.describe("invoice creation", () => {
       equityPercentage: 20,
       year: 2021,
       locked: true,
+      status: "approved",
     });
 
     await login(page, contractorUser);
