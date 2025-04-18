@@ -21,7 +21,7 @@ import { trpc, useCanAccess } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 
-const perPage = 50;
+
 const stripePromise = loadStripe(env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
 type ExpenseCardCharge = RouterOutput["expenseCards"]["charges"]["list"]["items"][number];

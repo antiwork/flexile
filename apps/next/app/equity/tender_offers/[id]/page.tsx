@@ -30,7 +30,7 @@ import LetterOfTransmissal from "./LetterOfTransmissal";
 
 type Bid = RouterOutput["tenderOffers"]["bids"]["list"]["bids"][number];
 type Holding = RouterOutput["shareHoldings"]["sumByShareClass"][number];
-const perPage = 50;
+
 
 const financialData = Object.entries({
   Cash: [

@@ -90,8 +90,6 @@ export default function ContractorPage() {
   const [invoicesData, { refetch: refetchInvoices }] = trpc.invoices.list.useSuspenseQuery({
     companyId: company.id,
     contractorId: contractor?.id ?? "",
-    perPage: 50,
-    page: 1,
   });
 
   const [selectedRoleId, setSelectedRoleId] = useState(contractor?.role ?? "");
