@@ -107,7 +107,8 @@ test.describe("One-off payments", () => {
         );
       });
 
-      test("errors if the worker has no equity grant", async ({ page }) => {
+      test("errors if the worker has no equity grant and the company does not have a share price", async ({ page }) => {
+        await db.update(companies).set({ fmvPerShareInUsd: null }).where(eq(companies.id, company.id));
         await db.delete(equityGrants).where(eq(equityGrants.companyInvestorId, companyInvestor.id));
 
         await login(page, adminUser);

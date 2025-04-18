@@ -9,7 +9,6 @@ import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useEffect, useState } from "react";
-import { Card, CardRow } from "@/components/Card";
 import Input from "@/components/Input";
 import SimpleLayout from "@/components/layouts/Simple";
 import MutationButton from "@/components/MutationButton";
@@ -18,6 +17,7 @@ import RichText, { Editor as RichTextEditor } from "@/components/RichText";
 import Select from "@/components/Select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { DEFAULT_WORKING_HOURS_PER_WEEK, MAX_WORKING_HOURS_PER_WEEK, WORKING_WEEKS_PER_YEAR } from "@/models";
 import { countryInfos } from "@/models/constants";
 import { PayRateType, trpc } from "@/trpc/client";
@@ -110,30 +110,30 @@ export default function RolePage({ countryCode }: { countryCode: string }) {
           ) : null}
           {role.jobDescription ? (
             <Card>
-              <CardRow>
-                <h2 className="text-xl font-bold">The role</h2>
-              </CardRow>
-              <CardRow>
+              <CardHeader>
+                <CardTitle className="text-xl">The role</CardTitle>
+              </CardHeader>
+              <CardContent>
                 <RichText content={role.jobDescription} />
-              </CardRow>
+              </CardContent>
             </Card>
           ) : null}
 
           <Card>
-            <CardRow>
-              <h2 className="text-xl font-bold">About {company.name}</h2>
-            </CardRow>
-            <CardRow>
+            <CardHeader>
+              <CardTitle className="text-xl">About {company.name}</CardTitle>
+            </CardHeader>
+            <CardContent>
               <RichText content={company.description} />
-            </CardRow>
+            </CardContent>
           </Card>
 
           {companyStats ? (
             <Card>
-              <CardRow>
-                <h2 className="text-xl font-bold">Our team</h2>
-              </CardRow>
-              <CardRow className="prose">
+              <CardHeader>
+                <CardTitle className="text-xl">Our team</CardTitle>
+              </CardHeader>
+              <CardContent className="prose">
                 <ul>
                   {companyStats.freelancers ? (
                     <li>{companyStats.freelancers.toLocaleString()} part-time freelancers</li>
@@ -152,45 +152,45 @@ export default function RolePage({ countryCode }: { countryCode: string }) {
                     </li>
                   ) : null}
                 </ul>
-              </CardRow>
+              </CardContent>
             </Card>
           ) : null}
 
           <Card>
             {role.payRateType === PayRateType.Hourly ? (
               <>
-                <CardRow>
-                  <h2 className="text-xl font-bold">Rate</h2>
-                </CardRow>
-                <CardRow>
+                <CardHeader>
+                  <CardTitle className="text-xl">Rate</CardTitle>
+                </CardHeader>
+                <CardContent>
                   {formatMoneyFromCents(role.payRateInSubunits)} / hour
                   {company.equityGrantsEnabled ? (
                     <p className="text-gray-500">
                       Part of this rate will be in the form of equity. This selection will be made during onboarding.
                     </p>
                   ) : null}
-                </CardRow>
+                </CardContent>
               </>
             ) : role.payRateType === PayRateType.Salary ? (
               <>
-                <CardRow>
-                  <h2 className="text-xl font-bold">Salary</h2>
-                </CardRow>
-                <CardRow>
+                <CardHeader>
+                  <CardTitle className="text-xl">Salary</CardTitle>
+                </CardHeader>
+                <CardContent>
                   {formatMoneyFromCents(role.payRateInSubunits)} / year
                   {company.equityGrantsEnabled ? (
                     <p className="text-gray-500">
                       Part of your salary will be in the form of equity. This selection will be made during onboarding.
                     </p>
                   ) : null}
-                </CardRow>
+                </CardContent>
               </>
             ) : (
               <>
-                <CardRow>
-                  <h2 className="text-xl font-bold">Salary</h2>
-                </CardRow>
-                <CardRow>
+                <CardHeader>
+                  <CardTitle className="text-xl">Salary</CardTitle>
+                </CardHeader>
+                <CardContent>
                   <div className="text-3xl font-bold">{formatMoneyFromCents(role.payRateInSubunits)}</div>
                   <p className="text-gray-500">Rate per project</p>
                   {company.equityGrantsEnabled ? (
@@ -198,7 +198,7 @@ export default function RolePage({ countryCode }: { countryCode: string }) {
                       Part of this rate will be given in equity. This selection will be made during onboarding.
                     </p>
                   ) : null}
-                </CardRow>
+                </CardContent>
               </>
             )}
           </Card>
@@ -231,7 +231,7 @@ export default function RolePage({ countryCode }: { countryCode: string }) {
         </>
       ) : (
         <Card>
-          <CardRow>
+          <CardContent>
             <div className="grid gap-4">
               <Input
                 value={values.name}
@@ -290,12 +290,13 @@ export default function RolePage({ countryCode }: { countryCode: string }) {
                 invalid={errors.has("description")}
                 className="h-48"
               />
-
-              <MutationButton mutation={submitMutation} loadingText="Submitting application...">
-                Submit application
-              </MutationButton>
             </div>
-          </CardRow>
+          </CardContent>
+          <CardFooter className="border-0 pt-0 [&>button]:w-full">
+            <MutationButton mutation={submitMutation} loadingText="Submitting application...">
+              Submit application
+            </MutationButton>
+          </CardFooter>
         </Card>
       )}
     </SimpleLayout>

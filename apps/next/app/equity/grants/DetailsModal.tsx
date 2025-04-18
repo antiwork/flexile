@@ -1,11 +1,12 @@
 import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
 import { isFuture } from "date-fns";
 import Decimal from "decimal.js";
-import React from "react";
-import { Card, CardRow } from "@/components/Card";
+import React, { Fragment } from "react";
 import { linkClasses } from "@/components/Link";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
@@ -15,7 +16,7 @@ import { formatMoney } from "@/utils/formatMoney";
 import { formatDate, humanizeMonths } from "@/utils/time";
 import { optionGrantTypeDisplayNames, relationshipDisplayNames } from ".";
 
-type EquityGrant = RouterOutput["equityGrants"]["list"]["equityGrants"][number];
+type EquityGrant = RouterOutput["equityGrants"]["list"][number];
 const DetailsModal = ({
   equityGrant,
   userId,
@@ -135,7 +136,7 @@ const DetailsModal = ({
     () => [
       {
         label: "Board approval date",
-        value: formatDate(equityGrant.boardApprovalDate),
+        value: equityGrant.boardApprovalDate ? formatDate(equityGrant.boardApprovalDate) : "N/A",
       },
       {
         label: "State/Country of Residency",
@@ -175,55 +176,70 @@ const DetailsModal = ({
         <div className="grid gap-4 p-4 pt-0 not-print:overflow-y-auto">
           {boxDetails.map((details, index) => (
             <Card key={index}>
-              {details.map((detail, i) => (
-                <CardRow key={i} className="flex justify-between gap-2">
-                  <div className="inline-flex gap-1">
-                    {detail.label}
-                    {detail.tooltip ? (
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <QuestionMarkCircleIcon className="size-4 print:hidden" />
-                        </TooltipTrigger>
-                        <TooltipContent>{detail.tooltip}</TooltipContent>
-                      </Tooltip>
-                    ) : null}
-                  </div>
-                  <div>{detail.value}</div>
-                </CardRow>
-              ))}
+              <CardContent>
+                {details.map((detail, i) => (
+                  <Fragment key={i}>
+                    <div className="flex justify-between gap-2">
+                      <div className="inline-flex gap-1">
+                        {detail.label}
+                        {detail.tooltip ? (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <QuestionMarkCircleIcon className="size-4 print:hidden" />
+                            </TooltipTrigger>
+                            <TooltipContent>{detail.tooltip}</TooltipContent>
+                          </Tooltip>
+                        ) : null}
+                      </div>
+                      <div>{detail.value}</div>
+                    </div>
+                    {i !== details.length - 1 && <Separator />}
+                  </Fragment>
+                ))}
+              </CardContent>
             </Card>
           ))}
 
           <Card>
-            <CardRow>
-              <h3>Post-termination exercise periods</h3>
-            </CardRow>
-            {postTerminationExercisePeriods.map((detail, index) => (
-              <CardRow key={index} className="flex justify-between gap-4">
-                <div>{detail.label}</div>
-                <div>{detail.value}</div>
-              </CardRow>
-            ))}
+            <CardHeader>
+              <CardTitle>Post-termination exercise periods</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {postTerminationExercisePeriods.map((detail, index) => (
+                <Fragment key={index}>
+                  <div className="flex justify-between gap-4">
+                    <div>{detail.label}</div>
+                    <div>{detail.value}</div>
+                  </div>
+                  {index !== postTerminationExercisePeriods.length - 1 && <Separator />}
+                </Fragment>
+              ))}
+            </CardContent>
           </Card>
 
           <Card>
-            <CardRow>
-              <h3>Compliance Details</h3>
-            </CardRow>
-            {complianceDetails.map((detail, index) => (
-              <CardRow key={index} className="flex justify-between gap-4">
-                <div>{detail.label}</div>
-                <div>{detail.value}</div>
-              </CardRow>
-            ))}
+            <CardHeader>
+              <CardTitle>Compliance Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {complianceDetails.map((detail, index) => (
+                <Fragment key={index}>
+                  <div className="flex justify-between gap-4">
+                    <div>{detail.label}</div>
+                    <div>{detail.value}</div>
+                  </div>
+                  {index !== complianceDetails.length - 1 && <Separator />}
+                </Fragment>
+              ))}
+            </CardContent>
           </Card>
 
           {additionalAgreements.length > 0 && (
             <Card>
-              <CardRow>
-                <h3>Additional Agreements</h3>
-              </CardRow>
-              <CardRow>
+              <CardHeader>
+                <CardTitle>Additional Agreements</CardTitle>
+              </CardHeader>
+              <CardContent>
                 <ul>
                   {additionalAgreements.map((detail, index) => (
                     <li key={index} className="list-inside list-disc">
@@ -233,16 +249,16 @@ const DetailsModal = ({
                     </li>
                   ))}
                 </ul>
-              </CardRow>
+              </CardContent>
             </Card>
           )}
 
           {rightsAndPreferences.length > 0 && (
             <Card>
-              <CardRow>
-                <h3>Rights and Preferences</h3>
-              </CardRow>
-              <CardRow>
+              <CardHeader>
+                <CardTitle>Rights and Preferences</CardTitle>
+              </CardHeader>
+              <CardContent>
                 <ul>
                   {rightsAndPreferences.map((detail, index) => (
                     <li key={index} className="list-inside list-disc">
@@ -251,7 +267,7 @@ const DetailsModal = ({
                     </li>
                   ))}
                 </ul>
-              </CardRow>
+              </CardContent>
             </Card>
           )}
         </div>

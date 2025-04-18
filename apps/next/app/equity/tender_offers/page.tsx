@@ -4,25 +4,23 @@ import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
+import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 import EquityLayout from "../Layout";
 
-const perPage = 50;
 export default function TenderOffers() {
   const company = useCurrentCompany();
   const router = useRouter();
   const user = useCurrentUser();
-  const [page] = usePage();
-  const [data] = trpc.tenderOffers.list.useSuspenseQuery({ companyId: company.id, page, perPage });
+  const [data] = trpc.tenderOffers.list.useSuspenseQuery({ companyId: company.id });
 
-  const columnHelper = createColumnHelper<(typeof data.tenderOffers)[number]>();
+  const columnHelper = createColumnHelper<RouterOutput["tenderOffers"]["list"][number]>();
   const columns = [
     columnHelper.accessor("startsAt", {
       header: "Start date",
@@ -32,7 +30,7 @@ export default function TenderOffers() {
     columnHelper.simple("minimumValuation", "Minimum valuation", formatMoney),
   ];
 
-  const table = useTable({ columns, data: data.tenderOffers });
+  const table = useTable({ columns, data });
 
   return (
     <EquityLayout
@@ -47,11 +45,8 @@ export default function TenderOffers() {
         ) : null
       }
     >
-      {data.tenderOffers.length ? (
-        <>
-          <Table table={table} onRowClicked={(row) => router.push(`/equity/tender_offers/${row.id}`)} />
-          <PaginationSection total={data.total} perPage={perPage} />
-        </>
+      {data.length ? (
+        <DataTable table={table} onRowClicked={(row) => router.push(`/equity/tender_offers/${row.id}`)} />
       ) : (
         <Placeholder icon={CheckCircleIcon}>There are no tender offers yet.</Placeholder>
       )}

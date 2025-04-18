@@ -394,13 +394,15 @@
               "company_investor_attributes": {
                 "investment_amount_in_cents": 0
               },
+              "equity_allocation_attributes": {
+                "equity_percentage": 25,
+                "status": "approved",
+                "locked": true
+              },
               "equity_grants": [
                 {
                   "option_pool": {
                     "year": 2020
-                  },
-                  "equity_allocation": {
-                    "equity_percentage": 25
                   },
                   "year": 2020,
                   "option_pool_year": 2020,
@@ -409,7 +411,6 @@
                   "number_of_shares": 5647,
                   "vested_shares": 5647,
                   "issue_date_relationship": "employee",
-                  "board_approval_date": "2020-01-01",
                   "option_grant_type": "iso",
                   "voluntary_termination_exercise_months": 3,
                   "involuntary_termination_exercise_months": 3,
@@ -418,7 +419,8 @@
                   "disability_exercise_months": 12,
                   "retirement_exercise_months": 3,
                   "model_attributes": {
-                    "accepted_at": "2020-01-02"
+                    "accepted_at": "2020-01-02",
+                    "board_approval_date": "2020-01-01"
                   },
                   "equity_grant_exercise": {
                     "model_attributes": {

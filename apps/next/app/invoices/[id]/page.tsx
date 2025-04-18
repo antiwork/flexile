@@ -5,15 +5,16 @@ import { InformationCircleIcon, PaperClipIcon, PencilIcon, XMarkIcon } from "@he
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
-import { Card, CardRow } from "@/components/Card";
+import { Fragment, useMemo, useState } from "react";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
 import { linkClasses } from "@/components/Link";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -129,34 +130,39 @@ export default function InvoicePage() {
             If everything looks correct, accept the invoice. Then your company administrator can initiate payment.
           </div>
           <Card>
-            {invoice.minAllowedEquityPercentage !== null && invoice.maxAllowedEquityPercentage !== null ? (
-              <CardRow>
-                <div className="mb-4 flex items-center justify-between">
-                  <span className="mb-4 text-gray-600">Cash vs equity split</span>
-                  <span className="font-medium">
-                    {(equityPercentage / 100).toLocaleString(undefined, { style: "percent" })} equity
-                  </span>
-                </div>
-                <Slider
-                  className="mb-4"
-                  value={[equityPercentage]}
-                  onValueChange={([selection]) =>
-                    setEquityPercentageElected(selection ?? invoice.minAllowedEquityPercentage ?? 0)
-                  }
-                  min={invoice.minAllowedEquityPercentage}
-                  max={invoice.maxAllowedEquityPercentage}
-                />
-                <div className="flex justify-between text-gray-600">
-                  <span>
-                    {(invoice.minAllowedEquityPercentage / 100).toLocaleString(undefined, { style: "percent" })} equity
-                  </span>
-                  <span>
-                    {(invoice.maxAllowedEquityPercentage / 100).toLocaleString(undefined, { style: "percent" })} equity
-                  </span>
-                </div>
-              </CardRow>
-            ) : null}
-            <CardRow>
+            <CardContent>
+              {invoice.minAllowedEquityPercentage !== null && invoice.maxAllowedEquityPercentage !== null ? (
+                <>
+                  <div>
+                    <div className="mb-4 flex items-center justify-between">
+                      <span className="mb-4 text-gray-600">Cash vs equity split</span>
+                      <span className="font-medium">
+                        {(equityPercentage / 100).toLocaleString(undefined, { style: "percent" })} equity
+                      </span>
+                    </div>
+                    <Slider
+                      className="mb-4"
+                      value={[equityPercentage]}
+                      onValueChange={([selection]) =>
+                        setEquityPercentageElected(selection ?? invoice.minAllowedEquityPercentage ?? 0)
+                      }
+                      min={invoice.minAllowedEquityPercentage}
+                      max={invoice.maxAllowedEquityPercentage}
+                    />
+                    <div className="flex justify-between text-gray-600">
+                      <span>
+                        {(invoice.minAllowedEquityPercentage / 100).toLocaleString(undefined, { style: "percent" })}{" "}
+                        equity
+                      </span>
+                      <span>
+                        {(invoice.maxAllowedEquityPercentage / 100).toLocaleString(undefined, { style: "percent" })}{" "}
+                        equity
+                      </span>
+                    </div>
+                  </div>
+                  <Separator />
+                </>
+              ) : null}
               <div>
                 <div className="flex items-center justify-between">
                   <span>Cash amount</span>
@@ -171,7 +177,7 @@ export default function InvoicePage() {
                   <span className="font-medium">{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</span>
                 </div>
               </div>
-            </CardRow>
+            </CardContent>
           </Card>
 
           <div className="flex justify-end">
@@ -246,24 +252,29 @@ export default function InvoicePage() {
               </div>
             </div>
 
-            {invoice.lineItems.length > 0 ? <Table table={table} /> : null}
+            {invoice.lineItems.length > 0 ? <DataTable table={table} /> : null}
 
             {invoice.expenses.length > 0 && (
               <Card>
-                <CardRow className="flex justify-between gap-2">
-                  <div>Expense</div>
-                  <div>Amount</div>
-                </CardRow>
-                {invoice.expenses.map((expense, i) => (
-                  <CardRow key={i} className="flex justify-between gap-2">
-                    <a href={expense.attachment} download className={linkClasses}>
-                      <PaperClipIcon className="inline size-4" />
-                      {expenseCategories.find((category) => category.id === expense.expenseCategoryId)?.name} –{" "}
-                      {expense.description}
-                    </a>
-                    <span>{formatMoneyFromCents(expense.totalAmountInCents)}</span>
-                  </CardRow>
-                ))}
+                <CardContent>
+                  <div className="flex justify-between gap-2">
+                    <div>Expense</div>
+                    <div>Amount</div>
+                  </div>
+                  {invoice.expenses.map((expense, i) => (
+                    <Fragment key={i}>
+                      <Separator />
+                      <div className="flex justify-between gap-2">
+                        <a href={expense.attachment} download className={linkClasses}>
+                          <PaperClipIcon className="inline size-4" />
+                          {expenseCategories.find((category) => category.id === expense.expenseCategoryId)?.name} –{" "}
+                          {expense.description}
+                        </a>
+                        <span>{formatMoneyFromCents(expense.totalAmountInCents)}</span>
+                      </div>
+                    </Fragment>
+                  ))}
+                </CardContent>
               </Card>
             )}
 
@@ -281,33 +292,37 @@ export default function InvoicePage() {
                 ) : null}
               </div>
               <Card>
-                {invoice.lineItems.length > 0 && invoice.expenses.length > 0 && (
-                  <>
-                    <CardRow className="flex justify-between gap-2">
-                      <strong>Total services</strong>
-                      <span>
-                        {formatMoneyFromCents(
-                          invoice.lineItems.reduce(
-                            (acc, lineItem) => acc + Number(lineItem.totalAmountCents) * cashFactor,
-                            0,
-                          ),
-                        )}
-                      </span>
-                    </CardRow>
-                    <CardRow className="flex justify-between gap-2">
-                      <strong>Total expenses</strong>
-                      <span>
-                        {formatMoneyFromCents(
-                          invoice.expenses.reduce((acc, expense) => acc + expense.totalAmountInCents, 0n),
-                        )}
-                      </span>
-                    </CardRow>
-                  </>
-                )}
-                <CardRow className="flex justify-between gap-2">
-                  <strong>Total</strong>
-                  <span>{formatMoneyFromCents(invoice.cashAmountInCents)}</span>
-                </CardRow>
+                <CardContent>
+                  {invoice.lineItems.length > 0 && invoice.expenses.length > 0 && (
+                    <>
+                      <div className="flex justify-between gap-2">
+                        <strong>Total services</strong>
+                        <span>
+                          {formatMoneyFromCents(
+                            invoice.lineItems.reduce(
+                              (acc, lineItem) => acc + Number(lineItem.totalAmountCents) * cashFactor,
+                              0,
+                            ),
+                          )}
+                        </span>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between gap-2">
+                        <strong>Total expenses</strong>
+                        <span>
+                          {formatMoneyFromCents(
+                            invoice.expenses.reduce((acc, expense) => acc + expense.totalAmountInCents, 0n),
+                          )}
+                        </span>
+                      </div>
+                      <Separator />
+                    </>
+                  )}
+                  <div className="flex justify-between gap-2">
+                    <strong>Total</strong>
+                    <span>{formatMoneyFromCents(invoice.cashAmountInCents)}</span>
+                  </div>
+                </CardContent>
               </Card>
             </footer>
           </div>

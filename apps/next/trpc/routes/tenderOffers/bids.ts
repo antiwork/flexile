@@ -3,7 +3,7 @@ import { and, desc, eq, exists, gte, lte, sum } from "drizzle-orm";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { VESTED_SHARES_CLASS } from "@/app/equity/tender_offers";
-import { byExternalId, db, pagination, paginationSchema } from "@/db";
+import { byExternalId, db } from "@/db";
 import { companyInvestors, shareClasses, shareHoldings, tenderOfferBids, tenderOffers } from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 import { sumVestedShares } from "@/trpc/routes/equityGrants";
@@ -11,7 +11,12 @@ import { simpleUser } from "@/trpc/routes/users";
 
 export const tenderOffersBidsRouter = createRouter({
   list: companyProcedure
-    .input(paginationSchema.and(z.object({ tenderOfferId: z.string(), investorId: z.string().optional() })))
+    .input(
+      z.object({
+        tenderOfferId: z.string(),
+        investorId: z.string().optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       if (
         !ctx.company.tenderOffersEnabled ||
@@ -33,15 +38,12 @@ export const tenderOffersBidsRouter = createRouter({
         where,
         with: { companyInvestor: { with: { user: { columns: simpleUser.columns } } } },
         orderBy: desc(tenderOfferBids.createdAt),
-        ...pagination(input),
       });
-      const total = await db.$count(tenderOfferBids, where);
-      const bids = bidsQuery.map((bid) => ({
+      return bidsQuery.map((bid) => ({
         ...pick(bid, ["sharePriceCents", "shareClass", "numberOfShares"]),
         id: bid.externalId,
         companyInvestor: { user: { email: bid.companyInvestor.user.email } },
       }));
-      return { bids, total };
     }),
   create: companyProcedure
     .input(

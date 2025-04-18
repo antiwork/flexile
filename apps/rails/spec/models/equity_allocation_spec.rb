@@ -9,7 +9,7 @@ RSpec.describe EquityAllocation do
     it do
       is_expected.to(validate_numericality_of(:equity_percentage)
                        .is_greater_than_or_equal_to(0)
-                       .is_less_than_or_equal_to(100)
+                       .is_less_than_or_equal_to(CompanyWorker::MAX_EQUITY_PERCENTAGE)
                        .only_integer
                        .allow_nil)
     end
@@ -27,6 +27,8 @@ RSpec.describe EquityAllocation do
 
       it { is_expected.to validate_uniqueness_of(:year).scoped_to(:company_contractor_id) }
     end
+
+    it { is_expected.to define_enum_for(:status).with_values(described_class.statuses).backed_by_column_of_type(:enum) }
 
     describe "changing equity_percentage" do
       it "disallows unsetting the equity percentage value" do
@@ -57,7 +59,7 @@ RSpec.describe EquityAllocation do
       end
     end
 
-    it "disallows changing the equity percentage value when locked" do
+    it "disallows locking without setting an equity percentage value" do
       equity_allocation = create(:equity_allocation)
       equity_allocation.update(locked: true)
 

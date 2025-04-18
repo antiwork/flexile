@@ -23,7 +23,7 @@ import InvoiceStatus from "@/app/invoices/Status";
 import RoleSelector from "@/app/roles/Selector";
 import { formatAbsencesForUpdate } from "@/app/updates/team/CompanyWorkerUpdate";
 import { Task as CompanyWorkerTask } from "@/app/updates/team/Task";
-import { Card, CardRow } from "@/components/Card";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import DecimalInput from "@/components/DecimalInput";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
@@ -31,14 +31,13 @@ import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
-import PaginationSection from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import Tabs from "@/components/Tabs";
 import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -84,15 +83,13 @@ export default function ContractorPage() {
     { companyId: company.id, investorId: investor?.id ?? "" },
     { enabled: !!investor },
   );
-  const { data: convertibles } = trpc.convertibleSecurities.list.useQuery(
+  const { data: convertiblesData } = trpc.convertibleSecurities.list.useQuery(
     { companyId: company.id, investorId: investor?.id ?? "" },
     { enabled: !!investor },
   );
   const [invoicesData, { refetch: refetchInvoices }] = trpc.invoices.list.useSuspenseQuery({
     companyId: company.id,
     contractorId: contractor?.id ?? "",
-    perPage: 50,
-    page: 1,
   });
 
   const [selectedRoleId, setSelectedRoleId] = useState(contractor?.role ?? "");
@@ -132,11 +129,11 @@ export default function ContractorPage() {
   const tabs = [
     contractor && ({ label: "Details", tab: `details` } as const),
     contractor && ({ label: "Invoices", tab: `invoices` } as const),
-    equityGrants?.total ? ({ label: "Options", tab: `options` } as const) : null,
-    shareHoldings?.total ? ({ label: "Shares", tab: `shares` } as const) : null,
-    convertibles?.totalCount ? ({ label: "Convertibles", tab: `convertibles` } as const) : null,
+    equityGrants?.length ? ({ label: "Options", tab: `options` } as const) : null,
+    shareHoldings?.length ? ({ label: "Shares", tab: `shares` } as const) : null,
+    convertiblesData?.convertibleSecurities.length ? ({ label: "Convertibles", tab: `convertibles` } as const) : null,
     equityGrantExercises?.length ? ({ label: "Exercises", tab: `exercises` } as const) : null,
-    dividends?.total ? ({ label: "Dividends", tab: `dividends` } as const) : null,
+    dividends?.length ? ({ label: "Dividends", tab: `dividends` } as const) : null,
     (contractor || investor) && ({ label: "Documents", tab: `documents` } as const),
     contractor && company.flags.includes("team_updates") ? ({ label: "Updates", tab: `updates` } as const) : null,
   ].filter((link) => !!link);
@@ -452,8 +449,8 @@ export default function ContractorPage() {
             return investor ? <DividendsTab investorId={investor.id} /> : null;
           case "documents":
             return documents ? (
-              documents.documents.length > 0 ? (
-                <DocumentsList userId={id} documents={documents.documents} />
+              documents.length > 0 ? (
+                <DocumentsList userId={id} documents={documents} />
               ) : (
                 <Placeholder icon={CheckCircleIcon}>All documents will show up here.</Placeholder>
               )
@@ -512,76 +509,78 @@ const DetailsTab = ({
   return (
     <>
       <FormSection title="Contract">
-        <CardRow className="grid gap-4">
-          {contractor.endedAt ? (
-            <Alert variant="destructive">
-              <ExclamationTriangleIcon />
-              <AlertDescription>
-                <div className="flex items-center justify-between">
-                  Contract {isFuture(contractor.endedAt) ? "ends" : "ended"} on {formatDate(contractor.endedAt)}.
-                  {isFuture(contractor.endedAt) && (
-                    <Button variant="outline" onClick={() => setCancelModalOpen(true)}>
-                      Cancel contract end
-                    </Button>
-                  )}
-                </div>
-              </AlertDescription>
-            </Alert>
-          ) : null}
-          <RoleSelector value={selectedRoleId} onChange={setSelectedRoleId} />
-          <div className="grid items-start gap-4 md:grid-cols-2">
-            <DecimalInput
-              value={payRateInSubunits / 100}
-              onChange={(value) => setPayRateInSubunits((value ?? 0) * 100)}
-              label="Rate"
-              placeholder="0"
-              disabled={!!contractor.endedAt}
-              prefix={<CurrencyDollarIcon className="size-4" />}
-              suffix={`/ ${contractor.payRateType === PayRateType.ProjectBased ? "project" : hoursPerWeek === null ? "year" : "hour"}`}
-            />
-            {contractor.payRateType !== PayRateType.ProjectBased && hoursPerWeek !== null && (
-              <NumberInput
-                value={hoursPerWeek}
-                onChange={(value) => setHoursPerWeek(value ?? 0)}
-                label="Average hours"
-                placeholder={DEFAULT_WORKING_HOURS_PER_WEEK.toString()}
+        <CardContent>
+          <div className="grid gap-4">
+            {contractor.endedAt ? (
+              <Alert variant="destructive">
+                <ExclamationTriangleIcon />
+                <AlertDescription>
+                  <div className="flex items-center justify-between">
+                    Contract {isFuture(contractor.endedAt) ? "ends" : "ended"} on {formatDate(contractor.endedAt)}.
+                    {isFuture(contractor.endedAt) && (
+                      <Button variant="outline" onClick={() => setCancelModalOpen(true)}>
+                        Cancel contract end
+                      </Button>
+                    )}
+                  </div>
+                </AlertDescription>
+              </Alert>
+            ) : null}
+            <RoleSelector value={selectedRoleId} onChange={setSelectedRoleId} />
+            <div className="grid items-start gap-4 md:grid-cols-2">
+              <DecimalInput
+                value={payRateInSubunits / 100}
+                onChange={(value) => setPayRateInSubunits((value ?? 0) * 100)}
+                label="Rate"
+                placeholder="0"
                 disabled={!!contractor.endedAt}
-                suffix="/ week"
+                prefix={<CurrencyDollarIcon className="size-4" />}
+                suffix={`/ ${contractor.payRateType === PayRateType.ProjectBased ? "project" : hoursPerWeek === null ? "year" : "hour"}`}
               />
+              {contractor.payRateType !== PayRateType.ProjectBased && hoursPerWeek !== null && (
+                <NumberInput
+                  value={hoursPerWeek}
+                  onChange={(value) => setHoursPerWeek(value ?? 0)}
+                  label="Average hours"
+                  placeholder={DEFAULT_WORKING_HOURS_PER_WEEK.toString()}
+                  disabled={!!contractor.endedAt}
+                  suffix="/ week"
+                />
+              )}
+            </div>
+            {contractor.payRateType !== PayRateType.ProjectBased && company.flags.includes("equity_compensation") && (
+              <div>
+                <span>Equity split</span>
+                <div className="my-2 flex h-2 overflow-hidden rounded-xs bg-gray-200">
+                  <div
+                    style={{ width: `${contractor.equityPercentage}%` }}
+                    className="flex flex-col justify-center bg-blue-600 whitespace-nowrap"
+                  ></div>
+                  <div
+                    style={{ width: `${100 - contractor.equityPercentage}%` }}
+                    className="flex flex-col justify-center"
+                  ></div>
+                </div>
+                <div className="flex justify-between">
+                  <span>
+                    {(contractor.equityPercentage / 100).toLocaleString(undefined, { style: "percent" })} Equity{" "}
+                    <span className="text-gray-600">
+                      ({formatMoneyFromCents((contractor.equityPercentage * payRateInSubunits) / 100)})
+                    </span>
+                  </span>
+                  <span>
+                    {((100 - contractor.equityPercentage) / 100).toLocaleString(undefined, { style: "percent" })} Cash{" "}
+                    <span className="text-gray-600">
+                      ({formatMoneyFromCents(((100 - contractor.equityPercentage) * payRateInSubunits) / 100)})
+                    </span>
+                  </span>
+                </div>
+              </div>
             )}
           </div>
-          {contractor.payRateType !== PayRateType.ProjectBased && company.flags.includes("equity_compensation") && (
-            <div>
-              <span>Equity split</span>
-              <div className="my-2 flex h-2 overflow-hidden rounded-xs bg-gray-200">
-                <div
-                  style={{ width: `${contractor.equityPercentage}%` }}
-                  className="flex flex-col justify-center bg-blue-600 whitespace-nowrap"
-                ></div>
-                <div
-                  style={{ width: `${100 - contractor.equityPercentage}%` }}
-                  className="flex flex-col justify-center"
-                ></div>
-              </div>
-              <div className="flex justify-between">
-                <span>
-                  {(contractor.equityPercentage / 100).toLocaleString(undefined, { style: "percent" })} Equity{" "}
-                  <span className="text-gray-600">
-                    ({formatMoneyFromCents((contractor.equityPercentage * payRateInSubunits) / 100)})
-                  </span>
-                </span>
-                <span>
-                  {((100 - contractor.equityPercentage) / 100).toLocaleString(undefined, { style: "percent" })} Cash{" "}
-                  <span className="text-gray-600">
-                    ({formatMoneyFromCents(((100 - contractor.equityPercentage) * payRateInSubunits) / 100)})
-                  </span>
-                </span>
-              </div>
-            </div>
-          )}
-        </CardRow>
+        </CardContent>
         {!contractor.endedAt && (
-          <CardRow>
+          <CardFooter>
             <MutationButton
               size="small"
               mutation={updateContractor}
@@ -602,50 +601,52 @@ const DetailsTab = ({
             >
               Save changes
             </MutationButton>
-          </CardRow>
+          </CardFooter>
         )}
       </FormSection>
       <FormSection title="Personal info">
-        <CardRow className="grid gap-4">
-          <Input
-            value={user.email}
-            label="Email"
-            disabled
-            suffix={
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="link"
-                    aria-label="Copy Email"
-                    onClick={() => void navigator.clipboard.writeText(user.email)}
-                  >
-                    <DocumentDuplicateIcon className="size-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipPortal>
-                  <TooltipContent>Copy to clipboard</TooltipContent>
-                </TooltipPortal>
-              </Tooltip>
-            }
-          />
-          <Input value={user.legalName} label="Legal name" disabled />
-          <div className="grid gap-3 md:grid-cols-2">
-            <Input value={user.preferredName} label="Preferred name" disabled />
-            <Input value={user.businessName ?? ""} label="Billing entity name" disabled />
+        <CardContent>
+          <div className="grid gap-4">
+            <Input
+              value={user.email}
+              label="Email"
+              disabled
+              suffix={
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="link"
+                      aria-label="Copy Email"
+                      onClick={() => void navigator.clipboard.writeText(user.email)}
+                    >
+                      <DocumentDuplicateIcon className="size-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipPortal>
+                    <TooltipContent>Copy to clipboard</TooltipContent>
+                  </TooltipPortal>
+                </Tooltip>
+              }
+            />
+            <Input value={user.legalName} label="Legal name" disabled />
+            <div className="grid gap-3 md:grid-cols-2">
+              <Input value={user.preferredName} label="Preferred name" disabled />
+              <Input value={user.businessName ?? ""} label="Billing entity name" disabled />
+            </div>
+            <Input value={user.address.streetAddress} label="Residential address (street name, number, apt)" disabled />
+            <div className="grid gap-3 md:grid-cols-2">
+              <Input value={user.address.city} label="City or town, state or province" disabled />
+              <Input value={user.address.zipCode} label="Postal code" disabled />
+            </div>
+            <Input value={user.address.countryCode} label="Country of residence" disabled />
           </div>
-          <Input value={user.address.streetAddress} label="Residential address (street name, number, apt)" disabled />
-          <div className="grid gap-3 md:grid-cols-2">
-            <Input value={user.address.city} label="City or town, state or province" disabled />
-            <Input value={user.address.zipCode} label="Postal code" disabled />
-          </div>
-          <Input value={user.address.countryCode} label="Country of residence" disabled />
-        </CardRow>
+        </CardContent>
       </FormSection>
     </>
   );
 };
 
-type Invoice = RouterOutput["invoices"]["list"]["invoices"][number];
+type Invoice = RouterOutput["invoices"]["list"][number];
 const invoicesColumnHelper = createColumnHelper<Invoice>();
 const invoicesColumns = [
   invoicesColumnHelper.accessor("invoiceNumber", {
@@ -663,13 +664,10 @@ const invoicesColumns = [
 ];
 const InvoicesTab = ({ data }: { data: RouterOutput["invoices"]["list"] }) => {
   const router = useRouter();
-  const table = useTable({ columns: invoicesColumns, data: data.invoices });
+  const table = useTable({ columns: invoicesColumns, data });
 
-  return data.invoices.length > 0 ? (
-    <>
-      <Table table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
-      <PaginationSection total={data.total} perPage={50} />
-    </>
+  return data.length > 0 ? (
+    <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
   ) : (
     <Placeholder icon={InboxIcon}>Invoices issued by this contractor will show up here.</Placeholder>
   );
@@ -692,16 +690,18 @@ const UpdatesTab = ({ contractorId }: { contractorId: string }) => {
             <h2 className="text-xl font-bold">Time off</h2>
           </hgroup>
 
-          <Card className="p-6">
-            <p className="text-gray-600">Upcoming</p>
-            <ul className="mt-4 grid gap-3">
-              {futureAbsences.map((absence) => (
-                <li key={absence.id} className="flex items-center">
-                  <NoSymbolIcon className="mr-2 h-5 w-5" />
-                  {formatDateRange(absence, { includeWeekday: true })}
-                </li>
-              ))}
-            </ul>
+          <Card>
+            <CardContent className="p-6">
+              <p className="text-gray-600">Upcoming</p>
+              <ul className="mt-4 grid gap-3">
+                {futureAbsences.map((absence) => (
+                  <li key={absence.id} className="flex items-center">
+                    <NoSymbolIcon className="mr-2 h-5 w-5" />
+                    {formatDateRange(absence, { includeWeekday: true })}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
           </Card>
         </div>
       )}
@@ -723,22 +723,24 @@ const UpdatesTab = ({ contractorId }: { contractorId: string }) => {
               </p>
             </hgroup>
 
-            <Card className="p-6">
-              {absencesInPeriod.length > 0 || update.tasks.length > 0 ? (
-                <ul className="grid gap-3">
-                  {absencesInPeriod.length > 0 && (
-                    <li className="flex">
-                      <NoSymbolIcon className="mr-2 h-5 w-5 text-gray-600" />
-                      <i>Off {formatAbsencesForUpdate(update, absencesInPeriod)}</i>
-                    </li>
-                  )}
-                  {update.tasks.map((task) => (
-                    <CompanyWorkerTask key={task.id} task={task} />
-                  ))}
-                </ul>
-              ) : (
-                <p>No tasks or time off recorded</p>
-              )}
+            <Card>
+              <CardContent className="p-6">
+                {absencesInPeriod.length > 0 || update.tasks.length > 0 ? (
+                  <ul className="grid gap-3">
+                    {absencesInPeriod.length > 0 && (
+                      <li className="flex">
+                        <NoSymbolIcon className="mr-2 h-5 w-5 text-gray-600" />
+                        <i>Off {formatAbsencesForUpdate(update, absencesInPeriod)}</i>
+                      </li>
+                    )}
+                    {update.tasks.map((task) => (
+                      <CompanyWorkerTask key={task.id} task={task} />
+                    ))}
+                  </ul>
+                ) : (
+                  <p>No tasks or time off recorded</p>
+                )}
+              </CardContent>
             </Card>
           </div>
         );
@@ -762,15 +764,15 @@ const sharesColumns = [
   sharesColumnHelper.simple("totalAmountInCents", "Cost", formatMoneyFromCents, "numeric"),
 ];
 
-type ShareHolding = RouterOutput["shareHoldings"]["list"]["shareHoldings"][number];
+type ShareHolding = RouterOutput["shareHoldings"]["list"][number];
 function SharesTab({ investorId }: { investorId: string }) {
   const company = useCurrentCompany();
-  const [data] = trpc.shareHoldings.list.useSuspenseQuery({ companyId: company.id, investorId });
+  const [shareHoldings] = trpc.shareHoldings.list.useSuspenseQuery({ companyId: company.id, investorId });
 
-  const table = useTable({ data: data.shareHoldings, columns: sharesColumns });
+  const table = useTable({ data: shareHoldings, columns: sharesColumns });
 
-  return data.shareHoldings.length > 0 ? (
-    <Table table={table} />
+  return shareHoldings.length > 0 ? (
+    <DataTable table={table} />
   ) : (
     <Placeholder icon={CheckCircleIcon}>This investor does not hold any shares.</Placeholder>
   );
@@ -791,17 +793,17 @@ const optionsColumns = [
   ),
 ];
 
-type EquityGrant = RouterOutput["equityGrants"]["list"]["equityGrants"][number];
+type EquityGrant = RouterOutput["equityGrants"]["list"][number];
 function OptionsTab({ investorId, userId }: { investorId: string; userId: string }) {
   const company = useCurrentCompany();
-  const [data] = trpc.equityGrants.list.useSuspenseQuery({ companyId: company.id, investorId });
-  const table = useTable({ data: data.equityGrants, columns: optionsColumns });
+  const [equityGrants] = trpc.equityGrants.list.useSuspenseQuery({ companyId: company.id, investorId });
+  const table = useTable({ data: equityGrants, columns: optionsColumns });
 
   const [selectedEquityGrant, setSelectedEquityGrant] = useState<EquityGrant | null>(null);
 
-  return data.equityGrants.length > 0 ? (
+  return equityGrants.length > 0 ? (
     <>
-      <Table table={table} onRowClicked={setSelectedEquityGrant} />
+      <DataTable table={table} onRowClicked={setSelectedEquityGrant} />
       {selectedEquityGrant ? (
         <DetailsModal
           equityGrant={selectedEquityGrant}
@@ -857,7 +859,7 @@ function ExercisesTab({ investorId }: { investorId: string }) {
   const table = useTable({ data: exercises, columns });
 
   return exercises.length > 0 ? (
-    <Table table={table} />
+    <DataTable table={table} />
   ) : (
     <Placeholder icon={CheckCircleIcon}>This investor has not exercised any options.</Placeholder>
   );
@@ -882,13 +884,13 @@ function ConvertiblesTab({ investorId }: { investorId: string }) {
   const table = useTable({ data: convertibles.convertibleSecurities, columns: convertiblesColumns });
 
   return convertibles.totalCount > 0 ? (
-    <Table table={table} />
+    <DataTable table={table} />
   ) : (
     <Placeholder icon={CheckCircleIcon}>This investor does not hold any convertible securities.</Placeholder>
   );
 }
 
-type Dividend = RouterOutput["dividends"]["list"]["dividends"][number];
+type Dividend = RouterOutput["dividends"]["list"][number];
 const dividendsColumnHelper = createColumnHelper<Dividend>();
 const dividendsColumns = [
   dividendsColumnHelper.simple("dividendRound.issuedAt", "Issue date", formatDate),
@@ -917,10 +919,10 @@ const dividendsColumns = [
 function DividendsTab({ investorId }: { investorId: string }) {
   const company = useCurrentCompany();
   const [dividends] = trpc.dividends.list.useSuspenseQuery({ companyId: company.id, investorId });
-  const table = useTable({ data: dividends.dividends, columns: dividendsColumns });
+  const table = useTable({ data: dividends, columns: dividendsColumns });
 
-  return dividends.total > 0 ? (
-    <Table table={table} />
+  return dividends.length > 0 ? (
+    <DataTable table={table} />
   ) : (
     <Placeholder icon={CheckCircleIcon}>This investor hasn't received any dividends yet.</Placeholder>
   );

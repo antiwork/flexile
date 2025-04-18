@@ -20,10 +20,6 @@ class CompanyWorkerMailerPreview < ActionMailer::Preview
     CompanyWorkerMailer.contract_ended(company_worker_id: CompanyWorker.inactive.last.id)
   end
 
-  def equity_grant_issued
-    CompanyWorkerMailer.equity_grant_issued(EquityGrant.last.id)
-  end
-
   def payment_sent
     CompanyWorkerMailer.payment_sent(Payment.last.id)
   end

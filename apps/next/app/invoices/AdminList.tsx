@@ -3,7 +3,7 @@ import { CheckCircleIcon, InformationCircleIcon } from "@heroicons/react/24/outl
 import { partition } from "lodash-es";
 import Link from "next/link";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
-import React, { useMemo, useState } from "react";
+import React, { Fragment, useMemo, useState } from "react";
 import StripeMicrodepositVerification from "@/app/administrator/settings/StripeMicrodepositVerification";
 import {
   ApproveButton,
@@ -15,18 +15,17 @@ import {
 } from "@/app/invoices/index";
 import { StatusWithTooltip } from "@/app/invoices/Status";
 import { Task } from "@/app/updates/team/Task";
-import { Card, CardRow } from "@/components/Card";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
-import Sheet from "@/components/Sheet";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import Tabs from "@/components/Tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -35,8 +34,7 @@ import { pluralize } from "@/utils/pluralize";
 import { export_company_invoices_path } from "@/utils/routes";
 import { formatDate, formatDuration } from "@/utils/time";
 
-type Invoice = RouterOutput["invoices"]["list"]["invoices"][number];
-const perPage = 50;
+type Invoice = RouterOutput["invoices"]["list"][number];
 export default function AdminList() {
   const company = useCurrentCompany();
   const [invoiceFilter] = useQueryState(
@@ -45,14 +43,11 @@ export default function AdminList() {
   );
   const [openModal, setOpenModal] = useState<"approve" | "reject" | null>(null);
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
-  const [page] = usePage();
   const isActionable = useIsActionable();
   const isPayable = useIsPayable();
   const areTaxRequirementsMet = useAreTaxRequirementsMet();
   const [data, { refetch }] = trpc.invoices.list.useSuspenseQuery({
     companyId: company.id,
-    perPage,
-    page,
     invoiceFilter,
   });
 
@@ -62,7 +57,7 @@ export default function AdminList() {
     void refetch();
   });
 
-  const columnHelper = createColumnHelper<(typeof data.invoices)[number]>();
+  const columnHelper = createColumnHelper<(typeof data)[number]>();
   const columns = useMemo(
     () => [
       columnHelper.accessor("billFrom", {
@@ -96,12 +91,13 @@ export default function AdminList() {
 
   const table = useTable({
     columns,
-    data: data.invoices,
+    data,
     getRowId: (invoice) => invoice.id,
     enableRowSelection: invoiceFilter === "actionable",
   });
 
-  const selectedInvoices = table.getSelectedRowModel().rows.map((row) => row.original);
+  const selectedRows = table.getSelectedRowModel().rows;
+  const selectedInvoices = selectedRows.map((row) => row.original);
   const [selectedPayableInvoices, selectedApprovableInvoices] = partition(selectedInvoices, isPayable);
 
   return (
@@ -117,26 +113,6 @@ export default function AdminList() {
           </Button>
         )
       }
-      footer={
-        invoiceFilter === "actionable" &&
-        selectedInvoices.length > 0 && (
-          <Sheet
-            primary
-            actions={
-              <>
-                <Button disabled={!company.completedPaymentMethodSetup} onClick={() => setOpenModal("approve")}>
-                  Approve selected
-                </Button>
-                <Button variant="outline" onClick={() => setOpenModal("reject")}>
-                  Reject selected
-                </Button>
-              </>
-            }
-          >
-            <b>{selectedInvoices.length} selected</b>
-          </Sheet>
-        )
-      }
     >
       <Tabs
         links={[
@@ -147,7 +123,7 @@ export default function AdminList() {
 
       <StripeMicrodepositVerification />
 
-      {data.invoices.length > 0 && (
+      {data.length > 0 && (
         <div className="grid gap-4">
           {!company.completedPaymentMethodSetup && (
             <Alert variant="destructive">
@@ -163,29 +139,44 @@ export default function AdminList() {
           {company.completedPaymentMethodSetup && !company.isTrusted ? (
             <Alert variant="destructive">
               <ExclamationTriangleIcon />
+              <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
               <AlertDescription>
-                <strong>Payments to contractors may take up to 10 business days to process.</strong>{" "}
-                <span>
-                  Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete additional
-                  verification steps.
-                </span>
+                Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete additional
+                verification steps.
               </AlertDescription>
             </Alert>
           ) : null}
 
-          {invoiceFilter === "actionable" && data.invoices.some((invoice) => !areTaxRequirementsMet(invoice)) && (
+          {invoiceFilter === "actionable" && data.some((invoice) => !areTaxRequirementsMet(invoice)) && (
             <Alert variant="destructive">
               <ExclamationTriangleIcon />
+              <AlertTitle>Missing tax information.</AlertTitle>
               <AlertDescription>
-                <strong>Missing tax information.</strong> Some invoices are not payable until contractors provide tax
-                information.
+                Some invoices are not payable until contractors provide tax information.
               </AlertDescription>
+            </Alert>
+          )}
+
+          {invoiceFilter === "actionable" && selectedRows.length > 0 && (
+            <Alert className="fixed right-0 bottom-0 left-0 z-50 flex items-center justify-between rounded-none border-r-0 border-b-0 border-l-0">
+              <div className="flex items-center gap-2">
+                <InformationCircleIcon className="size-4" />
+                <AlertTitle>{selectedRows.length} selected</AlertTitle>
+              </div>
+              <div className="flex flex-row flex-wrap gap-3">
+                <Button variant="outline" onClick={() => setOpenModal("reject")}>
+                  Reject selected
+                </Button>
+                <Button disabled={!company.completedPaymentMethodSetup} onClick={() => setOpenModal("approve")}>
+                  Approve selected
+                </Button>
+              </div>
             </Alert>
           )}
 
           <div className="flex justify-between md:hidden">
             <h2 className="text-xl font-bold">
-              {data.invoices.length} {pluralize("invoice", data.invoices.length)}
+              {data.length} {pluralize("invoice", data.length)}
             </h2>
             <Checkbox
               checked={table.getIsAllRowsSelected()}
@@ -194,12 +185,11 @@ export default function AdminList() {
             />
           </div>
 
-          <Table table={table} onRowClicked={setDetailInvoice} />
-          <PaginationSection total={data.total} perPage={perPage} />
+          <DataTable table={table} onRowClicked={setDetailInvoice} />
         </div>
       )}
 
-      {data.invoices.length === 0 && <Placeholder icon={CheckCircleIcon}>No invoices to display.</Placeholder>}
+      {data.length === 0 && <Placeholder icon={CheckCircleIcon}>No invoices to display.</Placeholder>}
 
       <Modal
         open={openModal === "approve"}
@@ -232,14 +222,19 @@ export default function AdminList() {
           </div>
         )}
         <Card>
-          {selectedInvoices.slice(0, 5).map((invoice) => (
-            <CardRow key={invoice.id} className="flex justify-between gap-2">
-              <b>{invoice.billFrom}</b>
-              <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
-            </CardRow>
-          ))}
+          <CardContent>
+            {selectedInvoices.slice(0, 5).map((invoice, index, array) => (
+              <Fragment key={invoice.id}>
+                <div className="flex justify-between gap-2">
+                  <b>{invoice.billFrom}</b>
+                  <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
+                </div>
+                {index !== array.length - 1 && <Separator />}
+              </Fragment>
+            ))}
+          </CardContent>
         </Card>
-        {selectedInvoices.length > 6 && <div>and {data.invoices.length - 6} more</div>}
+        {selectedInvoices.length > 6 && <div>and {data.length - 6} more</div>}
       </Modal>
 
       {detailInvoice && detailInvoice.invoiceType !== "other" ? (
@@ -331,20 +326,26 @@ const TasksModal = ({
             </Button>
           </header>
           <Card className="mt-3">
-            <CardRow className="flex justify-between gap-2">
-              <div>Net amount in cash</div>
-              <div>{formatMoneyFromCents(invoice.cashAmountInCents)}</div>
-            </CardRow>
-            {invoice.equityAmountInCents ? (
-              <CardRow className="flex justify-between gap-2">
-                <div>Swapped for equity ({invoice.equityPercentage}%)</div>
-                <div>{formatMoneyFromCents(invoice.equityAmountInCents)}</div>
-              </CardRow>
-            ) : null}
-            <CardRow className="flex justify-between gap-2 font-bold">
-              <div>Payout total</div>
-              <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
-            </CardRow>
+            <CardContent>
+              <div className="flex justify-between gap-2">
+                <div>Net amount in cash</div>
+                <div>{formatMoneyFromCents(invoice.cashAmountInCents)}</div>
+              </div>
+              <Separator />
+              {invoice.equityAmountInCents ? (
+                <>
+                  <div className="flex justify-between gap-2">
+                    <div>Swapped for equity ({invoice.equityPercentage}%)</div>
+                    <div>{formatMoneyFromCents(invoice.equityAmountInCents)}</div>
+                  </div>
+                  <Separator />
+                </>
+              ) : null}
+              <div className="flex justify-between gap-2 font-bold">
+                <div>Payout total</div>
+                <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
+              </div>
+            </CardContent>
           </Card>
         </section>
         {company.flags.includes("team_updates") ? (
@@ -354,12 +355,14 @@ const TasksModal = ({
             </header>
 
             {tasks && tasks.length > 0 ? (
-              <Card className="mt-3 max-w-full overflow-hidden p-4">
-                <ul className="space-y-2">
-                  {tasks.map((task) => (
-                    <Task key={task.id} task={task} />
-                  ))}
-                </ul>
+              <Card className="mt-3 max-w-full">
+                <CardContent className="overflow-hidden">
+                  <ul className="space-y-2">
+                    {tasks.map((task) => (
+                      <Task key={task.id} task={task} />
+                    ))}
+                  </ul>
+                </CardContent>
               </Card>
             ) : (
               <Placeholder icon={CheckCircleIcon}>No tasks to display yet!</Placeholder>

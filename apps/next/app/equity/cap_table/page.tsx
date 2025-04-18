@@ -3,10 +3,10 @@ import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import { useSearchParams } from "next/navigation";
 import React, { useMemo } from "react";
 import CopyButton from "@/components/CopyButton";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
 import Placeholder from "@/components/Placeholder";
-import Sheet from "@/components/Sheet";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import {
   fetchInvestorEmail,
@@ -172,18 +172,21 @@ export default function CapTable() {
   const shareClassesTable = useTable({ data: shareClassesData, columns: shareClassesColumns });
 
   return (
-    <EquityLayout
-      footer={
-        selectedInvestors.length > 0 && (
-          <Sheet primary actions={<CopyButton copyText={selectedInvestorEmails}>Contact selected</CopyButton>}>
-            <b>{selectedInvestors.length} selected</b>
-          </Sheet>
-        )
-      }
-    >
+    <EquityLayout>
+      {selectedInvestors.length > 0 && (
+        <Alert className="mb-4">
+          <AlertDescription className="flex items-center justify-between">
+            <span>
+              <strong>{selectedInvestors.length}</strong> selected
+            </span>
+            <CopyButton copyText={selectedInvestorEmails}>Contact selected</CopyButton>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {data.investors.length > 0 ? (
         <div className="overflow-x-auto">
-          <Table table={investorsTable} caption="Investors" />
+          <DataTable table={investorsTable} caption="Investors" />
         </div>
       ) : (
         <Placeholder icon={CheckCircleIcon}>There are no active investors right now.</Placeholder>
@@ -191,7 +194,7 @@ export default function CapTable() {
 
       {data.investors.length > 0 && data.shareClasses.length > 0 && (
         <div className="overflow-x-auto">
-          <Table table={shareClassesTable} caption="Share Classes" />
+          <DataTable table={shareClassesTable} caption="Share Classes" />
         </div>
       )}
     </EquityLayout>

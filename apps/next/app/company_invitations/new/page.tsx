@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { z } from "zod";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
-import { CardRow } from "@/components/Card";
 import DecimalInput from "@/components/DecimalInput";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
@@ -14,6 +13,7 @@ import MainLayout from "@/components/layouts/Main";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import RadioButtons from "@/components/RadioButtons";
+import { CardContent } from "@/components/ui/card";
 import { DocumentTemplateType, PayRateType } from "@/db/enums";
 import { trpc } from "@/trpc/client";
 
@@ -58,7 +58,7 @@ export default function CreateCompanyInvitation() {
     <MainLayout title="Who are you billing?">
       <div className="space-y-6">
         <FormSection title="Company details">
-          <CardRow className="grid gap-4">
+          <CardContent className="grid gap-4">
             <Input
               value={companyAdministratorEmail}
               onChange={setCompanyAdministratorEmail}
@@ -80,11 +80,11 @@ export default function CreateCompanyInvitation() {
               companyId={null}
               type={DocumentTemplateType.ConsultingContract}
             />
-          </CardRow>
+          </CardContent>
         </FormSection>
 
         <FormSection title="Role details">
-          <CardRow className="grid gap-4">
+          <CardContent className="grid gap-4">
             <Input
               value={roleName}
               onChange={setRoleName}
@@ -122,7 +122,7 @@ export default function CreateCompanyInvitation() {
                 help={errors["company_worker.hours_per_week"]}
               />
             )}
-          </CardRow>
+          </CardContent>
         </FormSection>
 
         <div className="grid gap-x-5 gap-y-3 md:grid-cols-[25%_1fr]">

@@ -2,9 +2,9 @@
 import { CircleCheck } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import React, { useMemo } from "react";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
 import Placeholder from "@/components/Placeholder";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { useCurrentCompany } from "@/global";
 import { PayRateType, trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
@@ -54,7 +54,7 @@ export default function RoleApplicationsPage() {
   return (
     <MainLayout title={role.name}>
       {applications.length ? (
-        <Table table={table} onRowClicked={(row) => router.push(rowLink(row))} />
+        <DataTable table={table} onRowClicked={(row) => router.push(rowLink(row))} />
       ) : (
         <div>
           <Placeholder icon={CircleCheck}>No candidates to review.</Placeholder>

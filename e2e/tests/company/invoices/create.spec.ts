@@ -205,6 +205,7 @@ test.describe("invoice creation", () => {
       equityPercentage: 20,
       year: 2021,
       locked: true,
+      status: "approved",
     });
 
     await login(page, contractorUser);

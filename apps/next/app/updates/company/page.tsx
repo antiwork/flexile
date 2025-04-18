@@ -1,32 +1,29 @@
 "use client";
-import { CheckCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { ArrowRightIcon, CheckCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
-import CardLink from "@/components/CardLink";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
 
-const perPage = 50;
 const useData = () => {
   const company = useCurrentCompany();
-  const [page] = usePage();
-  const [data] = trpc.companyUpdates.list.useSuspenseQuery({ companyId: company.id, perPage, page });
+  const [data] = trpc.companyUpdates.list.useSuspenseQuery({ companyId: company.id });
   return data;
 };
 
 export default function CompanyUpdates() {
   const user = useCurrentUser();
-  const data = useData();
+  const { updates } = useData();
 
   return (
     <MainLayout
@@ -39,11 +36,12 @@ export default function CompanyUpdates() {
         ) : null
       }
     >
-      {data.updates.length ? (
-        <>
-          {user.activeRole === "administrator" ? <AdminList /> : <ViewList />}
-          <PaginationSection total={data.total} perPage={perPage} />
-        </>
+      {updates.length ? (
+        user.activeRole === "administrator" ? (
+          <AdminList />
+        ) : (
+          <ViewList />
+        )
       ) : (
         <Placeholder icon={CheckCircleIcon}>No updates to display.</Placeholder>
       )}
@@ -52,7 +50,7 @@ export default function CompanyUpdates() {
 }
 
 const AdminList = () => {
-  const data = useData();
+  const { updates } = useData();
   const company = useCurrentCompany();
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
@@ -66,7 +64,7 @@ const AdminList = () => {
     },
   });
 
-  const columnHelper = createColumnHelper<(typeof data.updates)[number]>();
+  const columnHelper = createColumnHelper<(typeof updates)[number]>();
   const columns = useMemo(
     () => [
       columnHelper.simple("sentAt", "Sent on", (v) => (v ? formatDate(v) : "-")),
@@ -99,15 +97,15 @@ const AdminList = () => {
     [],
   );
 
-  const table = useTable({ columns, data: data.updates });
+  const table = useTable({ columns, data: updates });
 
   return (
     <>
-      <Table table={table} onRowClicked={(row) => router.push(`/updates/company/${row.id}/edit`)} />
+      <DataTable table={table} onRowClicked={(row) => router.push(`/updates/company/${row.id}/edit`)} />
       <Modal open={!!deletingUpdate} title="Delete update?" onClose={() => setDeletingUpdate(null)}>
         <p>
-          "{data.updates.find((update) => update.id === deletingUpdate)?.title}" will be permanently deleted and cannot
-          be restored.
+          "{updates.find((update) => update.id === deletingUpdate)?.title}" will be permanently deleted and cannot be
+          restored.
         </p>
         <div className="grid auto-cols-fr grid-flow-col items-center gap-3">
           <Button variant="outline" onClick={() => setDeletingUpdate(null)}>
@@ -127,13 +125,18 @@ const AdminList = () => {
 };
 
 const ViewList = () => {
-  const data = useData();
-  return data.updates.map((update) => (
-    <CardLink
-      key={update.id}
-      href={`/updates/company/${update.id}`}
-      title={update.title}
-      description={update.summary}
-    />
+  const { updates } = useData();
+  return updates.map((update) => (
+    <Card key={update.id} asChild>
+      <Link href={`/updates/company/${update.id}`}>
+        <CardContent className="grid grid-cols-[1fr_auto] items-center">
+          <div className="grid gap-4">
+            <h4 className="text-xl font-bold">{update.title}</h4>
+            <p className="line-clamp-2">{update.summary}</p>
+          </div>
+          <ArrowRightIcon className="size-7" />
+        </CardContent>
+      </Link>
+    </Card>
   ));
 };

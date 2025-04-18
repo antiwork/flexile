@@ -3,11 +3,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Map } from "immutable";
 import { useEffect, useState } from "react";
-import { CardRow } from "@/components/Card";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import MutationButton from "@/components/MutationButton";
 import Select from "@/components/Select";
+import { CardContent, CardFooter } from "@/components/ui/card";
 import { useCurrentCompany } from "@/global";
 import { usStates } from "@/models";
 import { trpc } from "@/trpc/client";
@@ -60,58 +60,59 @@ export default function Details() {
       title="Details"
       description="These details will be included in tax forms, as well as in your contractor's invoices."
     >
-      <CardRow className="grid gap-4">
-        <Input value={name} onChange={setName} label="Company's legal name" invalid={errors.has("name")} autoFocus />
-        <Input
-          value={taxId}
-          onChange={(value) => setTaxId(formatTaxId(value))}
-          label="EIN"
-          placeholder="XX-XXXXXXX"
-          invalid={errors.has("taxId")}
-          help={errors.get("taxId")}
-        />
-        <Input
-          value={phoneNumber}
-          onChange={(value) => setPhoneNumber(formatPhoneNumber(value))}
-          label="Phone number"
-          placeholder="(000) 000-0000"
-          invalid={errors.has("phoneNumber")}
-          help={errors.get("phoneNumber")}
-        />
-        <Input
-          value={streetAddress}
-          onChange={setStreetAddress}
-          label="Residential address (street name, number, apt)"
-          invalid={errors.has("streetAddress")}
-        />
-        <div className="grid gap-3 md:grid-cols-3">
-          <Input value={city} onChange={setCity} label="City or town" invalid={errors.has("city")} />
-          <Select
-            value={state || undefined}
-            onChange={setState}
-            placeholder="Choose State"
-            options={usStates.map(({ name, code }) => ({ value: code, label: name }))}
-            label="State"
-            invalid={errors.has("state")}
+      <CardContent>
+        <div className="grid gap-4">
+          <Input value={name} onChange={setName} label="Company's legal name" invalid={errors.has("name")} autoFocus />
+          <Input
+            value={taxId}
+            onChange={(value) => setTaxId(formatTaxId(value))}
+            label="EIN"
+            placeholder="XX-XXXXXXX"
+            invalid={errors.has("taxId")}
+            help={errors.get("taxId")}
           />
-          <Input value={zipCode} onChange={setZipCode} label="Postal code" invalid={errors.has("zipCode")} />
+          <Input
+            value={phoneNumber}
+            onChange={(value) => setPhoneNumber(formatPhoneNumber(value))}
+            label="Phone number"
+            placeholder="(000) 000-0000"
+            invalid={errors.has("phoneNumber")}
+            help={errors.get("phoneNumber")}
+          />
+          <Input
+            value={streetAddress}
+            onChange={setStreetAddress}
+            label="Residential address (street name, number, apt)"
+            invalid={errors.has("streetAddress")}
+          />
+          <div className="grid gap-3 md:grid-cols-3">
+            <Input value={city} onChange={setCity} label="City or town" invalid={errors.has("city")} />
+            <Select
+              value={state || undefined}
+              onChange={setState}
+              placeholder="Choose State"
+              options={usStates.map(({ name, code }) => ({ value: code, label: name }))}
+              label="State"
+              invalid={errors.has("state")}
+            />
+            <Input value={zipCode} onChange={setZipCode} label="Postal code" invalid={errors.has("zipCode")} />
+          </div>
+          <Select
+            value=""
+            onChange={(value) => value}
+            placeholder="United States"
+            options={[]}
+            label="Country"
+            disabled
+            help="Flexile is currently available only to companies incorporated in the United States."
+          />
         </div>
-        <Select
-          value=""
-          onChange={(value) => value}
-          placeholder="United States"
-          options={[]}
-          label="Country"
-          disabled
-          help="Flexile is currently available only to companies incorporated in the United States."
-        />
-      </CardRow>
-
-      <CardRow>
+      </CardContent>
+      <CardFooter>
         <MutationButton mutation={saveMutation} loadingText="Saving..." successText="Changes saved">
           Save changes
         </MutationButton>
-      </CardRow>
+      </CardFooter>
     </FormSection>
   );
 }

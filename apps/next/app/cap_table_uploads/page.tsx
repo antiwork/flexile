@@ -1,18 +1,15 @@
 "use client";
 
 import { ArrowDownTrayIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
 
-const perPage = 50;
 export default function CapTableUploadsPage() {
   const company = useCurrentCompany();
-  const [page] = usePage();
-  const [data] = trpc.capTableUploads.list.useSuspenseQuery({ companyId: company.id, page, perPage });
+  const [data] = trpc.capTableUploads.list.useSuspenseQuery({ companyId: company.id });
 
   const columnHelper = createColumnHelper<(typeof data.uploads)[number]>();
   const columns = [
@@ -71,10 +68,7 @@ export default function CapTableUploadsPage() {
             <h3 className="mt-2 text-sm font-medium text-gray-900">No cap table uploads yet</h3>
           </div>
         ) : (
-          <>
-            <Table table={table} />
-            <PaginationSection total={data.total} perPage={perPage} />
-          </>
+          <DataTable table={table} />
         )}
       </div>
     </MainLayout>

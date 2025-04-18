@@ -61,7 +61,8 @@ test.describe("Contractor onboarding - bank account", () => {
 
     await page.getByRole("button", { name: "Continue" }).click();
 
-    await page.getByLabel("Country").fill("Mexico");
+    await page.getByLabel("Country").click();
+    await page.getByRole("option", { name: "Mexico" }).click();
     await page.getByLabel("City").fill(" San Andres Cholula ");
     await page.getByLabel("Street address, apt number").fill(" 4 Oriente 820 ");
     await page.getByLabel("Post code").fill(" 72810 ");
@@ -98,30 +99,13 @@ test.describe("Contractor onboarding - bank account", () => {
     await expect(page.getByText("Recipient's Nationality")).not.toBeVisible();
   });
 
-  test("shows error message in dynamic form datalist input if invalid option is selected", async ({ page }) => {
-    await page.getByRole("button", { name: "Set up" }).click();
-    await page.getByRole("button", { name: "Continue" }).click();
-    await page.getByLabel("Country").fill("Garbage\t");
-    await page.keyboard.press("Tab");
-
-    await expect(page.getByText("Please select an option from the list.")).toBeVisible();
-  });
-
-  test("replaces select field with datalist input for fields with more than 5 choices", async ({ page }) => {
-    await page.getByRole("button", { name: "Set up" }).click();
-    await page.getByRole("button", { name: "Continue" }).click();
-
-    await expect(page.getByLabel("Country")).toBeVisible();
-    await expect(page.getByRole("combobox", { name: "Country" })).toBeVisible();
-  });
-
   test("prefills the user's information", async ({ page }) => {
     await page.getByRole("button", { name: "Set up" }).click();
 
     await expect(page.getByLabel("Full name of the account holder")).toHaveValue(onboardingUser.legalName ?? "");
 
     await page.getByRole("button", { name: "Continue" }).click();
-    await expect(page.getByLabel("State")).toHaveValue("Hawaii"); // unabbreviated version
+    await expect(page.getByLabel("State")).toHaveText("Hawaii"); // unabbreviated version
     await expect(page.getByLabel("City")).toHaveValue(onboardingUser.city ?? "");
     await expect(page.getByLabel("Street address, apt number")).toHaveValue(onboardingUser.streetAddress ?? "");
     await expect(page.getByLabel("ZIP code")).toHaveValue(onboardingUser.zipCode ?? "");
@@ -167,8 +151,9 @@ test.describe("Contractor onboarding - bank account", () => {
     await expect(page.getByLabel("Full name of the account holder")).toHaveValue(onboardingUser.legalName ?? "");
     await page.getByLabel("IBAN").fill("HR7624020064583467589");
     await page.getByRole("button", { name: "Continue" }).click();
-    await expect(page.getByLabel("Country")).toHaveValue("United States");
-    await page.getByLabel("Country").fill("Croatia");
+    await expect(page.getByLabel("Country")).toHaveText("United States");
+    await page.getByLabel("Country").click();
+    await page.getByRole("option", { name: "Croatia" }).click();
     await page.getByLabel("City").fill("Zagreb");
     await page.getByLabel("Street address, apt number").fill("Ulica Suha Punta 3");
     await page.getByLabel("Post code").fill("23000");
@@ -186,11 +171,13 @@ test.describe("Contractor onboarding - bank account", () => {
     await page.getByLabel("Transit number").fill("04841");
     await page.getByLabel("Account number").fill("3456712");
     await page.getByRole("button", { name: "Continue" }).click();
-    await expect(page.getByLabel("Country")).toHaveValue("United States");
-    await page.getByLabel("Country").fill("Canada");
+    await expect(page.getByLabel("Country")).toHaveText("United States");
+    await page.getByLabel("Country").click();
+    await page.getByRole("option", { name: "Canada" }).click();
     await page.getByLabel("City").fill(onboardingUser.city ?? "");
     await page.getByLabel("Street address, apt number").fill("59-720 Kamehameha Hwy");
-    await page.getByLabel("Province").fill("Alberta");
+    await page.getByLabel("Province").click();
+    await page.getByRole("option", { name: "Alberta" }).click();
     await page.getByLabel("Post code").fill("A2A 2A2");
 
     await page.getByRole("button", { name: "Save bank account" }).click();
@@ -237,7 +224,8 @@ test.describe("Contractor onboarding - bank account", () => {
       await page.getByRole("button", { name: "Set up" }).click();
       await page.getByLabel("Currency").selectOption("USD (United States Dollar)");
       await page.getByRole("button", { name: "Continue" }).click();
-      await page.getByLabel("Country").fill("United States");
+      await page.getByLabel("Country").click();
+      await page.getByRole("option", { name: "United States", exact: true }).click();
       await expect(page.getByLabel("State")).toBeVisible();
       await expect(page.getByLabel("ZIP code")).toBeVisible();
     });
@@ -246,7 +234,8 @@ test.describe("Contractor onboarding - bank account", () => {
       await page.getByRole("button", { name: "Set up" }).click();
       await page.getByLabel("Currency").selectOption("USD (United States Dollar)");
       await page.getByRole("button", { name: "Continue" }).click();
-      await page.getByLabel("Country").fill("Canada");
+      await page.getByLabel("Country").click();
+      await page.getByRole("option", { name: "Canada" }).click();
       await expect(page.getByLabel("Province")).toBeVisible();
       await expect(page.getByLabel("Post code")).toBeVisible();
     });
@@ -255,7 +244,8 @@ test.describe("Contractor onboarding - bank account", () => {
       await page.getByRole("button", { name: "Set up" }).click();
       await page.getByLabel("Currency").selectOption("USD (United States Dollar)");
       await page.getByRole("button", { name: "Continue" }).click();
-      await page.getByLabel("Country").fill("United Kingdom");
+      await page.getByLabel("Country").click();
+      await page.getByRole("option", { name: "United Kingdom" }).click();
       await expect(page.getByLabel("Post code")).toBeVisible();
       await expect(page.getByLabel("Province")).not.toBeVisible();
       await expect(page.getByLabel("State")).not.toBeVisible();
@@ -265,7 +255,8 @@ test.describe("Contractor onboarding - bank account", () => {
       await page.getByRole("button", { name: "Set up" }).click();
       await page.getByLabel("Currency").selectOption("USD (United States Dollar)");
       await page.getByRole("button", { name: "Continue" }).click();
-      await page.getByLabel("Country").fill("Bahamas");
+      await page.getByLabel("Country").click();
+      await page.getByRole("option", { name: "Bahamas" }).click();
       await expect(page.getByLabel("Post code")).not.toBeVisible();
       await expect(page.getByLabel("Province")).not.toBeVisible();
       await expect(page.getByLabel("State")).not.toBeVisible();
@@ -274,14 +265,16 @@ test.describe("Contractor onboarding - bank account", () => {
     test("shows optional Prefecture field for Japan", async ({ page }) => {
       await page.getByRole("button", { name: "Set up" }).click();
       await page.getByRole("button", { name: "Continue" }).click();
-      await page.getByLabel("Country").fill("Japan");
+      await page.getByLabel("Country").click();
+      await page.getByRole("option", { name: "Japan" }).click();
       await expect(page.getByLabel("Prefecture (optional)")).toBeVisible();
     });
 
     test("shows optional Region field for New Zealand", async ({ page }) => {
       await page.getByRole("button", { name: "Set up" }).click();
       await page.getByRole("button", { name: "Continue" }).click();
-      await page.getByLabel("Country").fill("New Zealand");
+      await page.getByLabel("Country").click();
+      await page.getByRole("option", { name: "New Zealand" }).click();
       await expect(page.getByLabel("Region (optional)")).toBeVisible();
     });
   });

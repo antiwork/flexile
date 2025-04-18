@@ -6,7 +6,6 @@ RSpec.describe GrantStockOptions do
   let(:company_worker) { create(:company_worker, user:, company:, pay_rate_in_subunits: 193_00) }
   let!(:option_pool) { create(:option_pool, company:, authorized_shares: 10_000_000, issued_shares: 50_000) }
   let!(:administrator) { create(:company_administrator, company:) }
-  let(:board_approval_date) { "2020-08-01" }
   let(:vesting_commencement_date) { "2020-01-01" }
   let(:number_of_shares) { :calculate }
   let(:issue_date_relationship) { :consultant }
@@ -21,7 +20,7 @@ RSpec.describe GrantStockOptions do
   let(:disability_exercise_months) { nil }
   let(:retirement_exercise_months) { nil }
   subject(:service) do
-    described_class.new(company_worker, option_pool:, board_approval_date:, vesting_commencement_date:,
+    described_class.new(company_worker, option_pool:, vesting_commencement_date:,
                                         number_of_shares:, issue_date_relationship:,
                                         option_grant_type:, option_expiry_months:, vesting_trigger:,
                                         vesting_schedule_params:, voluntary_termination_exercise_months:,
@@ -60,7 +59,6 @@ RSpec.describe GrantStockOptions do
 
     context "when company_investor exists" do
       let(:investor) { create(:company_investor, company:, user:) }
-      let(:board_approval_date) { "2024-01-01" }
       let(:option_grant_type) { :iso }
       let(:issue_date_relationship) { :employee }
 
@@ -82,7 +80,6 @@ RSpec.describe GrantStockOptions do
           period_started_at: DateTime.parse("1 Jan 2023").beginning_of_year,
           period_ended_at: DateTime.parse("1 Jan 2023").end_of_year,
           issue_date_relationship:,
-          board_approval_date:,
           option_grant_type:,
           option_expiry_months:,
           vesting_trigger:,
@@ -99,16 +96,16 @@ RSpec.describe GrantStockOptions do
         expect do
           service.process
         end.to change { CompanyInvestor.count }.by(0)
+           .and change { Document.equity_plan_contract.count }.by(0)
+           .and change { DocumentSignature.count }.by(0)
            .and change { EquityGrant.count }.by(1)
-           .and change { Document.equity_plan_contract.count }.by(1)
-           .and change { DocumentSignature.count }.by(2)
 
         equity_grant = EquityGrant.last
         expect(equity_grant.option_pool).to eq(option_pool)
         expect(equity_grant.company_investor).to eq(investor)
         expect(equity_grant.name).to eq("ACM-1")
         expect(equity_grant.issue_date_relationship_employee?).to be(true)
-        expect(equity_grant.board_approval_date).to eq(Date.parse(board_approval_date))
+        expect(equity_grant.board_approval_date).to eq(nil)
         expect(equity_grant.option_grant_type_iso?).to be(true)
         expect(equity_grant.period_started_at).to eq(DateTime.parse("1 Jan 2023").beginning_of_year)
         expect(equity_grant.period_ended_at).to be_within(2.second).of(DateTime.parse("1 Jan 2023").end_of_year)
@@ -121,18 +118,6 @@ RSpec.describe GrantStockOptions do
         expect(equity_grant.death_exercise_months).to eq(120)
         expect(equity_grant.disability_exercise_months).to eq(120)
         expect(equity_grant.retirement_exercise_months).to eq(120)
-
-        contract = Document.equity_plan_contract.last
-        expect(contract.company).to eq(company)
-        expect(contract.year).to eq(Date.current.year)
-        expect(contract.equity_grant).to eq(equity_grant)
-        expect(contract.name).to eq("Equity Incentive Plan #{Date.current.year}")
-
-        expect(contract.signatures.count).to eq(2)
-        expect(contract.signatures.first.user).to eq(user)
-        expect(contract.signatures.first.title).to eq("Signer")
-        expect(contract.signatures.last.user).to eq(administrator.user)
-        expect(contract.signatures.last.title).to eq("Company Representative")
       end
 
       context "when number of shares is provided" do
@@ -166,7 +151,6 @@ RSpec.describe GrantStockOptions do
           period_started_at: DateTime.parse("1 Jan 2024").beginning_of_year,
           period_ended_at: DateTime.parse("1 Jan 2024").end_of_year,
           issue_date_relationship: :consultant,
-          board_approval_date:,
           option_grant_type: :nso,
           option_expiry_months:,
           vesting_trigger:,
@@ -184,8 +168,8 @@ RSpec.describe GrantStockOptions do
           service.process
         end.to change { CompanyInvestor.count }.by(1)
            .and change { EquityGrant.count }.by(1)
-           .and change { Document.equity_plan_contract.count }.by(1)
-           .and change { DocumentSignature.count }.by(2)
+           .and change { Document.equity_plan_contract.count }.by(0)
+           .and change { DocumentSignature.count }.by(0)
         investor = CompanyInvestor.last
         expect(investor.company).to eq(company)
         expect(investor.user).to eq(user)
@@ -196,20 +180,8 @@ RSpec.describe GrantStockOptions do
         expect(equity_grant.company_investor).to eq(investor)
         expect(equity_grant.name).to eq("ACM-1")
         expect(equity_grant.issue_date_relationship_consultant?).to be(true)
-        expect(equity_grant.board_approval_date).to eq(Date.parse(board_approval_date))
+        expect(equity_grant.board_approval_date).to eq(nil)
         expect(equity_grant.option_grant_type_nso?).to be(true)
-
-        contract = Document.equity_plan_contract.last
-        expect(contract.company).to eq(company)
-        expect(contract.year).to eq(Date.current.year)
-        expect(contract.equity_grant).to eq(equity_grant)
-        expect(contract.name).to eq("Equity Incentive Plan #{Date.current.year}")
-
-        expect(contract.signatures.count).to eq(2)
-        expect(contract.signatures.first.user).to eq(user)
-        expect(contract.signatures.first.title).to eq("Signer")
-        expect(contract.signatures.last.user).to eq(administrator.user)
-        expect(contract.signatures.last.title).to eq("Company Representative")
       end
 
       it "does not grant options and returns an error when the user's residence country " \
@@ -246,7 +218,6 @@ RSpec.describe GrantStockOptions do
         service.process
       end.to change { CompanyInvestor.count }.by(1)
          .and change { EquityGrant.count }.by(1)
-         .and have_enqueued_mail(CompanyWorkerMailer, :equity_grant_issued)
 
       investor = CompanyInvestor.last
       expect(investor.company).to eq(company)
@@ -265,7 +236,6 @@ RSpec.describe GrantStockOptions do
 
       it "sets period_started_at and period_ended_at correctly when vesting schedule is provided" do
         args_for_new = {
-          board_approval_date:,
           period_started_at: DateTime.parse(vesting_commencement_date).beginning_of_day,
           period_ended_at: DateTime.parse(vesting_commencement_date).end_of_day + vesting_schedule.total_vesting_duration_months.months,
           vesting_schedule:,
@@ -274,7 +244,7 @@ RSpec.describe GrantStockOptions do
 
         expect do
           result = service.process
-          expect(result).to eq(success: true, document: Document.last)
+          expect(result).to eq(success: true, equity_grant_id: EquityGrant.last.id)
         end.to change { EquityGrant.count }.by(1)
 
         equity_grant = EquityGrant.last
@@ -296,8 +266,8 @@ RSpec.describe GrantStockOptions do
 
           expect do
             result = service.process
-            expect(result).to eq(success: true, document: Document.last)
             equity_grant = EquityGrant.last
+            expect(result).to eq(success: true, equity_grant_id: equity_grant.id)
             expect(equity_grant.vesting_schedule).to have_attributes(vesting_schedule_params.except(:vesting_schedule_id).to_h.symbolize_keys)
           end.to change { VestingSchedule.count }.by(1)
         end

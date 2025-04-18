@@ -6,10 +6,10 @@ import { useState } from "react";
 import { z } from "zod";
 import BankAccountModal from "@/app/settings/payouts/BankAccountModal";
 import type { BankAccount } from "@/app/settings/payouts/BankAccountModal";
-import { Card, CardRow } from "@/components/Card";
 import OnboardingLayout from "@/components/layouts/Onboarding";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { useCurrentUser } from "@/global";
 import { CURRENCIES, supportedCountries } from "@/models/constants";
 import { request } from "@/utils/request";
@@ -58,7 +58,7 @@ const BankAccountPage = <T extends string>({
   return (
     <OnboardingLayout stepIndex={steps.indexOf("Bank account")} steps={steps} title={header} subtitle={subheading}>
       <Card>
-        <CardRow className="flex justify-between gap-2">
+        <CardContent className="flex justify-between gap-2">
           <div className="flex items-center gap-3">
             {completed ? (
               <CheckCircleIcon className="size-8 text-green-500" />
@@ -78,7 +78,7 @@ const BankAccountPage = <T extends string>({
           <Button variant="outline" disabled={!!completed} onClick={() => setModalOpen(true)}>
             {completed ? "Done" : "Set up"}
           </Button>
-        </CardRow>
+        </CardContent>
       </Card>
       <footer>
         <Tooltip>

@@ -14,6 +14,7 @@ import { useDebounce } from "use-debounce";
 import Input from "@/components/Input";
 import { linkClasses } from "@/components/Link";
 import { Button } from "@/components/ui/button";
+import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { useCurrentCompany } from "@/global";
 import type { RouterInput, RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -181,28 +182,31 @@ export const TaskInput = ({
           />
         )}
         {githubSearchResults?.length && !task.integrationRecord && !hideSearchResults ? (
-          <div className="absolute z-10 mt-1 rounded-md bg-white shadow-lg">
-            <ul className="max-h-60 overflow-auto py-1 text-base" role="listbox">
-              {githubSearchResults.map((item, index) => (
-                // TODO replace with shadcn combobox
-                <li
-                  key={item.external_id}
-                  className={`flex cursor-pointer items-center justify-between px-3 py-2 outline-hidden select-none ${
-                    index === selectedIndex ? "bg-gray-100" : "hover:bg-gray-50"
-                  }`}
-                  role="option"
-                  onClick={() => onSelectIntegrationRecord(item)}
-                >
-                  <div className="flex items-center gap-2">
-                    <GithubIcon integrationRecord={item} />
-                    <div className="min-w-12 whitespace-nowrap text-gray-500">#{item.resource_id}</div>
-                    <div className="font-medium">
-                      {item.description.length > 50 ? `${item.description.slice(0, 50)}...` : item.description}
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
+          <div className="absolute z-10 mt-1 w-full">
+            <Command className="rounded-md border shadow-md">
+              <CommandList>
+                <CommandGroup>
+                  {githubSearchResults.map((item, index) => (
+                    <CommandItem
+                      key={item.external_id}
+                      className={`flex cursor-pointer items-center justify-between gap-2 ${
+                        index === selectedIndex ? "bg-accent" : ""
+                      }`}
+                      onSelect={() => onSelectIntegrationRecord(item)}
+                      value={item.external_id}
+                    >
+                      <div className="flex items-center gap-2">
+                        <GithubIcon integrationRecord={item} />
+                        <div className="min-w-12 whitespace-nowrap text-gray-500">#{item.resource_id}</div>
+                        <div className="font-medium">
+                          {item.description.length > 50 ? `${item.description.slice(0, 50)}...` : item.description}
+                        </div>
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
           </div>
         ) : null}
       </div>

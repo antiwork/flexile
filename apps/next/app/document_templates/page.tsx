@@ -1,12 +1,12 @@
 "use client";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
-import { FilePlusIcon, FileTextIcon, PercentIcon } from "lucide-react";
+import { FilePlusIcon, FileTextIcon, GavelIcon, PercentIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DocumentTemplateType } from "@/db/enums";
@@ -20,6 +20,7 @@ type Template = RouterOutput["documents"]["templates"]["list"][number];
 const typeLabels = {
   [DocumentTemplateType.ConsultingContract]: "Agreement",
   [DocumentTemplateType.EquityPlanContract]: "Equity plan",
+  [DocumentTemplateType.BoardConsent]: "Board consent",
 };
 
 const columnHelper = createColumnHelper<Template>();
@@ -113,6 +114,21 @@ export default function TemplatesPage() {
                       <span className="mt-2">Equity grant contract</span>
                     </div>
                   </MutationButton>
+                  <MutationButton
+                    idleVariant="outline"
+                    className="h-auto rounded-md p-6"
+                    mutation={create}
+                    param={{
+                      companyId: company.id,
+                      name: "Option grant board consent",
+                      type: DocumentTemplateType.BoardConsent,
+                    }}
+                  >
+                    <div className="flex flex-col items-center">
+                      <GavelIcon className="size-6" />
+                      <span className="mt-2 whitespace-normal">Option grant board consent</span>
+                    </div>
+                  </MutationButton>
                 </div>
               </div>
             </Modal>
@@ -121,7 +137,7 @@ export default function TemplatesPage() {
       }
     >
       <div className="overflow-x-auto">
-        <Table table={table} hoverable />
+        <DataTable table={table} />
       </div>
     </DocumentsLayout>
   );

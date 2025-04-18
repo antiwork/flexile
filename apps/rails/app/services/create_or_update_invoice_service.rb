@@ -99,7 +99,7 @@ class CreateOrUpdateInvoiceService
       end
 
       if selected_percentage.present?
-        contractor.equity_allocation_for(invoice_year).update!(locked: true)
+        contractor.equity_allocation_for(invoice_year).update!(status: EquityAllocation.statuses[:pending_grant_creation], locked: true)
       end
     end
     if error.present?

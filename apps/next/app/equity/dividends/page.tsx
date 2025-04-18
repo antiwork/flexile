@@ -2,9 +2,8 @@
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import React from "react";
 import DividendStatusIndicator from "@/app/equity/DividendStatusIndicator";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -13,7 +12,7 @@ import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 import EquityLayout from "../Layout";
 
-type Dividend = RouterOutput["dividends"]["list"]["dividends"][number];
+type Dividend = RouterOutput["dividends"]["list"][number];
 const columnHelper = createColumnHelper<Dividend>();
 const columns = [
   columnHelper.simple("dividendRound.issuedAt", "Issue date", formatDate),
@@ -39,27 +38,20 @@ const columns = [
     ),
   }),
 ];
-const perPage = 50;
 export default function Dividends() {
   const company = useCurrentCompany();
   const user = useCurrentUser();
-  const [page] = usePage();
   const [data] = trpc.dividends.list.useSuspenseQuery({
     companyId: company.id,
     investorId: user.roles.investor?.id,
-    perPage,
-    page,
   });
 
-  const table = useTable({ columns, data: data.dividends });
+  const table = useTable({ columns, data });
 
   return (
     <EquityLayout>
-      {data.dividends.length > 0 ? (
-        <>
-          <Table table={table} />
-          <PaginationSection total={data.total} perPage={perPage} />
-        </>
+      {data.length > 0 ? (
+        <DataTable table={table} />
       ) : (
         <Placeholder icon={CheckCircleIcon}>You have not been issued any dividends yet.</Placeholder>
       )}

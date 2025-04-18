@@ -7,18 +7,19 @@ import { formatISO } from "date-fns";
 import { List } from "immutable";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { z } from "zod";
 import EquityPercentageLockModal from "@/app/invoices/EquityPercentageLockModal";
-import { Card, CardRow } from "@/components/Card";
 import DecimalInput from "@/components/DecimalInput";
 import DurationInput from "@/components/DurationInput";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
 import Select from "@/components/Select";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
@@ -269,179 +270,6 @@ const Edit = () => {
       }),
     );
 
-  const invoiceColumnHelper = createColumnHelper<InvoiceFormLineItem>();
-  const invoiceColumns = useMemo(
-    () =>
-      [
-        invoiceColumnHelper.accessor("description", {
-          header: data.user.project_based ? "Project" : "Line item",
-          cell: (info) => (
-            <Input
-              value={info.getValue()}
-              placeholder="Description"
-              invalid={info.row.original.errors?.includes("description")}
-              onChange={(value) => updateLineItem(info.row.index, { description: value })}
-            />
-          ),
-          footer: () => (
-            <div className="flex gap-3">
-              <Button variant="link" onClick={addLineItem}>
-                <PlusIcon className="inline size-4" />
-                Add line item
-              </Button>
-              {data.company.expenses.enabled ? (
-                <Button variant="link" asChild>
-                  <Label className={canManageExpenses ? "hidden" : ""}>
-                    <ArrowUpTrayIcon className="inline size-4" />
-                    Add expense
-                    <input
-                      ref={uploadExpenseRef}
-                      type="file"
-                      className="hidden"
-                      accept="application/pdf, image/*"
-                      multiple
-                      onChange={createNewExpenseEntries}
-                    />
-                  </Label>
-                </Button>
-              ) : null}
-            </div>
-          ),
-        }),
-        !data.user.project_based
-          ? invoiceColumnHelper.accessor("minutes", {
-              header: "Hours",
-              cell: (info) => (
-                <DurationInput
-                  value={info.row.original.minutes}
-                  aria-label="Hours"
-                  invalid={info.row.original.errors?.includes("minutes")}
-                  onChange={(value) =>
-                    updateLineItem(info.row.index, {
-                      minutes: value,
-                      total_amount_cents: Math.ceil(info.row.original.pay_rate_in_subunits * ((value ?? 0) / 60)),
-                    })
-                  }
-                />
-              ),
-            })
-          : null,
-        !data.user.project_based
-          ? invoiceColumnHelper.simple(
-              "pay_rate_in_subunits",
-              "Rate",
-              (value) => `${formatMoneyFromCents(value)} / hour`,
-              "numeric",
-            )
-          : null,
-        invoiceColumnHelper.accessor("total_amount_cents", {
-          header: "Amount",
-          cell: (info) =>
-            data.user.project_based ? (
-              <DecimalInput
-                value={info.getValue() / 100}
-                onChange={(value) => updateLineItem(info.row.index, { total_amount_cents: (value ?? 0) * 100 })}
-                aria-label="Amount"
-                placeholder="0"
-                prefix="$"
-              />
-            ) : (
-              formatMoneyFromCents(info.getValue())
-            ),
-          meta: { numeric: true },
-        }),
-        invoiceColumnHelper.display({
-          id: "actions",
-          cell: (info) => (
-            <Button
-              variant="link"
-              aria-label="Remove"
-              onClick={() => setLineItems((lineItems) => lineItems.delete(info.row.index))}
-            >
-              <TrashIcon className="size-4" />
-            </Button>
-          ),
-        }),
-      ].filter((column) => !!column),
-    [canManageExpenses],
-  );
-
-  const expenseColumnHelper = createColumnHelper<InvoiceFormExpense>();
-  const expenseColumns = useMemo(
-    () => [
-      expenseColumnHelper.accessor("attachment", {
-        header: "Expense",
-        cell: (info) => (
-          <a href={info.getValue().url} download>
-            <PaperClipIcon className="inline size-4" />
-            {info.getValue().name}
-          </a>
-        ),
-        footer: () => (
-          <Button variant="link" onClick={() => uploadExpenseRef.current?.click()}>
-            <PlusIcon className="inline size-4" />
-            Add expense
-          </Button>
-        ),
-      }),
-      expenseColumnHelper.accessor("description", {
-        header: "Merchant",
-        cell: (info) => (
-          <Input
-            value={info.row.original.description}
-            aria-label="Merchant"
-            invalid={info.row.original.errors?.includes("description")}
-            onChange={(description) => updateExpense(info.row.index, { description })}
-          />
-        ),
-      }),
-      expenseColumnHelper.accessor("category_id", {
-        header: "Category",
-        cell: (info) => (
-          <Select
-            value={info.row.original.category_id.toString()}
-            options={data.company.expenses.categories.map((category) => ({
-              value: category.id.toString(),
-              label: category.name,
-            }))}
-            aria-label="Category"
-            invalid={info.row.original.errors?.includes("category")}
-            onChange={(value) => updateExpense(info.row.index, { category_id: Number(value) })}
-          />
-        ),
-      }),
-      expenseColumnHelper.accessor("total_amount_in_cents", {
-        header: "Amount",
-        cell: (info) => (
-          <DecimalInput
-            value={info.getValue() / 100}
-            placeholder="0"
-            onChange={(value) => updateExpense(info.row.index, { total_amount_in_cents: (value ?? 0) * 100 })}
-            aria-label="Amount"
-            invalid={info.row.original.errors?.includes("amount")}
-            prefix="$"
-          />
-        ),
-      }),
-      expenseColumnHelper.display({
-        id: "actions",
-        cell: (info) => (
-          <Button
-            variant="link"
-            aria-label="Remove"
-            onClick={() => setExpenses((expenses) => expenses.delete(info.row.index))}
-          >
-            <TrashIcon className="size-4" />
-          </Button>
-        ),
-      }),
-    ],
-    [],
-  );
-
-  const invoiceTable = useTable({ data: useMemo(() => lineItems.toArray(), [lineItems]), columns: invoiceColumns });
-  const expenseTable = useTable({ data: useMemo(() => expenses.toArray(), [expenses]), columns: expenseColumns });
-
   return (
     <MainLayout
       title={data.invoice.id ? "Edit invoice" : "New invoice"}
@@ -507,8 +335,177 @@ const Edit = () => {
             </div>
           </div>
 
-          <Table table={invoiceTable} />
-          {canManageExpenses ? <Table table={expenseTable} /> : null}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{data.user.project_based ? "Project" : "Line item"}</TableHead>
+                {data.user.project_based ? null : (
+                  <>
+                    <TableHead>Hours</TableHead>
+                    <TableHead>Rate</TableHead>
+                  </>
+                )}
+                <TableHead>Amount</TableHead>
+                <TableHead />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {lineItems.toArray().map((item, rowIndex) => (
+                <TableRow key={rowIndex}>
+                  <TableCell>
+                    <Input
+                      value={item.description}
+                      placeholder="Description"
+                      invalid={item.errors?.includes("description")}
+                      onChange={(value) => updateLineItem(rowIndex, { description: value })}
+                    />
+                  </TableCell>
+                  {data.user.project_based ? null : (
+                    <>
+                      <TableCell>
+                        <DurationInput
+                          value={item.minutes}
+                          aria-label="Hours"
+                          invalid={item.errors?.includes("minutes")}
+                          onChange={(value) =>
+                            updateLineItem(rowIndex, {
+                              minutes: value,
+                              total_amount_cents: Math.ceil(item.pay_rate_in_subunits * ((value ?? 0) / 60)),
+                            })
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>{`${formatMoneyFromCents(item.pay_rate_in_subunits)} / hour`}</TableCell>
+                    </>
+                  )}
+                  <TableCell>
+                    {data.user.project_based ? (
+                      <DecimalInput
+                        value={item.total_amount_cents / 100}
+                        onChange={(value) => updateLineItem(rowIndex, { total_amount_cents: (value ?? 0) * 100 })}
+                        aria-label="Amount"
+                        placeholder="0"
+                        prefix="$"
+                      />
+                    ) : (
+                      formatMoneyFromCents(item.total_amount_cents)
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="link"
+                      aria-label="Remove"
+                      onClick={() => setLineItems((lineItems) => lineItems.delete(rowIndex))}
+                    >
+                      <TrashIcon className="size-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell colSpan={data.user.project_based ? 3 : 5}>
+                  <div className="flex gap-3">
+                    <Button variant="link" onClick={addLineItem}>
+                      <PlusIcon className="inline size-4" />
+                      Add line item
+                    </Button>
+                    {data.company.expenses.enabled && canManageExpenses ? (
+                      <Button variant="link" asChild>
+                        <Label>
+                          <ArrowUpTrayIcon className="inline size-4" />
+                          Add expense
+                          <input
+                            ref={uploadExpenseRef}
+                            type="file"
+                            className="hidden"
+                            accept="application/pdf, image/*"
+                            multiple
+                            onChange={createNewExpenseEntries}
+                          />
+                        </Label>
+                      </Button>
+                    ) : null}
+                  </div>
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
+          {canManageExpenses ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Expense</TableHead>
+                  <TableHead>Merchant</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {expenses.toArray().map((expense, rowIndex) => (
+                  <TableRow key={rowIndex}>
+                    <TableCell>
+                      <a href={expense.attachment.url} download>
+                        <PaperClipIcon className="inline size-4" />
+                        {expense.attachment.name}
+                      </a>
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        value={expense.description}
+                        aria-label="Merchant"
+                        invalid={expense.errors?.includes("description")}
+                        onChange={(description) => updateExpense(rowIndex, { description })}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={expense.category_id.toString()}
+                        options={data.company.expenses.categories.map((category) => ({
+                          value: category.id.toString(),
+                          label: category.name,
+                        }))}
+                        aria-label="Category"
+                        invalid={expense.errors?.includes("category")}
+                        onChange={(value) => updateExpense(rowIndex, { category_id: Number(value) })}
+                      />
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      <DecimalInput
+                        value={expense.total_amount_in_cents / 100}
+                        placeholder="0"
+                        onChange={(value) => updateExpense(rowIndex, { total_amount_in_cents: (value ?? 0) * 100 })}
+                        aria-label="Amount"
+                        invalid={expense.errors?.includes("amount")}
+                        prefix="$"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="link"
+                        aria-label="Remove"
+                        onClick={() => setExpenses((expenses) => expenses.delete(rowIndex))}
+                      >
+                        <TrashIcon className="size-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={5}>
+                    <Button variant="link" onClick={() => uploadExpenseRef.current?.click()}>
+                      <PlusIcon className="inline size-4" />
+                      Add expense
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              </TableFooter>
+            </Table>
+          ) : null}
 
           <footer className="flex flex-col gap-3 lg:flex-row lg:justify-between">
             <Input
@@ -519,37 +516,46 @@ const Edit = () => {
               className="w-full border-dashed border-gray-100 lg:w-96"
             />
             <Card className="md:self-start">
-              {canManageExpenses || equityCalculation.amountInCents > 0 ? (
-                <CardRow className="flex justify-between gap-2">
-                  <strong>Total services</strong>
-                  <span>{formatMoneyFromCents(totalServicesAmountInCents)}</span>
-                </CardRow>
-              ) : null}
-              {canManageExpenses ? (
-                <CardRow className="flex justify-between gap-2">
-                  <strong>Total expenses</strong>
-                  <span>{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
-                </CardRow>
-              ) : null}
-              {equityCalculation.amountInCents > 0 ? (
-                <>
-                  <CardRow className="flex justify-between gap-2">
-                    <strong>Swapped for equity (not paid in cash)</strong>
-                    <span>{formatMoneyFromCents(equityCalculation.amountInCents)}</span>
-                  </CardRow>
-                  <CardRow className="flex justify-between gap-2">
-                    <strong>Net amount in cash</strong>
-                    <span className="numeric">
-                      {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.amountInCents)}
-                    </span>
-                  </CardRow>
-                </>
-              ) : (
-                <CardRow className="flex justify-between gap-2">
-                  <strong>Total</strong>
-                  <span className="numeric">{formatMoneyFromCents(totalInvoiceAmountInCents)}</span>
-                </CardRow>
-              )}
+              <CardContent>
+                {canManageExpenses || equityCalculation.amountInCents > 0 ? (
+                  <>
+                    <div className="flex justify-between gap-2">
+                      <strong>Total services</strong>
+                      <span>{formatMoneyFromCents(totalServicesAmountInCents)}</span>
+                    </div>
+                    <Separator />
+                  </>
+                ) : null}
+                {canManageExpenses ? (
+                  <>
+                    <div className="flex justify-between gap-2">
+                      <strong>Total expenses</strong>
+                      <span>{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
+                    </div>
+                    <Separator />
+                  </>
+                ) : null}
+                {equityCalculation.amountInCents > 0 ? (
+                  <>
+                    <div className="flex justify-between gap-2">
+                      <strong>Swapped for equity (not paid in cash)</strong>
+                      <span>{formatMoneyFromCents(equityCalculation.amountInCents)}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between gap-2">
+                      <strong>Net amount in cash</strong>
+                      <span className="numeric">
+                        {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.amountInCents)}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex justify-between gap-2">
+                    <strong>Total</strong>
+                    <span className="numeric">{formatMoneyFromCents(totalInvoiceAmountInCents)}</span>
+                  </div>
+                )}
+              </CardContent>
             </Card>
           </footer>
         </div>

@@ -2,7 +2,7 @@ import React from "react";
 import Status from "@/components/Status";
 import type { RouterOutput } from "@/trpc";
 
-type Dividend = RouterOutput["dividends"]["list"]["dividends"][number];
+type Dividend = RouterOutput["dividends"]["list"][number];
 
 const DividendStatusIndicator = ({ status }: { status: Dividend["status"] }) => {
   const getVariant = () => {

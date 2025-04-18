@@ -20,15 +20,6 @@ class CompanyWorkerMailer < ApplicationMailer
     mail(to: @user.email, reply_to: @company.email, subject: "You're invited to #{@company.name}'s team")
   end
 
-  def equity_grant_issued(equity_grant_id)
-    @equity_grant = EquityGrant.find(equity_grant_id)
-    @company = @equity_grant.option_pool.company
-    @user = @equity_grant.company_investor.user
-
-    mail(to: @user.email, reply_to: @company.email,
-         subject: "🔴 Action needed: sign your Incentive Plan to receive stock options")
-  end
-
   def vesting_event_processed(vesting_event_id)
     @vesting_event = VestingEvent.find(vesting_event_id)
     @equity_grant = @vesting_event.equity_grant

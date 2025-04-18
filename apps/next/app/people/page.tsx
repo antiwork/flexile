@@ -3,11 +3,10 @@ import { UserPlusIcon, UsersIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import React, { useMemo } from "react";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import Tabs from "@/components/Tabs";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -18,7 +17,6 @@ import { formatDate } from "@/utils/time";
 
 type Contractor = RouterOutput["contractors"]["list"]["workers"][number];
 
-const perPage = 25;
 export default function People() {
   const user = useCurrentUser();
   const company = useCurrentCompany();
@@ -26,8 +24,7 @@ export default function People() {
     "type",
     parseAsStringLiteral(["onboarding", "alumni", "active"] as const).withDefault("active"),
   );
-  const [page] = usePage();
-  const [data] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id, type, perPage, page });
+  const [{ workers }] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id, type });
 
   const columnHelper = createColumnHelper<Contractor>();
   const columns = useMemo(
@@ -50,7 +47,7 @@ export default function People() {
         columnHelper.simple("user.countryCode", "Country", (v) => v && countries.get(v)),
         columnHelper.simple("startedAt", "Start Date", formatDate),
         ...(type === "active" &&
-        data.workers.some((person) => {
+        workers.some((person) => {
           const endDate = person.endedAt;
           return endDate && new Date(endDate) > new Date();
         })
@@ -92,7 +89,7 @@ export default function People() {
     [type],
   );
 
-  const table = useTable({ columns, data: data.workers });
+  const table = useTable({ columns, data: workers });
 
   return (
     <MainLayout
@@ -116,11 +113,8 @@ export default function People() {
         ]}
       />
 
-      {data.workers.length > 0 ? (
-        <>
-          <Table table={table} onRowClicked={user.activeRole === "administrator" ? () => "" : undefined} />
-          <PaginationSection total={data.total} perPage={perPage} />
-        </>
+      {workers.length > 0 ? (
+        <DataTable table={table} onRowClicked={user.activeRole === "administrator" ? () => "" : undefined} />
       ) : (
         <Placeholder icon={UsersIcon}>Contractors will show up here.</Placeholder>
       )}

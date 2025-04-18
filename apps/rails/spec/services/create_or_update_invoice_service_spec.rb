@@ -130,7 +130,9 @@ RSpec.describe CreateOrUpdateInvoiceService do
           expect(invoice.flexile_fee_cents).to eq(50 + (1.5 * expected_total_amount_in_cents / 100.0))
           expected_options = 185 # (expected_equity_cents / (company.share_price_in_usd * 100)).round
           expect(invoice.equity_amount_in_options).to eq(expected_options)
-          expect(contractor.equity_allocation_for(date.year).locked?).to eq(true)
+          equity_allocation = contractor.equity_allocation_for(date.year)
+          expect(equity_allocation.status).to eq("pending_grant_creation")
+          expect(equity_allocation.locked?).to be(true)
         end.to change { user.invoices.count }.by(1)
       end
 
@@ -154,7 +156,9 @@ RSpec.describe CreateOrUpdateInvoiceService do
           expect(invoice.equity_amount_in_cents).to eq(0)
           expect(invoice.cash_amount_in_cents).to eq(720_00)
           expect(invoice.flexile_fee_cents).to eq(50 + (1.5 * 720_00 / 100))
-          expect(contractor.equity_allocation_for(date.year).locked?).to eq(true)
+          equity_allocation = contractor.equity_allocation_for(date.year)
+          expect(equity_allocation.status).to eq("pending_grant_creation")
+          expect(equity_allocation.locked?).to be(true)
         end.to change { user.invoices.count }.by(1)
       end
 
@@ -184,11 +188,12 @@ RSpec.describe CreateOrUpdateInvoiceService do
         end.to change { user.invoices.count }.by(1)
       end
 
-      it "fails to create an invoice if an active grant is missing and the contractor has an equity percentage" do
+      it "fails to create an invoice if an active grant is missing, company does not have a share price, and the contractor has an equity percentage" do
         create(:equity_allocation, company_worker: contractor, equity_percentage: 20, year: date.year)
         equity_grant.destroy!
+        company.update!(fmv_per_share_in_usd: nil)
 
-        expect(Bugsnag).to receive(:notify).with("InvoiceEquityCalculator: Error selecting active grant for CompanyWorker #{contractor.id}")
+        expect(Bugsnag).to receive(:notify).with("InvoiceEquityCalculator: Error determining share price for CompanyWorker #{contractor.id}")
         expect do
           result = invoice_service.process
           expect(result[:success]).to eq(false)
@@ -351,7 +356,9 @@ RSpec.describe CreateOrUpdateInvoiceService do
             expect(invoice.flexile_fee_cents).to eq(15_00) # max fee
             expected_options = 92 # (expected_equity_cents / (company.share_price_in_usd * 100)).floor
             expect(invoice.equity_amount_in_options).to eq(expected_options)
-            expect(contractor.equity_allocation_for(date.year).locked?).to eq(true)
+            equity_allocation = contractor.equity_allocation_for(date.year)
+            expect(equity_allocation.status).to eq("pending_grant_creation")
+            expect(equity_allocation.locked?).to be(true)
           end.to change { user.invoices.count }.by(1)
         end
       end

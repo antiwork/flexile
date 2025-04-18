@@ -10,7 +10,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import LegalCertificationModal from "@/app/onboarding/LegalCertificationModal";
-import { CardRow } from "@/components/Card";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import RadioButtons from "@/components/RadioButtons";
@@ -18,6 +17,7 @@ import Select from "@/components/Select";
 import Status from "@/components/Status";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { CardContent, CardFooter } from "@/components/ui/card";
 import { BusinessType, TaxClassification } from "@/db/enums";
 import { useCurrentUser } from "@/global";
 import { countries } from "@/models/constants";
@@ -192,7 +192,7 @@ export default function TaxPage() {
           user.roles.worker ? "invoices and " : ""
         }applicable tax forms.`}
       >
-        <CardRow className="grid gap-4">
+        <CardContent className="grid gap-4">
           {!isTaxInfoConfirmed && (
             <Alert variant="destructive">
               <ExclamationTriangleIcon />
@@ -383,9 +383,9 @@ export default function TaxPage() {
               help={errors.get("zip_code")}
             />
           </div>
-        </CardRow>
+        </CardContent>
 
-        <CardRow className="flex flex-wrap items-center gap-4">
+        <CardFooter className="flex-wrap gap-4">
           <Button disabled={!taxInfoChanged && isTaxInfoConfirmed} onClick={handleSave}>
             Save changes
           </Button>
@@ -397,7 +397,7 @@ export default function TaxPage() {
               {formData.contractor_for_companies.join(", ")}
             </div>
           ) : null}
-        </CardRow>
+        </CardFooter>
       </FormSection>
 
       <LegalCertificationModal

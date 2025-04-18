@@ -55,7 +55,7 @@ class SeedDataGeneratorFromTemplate
 
     print_message("Using email #{@config.fetch("email")}.")
     WiseCredential.create!(profile_id: WISE_PROFILE_ID, api_key: WISE_API_KEY)
-    ActiveRecord::Base.connection.exec_query("INSERT INTO document_templates(name, external_id, created_at, updated_at, document_type, docuseal_id, signable) VALUES('name', 'Consulting agreement', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, 592723, true)")
+    ActiveRecord::Base.connection.exec_query("INSERT INTO document_templates(name, external_id, created_at, updated_at, document_type, docuseal_id, signable) VALUES('Consulting agreement', 'ex1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, 592723, true), ('Equity grant contract', 'ex2', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1, 613787, true)")
     Wise::AccountBalance.create_usd_balance_if_needed
     top_up_wise_account_if_needed
 
@@ -629,9 +629,9 @@ class SeedDataGeneratorFromTemplate
 
               if OnboardingState::Worker.new(user: contractor.reload, company:).complete?
                 create_company_worker_invoices!(company_worker, ended_at:)
-                # if company_worker_data.key?("equity_allocation_attributes")
-                #   company_worker.equity_allocations.create!(company_worker_data.fetch("equity_allocation_attributes"))
-                # end
+                if company_worker_data.key?("equity_allocation_attributes")
+                  company_worker.equity_allocations.create!(**company_worker_data.fetch("equity_allocation_attributes"), year: Date.current.year)
+                end
                 updates_random_records_count = company_worker_updates_data.fetch("random_records_metadata").fetch("count")
                 create_company_worker_updates!(company_worker, updates_random_records_count)
 
@@ -885,8 +885,9 @@ class SeedDataGeneratorFromTemplate
       Timecop.travel(option_pool_created_at) do
         GrantStockOptions.new(
           company_worker,
-          board_approval_date: option_pool_created_at,
         ).process
+        equity_grant = EquityGrant.last
+        equity_grant.update!(board_approval_date: option_pool_created_at)
         CreateOrUpdateEquityAllocation.new(
           company_worker,
           equity_percentage: equity_grant_data.fetch("equity_allocation").fetch("equity_percentage")
@@ -941,7 +942,6 @@ class SeedDataGeneratorFromTemplate
           vested_shares: equity_grant_data.fetch("vested_shares"),
           period_started_at:,
           period_ended_at:,
-          board_approval_date: equity_grant_data.fetch("board_approval_date"),
           issue_date_relationship: equity_grant_data.fetch("issue_date_relationship"),
           vesting_trigger: "invoice_paid",
           vesting_schedule: nil,

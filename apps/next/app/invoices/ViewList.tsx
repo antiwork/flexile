@@ -7,17 +7,16 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import EquityPercentageLockModal from "@/app/invoices/EquityPercentageLockModal";
 import { StatusWithTooltip } from "@/app/invoices/Status";
-import { Card, CardRow } from "@/components/Card";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import DecimalInput from "@/components/DecimalInput";
 import DurationInput from "@/components/DurationInput";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
 import { linkClasses } from "@/components/Link";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
-import Table, { createColumnHelper, useTable } from "@/components/Table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assert } from "@/utils/assert";
@@ -30,16 +29,12 @@ import { EDITABLE_INVOICE_STATES } from ".";
 const useData = () => {
   const company = useCurrentCompany();
   const user = useCurrentUser();
-  const [page] = usePage();
   return trpc.invoices.list.useSuspenseQuery({
     contractorId: user.roles.worker?.id,
     companyId: company.id,
-    perPage,
-    page,
   });
 };
 
-const perPage = 50;
 export default function ViewList() {
   const [data] = useData();
   const router = useRouter();
@@ -52,8 +47,8 @@ export default function ViewList() {
     userId: user.id,
     signable: true,
   });
-  const unsignedContractId = documents.documents[0]?.id;
-  const columnHelper = createColumnHelper<(typeof data.invoices)[number]>();
+  const unsignedContractId = documents[0]?.id;
+  const columnHelper = createColumnHelper<(typeof data)[number]>();
   const columns = useMemo(
     () =>
       [
@@ -89,7 +84,7 @@ export default function ViewList() {
     [data],
   );
 
-  const table = useTable({ columns, data: data.invoices });
+  const table = useTable({ columns, data });
 
   return (
     <MainLayout
@@ -125,11 +120,8 @@ export default function ViewList() {
 
       <QuickInvoiceSection disabled={!!unsignedContractId} />
 
-      {data.invoices.length > 0 ? (
-        <>
-          <Table table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
-          <PaginationSection total={data.total} perPage={perPage} />
-        </>
+      {data.length > 0 ? (
+        <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
       ) : (
         <div>
           <Placeholder icon={CurrencyDollarIcon}>
@@ -224,8 +216,8 @@ const QuickInvoiceSection = ({ disabled }: { disabled?: boolean }) => {
   });
 
   return (
-    <Card disabled={!!disabled}>
-      <CardRow className="grid gap-4">
+    <Card className={disabled ? "pointer-events-none opacity-50" : ""}>
+      <CardContent className="grid gap-4">
         <h4 className="text-sm uppercase">Quick invoice</h4>
         <div className="grid gap-3 md:grid-cols-3">
           <div className="grid gap-2">
@@ -269,9 +261,9 @@ const QuickInvoiceSection = ({ disabled }: { disabled?: boolean }) => {
             ) : null}
           </div>
         </div>
-      </CardRow>
+      </CardContent>
 
-      <CardRow className="flex flex-wrap justify-between gap-3">
+      <CardFooter className="flex-wrap justify-between gap-3">
         <div className="flex flex-wrap items-center gap-4">
           {company.flags.includes("expenses") ? (
             <a href={`${newCompanyInvoiceRoute}&expenses=true`} inert={submit.isPending} className={linkClasses}>
@@ -301,7 +293,7 @@ const QuickInvoiceSection = ({ disabled }: { disabled?: boolean }) => {
             />
           ) : null}
         </div>
-      </CardRow>
+      </CardFooter>
     </Card>
   );
 };
