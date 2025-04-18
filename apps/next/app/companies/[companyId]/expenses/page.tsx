@@ -21,7 +21,6 @@ import { trpc, useCanAccess } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 
-
 const stripePromise = loadStripe(env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
 type ExpenseCardCharge = RouterOutput["expenseCards"]["charges"]["list"]["items"][number];
@@ -65,9 +64,7 @@ function CompanyExpenses() {
   return (
     <MainLayout title="Expenses">
       {data.items.length ? (
-        <>
-          <DataTable table={table} />
-        </>
+        <DataTable table={table} />
       ) : (
         <Placeholder icon={CheckCircleIcon}>
           <span>No expenses yet.</span>
@@ -204,9 +201,7 @@ function ContractorExpenses() {
       </Elements>
 
       {expenseCardCharges.items.length ? (
-        <>
-          <DataTable table={table} />
-        </>
+        <DataTable table={table} />
       ) : (
         <Placeholder icon={CheckCircleIcon}>No expenses to display.</Placeholder>
       )}

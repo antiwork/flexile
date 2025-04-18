@@ -45,9 +45,7 @@ export default function TenderOffers() {
       }
     >
       {data.tenderOffers.length ? (
-        <>
-          <DataTable table={table} onRowClicked={(row) => router.push(`/equity/tender_offers/${row.id}`)} />
-        </>
+        <DataTable table={table} onRowClicked={(row) => router.push(`/equity/tender_offers/${row.id}`)} />
       ) : (
         <Placeholder icon={CheckCircleIcon}>There are no tender offers yet.</Placeholder>
       )}

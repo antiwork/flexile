@@ -113,9 +113,7 @@ function Documents({ year }: { year: number }) {
   return (
     <>
       {documents.length > 0 ? (
-        <>
-          <DocumentsList userId={userId} documents={documents} />
-        </>
+        <DocumentsList userId={userId} documents={documents} />
       ) : (
         <Placeholder icon={CheckCircleIcon}>No documents for {year}.</Placeholder>
       )}

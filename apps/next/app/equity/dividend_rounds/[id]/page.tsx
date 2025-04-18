@@ -48,7 +48,6 @@ const columns = [
   }),
 ];
 
-
 export default function DividendRound() {
   const { id } = useParams<{ id: string }>();
   const company = useCurrentCompany();

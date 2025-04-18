@@ -50,9 +50,7 @@ export default function Convertibles() {
         />
       ) : null}
       {data.convertibleSecurities.length > 0 ? (
-        <>
-          <DataTable table={table} />
-        </>
+        <DataTable table={table} />
       ) : (
         <Placeholder icon={CheckCircleIcon}>You do not hold any convertible securities.</Placeholder>
       )}

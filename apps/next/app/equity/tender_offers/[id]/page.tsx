@@ -31,7 +31,6 @@ import LetterOfTransmissal from "./LetterOfTransmissal";
 type Bid = RouterOutput["tenderOffers"]["bids"]["list"]["bids"][number];
 type Holding = RouterOutput["shareHoldings"]["sumByShareClass"][number];
 
-
 const financialData = Object.entries({
   Cash: [
     11045655, 12563729, 13238776, 13332966, 15671365, 16100626, 15877174, 17083710, 18002925, 18641588, 12811052,
@@ -372,11 +371,7 @@ export default function TenderOfferView() {
         </>
       ) : null}
 
-      {bids.total > 0 ? (
-        <>
-          <DataTable table={bidsTable} />
-        </>
-      ) : null}
+      {bids.total > 0 ? <DataTable table={bidsTable} /> : null}
 
       {cancelingBid ? (
         <Modal

@@ -114,9 +114,7 @@ export default function People() {
       />
 
       {data.workers.length > 0 ? (
-        <>
-          <DataTable table={table} onRowClicked={user.activeRole === "administrator" ? () => "" : undefined} />
-        </>
+        <DataTable table={table} onRowClicked={user.activeRole === "administrator" ? () => "" : undefined} />
       ) : (
         <Placeholder icon={UsersIcon}>Contractors will show up here.</Placeholder>
       )}

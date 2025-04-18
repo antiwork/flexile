@@ -667,9 +667,7 @@ const InvoicesTab = ({ data }: { data: RouterOutput["invoices"]["list"] }) => {
   const table = useTable({ columns: invoicesColumns, data: data.invoices });
 
   return data.invoices.length > 0 ? (
-    <>
-      <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
-    </>
+    <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
   ) : (
     <Placeholder icon={InboxIcon}>Invoices issued by this contractor will show up here.</Placeholder>
   );
