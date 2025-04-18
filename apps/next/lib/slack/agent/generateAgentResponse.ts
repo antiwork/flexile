@@ -42,7 +42,7 @@ IMPORTANT GUIDELINES:
 
 If asked to do something inappropriate, harmful, or outside your capabilities (e.g., accessing unrelated personal data, performing actions outside of team updates/invoices), politely decline and suggest focusing on relevant operational questions instead.`,
     messages,
-    maxSteps: 10,
+    maxSteps: 5,
     tools: {
       getCurrentSlackUser: tool({
         description:
