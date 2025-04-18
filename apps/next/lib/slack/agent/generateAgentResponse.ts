@@ -152,7 +152,6 @@ If asked to do something inappropriate, harmful, or outside your capabilities (e
           await db.insert(companyContractorUpdateTasks).values({
             updateId: latestUpdate.id,
             description: taskDescription,
-            // Assuming createdAt is handled by DB default
           });
 
           return { success: true, message: `Added task: "${taskDescription}" to the latest weekly update.` };
@@ -213,24 +212,16 @@ If asked to do something inappropriate, harmful, or outside your capabilities (e
               delete invoiceValues[key as keyof typeof invoiceValues],
           );
 
-          try {
-            const newInvoiceResult = await db
-              .insert(invoices)
-              .values(invoiceValues as typeof invoices.$inferInsert) // Use type assertion after removing undefined
-              .returning({ id: invoices.id, issuedAt: invoices.issuedAt });
+          const newInvoiceResult = await db
+            .insert(invoices)
+            .values(invoiceValues as typeof invoices.$inferInsert) // Use type assertion after removing undefined
+            .returning({ id: invoices.id, issuedAt: invoices.issuedAt });
 
-            if (!newInvoiceResult || newInvoiceResult.length === 0) {
-              return { error: "Failed to create invoice record in the database." };
-            }
-            return {
-              success: true,
-              invoiceId: newInvoiceResult[0].id,
-              message: `Invoice for $${amount} submitted successfully.`,
-            };
-          } catch (error) {
-            captureExceptionAndLog(error);
-            return { error: "An error occurred while creating the invoice." };
-          }
+          return {
+            success: true,
+            invoiceId: newInvoiceResult[0].id,
+            message: `Invoice for $${amount} submitted successfully.`,
+          };
         },
       }),
     },
