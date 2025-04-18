@@ -26,9 +26,9 @@ const typeLabels = {
 type Document = RouterOutput["documents"]["list"]["documents"][number];
 
 function DocumentStatus({ document }: { document: Document }) {
-  const completedAt = document.signatories.every((signatory) => signatory.signedAt)
+  const completedAt = document.signatories.every((signatory: { signedAt: Date | null }) => signatory.signedAt)
     ? document.signatories.reduce<Date | null>(
-        (acc, signatory) =>
+        (acc, signatory: { signedAt: Date | null }) =>
           acc ? (signatory.signedAt && signatory.signedAt > acc ? signatory.signedAt : acc) : signatory.signedAt,
         null,
       )
