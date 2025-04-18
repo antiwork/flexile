@@ -37,7 +37,6 @@ export default inngest.createFunction(
           user: {
             columns: {
               email: true,
-              externalId: true,
             },
           },
         },
@@ -48,7 +47,6 @@ export default inngest.createFunction(
         .select({
           userId: companyInvestors.userId,
           email: users.email,
-          externalId: users.externalId,
         })
         .from(companyInvestors)
         .leftJoin(boardConsents, eq(boardConsents.companyInvestorId, companyInvestors.id))
@@ -72,12 +70,12 @@ export default inngest.createFunction(
           {
             email: companyInvestor.email,
             role: "Signer",
-            external_id: companyInvestor.externalId,
+            external_id: companyInvestor.userId.toString(),
           },
           {
             email: companyAdministrator.user.email,
             role: "Company Representative",
-            external_id: companyAdministrator.user.externalId,
+            external_id: companyAdministrator.userId.toString(),
           },
         ],
       });
