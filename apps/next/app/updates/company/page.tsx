@@ -37,9 +37,11 @@ export default function CompanyUpdates() {
       }
     >
       {data.updates.length ? (
-        <>
-          {user.activeRole === "administrator" ? <AdminList /> : <ViewList />}
-        </>
+        user.activeRole === "administrator" ? (
+          <AdminList />
+        ) : (
+          <ViewList />
+        )
       ) : (
         <Placeholder icon={CheckCircleIcon}>No updates to display.</Placeholder>
       )}
