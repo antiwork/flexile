@@ -165,7 +165,6 @@ const contractorColumns = [
 ];
 
 function ContractorExpenses() {
-  const [page] = usePage();
   const user = useCurrentUser();
   if (!user.roles.worker) notFound();
   const company = useCurrentCompany();
@@ -174,8 +173,6 @@ function ContractorExpenses() {
   const [expenseCardCharges] = trpc.expenseCards.charges.list.useSuspenseQuery({
     companyId: company.id,
     contractorId: user.roles.worker.id,
-    page,
-    perPage,
   });
 
   const [{ card }, { refetch }] = trpc.expenseCards.getActive.useSuspenseQuery({ companyId: company.id });
