@@ -119,8 +119,6 @@ const replyHandler = async (
         ts: assertDefined(statusMessage.ts),
       });
     }
-
-    return;
   };
 
   return { showStatus, showResult };

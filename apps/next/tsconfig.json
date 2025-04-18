@@ -3,11 +3,7 @@
     "noEmit": true,
     "moduleResolution": "bundler",
     "target": "es2023",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "es2023"
-    ],
+    "lib": ["dom", "dom.iterable", "es2023"],
     "module": "esnext",
     "strict": true,
     "allowUnreachableCode": false,
@@ -24,9 +20,7 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     },
     "resolveJsonModule": true,
     "jsx": "preserve",
@@ -46,7 +40,5 @@
     "types.d.ts",
     "middleware.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

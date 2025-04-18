@@ -7,11 +7,35 @@ import { db } from "@/db";
 import { companies, companyContractors, companyContractorUpdates, companyContractorUpdateTasks } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 
+// Define comprehensive user info type used across functions
+type UserError = {
+  error: string;
+};
+
+type UserSuccess = {
+  slackId: string;
+  userId: bigint;
+  contractorId: bigint;
+  companyId: bigint;
+  name: string | undefined;
+  email: string | undefined;
+};
+
+// Union type for functions that return user information
+type UserResult = UserError | UserSuccess;
+
+// Expose tool functions on 'this' for internal references
+interface ToolContext {
+  getCurrentSlackUser: {
+    execute: (params: Record<string, never>) => Promise<UserResult>;
+  };
+}
+
 export const generateAgentResponse = async (
   messages: CoreMessage[],
   company: typeof companies.$inferSelect,
   slackUserId: string | undefined,
-  showStatus: (status: string | null, debugContent?: Record<string, unknown> | string | null) => void,
+  showStatus: (status: string | null, debugContent?: Record<string, unknown> | string | null) => Promise<void>,
 ) => {
   const result = await generateText({
     model: openai("gpt-4o"),
@@ -40,8 +64,8 @@ If asked to do something inappropriate, harmful, or outside your capabilities (e
         description:
           "Get the current Slack user making the request. Crucial for actions specific to a user, like fetching their updates or submitting invoices.",
         parameters: z.object({}),
-        execute: async () => {
-          showStatus(`Checking user...`, { slackUserId });
+        execute: async (): Promise<UserResult> => {
+          await showStatus(`Checking user...`, { slackUserId });
           if (!slackUserId) return { error: "Slack user ID not available" };
 
           // Find contractor directly using slackUserId
@@ -69,12 +93,12 @@ If asked to do something inappropriate, harmful, or outside your capabilities (e
       getWeeklyUpdate: tool({
         description: "Get the latest weekly update submitted by the current user.",
         parameters: z.object({}), // Implicitly uses the current user
-        execute: async () => {
-          showStatus(`Getting weekly update...`);
+        async execute(this: ToolContext) {
+          await showStatus(`Getting weekly update...`);
           // 1. Get current user info (needs contractorId and companyId)
-          const currentUserInfo = await (this as any).getCurrentSlackUser.execute({});
-          if (currentUserInfo.error || !currentUserInfo.contractorId || !currentUserInfo.companyId) {
-            return { error: currentUserInfo.error || "Could not determine current user's contractor/company ID." };
+          const currentUserInfo = await this.getCurrentSlackUser.execute({});
+          if ("error" in currentUserInfo) {
+            return { error: currentUserInfo.error };
           }
           const { contractorId, companyId } = currentUserInfo;
 
@@ -110,12 +134,12 @@ If asked to do something inappropriate, harmful, or outside your capabilities (e
         parameters: z.object({
           taskName: z.string().describe("The name of the task or update item to add."),
         }),
-        execute: async ({ taskName }) => {
-          showStatus(`Updating weekly update...`, { taskName });
+        async execute(this: ToolContext, { taskName }) {
+          await showStatus(`Updating weekly update...`, { taskName });
           // 1. Get current user info
-          const currentUserInfo = await (this as any).getCurrentSlackUser.execute({});
-          if (currentUserInfo.error || !currentUserInfo.contractorId || !currentUserInfo.companyId) {
-            return { error: currentUserInfo.error || "Could not determine current user's contractor/company ID." };
+          const currentUserInfo = await this.getCurrentSlackUser.execute({});
+          if ("error" in currentUserInfo) {
+            return { error: currentUserInfo.error };
           }
           const { contractorId, companyId } = currentUserInfo;
 
