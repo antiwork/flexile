@@ -10,8 +10,6 @@ export const dividendsRouter = createRouter({
   list: companyProcedure
     .input(
       z.object({
-        page: z.number().default(1),
-        limit: z.number().default(10),
         investorId: z.string().optional(),
         dividendRoundId: z.number().optional(),
       }),
