@@ -17,7 +17,6 @@ import { formatDate } from "@/utils/time";
 
 type Contractor = RouterOutput["contractors"]["list"]["workers"][number];
 
-const perPage = 25;
 export default function People() {
   const user = useCurrentUser();
   const company = useCurrentCompany();
@@ -117,7 +116,6 @@ export default function People() {
       {data.workers.length > 0 ? (
         <>
           <DataTable table={table} onRowClicked={user.activeRole === "administrator" ? () => "" : undefined} />
-          <PaginationSection total={data.total} perPage={perPage} />
         </>
       ) : (
         <Placeholder icon={UsersIcon}>Contractors will show up here.</Placeholder>

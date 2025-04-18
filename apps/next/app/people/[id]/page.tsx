@@ -671,7 +671,6 @@ const InvoicesTab = ({ data }: { data: RouterOutput["invoices"]["list"] }) => {
   return data.invoices.length > 0 ? (
     <>
       <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
-      <PaginationSection total={data.total} perPage={50} />
     </>
   ) : (
     <Placeholder icon={InboxIcon}>Invoices issued by this contractor will show up here.</Placeholder>

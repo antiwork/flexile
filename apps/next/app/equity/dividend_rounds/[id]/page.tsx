@@ -71,7 +71,6 @@ export default function DividendRound() {
         ]}
       />
       <DataTable table={table} onRowClicked={(row) => router.push(rowLink(row))} />
-      <PaginationSection total={dividendsData.total} perPage={perPage} />
     </MainLayout>
   );
 }
