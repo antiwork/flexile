@@ -1,7 +1,7 @@
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { NonRetriableError } from "inngest";
 import { db } from "@/db";
-import { BoardConsentStatus, DocumentType } from "@/db/enums";
+import { DocumentType } from "@/db/enums";
 import { boardConsents, documents, equityAllocations, equityGrants } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 
@@ -11,7 +11,6 @@ export default inngest.createFunction(
   async ({ event, step }) => {
     const { boardConsentId } = event.data;
 
-    // Fetch board consent data
     const boardConsent = await step.run("fetch-board-consent", async () => {
       const consent = await db.query.boardConsents.findFirst({
         where: eq(boardConsents.id, BigInt(boardConsentId)),
@@ -29,27 +28,13 @@ export default inngest.createFunction(
       return consent;
     });
 
-    // Update equity allocation status
     await step.run("update-equity-allocation", async () => {
       await db
         .update(equityAllocations)
         .set({ status: "approved" })
         .where(eq(equityAllocations.id, boardConsent.equityAllocationId));
-    });
 
-    // Update board consent status
-    await step.run("update-board-consent", async () => {
-      const [updated] = await db
-        .update(boardConsents)
-        .set({
-          status: BoardConsentStatus.BoardApproved,
-          boardApprovedAt: new Date(),
-        })
-        .where(eq(boardConsents.id, BigInt(boardConsentId)))
-        .returning();
-      if (!updated) throw new NonRetriableError(`Board consent ${boardConsentId} not found`);
-
-      return updated;
+      return { message: "Equity allocation approved" };
     });
 
     const result = await step.run("fetch-equity-grant", async () => {
@@ -79,16 +64,14 @@ export default inngest.createFunction(
 
     const { optionGrant, equityPlanDocument } = result;
 
-    await step.sendEvent("email.equity-plan.admin-signing-needed", {
-      name: "email.equity-plan.admin-signing-needed",
+    await step.sendEvent("email.equity-plan.signing-needed", {
+      name: "email.equity-plan.signing-needed",
       data: {
         documentId: String(equityPlanDocument.id),
         optionGrantId: String(optionGrant.id),
         companyId: String(boardConsent.companyId),
       },
     });
-
-    // TODO: send email to investor that their equity grant was issued and their invoices are payable now
 
     return {
       optionGrantId: String(optionGrant.id),

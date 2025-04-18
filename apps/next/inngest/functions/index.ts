@@ -1,5 +1,5 @@
 import createBoardConsent from "./board_consents/create";
-import { sendAdminSigningEmail, sendBoardSigningEmails, sendLawyerApprovalEmails } from "./board_consents/emails";
+import { sendBoardSigningEmails, sendEquityPlanSigningEmail, sendLawyerApprovalEmails } from "./board_consents/emails";
 import lawyerApproval from "./board_consents/lawyerApproval";
 import boardApproval from "./board_consents/memberApproval";
 import quickbooksFinancialReportSync from "./quickbooksFinancialReportSync";
@@ -16,7 +16,7 @@ export default [
   slackWeeklyRecap,
   sendLawyerApprovalEmails,
   sendBoardSigningEmails,
-  sendAdminSigningEmail,
+  sendEquityPlanSigningEmail,
   createBoardConsent,
   lawyerApproval,
   boardApproval,

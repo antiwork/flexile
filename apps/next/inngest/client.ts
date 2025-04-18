@@ -61,7 +61,7 @@ export const inngest = new Inngest({
         companyId: z.string(),
       }),
     },
-    "email.equity-plan.admin-signing-needed": {
+    "email.equity-plan.signing-needed": {
       data: z.object({
         documentId: z.string(),
         companyId: z.string(),

@@ -192,6 +192,13 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
       onClose();
     },
   });
+  const documentMemberApproval = trpc.documents.approveByMember.useMutation({
+    onSuccess: async () => {
+      await trpcUtils.documents.list.refetch();
+      router.push("/documents");
+      onClose();
+    },
+  });
   const signDocument = trpc.documents.sign.useMutation({
     onSuccess: async () => {
       await trpcUtils.documents.list.refetch();
@@ -224,12 +231,29 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
           const userIsSigner = document.signatories.some(
             (signatory) => signatory.id === user.id && signatory.title === "Signer",
           );
-          const role = userIsSigner ? "Signer" : "Company Representative";
+          const role = userIsSigner
+            ? "Signer"
+            : document.type === DocumentType.BoardConsent
+              ? assertDefined(
+                  document.signatories.find((signatory) => signatory.id === user.id)?.title,
+                  "User is not a board member",
+                )
+              : "Company Representative";
           signDocument.mutate({
             companyId: company.id,
             id: document.id,
             role,
           });
+
+          if (
+            document.type === DocumentType.BoardConsent &&
+            document.signatories.every((signatory) => signatory.signedAt)
+          ) {
+            documentMemberApproval.mutate({
+              companyId: company.id,
+              id: document.id,
+            });
+          }
         }}
       />
     </Modal>

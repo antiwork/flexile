@@ -14,6 +14,7 @@ import env from "@/env";
 import { inngest } from "@/inngest/client";
 import AdminSigningEmail from "@/inngest/functions/emails/AdminSigningEmail";
 import BoardSigningEmail from "@/inngest/functions/emails/BoardSigningEmail";
+import EquityGrantIssuedEmail from "@/inngest/functions/emails/EquityGrantIssuedEmail";
 import { LawyerApprovalEmail } from "@/inngest/functions/emails/LawyerApprovalEmail";
 import { sendEmails } from "@/trpc/email";
 import { companyName } from "@/trpc/routes/companies";
@@ -182,9 +183,9 @@ export const sendBoardSigningEmails = inngest.createFunction(
   },
 );
 
-export const sendAdminSigningEmail = inngest.createFunction(
-  { id: "send-admin-signing-email" },
-  { event: "email.equity-plan.admin-signing-needed" },
+export const sendEquityPlanSigningEmail = inngest.createFunction(
+  { id: "send-equity-plan-signing-email" },
+  { event: "email.equity-plan.signing-needed" },
   async ({ event, step }) => {
     const { documentId, companyId, optionGrantId } = event.data;
 
@@ -209,6 +210,9 @@ export const sendAdminSigningEmail = inngest.createFunction(
         assertDefined(
           await db.query.equityGrants.findFirst({
             where: eq(equityGrants.id, BigInt(optionGrantId)),
+            with: {
+              vestingSchedule: true,
+            },
           }),
         ),
         assertDefined(
@@ -238,21 +242,40 @@ export const sendAdminSigningEmail = inngest.createFunction(
     });
 
     const userName = user.legalName || user.email;
+    const userEmail = assertDefined(user.email, "User email not found");
 
     await step.run("send-emails", async () => {
       const documentUrl = `${env.DOMAIN}/documents?sign=${document.id}`;
+      const signGrantUrl = `${env.DOMAIN}/stock_options_contracts/${document.id}`;
 
-      return await sendEmails(
-        {
-          from: `${company} via Flexile <support@${env.DOMAIN}>`,
-          subject: `Equity plan ready for signature`,
-          react: AdminSigningEmail({
-            userName,
-            documentUrl,
-          }),
-        },
-        process.env.NODE_ENV === "production" ? companyAdminEmails : [{ email: "delivered@resend.dev" }],
-      );
+      await Promise.all([
+        sendEmails(
+          {
+            from: `${company} via Flexile <support@${env.DOMAIN}>`,
+            subject: `Equity plan ready for signature`,
+            react: AdminSigningEmail({
+              userName,
+              documentUrl,
+            }),
+          },
+          process.env.NODE_ENV === "production" ? companyAdminEmails : [{ email: "delivered@resend.dev" }],
+        ),
+        sendEmails(
+          {
+            from: `${company} via Flexile <support@${env.DOMAIN}>`,
+            subject: `${company} has granted you stock options`,
+            react: EquityGrantIssuedEmail({
+              companyName: assertDefined(company),
+              grant,
+              vestingSchedule: grant.vestingSchedule,
+              signGrantUrl,
+            }),
+          },
+          process.env.NODE_ENV === "production" ? [{ email: userEmail }] : [{ email: "delivered@resend.dev" }],
+        ),
+      ]);
+
+      return { message: "Emails sent" };
     });
 
     return {
