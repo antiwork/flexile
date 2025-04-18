@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, inArray, notInArray } from "drizzle-orm";
+import { and, desc, eq, inArray, notInArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import {
@@ -125,7 +125,7 @@ export const capTableUploadsRouter = createRouter({
       throw new TRPCError({ code: "FORBIDDEN" });
     }
 
-    const baseQuery = db
+    const uploads = await db
       .select({
         id: capTableUploads.id,
         status: capTableUploads.status,
@@ -149,9 +149,6 @@ export const capTableUploadsRouter = createRouter({
         ),
       )
       .orderBy(desc(capTableUploads.createdAt));
-
-    const total = await db.$count(baseQuery.as("capTableUploads"));
-    const uploads = await baseQuery;
 
     const attachmentRows = await db.query.activeStorageAttachments.findMany({
       where: and(
@@ -184,7 +181,6 @@ export const capTableUploadsRouter = createRouter({
         ...upload,
         attachments: attachmentsByRecordId.get(upload.id) || [],
       })),
-      total,
     };
   }),
 });

@@ -123,11 +123,11 @@ export default function Equity() {
   const [fileError, setFileError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [canCreateCapTableUpload] = trpc.capTableUploads.canCreate.useSuspenseQuery({ companyId: company.id });
-  const [{ total }] = trpc.capTableUploads.list.useSuspenseQuery({
+  const [{ uploads }] = trpc.capTableUploads.list.useSuspenseQuery({
     companyId: company.id,
     onlyCurrentUser: true,
   });
-  const hasInProgressUpload = total > 0;
+  const hasInProgressUpload = uploads.length > 0;
 
   const [sharePriceInUsd, setSharePriceInUsd] = useState(
     company.sharePriceInUsd == null ? null : Number(company.sharePriceInUsd),
