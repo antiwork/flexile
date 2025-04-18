@@ -28,7 +28,7 @@ import { formatDate, formatMonth } from "@/utils/time";
 import { VESTED_SHARES_CLASS } from "../";
 import LetterOfTransmissal from "./LetterOfTransmissal";
 
-type Bid = RouterOutput["tenderOffers"]["bids"]["list"]["bids"][number];
+type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
 type Holding = RouterOutput["shareHoldings"]["sumByShareClass"][number];
 
 const financialData = Object.entries({
@@ -191,7 +191,7 @@ export default function TenderOfferView() {
     [user.activeRole],
   );
 
-  const bidsTable = useTable({ data: bids.bids, columns });
+  const bidsTable = useTable({ data: bids, columns });
 
   const buttonTooltip = !signed ? "Please sign the letter of transmittal before submitting a bid" : null;
 
@@ -371,7 +371,7 @@ export default function TenderOfferView() {
         </>
       ) : null}
 
-      {bids.total > 0 ? <DataTable table={bidsTable} /> : null}
+      {bids.length > 0 ? <DataTable table={bidsTable} /> : null}
 
       {cancelingBid ? (
         <Modal

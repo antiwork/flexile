@@ -22,7 +22,7 @@ export const expenseCardChargesRouter = createRouter({
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
-      const query = db
+      const rows = await db
         .select({
           expenseCardCharge: pick(expenseCardCharges, [
             "id",
@@ -49,10 +49,7 @@ export const expenseCardChargesRouter = createRouter({
           ),
         );
 
-      const total = await db.$count(query.as("expenseCardCharges"));
-      const rows = await query;
-
-      const items = rows.map((row) => ({
+      return rows.map((row) => ({
         ...row.expenseCardCharge,
         contractor: {
           id: row.contractor.externalId,
@@ -60,7 +57,5 @@ export const expenseCardChargesRouter = createRouter({
           user: simpleUser(row.user),
         },
       }));
-
-      return { items, total };
     }),
 });

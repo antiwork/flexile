@@ -23,7 +23,7 @@ import { formatDate } from "@/utils/time";
 
 const stripePromise = loadStripe(env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
-type ExpenseCardCharge = RouterOutput["expenseCards"]["charges"]["list"]["items"][number];
+type ExpenseCardCharge = RouterOutput["expenseCards"]["charges"]["list"][number];
 export default function ExpensesPage() {
   const user = useCurrentUser();
 
@@ -59,11 +59,11 @@ const companyColumns = [
 function CompanyExpenses() {
   const company = useCurrentCompany();
   const [data] = trpc.expenseCards.charges.list.useSuspenseQuery({ companyId: company.id });
-  const table = useTable({ columns: companyColumns, data: data.items });
+  const table = useTable({ columns: companyColumns, data });
 
   return (
     <MainLayout title="Expenses">
-      {data.items.length ? (
+      {data.length ? (
         <DataTable table={table} />
       ) : (
         <Placeholder icon={CheckCircleIcon}>
@@ -182,7 +182,7 @@ function ContractorExpenses() {
     },
   });
 
-  const table = useTable({ columns: contractorColumns, data: expenseCardCharges.items });
+  const table = useTable({ columns: contractorColumns, data: expenseCardCharges });
 
   return (
     <MainLayout
@@ -200,7 +200,7 @@ function ContractorExpenses() {
         <CardDisplay />
       </Elements>
 
-      {expenseCardCharges.items.length ? (
+      {expenseCardCharges.length ? (
         <DataTable table={table} />
       ) : (
         <Placeholder icon={CheckCircleIcon}>No expenses to display.</Placeholder>

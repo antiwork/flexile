@@ -8,6 +8,7 @@ import DataTable, { createColumnHelper, useTable } from "@/components/DataTable"
 import Placeholder from "@/components/Placeholder";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
+import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
@@ -19,7 +20,7 @@ export default function TenderOffers() {
   const user = useCurrentUser();
   const [data] = trpc.tenderOffers.list.useSuspenseQuery({ companyId: company.id });
 
-  const columnHelper = createColumnHelper<(typeof data.tenderOffers)[number]>();
+  const columnHelper = createColumnHelper<RouterOutput["tenderOffers"]["list"][number]>();
   const columns = [
     columnHelper.accessor("startsAt", {
       header: "Start date",
@@ -29,7 +30,7 @@ export default function TenderOffers() {
     columnHelper.simple("minimumValuation", "Minimum valuation", formatMoney),
   ];
 
-  const table = useTable({ columns, data: data.tenderOffers });
+  const table = useTable({ columns, data });
 
   return (
     <EquityLayout
@@ -44,7 +45,7 @@ export default function TenderOffers() {
         ) : null
       }
     >
-      {data.tenderOffers.length ? (
+      {data.length ? (
         <DataTable table={table} onRowClicked={(row) => router.push(`/equity/tender_offers/${row.id}`)} />
       ) : (
         <Placeholder icon={CheckCircleIcon}>There are no tender offers yet.</Placeholder>

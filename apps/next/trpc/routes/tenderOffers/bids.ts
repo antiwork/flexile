@@ -39,13 +39,11 @@ export const tenderOffersBidsRouter = createRouter({
         with: { companyInvestor: { with: { user: { columns: simpleUser.columns } } } },
         orderBy: desc(tenderOfferBids.createdAt),
       });
-      const total = await db.$count(tenderOfferBids, where);
-      const bids = bidsQuery.map((bid) => ({
+      return bidsQuery.map((bid) => ({
         ...pick(bid, ["sharePriceCents", "shareClass", "numberOfShares"]),
         id: bid.externalId,
         companyInvestor: { user: { email: bid.companyInvestor.user.email } },
       }));
-      return { bids, total };
     }),
   create: companyProcedure
     .input(

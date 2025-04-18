@@ -50,7 +50,7 @@ export const tenderOffersRouter = createRouter({
     if (!ctx.company.tenderOffersEnabled || (!ctx.companyAdministrator && !ctx.companyInvestor))
       throw new TRPCError({ code: "FORBIDDEN" });
 
-    const query = db
+    return await db
       .select({
         ...pick(tenderOffers, "startsAt", "endsAt", "minimumValuation"),
         id: tenderOffers.externalId,
@@ -59,10 +59,6 @@ export const tenderOffersRouter = createRouter({
       .innerJoin(companies, eq(tenderOffers.companyId, companies.id))
       .where(eq(companies.id, ctx.company.id))
       .orderBy(desc(tenderOffers.createdAt));
-
-    const total = await db.$count(query.as("tenderOffers"));
-
-    return { tenderOffers: await query, total };
   }),
 
   get: companyProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
