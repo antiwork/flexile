@@ -3,15 +3,9 @@ import { CoreMessage, tool } from "ai";
 import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import {
-  companies,
-  companyContractors,
-  companyContractorUpdates,
-  companyContractorUpdateTasks,
-  invoices,
-} from "@/db/schema";
+import { companies, companyContractors, companyContractorUpdates, companyContractorUpdateTasks } from "@/db/schema";
 import { runAIQuery } from "@/lib/ai/index";
-import type { RouterInput, RouterOutput } from "@/trpc";
+import type { RouterOutput } from "@/trpc";
 import { assertDefined } from "@/utils/assert";
 
 type Company = typeof companies.$inferSelect;
@@ -61,7 +55,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities (e
           // Find contractor directly using slackUserId
           const contractor = await db.query.companyContractors.findFirst({
             where: eq(companyContractors.slackUserId, slackUserId),
-            columns: { id: true, companyId: true, clerkUserId: true },
+            columns: { id: true, companyId: true, userId: true },
           });
 
           if (!contractor) return { error: "User not found as a contractor" };
@@ -72,7 +66,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities (e
 
           return {
             slackId: slackUserId,
-            clerkUserId: contractor.clerkUserId,
+            userId: contractor.userId,
             contractorId: contractor.id,
             companyId: contractor.companyId,
             name: user?.profile?.real_name,
@@ -155,73 +149,6 @@ If asked to do something inappropriate, harmful, or outside your capabilities (e
           });
 
           return { success: true, message: `Added task: "${taskDescription}" to the latest weekly update.` };
-        },
-      }),
-      submitInvoice: tool({
-        description: "Submit a new invoice for the current user.",
-        parameters: z.object({
-          amount: z.number().positive().describe("The invoice amount in dollars."),
-          description: z.string().describe("A brief description of the services rendered or invoice purpose."),
-          date: z
-            .string()
-            .datetime({ message: "Invalid date format" })
-            .optional()
-            .describe("The date services were rendered or the invoice date (YYYY-MM-DDTHH:mm:ssZ). Optional."),
-        }),
-        execute: async ({ amount, description, date }) => {
-          showStatus?.(`Submitting invoice...`, { amount, description, date });
-          // 1. Get current user info
-          const currentUserInfo = await (this as any).getCurrentSlackUser.execute({});
-          if (currentUserInfo.error || !currentUserInfo.contractorId || !currentUserInfo.companyId) {
-            return { error: currentUserInfo.error || "Could not determine current user's contractor/company ID." };
-          }
-          const { contractorId, companyId, clerkUserId } = currentUserInfo;
-
-          // 2. Create the invoice
-          // TODO (techdebt): Fill required fields based on actual schema
-          const currentDate = new Date();
-          const invoiceDate = date ? new Date(date) : currentDate;
-          const dueDate = new Date(invoiceDate.getTime() + 30 * 24 * 60 * 60 * 1000); // Due in 30 days
-
-          const invoiceValues: Partial<typeof invoices.$inferInsert> = {
-            companyId: companyId,
-            userId: clerkUserId, // Assuming userId is clerkUserId
-            createdById: clerkUserId, // Assuming createdById is clerkUserId
-            companyContractorId: contractorId,
-            amount: Math.round(amount * 100), // Placeholder, actual amount column might differ
-            totalAmountInUsdCents: Math.round(amount * 100), // Assuming this is the main amount
-            cashAmountInCents: Math.round(amount * 100),
-            description: description,
-            invoiceDate: invoiceDate.toISOString().split("T")[0],
-            issuedAt: invoiceDate,
-            dueOn: dueDate.toISOString().split("T")[0],
-            status: "pending",
-            invoiceNumber: `INV-${Date.now()}`, // Placeholder
-            billFrom: "Placeholder", // Placeholder
-            billTo: "Placeholder", // Placeholder
-            equityPercentage: 0, // Placeholder
-            equityAmountInCents: 0, // Placeholder
-            equityAmountInOptions: 0, // Placeholder
-            // Add other required fields from schema.ts with defaults or placeholders
-          };
-
-          // Remove undefined keys to avoid inserting nulls if columns are NOT NULL
-          Object.keys(invoiceValues).forEach(
-            (key) =>
-              invoiceValues[key as keyof typeof invoiceValues] === undefined &&
-              delete invoiceValues[key as keyof typeof invoiceValues],
-          );
-
-          const newInvoiceResult = await db
-            .insert(invoices)
-            .values(invoiceValues as typeof invoices.$inferInsert) // Use type assertion after removing undefined
-            .returning({ id: invoices.id, issuedAt: invoices.issuedAt });
-
-          return {
-            success: true,
-            invoiceId: newInvoiceResult[0].id,
-            message: `Invoice for $${amount} submitted successfully.`,
-          };
         },
       }),
     },
