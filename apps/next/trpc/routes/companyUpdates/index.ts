@@ -46,13 +46,12 @@ export const companyUpdatesRouter = createRouter({
         where,
         orderBy: desc(companyUpdates.createdAt),
       });
-      const total = await db.$count(db.select().from(companyUpdates).where(where).as("count"));
       const updates = rows.map((update) => ({
         ...pick(update, ["title", "sentAt"]),
         id: update.externalId,
         summary: truncate(renderTiptapToText(update.body), { length: 300 }),
       }));
-      return { updates, total };
+      return { updates };
     }),
   get: companyProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
     if (
