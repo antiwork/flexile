@@ -755,7 +755,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_18_135243) do
     t.virtual "vested_amount_usd", type: :decimal, as: "((vested_shares)::numeric * share_price_usd)", stored: true
     t.decimal "exercise_price_usd", null: false
     t.enum "issue_date_relationship", default: "consultant", null: false, enum_type: "equity_grants_issue_date_relationship"
-    t.date "board_approval_date", null: false
+    t.date "board_approval_date"
     t.enum "option_grant_type", default: "nso", null: false, enum_type: "equity_grants_option_grant_type"
     t.integer "voluntary_termination_exercise_months", null: false
     t.integer "involuntary_termination_exercise_months", null: false

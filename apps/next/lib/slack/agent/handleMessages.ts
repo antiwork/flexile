@@ -20,9 +20,9 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
         thread_ts,
         assertDefined(company.slackBotUserId),
       )
-    : ([{ role: "user", content: event.text ?? "" }] satisfies CoreMessage[]);
+    : ([{ role: "user", content: event.text ?? "" }] as CoreMessage[]);
   const result = await generateAgentResponse(messages, company, event.user, showStatus);
-  showResult(result);
+  await showResult(result);
 }
 
 export async function handleAssistantThreadMessage(event: AssistantThreadStartedEvent, company: Company) {
@@ -101,7 +101,7 @@ const replyHandler = async (
     } else if (status) {
       await client.chat.update({
         channel: event.channel,
-        ts: statusMessage.ts,
+        ts: assertDefined(statusMessage.ts),
         text: `_${status}_`,
       });
     }
@@ -116,9 +116,11 @@ const replyHandler = async (
     if (!debug) {
       await client.chat.delete({
         channel: event.channel,
-        ts: statusMessage.ts,
+        ts: assertDefined(statusMessage.ts),
       });
     }
+
+    return;
   };
 
   return { showStatus, showResult };

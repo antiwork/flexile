@@ -8,7 +8,6 @@ import { assertDefined } from "@/utils/assert";
 export const useUserStore = create(
   combine(
     {
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- temporary
       user: null as CurrentUser | null,
       pending: false,
     },
@@ -33,7 +32,6 @@ export const useCurrentUser = () => {
   useEffect(setRedirected, []);
   return user;
 };
-
 export const useCurrentCompany = () => {
   const user = useCurrentUser();
   return assertDefined(user.companies.find((c) => c.id === user.currentCompanyId));

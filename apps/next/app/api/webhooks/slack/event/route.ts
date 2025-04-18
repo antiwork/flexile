@@ -44,7 +44,7 @@ export const POST = async (request: Request) => {
   }
 
   const company = await db.query.companies.findFirst({
-    where: eq(companies.slackTeamId, event.team),
+    where: eq(companies.slackTeamId, data.team),
   });
   if (!company) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
