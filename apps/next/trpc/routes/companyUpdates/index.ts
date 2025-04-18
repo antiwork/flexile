@@ -32,7 +32,7 @@ export const companyUpdatesRouter = createRouter({
         perPage: z.number().optional(),
       }),
     )
-    .query(async ({ ctx, input }) => {
+    .query(async ({ ctx }) => {
       if (
         !ctx.company.companyUpdatesEnabled ||
         (!ctx.companyAdministrator && !isActive(ctx.companyContractor) && !ctx.companyInvestor)

@@ -3,7 +3,6 @@ import { and, eq, SQL } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { PgColumn, PgTable } from "drizzle-orm/pg-core";
 import { pick } from "lodash-es";
-import { z } from "zod";
 import env from "@/env";
 import * as schema from "./schema";
 export const db = drizzle({

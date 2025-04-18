@@ -92,6 +92,7 @@ export const documentsRouter = createRouter({
               signedAt: signature.signedAt,
             })),
         })),
+        total,
       };
     }),
   years: companyProcedure.input(z.object({ userId: z.string().nullable() })).query(async ({ ctx, input }) => {
