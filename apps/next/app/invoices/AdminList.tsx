@@ -26,7 +26,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { Sheet, SheetContent, SheetFooter, SheetTitle } from "@/components/ui/sheet";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -97,7 +96,8 @@ export default function AdminList() {
     enableRowSelection: invoiceFilter === "actionable",
   });
 
-  const selectedInvoices = table.getSelectedRowModel().rows.map((row) => row.original);
+  const selectedRows = table.getSelectedRowModel().rows;
+  const selectedInvoices = selectedRows.map((row) => row.original);
   const [selectedPayableInvoices, selectedApprovableInvoices] = partition(selectedInvoices, isPayable);
 
   return (
@@ -111,28 +111,6 @@ export default function AdminList() {
               Download CSV
             </a>
           </Button>
-        )
-      }
-      footer={
-        invoiceFilter === "actionable" &&
-        selectedInvoices.length > 0 && (
-          <Sheet>
-            <SheetContent side="bottom" className="relative w-full">
-              <SheetFooter>
-                <div className="flex flex-row items-center justify-between">
-                  <SheetTitle>{selectedInvoices.length} selected</SheetTitle>
-                  <div className="flex flex-row flex-wrap gap-3 sm:flex-row-reverse">
-                    <Button disabled={!company.completedPaymentMethodSetup} onClick={() => setOpenModal("approve")}>
-                      Approve selected
-                    </Button>
-                    <Button variant="outline" onClick={() => setOpenModal("reject")}>
-                      Reject selected
-                    </Button>
-                  </div>
-                </div>
-              </SheetFooter>
-            </SheetContent>
-          </Sheet>
         )
       }
     >
@@ -161,12 +139,10 @@ export default function AdminList() {
           {company.completedPaymentMethodSetup && !company.isTrusted ? (
             <Alert variant="destructive">
               <ExclamationTriangleIcon />
+              <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
               <AlertDescription>
-                <strong>Payments to contractors may take up to 10 business days to process.</strong>{" "}
-                <span>
-                  Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete additional
-                  verification steps.
-                </span>
+                Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete additional
+                verification steps.
               </AlertDescription>
             </Alert>
           ) : null}
@@ -174,10 +150,27 @@ export default function AdminList() {
           {invoiceFilter === "actionable" && data.invoices.some((invoice) => !areTaxRequirementsMet(invoice)) && (
             <Alert variant="destructive">
               <ExclamationTriangleIcon />
+              <AlertTitle>Missing tax information.</AlertTitle>
               <AlertDescription>
-                <strong>Missing tax information.</strong> Some invoices are not payable until contractors provide tax
-                information.
+                Some invoices are not payable until contractors provide tax information.
               </AlertDescription>
+            </Alert>
+          )}
+
+          {invoiceFilter === "actionable" && selectedRows.length > 0 && (
+            <Alert className="fixed right-0 bottom-0 left-0 z-50 flex items-center justify-between rounded-none border-r-0 border-b-0 border-l-0">
+              <div className="flex items-center gap-2">
+                <InformationCircleIcon className="size-4" />
+                <AlertTitle>{selectedRows.length} selected</AlertTitle>
+              </div>
+              <div className="flex flex-row flex-wrap gap-3">
+                <Button variant="outline" onClick={() => setOpenModal("reject")}>
+                  Reject selected
+                </Button>
+                <Button disabled={!company.completedPaymentMethodSetup} onClick={() => setOpenModal("approve")}>
+                  Approve selected
+                </Button>
+              </div>
             </Alert>
           )}
 

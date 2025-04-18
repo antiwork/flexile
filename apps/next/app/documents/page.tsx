@@ -8,8 +8,8 @@ import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import Select from "@/components/Select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
@@ -112,25 +112,21 @@ function Documents({ year }: { year: number }) {
 
   return (
     <>
+      {company.flags.includes("irs_tax_forms") && user.activeRole === "administrator" && isFilingDueDateApproaching ? (
+        <Alert className="mb-4">
+          <AlertTitle>Upcoming filing dates for 1099-NEC, 1099-DIV, and 1042-S</AlertTitle>
+          <AlertDescription>
+            We will submit form 1099-NEC to the IRS on {formatDate(filingDueDateFor1099NEC)}, form 1042-S on{" "}
+            {formatDate(filingDueDateFor1042S)}, and form 1099-DIV on {formatDate(filingDueDateFor1099DIV)}.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       {documents.length > 0 ? (
         <DocumentsList userId={userId} documents={documents} />
       ) : (
         <Placeholder icon={CheckCircleIcon}>No documents for {year}.</Placeholder>
       )}
-
-      {company.flags.includes("irs_tax_forms") && user.activeRole === "administrator" && isFilingDueDateApproaching ? (
-        <Sheet>
-          <SheetContent side="bottom" className="relative w-full">
-            <SheetHeader>
-              <SheetTitle>Upcoming filing dates for 1099-NEC, 1099-DIV, and 1042-S</SheetTitle>
-              <SheetDescription>
-                We will submit form 1099-NEC to the IRS on {formatDate(filingDueDateFor1099NEC)}, form 1042-S on{" "}
-                {formatDate(filingDueDateFor1042S)}, and form 1099-DIV on {formatDate(filingDueDateFor1099DIV)}.
-              </SheetDescription>
-            </SheetHeader>
-          </SheetContent>
-        </Sheet>
-      ) : null}
     </>
   );
 }
