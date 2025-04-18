@@ -104,7 +104,6 @@ export default function AdminList() {
   const selectedRows = table.getSelectedRowModel().rows;
   const selectedInvoices = selectedRows.map((row) => row.original);
   const [selectedPayableInvoices, selectedApprovableInvoices] = partition(selectedInvoices, isPayable);
-  const showSelectionSheet = invoiceFilter === "actionable" && selectedInvoices.length > 0;
 
   return (
     <MainLayout
