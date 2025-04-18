@@ -61,8 +61,6 @@ test.describe("invoice creation", () => {
       companyContractorId: companyContractor.id,
       equityPercentage: 20,
       year: 2023,
-      status: "pending_confirmation",
-      locked: false,
     });
 
     const { role: projectBasedRole } = await companyRolesFactory.createProjectBased({ companyId: company.id });
@@ -72,6 +70,15 @@ test.describe("invoice creation", () => {
         streetAddress: "2nd Ave.",
       })
     ).user;
+
+    const { companyInvestor: projectBasedInvestor } = await companyInvestorsFactory.create({
+      companyId: company.id,
+      userId: projectBasedUser.id,
+    });
+    await equityGrantsFactory.createActive(
+      { companyInvestorId: projectBasedInvestor.id, sharePriceUsd: "1.5" },
+      { year: 2023 },
+    );
 
     const { companyContractor: projectBasedContractor } = await companyContractorsFactory.createProjectBased({
       companyId: company.id,
@@ -83,8 +90,6 @@ test.describe("invoice creation", () => {
       companyContractorId: projectBasedContractor.id,
       equityPercentage: 50,
       year: 2023,
-      status: "pending_confirmation",
-      locked: false,
     });
   });
 
