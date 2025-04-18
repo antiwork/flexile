@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { and, count, desc, eq, sum } from "drizzle-orm";
 import { pick } from "lodash-es";
 import { z } from "zod";
-import { db, paginationSchema } from "@/db";
+import { db, paginate, paginationSchema } from "@/db";
 import { companyInvestors, convertibleInvestments, convertibleSecurities } from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 import { assertDefined } from "@/utils/assert";

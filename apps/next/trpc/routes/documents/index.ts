@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { and, countDistinct, desc, eq, inArray, isNotNull, isNull, not, type SQLWrapper } from "drizzle-orm";
 import { pick } from "lodash-es";
 import { z } from "zod";
-import { byExternalId, db, paginationSchema } from "@/db";
+import { byExternalId, db, paginate, paginationSchema } from "@/db";
 import { activeStorageAttachments, activeStorageBlobs, documents, documentSignatures, users } from "@/db/schema";
 import env from "@/env";
 import { companyProcedure, createRouter, getS3Url } from "@/trpc";
