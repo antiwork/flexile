@@ -89,11 +89,11 @@ const List = ({ userId, documents }: { userId: string | null; documents: Documen
         columnHelper.simple("name", "Document"),
         columnHelper.simple("type", "Type", (value) => typeLabels[value]),
         columnHelper.simple("createdAt", "Date", formatDate),
-        columnHelper.accessor("completedAt", {
+        columnHelper.display({
           header: "Status",
           cell: (info) => <DocumentStatus document={info.row.original} />,
         }),
-        columnHelper.accessor("completedAt", {
+        columnHelper.display({
           id: "actions",
           cell: (info) => {
             const document = info.row.original;
