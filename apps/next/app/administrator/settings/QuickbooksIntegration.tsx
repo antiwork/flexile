@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import Image from "next/image";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -131,7 +132,7 @@ export default function QuickbooksRow() {
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold">
-              <img src={quickbooksLogo.src} className="inline size-6" alt="" />
+              <Image src={quickbooksLogo.src} className="inline size-6" alt="" />
               &ensp;QuickBooks
             </h2>
             {quickbooksIntegration?.status === "active" ? <Status variant="success">Connected</Status> : null}
