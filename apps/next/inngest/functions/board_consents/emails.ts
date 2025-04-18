@@ -101,7 +101,7 @@ export const sendLawyerApprovalEmails = inngest.createFunction(
             companyName: assertDefined(company),
           }),
         },
-        process.env.NODE_ENV === "production" ? lawyerEmails : [{ email: "delivered@resend.dev" }],
+        lawyerEmails,
       );
     });
 
@@ -172,7 +172,7 @@ export const sendBoardSigningEmails = inngest.createFunction(
             documentUrl,
           }),
         },
-        process.env.NODE_ENV === "production" ? boardMemberEmails : [{ email: "delivered@resend.dev" }],
+        boardMemberEmails,
       );
     });
 
@@ -258,12 +258,12 @@ export const sendEquityPlanSigningEmail = inngest.createFunction(
               documentUrl,
             }),
           },
-          process.env.NODE_ENV === "production" ? companyAdminEmails : [{ email: "delivered@resend.dev" }],
+          companyAdminEmails,
         ),
         sendEmails(
           {
             from: `${company} via Flexile <support@${env.DOMAIN}>`,
-            subject: `${company} has granted you stock options`,
+            subject: `🔴 Action needed: sign your Incentive Plan to receive stock options`,
             react: EquityGrantIssuedEmail({
               companyName: assertDefined(company),
               grant,
@@ -271,7 +271,7 @@ export const sendEquityPlanSigningEmail = inngest.createFunction(
               signGrantUrl,
             }),
           },
-          process.env.NODE_ENV === "production" ? [{ email: userEmail }] : [{ email: "delivered@resend.dev" }],
+          [{ email: userEmail }],
         ),
       ]);
 

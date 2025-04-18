@@ -154,6 +154,8 @@ export default function NewEquityGrant() {
       setGrantType(lastGrant?.optionGrantType ?? "nso");
       setIssueDateRelationship(lastGrant?.issueDateRelationship);
     }
+
+    // TODO (techdebt): automatically calculate number of shares based on role type + Black-Scholes Model (https://carta.com/learn/startups/equity-management/black-scholes-model/)
   }, [recipientId]);
 
   useEffect(() => {
