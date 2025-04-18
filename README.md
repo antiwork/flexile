@@ -88,6 +88,14 @@ bundle exec rspec spec/system/roles/show_spec.rb:7 # Run a single spec
 pnpm playwright test
 ```
 
+### Slack integration
+
+To test Slack, use (ngrok)[https://ngrok.com] (`brew install ngrok`):
+
+```
+ngrok http https://flexile.dev
+```
+
 ## Contributing
 
 We welcome contributions to Flexile! Please read our [Contributing Guide](CONTRIBUTING.md) for information on how to get started, coding standards, and more.

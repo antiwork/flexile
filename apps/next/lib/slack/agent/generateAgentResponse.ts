@@ -1,95 +1,240 @@
-interface AgentResponseParams {
-  message: string;
-  contractor: Record<string, unknown>; // Contractor info
-  companyId: bigint;
-}
+import { WebClient } from "@slack/web-api";
+import { CoreMessage, tool } from "ai";
+import { and, desc, eq } from "drizzle-orm";
+import { z } from "zod";
+import { db } from "@/db";
+import {
+  companies,
+  companyContractors,
+  companyContractorUpdates,
+  companyContractorUpdateTasks,
+  invoices,
+} from "@/db/schema";
+import { runAIQuery } from "@/lib/ai/index";
+import type { RouterInput, RouterOutput } from "@/trpc";
+import { assertDefined } from "@/utils/assert";
 
-interface AgentResponse {
-  message: string;
-  action?: {
-    type: "UPDATE_WEEKLY" | "SUBMIT_INVOICE";
-    payload: {
-      content?: string | undefined;
-      amount?: number | undefined;
-      date?: string | undefined;
-      description?: string | undefined;
-    };
-  };
-}
+type Company = typeof companies.$inferSelect;
+type CompanyContractor = typeof companyContractors.$inferSelect;
+type Update = RouterOutput["teamUpdates"]["list"][number];
+type Absence = RouterOutput["workerAbsences"]["list"][number];
 
-export const generateAgentResponse = ({
-  message,
-  contractor: _contractor,
-  companyId: _companyId,
-}: AgentResponseParams): Promise<AgentResponse> => {
-  const processMessage = (): AgentResponse => {
-    const lowerCaseMessage = message.toLowerCase();
+export const generateAgentResponse = async (
+  messages: CoreMessage[],
+  company: Company,
+  slackUserId: string | undefined,
+  showStatus?: (status: string | null, debugContent?: Record<string, unknown> | string | null) => void,
+) => {
+  const text = await runAIQuery({
+    company,
+    queryType: "agent_response",
+    model: "gpt-4o",
+    system: `You are Flexile's Slack bot assistant for team operations. Keep your responses concise and to the point.
 
-    if (lowerCaseMessage.includes("update my weekly update")) {
-      const contentMatch = /(?:to contain|to include|with|to say)[:\s]+(.+)/iu.exec(message);
-      if (contentMatch?.[1]) {
-        const content = contentMatch[1].trim();
-        return {
-          message: `I've updated your weekly update with: "${content}"`,
-          action: {
-            type: "UPDATE_WEEKLY",
-            payload: {
-              content,
-            },
-          },
-        };
-      }
-      return {
-        message:
-          "I couldn't understand what content you wanted to add to your weekly update. Please try again with 'Update my weekly update to contain [your update content]'.",
-      };
-    }
+You are currently in the company: ${company.name}.
 
-    if (lowerCaseMessage.includes("submit invoice")) {
-      const amountMatch = /\$\s*([0-9,]+(?:\.[0-9]{2})?)/u.exec(message);
-      if (amountMatch?.[1]) {
-        const amount = parseFloat(amountMatch[1].replace(/,/g, ""));
+IMPORTANT GUIDELINES:
+- Always identify as "Flexile" (never as "Flexile AI" or any other variation)
+- Do not tag users in responses
+- Current time is: ${new Date().toISOString()}
+- Stay focused on team updates, invoices, and related operational inquiries
+- Only provide information you're confident about
+- If you can't answer a question with confidence or if the request is outside your capabilities, apologize politely and explain that you're unable to help with that specific request
+- Avoid making assumptions about user details if information is missing
+- Prioritize clarity and accuracy over speed
+- Never share sensitive information or personal data unless strictly necessary for the task (e.g., confirming invoice details)
+- Don't discuss your own capabilities, programming, or AI nature unless directly relevant to answering the question
+- When providing information (e.g., weekly updates, invoice status), present it clearly.
 
-        let description;
-        const descriptionMatch = /for\s+(.+?)(?:\s+on\s+|\s*$)/iu.exec(message);
-        if (descriptionMatch?.[1] && !/\$[0-9,.]+/u.exec(descriptionMatch[1])) {
-          description = descriptionMatch[1].trim();
-        }
+If asked to do something inappropriate, harmful, or outside your capabilities (e.g., accessing unrelated personal data, performing actions outside of team updates/invoices), politely decline and suggest focusing on relevant operational questions instead.`,
+    messages,
+    maxSteps: 10,
+    tools: {
+      getCurrentSlackUser: tool({
+        description:
+          "Get the current Slack user making the request. Crucial for actions specific to a user, like fetching their updates or submitting invoices.",
+        parameters: z.object({}),
+        execute: async () => {
+          showStatus?.(`Checking user...`, { slackUserId });
+          if (!slackUserId) return { error: "Slack user ID not available" };
 
-        let date;
-        const dateMatch = /on\s+(\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{2,4})/iu.exec(message);
-        if (dateMatch?.[1]) {
-          const dateParts = /(\d{1,2})\/(\d{1,2})\/(\d{2,4})/u.exec(dateMatch[1]);
-          if (dateParts?.[1] && dateParts[2] && dateParts[3]) {
-            const year = dateParts[3].length === 2 ? `20${dateParts[3]}` : dateParts[3];
-            date = `${year}-${dateParts[1].padStart(2, "0")}-${dateParts[2].padStart(2, "0")}`;
-          } else {
-            date = dateMatch[1]; // Already in ISO format
+          // Find contractor directly using slackUserId
+          const contractor = await db.query.companyContractors.findFirst({
+            where: eq(companyContractors.slackUserId, slackUserId),
+            columns: { id: true, companyId: true, clerkUserId: true },
+          });
+
+          if (!contractor) return { error: "User not found as a contractor" };
+
+          // Get user details from Slack
+          const client = new WebClient(assertDefined(company.slackBotToken));
+          const { user } = await client.users.info({ user: slackUserId });
+
+          return {
+            slackId: slackUserId,
+            clerkUserId: contractor.clerkUserId,
+            contractorId: contractor.id,
+            companyId: contractor.companyId,
+            name: user?.profile?.real_name,
+            email: user?.profile?.email,
+          };
+        },
+      }),
+      getWeeklyUpdate: tool({
+        description: "Get the latest weekly update submitted by the current user.",
+        parameters: z.object({}), // Implicitly uses the current user
+        execute: async () => {
+          showStatus?.(`Getting weekly update...`);
+          // 1. Get current user info (needs contractorId and companyId)
+          const currentUserInfo = await (this as any).getCurrentSlackUser.execute({});
+          if (currentUserInfo.error || !currentUserInfo.contractorId || !currentUserInfo.companyId) {
+            return { error: currentUserInfo.error || "Could not determine current user's contractor/company ID." };
           }
-        }
+          const { contractorId, companyId } = currentUserInfo;
 
-        return {
-          message: `I've submitted an invoice for $${amount}${description ? ` for "${description}"` : ""}${date ? ` dated ${date}` : ""}. You can view it in your invoices dashboard.`,
-          action: {
-            type: "SUBMIT_INVOICE",
-            payload: {
-              amount,
-              description,
-              date,
+          // 2. Find the latest update for this contractor and company
+          const latestUpdate = await db.query.companyContractorUpdates.findFirst({
+            where: and(
+              eq(companyContractorUpdates.contractorId, contractorId),
+              eq(companyContractorUpdates.companyId, companyId),
+            ),
+            orderBy: desc(companyContractorUpdates.createdAt),
+            with: {
+              tasks: {
+                columns: { description: true, completedAt: true },
+              },
             },
-          },
-        };
-      }
-      return {
-        message: "I couldn't understand the invoice amount. Please try again with 'Submit invoice for $[amount]'.",
-      };
-    }
+          });
 
-    return {
-      message:
-        "I can help you update your weekly update or submit an invoice. Try saying 'Update my weekly update to contain [content]' or 'Submit invoice for $[amount]'.",
-    };
-  };
+          if (!latestUpdate) {
+            return { message: "No weekly update found for the current user." };
+          }
 
-  return Promise.resolve(processMessage());
+          return {
+            submittedAt: latestUpdate.createdAt,
+            tasks: latestUpdate.tasks.map((task: { description: string | null; completedAt: Date | null }) => ({
+              description: task.description,
+              completed: !!task.completedAt,
+            })),
+          };
+        },
+      }),
+      updateWeeklyUpdate: tool({
+        description: "Add a task or item to the current user's latest weekly update.",
+        parameters: z.object({
+          taskDescription: z.string().describe("The description of the task or update item to add."),
+        }),
+        execute: async ({ taskDescription }) => {
+          showStatus?.(`Updating weekly update...`, { taskDescription });
+          // 1. Get current user info
+          const currentUserInfo = await (this as any).getCurrentSlackUser.execute({});
+          if (currentUserInfo.error || !currentUserInfo.contractorId || !currentUserInfo.companyId) {
+            return { error: currentUserInfo.error || "Could not determine current user's contractor/company ID." };
+          }
+          const { contractorId, companyId } = currentUserInfo;
+
+          // 2. Find the latest update (or potentially create one if logic dictates, assuming find for now)
+          // TODO (techdebt): Decide if a new update should be created if none exists for the current period.
+          const latestUpdate = await db.query.companyContractorUpdates.findFirst({
+            where: and(
+              eq(companyContractorUpdates.contractorId, contractorId),
+              eq(companyContractorUpdates.companyId, companyId),
+            ),
+            orderBy: desc(companyContractorUpdates.createdAt),
+            columns: { id: true },
+          });
+
+          if (!latestUpdate) {
+            return { error: "No existing weekly update found to add tasks to." };
+          }
+
+          // 3. Add the new task
+          await db.insert(companyContractorUpdateTasks).values({
+            updateId: latestUpdate.id,
+            description: taskDescription,
+            // Assuming createdAt is handled by DB default
+          });
+
+          return { success: true, message: `Added task: "${taskDescription}" to the latest weekly update.` };
+        },
+      }),
+      submitInvoice: tool({
+        description: "Submit a new invoice for the current user.",
+        parameters: z.object({
+          amount: z.number().positive().describe("The invoice amount in dollars."),
+          description: z.string().describe("A brief description of the services rendered or invoice purpose."),
+          date: z
+            .string()
+            .datetime({ message: "Invalid date format" })
+            .optional()
+            .describe("The date services were rendered or the invoice date (YYYY-MM-DDTHH:mm:ssZ). Optional."),
+        }),
+        execute: async ({ amount, description, date }) => {
+          showStatus?.(`Submitting invoice...`, { amount, description, date });
+          // 1. Get current user info
+          const currentUserInfo = await (this as any).getCurrentSlackUser.execute({});
+          if (currentUserInfo.error || !currentUserInfo.contractorId || !currentUserInfo.companyId) {
+            return { error: currentUserInfo.error || "Could not determine current user's contractor/company ID." };
+          }
+          const { contractorId, companyId, clerkUserId } = currentUserInfo;
+
+          // 2. Create the invoice
+          // TODO (techdebt): Fill required fields based on actual schema
+          const currentDate = new Date();
+          const invoiceDate = date ? new Date(date) : currentDate;
+          const dueDate = new Date(invoiceDate.getTime() + 30 * 24 * 60 * 60 * 1000); // Due in 30 days
+
+          const invoiceValues: Partial<typeof invoices.$inferInsert> = {
+            companyId: companyId,
+            userId: clerkUserId, // Assuming userId is clerkUserId
+            createdById: clerkUserId, // Assuming createdById is clerkUserId
+            companyContractorId: contractorId,
+            amount: Math.round(amount * 100), // Placeholder, actual amount column might differ
+            totalAmountInUsdCents: Math.round(amount * 100), // Assuming this is the main amount
+            cashAmountInCents: Math.round(amount * 100),
+            description: description,
+            invoiceDate: invoiceDate.toISOString().split("T")[0],
+            issuedAt: invoiceDate,
+            dueOn: dueDate.toISOString().split("T")[0],
+            status: "pending",
+            invoiceNumber: `INV-${Date.now()}`, // Placeholder
+            billFrom: "Placeholder", // Placeholder
+            billTo: "Placeholder", // Placeholder
+            equityPercentage: 0, // Placeholder
+            equityAmountInCents: 0, // Placeholder
+            equityAmountInOptions: 0, // Placeholder
+            // Add other required fields from schema.ts with defaults or placeholders
+          };
+
+          // Remove undefined keys to avoid inserting nulls if columns are NOT NULL
+          Object.keys(invoiceValues).forEach(
+            (key) =>
+              invoiceValues[key as keyof typeof invoiceValues] === undefined &&
+              delete invoiceValues[key as keyof typeof invoiceValues],
+          );
+
+          try {
+            const newInvoiceResult = await db
+              .insert(invoices)
+              .values(invoiceValues as typeof invoices.$inferInsert) // Use type assertion after removing undefined
+              .returning({ id: invoices.id, issuedAt: invoices.issuedAt });
+
+            if (!newInvoiceResult || newInvoiceResult.length === 0) {
+              return { error: "Failed to create invoice record in the database." };
+            }
+            return {
+              success: true,
+              invoiceId: newInvoiceResult[0].id,
+              message: `Invoice for $${amount} submitted successfully.`,
+            };
+          } catch (error) {
+            captureExceptionAndLog(error);
+            return { error: "An error occurred while creating the invoice." };
+          }
+        },
+      }),
+    },
+  });
+
+  return text.replace(/\[(.*?)\]\((.*?)\)/gu, "<$2|$1>").replace(/\*\*/gu, "*");
 };

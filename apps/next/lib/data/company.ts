@@ -7,6 +7,8 @@ export const disconnectSlack = async (companyId: bigint) => {
     .update(companies)
     .set({
       slackBotUserId: null,
+      slackBotToken: null,
+      slackTeamId: null,
     })
     .where(eq(companies.id, companyId));
 };

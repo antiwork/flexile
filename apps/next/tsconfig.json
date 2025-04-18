@@ -3,7 +3,11 @@
     "noEmit": true,
     "moduleResolution": "bundler",
     "target": "es2023",
-    "lib": ["dom", "dom.iterable", "es2023"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "es2023"
+    ],
     "module": "esnext",
     "strict": true,
     "allowUnreachableCode": false,
@@ -14,9 +18,15 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "forceConsistentCasingInFileNames": true,
-    "plugins": [{ "name": "next" }],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": [
+        "./*"
+      ]
     },
     "resolveJsonModule": true,
     "jsx": "preserve",
@@ -24,7 +34,8 @@
     "incremental": true,
     "esModuleInterop": true,
     "allowJs": true,
-    "exactOptionalPropertyTypes": true
+    "exactOptionalPropertyTypes": true,
+    "isolatedModules": true
   },
   "include": [
     "next-env.d.ts",
@@ -35,5 +46,7 @@
     "types.d.ts",
     "middleware.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }

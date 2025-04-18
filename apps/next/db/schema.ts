@@ -2040,13 +2040,13 @@ export const companyContractors = pgTable(
     companyId: bigint("company_id", { mode: "bigint" }).notNull(),
     startedAt: timestamp("started_at", { precision: 6, mode: "date" }).notNull(),
     hoursPerWeek: integer("hours_per_week"),
+    slackUserId: varchar("slack_user_id"),
     createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
       .notNull()
       .$onUpdate(() => new Date()),
     endedAt: timestamp("ended_at", { precision: 6, mode: "date" }),
     companyRoleId: bigint("company_role_id", { mode: "bigint" }).notNull(),
-
     externalId: varchar("external_id").$default(nanoid).notNull(),
     payRateType: integer("pay_rate_type").$type<PayRateType>().default(PayRateType.Hourly).notNull(),
     sentEquityPercentSelectionEmail: boolean("sent_equity_percent_selection_email").notNull().default(false),
@@ -2189,6 +2189,7 @@ export const companies = pgTable(
       .$onUpdate(() => new Date()),
     stripeCustomerId: varchar("stripe_customer_id"),
     slackBotUserId: varchar("slack_bot_user_id"),
+    slackBotToken: varchar("slack_bot_token"),
     slackTeamId: varchar("slack_team_id"),
     requiredInvoiceApprovalCount: integer("required_invoice_approval_count").default(1).notNull(),
     valuationInDollars: bigint("valuation_in_dollars", { mode: "bigint" }).default(0n).notNull(),

@@ -20,7 +20,6 @@ import {
 import { baseProcedure, companyProcedure, createRouter, protectedProcedure } from "@/trpc";
 import { createSubmission } from "@/trpc/routes/documents/templates";
 import { assertDefined } from "@/utils/assert";
-import { disconnectSlack as disconnectSlackData } from "@/lib/data/company";
 import {
   company_administrator_stripe_microdeposit_verifications_url,
   company_invitations_url,
@@ -291,6 +290,13 @@ export const companiesRouter = createRouter({
     }),
   disconnectSlack: companyProcedure.mutation(async ({ ctx }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
-    await disconnectSlackData(ctx.company.id);
+    await db
+      .update(companies)
+      .set({
+        slackBotUserId: null,
+        slackBotToken: null,
+        slackTeamId: null,
+      })
+      .where(eq(companies.id, ctx.company.id));
   }),
 });
