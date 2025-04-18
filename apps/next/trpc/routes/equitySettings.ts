@@ -32,6 +32,7 @@ export const equitySettingsRouter = createRouter({
           year: new Date().getFullYear(),
           equityPercentage: input.equityPercentage,
           status: "pending_grant_creation",
+          locked: true,
         })
         .onConflictDoUpdate({
           target: [equityAllocations.companyContractorId, equityAllocations.year],
