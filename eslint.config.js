@@ -62,10 +62,7 @@ export default [
           "newlines-between": "never",
           named: true,
           alphabetize: { order: "asc", caseInsensitive: true },
-          pathGroups: [
-            { pattern: "$assets/**", group: "external", position: "after" },
-            { pattern: "@/**", group: "external", position: "after" },
-          ],
+          pathGroups: [{ pattern: "@/**", group: "parent", position: "before" }],
         },
       ],
     },
