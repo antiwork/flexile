@@ -121,9 +121,7 @@ export default function ViewList() {
       <QuickInvoiceSection disabled={!!unsignedContractId} />
 
       {data.invoices.length > 0 ? (
-        <>
-          <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
-        </>
+        <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
       ) : (
         <div>
           <Placeholder icon={CurrencyDollarIcon}>

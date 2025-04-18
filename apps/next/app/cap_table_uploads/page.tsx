@@ -68,9 +68,7 @@ export default function CapTableUploadsPage() {
             <h3 className="mt-2 text-sm font-medium text-gray-900">No cap table uploads yet</h3>
           </div>
         ) : (
-          <>
-            <DataTable table={table} />
-          </>
+          <DataTable table={table} />
         )}
       </div>
     </MainLayout>

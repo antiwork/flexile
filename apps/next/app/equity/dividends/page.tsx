@@ -51,9 +51,7 @@ export default function Dividends() {
   return (
     <EquityLayout>
       {data.dividends.length > 0 ? (
-        <>
-          <DataTable table={table} />
-        </>
+        <DataTable table={table} />
       ) : (
         <Placeholder icon={CheckCircleIcon}>You have not been issued any dividends yet.</Placeholder>
       )}
