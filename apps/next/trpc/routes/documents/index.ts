@@ -195,19 +195,14 @@ export const documentsRouter = createRouter({
       })
       .where(eq(boardConsents.id, boardConsent.id));
 
-    await Promise.all(
-      document.signatures.map(async (signature) => {
-        await inngest.send({
-          name: "board_consent.lawyer_approved",
-          data: {
-            boardConsentId: boardConsent.id,
-            documentId: document.id,
-            userId: signature.userId,
-            companyId: document.companyId,
-          },
-        });
-      }),
-    );
+    await inngest.send({
+      name: "board-consent.lawyer-approved",
+      data: {
+        boardConsentId: String(boardConsent.id),
+        documentId: String(document.id),
+        companyId: String(document.companyId),
+      },
+    });
   }),
   templates: templatesRouter,
 });

@@ -6,6 +6,7 @@ import { useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Modal from "@/components/Modal";
+import MutationButton from "@/components/MutationButton";
 import Status from "@/components/Status";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -85,12 +86,17 @@ const List = ({ userId, documents }: { userId: string | null; documents: Documen
 
     return !!document.docusealSubmissionId && document.signatories.some((signatory) => !signatory.signedAt);
   };
+  const isLawyerApprovable = (document: Document): document is SignableDocument =>
+    document.type === DocumentType.BoardConsent && !document.lawyerApproved;
   const signDocument = signDocumentId
-    ? documents.find((document): document is SignableDocument => document.id === signDocumentId && isSignable(document))
+    ? documents.find(
+        (document): document is SignableDocument =>
+          document.id === signDocumentId && (isSignable(document) || isLawyerApprovable(document)),
+      )
     : null;
   useEffect(() => {
     const document = signDocumentParam ? documents.find((document) => document.id === BigInt(signDocumentParam)) : null;
-    if (document && isSignable(document)) setSignDocumentId(document.id);
+    if (document && (isSignable(document) || isLawyerApprovable(document))) setSignDocumentId(document.id);
   }, [documents, signDocumentParam]);
   useEffect(() => {
     if (downloadUrl) window.location.href = downloadUrl;
@@ -103,7 +109,9 @@ const List = ({ userId, documents }: { userId: string | null; documents: Documen
           : columnHelper.display({
               header: "Signer",
               cell: (info) =>
-                assertDefined(info.row.original.signatories.find((signatory) => signatory.title === "Signer")).name,
+                assertDefined(
+                  info.row.original.signatories.find((signatory) => signatory.title !== "Company Representative"),
+                ).name,
             }),
         columnHelper.simple("name", "Document"),
         columnHelper.simple("type", "Type", (value) => typeLabels[value]),
@@ -180,6 +188,7 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
   const documentLawyerApproval = trpc.documents.approveByLawyer.useMutation({
     onSuccess: async () => {
       await trpcUtils.documents.list.refetch();
+      router.push("/documents");
       onClose();
     },
   });
@@ -196,16 +205,15 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
     <Modal open onClose={onClose}>
       {user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent && (
         <header className="flex justify-end gap-4">
-          <Button
-            onClick={() =>
-              documentLawyerApproval.mutate({
-                companyId: company.id,
-                id: document.id,
-              })
-            }
+          <MutationButton
+            mutation={documentLawyerApproval}
+            param={{ companyId: company.id, id: document.id }}
+            loadingText="Approving..."
+            successText="Approved!"
+            errorText="Failed to approve"
           >
             Approve
-          </Button>
+          </MutationButton>
         </header>
       )}
       <DocusealForm

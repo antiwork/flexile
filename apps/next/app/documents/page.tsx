@@ -22,7 +22,7 @@ export default function DocumentsPage() {
   const company = useCurrentCompany();
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [_, setPage] = usePage();
-  const userId = user.activeRole === "administrator" ? null : user.id;
+  const userId = user.activeRole === "administrator" || user.activeRole === "lawyer" ? null : user.id;
   const [years] = trpc.documents.years.useSuspenseQuery({ companyId: company.id, userId });
   const defaultYear = years[0] ?? new Date().getFullYear();
   const [year, setYear] = useQueryState("year", parseAsInteger.withDefault(defaultYear));
@@ -97,7 +97,7 @@ const perPage = 50;
 const useQuery = (year: number) => {
   const user = useCurrentUser();
   const company = useCurrentCompany();
-  const userId = user.activeRole === "administrator" ? null : user.id;
+  const userId = user.activeRole === "administrator" || user.activeRole === "lawyer" ? null : user.id;
   const [page] = usePage();
   return trpc.documents.list.useSuspenseQuery({ companyId: company.id, userId, year, perPage, page });
 };
@@ -106,7 +106,7 @@ function Documents({ year }: { year: number }) {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const currentYear = new Date().getFullYear();
-  const userId = user.activeRole === "administrator" ? null : user.id;
+  const userId = user.activeRole === "administrator" || user.activeRole === "lawyer" ? null : user.id;
   const [{ documents, total }] = useQuery(year);
 
   const filingDueDateFor1099NEC = new Date(currentYear, 0, 31);

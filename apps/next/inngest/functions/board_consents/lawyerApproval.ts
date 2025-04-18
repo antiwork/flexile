@@ -1,88 +1,109 @@
 import docuseal from "@docuseal/api";
 import { and, desc, eq, isNull, or } from "drizzle-orm";
+import { NonRetriableError } from "inngest";
 import { db } from "@/db";
 import { DocumentTemplateType, DocumentType } from "@/db/enums";
-import { companyAdministrators, documents, documentSignatures, documentTemplates } from "@/db/schema";
+import {
+  boardConsents,
+  companyAdministrators,
+  companyInvestors,
+  documents,
+  documentSignatures,
+  documentTemplates,
+  users,
+} from "@/db/schema";
 import { inngest } from "@/inngest/client";
-import { assertDefined } from "@/utils/assert";
 
 export default inngest.createFunction(
   { id: "lawyer-board-consent-approval" },
-  { event: "board_consent.lawyer_approved" },
+  { event: "board-consent.lawyer-approved" },
   async ({ event, step }) => {
-    const { boardConsentId, companyId, documentId, userId } = event.data;
+    const { boardConsentId, companyId, documentId } = event.data;
 
     await step.run("generate-equity-plan-contract", async () => {
-      const documentSignature = await db.query.documentSignatures.findFirst({
-        where: and(eq(documentSignatures.documentId, documentId), eq(documentSignatures.userId, userId)),
+      const template = await db.query.documentTemplates.findFirst({
+        where: and(
+          eq(documentTemplates.type, DocumentTemplateType.EquityPlanContract),
+          or(eq(documentTemplates.companyId, BigInt(companyId)), isNull(documentTemplates.companyId)),
+        ),
+        orderBy: desc(documentTemplates.createdAt),
       });
+      if (!template) throw new NonRetriableError("Equity plan contract template not found");
 
-      if (!documentSignature) {
-        const template = await db.query.documentTemplates.findFirst({
-          where: and(
-            eq(documentTemplates.type, DocumentTemplateType.EquityPlanContract),
-            or(eq(documentTemplates.companyId, companyId), isNull(documentTemplates.companyId)),
-          ),
-          orderBy: desc(documentTemplates.createdAt),
-        });
-        if (!template) throw new Error("Equity plan contract template not found");
-
-        const boardMembers = await db.query.companyAdministrators.findMany({
-          where: eq(companyAdministrators.companyId, companyId),
-          with: {
-            user: {
-              columns: {
-                externalId: true,
-                email: true,
-              },
+      const year = new Date().getFullYear();
+      const companyAdministrator = await db.query.companyAdministrators.findFirst({
+        where: eq(companyAdministrators.companyId, BigInt(companyId)),
+        with: {
+          user: {
+            columns: {
+              email: true,
+              externalId: true,
             },
           },
-        });
+        },
+      });
+      if (!companyAdministrator) throw new NonRetriableError("Company administrator not found");
 
-        const submission = await docuseal.createSubmission({
-          template_id: Number(template.docusealId),
-          send_email: false,
-          submitters: boardMembers.map((admin, index) => ({
-            email: admin.user.email,
-            role: `Board member ${index + 1}`,
-            external_id: admin.user.externalId,
-          })),
-        });
-
-        const year = new Date().getFullYear();
-        const companyAdministrator = await db.query.companyAdministrators.findFirst({
-          where: eq(companyAdministrators.companyId, companyId),
-        });
-        const [doc] = await db
-          .insert(documents)
-          .values({
-            companyId,
-            type: DocumentType.EquityPlanContract,
-            year,
-            name: `Equity Incentive Plan ${year}`,
-            docusealSubmissionId: submission.id,
-          })
-          .returning();
-
-        await db.insert(documentSignatures).values([
+      const [companyInvestor] = await db
+        .select({
+          userId: companyInvestors.userId,
+          email: users.email,
+          externalId: users.externalId,
+        })
+        .from(companyInvestors)
+        .leftJoin(boardConsents, eq(boardConsents.companyInvestorId, companyInvestors.id))
+        .innerJoin(users, eq(users.id, companyInvestors.userId))
+        .where(and(eq(boardConsents.id, BigInt(boardConsentId)), eq(companyInvestors.companyId, BigInt(companyId))));
+      if (!companyInvestor) throw new NonRetriableError("Company investor not found");
+      const submission = await docuseal.createSubmission({
+        template_id: Number(template.docusealId),
+        send_email: false,
+        submitters: [
           {
-            documentId: assertDefined(doc).id,
-            userId,
-            title: "Signer",
+            email: companyInvestor.email,
+            role: "Signer",
+            external_id: companyInvestor.externalId,
           },
           {
-            documentId: assertDefined(doc).id,
-            userId: assertDefined(companyAdministrator).userId,
-            title: "Company Representative",
+            email: companyAdministrator.user.email,
+            role: "Company Representative",
+            external_id: companyAdministrator.user.externalId,
           },
-        ]);
-      }
+        ],
+      });
+      const [doc] = await db
+        .insert(documents)
+        .values({
+          companyId: BigInt(companyId),
+          type: DocumentType.EquityPlanContract,
+          year,
+          name: `Equity Incentive Plan ${year}`,
+          docusealSubmissionId: submission.id,
+        })
+        .returning();
+      if (!doc) throw new NonRetriableError("Document not created");
+
+      await db.insert(documentSignatures).values([
+        {
+          documentId: doc.id,
+          userId: companyInvestor.userId,
+          title: "Signer",
+        },
+        {
+          documentId: doc.id,
+          userId: companyAdministrator.userId,
+          title: "Company Representative",
+        },
+      ]);
+
+      return { message: "Equity plan contract created" };
     });
 
-    await step.sendEvent("email.board_consent.member_signing_needed", {
-      name: "email.board_consent.member_signing_needed",
+    await step.sendEvent("email.board-consent.member-signing-needed", {
+      name: "email.board-consent.member-signing-needed",
       data: {
-        boardConsentId,
+        boardConsentId: String(boardConsentId),
+        documentId: String(documentId),
         companyId,
       },
     });

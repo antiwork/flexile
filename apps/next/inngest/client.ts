@@ -28,45 +28,44 @@ export const inngest = new Inngest({
         recipients: z.array(recipientSchema).optional(),
       }),
     },
-    "board_consent.created": {
+    "board-consent.create": {
       data: z.object({
-        equityGrantId: z.bigint(),
-        companyId: z.bigint(),
-        companyWorkerId: z.bigint(),
+        equityGrantId: z.string(),
+        companyId: z.string(),
+        companyWorkerId: z.string(),
       }),
     },
-    "board_consent.lawyer_approved": {
+    "board-consent.lawyer-approved": {
       data: z.object({
-        boardConsentId: z.bigint(),
-        documentId: z.bigint(),
-        userId: z.bigint(),
-        companyId: z.bigint(),
+        boardConsentId: z.string(),
+        documentId: z.string(),
+        companyId: z.string(),
       }),
     },
-    "board_consent.member_approved": {
+    "board-consent.member-approved": {
       data: z.object({
-        boardConsentId: z.bigint(),
+        boardConsentId: z.string(),
       }),
     },
-    "board_consent.auto_approve": {},
-    "email.board_consent.lawyer_approval_needed": {
+    "board-consent.auto-approve": {},
+    "email.board-consent.lawyer-approval-needed": {
       data: z.object({
-        boardConsentId: z.bigint(),
-        companyId: z.bigint(),
-        companyInvestorId: z.bigint(),
+        boardConsentId: z.string(),
+        companyId: z.string(),
+        companyInvestorId: z.string(),
       }),
     },
-    "email.board_consent.member_signing_needed": {
+    "email.board-consent.member-signing-needed": {
       data: z.object({
-        boardConsentId: z.bigint(),
-        companyId: z.bigint(),
+        boardConsentId: z.string(),
+        companyId: z.string(),
       }),
     },
-    "email.equity_plan.admin_signing_needed": {
+    "email.equity-plan.admin-signing-needed": {
       data: z.object({
-        documentId: z.bigint(),
-        companyId: z.bigint(),
-        optionGrantId: z.bigint(),
+        documentId: z.string(),
+        companyId: z.string(),
+        optionGrantId: z.string(),
       }),
     },
   }),

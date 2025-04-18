@@ -21,13 +21,13 @@ import { assertDefined } from "@/utils/assert";
 
 export const sendLawyerApprovalEmails = inngest.createFunction(
   { id: "send-lawyer-approval-emails" },
-  { event: "email.board_consent.lawyer_approval_needed" },
+  { event: "email.board-consent.lawyer-approval-needed" },
   async ({ event, step }) => {
     const { boardConsentId, companyId } = event.data;
 
     const lawyerEmails = await step.run("fetch-lawyer-emails", async () => {
       const companyLawyersList = await db.query.companyLawyers.findMany({
-        where: eq(companyLawyers.companyId, companyId),
+        where: eq(companyLawyers.companyId, BigInt(companyId)),
         with: {
           user: true,
         },
@@ -42,7 +42,7 @@ export const sendLawyerApprovalEmails = inngest.createFunction(
 
     const data = await step.run("fetch-required-data", async () => {
       const consent = await db.query.boardConsents.findFirst({
-        where: eq(boardConsents.id, boardConsentId),
+        where: eq(boardConsents.id, BigInt(boardConsentId)),
         with: {
           equityAllocation: true,
         },
@@ -55,7 +55,7 @@ export const sendLawyerApprovalEmails = inngest.createFunction(
       const [company, contractor, doc] = await Promise.all([
         assertDefined(
           await db.query.companies.findFirst({
-            where: eq(companies.id, companyId),
+            where: eq(companies.id, BigInt(companyId)),
             columns: {
               publicName: true,
               name: true,
@@ -64,7 +64,7 @@ export const sendLawyerApprovalEmails = inngest.createFunction(
         ),
         assertDefined(
           await db.query.companyInvestors.findFirst({
-            where: eq(companyInvestors.id, consent.companyInvestorId),
+            where: eq(companyInvestors.id, BigInt(consent.companyInvestorId)),
             with: {
               user: { columns: { legalName: true, email: true } },
             },
@@ -72,7 +72,7 @@ export const sendLawyerApprovalEmails = inngest.createFunction(
         ),
         assertDefined(
           await db.query.documents.findFirst({
-            where: eq(documents.id, consent.documentId),
+            where: eq(documents.id, BigInt(consent.documentId)),
           }),
         ),
       ]);
@@ -88,7 +88,7 @@ export const sendLawyerApprovalEmails = inngest.createFunction(
     const contractorName = contractor.user.legalName || contractor.user.email;
 
     await step.run("send-emails", async () => {
-      const documentUrl = `${process.env.NEXT_PUBLIC_APP_URL}/documents/${doc.id}`;
+      const documentUrl = `${env.DOMAIN}/documents?sign=${doc.id}`;
 
       return await sendEmails(
         {
@@ -100,7 +100,7 @@ export const sendLawyerApprovalEmails = inngest.createFunction(
             companyName: assertDefined(company),
           }),
         },
-        lawyerEmails,
+        process.env.NODE_ENV === "production" ? lawyerEmails : [{ email: "delivered@resend.dev" }],
       );
     });
 
@@ -113,13 +113,13 @@ export const sendLawyerApprovalEmails = inngest.createFunction(
 
 export const sendBoardSigningEmails = inngest.createFunction(
   { id: "send-board-signing-emails" },
-  { event: "email.board_consent.member_signing_needed" },
+  { event: "email.board-consent.member-signing-needed" },
   async ({ event, step }) => {
     const { boardConsentId, companyId } = event.data;
 
     const boardMemberEmails = await step.run("fetch-board-member-emails", async () => {
       const boardMembers = await db.query.companyAdministrators.findMany({
-        where: and(eq(companyAdministrators.companyId, companyId), eq(companyAdministrators.boardMember, true)),
+        where: and(eq(companyAdministrators.companyId, BigInt(companyId)), eq(companyAdministrators.boardMember, true)),
         with: {
           user: { columns: { email: true } },
         },
@@ -130,42 +130,37 @@ export const sendBoardSigningEmails = inngest.createFunction(
 
     const data = await step.run("fetch-required-data", async () => {
       const consent = await db.query.boardConsents.findFirst({
-        where: eq(boardConsents.id, boardConsentId),
+        where: eq(boardConsents.id, BigInt(boardConsentId)),
       });
 
       if (!consent) {
         throw new NonRetriableError(`Board consent not found: ${boardConsentId}`);
       }
 
-      const [company, contractor, doc] = await Promise.all([
+      const [company, contractor] = await Promise.all([
         assertDefined(
           await db.query.companies.findFirst({
-            where: eq(companies.id, companyId),
+            where: eq(companies.id, BigInt(companyId)),
           }),
         ),
         assertDefined(
           await db.query.companyInvestors.findFirst({
-            where: eq(companyInvestors.id, consent.companyInvestorId),
+            where: eq(companyInvestors.id, BigInt(consent.companyInvestorId)),
             with: {
               user: { columns: { legalName: true, email: true } },
             },
           }),
         ),
-        assertDefined(
-          await db.query.documents.findFirst({
-            where: eq(documents.id, consent.documentId),
-          }),
-        ),
       ]);
 
-      return { company: companyName(company), contractor, doc };
+      return { company: companyName(company), contractor, consent };
     });
 
-    const { company, contractor, doc } = data;
+    const { company, contractor, consent } = data;
     const contractorName = contractor.user.legalName || contractor.user.email;
 
     await step.run("send-emails", async () => {
-      const documentUrl = `${process.env.NEXT_PUBLIC_APP_URL}/documents/${doc.id}`;
+      const documentUrl = `${env.DOMAIN}/documents?sign=${consent.documentId}`;
 
       return await sendEmails(
         {
@@ -176,7 +171,7 @@ export const sendBoardSigningEmails = inngest.createFunction(
             documentUrl,
           }),
         },
-        boardMemberEmails,
+        process.env.NODE_ENV === "production" ? boardMemberEmails : [{ email: "delivered@resend.dev" }],
       );
     });
 
@@ -189,13 +184,13 @@ export const sendBoardSigningEmails = inngest.createFunction(
 
 export const sendAdminSigningEmail = inngest.createFunction(
   { id: "send-admin-signing-email" },
-  { event: "email.equity_plan.admin_signing_needed" },
+  { event: "email.equity-plan.admin-signing-needed" },
   async ({ event, step }) => {
     const { documentId, companyId, optionGrantId } = event.data;
 
     const companyAdminEmails = await step.run("fetch-company-admin-emails", async () => {
       const companyAdmins = await db.query.companyAdministrators.findMany({
-        where: eq(companyAdministrators.companyId, companyId),
+        where: eq(companyAdministrators.companyId, BigInt(companyId)),
         with: {
           user: true,
         },
@@ -208,17 +203,17 @@ export const sendAdminSigningEmail = inngest.createFunction(
       const [document, grant, company] = await Promise.all([
         assertDefined(
           await db.query.documents.findFirst({
-            where: eq(documents.id, documentId),
+            where: eq(documents.id, BigInt(documentId)),
           }),
         ),
         assertDefined(
           await db.query.equityGrants.findFirst({
-            where: eq(equityGrants.id, optionGrantId),
+            where: eq(equityGrants.id, BigInt(optionGrantId)),
           }),
         ),
         assertDefined(
           await db.query.companies.findFirst({
-            where: eq(companies.id, companyId),
+            where: eq(companies.id, BigInt(companyId)),
           }),
         ),
       ]);
@@ -231,7 +226,7 @@ export const sendAdminSigningEmail = inngest.createFunction(
     const user = await step.run("fetch-user", async () => {
       const companyInvestor = assertDefined(
         await db.query.companyInvestors.findFirst({
-          where: eq(companyInvestors.id, grant.companyInvestorId),
+          where: eq(companyInvestors.id, BigInt(grant.companyInvestorId)),
           with: {
             user: { columns: { legalName: true, email: true } },
           },
@@ -245,7 +240,7 @@ export const sendAdminSigningEmail = inngest.createFunction(
     const userName = user.legalName || user.email;
 
     await step.run("send-emails", async () => {
-      const documentUrl = `${process.env.NEXT_PUBLIC_APP_URL}/documents/${document.id}`;
+      const documentUrl = `${env.DOMAIN}/documents?sign=${document.id}`;
 
       return await sendEmails(
         {
@@ -256,7 +251,7 @@ export const sendAdminSigningEmail = inngest.createFunction(
             documentUrl,
           }),
         },
-        companyAdminEmails,
+        process.env.NODE_ENV === "production" ? companyAdminEmails : [{ email: "delivered@resend.dev" }],
       );
     });
 

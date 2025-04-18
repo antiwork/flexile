@@ -230,11 +230,11 @@ export const equityGrantsRouter = createRouter({
       const { equity_grant_id } = z.object({ equity_grant_id: z.number() }).parse(await response.json());
 
       await inngest.send({
-        name: "board_consent.created",
+        name: "board-consent.create",
         data: {
-          equityGrantId: BigInt(equity_grant_id),
-          companyId: ctx.company.id,
-          companyWorkerId: worker.id,
+          equityGrantId: String(equity_grant_id),
+          companyId: String(ctx.company.id),
+          companyWorkerId: String(worker.id),
         },
       });
     }),

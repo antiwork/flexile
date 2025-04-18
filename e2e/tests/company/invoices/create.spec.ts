@@ -71,15 +71,6 @@ test.describe("invoice creation", () => {
       })
     ).user;
 
-    const { companyInvestor: projectBasedInvestor } = await companyInvestorsFactory.create({
-      companyId: company.id,
-      userId: projectBasedUser.id,
-    });
-    await equityGrantsFactory.createActive(
-      { companyInvestorId: projectBasedInvestor.id, sharePriceUsd: "1.5" },
-      { year: 2023 },
-    );
-
     const { companyContractor: projectBasedContractor } = await companyContractorsFactory.createProjectBased({
       companyId: company.id,
       userId: projectBasedUser.id,

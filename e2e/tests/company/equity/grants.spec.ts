@@ -13,7 +13,7 @@ import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
 import { and, desc, eq } from "drizzle-orm";
 import { DocumentTemplateType } from "@/db/enums";
-import { companyInvestors, documents, equityGrants } from "@/db/schema";
+import { companyInvestors, equityGrants } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 
 test.describe("New Contractor", () => {

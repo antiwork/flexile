@@ -118,12 +118,20 @@ export const templatesRouter = createRouter({
         throw new TRPCError({ code: "BAD_REQUEST", message: "No board members found for this company" });
       }
 
-      requiredFields = boardMembers.map((_, index) => ({
-        name: `__boardMemberSignature${index + 1}`,
-        title: `Board member signature`,
-        role: index === 0 ? `Board member` : `Board member ${index + 1}`,
-        type: "signature",
-      }));
+      requiredFields = boardMembers.flatMap((_, index) => [
+        {
+          name: `__boardMemberSignature${index + 1}`,
+          title: `Board member signature`,
+          role: index === 0 ? `Board member` : `Board member ${index + 1}`,
+          type: "signature",
+        },
+        {
+          name: `__boardMemberName${index + 1}`,
+          title: `Board member name`,
+          role: index === 0 ? `Board member` : `Board member ${index + 1}`,
+          type: "text",
+        },
+      ]);
     }
 
     return { template, token, requiredFields };
@@ -148,7 +156,11 @@ export const templatesRouter = createRouter({
           },
         },
         equityGrant: {
-          with: { optionPool: true, vestingSchedule: true },
+          with: {
+            optionPool: true,
+            vestingSchedule: true,
+            companyInvestor: { with: { user: { columns: { state: true, countryCode: true } } } },
+          },
         },
       },
     });
@@ -157,7 +169,8 @@ export const templatesRouter = createRouter({
     const submission = await docuseal.getSubmission(input.id);
     const submitter = submission.submitters.find(
       (s) =>
-        ((s.role === "Company Representative" && (ctx.companyAdministrator || ctx.companyLawyer)) ||
+        (((s.role === "Company Representative" || s.role.startsWith("Board member")) &&
+          (ctx.companyAdministrator || ctx.companyLawyer)) ||
           s.external_id === String(ctx.user.id)) &&
         (s.status === "awaiting" || s.status === "opened"),
     );
@@ -225,6 +238,35 @@ export const templatesRouter = createRouter({
         __vestingCommencementDate: equityGrant.periodStartedAt.toLocaleDateString(),
         __exerciseSchedule: "Same as Vesting Schedule",
       });
+
+      const vestingSchedule = equityGrant.vestingSchedule;
+      if (vestingSchedule) {
+        values.__vestingSchedule = `${vestingSchedule.vestingFrequencyMonths}/${vestingSchedule.totalVestingDurationMonths} of the total Shares shall vest monthly on the same day each month as the Vesting Commencement Date${vestingSchedule.cliffDurationMonths > 0 ? `, with ${vestingSchedule.cliffDurationMonths} months cliff` : ""}, subject to the service provider's Continuous Service (as defined in the Plan) through each vesting date.`;
+      } else if (equityGrant.vestingTrigger === "invoice_paid") {
+        values.__vestingSchedule = `Shares will vest as invoices are paid. The number of shares vesting each month will be equal to the total dollar amount of eligible fees billed to and approved by the Company during that month, times the equity allocation percentage selected, divided by the value per share of the Company's common stock on the Effective Date of the Equity Election Form (which for purposes of the vesting of this award will be either a) the fully diluted share price associated with the last SAFE valuation cap, or b) the share price of the last preferred stock sale, whichever is most recent, as determined by the Board). Any options that remain unvested at the conclusion of the calendar year after giving effect to any vesting earned for the month of December will be forfeited for no consideration.`;
+      }
+    } else if (document.type === DocumentType.BoardConsent) {
+      const equityGrant = document.equityGrant;
+      if (!equityGrant) throw new TRPCError({ code: "NOT_FOUND" });
+
+      Object.assign(values, {
+        __boardApprovalDate: equityGrant.boardApprovalDate ?? new Date().toLocaleDateString(),
+        __quantity: equityGrant.numberOfShares.toString(),
+        __relationship: equityGrant.issueDateRelationship,
+        __grantType: equityGrant.optionGrantType.toUpperCase(),
+        __exercisePrice: equityGrant.exercisePriceUsd.toString(),
+        __optionholderName: equityGrant.optionHolderName,
+        __vestingCommencementDate: equityGrant.periodStartedAt.toLocaleDateString(),
+      });
+
+      document.signatures.forEach((signature, index) => {
+        if (signature.title.startsWith("Board member")) {
+          values[`__boardMemberName${index + 1}`] = signature.user.legalName ?? "";
+        }
+      });
+
+      const { state, countryCode } = equityGrant.companyInvestor.user;
+      values.__optionholderAddress = (countryCode === "US" ? state : countries.get(countryCode ?? "")) ?? "";
 
       const vestingSchedule = equityGrant.vestingSchedule;
       if (vestingSchedule) {
