@@ -228,8 +228,8 @@ export default function MainLayout({
                 {!user.companies.length && (
                     <NavLink
                     href="/company_invitations"
-                    icon={UserIcon}
-                    filledIcon={SolidUserIcon}
+                    icon={BriefcaseIcon}
+                    filledIcon={SolidBriefcaseIcon}
                     active={pathname.startsWith("/company_invitations")}
                     >
                       Invite companies
