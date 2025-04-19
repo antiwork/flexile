@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import Image from "next/image";
 import MutationButton from "@/components/MutationButton";
 import Status from "@/components/Status";
 import { useCurrentCompany } from "@/global";
@@ -33,7 +34,7 @@ export default function GithubIntegration({ oauthUrl }: { oauthUrl: string }) {
       <div>
         <div className="flex items-center gap-2">
           <h2 className="text-xl font-bold">
-            <img src={githubLogo.src} className="inline size-6" alt="" />
+            <Image src={githubLogo.src} className="inline size-6" alt="" />
             &ensp;GitHub
           </h2>
           {integration?.status === "active" || integration?.status === "initialized" ? (

@@ -5,6 +5,7 @@ import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { Set } from "immutable";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
@@ -92,7 +93,7 @@ export default function RolePage({ countryCode }: { countryCode: string }) {
       hideHeader
       title={
         <div className="flex flex-col items-center gap-4">
-          <img src={company.logoUrl ?? ""} className="size-12 justify-self-center rounded-md" alt="" />
+          <Image src={company.logoUrl ?? ""} className="size-12 justify-self-center rounded-md" alt="" />
           <div>
             {role.name} at {company.name}
           </div>

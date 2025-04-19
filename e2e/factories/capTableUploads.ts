@@ -18,6 +18,6 @@ export const capTableUploadsFactory = {
       .returning();
     assert(insertedUpload != null);
 
-    return { capTableUpload: insertedUpload };
+    return insertedUpload;
   },
 };

@@ -25,34 +25,27 @@ const dataSchema = createInsertSchema(companyUpdates).pick({
   showNetIncome: true,
 });
 export const companyUpdatesRouter = createRouter({
-  list: companyProcedure
-    .input(
-      z.object({
-        page: z.number().optional(),
-        perPage: z.number().optional(),
-      }),
+  list: companyProcedure.query(async ({ ctx }) => {
+    if (
+      !ctx.company.companyUpdatesEnabled ||
+      (!ctx.companyAdministrator && !isActive(ctx.companyContractor) && !ctx.companyInvestor)
     )
-    .query(async ({ ctx }) => {
-      if (
-        !ctx.company.companyUpdatesEnabled ||
-        (!ctx.companyAdministrator && !isActive(ctx.companyContractor) && !ctx.companyInvestor)
-      )
-        throw new TRPCError({ code: "FORBIDDEN" });
-      const where = and(
-        eq(companyUpdates.companyId, ctx.company.id),
-        ctx.companyAdministrator ? undefined : isNotNull(companyUpdates.sentAt),
-      );
-      const rows = await db.query.companyUpdates.findMany({
-        where,
-        orderBy: desc(companyUpdates.createdAt),
-      });
-      const updates = rows.map((update) => ({
-        ...pick(update, ["title", "sentAt"]),
-        id: update.externalId,
-        summary: truncate(renderTiptapToText(update.body), { length: 300 }),
-      }));
-      return { updates };
-    }),
+      throw new TRPCError({ code: "FORBIDDEN" });
+    const where = and(
+      eq(companyUpdates.companyId, ctx.company.id),
+      ctx.companyAdministrator ? undefined : isNotNull(companyUpdates.sentAt),
+    );
+    const rows = await db.query.companyUpdates.findMany({
+      where,
+      orderBy: desc(companyUpdates.createdAt),
+    });
+    const updates = rows.map((update) => ({
+      ...pick(update, ["title", "sentAt"]),
+      id: update.externalId,
+      summary: truncate(renderTiptapToText(update.body), { length: 300 }),
+    }));
+    return { updates };
+  }),
   get: companyProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
     if (
       !ctx.company.companyUpdatesEnabled ||

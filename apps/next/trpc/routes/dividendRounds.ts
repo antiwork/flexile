@@ -6,17 +6,16 @@ import { dividendRounds } from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 
 export const dividendRoundsRouter = createRouter({
-  list: companyProcedure.input(z.object({})).query(async ({ ctx }) => {
+  list: companyProcedure.query(async ({ ctx }) => {
     if (!ctx.company.dividendsAllowed) throw new TRPCError({ code: "FORBIDDEN" });
     if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
     const where = eq(dividendRounds.companyId, ctx.company.id);
-    const rows = await db.query.dividendRounds.findMany({
+    return await db.query.dividendRounds.findMany({
       columns: { id: true, issuedAt: true, totalAmountInCents: true, numberOfShareholders: true },
       where,
       orderBy: [desc(dividendRounds.id)],
     });
-    return { dividendRounds: rows };
   }),
 
   get: companyProcedure.input(z.object({ id: z.number() })).query(async ({ ctx, input }) => {

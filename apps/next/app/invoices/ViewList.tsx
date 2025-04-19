@@ -127,10 +127,10 @@ export default function ViewList() {
           <Placeholder icon={CurrencyDollarIcon}>
             Create a new invoice to get started.
             <Button asChild variant="outline" size="small" disabled={!!unsignedContractId}>
-              <a inert={!!unsignedContractId} href="/invoices/new">
+              <Link inert={!!unsignedContractId} href="/invoices/new">
                 <PlusIcon className="size-4" />
                 New invoice
-              </a>
+              </Link>
             </Button>
           </Placeholder>
         </div>
