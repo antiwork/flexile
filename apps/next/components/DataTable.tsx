@@ -209,7 +209,7 @@ export default function DataTable<T extends RowData>({ table, caption, onRowClic
           {data.rows.map((row) => (
             <TableRow
               key={row.id}
-              className={`translate-x-0 ${rowClasses}`}
+              className={rowClasses}
               data-state={row.getIsSelected() ? "selected" : undefined}
               onClick={() => onRowClicked?.(row.original)}
             >

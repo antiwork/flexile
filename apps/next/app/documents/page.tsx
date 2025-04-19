@@ -81,9 +81,116 @@ function getStatus(document: Document): { variant: StatusVariant | undefined; na
   }
 }
 
+const EditTemplates = () => {
+  const company = useCurrentCompany();
+  const router = useRouter();
+
+  const [open, setOpen] = useState(false);
+  const [templates, { refetch: refetchTemplates }] = trpc.documents.templates.list.useSuspenseQuery({
+    companyId: company.id,
+  });
+  const createTemplate = trpc.documents.templates.create.useMutation({
+    onSuccess: (id) => {
+      void refetchTemplates();
+      router.push(`/document_templates/${id}`);
+    },
+  });
+
+  return (
+    <>
+      <Button variant="outline" size="small" onClick={() => setOpen(true)}>
+        <PencilIcon className="size-4" />
+        Edit templates
+      </Button>
+      <Modal open={open} onClose={() => setOpen(false)} title="Edit templates">
+        <div className="grid gap-4">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Type</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {templates.map((template) => (
+                <TableRow key={template.id}>
+                  <TableCell>
+                    <Link href={`/document_templates/${template.id}`} className="after:absolute after:inset-0">
+                      {template.name}
+                    </Link>
+                  </TableCell>
+                  <TableCell>{templateTypeLabels[template.type]}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <h3 className="text-lg font-medium">Create a new template</h3>
+          <Alert>
+            <InformationCircleIcon />
+            <AlertDescription>
+              By creating a custom document template, you acknowledge that Flexile shall not be liable for any claims,
+              liabilities, or damages arising from or related to such documents. See our{" "}
+              <Link href="/terms" className="text-blue-600 hover:underline">
+                Terms of Service
+              </Link>{" "}
+              for more details.
+            </AlertDescription>
+          </Alert>
+          <div className="grid grid-cols-2 gap-4">
+            <MutationButton
+              idleVariant="outline"
+              className="h-auto rounded-md p-6"
+              mutation={createTemplate}
+              param={{
+                companyId: company.id,
+                name: "Consulting agreement",
+                type: DocumentTemplateType.ConsultingContract,
+              }}
+            >
+              <div className="flex flex-col items-center">
+                <FileTextIcon className="size-6" />
+                <span className="mt-2">Consulting agreement</span>
+              </div>
+            </MutationButton>
+            <MutationButton
+              idleVariant="outline"
+              className="h-auto rounded-md p-6"
+              mutation={createTemplate}
+              param={{
+                companyId: company.id,
+                name: "Equity grant contract",
+                type: DocumentTemplateType.EquityPlanContract,
+              }}
+            >
+              <div className="flex flex-col items-center">
+                <PercentIcon className="size-6" />
+                <span className="mt-2">Equity grant contract</span>
+              </div>
+            </MutationButton>
+            <MutationButton
+              idleVariant="outline"
+              className="h-auto rounded-md p-6"
+              mutation={createTemplate}
+              param={{
+                companyId: company.id,
+                name: "Option grant board consent",
+                type: DocumentTemplateType.BoardConsent,
+              }}
+            >
+              <div className="flex flex-col items-center">
+                <GavelIcon className="size-6" />
+                <span className="mt-2 whitespace-normal">Option grant board consent</span>
+              </div>
+            </MutationButton>
+          </div>
+        </div>
+      </Modal>
+    </>
+  );
+};
+
 export default function DocumentsPage() {
   const user = useCurrentUser();
-  const router = useRouter();
   const company = useCurrentCompany();
   const [showInviteModal, setShowInviteModal] = useState(false);
   const userId = user.activeRole === "administrator" || user.activeRole === "lawyer" ? null : user.id;
@@ -109,7 +216,6 @@ export default function DocumentsPage() {
   const { data: downloadUrl } = trpc.documents.getUrl.useQuery(
     downloadDocument ? { companyId: company.id, id: downloadDocument } : skipToken,
   );
-  const [templatesModalOpen, setTemplatesModalOpen] = useState(false);
   const [signDocumentParam] = useQueryState("sign");
   const [signDocumentId, setSignDocumentId] = useState<bigint | null>(null);
   const isSignable = (document: Document): document is SignableDocument => {
@@ -142,16 +248,6 @@ export default function DocumentsPage() {
   useEffect(() => {
     if (downloadUrl) window.location.href = downloadUrl;
   }, [downloadUrl]);
-
-  const [templates, { refetch: refetchTemplates }] = trpc.documents.templates.list.useSuspenseQuery({
-    companyId: company.id,
-  });
-  const createTemplate = trpc.documents.templates.create.useMutation({
-    onSuccess: (id) => {
-      void refetchTemplates();
-      router.push(`/document_templates/${id}`);
-    },
-  });
 
   const columns = useMemo(
     () =>
@@ -267,10 +363,7 @@ export default function DocumentsPage() {
             <DataTable
               table={table}
               actions={
-                <Button variant="outline" size="small" onClick={() => setTemplatesModalOpen(true)}>
-                  <PencilIcon className="size-4" />
-                  Edit templates
-                </Button>
+                user.activeRole === "administrator" || user.activeRole === "lawyer" ? <EditTemplates /> : undefined
               }
             />
             {signDocument ? (
@@ -302,89 +395,6 @@ export default function DocumentsPage() {
             Invite
           </MutationButton>
         </form>
-      </Modal>
-      <Modal open={templatesModalOpen} onClose={() => setTemplatesModalOpen(false)} title="Edit templates">
-        <div className="grid gap-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {templates.map((template) => (
-                <TableRow key={template.id}>
-                  <TableCell>
-                    <Link href={`/document_templates/${template.id}`} className="after:absolute after:inset-0">
-                      {template.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{templateTypeLabels[template.type]}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <h3 className="text-lg font-medium">Create a new template</h3>
-          <Alert>
-            <InformationCircleIcon />
-            <AlertDescription>
-              By creating a custom document template, you acknowledge that Flexile shall not be liable for any claims,
-              liabilities, or damages arising from or related to such documents. See our{" "}
-              <Link href="/terms" className="text-blue-600 hover:underline">
-                Terms of Service
-              </Link>{" "}
-              for more details.
-            </AlertDescription>
-          </Alert>
-          <div className="grid grid-cols-2 gap-4">
-            <MutationButton
-              idleVariant="outline"
-              className="h-auto rounded-md p-6"
-              mutation={createTemplate}
-              param={{
-                companyId: company.id,
-                name: "Consulting agreement",
-                type: DocumentTemplateType.ConsultingContract,
-              }}
-            >
-              <div className="flex flex-col items-center">
-                <FileTextIcon className="size-6" />
-                <span className="mt-2">Consulting agreement</span>
-              </div>
-            </MutationButton>
-            <MutationButton
-              idleVariant="outline"
-              className="h-auto rounded-md p-6"
-              mutation={createTemplate}
-              param={{
-                companyId: company.id,
-                name: "Equity grant contract",
-                type: DocumentTemplateType.EquityPlanContract,
-              }}
-            >
-              <div className="flex flex-col items-center">
-                <PercentIcon className="size-6" />
-                <span className="mt-2">Equity grant contract</span>
-              </div>
-            </MutationButton>
-            <MutationButton
-              idleVariant="outline"
-              className="h-auto rounded-md p-6"
-              mutation={createTemplate}
-              param={{
-                companyId: company.id,
-                name: "Option grant board consent",
-                type: DocumentTemplateType.BoardConsent,
-              }}
-            >
-              <div className="flex flex-col items-center">
-                <GavelIcon className="size-6" />
-                <span className="mt-2 whitespace-normal">Option grant board consent</span>
-              </div>
-            </MutationButton>
-          </div>
-        </div>
       </Modal>
     </MainLayout>
   );
