@@ -1,11 +1,13 @@
 "use client";
-import { ArrowDownTrayIcon } from "@heroicons/react/16/solid";
-import { BriefcaseIcon, CheckCircleIcon, PaperAirplaneIcon } from "@heroicons/react/24/outline";
+import { ArrowDownTrayIcon, InformationCircleIcon } from "@heroicons/react/16/solid";
+import { BriefcaseIcon, CheckCircleIcon, PaperAirplaneIcon, PencilIcon } from "@heroicons/react/24/outline";
 import { skipToken, useMutation } from "@tanstack/react-query";
-import { getSortedRowModel } from "@tanstack/react-table";
+import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
+import { FileTextIcon, GavelIcon, PercentIcon } from "lucide-react";
 import type { Route } from "next";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { parseAsInteger, useQueryState } from "nuqs";
+import { useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
 import DocusealForm from "@/app/documents/DocusealForm";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
@@ -14,13 +16,13 @@ import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
-import Select from "@/components/Select";
-import Status from "@/components/Status";
+import Status, { type Variant as StatusVariant } from "@/components/Status";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
-import { DocumentType, trpc } from "@/trpc/client";
+import { DocumentTemplateType, DocumentType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
 import { formatDate } from "@/utils/time";
 
@@ -36,8 +38,14 @@ const typeLabels = {
   [DocumentType.BoardConsent]: "Board consent",
 };
 
-function DocumentStatus({ document }: { document: Document }) {
-  const completedAt = document.signatories.every((signatory) => signatory.signedAt)
+const templateTypeLabels = {
+  [DocumentTemplateType.ConsultingContract]: "Agreement",
+  [DocumentTemplateType.EquityPlanContract]: "Equity plan",
+  [DocumentTemplateType.BoardConsent]: "Board consent",
+};
+
+const getCompletedAt = (document: Document) =>
+  document.signatories.every((signatory) => signatory.signedAt)
     ? document.signatories.reduce<Date | null>(
         (acc, signatory) =>
           acc ? (signatory.signedAt && signatory.signedAt > acc ? signatory.signedAt : acc) : signatory.signedAt,
@@ -45,40 +53,43 @@ function DocumentStatus({ document }: { document: Document }) {
       )
     : undefined;
 
+function getStatus(document: Document): { variant: StatusVariant | undefined; name: string; text: string } {
+  const completedAt = getCompletedAt(document);
+
   switch (document.type) {
     case DocumentType.TaxDocument:
       if (document.name.startsWith("W-") || completedAt) {
-        return <Status variant="success">{completedAt ? `Filed on ${formatDate(completedAt)}` : "Signed"}</Status>;
+        return {
+          variant: "success",
+          name: "Signed",
+          text: completedAt ? `Filed on ${formatDate(completedAt)}` : "Signed",
+        };
       }
-      return <Status>Ready for filing</Status>;
+      return { variant: undefined, name: "Ready for filing", text: "Ready for filing" };
     case DocumentType.ShareCertificate:
     case DocumentType.ExerciseNotice:
-      return <Status variant="success">Issued</Status>;
+      return { variant: "success", name: "Issued", text: "Issued" };
     case DocumentType.BoardConsent:
     case DocumentType.ConsultingContract:
     case DocumentType.EquityPlanContract:
       if (document.type === DocumentType.BoardConsent && !document.lawyerApproved) {
-        return <Status variant="secondary">Waiting approval</Status>;
+        return { variant: "secondary", name: "Awaiting approval", text: "Awaiting approval" };
       }
-      return completedAt ? (
-        <Status variant="success">Signed</Status>
-      ) : (
-        <Status variant="critical">Signature required</Status>
-      );
+      return completedAt
+        ? { variant: "success", name: "Signed", text: "Signed" }
+        : { variant: "critical", name: "Signature required", text: "Signature required" };
   }
 }
 
 export default function DocumentsPage() {
   const user = useCurrentUser();
+  const router = useRouter();
   const company = useCurrentCompany();
   const [showInviteModal, setShowInviteModal] = useState(false);
   const userId = user.activeRole === "administrator" || user.activeRole === "lawyer" ? null : user.id;
 
-  const [years] = trpc.documents.years.useSuspenseQuery({ companyId: company.id, userId });
-  const defaultYear = years[0] ?? new Date().getFullYear();
-  const [year, setYear] = useQueryState("year", parseAsInteger.withDefault(defaultYear));
   const currentYear = new Date().getFullYear();
-  const [documents] = trpc.documents.list.useSuspenseQuery({ companyId: company.id, userId, year });
+  const [documents] = trpc.documents.list.useSuspenseQuery({ companyId: company.id, userId });
 
   const [lawyerEmail, setLawyerEmail] = useState("");
   const inviteLawyer = trpc.lawyers.invite.useMutation();
@@ -98,6 +109,7 @@ export default function DocumentsPage() {
   const { data: downloadUrl } = trpc.documents.getUrl.useQuery(
     downloadDocument ? { companyId: company.id, id: downloadDocument } : skipToken,
   );
+  const [templatesModalOpen, setTemplatesModalOpen] = useState(false);
   const [signDocumentParam] = useQueryState("sign");
   const [signDocumentId, setSignDocumentId] = useState<bigint | null>(null);
   const isSignable = (document: Document): document is SignableDocument => {
@@ -130,24 +142,48 @@ export default function DocumentsPage() {
   useEffect(() => {
     if (downloadUrl) window.location.href = downloadUrl;
   }, [downloadUrl]);
+
+  const [templates, { refetch: refetchTemplates }] = trpc.documents.templates.list.useSuspenseQuery({
+    companyId: company.id,
+  });
+  const createTemplate = trpc.documents.templates.create.useMutation({
+    onSuccess: (id) => {
+      void refetchTemplates();
+      router.push(`/document_templates/${id}`);
+    },
+  });
+
   const columns = useMemo(
     () =>
       [
         userId && user.activeRole === "contractorOrInvestor"
           ? null
-          : columnHelper.display({
-              header: "Signer",
-              cell: (info) =>
-                assertDefined(
-                  info.row.original.signatories.find((signatory) => signatory.title !== "Company Representative"),
-                ).name,
-            }),
+          : columnHelper.accessor(
+              (row) =>
+                assertDefined(row.signatories.find((signatory) => signatory.title !== "Company Representative")).name,
+              { header: "Signer" },
+            ),
         columnHelper.simple("name", "Document"),
-        columnHelper.simple("type", "Type", (value) => typeLabels[value]),
-        columnHelper.simple("createdAt", "Date", formatDate),
-        columnHelper.display({
+        columnHelper.accessor((row) => typeLabels[row.type], {
+          header: "Type",
+          meta: { filterOptions: [...new Set(documents.map((document) => typeLabels[document.type]))] },
+        }),
+        columnHelper.accessor("createdAt", {
+          header: "Date",
+          cell: (info) => formatDate(info.getValue()),
+          meta: {
+            filterOptions: [...new Set(documents.map((document) => document.createdAt.getFullYear().toString()))],
+          },
+          filterFn: (row, _, filterValue) =>
+            Array.isArray(filterValue) && filterValue.includes(row.original.createdAt.getFullYear().toString()),
+        }),
+        columnHelper.accessor((row) => getStatus(row).name, {
           header: "Status",
-          cell: (info) => <DocumentStatus document={info.row.original} />,
+          meta: { filterOptions: [...new Set(documents.map((document) => getStatus(document).name))] },
+          cell: (info) => {
+            const { variant, text } = getStatus(info.row.original);
+            return <Status variant={variant}>{text}</Status>;
+          },
         }),
         columnHelper.display({
           id: "actions",
@@ -193,13 +229,14 @@ export default function DocumentsPage() {
       ].filter((column) => !!column),
     [userId],
   );
-  const table = useTable({ columns, data: documents, getSortedRowModel: getSortedRowModel() });
+  const table = useTable({
+    columns,
+    data: documents,
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+  });
 
-  const filingDueDateFor1099NEC = new Date(currentYear, 0, 31);
-  const filingDueDateFor1042S = new Date(currentYear, 2, 15);
   const filingDueDateFor1099DIV = new Date(currentYear, 2, 31);
-
-  const isFilingDueDateApproaching = year === currentYear && new Date() <= filingDueDateFor1099DIV;
 
   return (
     <MainLayout
@@ -216,36 +253,32 @@ export default function DocumentsPage() {
       <div className="grid gap-4">
         {company.flags.includes("irs_tax_forms") &&
         user.activeRole === "administrator" &&
-        isFilingDueDateApproaching ? (
+        new Date() <= filingDueDateFor1099DIV ? (
           <Alert className="mb-4">
             <AlertTitle>Upcoming filing dates for 1099-NEC, 1099-DIV, and 1042-S</AlertTitle>
             <AlertDescription>
-              We will submit form 1099-NEC to the IRS on {formatDate(filingDueDateFor1099NEC)}, form 1042-S on{" "}
-              {formatDate(filingDueDateFor1042S)}, and form 1099-DIV on {formatDate(filingDueDateFor1099DIV)}.
+              We will submit form 1099-NEC to the IRS on {formatDate(new Date(currentYear, 0, 31))}, form 1042-S on{" "}
+              {formatDate(new Date(currentYear, 2, 15))}, and form 1099-DIV on {formatDate(filingDueDateFor1099DIV)}.
             </AlertDescription>
           </Alert>
         ) : null}
-        <div className="flex justify-between">
-          <div>
-            <Select
-              ariaLabel="Filter by year"
-              value={year.toString()}
-              options={years.map((year) => ({ label: year.toString(), value: year.toString() }))}
-              onChange={(value) => {
-                void setYear(parseInt(value, 10));
-              }}
-            />
-          </div>
-        </div>
         {documents.length > 0 ? (
           <>
-            <DataTable table={table} />
+            <DataTable
+              table={table}
+              actions={
+                <Button variant="outline" size="small" onClick={() => setTemplatesModalOpen(true)}>
+                  <PencilIcon className="size-4" />
+                  Edit templates
+                </Button>
+              }
+            />
             {signDocument ? (
               <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} />
             ) : null}
           </>
         ) : (
-          <Placeholder icon={CheckCircleIcon}>No documents for {year}.</Placeholder>
+          <Placeholder icon={CheckCircleIcon}>No documents yet.</Placeholder>
         )}
       </div>
       <Modal open={showInviteModal} onClose={() => setShowInviteModal(false)} title="Who's joining?">
@@ -269,6 +302,89 @@ export default function DocumentsPage() {
             Invite
           </MutationButton>
         </form>
+      </Modal>
+      <Modal open={templatesModalOpen} onClose={() => setTemplatesModalOpen(false)} title="Edit templates">
+        <div className="grid gap-4">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Type</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {templates.map((template) => (
+                <TableRow key={template.id}>
+                  <TableCell>
+                    <Link href={`/document_templates/${template.id}`} className="after:absolute after:inset-0">
+                      {template.name}
+                    </Link>
+                  </TableCell>
+                  <TableCell>{templateTypeLabels[template.type]}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <h3 className="text-lg font-medium">Create a new template</h3>
+          <Alert>
+            <InformationCircleIcon />
+            <AlertDescription>
+              By creating a custom document template, you acknowledge that Flexile shall not be liable for any claims,
+              liabilities, or damages arising from or related to such documents. See our{" "}
+              <Link href="/terms" className="text-blue-600 hover:underline">
+                Terms of Service
+              </Link>{" "}
+              for more details.
+            </AlertDescription>
+          </Alert>
+          <div className="grid grid-cols-2 gap-4">
+            <MutationButton
+              idleVariant="outline"
+              className="h-auto rounded-md p-6"
+              mutation={createTemplate}
+              param={{
+                companyId: company.id,
+                name: "Consulting agreement",
+                type: DocumentTemplateType.ConsultingContract,
+              }}
+            >
+              <div className="flex flex-col items-center">
+                <FileTextIcon className="size-6" />
+                <span className="mt-2">Consulting agreement</span>
+              </div>
+            </MutationButton>
+            <MutationButton
+              idleVariant="outline"
+              className="h-auto rounded-md p-6"
+              mutation={createTemplate}
+              param={{
+                companyId: company.id,
+                name: "Equity grant contract",
+                type: DocumentTemplateType.EquityPlanContract,
+              }}
+            >
+              <div className="flex flex-col items-center">
+                <PercentIcon className="size-6" />
+                <span className="mt-2">Equity grant contract</span>
+              </div>
+            </MutationButton>
+            <MutationButton
+              idleVariant="outline"
+              className="h-auto rounded-md p-6"
+              mutation={createTemplate}
+              param={{
+                companyId: company.id,
+                name: "Option grant board consent",
+                type: DocumentTemplateType.BoardConsent,
+              }}
+            >
+              <div className="flex flex-col items-center">
+                <GavelIcon className="size-6" />
+                <span className="mt-2 whitespace-normal">Option grant board consent</span>
+              </div>
+            </MutationButton>
+          </div>
+        </div>
       </Modal>
     </MainLayout>
   );

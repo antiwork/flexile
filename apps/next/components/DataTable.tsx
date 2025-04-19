@@ -12,8 +12,21 @@ import {
   type TableOptions,
   useReactTable,
 } from "@tanstack/react-table";
+import { FilterIcon } from "lucide-react";
 import React, { useMemo } from "react";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import {
   Table as ShadcnTable,
   TableBody,
@@ -30,6 +43,7 @@ declare module "@tanstack/react-table" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface ColumnMeta<TData extends RowData, TValue> {
     numeric?: boolean;
+    filterOptions?: string[];
   }
 }
 
@@ -64,23 +78,26 @@ interface TableProps<T> {
   table: Table<T>;
   caption?: string;
   onRowClicked?: ((row: T) => void) | undefined;
+  actions?: React.ReactNode;
 }
 
-export default function DataTable<T extends RowData>({ table, caption, onRowClicked }: TableProps<T>) {
-  const data = useMemo(() => {
-    const headers = table
-      .getHeaderGroups()
-      .filter((group) => group.headers.some((header) => header.column.columnDef.header));
-    const rows = table.getRowModel().rows;
-    const footers = table
-      .getFooterGroups()
-      .filter((group) => group.headers.some((header) => header.column.columnDef.footer));
-    const firstRow = headers[0] ?? rows[0] ?? footers[0];
-    const lastRow = (footers.length ? footers : rows.length ? rows : headers).at(-1);
-    const sortable = !!table.options.getSortedRowModel;
-    const selectable = !!table.options.enableRowSelection;
-    return { headers, rows, footers, firstRow, lastRow, sortable, selectable };
-  }, [table.getState()]);
+export default function DataTable<T extends RowData>({ table, caption, onRowClicked, actions }: TableProps<T>) {
+  const data = useMemo(
+    () => ({
+      headers: table
+        .getHeaderGroups()
+        .filter((group) => group.headers.some((header) => header.column.columnDef.header)),
+      rows: table.getRowModel().rows,
+      footers: table
+        .getFooterGroups()
+        .filter((group) => group.headers.some((header) => header.column.columnDef.footer)),
+    }),
+    [table.getState()],
+  );
+  const sortable = !!table.options.getSortedRowModel;
+  const filterable = !!table.options.getFilteredRowModel;
+  const selectable = !!table.options.enableRowSelection;
+  const filterableColumns = table.getAllColumns().filter((column) => column.columnDef.meta?.filterOptions);
 
   const rowClasses = "py-2 not-print:max-md:grid";
   const cellClasses = (column: Column<T> | null, type?: "header" | "footer") => {
@@ -93,100 +110,160 @@ export default function DataTable<T extends RowData>({ table, caption, onRowClic
   };
 
   return (
-    <ShadcnTable className="caption-top not-print:max-md:grid">
-      {caption ? <TableCaption className="mb-2 text-left text-lg font-bold text-black">{caption}</TableCaption> : null}
-      <TableHeader className="not-print:max-md:hidden">
-        {data.headers.map((headerGroup) => (
-          <TableRow key={headerGroup.id}>
-            {data.selectable ? (
-              <TableHead className={cellClasses(null, "header")}>
-                <Checkbox
-                  checked={table.getIsAllRowsSelected()}
-                  aria-label="Select all"
-                  onCheckedChange={(checked) => table.toggleAllRowsSelected(checked === true)}
-                />
-              </TableHead>
+    <div className="grid gap-4">
+      {filterable || actions ? (
+        <div className="flex justify-between">
+          <div className="flex gap-2">
+            {table.options.enableGlobalFilter !== false ? (
+              <Input
+                value={z.string().nullish().parse(table.getState().globalFilter) ?? ""}
+                onChange={(e) => table.setGlobalFilter(e.target.value)}
+                className="w-40"
+                placeholder="Filter..."
+              />
             ) : null}
-            {headerGroup.headers.map((header) => (
-              <TableHead
-                key={header.id}
-                colSpan={header.colSpan}
-                className={`${cellClasses(header.column, "header")} ${data.sortable && header.column.getCanSort() ? "cursor-pointer" : ""}`}
-                aria-sort={
-                  header.column.getIsSorted() === "asc"
-                    ? "ascending"
-                    : header.column.getIsSorted() === "desc"
-                      ? "descending"
-                      : undefined
-                }
-                onClick={() => data.sortable && header.column.getCanSort() && header.column.toggleSorting()}
-              >
-                {!header.isPlaceholder && flexRender(header.column.columnDef.header, header.getContext())}
-                {header.column.getIsSorted() === "asc" && <ChevronUpIcon className="size-5" />}
-                {header.column.getIsSorted() === "desc" && <ChevronDownIcon className="size-5" />}
-              </TableHead>
-            ))}
-          </TableRow>
-        ))}
-      </TableHeader>
-      <TableBody className="not-print:max-md:contents">
-        {data.rows.map((row) => (
-          <TableRow
-            key={row.id}
-            className={`translate-x-0 ${rowClasses}`}
-            data-state={row.getIsSelected() ? "selected" : undefined}
-            onClick={() => onRowClicked?.(row.original)}
-          >
-            {data.selectable ? (
-              <TableCell className={cellClasses(null)} onClick={(e) => e.stopPropagation()}>
-                <Checkbox
-                  checked={row.getIsSelected()}
-                  aria-label="Select row"
-                  disabled={!row.getCanSelect()}
-                  onCheckedChange={row.getToggleSelectedHandler()}
-                />
-              </TableCell>
+            {filterableColumns.length > 0 ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="small">
+                    <FilterIcon className="size-4" />
+                    Filter
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {filterableColumns.map((column) => {
+                    const filterValue = z.array(z.string()).nullish().parse(column.getFilterValue());
+                    return (
+                      <DropdownMenuSub key={column.id}>
+                        <DropdownMenuSubTrigger>
+                          <span>{typeof column.columnDef.header === "string" ? column.columnDef.header : ""}</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent>
+                          {column.columnDef.meta?.filterOptions?.map((option) => (
+                            <DropdownMenuCheckboxItem
+                              key={option}
+                              checked={filterValue?.includes(option) ?? false}
+                              onCheckedChange={(checked) =>
+                                column.setFilterValue(
+                                  checked
+                                    ? [...(filterValue ?? []), option]
+                                    : filterValue && filterValue.length > 1
+                                      ? filterValue.filter((o) => o !== option)
+                                      : undefined,
+                                )
+                              }
+                            >
+                              {option}
+                            </DropdownMenuCheckboxItem>
+                          ))}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : null}
-            {row.getVisibleCells().map((cell) => (
-              <TableCell
-                key={cell.id}
-                className={`${cellClasses(cell.column)} ${cell.column.id === "actions" ? "md:text-right print:hidden" : ""}`}
-                onClick={(e) => cell.column.id === "actions" && e.stopPropagation()}
-              >
-                {typeof cell.column.columnDef.header === "string" && (
-                  <div className="text-gray-500 md:hidden print:hidden" aria-hidden>
-                    {cell.column.columnDef.header}
-                  </div>
-                )}
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </TableCell>
-            ))}
-          </TableRow>
-        ))}
-      </TableBody>
-      {data.footers.length > 0 && (
-        <TableFooter>
-          {data.footers.map((footerGroup) => (
-            <TableRow key={footerGroup.id} className={rowClasses}>
-              {data.selectable ? <TableCell className={cellClasses(null, "footer")} /> : null}
-              {footerGroup.headers.map((header) => (
-                <TableCell key={header.id} className={cellClasses(header.column, "footer")} colSpan={header.colSpan}>
-                  {header.isPlaceholder ? null : (
-                    <>
-                      {typeof header.column.columnDef.header === "string" && (
-                        <div className="text-gray-500 md:hidden print:hidden" aria-hidden>
-                          {header.column.columnDef.header}
-                        </div>
-                      )}
-                      {flexRender(header.column.columnDef.footer, header.getContext())}
-                    </>
+          </div>
+          <div className="flex gap-2">{actions}</div>
+        </div>
+      ) : null}
+      <ShadcnTable className="caption-top not-print:max-md:grid">
+        {caption ? (
+          <TableCaption className="mb-2 text-left text-lg font-bold text-black">{caption}</TableCaption>
+        ) : null}
+        <TableHeader className="not-print:max-md:hidden">
+          {data.headers.map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {selectable ? (
+                <TableHead className={cellClasses(null, "header")}>
+                  <Checkbox
+                    checked={table.getIsAllRowsSelected()}
+                    aria-label="Select all"
+                    onCheckedChange={(checked) => table.toggleAllRowsSelected(checked === true)}
+                  />
+                </TableHead>
+              ) : null}
+              {headerGroup.headers.map((header) => (
+                <TableHead
+                  key={header.id}
+                  colSpan={header.colSpan}
+                  className={`${cellClasses(header.column, "header")} ${sortable && header.column.getCanSort() ? "cursor-pointer" : ""}`}
+                  aria-sort={
+                    header.column.getIsSorted() === "asc"
+                      ? "ascending"
+                      : header.column.getIsSorted() === "desc"
+                        ? "descending"
+                        : undefined
+                  }
+                  onClick={() => sortable && header.column.getCanSort() && header.column.toggleSorting()}
+                >
+                  {!header.isPlaceholder && flexRender(header.column.columnDef.header, header.getContext())}
+                  {header.column.getIsSorted() === "asc" && <ChevronUpIcon className="inline size-5" />}
+                  {header.column.getIsSorted() === "desc" && <ChevronDownIcon className="inline size-5" />}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody className="not-print:max-md:contents">
+          {data.rows.map((row) => (
+            <TableRow
+              key={row.id}
+              className={`translate-x-0 ${rowClasses}`}
+              data-state={row.getIsSelected() ? "selected" : undefined}
+              onClick={() => onRowClicked?.(row.original)}
+            >
+              {selectable ? (
+                <TableCell className={cellClasses(null)} onClick={(e) => e.stopPropagation()}>
+                  <Checkbox
+                    checked={row.getIsSelected()}
+                    aria-label="Select row"
+                    disabled={!row.getCanSelect()}
+                    onCheckedChange={row.getToggleSelectedHandler()}
+                  />
+                </TableCell>
+              ) : null}
+              {row.getVisibleCells().map((cell) => (
+                <TableCell
+                  key={cell.id}
+                  className={`${cellClasses(cell.column)} ${cell.column.id === "actions" ? "md:text-right print:hidden" : ""}`}
+                  onClick={(e) => cell.column.id === "actions" && e.stopPropagation()}
+                >
+                  {typeof cell.column.columnDef.header === "string" && (
+                    <div className="text-gray-500 md:hidden print:hidden" aria-hidden>
+                      {cell.column.columnDef.header}
+                    </div>
                   )}
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </TableCell>
               ))}
             </TableRow>
           ))}
-        </TableFooter>
-      )}
-    </ShadcnTable>
+        </TableBody>
+        {data.footers.length > 0 && (
+          <TableFooter>
+            {data.footers.map((footerGroup) => (
+              <TableRow key={footerGroup.id} className={rowClasses}>
+                {selectable ? <TableCell className={cellClasses(null, "footer")} /> : null}
+                {footerGroup.headers.map((header) => (
+                  <TableCell key={header.id} className={cellClasses(header.column, "footer")} colSpan={header.colSpan}>
+                    {header.isPlaceholder ? null : (
+                      <>
+                        {typeof header.column.columnDef.header === "string" && (
+                          <div className="text-gray-500 md:hidden print:hidden" aria-hidden>
+                            {header.column.columnDef.header}
+                          </div>
+                        )}
+                        {flexRender(header.column.columnDef.footer, header.getContext())}
+                      </>
+                    )}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableFooter>
+        )}
+      </ShadcnTable>
+    </div>
   );
 }
