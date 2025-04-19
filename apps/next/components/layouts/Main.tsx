@@ -472,7 +472,6 @@ const NavLinks = ({ company }: { company: Company }) => {
           ) : null}
         </>
       ) : null}
-
       {routes.has("Invoices") && (
         <InvoicesNavLink
           companyId={company.id}
@@ -480,7 +479,6 @@ const NavLinks = ({ company }: { company: Company }) => {
           isAdmin={isRole("administrator")}
         />
       )}
-
       {routes.has("Expenses") && (
         <NavLink
           href={`/companies/${company.id}/expenses`}
@@ -491,7 +489,6 @@ const NavLinks = ({ company }: { company: Company }) => {
           Expenses
         </NavLink>
       )}
-
       {routes.has("Documents") && (
         <NavLink
           href="/documents"
@@ -502,7 +499,6 @@ const NavLinks = ({ company }: { company: Company }) => {
           Documents
         </NavLink>
       )}
-
       {routes.has("People") && (
         <NavLink
           href="/people"
@@ -513,7 +509,6 @@ const NavLinks = ({ company }: { company: Company }) => {
           People
         </NavLink>
       )}
-
       {routes.has("Roles") && (
         <NavLink
           href="/roles"
@@ -524,7 +519,6 @@ const NavLinks = ({ company }: { company: Company }) => {
           Roles
         </NavLink>
       )}
-
       {routes.has("Equity") && equityNavLink ? (
         <NavLink
           href={equityNavLink.route}
@@ -535,7 +529,6 @@ const NavLinks = ({ company }: { company: Company }) => {
           Equity
         </NavLink>
       ) : null}
-
       {routes.has("Settings") && (
         <NavLink
           href={isRole("administrator") ? `/administrator/settings` : `/settings/equity`}
@@ -546,7 +539,6 @@ const NavLinks = ({ company }: { company: Company }) => {
           Settings
         </NavLink>
       )}
-
       {company.other_access_roles.map((accessRole) => (
         <SwitchRoleNavLink key={accessRole} accessRole={accessRole} companyId={company.id} />
       ))}
