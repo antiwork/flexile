@@ -15,7 +15,6 @@ import { Decimal } from "decimal.js";
 import { useParams, useRouter } from "next/navigation";
 import { parseAsString, useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
-import DocumentsList from "@/app/documents/List";
 import DividendStatusIndicator from "@/app/equity/DividendStatusIndicator";
 import EquityGrantExerciseStatusIndicator from "@/app/equity/EquityGrantExerciseStatusIndicator";
 import DetailsModal from "@/app/equity/grants/DetailsModal";
@@ -58,10 +57,6 @@ export default function ContractorPage() {
   const trpcUtils = trpc.useUtils();
   const { id } = useParams<{ id: string }>();
   const [user] = trpc.users.get.useSuspenseQuery({ companyId: company.id, id });
-  const { data: documents } = trpc.documents.list.useQuery(
-    { companyId: company.id, userId: id },
-    { enabled: currentUser.activeRole === "administrator" },
-  );
   const { data: contractor, refetch } = trpc.contractors.get.useQuery(
     { companyId: company.id, userId: id },
     { enabled: currentUser.activeRole === "administrator" },
@@ -134,7 +129,6 @@ export default function ContractorPage() {
     convertiblesData?.convertibleSecurities.length ? ({ label: "Convertibles", tab: `convertibles` } as const) : null,
     equityGrantExercises?.length ? ({ label: "Exercises", tab: `exercises` } as const) : null,
     dividends?.length ? ({ label: "Dividends", tab: `dividends` } as const) : null,
-    (contractor || investor) && ({ label: "Documents", tab: `documents` } as const),
     contractor && company.flags.includes("team_updates") ? ({ label: "Updates", tab: `updates` } as const) : null,
   ].filter((link) => !!link);
   const [selectedTab] = useQueryState("tab", parseAsString.withDefault(tabs[0]?.tab ?? ""));
@@ -447,14 +441,6 @@ export default function ContractorPage() {
             return investor ? <ExercisesTab investorId={investor.id} /> : null;
           case "dividends":
             return investor ? <DividendsTab investorId={investor.id} /> : null;
-          case "documents":
-            return documents ? (
-              documents.length > 0 ? (
-                <DocumentsList userId={id} documents={documents} />
-              ) : (
-                <Placeholder icon={CheckCircleIcon}>All documents will show up here.</Placeholder>
-              )
-            ) : null;
           case "details":
             return (
               <DetailsTab
