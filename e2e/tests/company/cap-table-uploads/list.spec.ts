@@ -12,6 +12,7 @@ test.describe.configure({ mode: "serial" });
 
 test.describe("Cap table uploads list", () => {
   test("shows empty state when no uploads exist", async ({ page }: { page: Page }) => {
+    await db.delete(capTableUploads);
     const { user } = await usersFactory.create({ teamMember: true, invitingCompany: true });
 
     await login(page, user);
