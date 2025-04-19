@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_16_022423) do
+ActiveRecord::Schema[8.0].define(version: 2025_04_18_135243) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -153,6 +153,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_16_022423) do
     t.boolean "equity_compensation_enabled", default: false, null: false
     t.boolean "team_updates_enabled", default: false, null: false
     t.jsonb "json_data", default: {"flags" => []}, null: false
+    t.string "slack_bot_user_id"
+    t.string "slack_team_id"
+    t.string "slack_bot_token"
     t.index ["external_id"], name: "index_companies_on_external_id", unique: true
   end
 
@@ -220,6 +223,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_16_022423) do
     t.boolean "on_trial", default: false, null: false
     t.integer "pay_rate_in_subunits", null: false
     t.string "pay_rate_currency", default: "usd", null: false
+    t.string "slack_user_id"
     t.index ["company_id"], name: "index_company_contractors_on_company_id"
     t.index ["company_role_id"], name: "index_company_contractors_on_company_role_id"
     t.index ["external_id"], name: "index_company_contractors_on_external_id", unique: true

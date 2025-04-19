@@ -16,7 +16,6 @@ export const test = baseTest.extend<{
     const emails: SentEmail[] = [];
     next.onFetch(async (request) => {
       if (request.method === "POST" && request.url === "https://api.resend.com/emails") {
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- not worth validating
         const email = (await request.json()) as SentEmail;
         if (!email.text) email.text = assertDefined(parseHTML(email.html).textContent);
         emails.push(email);

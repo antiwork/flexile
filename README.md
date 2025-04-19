@@ -28,7 +28,7 @@ Payroll & equity for everyone.
 
 You'll need:
 
-- [Docker](https://docs.docker.com/engine/install/)
+- [Docker](https://docs.docker.com/desktop/)
 - [Node.js](https://nodejs.org/en/download) (see [`.node-version`](.node-version))
 
 The easiest way to set up the development environment is to use the [`bin/setup` script](bin/setup), but feel free to run the commands in it yourself to:
@@ -46,6 +46,37 @@ Once the local services are up and running, the application will be available at
 
 Check [the seeds](apps/rails/config/data/seed_templates/gumroad.json) for default data created during setup.
 
+## Migrations
+
+Make sure to do this from the `apps/rails` folder:
+
+```
+bundle exec rails generate migration AddSlackBotUserIdToCompanies slack_bot_user_id:string
+rails db:migrate
+```
+
+Then add this to the `apps/next/db/schema.ts` for the Next app to understand:
+
+```
+export const companies = pgTable(
+  "companies",
+  {
+    ...
+    slackBotUserId: varchar("slack_bot_user_id"),
+    ...
+  }
+```
+
+You can access this in this way:
+
+```
+type Company = typeof companies.$inferSelect;
+...
+export async function handleMessage(event: GenericMessageEvent | AppMentionEvent, company: Company) {
+...
+company.slackBotUserId
+```
+
 ## Testing
 
 ```shell
@@ -55,6 +86,14 @@ bundle exec rspec spec/system/roles/show_spec.rb:7 # Run a single spec
 
 # Run Playwright end-to-end tests
 pnpm playwright test
+```
+
+### Slack integration
+
+To test Slack, use (ngrok)[https://ngrok.com] (`brew install ngrok`):
+
+```
+ngrok http https://flexile.dev
 ```
 
 ## Contributing
