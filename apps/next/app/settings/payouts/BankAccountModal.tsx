@@ -399,13 +399,15 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
         <DialogHeader>
           <DialogTitle>Bank account</DialogTitle>
         </DialogHeader>
-        <Label htmlFor={`currency-${uid}`}>Currency</Label>
-        <ComboBox
-          id={`currency-${uid}`}
-          value={[currency]}
-          onChange={(value) => setCurrency(z.enum(currencyCodes).parse(value[0]))}
-          options={CURRENCIES.map(({ value, name }) => ({ value, label: name }))}
-        />
+        <div className="grid gap-2">
+          <Label htmlFor={`currency-${uid}`}>Currency</Label>
+          <ComboBox
+            id={`currency-${uid}`}
+            value={[currency]}
+            onChange={(value) => setCurrency(z.enum(currencyCodes).parse(value[0]))}
+            options={CURRENCIES.map(({ value, name }) => ({ value, label: name }))}
+          />
+        </div>
 
         {formSwitch ? (
           <Checkbox
@@ -416,7 +418,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
             onCheckedChange={() => setSelectedFormIndex((prev) => (prev + 1) % 2)}
           />
         ) : forms.length > 2 ? (
-          <>
+          <div className="grid gap-2">
             <Label htmlFor={`form-${uid}`}>Account Type</Label>
             <ComboBox
               id={`form-${uid}`}
@@ -425,7 +427,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
               options={forms.map((form, i) => ({ value: i.toString(), label: form.title }))}
               disabled={isPending}
             />
-          </>
+          </div>
         ) : null}
 
         {visibleFields?.map((field) => {
