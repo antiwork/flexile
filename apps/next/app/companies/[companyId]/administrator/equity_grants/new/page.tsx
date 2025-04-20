@@ -30,13 +30,12 @@ const vestingFrequencyOptions = [
   { label: "Annually", value: "12" },
 ];
 
-function getTypedKeys<T extends Record<string, unknown>>(obj: T): Array<keyof T> {
-  return Object.keys(obj) as Array<keyof T>;
+function isLiteralValue<T extends Record<string, unknown>>(
+  value: string, 
+  obj: T
+): value is keyof T {
+  return Object.keys(obj).includes(value);
 }
-
-const relationshipKeys = getTypedKeys(relationshipDisplayNames);
-const optionGrantTypeKeys = getTypedKeys(optionGrantTypeDisplayNames);
-const vestingTriggerKeys = getTypedKeys(vestingTriggerDisplayNames);
 
 const formSchema = z.object({
   contractor: z.string().min(1, "Must be present."),
@@ -83,12 +82,14 @@ const formSchemaWithRefinements = formSchema
       interface ZodContext {
         optionPools?: OptionPool[];
       }
-      const context = ctx as unknown as ZodContext;
-      const optionPool = data.option_pool && context.optionPools
-        ? context.optionPools.find((pool) => pool.id === data.option_pool)
-        : undefined;
-
+      const context = ctx.contextualErrorMap ? ctx : { optionPools: [] };
+      const optionPools = 'optionPools' in context ? context.optionPools : undefined;
+      
+      if (!data.option_pool || !optionPools) return true;
+      
+      const optionPool = optionPools.find((pool) => pool.id === data.option_pool);
       if (!optionPool) return true;
+      
       return optionPool.availableShares >= data.number_of_shares;
     },
     {
@@ -474,7 +475,7 @@ export default function NewEquityGrant() {
                       <Input
                         type="number"
                         placeholder="0"
-                        value={field.value ?? ""}
+                        value={field.value || ""}
                         onChange={(e) => field.onChange(e.target.value === "" ? null : Number(e.target.value))}
                       />
                     </FormControl>
