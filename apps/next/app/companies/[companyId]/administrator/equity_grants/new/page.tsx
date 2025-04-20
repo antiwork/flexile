@@ -30,22 +30,26 @@ const vestingFrequencyOptions = [
   { label: "Annually", value: "12" },
 ];
 
-const relationshipKeys = Object.keys(relationshipDisplayNames) as (keyof typeof relationshipDisplayNames)[];
-const optionGrantTypeKeys = Object.keys(optionGrantTypeDisplayNames) as (keyof typeof optionGrantTypeDisplayNames)[];
-const vestingTriggerKeys = Object.keys(vestingTriggerDisplayNames) as (keyof typeof vestingTriggerDisplayNames)[];
+function getTypedKeys<T extends Record<string, unknown>>(obj: T): Array<keyof T> {
+  return Object.keys(obj) as Array<keyof T>;
+}
+
+const relationshipKeys = getTypedKeys(relationshipDisplayNames);
+const optionGrantTypeKeys = getTypedKeys(optionGrantTypeDisplayNames);
+const vestingTriggerKeys = getTypedKeys(vestingTriggerDisplayNames);
 
 const formSchema = z.object({
   contractor: z.string().min(1, "Must be present."),
   option_pool: z.string().min(1, "Must be present."),
   number_of_shares: z.number().gt(0, "Must be present and greater than 0."),
-  issue_date_relationship: z.enum(relationshipKeys, {
+  issue_date_relationship: z.enum(Object.keys(relationshipDisplayNames) as [string, ...string[]], {
     required_error: "Must be present.",
   }),
-  option_grant_type: z.enum(optionGrantTypeKeys, {
+  option_grant_type: z.enum(Object.keys(optionGrantTypeDisplayNames) as [string, ...string[]], {
     required_error: "Must be present.",
   }),
   expires_at: z.number().min(0, "Must be present and greater than or equal to 0."),
-  vesting_trigger: z.enum(vestingTriggerKeys, {
+  vesting_trigger: z.enum(Object.keys(vestingTriggerDisplayNames) as [string, ...string[]], {
     required_error: "Must be present.",
   }),
   vesting_schedule_id: z.string().optional(),
@@ -69,19 +73,23 @@ interface OptionPool {
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface FormContext {
-  optionPools: OptionPool[];
-}
+// interface FormContext {
+//   optionPools: OptionPool[];
+// }
 
 const formSchemaWithRefinements = formSchema
   .refine(
     (data, ctx) => {
-      const context = ctx.contextualErrorMap ? ctx : undefined;
-      const optionPool = data.option_pool
-        ? context?.optionPools?.find((pool) => pool.id === data.option_pool)
+      interface ZodContext {
+        optionPools?: OptionPool[];
+      }
+      const context = ctx as unknown as ZodContext;
+      const optionPool = data.option_pool && context.optionPools
+        ? context.optionPools.find((pool) => pool.id === data.option_pool)
         : undefined;
 
-      return !optionPool || optionPool.availableShares >= data.number_of_shares;
+      if (!optionPool) return true;
+      return optionPool.availableShares >= data.number_of_shares;
     },
     {
       message: "Not enough shares available in the option pool to create a grant with this number of options.",
@@ -408,7 +416,9 @@ export default function NewEquityGrant() {
       }
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+        <form onSubmit={form.handleSubmit((values) => {
+          void onSubmit(values);
+        })}>
           <FormSection title="Grant details">
             <CardContent className="grid gap-4">
               <FormField
@@ -528,7 +538,7 @@ export default function NewEquityGrant() {
                         <Input
                           type="number"
                           placeholder="0"
-                          value={field.value ?? ""}
+                          value={field.value || ""}
                           onChange={(e) => field.onChange(e.target.value === "" ? null : Number(e.target.value))}
                         />
                         <span className="ml-2 text-gray-600">months</span>
@@ -614,7 +624,7 @@ export default function NewEquityGrant() {
                                 <Input
                                   type="number"
                                   placeholder="0"
-                                  value={field.value ?? ""}
+                                  value={field.value || ""}
                                   onChange={(e) =>
                                     field.onChange(e.target.value === "" ? null : Number(e.target.value))
                                   }
@@ -638,7 +648,7 @@ export default function NewEquityGrant() {
                                 <Input
                                   type="number"
                                   placeholder="0"
-                                  value={field.value ?? ""}
+                                  value={field.value || ""}
                                   onChange={(e) =>
                                     field.onChange(e.target.value === "" ? null : Number(e.target.value))
                                   }
@@ -689,7 +699,7 @@ export default function NewEquityGrant() {
                         <Input
                           type="number"
                           placeholder="0"
-                          value={field.value ?? ""}
+                          value={field.value || ""}
                           onChange={(e) => field.onChange(e.target.value === "" ? null : Number(e.target.value))}
                         />
                         <span className="ml-2 text-gray-600">months</span>
@@ -711,7 +721,7 @@ export default function NewEquityGrant() {
                         <Input
                           type="number"
                           placeholder="0"
-                          value={field.value ?? ""}
+                          value={field.value || ""}
                           onChange={(e) => field.onChange(e.target.value === "" ? null : Number(e.target.value))}
                         />
                         <span className="ml-2 text-gray-600">months</span>
@@ -733,7 +743,7 @@ export default function NewEquityGrant() {
                         <Input
                           type="number"
                           placeholder="0"
-                          value={field.value ?? ""}
+                          value={field.value || ""}
                           onChange={(e) => field.onChange(e.target.value === "" ? null : Number(e.target.value))}
                         />
                         <span className="ml-2 text-gray-600">months</span>
@@ -755,7 +765,7 @@ export default function NewEquityGrant() {
                         <Input
                           type="number"
                           placeholder="0"
-                          value={field.value ?? ""}
+                          value={field.value || ""}
                           onChange={(e) => field.onChange(e.target.value === "" ? null : Number(e.target.value))}
                         />
                         <span className="ml-2 text-gray-600">months</span>
@@ -777,7 +787,7 @@ export default function NewEquityGrant() {
                         <Input
                           type="number"
                           placeholder="0"
-                          value={field.value ?? ""}
+                          value={field.value || ""}
                           onChange={(e) => field.onChange(e.target.value === "" ? null : Number(e.target.value))}
                         />
                         <span className="ml-2 text-gray-600">months</span>
@@ -799,7 +809,7 @@ export default function NewEquityGrant() {
                         <Input
                           type="number"
                           placeholder="0"
-                          value={field.value ?? ""}
+                          value={field.value || ""}
                           onChange={(e) => field.onChange(e.target.value === "" ? null : Number(e.target.value))}
                         />
                         <span className="ml-2 text-gray-600">months</span>
@@ -816,7 +826,7 @@ export default function NewEquityGrant() {
             <div></div>
             <div className="grid gap-2">
               {form.formState.errors.root ? (
-                <div className="text-red text-center text-xs">{form.formState.errors.root.message}</div>
+                <div className="text-red text-center text-xs">{form.formState.errors.root.message || "An error occurred"}</div>
               ) : null}
               <Button type="submit" disabled={createEquityGrant.isLoading}>
                 {createEquityGrant.isLoading ? "Creating..." : "Create option grant"}
