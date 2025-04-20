@@ -101,7 +101,7 @@ export const CompanyDetails = () => {
 
   return (
     <Form {...form}>
-      <form className="grid gap-4" onSubmit={e(onSubmit, "prevent")}>
+      <form className="grid gap-4" onSubmit={(e) => { e.preventDefault(); void onSubmit(); }}>
         <FormField
           control={form.control}
           name="legal_name"
