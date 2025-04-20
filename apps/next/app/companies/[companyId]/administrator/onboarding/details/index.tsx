@@ -1,3 +1,5 @@
+"use client";
+
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
