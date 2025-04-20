@@ -1,27 +1,30 @@
 import { utc } from "@date-fns/utc";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
-import { startOfWeek } from "date-fns";
 import { List, Map } from "immutable";
-import { useEffect, useState } from "react";
-import Input from "@/components/Input";
+import { useEffect, useRef, useState } from "react";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Label } from "@/components/ui/label";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { areOverlapping } from "@/models/period";
 import { trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
 import { formatServerDate } from "@/utils/time";
+import { formatISO, parseISO, startOfWeek } from "date-fns";
 
 type CompanyWorkerAbsenceForm = {
   id: bigint | null;
   startsOn: string | null;
   endsOn: string | null;
 };
+
 const AbsencesModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
   const company = useCurrentCompany();
   const user = useCurrentUser();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const currentPeriodStartsOn = formatServerDate(startOfWeek(new Date(), { in: utc }));
   const [workerAbsences] = trpc.workerAbsences.list.useSuspenseQuery({
@@ -120,28 +123,38 @@ const AbsencesModal = ({ open, onClose }: { open: boolean; onClose: () => void }
 
   return (
     <Modal title="Time off" open={open} onClose={onClose} className="lg:min-w-[65ch]">
-      <div className="grid gap-4">
+      <div ref={containerRef} className="grid gap-4">
         {absences.size === 0 ? "no time off" : null}
         {absences.map((absence, index) => (
           <div key={absence.id || `absence-${index}`} className="flex flex-col gap-2 lg:flex-row">
             <div className="flex-1">
-              <Input
-                value={absence.startsOn}
-                onChange={(value) => updateAbsence(index, { startsOn: value })}
-                type="date"
-                label="From"
-                invalid={absenceErrors.has(absence)}
-              />
+              <div className="grid gap-2">
+                <Label className="cursor-pointer">From</Label>
+                <DatePicker
+                  date={absence.startsOn ? parseISO(absence.startsOn) : undefined}
+                  setDate={(date) =>
+                    updateAbsence(index, { startsOn: date ? formatISO(date, { representation: "date" }) : null })
+                  }
+                  placeholder="Select date"
+                  container={containerRef.current}
+                />
+              </div>
             </div>
             <div className="flex-1">
-              <Input
-                value={absence.endsOn}
-                onChange={(value) => updateAbsence(index, { endsOn: value })}
-                type="date"
-                label="Until"
-                invalid={absenceErrors.has(absence)}
-                help={absenceErrors.get(absence)}
-              />
+              <div className="grid gap-2">
+                <Label className="cursor-pointer">Until</Label>
+                <DatePicker
+                  date={absence.endsOn ? parseISO(absence.endsOn) : undefined}
+                  setDate={(date) =>
+                    updateAbsence(index, { endsOn: date ? formatISO(date, { representation: "date" }) : null })
+                  }
+                  placeholder="Select date"
+                  container={containerRef.current}
+                />
+              </div>
+              {absenceErrors.has(absence) && (
+                <div className="mt-1 text-sm text-red-500">{absenceErrors.get(absence)}</div>
+              )}
             </div>
             <div className="flex items-end">
               <Button

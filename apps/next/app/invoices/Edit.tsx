@@ -3,7 +3,6 @@
 import { ArrowUpTrayIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { PaperAirplaneIcon, PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import { formatISO } from "date-fns";
 import { List } from "immutable";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -17,6 +16,7 @@ import MainLayout from "@/components/layouts/Main";
 import Select from "@/components/Select";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -32,6 +32,7 @@ import {
   new_company_invoice_path,
 } from "@/utils/routes";
 import { LegacyAddress as Address } from ".";
+import { formatISO, parseISO } from "date-fns";
 
 const addressSchema = z.object({
   street_address: z.string(),
@@ -118,9 +119,15 @@ const Edit = () => {
   });
 
   const [invoiceNumber, setInvoiceNumber] = useState(data.invoice.invoice_number);
-  const [issueDate, setIssueDate] = useState(
-    searchParams.get("date") || formatISO(data.invoice.invoice_date, { representation: "date" }),
-  );
+  const [issueDate, setIssueDate] = useState<Date>(() => {
+    if (searchParams.get("date")) {
+      const dateStr = searchParams.get("date");
+      if (!dateStr) return new Date();
+      return parseISO(dateStr);
+    }
+    return parseISO(data.invoice.invoice_date);
+  });
+
   const invoiceYear = new Date(issueDate).getFullYear() || new Date().getFullYear();
   const [notes, setNotes] = useState(data.invoice.notes ?? "");
   const [lineItems, setLineItems] = useState<List<InvoiceFormLineItem>>(() => {
@@ -142,6 +149,12 @@ const Edit = () => {
     ]);
   });
   const [expenses, setExpenses] = useState(List<InvoiceFormExpense>(data.invoice.expenses));
+
+  const handleDateChange = (date: Date | undefined) => {
+    if (date) {
+      setIssueDate(date);
+    }
+  };
 
   const validate = () => {
     setErrorField(null);
@@ -169,7 +182,7 @@ const Edit = () => {
 
       const formData = new FormData();
       formData.append("invoice[invoice_number]", invoiceNumber);
-      formData.append("invoice[invoice_date]", issueDate);
+      formData.append("invoice[invoice_date]", formatISO(issueDate, { representation: "date" }));
       for (const lineItem of lineItems) {
         if (lineItem.id) {
           formData.append("invoice_line_items[][id]", lineItem.id.toString());
@@ -325,13 +338,10 @@ const Edit = () => {
               />
             </div>
             <div>
-              <Input
-                value={issueDate}
-                onChange={setIssueDate}
-                label="Date"
-                invalid={errorField === "issueDate"}
-                type="date"
-              />
+              <div className="group grid gap-2">
+                <Label className="cursor-pointer">Date</Label>
+                <DatePicker date={issueDate} setDate={handleDateChange} placeholder="Select date" />
+              </div>
             </div>
           </div>
 

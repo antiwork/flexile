@@ -18,6 +18,7 @@ import Status from "@/components/Status";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardFooter } from "@/components/ui/card";
+import { DatePicker } from "@/components/ui/date-picker";
 import { BusinessType, TaxClassification } from "@/db/enums";
 import { useCurrentUser } from "@/global";
 import { countries } from "@/models/constants";
@@ -27,6 +28,8 @@ import { request } from "@/utils/request";
 import { settings_tax_path } from "@/utils/routes";
 import { useOnChange } from "@/utils/useOnChange";
 import SettingsLayout from "../Layout";
+import { formatISO, parseISO } from "date-fns";
+import { Label } from "@/components/ui/label";
 
 const dataSchema = z.object({
   birth_date: z.string().nullable(),
@@ -334,12 +337,18 @@ export default function TaxPage() {
               autoComplete="flexile-tax-id"
             />
 
-            <Input
-              value={formData.birth_date ?? ""}
-              onChange={(value) => setFormData({ ...formData, birth_date: value })}
-              label={`Date of ${formData.business_entity ? "incorporation" : "birth"} (optional)`}
-              type="date"
-            />
+            <div className="grid gap-2">
+              <Label className="cursor-pointer">
+                Date of {formData.business_entity ? "incorporation" : "birth"} (optional)
+              </Label>
+              <DatePicker
+                date={formData.birth_date ? parseISO(formData.birth_date) : undefined}
+                setDate={(date: Date | undefined) =>
+                  setFormData({ ...formData, birth_date: date ? formatISO(date, { representation: "date" }) : null })
+                }
+                placeholder={`Select date`}
+              />
+            </div>
           </div>
 
           <Input

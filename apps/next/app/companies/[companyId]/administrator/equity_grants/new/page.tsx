@@ -7,16 +7,18 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { optionGrantTypeDisplayNames, relationshipDisplayNames, vestingTriggerDisplayNames } from "@/app/equity/grants";
 import FormSection from "@/components/FormSection";
-import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import Select from "@/components/Select";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
+import { formatISO, parseISO } from "date-fns";
 
 const MAX_VESTING_DURATION_IN_MONTHS = 120;
 
@@ -131,7 +133,7 @@ export default function NewEquityGrant() {
   const expiryRef = useRef<HTMLInputElement>(null);
   const vestingTriggerRef = useRef<HTMLSelectElement>(null);
   const vestingScheduleRef = useRef<HTMLSelectElement>(null);
-  const vestingCommencementRef = useRef<HTMLInputElement>(null);
+  const vestingCommencementRef = useRef<HTMLDivElement>(null);
   const totalVestingDurationRef = useRef<HTMLInputElement>(null);
   const cliffDurationRef = useRef<HTMLInputElement>(null);
   const vestingFrequencyRef = useRef<HTMLSelectElement>(null);
@@ -563,14 +565,20 @@ export default function NewEquityGrant() {
                 />
               </fieldset>
               <fieldset>
-                <Input
-                  label="Vesting commencement date"
-                  type="date"
-                  value={vestingCommencementDate}
-                  onChange={setVestingCommencementDate}
-                  ref={vestingCommencementRef}
-                  {...invalidFieldAttrs("vesting_commencement_date", errorInfo)}
-                />
+                <div className="group grid gap-2" ref={vestingCommencementRef}>
+                  <Label className="cursor-pointer">Vesting commencement date</Label>
+                  <DatePicker
+                    date={vestingCommencementDate ? parseISO(vestingCommencementDate) : undefined}
+                    setDate={(date) =>
+                      setVestingCommencementDate(date ? formatISO(date, { representation: "date" }) : "")
+                    }
+                    placeholder="Select date"
+                    container={vestingCommencementRef.current}
+                  />
+                  {errorInfo?.attribute_name === "vesting_commencement_date" && (
+                    <div className="mt-1 text-sm text-red-500">{errorInfo.error}</div>
+                  )}
+                </div>
               </fieldset>
               {vestingScheduleId === "custom" ? (
                 <>

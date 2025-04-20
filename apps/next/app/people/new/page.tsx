@@ -1,6 +1,5 @@
 "use client";
 import { PaperAirplaneIcon } from "@heroicons/react/16/solid";
-import { formatISO } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { parseAsInteger, useQueryState } from "nuqs";
@@ -16,11 +15,14 @@ import NumberInput from "@/components/NumberInput";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
 import { AVG_TRIAL_HOURS } from "@/models/constants";
 import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
 import { useOnChange } from "@/utils/useOnChange";
+import { formatISO } from "date-fns";
 
 function Create() {
   const company = useCurrentCompany();
@@ -47,7 +49,8 @@ function Create() {
   const [rateUsd, setRateUsd] = useState(50);
   const [hours, setHours] = useState(0);
   const [skipTrial, setSkipTrial] = useState(false);
-  const [startDate, setStartDate] = useState(formatISO(new Date(), { representation: "date" }));
+  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
+
   const defaultHours = role?.trialEnabled ? AVG_TRIAL_HOURS : (application?.hoursPerWeek ?? 0);
   useEffect(() => {
     setEmail(application?.email ?? "");
@@ -69,7 +72,7 @@ function Create() {
     ((role?.payRateType === PayRateType.Hourly && hours) ||
       role?.payRateType === PayRateType.ProjectBased ||
       role?.payRateType === PayRateType.Salary) &&
-    startDate.length > 0;
+    startDate !== undefined;
 
   const trpcUtils = trpc.useUtils();
   const saveMutation = trpc.contractors.create.useMutation({
@@ -96,7 +99,10 @@ function Create() {
         <CardContent>
           <div className="grid gap-4">
             <Input value={email} onChange={setEmail} type="email" label="Email" placeholder="Contractor's email" />
-            <Input value={startDate} onChange={setStartDate} type="date" label="Start date" />
+            <div className="group grid gap-2">
+              <Label>Start date</Label>
+              <DatePicker date={startDate} setDate={setStartDate} placeholder="Select date" />
+            </div>
             <RoleSelector value={roleId ?? null} onChange={setRoleId} />
             {role?.trialEnabled && role.payRateType !== PayRateType.Salary ? (
               <Checkbox
@@ -147,9 +153,7 @@ function Create() {
               companyId: company.id,
               applicationId,
               email,
-              // startDate only contains the date without a timezone. Appending T00:00:00 ensures the date is
-              // parsed as midnight in the local timezone rather than UTC.
-              startedAt: formatISO(new Date(`${startDate}T00:00:00`)),
+              startedAt: startDate ? formatISO(startDate) : "",
               payRateInSubunits: rateUsd * 100,
               payRateType: role?.payRateType ?? PayRateType.Hourly,
               onTrial,

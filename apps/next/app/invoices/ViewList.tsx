@@ -1,7 +1,6 @@
 import { CurrencyDollarIcon, ExclamationTriangleIcon, PencilIcon, PlusIcon } from "@heroicons/react/20/solid";
 import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
-import { formatISO } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -10,13 +9,14 @@ import { StatusWithTooltip } from "@/app/invoices/Status";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import DecimalInput from "@/components/DecimalInput";
 import DurationInput from "@/components/DurationInput";
-import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
 import { linkClasses } from "@/components/Link";
 import Placeholder from "@/components/Placeholder";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Label } from "@/components/ui/label";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assert } from "@/utils/assert";
@@ -25,6 +25,7 @@ import { request } from "@/utils/request";
 import { company_invoices_path } from "@/utils/routes";
 import { formatDate, formatDuration } from "@/utils/time";
 import { EDITABLE_INVOICE_STATES } from ".";
+import { formatISO } from "date-fns";
 
 const useData = () => {
   const company = useCurrentCompany();
@@ -153,20 +154,22 @@ const QuickInvoiceSection = ({ disabled }: { disabled?: boolean }) => {
   });
   assert(!!user.roles.worker);
   const payRateInSubunits = user.roles.worker.payRateInSubunits;
-  const initialInvoiceDate = formatISO(nextInvoiceDate, { representation: "date" });
 
+  const [date, setDate] = useState<Date | undefined>(new Date());
   const [duration, setDuration] = useState<number | null>(null);
   const [amountUsd, setAmountUsd] = useState<number | null>(payRateInSubunits ? payRateInSubunits / 100 : null);
-  const [date, setDate] = useState(initialInvoiceDate);
   const [lockModalOpen, setLockModalOpen] = useState(false);
 
   const totalAmountInCents = isProjectBased
     ? (amountUsd ?? 0) * 100
     : Math.ceil(((duration ?? 0) / 60) * (payRateInSubunits ?? 0));
 
-  const invoiceYear = new Date(date).getFullYear() || new Date().getFullYear();
+  const invoiceYear = date ? date.getFullYear() : new Date().getFullYear();
 
-  const newSearchParams = new URLSearchParams({ date });
+  const newSearchParams = new URLSearchParams();
+  if (date) {
+    newSearchParams.set("date", formatISO(date, { representation: "date" }));
+  }
   if (isProjectBased) newSearchParams.set("amount", String(amountUsd));
   else newSearchParams.set("duration", String(duration));
   const newCompanyInvoiceRoute = `/invoices/new?${newSearchParams.toString()}`;
@@ -202,7 +205,7 @@ const QuickInvoiceSection = ({ disabled }: { disabled?: boolean }) => {
       if (response.ok) {
         setDuration(null);
         setAmountUsd(null);
-        setDate(initialInvoiceDate);
+        setDate(nextInvoiceDate);
 
         await refetch();
       }
@@ -247,7 +250,10 @@ const QuickInvoiceSection = ({ disabled }: { disabled?: boolean }) => {
             ) : null}
           </div>
           <div>
-            <Input value={date} onChange={setDate} label="Invoice date" type="date" disabled={submit.isPending} />
+            <div className="grid gap-2">
+              <Label className="cursor-pointer">Invoice date</Label>
+              <DatePicker date={date} setDate={setDate} placeholder="Select date" disabled={submit.isPending} />
+            </div>
           </div>
           <div className="text-right">
             <span>{equityCalculation.amountInCents > 0 ? "Net amount in cash" : "Total to invoice"}</span>

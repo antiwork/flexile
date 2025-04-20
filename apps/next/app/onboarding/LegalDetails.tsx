@@ -13,11 +13,14 @@ import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
 import RadioButtons from "@/components/RadioButtons";
 import Select from "@/components/Select";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Label } from "@/components/ui/label";
 import { e } from "@/utils";
 import { getTinName } from "@/utils/legal";
 import { request } from "@/utils/request";
 import { legal_onboarding_path, save_legal_onboarding_path } from "@/utils/routes";
 import LegalCertificationModal from "./LegalCertificationModal";
+import { formatISO, parseISO } from "date-fns";
 
 const LegalDetails = <T extends string>({
   header,
@@ -177,13 +180,14 @@ const LegalDetails = <T extends string>({
               }
             />
 
-            <Input
-              value={birthDate}
-              onChange={setBirthDate}
-              type="date"
-              label="Date of birth"
-              invalid={errors.has("birth_date")}
-            />
+            <div className="grid gap-2">
+              <Label className="cursor-pointer">Date of birth</Label>
+              <DatePicker
+                date={birthDate ? parseISO(birthDate) : undefined}
+                setDate={(date) => setBirthDate(date ? formatISO(date, { representation: "date" }) : "")}
+                placeholder="Select date"
+              />
+            </div>
           </>
         ) : null}
 

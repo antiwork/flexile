@@ -10,11 +10,10 @@ import {
 } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/react-query";
-import { areIntervalsOverlapping, format, formatISO, isFuture } from "date-fns";
 import { Decimal } from "decimal.js";
 import { useParams, useRouter } from "next/navigation";
 import { parseAsString, useQueryState } from "nuqs";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import DocumentsList from "@/app/documents/List";
 import DividendStatusIndicator from "@/app/equity/DividendStatusIndicator";
 import EquityGrantExerciseStatusIndicator from "@/app/equity/EquityGrantExerciseStatusIndicator";
@@ -38,6 +37,7 @@ import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from "@/compon
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -50,6 +50,7 @@ import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { approve_company_invoices_path, company_equity_exercise_payment_path } from "@/utils/routes";
 import { formatDate, formatDuration } from "@/utils/time";
+import { areIntervalsOverlapping, format, formatISO, isFuture } from "date-fns";
 
 export default function ContractorPage() {
   const currentUser = useCurrentUser();
@@ -98,7 +99,8 @@ export default function ContractorPage() {
   const selectedRole = roles.find((role) => role.id === selectedRoleId);
   const [endModalOpen, setEndModalOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
-  const [endDate, setEndDate] = useState(formatISO(new Date(), { representation: "date" }));
+  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
+  const datePickerContainerRef = useRef<HTMLDivElement>(null);
   const [completeTrialModalOpen, setCompleteTrialModalOpen] = useState(false);
   const [issuePaymentModalOpen, setIssuePaymentModalOpen] = useState(false);
   const [paymentAmountInCents, setPaymentAmountInCents] = useState<number | null>(null);
@@ -157,12 +159,12 @@ export default function ContractorPage() {
 
   const endContractMutation = useMutation({
     mutationFn: async () => {
-      if (!contractor) return;
+      if (!contractor || !endDate) return;
 
       await endContract.mutateAsync({
         companyId: company.id,
         id: contractor.id,
-        endDate,
+        endDate: formatISO(endDate, { representation: "date" }),
       });
       await trpcUtils.contractors.list.invalidate({ companyId: company.id });
       await refetch();
@@ -312,7 +314,14 @@ export default function ContractorPage() {
         }
       >
         <p>This action cannot be undone.</p>
-        <Input type="date" label="End date" value={endDate} onChange={setEndDate} />
+        <div ref={datePickerContainerRef}>
+          <DatePicker
+            date={endDate}
+            setDate={setEndDate}
+            placeholder="Select end date"
+            container={datePickerContainerRef.current}
+          />
+        </div>
         <div className="grid gap-3">
           <Status variant="success">{user.displayName} will be able to submit invoices after contract end.</Status>
           <Status variant="success">{user.displayName} will receive upcoming payments.</Status>
