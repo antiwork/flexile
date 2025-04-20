@@ -30,9 +30,9 @@ const vestingFrequencyOptions = [
   { label: "Annually", value: "12" },
 ];
 
-const relationshipKeys = Object.keys(relationshipDisplayNames) as Array<keyof typeof relationshipDisplayNames>;
-const optionGrantTypeKeys = Object.keys(optionGrantTypeDisplayNames) as Array<keyof typeof optionGrantTypeDisplayNames>;
-const vestingTriggerKeys = Object.keys(vestingTriggerDisplayNames) as Array<keyof typeof vestingTriggerDisplayNames>;
+const relationshipKeys = Object.keys(relationshipDisplayNames) as (keyof typeof relationshipDisplayNames)[];
+const optionGrantTypeKeys = Object.keys(optionGrantTypeDisplayNames) as (keyof typeof optionGrantTypeDisplayNames)[];
+const vestingTriggerKeys = Object.keys(vestingTriggerDisplayNames) as (keyof typeof vestingTriggerDisplayNames)[];
 
 const formSchema = z.object({
   contractor: z.string().min(1, "Must be present."),
@@ -76,9 +76,9 @@ interface FormContext {
 const formSchemaWithRefinements = formSchema
   .refine(
     (data, ctx) => {
-      const context = ctx as unknown as FormContext;
-      const optionPool = data.option_pool 
-        ? context.optionPools?.find((pool) => pool.id === data.option_pool) 
+      const context = ctx.contextualErrorMap ? ctx : undefined;
+      const optionPool = data.option_pool
+        ? context?.optionPools?.find((pool) => pool.id === data.option_pool)
         : undefined;
 
       return !optionPool || optionPool.availableShares >= data.number_of_shares;
@@ -271,7 +271,7 @@ export default function NewEquityGrant() {
   const recipientId = form.watch("contractor");
   const optionPoolId = form.watch("option_pool");
   const issueDateRelationship = form.watch("issue_date_relationship");
-  const grantType = form.watch("option_grant_type");
+  const _grantType = form.watch("option_grant_type");
   const vestingTrigger = form.watch("vesting_trigger");
   const vestingScheduleId = form.watch("vesting_schedule_id");
 
@@ -346,9 +346,11 @@ export default function NewEquityGrant() {
           attribute_name: z
             .string()
             .nullable()
-            .transform((value): FormFieldName | null => {
+            .transform((value) => {
               if (!value) return null;
-              return value as FormFieldName;
+              const isFormField = (val: string): val is FormFieldName => 
+                Object.keys(formSchema.shape).includes(val) || val === "root";
+              return isFormField(value) ? value : "root";
             }),
         });
 
