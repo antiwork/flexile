@@ -30,27 +30,28 @@ const vestingFrequencyOptions = [
   { label: "Annually", value: "12" },
 ];
 
-function isLiteralValue<T extends Record<string, unknown>>(
+function _isLiteralValue<T extends Record<string, unknown>>(
   value: string, 
   obj: T
 ): value is keyof T {
   return Object.keys(obj).includes(value);
 }
 
+function createEnumSchema<T extends Record<string, string>>(obj: T, errorMsg: string) {
+  return z.enum(
+    Object.keys(obj).filter((key): key is keyof T => key in obj),
+    { required_error: errorMsg }
+  );
+}
+
 const formSchema = z.object({
   contractor: z.string().min(1, "Must be present."),
   option_pool: z.string().min(1, "Must be present."),
   number_of_shares: z.number().gt(0, "Must be present and greater than 0."),
-  issue_date_relationship: z.enum(Object.keys(relationshipDisplayNames) as [string, ...string[]], {
-    required_error: "Must be present.",
-  }),
-  option_grant_type: z.enum(Object.keys(optionGrantTypeDisplayNames) as [string, ...string[]], {
-    required_error: "Must be present.",
-  }),
+  issue_date_relationship: createEnumSchema(relationshipDisplayNames, "Must be present."),
+  option_grant_type: createEnumSchema(optionGrantTypeDisplayNames, "Must be present."),
   expires_at: z.number().min(0, "Must be present and greater than or equal to 0."),
-  vesting_trigger: z.enum(Object.keys(vestingTriggerDisplayNames) as [string, ...string[]], {
-    required_error: "Must be present.",
-  }),
+  vesting_trigger: createEnumSchema(vestingTriggerDisplayNames, "Must be present."),
   vesting_schedule_id: z.string().optional(),
   vesting_commencement_date: z.string().optional(),
   total_vesting_duration_months: z.number().nullable(),
@@ -76,19 +77,21 @@ type FormValues = z.infer<typeof formSchema>;
 //   optionPools: OptionPool[];
 // }
 
+interface FormContext {
+  optionPools?: OptionPool[];
+}
+
 const formSchemaWithRefinements = formSchema
   .refine(
     (data, ctx) => {
-      interface ZodContext {
-        optionPools?: OptionPool[];
-      }
-      const context = ctx.contextualErrorMap ? ctx : { optionPools: [] };
-      const optionPools = 'optionPools' in context ? context.optionPools : undefined;
+      const contextObj = typeof ctx === 'object' && ctx !== null ? ctx : {};
+      const formContext = 'context' in contextObj ? contextObj.context : undefined;
+      const optionPools = formContext && 'optionPools' in formContext ? formContext.optionPools : undefined;
       
       if (!data.option_pool || !optionPools) return true;
       
       const optionPool = optionPools.find((pool) => pool.id === data.option_pool);
-      if (!optionPool) return true;
+      if (!optionPool || typeof optionPool.availableShares !== 'number') return true;
       
       return optionPool.availableShares >= data.number_of_shares;
     },
@@ -381,10 +384,10 @@ export default function NewEquityGrant() {
     },
   });
 
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = async (values: FormValues): Promise<void> => {
     const isCustomVestingSchedule = values.vesting_trigger === "scheduled" && values.vesting_schedule_id === "custom";
 
-    return createEquityGrant.mutateAsync({
+    await createEquityGrant.mutateAsync({
       companyId: company.id,
       companyWorkerId: values.contractor,
       optionPoolId: values.option_pool,
@@ -827,7 +830,11 @@ export default function NewEquityGrant() {
             <div></div>
             <div className="grid gap-2">
               {form.formState.errors.root ? (
-                <div className="text-red text-center text-xs">{form.formState.errors.root.message || "An error occurred"}</div>
+                <div className="text-red text-center text-xs">
+                  {typeof form.formState.errors.root.message === 'string' 
+                    ? form.formState.errors.root.message 
+                    : "An error occurred"}
+                </div>
               ) : null}
               <Button type="submit" disabled={createEquityGrant.isLoading}>
                 {createEquityGrant.isLoading ? "Creating..." : "Create option grant"}
