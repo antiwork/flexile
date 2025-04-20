@@ -56,7 +56,6 @@ import { request } from "@/utils/request";
 import { company_search_path, company_switch_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import { useOnGlobalEvent } from "@/utils/useOnGlobalEvent";
-import "@/components/layouts/sidebar.css";
 
 import {
   Sidebar,
