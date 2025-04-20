@@ -4,33 +4,25 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import Input from "@/components/Input";
-import MutationButton from "@/components/MutationButton";
-import Select from "@/components/Select";
+import ComboBox from "@/components/ComboBox";
+import { MutationStatusButton } from "@/components/MutationButton";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { useCurrentUser } from "@/global";
 import { usStates } from "@/models";
 import { request } from "@/utils/request";
 import { company_administrator_onboarding_path, details_company_administrator_onboarding_path } from "@/utils/routes";
 
 const formSchema = z.object({
-  legal_name: z
-    .string()
-    .min(1, "This field is required")
-    .refine((val) => /\S+\s+\S+/u.test(val), {
-      message: "This doesn't look like a complete full name",
-    }),
+  legal_name: z.string().refine((val) => /\S+\s+\S+/u.test(val), {
+    message: "This doesn't look like a complete full name",
+  }),
   company: z.object({
     name: z.string().min(1, "This field is required"),
     street_address: z.string().min(1, "This field is required"),
     city: z.string().min(1, "This field is required"),
     state: z.string().min(1, "This field is required"),
-    zip_code: z
-      .string()
-      .min(1, "This field is required")
-      .refine((val) => /\d/u.test(val), {
-        message: "Enter a valid ZIP code (5 or 9 digits)",
-      }),
+    zip_code: z.string().regex(/^\d+$/u, { message: "Enter a valid ZIP code" }),
   }),
 });
 
@@ -87,7 +79,7 @@ export const CompanyDetails = () => {
         accept: "json",
         url: company_administrator_onboarding_path(user.currentCompanyId || "_"),
         assertOk: true,
-        jsonData: { company: values.company, legal_name: values.legal_name },
+        jsonData: values,
       });
 
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
@@ -114,15 +106,7 @@ export const CompanyDetails = () => {
             <FormItem>
               <FormLabel>Your full legal name</FormLabel>
               <FormControl>
-                <Input
-                  {...field}
-                  autoFocus
-                  help={
-                    field.value && !/\S+\s+\S+/u.test(field.value)
-                      ? "This doesn't look like a complete full name"
-                      : undefined
-                  }
-                />
+                <Input {...field} autoFocus />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -179,9 +163,9 @@ export const CompanyDetails = () => {
               <FormItem>
                 <FormLabel>State</FormLabel>
                 <FormControl>
-                  <Select
-                    value={field.value}
-                    onChange={field.onChange}
+                  <ComboBox
+                    value={[field.value]}
+                    onChange={(value) => field.onChange(value[0])}
                     placeholder="Choose State"
                     options={usStates.map(({ name, code }) => ({ value: code, label: name }))}
                   />
@@ -198,12 +182,7 @@ export const CompanyDetails = () => {
               <FormItem>
                 <FormLabel>ZIP code</FormLabel>
                 <FormControl>
-                  <Input
-                    {...field}
-                    help={
-                      field.value && !/\d/u.test(field.value) ? "Enter a valid ZIP code (5 or 9 digits)" : undefined
-                    }
-                  />
+                  <Input {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -213,9 +192,9 @@ export const CompanyDetails = () => {
 
         <div className="text-xs">Flexile is only available for companies based in the United States.</div>
 
-        <MutationButton mutation={submit} idleVariant="primary" type="submit" loadingText="Saving...">
+        <MutationStatusButton mutation={submit} idleVariant="primary" type="submit" loadingText="Saving...">
           Continue
-        </MutationButton>
+        </MutationStatusButton>
       </form>
     </Form>
   );
