@@ -1,13 +1,12 @@
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Map as ImmutableMap } from "immutable";
 import { set } from "lodash-es";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import Input from "@/components/Input";
 import MutationButton from "@/components/MutationButton";
 import RadioButtons from "@/components/RadioButtons";
-import Select from "@/components/Select";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -120,6 +119,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
   detailsRef.current = details;
   const [errors, setErrors] = useState(new Map<string, string>());
   const previousForms = useRef<Form[] | null>(null);
+  const uid = useId();
 
   const nestedDetails = () => {
     const result = {};
@@ -399,11 +399,12 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
         <DialogHeader>
           <DialogTitle>Bank account</DialogTitle>
         </DialogHeader>
-        <Select
-          value={currency}
-          onChange={(value) => setCurrency(z.enum(currencyCodes).parse(value))}
+        <Label htmlFor={`currency-${uid}`}>Currency</Label>
+        <ComboBox
+          id={`currency-${uid}`}
+          value={[currency]}
+          onChange={(value) => setCurrency(z.enum(currencyCodes).parse(value[0]))}
           options={CURRENCIES.map(({ value, name }) => ({ value, label: name }))}
-          label="Currency"
         />
 
         {formSwitch ? (
@@ -415,14 +416,16 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
             onCheckedChange={() => setSelectedFormIndex((prev) => (prev + 1) % 2)}
           />
         ) : forms.length > 2 ? (
-          <Select
-            value={selectedFormIndex.toString()}
-            onChange={(value) => setSelectedFormIndex(Number(value))}
-            placeholder="Choose account type"
-            options={forms.map((form, i) => ({ value: i.toString(), label: form.title }))}
-            label="Account Type"
-            disabled={isPending}
-          />
+          <>
+            <Label htmlFor={`form-${uid}`}>Account Type</Label>
+            <ComboBox
+              id={`form-${uid}`}
+              value={[selectedFormIndex.toString()]}
+              onChange={(value) => setSelectedFormIndex(Number(value[0]))}
+              options={forms.map((form, i) => ({ value: i.toString(), label: form.title }))}
+              disabled={isPending}
+            />
+          </>
         ) : null}
 
         {visibleFields?.map((field) => {
