@@ -1,7 +1,7 @@
 "use client";
 
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import Input from "@/components/Input";
@@ -100,7 +100,13 @@ export const CompanyDetails = () => {
 
   return (
     <Form {...form}>
-      <form className="grid gap-4" onSubmit={(e) => { e.preventDefault(); void onSubmit(); }}>
+      <form
+        className="grid gap-4"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void onSubmit();
+        }}
+      >
         <FormField
           control={form.control}
           name="legal_name"
@@ -111,7 +117,11 @@ export const CompanyDetails = () => {
                 <Input
                   {...field}
                   autoFocus
-                  help={field.value && !/\S+\s+\S+/u.test(field.value) ? "This doesn't look like a complete full name" : undefined}
+                  help={
+                    field.value && !/\S+\s+\S+/u.test(field.value)
+                      ? "This doesn't look like a complete full name"
+                      : undefined
+                  }
                 />
               </FormControl>
               <FormMessage />
@@ -190,7 +200,9 @@ export const CompanyDetails = () => {
                 <FormControl>
                   <Input
                     {...field}
-                    help={field.value && !/\d/u.test(field.value) ? "Enter a valid ZIP code (5 or 9 digits)" : undefined}
+                    help={
+                      field.value && !/\d/u.test(field.value) ? "Enter a valid ZIP code (5 or 9 digits)" : undefined
+                    }
                   />
                 </FormControl>
                 <FormMessage />
