@@ -153,7 +153,7 @@ const AbsencesModal = ({ open, onClose }: { open: boolean; onClose: () => void }
                 />
               </div>
               {absenceErrors.has(absence) && (
-                <div className="mt-1 text-sm text-red-500">{absenceErrors.get(absence)}</div>
+                <div className="group-has-invalid:text-red text-xs text-gray-500">{absenceErrors.get(absence)}</div>
               )}
             </div>
             <div className="flex items-end">
