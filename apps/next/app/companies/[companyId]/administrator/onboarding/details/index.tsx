@@ -10,7 +10,6 @@ import Select from "@/components/Select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useCurrentUser } from "@/global";
 import { usStates } from "@/models";
-import { e } from "@/utils";
 import { request } from "@/utils/request";
 import { company_administrator_onboarding_path, details_company_administrator_onboarding_path } from "@/utils/routes";
 
