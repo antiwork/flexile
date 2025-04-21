@@ -1,47 +1,34 @@
 import type { Page } from "@playwright/test";
+import { db } from "@test/db";
 import { capTableUploadsFactory } from "@test/factories/capTableUploads";
-import { companiesFactory } from "@test/factories/companies";
-import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { findRequiredTableRow } from "@test/helpers/matchers";
 import { expect, test } from "@test/index";
 import { format } from "date-fns";
+import { capTableUploads } from "@/db/schema";
+
+test.describe.configure({ mode: "serial" });
 
 test.describe("Cap table uploads list", () => {
-  const setupCompany = async () => {
-    const { company } = await companiesFactory.createCompletedOnboarding();
-    const { user } = await usersFactory.create({ teamMember: true });
-    await companyAdministratorsFactory.create({ companyId: company.id, userId: user.id });
-    return { company, user };
-  };
-
   test("shows empty state when no uploads exist", async ({ page }: { page: Page }) => {
-    const { user } = await setupCompany();
+    await db.delete(capTableUploads);
+    const { user } = await usersFactory.create({ teamMember: true, invitingCompany: true });
 
     await login(page, user);
     await page.goto("/cap_table_uploads");
-    await page.waitForLoadState("networkidle");
 
     await expect(page.getByText("No cap table uploads yet")).toBeVisible();
     await expect(page.getByRole("table")).not.toBeVisible();
   });
 
   test("shows list of uploads with different statuses", async ({ page }: { page: Page }) => {
-    const { user, company } = await setupCompany();
+    await db.delete(capTableUploads);
+    const { user } = await usersFactory.create({ teamMember: true, invitingCompany: true });
 
     // Create test data for different statuses
     const statuses = ["submitted", "processing", "failed"] as const;
-    const uploads = await Promise.all(
-      statuses.map(async (status) => {
-        const { capTableUpload } = await capTableUploadsFactory.create({
-          companyId: company.id,
-          userId: user.id,
-          status,
-        });
-        return capTableUpload;
-      }),
-    );
+    const uploads = await Promise.all(statuses.map(async (status) => capTableUploadsFactory.create({ status })));
 
     await login(page, user);
     await page.goto("/cap_table_uploads");

@@ -1,14 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import Image from "next/image";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import ComboBox from "@/components/ComboBox";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import Status from "@/components/Status";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCurrentCompany } from "@/global";
 import quickbooksLogo from "@/images/quickbooks.svg";
 import { trpc } from "@/trpc/client";
@@ -131,7 +132,7 @@ export default function QuickbooksRow() {
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold">
-              <img src={quickbooksLogo.src} className="inline size-6" alt="" />
+              <Image src={quickbooksLogo.src} className="inline size-6" alt="" />
               &ensp;QuickBooks
             </h2>
             {quickbooksIntegration?.status === "active" ? <Status variant="success">Connected</Status> : null}
@@ -182,18 +183,12 @@ export default function QuickbooksRow() {
                     <FormItem>
                       <FormLabel>Expense account for {expenseAccountLabels[name]}</FormLabel>
                       <FormControl>
-                        <Select value={field.value ?? ""} onValueChange={field.onChange}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select an account" />
-                          </SelectTrigger>
-                          <SelectContent align="center">
-                            {expenseAccountOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <ComboBox
+                          options={expenseAccountOptions}
+                          value={field.value ?? ""}
+                          onChange={(value) => field.onChange(value)}
+                          placeholder="Select an account"
+                        />
                       </FormControl>
                       {name === "consultingServicesExpenseAccountId" ? (
                         <FormDescription>This can be overridden for individual roles.</FormDescription>
@@ -213,18 +208,12 @@ export default function QuickbooksRow() {
                   <FormItem>
                     <FormLabel>Bank account</FormLabel>
                     <FormControl>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select an account" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {bankAccountOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <ComboBox
+                        options={bankAccountOptions}
+                        value={field.value}
+                        onChange={(value) => field.onChange(value)}
+                        placeholder="Select an account"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -213,9 +213,9 @@ export default function EditTemplatePage() {
       }
       headerActions={
         <Button variant="outline" asChild>
-          <Link href="/document_templates">
+          <Link href="/documents">
             <ArrowLeftIcon className="size-4" />
-            Back to templates
+            Back to documents
           </Link>
         </Button>
       }

@@ -3,13 +3,11 @@
 import { ArrowDownTrayIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
-import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
 
 export default function CapTableUploadsPage() {
-  const company = useCurrentCompany();
-  const [data] = trpc.capTableUploads.list.useSuspenseQuery({ companyId: company.id });
+  const [data] = trpc.capTableUploads.list.useSuspenseQuery();
 
   const columnHelper = createColumnHelper<(typeof data.uploads)[number]>();
   const columns = [
