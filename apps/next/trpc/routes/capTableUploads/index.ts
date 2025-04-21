@@ -14,7 +14,7 @@ import {
 } from "@/db/schema";
 import env from "@/env";
 import { MAX_FILES_PER_CAP_TABLE_UPLOAD } from "@/models";
-import { companyProcedure, createRouter, getS3Url } from "@/trpc";
+import { companyProcedure, createRouter, getS3Url, protectedProcedure } from "@/trpc";
 import { assert } from "@/utils/assert";
 
 const COMPLETED_STATUSES = ["completed", "canceled"] as const;
@@ -120,10 +120,8 @@ export const capTableUploadsRouter = createRouter({
       });
     }),
 
-  list: companyProcedure.input(z.object({ onlyCurrentUser: z.boolean().optional() })).query(async ({ ctx, input }) => {
-    if (!(ctx.user.teamMember || input.onlyCurrentUser)) {
-      throw new TRPCError({ code: "FORBIDDEN" });
-    }
+  list: protectedProcedure.query(async ({ ctx }) => {
+    if (!ctx.user.teamMember && !ctx.company) throw new TRPCError({ code: "FORBIDDEN" });
 
     const uploads = await db
       .select({
@@ -143,9 +141,8 @@ export const capTableUploadsRouter = createRouter({
       .innerJoin(companies, eq(companies.id, capTableUploads.companyId))
       .where(
         and(
-          eq(companies.id, ctx.company.id),
+          ctx.company ? eq(capTableUploads.companyId, ctx.company.id) : undefined,
           notInArray(capTableUploads.status, [...COMPLETED_STATUSES]),
-          ...(input.onlyCurrentUser ? [eq(capTableUploads.userId, ctx.user.id)] : []),
         ),
       )
       .orderBy(desc(capTableUploads.createdAt));

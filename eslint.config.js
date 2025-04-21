@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { includeIgnoreFile } from "@eslint/compat";
 import js from "@eslint/js";
+import nextPlugin from "@next/eslint-plugin-next";
 import prettierConfig from "eslint-config-prettier";
 import importPlugin from "eslint-plugin-import";
 import prettierRecommended from "eslint-plugin-prettier/recommended";
@@ -61,14 +62,15 @@ export default [
           "newlines-between": "never",
           named: true,
           alphabetize: { order: "asc", caseInsensitive: true },
-          pathGroups: [
-            { pattern: "$assets/**", group: "external", position: "after" },
-            { pattern: "@/**", group: "external", position: "after" },
-          ],
+          pathGroups: [{ pattern: "@/**", group: "parent", position: "before" }],
         },
       ],
     },
+    settings: {
+      next: { rootDir: "apps/next" },
+    },
   },
+  nextPlugin.flatConfig.recommended,
   ...tseslint.config({
     files: ["**/*.ts", "**/*.tsx"],
     extends: [...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylisticTypeChecked],

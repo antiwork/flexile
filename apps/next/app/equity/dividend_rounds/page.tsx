@@ -12,7 +12,7 @@ import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 import EquityLayout from "../Layout";
 
-type DividendRound = RouterOutput["dividendRounds"]["list"]["dividendRounds"][number];
+type DividendRound = RouterOutput["dividendRounds"]["list"][number];
 const columnHelper = createColumnHelper<DividendRound>();
 const columns = [
   columnHelper.accessor("issuedAt", {
@@ -30,7 +30,7 @@ const columns = [
 export default function DividendRounds() {
   const company = useCurrentCompany();
   const router = useRouter();
-  const [{ dividendRounds }] = trpc.dividendRounds.list.useSuspenseQuery({ companyId: company.id });
+  const [dividendRounds] = trpc.dividendRounds.list.useSuspenseQuery({ companyId: company.id });
 
   const table = useTable({ columns, data: dividendRounds });
 
