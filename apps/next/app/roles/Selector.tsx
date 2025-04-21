@@ -23,9 +23,7 @@ const Selector = ({ value, onChange }: { value: string | null; onChange: (id: st
       <ComboBox
         id={`role-${uid}`}
         value={value}
-        onChange={(value) => {
-          if (value) onChange(value);
-        }}
+        onChange={onChange}
         options={roles.map((role) => ({ value: role.id, label: role.name }))}
       />
       {creatingRole ? <ManageModal open onClose={() => setCreatingRole(false)} id={null} onCreated={onChange} /> : null}

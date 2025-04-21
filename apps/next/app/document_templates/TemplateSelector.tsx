@@ -30,7 +30,7 @@ const TemplateSelector = ({
         id={`template-${uid}`}
         value={selected ?? ""}
         options={filteredTemplates.map((t) => ({ label: t.name, value: t.id }))}
-        onChange={(value) => setSelected(value ?? null)}
+        onChange={setSelected}
         {...props}
       />
     </>
