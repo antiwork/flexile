@@ -89,6 +89,15 @@ const EditTemplates = () => {
   const [templates, { refetch: refetchTemplates }] = trpc.documents.templates.list.useSuspenseQuery({
     companyId: company.id,
   });
+  const filteredTemplates = useMemo(
+    () =>
+      company.id && templates.length > 1
+        ? templates.filter(
+            (template) => !template.generic || !templates.some((t) => !t.generic && t.type === template.type),
+          )
+        : templates,
+    [templates],
+  );
   const createTemplate = trpc.documents.templates.create.useMutation({
     onSuccess: (id) => {
       void refetchTemplates();
@@ -112,7 +121,7 @@ const EditTemplates = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {templates.map((template) => (
+              {filteredTemplates.map((template) => (
                 <TableRow key={template.id}>
                   <TableCell>
                     <Link href={`/document_templates/${template.id}`} className="after:absolute after:inset-0">
