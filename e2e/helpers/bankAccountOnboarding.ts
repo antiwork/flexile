@@ -1,4 +1,5 @@
-import { type Page } from "../index";
+import { type Page } from "..";
+import { selectComboboxOption } from ".";
 
 type BankAccountFormValues = {
   legalName: string;
@@ -11,7 +12,7 @@ type BankAccountFormValues = {
   accountNumber: string;
 };
 export async function fillOutUsdBankAccountForm(page: Page, formValues: BankAccountFormValues) {
-  await page.getByLabel("Currency").selectOption("USD (United States Dollar)");
+  await selectComboboxOption(page, "Currency", "USD (United States Dollar)");
   await page.getByLabel("Full name of the account holder").fill(formValues.legalName);
   await page.getByLabel("Routing number").fill(formValues.routingNumber);
   await page.getByLabel("Account number").fill(formValues.accountNumber);

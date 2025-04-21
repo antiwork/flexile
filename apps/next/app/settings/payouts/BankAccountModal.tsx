@@ -1,13 +1,12 @@
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Map as ImmutableMap } from "immutable";
 import { set } from "lodash-es";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import Input from "@/components/Input";
 import MutationButton from "@/components/MutationButton";
 import RadioButtons from "@/components/RadioButtons";
-import Select from "@/components/Select";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -120,6 +119,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
   detailsRef.current = details;
   const [errors, setErrors] = useState(new Map<string, string>());
   const previousForms = useRef<Form[] | null>(null);
+  const uid = useId();
 
   const nestedDetails = () => {
     const result = {};
@@ -399,12 +399,15 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
         <DialogHeader>
           <DialogTitle>Bank account</DialogTitle>
         </DialogHeader>
-        <Select
-          value={currency}
-          onChange={(value) => setCurrency(z.enum(currencyCodes).parse(value))}
-          options={CURRENCIES.map(({ value, name }) => ({ value, label: name }))}
-          label="Currency"
-        />
+        <div className="grid gap-2">
+          <Label htmlFor={`currency-${uid}`}>Currency</Label>
+          <ComboBox
+            id={`currency-${uid}`}
+            value={currency}
+            onChange={(value) => setCurrency(z.enum(currencyCodes).parse(value))}
+            options={CURRENCIES.map(({ value, name }) => ({ value, label: name }))}
+          />
+        </div>
 
         {formSwitch ? (
           <Checkbox
@@ -415,14 +418,16 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
             onCheckedChange={() => setSelectedFormIndex((prev) => (prev + 1) % 2)}
           />
         ) : forms.length > 2 ? (
-          <Select
-            value={selectedFormIndex.toString()}
-            onChange={(value) => setSelectedFormIndex(Number(value))}
-            placeholder="Choose account type"
-            options={forms.map((form, i) => ({ value: i.toString(), label: form.title }))}
-            label="Account Type"
-            disabled={isPending}
-          />
+          <div className="grid gap-2">
+            <Label htmlFor={`form-${uid}`}>Account Type</Label>
+            <ComboBox
+              id={`form-${uid}`}
+              value={selectedFormIndex.toString()}
+              onChange={(value) => setSelectedFormIndex(Number(value))}
+              options={forms.map((form, i) => ({ value: i.toString(), label: form.title }))}
+              disabled={isPending}
+            />
+          </div>
         ) : null}
 
         {visibleFields?.map((field) => {
@@ -441,9 +446,9 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
                   </Label>
                   <ComboBox
                     id={field.key}
-                    value={[details.get(field.key) ?? ""]}
-                    onChange={(value: string[]) => {
-                      setDetails((prev) => prev.set(field.key, value[0] ?? null));
+                    value={details.get(field.key) ?? ""}
+                    onChange={(value) => {
+                      setDetails((prev) => prev.set(field.key, value));
                       setTimeout(() => fieldUpdated(field), 0);
                     }}
                     modal

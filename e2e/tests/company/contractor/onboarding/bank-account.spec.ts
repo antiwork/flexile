@@ -2,6 +2,7 @@ import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
+import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { fillOutUsdBankAccountForm } from "@test/helpers/bankAccountOnboarding";
 import { expect, test } from "@test/index";
@@ -55,7 +56,7 @@ test.describe("Contractor onboarding - bank account", () => {
 
   test("allows setting a bank account from Mexico", async ({ page }) => {
     await page.getByRole("button", { name: "Set up" }).click();
-    await page.getByLabel("Currency").selectOption("MXN (Mexican Peso)");
+    await selectComboboxOption(page, "Currency", "MXN (Mexican Peso)");
     await page.getByLabel("Full name of the account holder").fill(onboardingUser.legalName ?? "");
     await page.getByLabel("CLABE").fill("032180000118359719");
 
@@ -84,7 +85,7 @@ test.describe("Contractor onboarding - bank account", () => {
 
   test("hides optional fields for USD", async ({ page }) => {
     await page.getByRole("button", { name: "Set up" }).click();
-    await page.getByLabel("Currency").selectOption("USD (United States Dollar)");
+    await selectComboboxOption(page, "Currency", "USD (United States Dollar)");
 
     await expect(page.getByLabel("Full name of the account holder")).toBeVisible();
     await expect(page.getByLabel("Email")).not.toBeVisible();
@@ -92,7 +93,7 @@ test.describe("Contractor onboarding - bank account", () => {
 
   test("hides optional fields for AED", async ({ page }) => {
     await page.getByRole("button", { name: "Set up" }).click();
-    await page.getByLabel("Currency").selectOption("AED (United Arab Emirates Dirham)");
+    await selectComboboxOption(page, "Currency", "AED (United Arab Emirates Dirham)");
 
     await expect(page.getByLabel("Full name of the account holder")).toBeVisible();
     await expect(page.getByLabel("Date of birth")).not.toBeVisible();
@@ -147,7 +148,7 @@ test.describe("Contractor onboarding - bank account", () => {
 
   test("allows an EUR Recipient to submit bank account info", async ({ page }) => {
     await page.getByRole("button", { name: "Set up" }).click();
-    await page.getByLabel("Currency").selectOption("EUR (Euro)");
+    await selectComboboxOption(page, "Currency", "EUR (Euro)");
     await expect(page.getByLabel("Full name of the account holder")).toHaveValue(onboardingUser.legalName ?? "");
     await page.getByLabel("IBAN").fill("HR7624020064583467589");
     await page.getByRole("button", { name: "Continue" }).click();
@@ -165,7 +166,7 @@ test.describe("Contractor onboarding - bank account", () => {
 
   test("allows a CAD Recipient to submit bank account info", async ({ page }) => {
     await page.getByRole("button", { name: "Set up" }).click();
-    await page.getByLabel("Currency").selectOption("CAD (Canadian Dollar)");
+    await selectComboboxOption(page, "Currency", "CAD (Canadian Dollar)");
     await expect(page.getByLabel("Full name of the account holder")).toHaveValue(onboardingUser.legalName ?? "");
     await page.getByLabel("Institution number").fill("006");
     await page.getByLabel("Transit number").fill("04841");
@@ -187,7 +188,7 @@ test.describe("Contractor onboarding - bank account", () => {
 
   test("shows relevant account types for individual entity", async ({ page }) => {
     await page.getByRole("button", { name: "Set up" }).click();
-    await page.getByLabel("Currency").selectOption("KRW (South Korean Won)");
+    await selectComboboxOption(page, "Currency", "KRW (South Korean Won)");
     await expect(page.getByLabel("Date of birth")).toBeVisible();
     await expect(page.getByLabel("Bank name")).toBeVisible();
     await expect(page.getByLabel("Account number (KRW accounts only)")).toBeVisible();
@@ -206,7 +207,7 @@ test.describe("Contractor onboarding - bank account", () => {
 
     test("shows relevant account types", async ({ page }) => {
       await page.getByRole("button", { name: "Set up" }).click();
-      await page.getByLabel("Currency").selectOption("KRW (South Korean Won)");
+      await selectComboboxOption(page, "Currency", "KRW (South Korean Won)");
       await expect(page.getByLabel("Name of the business / organisation")).toBeVisible();
       await expect(page.getByLabel("Bank name")).toBeVisible();
       await expect(page.getByLabel("Account number (KRW accounts only)")).toBeVisible();
@@ -214,7 +215,7 @@ test.describe("Contractor onboarding - bank account", () => {
 
     test("prefills the account holder field with the business name", async ({ page }) => {
       await page.getByRole("button", { name: "Set up" }).click();
-      await page.getByLabel("Currency").selectOption("USD (United States Dollar)");
+      await selectComboboxOption(page, "Currency", "USD (United States Dollar)");
       await expect(page.getByLabel("Name of the business / organisation")).toHaveValue("Business Inc.");
     });
   });
@@ -222,7 +223,7 @@ test.describe("Contractor onboarding - bank account", () => {
   test.describe("address fields", () => {
     test("shows state field", async ({ page }) => {
       await page.getByRole("button", { name: "Set up" }).click();
-      await page.getByLabel("Currency").selectOption("USD (United States Dollar)");
+      await selectComboboxOption(page, "Currency", "USD (United States Dollar)");
       await page.getByRole("button", { name: "Continue" }).click();
       await page.getByLabel("Country").click();
       await page.getByRole("option", { name: "United States", exact: true }).click();
@@ -232,7 +233,7 @@ test.describe("Contractor onboarding - bank account", () => {
 
     test("shows province field", async ({ page }) => {
       await page.getByRole("button", { name: "Set up" }).click();
-      await page.getByLabel("Currency").selectOption("USD (United States Dollar)");
+      await selectComboboxOption(page, "Currency", "USD (United States Dollar)");
       await page.getByRole("button", { name: "Continue" }).click();
       await page.getByLabel("Country").click();
       await page.getByRole("option", { name: "Canada" }).click();
@@ -242,7 +243,7 @@ test.describe("Contractor onboarding - bank account", () => {
 
     test("only shows post code field for United Kingdom", async ({ page }) => {
       await page.getByRole("button", { name: "Set up" }).click();
-      await page.getByLabel("Currency").selectOption("USD (United States Dollar)");
+      await selectComboboxOption(page, "Currency", "USD (United States Dollar)");
       await page.getByRole("button", { name: "Continue" }).click();
       await page.getByLabel("Country").click();
       await page.getByRole("option", { name: "United Kingdom" }).click();
@@ -253,7 +254,7 @@ test.describe("Contractor onboarding - bank account", () => {
 
     test("does not show state or post code fields for Bahamas", async ({ page }) => {
       await page.getByRole("button", { name: "Set up" }).click();
-      await page.getByLabel("Currency").selectOption("USD (United States Dollar)");
+      await selectComboboxOption(page, "Currency", "USD (United States Dollar)");
       await page.getByRole("button", { name: "Continue" }).click();
       await page.getByLabel("Country").click();
       await page.getByRole("option", { name: "Bahamas" }).click();
@@ -328,7 +329,7 @@ test.describe("Contractor onboarding - bank account", () => {
   test.describe("account type selection", () => {
     test("hides account type and selects the only account type option for AED currency", async ({ page }) => {
       await page.getByRole("button", { name: "Set up" }).click();
-      await page.getByLabel("Currency").selectOption("AED (United Arab Emirates Dirham)");
+      await selectComboboxOption(page, "Currency", "AED (United Arab Emirates Dirham)");
       await expect(page.getByLabel("Full name of the account holder")).toBeVisible();
       await expect(page.getByLabel("IBAN")).toBeVisible();
       await expect(page.getByLabel("Account Type")).not.toBeVisible();
@@ -340,7 +341,7 @@ test.describe("Contractor onboarding - bank account", () => {
       });
 
       test("shows local bank account when the currency is GBP", async ({ page }) => {
-        await page.getByLabel("Currency").selectOption("GBP (British Pound)");
+        await selectComboboxOption(page, "Currency", "GBP (British Pound)");
         await expect(page.getByLabel("Full name of the account holder")).toBeVisible();
         await expect(page.getByLabel("UK sort code")).toBeVisible();
         await expect(page.getByLabel("Account number")).toBeVisible();
@@ -349,7 +350,7 @@ test.describe("Contractor onboarding - bank account", () => {
       });
 
       test("shows local bank account when the currency is HKD", async ({ page }) => {
-        await page.getByLabel("Currency").selectOption("HKD (Hong Kong Dollar)");
+        await selectComboboxOption(page, "Currency", "HKD (Hong Kong Dollar)");
         await page.getByLabel("I'd prefer to use FPS ID").click();
         await expect(page.getByLabel("Full name of the account holder")).toBeVisible();
         await expect(page.getByLabel("Bank name")).toBeVisible();
@@ -359,7 +360,7 @@ test.describe("Contractor onboarding - bank account", () => {
       });
 
       test("shows local bank account when the currency is HUF", async ({ page }) => {
-        await page.getByLabel("Currency").selectOption("HUF (Hungarian Forint)");
+        await selectComboboxOption(page, "Currency", "HUF (Hungarian Forint)");
         await expect(page.getByLabel("Full name of the account holder")).toBeVisible();
         await expect(page.getByLabel("Account number")).toBeVisible();
         await expect(page.getByLabel("I'd prefer to use IBAN")).toBeVisible();
@@ -367,7 +368,7 @@ test.describe("Contractor onboarding - bank account", () => {
       });
 
       test("shows local bank account when the currency is IDR", async ({ page }) => {
-        await page.getByLabel("Currency").selectOption("IDR (Indonesian Rupiah)");
+        await selectComboboxOption(page, "Currency", "IDR (Indonesian Rupiah)");
         await expect(page.getByLabel("Full name of the account holder")).toBeVisible();
         await expect(page.getByLabel("Bank name")).toBeVisible();
         await expect(page.getByLabel("Account number (IDR accounts only)")).toBeVisible();
@@ -375,7 +376,7 @@ test.describe("Contractor onboarding - bank account", () => {
       });
 
       test("shows local bank account when the currency is KES", async ({ page }) => {
-        await page.getByLabel("Currency").selectOption("KES (Kenyan Shilling)");
+        await selectComboboxOption(page, "Currency", "KES (Kenyan Shilling)");
         await expect(page.getByLabel("Full name of the account holder")).toBeVisible();
         await expect(page.getByLabel("Bank name")).toBeVisible();
         await expect(page.getByLabel("Account number")).toBeVisible();
@@ -383,7 +384,7 @@ test.describe("Contractor onboarding - bank account", () => {
       });
 
       test("shows local bank account when the currency is PHP", async ({ page }) => {
-        await page.getByLabel("Currency").selectOption("PHP (Philippine Peso)");
+        await selectComboboxOption(page, "Currency", "PHP (Philippine Peso)");
         await expect(page.getByLabel("Full name of the account holder")).toBeVisible();
         await expect(page.getByLabel("Bank name")).toBeVisible();
         await expect(page.getByLabel("Account number (PHP accounts only)")).toBeVisible();
@@ -391,7 +392,7 @@ test.describe("Contractor onboarding - bank account", () => {
       });
 
       test("shows local bank account when the currency is PLN", async ({ page }) => {
-        await page.getByLabel("Currency").selectOption("PLN (Polish Złoty)");
+        await selectComboboxOption(page, "Currency", "PLN (Polish Złoty)");
         await expect(page.getByLabel("Full name of the account holder")).toBeVisible();
         await expect(page.getByLabel("Account number")).toBeVisible();
         await expect(page.getByLabel("I'd prefer to use IBAN")).toBeVisible();
@@ -399,7 +400,7 @@ test.describe("Contractor onboarding - bank account", () => {
       });
 
       test("shows IBAN when the currency is UAH", async ({ page }) => {
-        await page.getByLabel("Currency").selectOption("UAH (Ukrainian Hryvnia)");
+        await selectComboboxOption(page, "Currency", "UAH (Ukrainian Hryvnia)");
         await expect(page.getByLabel("Full name of the account holder")).toBeVisible();
         await expect(page.getByLabel("IBAN")).toBeVisible();
         await expect(page.getByLabel("I'd prefer to use PrivatBank card")).toBeVisible();
