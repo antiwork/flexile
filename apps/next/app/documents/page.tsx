@@ -193,7 +193,8 @@ export default function DocumentsPage() {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const userId = user.activeRole === "administrator" || user.activeRole === "lawyer" ? null : user.id;
+  const isCompanyRepresentative = user.activeRole === "administrator" || user.activeRole === "lawyer";
+  const userId = isCompanyRepresentative ? null : user.id;
 
   const currentYear = new Date().getFullYear();
   const [documents] = trpc.documents.list.useSuspenseQuery({ companyId: company.id, userId });
@@ -341,12 +342,15 @@ export default function DocumentsPage() {
     <MainLayout
       title="Documents"
       headerActions={
-        user.activeRole === "administrator" && company.flags.includes("lawyers") ? (
-          <Button onClick={() => setShowInviteModal(true)}>
-            <BriefcaseIcon className="size-4" />
-            Invite lawyer
-          </Button>
-        ) : null
+        <>
+          {isCompanyRepresentative && documents.length === 0 ? <EditTemplates /> : null}
+          {user.activeRole === "administrator" && company.flags.includes("lawyers") ? (
+            <Button onClick={() => setShowInviteModal(true)}>
+              <BriefcaseIcon className="size-4" />
+              Invite lawyer
+            </Button>
+          ) : null}
+        </>
       }
     >
       <div className="grid gap-4">
@@ -365,9 +369,8 @@ export default function DocumentsPage() {
           <>
             <DataTable
               table={table}
-              actions={
-                user.activeRole === "administrator" || user.activeRole === "lawyer" ? <EditTemplates /> : undefined
-              }
+              actions={isCompanyRepresentative ? <EditTemplates /> : undefined}
+              searchColumn="Signer"
             />
             {signDocument ? (
               <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} />

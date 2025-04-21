@@ -12,7 +12,7 @@ const buttonVariants = cva(
         primary: "bg-blue-600 text-white border-blue-600 hover:bg-black hover:border-black",
         critical: "bg-red text-white border-red",
         success: "bg-green text-white border-green",
-        outline: "bg-transparent text-inherit border-[var(--color-muted)] shadow-xs hover:bg-accent",
+        outline: "bg-transparent text-inherit border-muted shadow-xs hover:bg-accent",
         dashed: "bg-transparent text-inherit border-dashed border-current hover:text-blue-600",
         ghost: "border-transparent hover:bg-accent hover:text-accent-foreground",
         link: "gap-1 border-none underline hover:text-blue-600 !py-0 justify-start px-0",

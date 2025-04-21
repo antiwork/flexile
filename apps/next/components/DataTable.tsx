@@ -82,9 +82,16 @@ interface TableProps<T> {
   caption?: string;
   onRowClicked?: ((row: T) => void) | undefined;
   actions?: React.ReactNode;
+  searchColumn?: string;
 }
 
-export default function DataTable<T extends RowData>({ table, caption, onRowClicked, actions }: TableProps<T>) {
+export default function DataTable<T extends RowData>({
+  table,
+  caption,
+  onRowClicked,
+  actions,
+  searchColumn,
+}: TableProps<T>) {
   const data = useMemo(
     () => ({
       headers: table
@@ -106,7 +113,10 @@ export default function DataTable<T extends RowData>({ table, caption, onRowClic
     () =>
       table
         .getState()
-        .columnFilters.reduce((count, filter) => count + (Array.isArray(filter.value) ? filter.value.length : 0), 0),
+        .columnFilters.reduce(
+          (count, filter) => count + (Array.isArray(filter.value) ? filter.value.length : filter.value ? 1 : 0),
+          0,
+        ),
     [table.getState().columnFilters],
   );
 
@@ -125,14 +135,25 @@ export default function DataTable<T extends RowData>({ table, caption, onRowClic
       {filterable || actions ? (
         <div className="flex justify-between">
           <div className="flex gap-2">
-            {table.options.enableGlobalFilter !== false ? (
+            {table.options.enableGlobalFilter !== false || searchColumn ? (
               <div className="relative">
                 <SearchIcon className="text-muted-foreground absolute top-2.5 left-2.5 size-4" />
                 <Input
-                  value={z.string().nullish().parse(table.getState().globalFilter) ?? ""}
-                  onChange={(e) => table.setGlobalFilter(e.target.value)}
+                  value={
+                    z
+                      .string()
+                      .nullish()
+                      .parse(
+                        searchColumn ? table.getColumn(searchColumn)?.getFilterValue() : table.getState().globalFilter,
+                      ) ?? ""
+                  }
+                  onChange={(e) =>
+                    searchColumn
+                      ? table.getColumn(searchColumn)?.setFilterValue(e.target.value)
+                      : table.setGlobalFilter(e.target.value)
+                  }
                   className="w-60 pl-8"
-                  placeholder="Search by name ..."
+                  placeholder="Search ..."
                 />
               </div>
             ) : null}
@@ -168,12 +189,8 @@ export default function DataTable<T extends RowData>({ table, caption, onRowClic
                         </DropdownMenuSubTrigger>
                         <DropdownMenuSubContent>
                           <DropdownMenuCheckboxItem
-                            checked={!filterValue || filterValue.length === 0}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                column.setFilterValue(undefined);
-                              }
-                            }}
+                            checked={!filterValue?.length}
+                            onCheckedChange={() => column.setFilterValue(undefined)}
                           >
                             All
                           </DropdownMenuCheckboxItem>
@@ -201,11 +218,7 @@ export default function DataTable<T extends RowData>({ table, caption, onRowClic
                   {activeFilterCount > 0 && (
                     <>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onSelect={() => table.resetColumnFilters()}
-                        className="cursor-pointer"
-                      >
+                      <DropdownMenuItem variant="destructive" onSelect={() => table.resetColumnFilters()}>
                         Clear all filters
                       </DropdownMenuItem>
                     </>
