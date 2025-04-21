@@ -15,12 +15,15 @@ import {
 import { FilterIcon, SearchIcon } from "lucide-react";
 import React, { useMemo } from "react";
 import { z } from "zod";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -99,6 +102,14 @@ export default function DataTable<T extends RowData>({ table, caption, onRowClic
   const selectable = !!table.options.enableRowSelection;
   const filterableColumns = table.getAllColumns().filter((column) => column.columnDef.meta?.filterOptions);
 
+  const activeFilterCount = useMemo(
+    () =>
+      table
+        .getState()
+        .columnFilters.reduce((count, filter) => count + (Array.isArray(filter.value) ? filter.value.length : 0), 0),
+    [table.getState().columnFilters],
+  );
+
   const rowClasses = "py-2 not-print:max-md:grid";
   const cellClasses = (column: Column<T> | null, type?: "header" | "footer") => {
     const numeric = column?.columnDef.meta?.numeric;
@@ -129,8 +140,15 @@ export default function DataTable<T extends RowData>({ table, caption, onRowClic
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="small">
-                    <FilterIcon className="size-4" />
-                    Filter
+                    <div className="flex items-center gap-1">
+                      <FilterIcon className="size-4" />
+                      Filter
+                      {activeFilterCount > 0 && (
+                        <Badge variant="secondary" className="rounded-sm px-1 font-normal">
+                          {activeFilterCount}
+                        </Badge>
+                      )}
+                    </div>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -139,7 +157,14 @@ export default function DataTable<T extends RowData>({ table, caption, onRowClic
                     return (
                       <DropdownMenuSub key={column.id}>
                         <DropdownMenuSubTrigger>
-                          <span>{typeof column.columnDef.header === "string" ? column.columnDef.header : ""}</span>
+                          <div className="flex items-center gap-1">
+                            <span>{typeof column.columnDef.header === "string" ? column.columnDef.header : ""}</span>
+                            {Array.isArray(filterValue) && filterValue.length > 0 && (
+                              <Badge variant="secondary" className="rounded-sm px-1 font-normal">
+                                {filterValue.length}
+                              </Badge>
+                            )}
+                          </div>
                         </DropdownMenuSubTrigger>
                         <DropdownMenuSubContent>
                           <DropdownMenuCheckboxItem
@@ -173,6 +198,18 @@ export default function DataTable<T extends RowData>({ table, caption, onRowClic
                       </DropdownMenuSub>
                     );
                   })}
+                  {activeFilterCount > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onSelect={() => table.resetColumnFilters()}
+                        className="cursor-pointer"
+                      >
+                        Clear all filters
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : null}

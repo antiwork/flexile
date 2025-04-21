@@ -328,6 +328,9 @@ export default function DocumentsPage() {
   const table = useTable({
     columns,
     data: documents,
+    initialState: {
+      sorting: [{ id: "createdAt", desc: true }],
+    },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
   });
