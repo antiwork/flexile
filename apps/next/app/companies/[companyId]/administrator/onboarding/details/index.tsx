@@ -86,9 +86,7 @@ export const CompanyDetails = () => {
     },
   });
 
-  const onSubmit = form.handleSubmit((values) => {
-    submit.mutate(values);
-  });
+  const onSubmit = form.handleSubmit((values) => submit.mutate(values));
 
   return (
     <Form {...form}>
@@ -164,8 +162,7 @@ export const CompanyDetails = () => {
                 <FormLabel>State</FormLabel>
                 <FormControl>
                   <ComboBox
-                    value={[field.value]}
-                    onChange={(value) => field.onChange(value[0])}
+                    {...field}
                     placeholder="Choose State"
                     options={usStates.map(({ name, code }) => ({ value: code, label: name }))}
                   />
