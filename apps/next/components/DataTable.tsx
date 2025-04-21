@@ -12,7 +12,7 @@ import {
   type TableOptions,
   useReactTable,
 } from "@tanstack/react-table";
-import { FilterIcon } from "lucide-react";
+import { FilterIcon, SearchIcon } from "lucide-react";
 import React, { useMemo } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -115,12 +115,15 @@ export default function DataTable<T extends RowData>({ table, caption, onRowClic
         <div className="flex justify-between">
           <div className="flex gap-2">
             {table.options.enableGlobalFilter !== false ? (
-              <Input
-                value={z.string().nullish().parse(table.getState().globalFilter) ?? ""}
-                onChange={(e) => table.setGlobalFilter(e.target.value)}
-                className="w-40"
-                placeholder="Filter..."
-              />
+              <div className="relative">
+                <SearchIcon className="text-muted-foreground absolute top-2.5 left-2.5 size-4" />
+                <Input
+                  value={z.string().nullish().parse(table.getState().globalFilter) ?? ""}
+                  onChange={(e) => table.setGlobalFilter(e.target.value)}
+                  className="w-60 pl-8"
+                  placeholder="Search by name ..."
+                />
+              </div>
             ) : null}
             {filterableColumns.length > 0 ? (
               <DropdownMenu>
@@ -139,6 +142,16 @@ export default function DataTable<T extends RowData>({ table, caption, onRowClic
                           <span>{typeof column.columnDef.header === "string" ? column.columnDef.header : ""}</span>
                         </DropdownMenuSubTrigger>
                         <DropdownMenuSubContent>
+                          <DropdownMenuCheckboxItem
+                            checked={!filterValue || filterValue.length === 0}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                column.setFilterValue(undefined);
+                              }
+                            }}
+                          >
+                            All
+                          </DropdownMenuCheckboxItem>
                           {column.columnDef.meta?.filterOptions?.map((option) => (
                             <DropdownMenuCheckboxItem
                               key={option}
