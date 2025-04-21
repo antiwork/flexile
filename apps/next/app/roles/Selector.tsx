@@ -22,10 +22,9 @@ const Selector = ({ value, onChange }: { value: string | null; onChange: (id: st
       </Label>
       <ComboBox
         id={`role-${uid}`}
-        value={value ? [value] : []}
+        value={value}
         onChange={(value) => {
-          const id = value[0];
-          if (id) onChange(id);
+          if (value) onChange(value);
         }}
         options={roles.map((role) => ({ value: role.id, label: role.name }))}
       />

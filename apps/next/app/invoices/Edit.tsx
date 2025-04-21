@@ -462,14 +462,14 @@ const Edit = () => {
                     </TableCell>
                     <TableCell>
                       <ComboBox
-                        value={[expense.category_id.toString()]}
+                        value={expense.category_id.toString()}
                         options={data.company.expenses.categories.map((category) => ({
                           value: category.id.toString(),
                           label: category.name,
                         }))}
                         aria-label="Category"
                         aria-invalid={expense.errors?.includes("category")}
-                        onChange={(value) => updateExpense(rowIndex, { category_id: Number(value[0]) })}
+                        onChange={(value) => updateExpense(rowIndex, { category_id: Number(value) })}
                       />
                     </TableCell>
                     <TableCell className="text-right tabular-nums">

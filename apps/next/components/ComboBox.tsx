@@ -15,14 +15,11 @@ const ComboBox = ({
   className,
   modal,
   ...props
-}: {
-  options: { value: string; label: string }[];
-  value: string[];
-  multiple?: boolean;
-  onChange: (value: string[]) => void;
-  placeholder?: string;
-  modal?: boolean;
-} & Omit<React.ComponentProps<typeof Button>, "value" | "onChange">) => {
+}: { options: { value: string; label: string }[]; placeholder?: string; modal?: boolean } & (
+  | { multiple: true; value: string[]; onChange: (value: string[]) => void }
+  | { multiple?: false; value: string | null; onChange: (value: string) => void }
+) &
+  Omit<React.ComponentProps<typeof Button>, "value" | "onChange">) => {
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -36,7 +33,11 @@ const ComboBox = ({
           className={cn("justify-between", className)}
         >
           <div className="truncate">
-            {value.length > 0 ? value.map((v) => options.find((o) => o.value === v)?.label).join(", ") : placeholder}
+            {value?.length
+              ? multiple
+                ? value.map((v) => options.find((o) => o.value === v)?.label).join(", ")
+                : value
+              : placeholder}
           </div>
           <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
@@ -59,12 +60,17 @@ const ComboBox = ({
                           : [...value, currentValue],
                       );
                     } else {
-                      onChange([currentValue]);
+                      onChange(currentValue);
                       setOpen(false);
                     }
                   }}
                 >
-                  <Check className={cn("mr-2 h-4 w-4", value.includes(option.value) ? "opacity-100" : "opacity-0")} />
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      multiple ? (value.includes(option.value) ? "opacity-100" : "opacity-0") : option.value === value,
+                    )}
+                  />
                   {option.label}
                 </CommandItem>
               ))}

@@ -403,8 +403,8 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
           <Label htmlFor={`currency-${uid}`}>Currency</Label>
           <ComboBox
             id={`currency-${uid}`}
-            value={[currency]}
-            onChange={(value) => setCurrency(z.enum(currencyCodes).parse(value[0]))}
+            value={currency}
+            onChange={(value) => setCurrency(z.enum(currencyCodes).parse(value))}
             options={CURRENCIES.map(({ value, name }) => ({ value, label: name }))}
           />
         </div>
@@ -422,8 +422,8 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
             <Label htmlFor={`form-${uid}`}>Account Type</Label>
             <ComboBox
               id={`form-${uid}`}
-              value={[selectedFormIndex.toString()]}
-              onChange={(value) => setSelectedFormIndex(Number(value[0]))}
+              value={selectedFormIndex.toString()}
+              onChange={(value) => setSelectedFormIndex(Number(value))}
               options={forms.map((form, i) => ({ value: i.toString(), label: form.title }))}
               disabled={isPending}
             />
@@ -446,9 +446,9 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
                   </Label>
                   <ComboBox
                     id={field.key}
-                    value={[details.get(field.key) ?? ""]}
-                    onChange={(value: string[]) => {
-                      setDetails((prev) => prev.set(field.key, value[0] ?? null));
+                    value={details.get(field.key) ?? ""}
+                    onChange={(value) => {
+                      setDetails((prev) => prev.set(field.key, value));
                       setTimeout(() => fieldUpdated(field), 0);
                     }}
                     modal

@@ -28,9 +28,9 @@ const TemplateSelector = ({
       <Label htmlFor={`template-${uid}`}>Contract</Label>
       <ComboBox
         id={`template-${uid}`}
-        value={[selected ?? ""]}
+        value={selected ?? ""}
         options={filteredTemplates.map((t) => ({ label: t.name, value: t.id }))}
-        onChange={(value) => setSelected(value[0] ?? null)}
+        onChange={(value) => setSelected(value ?? null)}
         {...props}
       />
     </>
