@@ -21,6 +21,7 @@ const ComboBox = ({
 ) &
   Omit<React.ComponentProps<typeof Button>, "value" | "onChange">) => {
   const [open, setOpen] = React.useState(false);
+  const getLabel = (value: string) => options.find((o) => o.value === value)?.label;
 
   return (
     <Popover open={open} onOpenChange={setOpen} modal={modal || false}>
@@ -33,11 +34,7 @@ const ComboBox = ({
           className={cn("justify-between", className)}
         >
           <div className="truncate">
-            {value?.length
-              ? multiple
-                ? value.map((v) => options.find((o) => o.value === v)?.label).join(", ")
-                : value
-              : placeholder}
+            {value?.length ? (multiple ? value.map(getLabel).join(", ") : getLabel(value)) : placeholder}
           </div>
           <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
