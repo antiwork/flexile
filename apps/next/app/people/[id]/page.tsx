@@ -3,7 +3,6 @@ import { CheckIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import {
   CheckCircleIcon,
-  CurrencyDollarIcon,
   DocumentDuplicateIcon,
   InboxIcon,
   NoSymbolIcon,
@@ -335,20 +334,23 @@ export default function ContractorPage() {
 
       <Modal open={issuePaymentModalOpen} onClose={closeIssuePaymentModal} title="Issue one-time payment">
         <div className="grid gap-4">
-          <DecimalInput
-            value={paymentAmountInCents ? paymentAmountInCents / 100 : null}
-            onChange={(value) => {
-              if (value !== null) {
-                const cents = new Decimal(value).mul(100).toNumber();
-                setPaymentAmountInCents(cents);
-              } else {
-                setPaymentAmountInCents(null);
-              }
-            }}
-            label="Amount"
-            placeholder="Enter amount"
-            prefix="$"
-          />
+          <div>
+            <Label htmlFor="payment-amount">Amount</Label>
+            <DecimalInput
+              id="payment-amount"
+              value={paymentAmountInCents ? paymentAmountInCents / 100 : null}
+              onChange={(value) => {
+                if (value !== null) {
+                  const cents = new Decimal(value).mul(100).toNumber();
+                  setPaymentAmountInCents(cents);
+                } else {
+                  setPaymentAmountInCents(null);
+                }
+              }}
+              placeholder="Enter amount"
+              prefix="$"
+            />
+          </div>
           <Input
             value={paymentDescription}
             onChange={setPaymentDescription}
@@ -514,15 +516,22 @@ const DetailsTab = ({
             ) : null}
             <RoleSelector value={selectedRoleId} onChange={setSelectedRoleId} />
             <div className="grid items-start gap-4 md:grid-cols-2">
-              <DecimalInput
-                value={payRateInSubunits / 100}
-                onChange={(value) => setPayRateInSubunits((value ?? 0) * 100)}
-                label="Rate"
-                placeholder="0"
-                disabled={!!contractor.endedAt}
-                prefix={<CurrencyDollarIcon className="size-4" />}
-                suffix={`/ ${contractor.payRateType === PayRateType.ProjectBased ? "project" : hoursPerWeek === null ? "year" : "hour"}`}
-              />
+              <div>
+                <Label htmlFor="pay-rate">Rate</Label>
+                <div className="flex items-center gap-1">
+                  <DecimalInput
+                    id="pay-rate"
+                    value={payRateInSubunits / 100}
+                    onChange={(value) => setPayRateInSubunits((value ?? 0) * 100)}
+                    placeholder="0"
+                    disabled={!!contractor.endedAt}
+                    prefix="$"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    / {contractor.payRateType === PayRateType.ProjectBased ? "project" : hoursPerWeek === null ? "year" : "hour"}
+                  </span>
+                </div>
+              </div>
               {contractor.payRateType !== PayRateType.ProjectBased && hoursPerWeek !== null && (
                 <NumberInput
                   value={hoursPerWeek}

@@ -478,7 +478,7 @@ const Edit = () => {
                         placeholder="0"
                         onChange={(value) => updateExpense(rowIndex, { total_amount_in_cents: (value ?? 0) * 100 })}
                         aria-label="Amount"
-                        invalid={expense.errors?.includes("amount")}
+                        invalid={expense.errors?.includes("amount") ?? false}
                         prefix="$"
                       />
                     </TableCell>

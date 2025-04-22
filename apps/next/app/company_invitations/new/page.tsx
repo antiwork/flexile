@@ -16,6 +16,7 @@ import RadioButtons from "@/components/RadioButtons";
 import { CardContent } from "@/components/ui/card";
 import { DocumentTemplateType, PayRateType } from "@/db/enums";
 import { trpc } from "@/trpc/client";
+import { Label } from "@/components/ui/label";
 
 export default function CreateCompanyInvitation() {
   const router = useRouter();
@@ -103,15 +104,26 @@ export default function CreateCompanyInvitation() {
               invalid={!!errors["company_role.rate.pay_rate_type"]}
               help={errors["company_role.rate.pay_rate_type"]}
             />
-            <DecimalInput
-              value={roleRate}
-              onChange={setRoleRate}
-              label="Rate"
-              prefix="$"
-              suffix={rolePayRateType === "hourly" ? "/ hour" : "/ project"}
-              invalid={!!errors["company_role.rate.pay_rate_in_subunits"]}
-              help={errors["company_role.rate.pay_rate_in_subunits"]}
-            />
+            <div>
+              <Label htmlFor="role-rate">Rate</Label>
+              <div className="flex items-center gap-1">
+                <DecimalInput
+                  id="role-rate"
+                  value={roleRate}
+                  onChange={setRoleRate}
+                  prefix="$"
+                  invalid={!!errors["company_role.rate.pay_rate_in_subunits"]}
+                />
+                <span className="text-sm text-muted-foreground">
+                  {rolePayRateType === "hourly" ? "/ hour" : "/ project"}
+                </span>
+              </div>
+              {errors["company_role.rate.pay_rate_in_subunits"] && (
+                <span className="text-sm text-destructive">
+                  {errors["company_role.rate.pay_rate_in_subunits"]}
+                </span>
+              )}
+            </div>
             {rolePayRateType === "hourly" && (
               <NumberInput
                 value={roleHours}

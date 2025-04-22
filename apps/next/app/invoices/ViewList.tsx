@@ -25,6 +25,7 @@ import { request } from "@/utils/request";
 import { company_invoices_path } from "@/utils/routes";
 import { formatDate, formatDuration } from "@/utils/time";
 import { EDITABLE_INVOICE_STATES } from ".";
+import { Label } from "@/components/ui/label";
 
 const useData = () => {
   const company = useCurrentCompany();
@@ -222,16 +223,19 @@ const QuickInvoiceSection = ({ disabled }: { disabled?: boolean }) => {
         <div className="grid gap-3 md:grid-cols-3">
           <div className="grid gap-2">
             {isProjectBased ? (
-              <DecimalInput
-                value={amountUsd}
-                onChange={setAmountUsd}
-                label="Amount to bill"
-                min={1}
-                step={0.01}
+              <div className="grid gap-2">
+                <Label htmlFor="amount-to-bill">Amount to bill</Label>
+                <DecimalInput
+                  id="amount-to-bill"
+                  value={amountUsd}
+                  onChange={setAmountUsd}
+                  min={1}
+                  step={0.01}
                 placeholder={payRateInSubunits ? String(payRateInSubunits / 100) : undefined}
                 prefix="$"
                 disabled={submit.isPending}
-              />
+                />
+              </div>
             ) : (
               <DurationInput value={duration} onChange={setDuration} label="Hours worked" disabled={submit.isPending} />
             )}

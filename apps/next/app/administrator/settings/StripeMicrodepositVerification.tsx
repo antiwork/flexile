@@ -14,6 +14,7 @@ import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assert } from "@/utils/assert";
 import { formatDate } from "@/utils/time";
+import { Label } from "@/components/ui/label";
 
 const StripeMicrodepositVerification = () => {
   const company = useCurrentCompany();
@@ -121,28 +122,37 @@ const StripeMicrodepositVerification = () => {
             help={errors.get("verificationCode")}
           />
         ) : (
-          <>
-            <DecimalInput
-              value={firstAmount}
-              onChange={setFirstAmount}
-              invalid={errors.has("firstAmount")}
-              min="0"
-              placeholder="0"
-              label="Amount 1"
-              prefix="$"
-              help={errors.get("firstAmount")}
-            />
-            <DecimalInput
-              value={secondAmount}
-              onChange={setSecondAmount}
-              invalid={errors.has("secondAmount")}
-              min="0"
-              placeholder="0"
-              label="Amount 2"
-              prefix="$"
-              help={errors.get("secondAmount")}
-            />
-          </>
+          <div className="grid gap-4">
+            <div>
+              <Label htmlFor="amount-1">Amount 1</Label>
+              <DecimalInput
+                id="amount-1"
+                value={firstAmount}
+                onChange={setFirstAmount}
+                invalid={errors.has("firstAmount")}
+                prefix="$"
+                {...(errors.has("firstAmount") && { "aria-invalid": true })}
+              />
+              {errors.get("firstAmount") && (
+                <span className="text-sm text-destructive">{errors.get("firstAmount")}</span>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="amount-2">Amount 2</Label>
+              <DecimalInput
+                id="amount-2"
+                value={secondAmount}
+                onChange={setSecondAmount}
+                invalid={errors.has("secondAmount")}
+                prefix="$"
+                {...(errors.has("secondAmount") && { "aria-invalid": true })}
+              />
+              {errors.get("secondAmount") && (
+                <span className="text-sm text-destructive">{errors.get("secondAmount")}</span>
+              )}
+            </div>
+          </div>
         )}
 
         <div className="modal-footer">

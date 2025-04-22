@@ -162,30 +162,39 @@ export default function Equity() {
       >
         <CardContent>
           <div className="grid gap-4">
-            <DecimalInput
-              value={sharePriceInUsd ?? null}
-              onChange={setSharePriceInUsd}
-              label="Current share price (USD)"
-              invalid={errors.has("sharePriceInUsd")}
-              prefix="$"
-              minimumFractionDigits={2}
-            />
-            <DecimalInput
-              value={fmvPerShareInUsd ?? null}
-              onChange={setFmvPerShareInUsd}
-              label="Current 409A valuation (USD per share)"
-              invalid={errors.has("fmvPerShareInUsd")}
-              prefix="$"
-              minimumFractionDigits={2}
-            />
-            <DecimalInput
-              value={conversionSharePriceUsd ?? null}
-              onChange={setConversionSharePriceUsd}
-              label="Conversion share price (USD)"
-              invalid={errors.has("conversionSharePriceUsd")}
-              prefix="$"
-              minimumFractionDigits={2}
-            />
+            <div>
+              <Label htmlFor="share-price">Current share price (USD)</Label>
+              <DecimalInput
+                id="share-price"
+                value={sharePriceInUsd ?? null}
+                onChange={setSharePriceInUsd}
+                invalid={errors.has("sharePriceInUsd")}
+                prefix="$"
+                minimumFractionDigits={2}
+              />
+            </div>
+            <div>
+              <Label htmlFor="fmv-price">Current 409A valuation (USD per share)</Label>
+              <DecimalInput
+                id="fmv-price"
+                value={fmvPerShareInUsd ?? null}
+                onChange={setFmvPerShareInUsd}
+                invalid={errors.has("fmvPerShareInUsd")}
+                prefix="$"
+                minimumFractionDigits={2}
+              />
+            </div>
+            <div>
+              <Label htmlFor="conversion-price">Conversion share price (USD)</Label>
+              <DecimalInput
+                id="conversion-price"
+                value={conversionSharePriceUsd ?? null}
+                onChange={setConversionSharePriceUsd}
+                invalid={errors.has("conversionSharePriceUsd")}
+                prefix="$"
+                minimumFractionDigits={2}
+              />
+            </div>
           </div>
         </CardContent>
         <CardFooter>
