@@ -56,9 +56,9 @@ const DecimalInput = ({
     }
 
     const sanitized = currentInput
-      .replace(/[^\d.-]/g, "")
-      .replace(/(\..*)\./g, "$1")
-      .replace(/(?!^)-/g, "")
+      .replace(/[^\d.-]/gu, "")
+      .replace(/(\..*)\./gu, "$1")
+      .replace(/(?!^)-/gu, "")
 
     if (sanitized !== currentInput && currentInput !== "-" && currentInput !== ".") {
       e.target.value = sanitized
@@ -101,11 +101,11 @@ const DecimalInput = ({
 
   return (
     <div className={cn("relative flex items-center", className)}>
-      {prefix && (
+      {prefix ? (
         <span className="pointer-events-none absolute left-3 text-muted-foreground">
           {prefix}
         </span>
-      )}
+      ) : null}
       <Input
         value={inputValue}
         onChange={handleChange}
