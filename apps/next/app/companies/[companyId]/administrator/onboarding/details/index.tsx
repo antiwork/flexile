@@ -22,7 +22,7 @@ const formSchema = z.object({
     street_address: z.string().min(1, "This field is required"),
     city: z.string().min(1, "This field is required"),
     state: z.string().min(1, "This field is required"),
-    zip_code: z.string().regex(/^\d+$/u, { message: "Enter a valid ZIP code" }),
+    zip_code: z.string().regex(/^\d{5}(?:-\d{4})?$/u, { message: "Enter a valid ZIP code" }),
   }),
 });
 

@@ -94,7 +94,6 @@ const DecimalInput = ({
 
   const handleFocus: React.FocusEventHandler<HTMLInputElement> = (e) => {
     setIsFocused(true)
-    setInputValue(value?.toString() ?? "")
     onFocus?.(e)
     e.target.select()
   }
