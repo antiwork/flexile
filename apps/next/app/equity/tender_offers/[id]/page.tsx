@@ -18,9 +18,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Label } from "@/components/ui/label";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -340,11 +340,9 @@ export default function TenderOfferView() {
                       className={newBid.pricePerShare <= 0 && submitMutation.isError ? "error" : ""}
                       prefix="$"
                     />
-                    {newBid.pricePerShare <= 0 && submitMutation.isError && (
-                      <span className="text-sm text-destructive">
-                        Price per share must be greater than 0
-                      </span>
-                    )}
+                    {newBid.pricePerShare <= 0 && submitMutation.isError ? (
+                      <span className="text-destructive text-sm">Price per share must be greater than 0</span>
+                    ) : null}
                   </div>
                   {totalAmount > 0 && (
                     <div className="info">

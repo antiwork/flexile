@@ -1,12 +1,7 @@
 "use client";
 import { CheckIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import {
-  CheckCircleIcon,
-  DocumentDuplicateIcon,
-  InboxIcon,
-  NoSymbolIcon,
-} from "@heroicons/react/24/outline";
+import { CheckCircleIcon, DocumentDuplicateIcon, InboxIcon, NoSymbolIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/react-query";
 import { areIntervalsOverlapping, format, formatISO, isFuture } from "date-fns";
@@ -527,8 +522,13 @@ const DetailsTab = ({
                     disabled={!!contractor.endedAt}
                     prefix="$"
                   />
-                  <span className="text-sm text-muted-foreground">
-                    / {contractor.payRateType === PayRateType.ProjectBased ? "project" : hoursPerWeek === null ? "year" : "hour"}
+                  <span className="text-muted-foreground text-sm">
+                    /{" "}
+                    {contractor.payRateType === PayRateType.ProjectBased
+                      ? "project"
+                      : hoursPerWeek === null
+                        ? "year"
+                        : "hour"}
                   </span>
                 </div>
               </div>

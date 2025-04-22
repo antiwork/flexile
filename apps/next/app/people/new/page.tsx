@@ -16,12 +16,12 @@ import NumberInput from "@/components/NumberInput";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
 import { AVG_TRIAL_HOURS } from "@/models/constants";
 import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
 import { useOnChange } from "@/utils/useOnChange";
-import { Label } from "@/components/ui/label";
 
 function Create() {
   const company = useCurrentCompany();
@@ -109,13 +109,8 @@ function Create() {
             <div>
               <Label htmlFor="rate">Rate</Label>
               <div className="flex items-center gap-1">
-                <DecimalInput
-                  id="rate"
-                  value={rateUsd}
-                  onChange={(value) => setRateUsd(value ?? 0)}
-                  prefix="$"
-                />
-                <span className="text-sm text-muted-foreground">
+                <DecimalInput id="rate" value={rateUsd} onChange={(value) => setRateUsd(value ?? 0)} prefix="$" />
+                <span className="text-muted-foreground text-sm">
                   {role?.payRateType === PayRateType.ProjectBased
                     ? "/ project"
                     : role?.payRateType === PayRateType.Salary

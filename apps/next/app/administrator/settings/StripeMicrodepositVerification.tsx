@@ -10,11 +10,11 @@ import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assert } from "@/utils/assert";
 import { formatDate } from "@/utils/time";
-import { Label } from "@/components/ui/label";
 
 const StripeMicrodepositVerification = () => {
   const company = useCurrentCompany();
@@ -134,7 +134,7 @@ const StripeMicrodepositVerification = () => {
                 {...(errors.has("firstAmount") && { "aria-invalid": true })}
               />
               {errors.get("firstAmount") && (
-                <span className="text-sm text-destructive">{errors.get("firstAmount")}</span>
+                <span className="text-destructive text-sm">{errors.get("firstAmount")}</span>
               )}
             </div>
 
@@ -149,7 +149,7 @@ const StripeMicrodepositVerification = () => {
                 {...(errors.has("secondAmount") && { "aria-invalid": true })}
               />
               {errors.get("secondAmount") && (
-                <span className="text-sm text-destructive">{errors.get("secondAmount")}</span>
+                <span className="text-destructive text-sm">{errors.get("secondAmount")}</span>
               )}
             </div>
           </div>

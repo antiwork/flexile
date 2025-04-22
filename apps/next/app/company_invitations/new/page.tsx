@@ -14,9 +14,9 @@ import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import RadioButtons from "@/components/RadioButtons";
 import { CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { DocumentTemplateType, PayRateType } from "@/db/enums";
 import { trpc } from "@/trpc/client";
-import { Label } from "@/components/ui/label";
 
 export default function CreateCompanyInvitation() {
   const router = useRouter();
@@ -114,15 +114,13 @@ export default function CreateCompanyInvitation() {
                   prefix="$"
                   invalid={!!errors["company_role.rate.pay_rate_in_subunits"]}
                 />
-                <span className="text-sm text-muted-foreground">
+                <span className="text-muted-foreground text-sm">
                   {rolePayRateType === "hourly" ? "/ hour" : "/ project"}
                 </span>
               </div>
-              {errors["company_role.rate.pay_rate_in_subunits"] && (
-                <span className="text-sm text-destructive">
-                  {errors["company_role.rate.pay_rate_in_subunits"]}
-                </span>
-              )}
+              {errors["company_role.rate.pay_rate_in_subunits"] ? (
+                <span className="text-destructive text-sm">{errors["company_role.rate.pay_rate_in_subunits"]}</span>
+              ) : null}
             </div>
             {rolePayRateType === "hourly" && (
               <NumberInput

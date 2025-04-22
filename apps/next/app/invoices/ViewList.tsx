@@ -17,6 +17,7 @@ import Placeholder from "@/components/Placeholder";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assert } from "@/utils/assert";
@@ -25,7 +26,6 @@ import { request } from "@/utils/request";
 import { company_invoices_path } from "@/utils/routes";
 import { formatDate, formatDuration } from "@/utils/time";
 import { EDITABLE_INVOICE_STATES } from ".";
-import { Label } from "@/components/ui/label";
 
 const useData = () => {
   const company = useCurrentCompany();
@@ -231,9 +231,9 @@ const QuickInvoiceSection = ({ disabled }: { disabled?: boolean }) => {
                   onChange={setAmountUsd}
                   min={1}
                   step={0.01}
-                placeholder={payRateInSubunits ? String(payRateInSubunits / 100) : undefined}
-                prefix="$"
-                disabled={submit.isPending}
+                  placeholder={payRateInSubunits ? String(payRateInSubunits / 100) : undefined}
+                  prefix="$"
+                  disabled={submit.isPending}
                 />
               </div>
             ) : (
