@@ -4,6 +4,7 @@ import { companyAdministratorsFactory } from "@test/factories/companyAdministrat
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyRolesFactory } from "@test/factories/companyRoles";
 import { usersFactory } from "@test/factories/users";
+import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test } from "@test/index";
@@ -47,7 +48,7 @@ test.describe("Edit contractor", () => {
     await expect(page.getByLabel("Legal name")).toHaveValue(contractor.legalName);
     await expect(page.getByLabel("Legal name")).toBeDisabled();
 
-    await page.getByLabel("Role").selectOption(otherRole.name);
+    await selectComboboxOption(page, "Role", otherRole.name);
     await page.getByLabel("Rate").fill("107");
     await page.getByLabel("Average hours").fill("24");
     await page.getByRole("button", { name: "Save changes" }).click();
@@ -107,7 +108,7 @@ test.describe("Edit contractor", () => {
     await page.getByRole("heading", { name: projectBasedUser.preferredName }).click();
     await expect(page.getByLabel("Role")).toContainText(projectBasedRole.name);
 
-    await page.getByLabel("Role").selectOption(otherProjectBasedRole.name);
+    await selectComboboxOption(page, "Role", otherProjectBasedRole.name);
     await page.getByLabel("Rate").fill("2000");
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByRole("button", { name: "Sign now" })).toBeVisible();
@@ -151,7 +152,7 @@ test.describe("Edit contractor", () => {
     await page.getByLabel("New role").getByLabel("Rate", { exact: true }).fill("200");
     await page.getByRole("button", { name: "Create", exact: true }).click();
 
-    await page.getByLabel("RoleCreate New").selectOption("Example Role");
+    await selectComboboxOption(page, "Role", "Example Role");
     await expect(page.getByLabel("RoleCreate New")).toContainText("Example Role");
     await expect(page.getByLabel("Rate")).toHaveValue("200");
     await page.getByRole("button", { name: "Save changes" }).click();

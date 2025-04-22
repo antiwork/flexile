@@ -5,6 +5,7 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyRolesFactory } from "@test/factories/companyRoles";
 import { usersFactory } from "@test/factories/users";
+import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { mockDocuseal as mockDocusealHelper } from "@test/helpers/docuseal";
 import { expect, type Page, test, withinModal } from "@test/index";
@@ -94,7 +95,7 @@ test.describe("New Contractor", () => {
         'Maximum fee payable to Contractor on this Project Assignment, including all items in the first two paragraphs above is $152,460 (the "Maximum Fee").',
     });
     const { email, date } = await fillForm(page);
-    await page.getByLabel("Role").selectOption("Hourly Role 1");
+    await selectComboboxOption(page, "Role", "Hourly Role 1");
     await page.getByLabel("Average hours").fill("25");
     await page.getByLabel("Rate").fill("99");
 
@@ -137,7 +138,7 @@ test.describe("New Contractor", () => {
     });
     await mockForm(page);
     const { email, date } = await fillForm(page);
-    await page.getByLabel("Role").selectOption("Project-based Role");
+    await selectComboboxOption(page, "Role", "Project-based Role");
     await page.getByLabel("Rate").fill("1000");
 
     await page.getByRole("button", { name: "Send invite" }).click();
@@ -171,7 +172,7 @@ test.describe("New Contractor", () => {
 
   test("allows inviting a salary-based contractor", async ({ page }) => {
     const { email, date } = await fillForm(page);
-    await page.getByLabel("Role").selectOption("Salaried Role");
+    await selectComboboxOption(page, "Role", "Salaried Role");
     await page.getByLabel("Rate").fill("120000");
 
     await page.getByRole("button", { name: "Send invite" }).click();

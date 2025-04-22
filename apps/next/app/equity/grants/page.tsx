@@ -108,7 +108,7 @@ const CompanyGrantList = () => {
         <Alert>
           <InformationCircleIcon />
           <AlertDescription>
-            <Link href="/document_templates" className={linkClasses}>
+            <Link href="/documents" className={linkClasses}>
               Create equity plan contract and board consent templates
             </Link>{" "}
             before adding new option grants.
