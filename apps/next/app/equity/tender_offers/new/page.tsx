@@ -76,12 +76,15 @@ export default function NewTenderOffer() {
           <div className="grid gap-4">
             <Input value={startDate} onChange={setStartDate} type="date" label="Start date" />
             <Input value={endDate} onChange={setEndDate} type="date" label="End date" />
-            <NumberInput
-              value={minimumValuation}
-              onChange={(value) => setMinimumValuation(value || 0)}
-              label="Minimum valuation"
-              prefix="$"
-            />
+            <div className="grid gap-2">
+              <Label htmlFor="minimum-valuation">Minimum valuation</Label>
+              <NumberInput
+                id="minimum-valuation"
+                value={minimumValuation}
+                onChange={(value) => setMinimumValuation(value || 0)}
+                prefix="$"
+              />
+            </div>
             <div className="grid gap-2">
               <Label htmlFor="attachment">Attachment</Label>
               <input

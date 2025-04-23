@@ -14,6 +14,7 @@ import NumberInput from "@/components/NumberInput";
 import Select from "@/components/Select";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
@@ -486,14 +487,20 @@ export default function NewEquityGrant() {
             />
           </fieldset>
           <fieldset>
-            <NumberInput
-              label="Number of options"
-              value={numberOfShares}
-              placeholder="0"
-              onChange={setNumberOfShares}
-              ref={numberOfSharesRef}
-              {...invalidFieldAttrs("number_of_shares", errorInfo)}
-            />
+            <div className="grid gap-2">
+              <Label htmlFor="number-of-shares">Number of options</Label>
+              <NumberInput
+                id="number-of-shares"
+                value={numberOfShares}
+                placeholder="0"
+                onChange={setNumberOfShares}
+                ref={numberOfSharesRef}
+                {...invalidFieldAttrs("number_of_shares", errorInfo)}
+              />
+              {invalidFieldAttrs("number_of_shares", errorInfo).help && (
+                <div className="text-destructive text-sm">{invalidFieldAttrs("number_of_shares", errorInfo).help}</div>
+              )}
+            </div>
           </fieldset>
           <fieldset>
             <Select
@@ -520,19 +527,25 @@ export default function NewEquityGrant() {
             />
           </fieldset>
           <fieldset>
-            <NumberInput
-              label="Expiry"
-              value={expiryInMonths}
-              placeholder="0"
-              onChange={setExpiryInMonths}
-              suffix="months"
-              ref={expiryRef}
-              {...invalidFieldAttrs(
-                "expires_at",
-                errorInfo,
-                "If not exercised, options will expire after this period.",
+            <div className="grid gap-2">
+              <Label htmlFor="expiry">Expiry</Label>
+              <NumberInput
+                id="expiry"
+                value={expiryInMonths}
+                placeholder="0"
+                onChange={setExpiryInMonths}
+                suffix="months"
+                ref={expiryRef}
+                {...invalidFieldAttrs(
+                  "expires_at",
+                  errorInfo,
+                  "If not exercised, options will expire after this period.",
+                )}
+              />
+              {invalidFieldAttrs("expires_at", errorInfo).help && (
+                <div className="text-destructive text-sm">{invalidFieldAttrs("expires_at", errorInfo).help}</div>
               )}
-            />
+            </div>
           </fieldset>
         </CardContent>
       </FormSection>
@@ -575,26 +588,38 @@ export default function NewEquityGrant() {
               {vestingScheduleId === "custom" ? (
                 <>
                   <fieldset>
-                    <NumberInput
-                      label="Total vesting duration"
-                      value={totalVestingDurationMonths}
-                      placeholder="0"
-                      onChange={setTotalVestingDurationMonths}
-                      suffix="months"
-                      ref={totalVestingDurationRef}
-                      {...invalidFieldAttrs("total_vesting_duration_months", errorInfo)}
-                    />
+                    <div className="grid gap-2">
+                      <Label htmlFor="total-vesting-duration">Total vesting duration</Label>
+                      <NumberInput
+                        id="total-vesting-duration"
+                        value={totalVestingDurationMonths}
+                        placeholder="0"
+                        onChange={setTotalVestingDurationMonths}
+                        suffix="months"
+                        ref={totalVestingDurationRef}
+                        {...invalidFieldAttrs("total_vesting_duration_months", errorInfo)}
+                      />
+                      {invalidFieldAttrs("total_vesting_duration_months", errorInfo).help && (
+                        <div className="text-destructive text-sm">{invalidFieldAttrs("total_vesting_duration_months", errorInfo).help}</div>
+                      )}
+                    </div>
                   </fieldset>
                   <fieldset>
-                    <NumberInput
-                      label="Cliff period"
-                      value={cliffDurationMonths}
-                      placeholder="0"
-                      onChange={setCliffDurationMonths}
-                      suffix="months"
-                      ref={cliffDurationRef}
-                      {...invalidFieldAttrs("cliff_duration_months", errorInfo)}
-                    />
+                    <div className="grid gap-2">
+                      <Label htmlFor="cliff-period">Cliff period</Label>
+                      <NumberInput
+                        id="cliff-period"
+                        value={cliffDurationMonths}
+                        placeholder="0"
+                        onChange={setCliffDurationMonths}
+                        suffix="months"
+                        ref={cliffDurationRef}
+                        {...invalidFieldAttrs("cliff_duration_months", errorInfo)}
+                      />
+                      {invalidFieldAttrs("cliff_duration_months", errorInfo).help && (
+                        <div className="text-destructive text-sm">{invalidFieldAttrs("cliff_duration_months", errorInfo).help}</div>
+                      )}
+                    </div>
                   </fieldset>
                   <fieldset>
                     <Select
@@ -616,70 +641,106 @@ export default function NewEquityGrant() {
       <FormSection title="Post-termination exercise periods">
         <CardContent className="grid gap-4">
           <fieldset>
-            <NumberInput
-              label="Voluntary termination exercise period"
-              value={voluntaryTerminationExercisePeriodInMonths}
-              placeholder="0"
-              onChange={setVoluntaryTerminationExercisePeriodInMonths}
-              suffix="months"
-              ref={voluntaryTerminationRef}
-              {...invalidFieldAttrs("voluntary_termination_exercise_months", errorInfo)}
-            />
+            <div className="grid gap-2">
+              <Label htmlFor="voluntary-termination">Voluntary termination exercise period</Label>
+              <NumberInput
+                id="voluntary-termination"
+                value={voluntaryTerminationExercisePeriodInMonths}
+                placeholder="0"
+                onChange={setVoluntaryTerminationExercisePeriodInMonths}
+                suffix="months"
+                ref={voluntaryTerminationRef}
+                {...invalidFieldAttrs("voluntary_termination_exercise_months", errorInfo)}
+              />
+              {invalidFieldAttrs("voluntary_termination_exercise_months", errorInfo).help && (
+                <div className="text-destructive text-sm">{invalidFieldAttrs("voluntary_termination_exercise_months", errorInfo).help}</div>
+              )}
+            </div>
           </fieldset>
           <fieldset>
-            <NumberInput
-              label="Involuntary termination exercise period"
-              value={involuntaryTerminationExercisePeriodInMonths}
-              placeholder="0"
-              onChange={setInvoluntaryTerminationExercisePeriodInMonths}
-              suffix="months"
-              ref={involuntaryTerminationRef}
-              {...invalidFieldAttrs("involuntary_termination_exercise_months", errorInfo)}
-            />
+            <div className="grid gap-2">
+              <Label htmlFor="involuntary-termination">Involuntary termination exercise period</Label>
+              <NumberInput
+                id="involuntary-termination"
+                value={involuntaryTerminationExercisePeriodInMonths}
+                placeholder="0"
+                onChange={setInvoluntaryTerminationExercisePeriodInMonths}
+                suffix="months"
+                ref={involuntaryTerminationRef}
+                {...invalidFieldAttrs("involuntary_termination_exercise_months", errorInfo)}
+              />
+              {invalidFieldAttrs("involuntary_termination_exercise_months", errorInfo).help && (
+                <div className="text-destructive text-sm">{invalidFieldAttrs("involuntary_termination_exercise_months", errorInfo).help}</div>
+              )}
+            </div>
           </fieldset>
           <fieldset>
-            <NumberInput
-              label="Termination with cause exercise period"
-              value={terminationWithCauseExercisePeriodInMonths}
-              placeholder="0"
-              onChange={setTerminationWithCauseExercisePeriodInMonths}
-              suffix="months"
-              ref={terminationWithCauseRef}
-              {...invalidFieldAttrs("termination_with_cause_exercise_months", errorInfo)}
-            />
+            <div className="grid gap-2">
+              <Label htmlFor="termination-with-cause">Termination with cause exercise period</Label>
+              <NumberInput
+                id="termination-with-cause"
+                value={terminationWithCauseExercisePeriodInMonths}
+                placeholder="0"
+                onChange={setTerminationWithCauseExercisePeriodInMonths}
+                suffix="months"
+                ref={terminationWithCauseRef}
+                {...invalidFieldAttrs("termination_with_cause_exercise_months", errorInfo)}
+              />
+              {invalidFieldAttrs("termination_with_cause_exercise_months", errorInfo).help && (
+                <div className="text-destructive text-sm">{invalidFieldAttrs("termination_with_cause_exercise_months", errorInfo).help}</div>
+              )}
+            </div>
           </fieldset>
           <fieldset>
-            <NumberInput
-              label="Death exercise period"
-              value={deathExercisePeriodInMonths}
-              placeholder="0"
-              onChange={setDeathExercisePeriodInMonths}
-              suffix="months"
-              ref={deathExerciseRef}
-              {...invalidFieldAttrs("death_exercise_months", errorInfo)}
-            />
+            <div className="grid gap-2">
+              <Label htmlFor="death-exercise">Death exercise period</Label>
+              <NumberInput
+                id="death-exercise"
+                value={deathExercisePeriodInMonths}
+                placeholder="0"
+                onChange={setDeathExercisePeriodInMonths}
+                suffix="months"
+                ref={deathExerciseRef}
+                {...invalidFieldAttrs("death_exercise_months", errorInfo)}
+              />
+              {invalidFieldAttrs("death_exercise_months", errorInfo).help && (
+                <div className="text-destructive text-sm">{invalidFieldAttrs("death_exercise_months", errorInfo).help}</div>
+              )}
+            </div>
           </fieldset>
           <fieldset>
-            <NumberInput
-              label="Disability exercise period"
-              value={disabilityExercisePeriodInMonths}
-              placeholder="0"
-              onChange={setDisabilityExercisePeriodInMonths}
-              suffix="months"
-              ref={disabilityExerciseRef}
-              {...invalidFieldAttrs("disability_exercise_months", errorInfo)}
-            />
+            <div className="grid gap-2">
+              <Label htmlFor="disability-exercise">Disability exercise period</Label>
+              <NumberInput
+                id="disability-exercise"
+                value={disabilityExercisePeriodInMonths}
+                placeholder="0"
+                onChange={setDisabilityExercisePeriodInMonths}
+                suffix="months"
+                ref={disabilityExerciseRef}
+                {...invalidFieldAttrs("disability_exercise_months", errorInfo)}
+              />
+              {invalidFieldAttrs("disability_exercise_months", errorInfo).help && (
+                <div className="text-destructive text-sm">{invalidFieldAttrs("disability_exercise_months", errorInfo).help}</div>
+              )}
+            </div>
           </fieldset>
           <fieldset>
-            <NumberInput
-              label="Retirement exercise period"
-              value={retirementExercisePeriodInMonths}
-              placeholder="0"
-              onChange={setRetirementExercisePeriodInMonths}
-              suffix="months"
-              ref={retirementExerciseRef}
-              {...invalidFieldAttrs("retirement_exercise_months", errorInfo)}
-            />
+            <div className="grid gap-2">
+              <Label htmlFor="retirement-exercise">Retirement exercise period</Label>
+              <NumberInput
+                id="retirement-exercise"
+                value={retirementExercisePeriodInMonths}
+                placeholder="0"
+                onChange={setRetirementExercisePeriodInMonths}
+                suffix="months"
+                ref={retirementExerciseRef}
+                {...invalidFieldAttrs("retirement_exercise_months", errorInfo)}
+              />
+              {invalidFieldAttrs("retirement_exercise_months", errorInfo).help && (
+                <div className="text-destructive text-sm">{invalidFieldAttrs("retirement_exercise_months", errorInfo).help}</div>
+              )}
+            </div>
           </fieldset>
         </CardContent>
       </FormSection>
