@@ -10,7 +10,7 @@ export const financialReportsRouter = createRouter({
     const isActiveContractor = ctx.companyContractor && !ctx.companyContractor.endedAt;
     if (
       !ctx.companyAdministrator &&
-      !(ctx.company.companyUpdatesEnabled && (ctx.companyInvestor || isActiveContractor))
+      !(ctx.companyInvestor || isActiveContractor)
     ) {
       throw new TRPCError({ code: "FORBIDDEN" });
     }

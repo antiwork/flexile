@@ -3,7 +3,6 @@ import {
   ArrowRightStartOnRectangleIcon,
   Bars3Icon,
   BriefcaseIcon,
-  BuildingOfficeIcon,
   ChartPieIcon,
   ChevronDownIcon,
   Cog6ToothIcon,
@@ -12,8 +11,6 @@ import {
   DocumentDuplicateIcon,
   DocumentTextIcon,
   MagnifyingGlassIcon,
-  MegaphoneIcon,
-  UserGroupIcon,
   UserIcon,
   UsersIcon,
   XMarkIcon,
@@ -21,14 +18,11 @@ import {
 import {
   ArrowPathIcon,
   BriefcaseIcon as SolidBriefcaseIcon,
-  BuildingOfficeIcon as SolidBuildingOfficeIcon,
   ChartPieIcon as SolidChartPieIcon,
   Cog6ToothIcon as SolidCog6ToothIcon,
   CurrencyDollarIcon as SolidCurrencyDollarIcon,
   DocumentDuplicateIcon as SolidDocumentDuplicateIcon,
   DocumentTextIcon as SolidDocumentTextIcon,
-  MegaphoneIcon as SolidMegaphoneIcon,
-  UserGroupIcon as SolidUserGroupIcon,
   UserIcon as SolidUserIcon,
   UsersIcon as SolidUsersIcon,
 } from "@heroicons/react/24/solid";
@@ -371,7 +365,6 @@ const NavLinks = ({ company }: { company: Company }) => {
   const routes = new Set(
     company.routes.flatMap((route) => [route.label, ...(route.subLinks?.map((subLink) => subLink.label) || [])]),
   );
-  const updatesPath = company.routes.find((route) => route.label === "Updates")?.name;
   const switchCompany = useSwitchCompanyOrRole();
   const isRole = (...roles: (typeof user.activeRole)[]) => roles.includes(user.activeRole);
   const equityNavLink = equityNavLinks(user, company)[0];
@@ -384,40 +377,6 @@ const NavLinks = ({ company }: { company: Company }) => {
         }
       }}
     >
-      {updatesPath ? (
-        <>
-          <NavLink
-            href={updatesPath === "company_updates_company_index" ? "/updates/company" : "/updates/team"}
-            icon={MegaphoneIcon}
-            filledIcon={SolidMegaphoneIcon}
-            active={!!active && pathname.startsWith("/updates")}
-          >
-            Updates
-          </NavLink>
-          {routes.has("Company") && routes.has("Team") ? (
-            <>
-              <NavLink
-                href="/updates/company"
-                icon={BuildingOfficeIcon}
-                filledIcon={SolidBuildingOfficeIcon}
-                className="ml-4"
-                active={!!active && pathname.startsWith("/updates/company")}
-              >
-                Company
-              </NavLink>
-              <NavLink
-                href="/updates/team"
-                icon={UserGroupIcon}
-                filledIcon={SolidUserGroupIcon}
-                className="ml-4"
-                active={!!active && pathname.startsWith("/updates/team")}
-              >
-                Team
-              </NavLink>
-            </>
-          ) : null}
-        </>
-      ) : null}
       {routes.has("Invoices") && (
         <InvoicesNavLink
           companyId={company.id}

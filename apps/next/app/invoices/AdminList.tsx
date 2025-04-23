@@ -14,7 +14,6 @@ import {
   useIsPayable,
 } from "@/app/invoices/index";
 import { StatusWithTooltip } from "@/app/invoices/Status";
-import { Task } from "@/app/updates/team/Task";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
@@ -270,14 +269,10 @@ const TasksModal = ({
 }) => {
   const company = useCurrentCompany();
   const isActionable = useIsActionable();
-  const { data: tasks } = trpc.teamUpdateTasks.listForInvoice.useQuery({
-    companyId: company.id,
-    invoiceId: invoice.id,
-  });
 
   return (
     <Modal
-      open={!!tasks}
+      open={true}
       onClose={onClose}
       sidebar
       className="w-110 p-3"
@@ -348,27 +343,6 @@ const TasksModal = ({
             </CardContent>
           </Card>
         </section>
-        {company.flags.includes("team_updates") ? (
-          <section className="min-w-0">
-            <header className="mb-3 flex items-center justify-between gap-4 text-gray-600">
-              <h3 className="text-md uppercase">Tasks</h3>
-            </header>
-
-            {tasks && tasks.length > 0 ? (
-              <Card className="mt-3 max-w-full">
-                <CardContent className="overflow-hidden">
-                  <ul className="space-y-2">
-                    {tasks.map((task) => (
-                      <Task key={task.id} task={task} />
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            ) : (
-              <Placeholder icon={CheckCircleIcon}>No tasks to display yet!</Placeholder>
-            )}
-          </section>
-        ) : null}
       </div>
     </Modal>
   );

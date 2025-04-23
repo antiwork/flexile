@@ -14,8 +14,7 @@ import EquityGrantExerciseStatusIndicator from "@/app/equity/EquityGrantExercise
 import DetailsModal from "@/app/equity/grants/DetailsModal";
 import InvoiceStatus from "@/app/invoices/Status";
 import RoleSelector from "@/app/roles/Selector";
-import { formatAbsencesForUpdate } from "@/app/updates/team/CompanyWorkerUpdate";
-import { Task as CompanyWorkerTask } from "@/app/updates/team/Task";
+
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
@@ -122,7 +121,7 @@ export default function ContractorPage() {
     convertiblesData?.convertibleSecurities.length ? ({ label: "Convertibles", tab: `convertibles` } as const) : null,
     equityGrantExercises?.length ? ({ label: "Exercises", tab: `exercises` } as const) : null,
     dividends?.length ? ({ label: "Dividends", tab: `dividends` } as const) : null,
-    contractor && company.flags.includes("team_updates") ? ({ label: "Updates", tab: `updates` } as const) : null,
+
   ].filter((link) => !!link);
   const [selectedTab] = useQueryState("tab", parseAsString.withDefault(tabs[0]?.tab ?? ""));
 
@@ -426,8 +425,7 @@ export default function ContractorPage() {
         switch (selectedTab) {
           case "invoices":
             return contractor ? <InvoicesTab data={invoicesData} /> : null;
-          case "updates":
-            return contractor ? <UpdatesTab contractorId={contractor.id} /> : null;
+
           case "options":
             return investor ? <OptionsTab investorId={investor.id} userId={id} /> : null;
           case "shares":
@@ -669,82 +667,7 @@ const InvoicesTab = ({ data }: { data: RouterOutput["invoices"]["list"] }) => {
   );
 };
 
-const UpdatesTab = ({ contractorId }: { contractorId: string }) => {
-  const company = useCurrentCompany();
-  const [updates] = trpc.teamUpdates.list.useSuspenseQuery({ companyId: company.id, contractorId });
-  const [absences] = trpc.workerAbsences.list.useSuspenseQuery({
-    companyId: company.id,
-    contractorId,
-  });
-  const futureAbsences = absences.filter((absence) => isFuture(absence.endsOn));
 
-  return (
-    <>
-      {futureAbsences.length > 0 && (
-        <div className="grid gap-x-5 gap-y-3 md:grid-cols-[25%_1fr]">
-          <hgroup>
-            <h2 className="text-xl font-bold">Time off</h2>
-          </hgroup>
-
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-gray-600">Upcoming</p>
-              <ul className="mt-4 grid gap-3">
-                {futureAbsences.map((absence) => (
-                  <li key={absence.id} className="flex items-center">
-                    <NoSymbolIcon className="mr-2 h-5 w-5" />
-                    {formatDateRange(absence, { includeWeekday: true })}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-      {updates.map((update) => {
-        const absencesInPeriod = absences.filter((absence) =>
-          areIntervalsOverlapping(
-            { start: absence.startsOn, end: absence.endsOn },
-            { start: update.periodStartsOn, end: update.periodEndsOn },
-          ),
-        );
-        return (
-          <div key={update.id} className="grid gap-x-5 gap-y-3 md:grid-cols-[25%_1fr]">
-            <hgroup>
-              <h2 className="text-xl font-bold">
-                {formatDateRange({ startsOn: update.periodStartsOn, endsOn: update.periodEndsOn })}
-              </h2>
-              <p className="text-gray-600">
-                {update.publishedAt ? `Posted on ${format(update.publishedAt, "EEEE, MMM d")}` : "Unpublished"}
-              </p>
-            </hgroup>
-
-            <Card>
-              <CardContent className="p-6">
-                {absencesInPeriod.length > 0 || update.tasks.length > 0 ? (
-                  <ul className="grid gap-3">
-                    {absencesInPeriod.length > 0 && (
-                      <li className="flex">
-                        <NoSymbolIcon className="mr-2 h-5 w-5 text-gray-600" />
-                        <i>Off {formatAbsencesForUpdate(update, absencesInPeriod)}</i>
-                      </li>
-                    )}
-                    {update.tasks.map((task) => (
-                      <CompanyWorkerTask key={task.id} task={task} />
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No tasks or time off recorded</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        );
-      })}
-      {!updates.length ? <Placeholder icon={CheckCircleIcon}>No team updates to display.</Placeholder> : null}
-    </>
-  );
-};
 
 const sharesColumnHelper = createColumnHelper<ShareHolding>();
 const sharesColumns = [
