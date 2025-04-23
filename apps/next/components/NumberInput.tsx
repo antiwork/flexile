@@ -48,7 +48,7 @@ const NumberInput = ({
 
   useEffect(() => {
     if (!isFocused) {
-      setInputValue(formatDisplayValue(value));
+      setInputValue(formatDisplayValue(value ?? null));
     }
   }, [value, isFocused, formatDisplayValue]);
 
@@ -89,14 +89,14 @@ const NumberInput = ({
       setInputValue(valueToParse);
       onChange(null);
     } else {
-      setInputValue(formatDisplayValue(value));
-      onChange(value);
+      setInputValue(formatDisplayValue(value ?? null));
+      onChange(value ?? null);
     }
   };
 
   const handleBlur: React.FocusEventHandler<HTMLInputElement> = (e) => {
     setIsFocused(false);
-    setInputValue(formatDisplayValue(value));
+    setInputValue(formatDisplayValue(value ?? null));
     onBlur?.(e);
   };
 
