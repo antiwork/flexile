@@ -47,6 +47,7 @@ const MutationButton = <T extends unknown>({
     {...buttonProps}
     mutation={mutation}
     asChild={asChild}
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- TS isn't smart enough for this
     onClick={e(() => mutation.mutate(param as T), "prevent")}
   />
 );

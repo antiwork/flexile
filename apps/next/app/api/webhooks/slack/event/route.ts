@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { SlackEvent } from "@slack/web-api";
+import { type SlackEvent } from "@slack/web-api";
 import { waitUntil } from "@vercel/functions";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -34,6 +34,7 @@ export const POST = async (request: Request) => {
     return new Response(null, { status: 200 });
   }
 
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- temporary
   const event = data.event as SlackEvent | undefined;
 
   if (!event) return NextResponse.json({ error: "Invalid request" }, { status: 400 });

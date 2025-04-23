@@ -8,6 +8,7 @@ import { assertDefined } from "@/utils/assert";
 export const useUserStore = create(
   combine(
     {
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- temporary
       user: null as CurrentUser | null,
       pending: false,
     },

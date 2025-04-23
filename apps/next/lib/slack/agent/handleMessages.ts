@@ -1,5 +1,10 @@
-import { AppMentionEvent, AssistantThreadStartedEvent, GenericMessageEvent, WebClient } from "@slack/web-api";
-import { CoreMessage } from "ai";
+import {
+  type AppMentionEvent,
+  type AssistantThreadStartedEvent,
+  type GenericMessageEvent,
+  WebClient,
+} from "@slack/web-api";
+import { type CoreMessage } from "ai";
 import { companies } from "@/db/schema";
 import { generateAgentResponse } from "@/lib/slack/agent/generateAgentResponse";
 import { getThreadMessages } from "@/lib/slack/client";
@@ -20,7 +25,8 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
         thread_ts,
         assertDefined(company.slackBotUserId),
       )
-    : ([{ role: "user", content: event.text ?? "" }] as CoreMessage[]);
+    : // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- temporary
+      ([{ role: "user", content: event.text ?? "" }] as CoreMessage[]);
   const result = await generateAgentResponse(messages, company, event.user, showStatus);
   await showResult(result);
 }

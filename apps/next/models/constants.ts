@@ -50,7 +50,7 @@ export const CURRENCIES = [
 ] as const;
 
 export type Currency = (typeof CURRENCIES)[number]["value"];
-
+// eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- required for Zod, and can't be expressed by TS well
 export const currencyCodes = CURRENCIES.map(({ value }) => value) as [Currency, ...Currency[]];
 
 export const currencyByCountryCode = new Map<string, Currency>([

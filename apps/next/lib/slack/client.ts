@@ -1,6 +1,6 @@
 import crypto from "crypto";
-import { ChatPostEphemeralArguments, ChatPostMessageArguments, WebClient } from "@slack/web-api";
-import { CoreMessage } from "ai";
+import { type ChatPostEphemeralArguments, type ChatPostMessageArguments, WebClient } from "@slack/web-api";
+import { type CoreMessage } from "ai";
 import { cache } from "react";
 import env from "@/env";
 
@@ -43,6 +43,7 @@ export const postSlackMessage = async (
   const client = new WebClient(token);
   const postMessage = async () => {
     if (ephemeralUserId) {
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- temporary
       const response = await client.chat.postEphemeral({
         ...options,
         user: ephemeralUserId,

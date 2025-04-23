@@ -1,6 +1,6 @@
 import { openai } from "@ai-sdk/openai";
 import { WebClient } from "@slack/web-api";
-import { CoreMessage, generateText, tool } from "ai";
+import { type CoreMessage, generateText, tool } from "ai";
 import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";

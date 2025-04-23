@@ -14,22 +14,18 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "forceConsistentCasingInFileNames": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./*"]
     },
     "resolveJsonModule": true,
+    "verbatimModuleSyntax": true,
     "jsx": "preserve",
     "skipLibCheck": true,
     "incremental": true,
     "esModuleInterop": true,
     "allowJs": true,
-    "exactOptionalPropertyTypes": true,
-    "isolatedModules": true
+    "exactOptionalPropertyTypes": true
   },
   "include": [
     "next-env.d.ts",
