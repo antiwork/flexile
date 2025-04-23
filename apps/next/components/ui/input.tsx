@@ -1,7 +1,13 @@
 import * as React from "react";
 import { cn } from "@/utils";
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+type InputProps = React.ComponentProps<"input">;
+function Input({
+  className,
+  type,
+  value,
+  ...props
+}: Omit<InputProps, "value"> & { value?: InputProps["value"] | null }) {
   return (
     <input
       type={type}
