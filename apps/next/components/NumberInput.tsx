@@ -6,27 +6,6 @@ import { cn } from "@/utils";
 
 const MAXIMUM_FRACTION_DIGITS_ALLOWED_BY_SPEC = 100;
 
-/**
- * NumberInput component for numeric input with optional decimal support and prefix/suffix.
- *
- * This component should be used with a separate Label component and error messages should be
- * handled outside the component. Example usage:
- *
- * ```tsx
- * <div className="grid gap-2">
- *   <Label htmlFor="amount">Amount</Label>
- *   <NumberInput
- *     id="amount"
- *     value={amount}
- *     onChange={setAmount}
- *     prefix="$"
- *     decimal
- *     invalid={hasError}
- *   />
- *   {hasError && <p className="text-destructive text-sm">Please enter a valid amount</p>}
- * </div>
- * ```
- */
 const NumberInput = ({
   value,
   onChange,

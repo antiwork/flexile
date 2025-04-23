@@ -92,7 +92,7 @@ const DividendSection = () => {
             placeholder="10"
             prefix="$"
           />
-          <p className="text-sm text-muted-foreground">Payments below this threshold will be retained.</p>
+          <p className="text-muted-foreground text-sm">Payments below this threshold will be retained.</p>
         </div>
       </CardContent>
       <CardFooter className="flex-wrap gap-4">

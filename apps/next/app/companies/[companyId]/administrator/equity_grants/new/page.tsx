@@ -565,15 +565,16 @@ export default function NewEquityGrant() {
           {vestingTrigger === "scheduled" ? (
             <>
               <fieldset>
-                <Select
-                  label="Vesting schedule"
-                  options={vestingScheduleOptions}
-                  value={vestingScheduleId}
-                  placeholder="Select a vesting schedule"
-                  onChange={setVestingScheduleId}
-                  ref={vestingScheduleRef}
-                  {...invalidFieldAttrs("vesting_schedule_id", errorInfo)}
-                />
+                <div className="grid gap-2">
+                  <Label htmlFor="vesting-schedule">Vesting schedule</Label>
+                  <Select
+                    id="vesting-schedule"
+                    value={vestingScheduleId}
+                    onChange={(v) => setVestingScheduleId(v)}
+                    options={vestingScheduleOptions}
+                  />
+                  <p className="text-muted-foreground text-sm">Defines how options vest over time.</p>
+                </div>
               </fieldset>
               <fieldset>
                 <Input
@@ -622,15 +623,16 @@ export default function NewEquityGrant() {
                     </div>
                   </fieldset>
                   <fieldset>
-                    <Select
-                      label="Vesting frequency"
-                      options={vestingFrequencyOptions}
-                      value={vestingFrequencyMonths}
-                      placeholder="Select vesting frequency"
-                      onChange={setVestingFrequencyMonths}
-                      ref={vestingFrequencyRef}
-                      {...invalidFieldAttrs("vesting_frequency_months", errorInfo)}
-                    />
+                    <div className="grid gap-2">
+                      <Label htmlFor="vesting-frequency">Vesting frequency</Label>
+                      <Select
+                        id="vesting-frequency"
+                        value={vestingFrequencyMonths}
+                        onChange={(v) => setVestingFrequencyMonths(v)}
+                        options={vestingFrequencyOptions}
+                      />
+                      <p className="text-muted-foreground text-sm">How often options vest after the cliff period.</p>
+                    </div>
                   </fieldset>
                 </>
               ) : null}
