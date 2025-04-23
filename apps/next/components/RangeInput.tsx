@@ -73,9 +73,13 @@ const RangeInput = ({
   );
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    if (newValue === "" || /^-?\d*\.?\d*$/u.test(newValue)) {
-      setInputValue(newValue);
+    const rawValue = e.target.value;
+    // Update the displayed text immediately
+    setInputValue(rawValue);
+
+    // Validate and propagate the change if the pattern is valid
+    if (rawValue === "" || rawValue === "-" || /^-?\d*\.?\d*$/u.test(rawValue)) {
+      validateAndUpdateValue(rawValue);
     }
   }, []);
 

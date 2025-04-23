@@ -180,7 +180,7 @@ test.describe("New Contractor", () => {
     await page.getByRole("button", { name: "Exercise Options" }).click();
     await withinModal(
       async (modal) => {
-        await modal.getByLabel("Options to exercise").fill("10");
+        await modal.getByLabel("Options to exercise value").fill("10");
         await expect(modal.getByText("Exercise cost$50")).toBeVisible();
         await expect(modal.getByText("Options valueBased on 2M valuation$1,000")).toBeVisible();
         await modal.getByRole("button", { name: "Proceed" }).click();
