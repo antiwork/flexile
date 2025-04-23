@@ -271,7 +271,7 @@ const TasksModal = ({
 
   return (
     <Modal
-      open={true}
+      open
       onClose={onClose}
       sidebar
       className="w-110 p-3"

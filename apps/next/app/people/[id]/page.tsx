@@ -14,7 +14,6 @@ import EquityGrantExerciseStatusIndicator from "@/app/equity/EquityGrantExercise
 import DetailsModal from "@/app/equity/grants/DetailsModal";
 import InvoiceStatus from "@/app/invoices/Status";
 import RoleSelector from "@/app/roles/Selector";
-
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
@@ -33,7 +32,6 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { DEFAULT_WORKING_HOURS_PER_WEEK, MAXIMUM_EQUITY_PERCENTAGE, MINIMUM_EQUITY_PERCENTAGE } from "@/models";
-
 import type { RouterOutput } from "@/trpc";
 import { PayRateType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
@@ -121,7 +119,6 @@ export default function ContractorPage() {
     convertiblesData?.convertibleSecurities.length ? ({ label: "Convertibles", tab: `convertibles` } as const) : null,
     equityGrantExercises?.length ? ({ label: "Exercises", tab: `exercises` } as const) : null,
     dividends?.length ? ({ label: "Dividends", tab: `dividends` } as const) : null,
-
   ].filter((link) => !!link);
   const [selectedTab] = useQueryState("tab", parseAsString.withDefault(tabs[0]?.tab ?? ""));
 
@@ -666,8 +663,6 @@ const InvoicesTab = ({ data }: { data: RouterOutput["invoices"]["list"] }) => {
     <Placeholder icon={InboxIcon}>Invoices issued by this contractor will show up here.</Placeholder>
   );
 };
-
-
 
 const sharesColumnHelper = createColumnHelper<ShareHolding>();
 const sharesColumns = [
