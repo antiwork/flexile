@@ -219,8 +219,7 @@ test.describe("invoice creation", () => {
 
     const yearTotalsLocator = page.locator("footer > div:last-child");
     await expect(yearTotalsLocator).toMatchAriaSnapshot(`
-      - text: Total
-      - text: $205
+      - text: Total $205
     `);
     await expect(page.getByText("Swapped for equity")).not.toBeVisible();
     await expect(page.getByText("Net amount in cash")).not.toBeVisible();
