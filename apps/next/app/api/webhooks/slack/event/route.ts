@@ -34,10 +34,9 @@ export const POST = async (request: Request) => {
     return new Response(null, { status: 200 });
   }
 
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- temporary
-  const event = data.event as SlackEvent | undefined;
+  if (!data.event) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
-  if (!event) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  const event: SlackEvent = data.event;
 
   if (event.type === "message" && (event.subtype || event.bot_id || event.bot_profile)) {
     // Not messages we need to handle

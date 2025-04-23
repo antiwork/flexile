@@ -18,15 +18,14 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
   const { thread_ts, channel } = event;
   const { showStatus, showResult } = await replyHandler(new WebClient(assertDefined(company.slackBotToken)), event);
 
-  const messages = thread_ts
+  const messages: CoreMessage[] = thread_ts
     ? await getThreadMessages(
         assertDefined(company.slackBotToken),
         channel,
         thread_ts,
         assertDefined(company.slackBotUserId),
       )
-    : // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- temporary
-      ([{ role: "user", content: event.text ?? "" }] as CoreMessage[]);
+    : [{ role: "user", content: event.text ?? "" }];
   const result = await generateAgentResponse(messages, company, event.user, showStatus);
   await showResult(result);
 }
