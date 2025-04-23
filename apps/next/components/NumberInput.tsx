@@ -21,7 +21,7 @@ const NumberInput = ({
   id,
   ...props
 }: {
-  value: number | null;
+  value: number | null | undefined;
   onChange: (value: number | null) => void;
   onBlur?: React.FocusEventHandler<HTMLInputElement>;
   onFocus?: React.FocusEventHandler<HTMLInputElement>;

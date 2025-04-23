@@ -18,7 +18,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { omit, pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
-import { PayRateType } from "@/db/enums";
+import { optionGrantTypes, optionGrantVestingTriggers, PayRateType } from "@/db/enums";
 import {
   companyContractors,
   companyInvestors,
@@ -157,7 +157,7 @@ export const equityGrantsRouter = createRouter({
           companyWorkerId: z.string(),
           optionPoolId: z.string(),
           numberOfShares: z.number(),
-          optionGrantType: z.enum(["iso", "nso"]),
+          optionGrantType: z.enum(optionGrantTypes),
           optionExpiryMonths: z.number(),
           voluntaryTerminationExerciseMonths: z.number(),
           involuntaryTerminationExerciseMonths: z.number(),
@@ -165,7 +165,7 @@ export const equityGrantsRouter = createRouter({
           deathExerciseMonths: z.number(),
           disabilityExerciseMonths: z.number(),
           retirementExerciseMonths: z.number(),
-          vestingTrigger: z.enum(["scheduled", "invoice_paid"]),
+          vestingTrigger: z.enum(optionGrantVestingTriggers),
           vestingScheduleId: z.string().nullable(),
           vestingCommencementDate: z.string().nullable(),
           totalVestingDurationMonths: z.number().nullable(),
