@@ -181,7 +181,6 @@ export default function NewEquityGrant() {
         </Button>
       }
     >
-      {/*TODO use a <form> here after FormSection is cleaned up*/}
       <Form {...form}>
         <form onSubmit={(e) => void submit(e)} className="grid gap-6">
           <FormSection title="Grant details">
