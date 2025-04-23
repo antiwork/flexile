@@ -10,7 +10,7 @@ export const slackClient = new WebClient(env.SLACK_TOKEN, {
   },
 });
 
-export const verifySlackRequest = (body: string, headers: Headers): Promise<boolean> => {
+export const validSlackWebhookRequest = (body: string, headers: Headers) => {
   const slackSignature = headers.get("x-slack-signature");
   const timestamp = headers.get("x-slack-request-timestamp");
   const slackSigningSecret = env.SLACK_SIGNING_SECRET;
@@ -21,14 +21,14 @@ export const verifySlackRequest = (body: string, headers: Headers): Promise<bool
     !timestamp ||
     new Date(Number(timestamp) * 1000).getTime() < Date.now() - 300 * 1000
   ) {
-    return Promise.resolve(false);
+    return false;
   }
 
   const baseString = `v0:${timestamp}:${body}`;
   const hmac = crypto.createHmac("sha256", slackSigningSecret);
   const computedSignature = `v0=${hmac.update(baseString).digest("hex")}`;
 
-  return Promise.resolve(crypto.timingSafeEqual(Buffer.from(computedSignature), Buffer.from(slackSignature)));
+  return crypto.timingSafeEqual(Buffer.from(computedSignature), Buffer.from(slackSignature));
 };
 
 export const postSlackMessage = async (

@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { type SlackEvent } from "@slack/web-api";
 import { waitUntil } from "@vercel/functions";
 import { and, eq } from "drizzle-orm";
@@ -8,66 +5,108 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { companies } from "@/db/schema";
 import { handleAssistantThreadMessage, handleMessage, isAgentThread } from "@/lib/slack/agent/handleMessages";
-import { verifySlackRequest } from "@/lib/slack/client";
+import { validSlackWebhookRequest } from "@/lib/slack/client";
 
-export const POST = async (request: Request) => {
-  const body = await request.text();
-  if (!(await verifySlackRequest(body, request.headers))) {
-    return NextResponse.json({ error: "Signature verification failed" }, { status: 403 });
+interface SlackUrlVerification {
+  type: "url_verification";
+  token: string;
+  challenge: string;
+}
+
+interface SlackEventCallback {
+  type: "event_callback";
+  event: SlackEvent;
+  team_id: string;
+  api_app_id: string;
+  event_id: string;
+  event_time: number;
+  authed_users?: string[];
+}
+
+type SlackWebhookPayload = SlackUrlVerification | SlackEventCallback;
+
+interface SlackWebhookRequest extends Request {
+  json(): Promise<SlackWebhookPayload>;
+}
+
+export const POST = async (request: SlackWebhookRequest) => {
+  if (!validSlackWebhookRequest(await request.text(), request.headers)) {
+    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
-  const data = JSON.parse(body);
+  const data = await request.json();
 
-  if (data.type === "url_verification") {
-    return NextResponse.json({ challenge: data.challenge });
-  }
+  switch (data.type) {
+    case "url_verification":
+      return NextResponse.json({ challenge: data.challenge }, { status: 200 });
 
-  if (data.type === "event_callback" && data.event.type === "tokens_revoked") {
-    for (const userId of data.event.tokens.bot) {
-      const company = await db.query.companies.findFirst({
-        where: and(eq(companies.slackTeamId, data.team_id), eq(companies.slackBotUserId, userId)),
-      });
+    case "event_callback": {
+      const event = data.event;
 
-      if (company) {
-        await db
-          .update(companies)
-          .set({
-            slackBotUserId: null,
-            slackBotToken: null,
-            slackTeamId: null,
-          })
-          .where(eq(companies.id, company.id));
+      switch (event.type) {
+        case "tokens_revoked":
+          for (const userId of event.tokens.bot ?? []) {
+            const company = await db.query.companies.findFirst({
+              where: and(eq(companies.slackTeamId, data.team_id), eq(companies.slackBotUserId, userId)),
+            });
+
+            if (company) {
+              await db
+                .update(companies)
+                .set({
+                  slackBotUserId: null,
+                  slackBotToken: null,
+                  slackTeamId: null,
+                })
+                .where(eq(companies.id, company.id));
+            }
+          }
+          return NextResponse.json({ message: "Success!" }, { status: 200 });
+
+        case "message": {
+          if (event.subtype || event.bot_id || event.bot_profile) {
+            // No messages we need to handle
+            return NextResponse.json({ message: "Success!" }, { status: 200 });
+          }
+          const companyMessage = await db.query.companies.findFirst({
+            where: eq(companies.slackTeamId, data.team_id),
+          });
+          if (!companyMessage) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+
+          if (event.channel_type === "im" || (await isAgentThread(event, companyMessage))) {
+            waitUntil(handleMessage(event, companyMessage));
+            return NextResponse.json({ message: "Success!" }, { status: 200 });
+          }
+          break;
+        }
+
+        case "app_mention": {
+          const companyAppMention = await db.query.companies.findFirst({
+            where: eq(companies.slackTeamId, data.team_id),
+          });
+          if (!companyAppMention) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+
+          waitUntil(handleMessage(event, companyAppMention));
+          return NextResponse.json({ message: "Success!" }, { status: 200 });
+        }
+
+        case "assistant_thread_started": {
+          const companyAssistant = await db.query.companies.findFirst({
+            where: eq(companies.slackTeamId, data.team_id),
+          });
+          if (!companyAssistant) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+
+          waitUntil(handleAssistantThreadMessage(event, companyAssistant));
+          return NextResponse.json({ message: "Success!" }, { status: 200 });
+        }
+
+        default:
+          return NextResponse.json({ error: "Invalid request" }, { status: 400 });
       }
+      break;
     }
-    return new Response(null, { status: 200 });
+
+    default:
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
-
-  if (!data.event) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-
-  const event: SlackEvent = data.event;
-
-  if (event.type === "message" && (event.subtype || event.bot_id || event.bot_profile)) {
-    // Not messages we need to handle
-    return new Response("Success!", { status: 200 });
-  }
-
-  const company = await db.query.companies.findFirst({
-    where: eq(companies.slackTeamId, data.team_id),
-  });
-  if (!company) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-
-  if (
-    event.type === "app_mention" ||
-    (event.type === "message" && (event.channel_type === "im" || (await isAgentThread(event, company))))
-  ) {
-    waitUntil(handleMessage(event, company));
-    return new Response("Success!", { status: 200 });
-  }
-
-  if (event.type === "assistant_thread_started") {
-    waitUntil(handleAssistantThreadMessage(event, company));
-    return new Response("Success!", { status: 200 });
-  }
-
-  return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 };
