@@ -2,11 +2,9 @@ import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { PayRateType } from "@/db/enums";
 import { companyContractors, equityAllocations } from "@/db/schema";
 import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import { companyProcedure, createRouter } from "@/trpc";
-import { getUniqueUnvestedEquityGrantForYear } from "./equityGrants";
 
 export const equitySettingsRouter = createRouter({
   get: companyProcedure.query(async ({ ctx }) => {
@@ -21,16 +19,11 @@ export const equitySettingsRouter = createRouter({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.companyContractor) throw new TRPCError({ code: "FORBIDDEN" });
       assertPermissions(ctx.companyContractor);
-      if (ctx.companyContractor.onTrial) throw new TRPCError({ code: "FORBIDDEN" });
 
       const equityAllocation = await getEquityAllocation(ctx.companyContractor.id);
       if (equityAllocation?.locked) throw new TRPCError({ code: "FORBIDDEN" });
-
-      const unvestedEquityGrant = await getUniqueUnvestedEquityGrantForYear(
-        ctx.companyContractor,
-        new Date().getFullYear(),
-      );
-      if (!unvestedEquityGrant) throw new TRPCError({ code: "FORBIDDEN" });
+      if (equityAllocation && equityAllocation.status !== "pending_confirmation")
+        throw new TRPCError({ code: "FORBIDDEN" });
 
       await db
         .insert(equityAllocations)
@@ -38,22 +31,24 @@ export const equitySettingsRouter = createRouter({
           companyContractorId: ctx.companyContractor.id,
           year: new Date().getFullYear(),
           equityPercentage: input.equityPercentage,
+          status: "pending_grant_creation",
+          locked: true,
         })
         .onConflictDoUpdate({
           target: [equityAllocations.companyContractorId, equityAllocations.year],
-          set: { equityPercentage: input.equityPercentage },
+          set: { equityPercentage: input.equityPercentage, status: "pending_grant_creation" },
         });
     }),
 });
 
 const assertPermissions = (contractor: typeof companyContractors.$inferSelect) => {
-  if (contractor.payRateType === PayRateType.Salary) throw new TRPCError({ code: "FORBIDDEN" });
   if (contractor.endedAt && new Date() > contractor.endedAt) throw new TRPCError({ code: "FORBIDDEN" });
+  if (contractor.onTrial) throw new TRPCError({ code: "FORBIDDEN" });
 };
 
 const getEquityAllocation = async (contractorId: bigint) =>
   await db.query.equityAllocations.findFirst({
-    columns: { equityPercentage: true, locked: true },
+    columns: { equityPercentage: true, locked: true, status: true },
     where: and(
       eq(equityAllocations.companyContractorId, contractorId),
       eq(equityAllocations.year, new Date().getFullYear()),

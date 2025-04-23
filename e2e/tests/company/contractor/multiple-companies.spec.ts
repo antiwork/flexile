@@ -5,6 +5,7 @@ import { companyAdministratorsFactory } from "@test/factories/companyAdministrat
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyRolesFactory } from "@test/factories/companyRoles";
 import { usersFactory } from "@test/factories/users";
+import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
@@ -114,7 +115,7 @@ test.describe("Contractor for multiple companies", () => {
     await page.getByLabel("Your company's legal name").fill("Test Company");
     await page.getByLabel("Street address, apt number").fill("123 Main St");
     await page.getByLabel("City").fill("Anytown");
-    await page.getByLabel("State").selectOption("Missouri");
+    await selectComboboxOption(page, "State", "Missouri");
     await page.getByLabel("ZIP code").fill("12345");
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByRole("button", { name: "Start using Flexile" })).toBeDisabled();

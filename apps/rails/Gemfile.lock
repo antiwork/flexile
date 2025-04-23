@@ -611,7 +611,7 @@ GEM
       tilt
     securerandom (0.4.1)
     selectize-rails (0.12.6)
-    selenium-webdriver (4.30.1)
+    selenium-webdriver (4.31.0)
       base64 (~> 0.2)
       logger (~> 1.4)
       rexml (~> 3.2, >= 3.2.5)
@@ -758,7 +758,7 @@ DEPENDENCIES
   rubocop-rspec (~> 3.5.0)
   ruby-openai (~> 8.0)
   rubyXL (~> 3.4)
-  selenium-webdriver (~> 4.30.0)
+  selenium-webdriver (~> 4.31.0)
   shoulda-matchers (~> 6.0)
   sidekiq (~> 8)
   sidekiq-cron (~> 2.0)

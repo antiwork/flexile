@@ -2,6 +2,7 @@ import { faker } from "@faker-js/faker";
 import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
+import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
@@ -41,7 +42,7 @@ test.describe("Company administrator onboarding - company details", () => {
     await page.getByLabel("Your company's legal name").fill(companyName);
     await page.getByLabel("Street address, apt number").fill(streetAddress);
     await page.getByLabel("City").fill(city);
-    await page.getByLabel("State").selectOption(state);
+    await selectComboboxOption(page, "State", state);
     await page.getByLabel("ZIP code").fill(zipCode);
 
     await page.getByRole("button", { name: "Continue" }).click();

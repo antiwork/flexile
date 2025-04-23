@@ -15,7 +15,7 @@ export type InputProps = Omit<
   suffix?: React.ReactNode;
   help?: React.ReactNode;
   invalid?: boolean | undefined;
-  ref?: React.RefObject<(HTMLInputElement | HTMLTextAreaElement) | null>;
+  ref?: React.Ref<(HTMLInputElement | HTMLTextAreaElement) | null>;
   type?: "text" | "date" | "datetime-local" | "email" | "password" | "url" | "textarea";
   onChange?: (text: string) => void;
   value?: string | null;
@@ -65,7 +65,8 @@ const Input = ({
           <Textarea
             id={inputId}
             ref={(e: HTMLTextAreaElement) => {
-              if (ref) ref.current = e;
+              if (typeof ref === "function") ref(e);
+              else if (ref) ref.current = e;
             }}
             value={value ?? ""}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange?.(e.target.value)}
@@ -77,7 +78,8 @@ const Input = ({
             id={inputId}
             ref={(e: HTMLInputElement) => {
               inputRef.current = e;
-              if (ref) ref.current = e;
+              if (typeof ref === "function") ref(e);
+              else if (ref) ref.current = e;
             }}
             type={type}
             value={value ?? ""}

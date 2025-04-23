@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -13,7 +12,7 @@ import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 import EquityLayout from "../Layout";
 
-type DividendRound = RouterOutput["dividendRounds"]["list"]["dividendRounds"][number];
+type DividendRound = RouterOutput["dividendRounds"]["list"][number];
 const columnHelper = createColumnHelper<DividendRound>();
 const columns = [
   columnHelper.accessor("issuedAt", {
@@ -28,22 +27,17 @@ const columns = [
   columnHelper.simple("numberOfShareholders", "Shareholders", (value) => value.toLocaleString(), "numeric"),
 ];
 
-const perPage = 50;
 export default function DividendRounds() {
   const company = useCurrentCompany();
   const router = useRouter();
-  const [page] = usePage();
-  const [data] = trpc.dividendRounds.list.useSuspenseQuery({ companyId: company.id, perPage, page });
+  const [dividendRounds] = trpc.dividendRounds.list.useSuspenseQuery({ companyId: company.id });
 
-  const table = useTable({ columns, data: data.dividendRounds });
+  const table = useTable({ columns, data: dividendRounds });
 
   return (
     <EquityLayout>
-      {data.dividendRounds.length > 0 ? (
-        <>
-          <DataTable table={table} onRowClicked={(row) => router.push(`/equity/dividend_rounds/${row.id}`)} />
-          <PaginationSection total={data.total} perPage={perPage} />
-        </>
+      {dividendRounds.length > 0 ? (
+        <DataTable table={table} onRowClicked={(row) => router.push(`/equity/dividend_rounds/${row.id}`)} />
       ) : (
         <Placeholder icon={CheckCircleIcon}>You have not issued any dividends yet.</Placeholder>
       )}

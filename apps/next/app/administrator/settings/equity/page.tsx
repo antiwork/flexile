@@ -2,25 +2,20 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Set } from "immutable";
-import { Check, ChevronsUpDown, User, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import ComboBox from "@/components/ComboBox";
 import DecimalInput from "@/components/DecimalInput";
 import FormSection from "@/components/FormSection";
 import MutationButton from "@/components/MutationButton";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CardContent, CardFooter } from "@/components/ui/card";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useCurrentCompany } from "@/global";
 import { MAX_FILES_PER_CAP_TABLE_UPLOAD } from "@/models";
 import { trpc } from "@/trpc/client";
-import { cn, md5Checksum } from "@/utils";
+import { md5Checksum } from "@/utils";
 
 const BoardMembersSection = () => {
   const company = useCurrentCompany();
-  const [open, setOpen] = useState(false);
   const [administrators] = trpc.companyAdministrators.list.useSuspenseQuery({ companyId: company.id });
   const [boardMemberIds, setBoardMemberIds] = useState(
     Set(administrators.flatMap((admin) => (admin.boardMember ? [admin.id] : []))),
@@ -46,64 +41,12 @@ const BoardMembersSection = () => {
       <CardContent>
         <div className="grid gap-4">
           Choose board members from your existing administrators.
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={open}
-                className="w-full justify-between rounded-md"
-              >
-                {boardMemberIds.size > 0
-                  ? `${boardMemberIds.size} member${boardMemberIds.size > 1 ? "s" : ""} selected`
-                  : "Select members..."}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="p-0">
-              <Command className="w-full">
-                <CommandInput placeholder="Search administrators..." />
-                <CommandList>
-                  <CommandEmpty>No administrator found.</CommandEmpty>
-                  <CommandGroup>
-                    {administrators.map((admin) => (
-                      <CommandItem
-                        key={admin.id}
-                        onSelect={() =>
-                          setBoardMemberIds(boardMemberIds[boardMemberIds.has(admin.id) ? "delete" : "add"](admin.id))
-                        }
-                        className="flex items-center gap-2"
-                      >
-                        <User className="text-muted-foreground h-5 w-5" />
-                        <span>{admin.name}</span>
-                        <Check className={cn("ml-auto h-4 w-4", { invisible: !boardMemberIds.has(admin.id) })} />
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-          {boardMemberIds.size > 0 ? (
-            <div className="flex flex-wrap">
-              {administrators
-                .filter((admin) => boardMemberIds.has(admin.id))
-                .map((member) => (
-                  <Badge key={member.id} variant="secondary" className="flex items-center gap-1">
-                    <User className="h-3 w-3" />
-                    {member.name}
-                    <Button
-                      variant="link"
-                      className="text-muted-foreground hover:text-foreground h-auto p-0"
-                      onClick={() => setBoardMemberIds(boardMemberIds.delete(member.id))}
-                    >
-                      <X className="h-3 w-3" />
-                      <span className="sr-only">Remove</span>
-                    </Button>
-                  </Badge>
-                ))}
-            </div>
-          ) : null}
+          <ComboBox
+            options={administrators.map((admin) => ({ value: admin.id, label: admin.name }))}
+            value={boardMemberIds.toArray()}
+            onChange={(value) => setBoardMemberIds(Set(value))}
+            multiple
+          />
         </div>
       </CardContent>
       <CardFooter>
@@ -123,13 +66,8 @@ export default function Equity() {
   const [fileError, setFileError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [canCreateCapTableUpload] = trpc.capTableUploads.canCreate.useSuspenseQuery({ companyId: company.id });
-  const [{ total }] = trpc.capTableUploads.list.useSuspenseQuery({
-    companyId: company.id,
-    page: 1,
-    perPage: 1,
-    onlyCurrentUser: true,
-  });
-  const hasInProgressUpload = total > 0;
+  const [{ uploads }] = trpc.capTableUploads.list.useSuspenseQuery({ companyId: company.id });
+  const hasInProgressUpload = uploads.length > 0;
 
   const [sharePriceInUsd, setSharePriceInUsd] = useState(
     company.sharePriceInUsd == null ? null : Number(company.sharePriceInUsd),

@@ -27,10 +27,6 @@ export default function Equity() {
   assert(worker != null);
   const company = useCurrentCompany();
   const [{ allocation }] = trpc.equitySettings.get.useSuspenseQuery({ companyId: company.id });
-  const [{ grant: equityGrant }] = trpc.equityGrants.getUniqueUnvested.useSuspenseQuery({
-    companyId: company.id,
-    year: new Date().getFullYear(),
-  });
 
   const [equityPercent, setEquityPercent] = useState(allocation?.equityPercentage ?? 0);
 
@@ -45,8 +41,8 @@ export default function Equity() {
     if (allocation?.locked) {
       return `You'll be able to select a new allocation for ${new Date().getFullYear() + 1} later this year.`;
     }
-    if (!equityGrant) {
-      return "You'll be able to select an equity split once your option grant has been issued.";
+    if (allocation?.status === "pending_grant_creation" || allocation?.status === "pending_approval") {
+      return "Your allocation is pending board approval. You can submit invoices for this year, but they're only going to be paid once the allocation is approved.";
     }
     return null;
   };
@@ -75,7 +71,7 @@ export default function Equity() {
                 unit="%"
                 label={
                   <div className="flex justify-between gap-2">
-                    How much of your hourly rate would you like to swap for equity?
+                    How much of your rate would you like to swap for equity?
                     <a
                       className={linkClasses}
                       href="https://sahillavingia.com/dividends"
@@ -92,21 +88,22 @@ export default function Equity() {
             <div className="flex justify-between gap-2">
               <div>Cash amount</div>
               <div>
-                {formatMoneyFromCents(cashCents)} <span className="text-gray-500">/ hour</span>
+                {formatMoneyFromCents(cashCents)} <span className="text-gray-500">/ {worker.payRateType}</span>
               </div>
             </div>
             <Separator />
             <div className="flex justify-between gap-2">
               <div>Equity value</div>
               <div>
-                {formatMoneyFromCents(equityCents)} <span className="text-gray-500">/ hour</span>
+                {formatMoneyFromCents(equityCents)} <span className="text-gray-500">/ {worker.payRateType}</span>
               </div>
             </div>
             <Separator />
             <div className="flex justify-between gap-2">
               <div>Total amount</div>
               <div>
-                {formatMoneyFromCents(equityCents + cashCents)} <span className="text-gray-500">/ hour</span>
+                {formatMoneyFromCents(equityCents + cashCents)}{" "}
+                <span className="text-gray-500">/ {worker.payRateType}</span>
               </div>
             </div>
           </CardContent>

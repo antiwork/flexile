@@ -68,13 +68,30 @@ RSpec.describe InvoiceEquityCalculator do
     context "and an eligible unvested equity grant for the year is absent" do
       let(:invoice_year) { Date.current.year + 2 }
 
-      it "notifies about the missing share price and returns nil" do
+      before do
         create(:equity_allocation, company_worker: company_worker, equity_percentage: 1, year: invoice_year)
+      end
 
-        message = "InvoiceEquityCalculator: Error selecting active grant for CompanyWorker #{company_worker.id}"
-        expect(Bugsnag).to receive(:notify).with(message)
+      it "returns zero for all equity values" do
+        result = calculator.calculate
+        expect(result[:equity_cents]).to eq(0)
+        expect(result[:equity_options]).to eq(0)
+        expect(result[:equity_percentage]).to eq(0)
+        expect(result[:selected_percentage]).to eq(1)
+        expect(result[:is_equity_allocation_locked]).to eq(false)
+      end
 
-        expect(calculator.calculate).to be_nil
+      context "and the company does not have a share price" do
+        before do
+          company.update!(fmv_per_share_in_usd: nil)
+        end
+
+        it "notifies about the missing share price and returns nil" do
+          message = "InvoiceEquityCalculator: Error determining share price for CompanyWorker #{company_worker.id}"
+          expect(Bugsnag).to receive(:notify).with(message)
+
+          expect(calculator.calculate).to be_nil
+        end
       end
     end
   end

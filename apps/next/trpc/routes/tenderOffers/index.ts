@@ -3,7 +3,7 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
-import { db, paginate, paginationSchema } from "@/db";
+import { db } from "@/db";
 import { activeStorageAttachments, activeStorageBlobs, companies, tenderOffers } from "@/db/schema";
 import { companyProcedure, createRouter, getS3Url } from "@/trpc";
 import { tenderOffersBidsRouter } from "./bids";
@@ -46,11 +46,11 @@ export const tenderOffersRouter = createRouter({
     });
   }),
 
-  list: companyProcedure.input(paginationSchema).query(async ({ ctx, input }) => {
+  list: companyProcedure.query(async ({ ctx }) => {
     if (!ctx.company.tenderOffersEnabled || (!ctx.companyAdministrator && !ctx.companyInvestor))
       throw new TRPCError({ code: "FORBIDDEN" });
 
-    const query = db
+    return await db
       .select({
         ...pick(tenderOffers, "startsAt", "endsAt", "minimumValuation"),
         id: tenderOffers.externalId,
@@ -59,10 +59,6 @@ export const tenderOffersRouter = createRouter({
       .innerJoin(companies, eq(tenderOffers.companyId, companies.id))
       .where(eq(companies.id, ctx.company.id))
       .orderBy(desc(tenderOffers.createdAt));
-
-    const total = await db.$count(query.as("tenderOffers"));
-
-    return { tenderOffers: await paginate(query, input), total };
   }),
 
   get: companyProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {

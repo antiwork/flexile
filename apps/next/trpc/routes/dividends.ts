@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
-import { byExternalId, db, pagination, paginationSchema } from "@/db";
+import { byExternalId, db } from "@/db";
 import { companyInvestors, dividends } from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 import { simpleUser } from "./users";
@@ -9,7 +9,10 @@ import { simpleUser } from "./users";
 export const dividendsRouter = createRouter({
   list: companyProcedure
     .input(
-      paginationSchema.and(z.object({ investorId: z.string().optional(), dividendRoundId: z.number().optional() })),
+      z.object({
+        investorId: z.string().optional(),
+        dividendRoundId: z.number().optional(),
+      }),
     )
     .query(async ({ input, ctx }) => {
       if (
@@ -33,12 +36,8 @@ export const dividendsRouter = createRouter({
           investor: { with: { user: { columns: simpleUser.columns } } },
         },
         where,
-        ...pagination(input),
+        orderBy: [desc(dividends.id)],
       });
-      const total = await db.$count(dividends, where);
-      return {
-        dividends: rows.map((row) => ({ ...row, investor: { user: simpleUser(row.investor.user) } })),
-        total,
-      };
+      return rows.map((row) => ({ ...row, investor: { user: simpleUser(row.investor.user) } }));
     }),
 });

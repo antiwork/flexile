@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq, inArray, notInArray } from "drizzle-orm";
 import { z } from "zod";
-import { db, paginate, paginationSchema } from "@/db";
+import { db } from "@/db";
 import {
   activeStorageAttachments,
   activeStorageBlobs,
@@ -14,7 +14,7 @@ import {
 } from "@/db/schema";
 import env from "@/env";
 import { MAX_FILES_PER_CAP_TABLE_UPLOAD } from "@/models";
-import { companyProcedure, createRouter, getS3Url } from "@/trpc";
+import { companyProcedure, createRouter, getS3Url, protectedProcedure } from "@/trpc";
 import { assert } from "@/utils/assert";
 
 const COMPLETED_STATUSES = ["completed", "canceled"] as const;
@@ -120,73 +120,64 @@ export const capTableUploadsRouter = createRouter({
       });
     }),
 
-  list: companyProcedure
-    .input(paginationSchema.and(z.object({ onlyCurrentUser: z.boolean().optional() })))
-    .query(async ({ ctx, input }) => {
-      if (!(ctx.user.teamMember || input.onlyCurrentUser)) {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
+  list: protectedProcedure.query(async ({ ctx }) => {
+    if (!ctx.user.teamMember && !ctx.company) throw new TRPCError({ code: "FORBIDDEN" });
 
-      const baseQuery = db
-        .select({
-          id: capTableUploads.id,
-          status: capTableUploads.status,
-          uploadedAt: capTableUploads.uploadedAt,
-          user: {
-            id: users.id,
-            email: users.email,
-            preferredName: users.preferredName,
-            legalName: users.legalName,
-          },
-          companyName: companies.name,
-        })
-        .from(capTableUploads)
-        .innerJoin(users, eq(users.id, capTableUploads.userId))
-        .innerJoin(companies, eq(companies.id, capTableUploads.companyId))
-        .where(
-          and(
-            eq(companies.externalId, input.companyId),
-            notInArray(capTableUploads.status, [...COMPLETED_STATUSES]),
-            ...(input.onlyCurrentUser ? [eq(capTableUploads.userId, ctx.user.id)] : []),
-          ),
-        )
-        .orderBy(desc(capTableUploads.createdAt));
-
-      const total = await db.$count(baseQuery.as("capTableUploads"));
-      const uploads = await paginate(baseQuery, input);
-
-      const attachmentRows = await db.query.activeStorageAttachments.findMany({
-        where: and(
-          eq(activeStorageAttachments.recordType, "CapTableUpload"),
-          inArray(
-            activeStorageAttachments.recordId,
-            uploads.map((upload) => upload.id),
-          ),
-          eq(activeStorageAttachments.name, "files"),
+    const uploads = await db
+      .select({
+        id: capTableUploads.id,
+        status: capTableUploads.status,
+        uploadedAt: capTableUploads.uploadedAt,
+        user: {
+          id: users.id,
+          email: users.email,
+          preferredName: users.preferredName,
+          legalName: users.legalName,
+        },
+        companyName: companies.name,
+      })
+      .from(capTableUploads)
+      .innerJoin(users, eq(users.id, capTableUploads.userId))
+      .innerJoin(companies, eq(companies.id, capTableUploads.companyId))
+      .where(
+        and(
+          ctx.company ? eq(capTableUploads.companyId, ctx.company.id) : undefined,
+          notInArray(capTableUploads.status, [...COMPLETED_STATUSES]),
         ),
-        with: { blob: { columns: { key: true, filename: true } } },
-      });
+      )
+      .orderBy(desc(capTableUploads.createdAt));
 
-      const attachmentsByRecordId = new Map<bigint, { url: string; filename: string }[]>();
-      await Promise.all(
-        attachmentRows.map(async (attachment) => {
-          const url = await getS3Url(attachment.blob.key, attachment.blob.filename);
-          const attachmentData = {
-            url,
-            filename: attachment.blob.filename,
-          };
+    const attachmentRows = await db.query.activeStorageAttachments.findMany({
+      where: and(
+        eq(activeStorageAttachments.recordType, "CapTableUpload"),
+        inArray(
+          activeStorageAttachments.recordId,
+          uploads.map((upload) => upload.id),
+        ),
+        eq(activeStorageAttachments.name, "files"),
+      ),
+      with: { blob: { columns: { key: true, filename: true } } },
+    });
 
-          const existing = attachmentsByRecordId.get(attachment.recordId) || [];
-          attachmentsByRecordId.set(attachment.recordId, [...existing, attachmentData]);
-        }),
-      );
+    const attachmentsByRecordId = new Map<bigint, { url: string; filename: string }[]>();
+    await Promise.all(
+      attachmentRows.map(async (attachment) => {
+        const url = await getS3Url(attachment.blob.key, attachment.blob.filename);
+        const attachmentData = {
+          url,
+          filename: attachment.blob.filename,
+        };
 
-      return {
-        uploads: uploads.map((upload) => ({
-          ...upload,
-          attachments: attachmentsByRecordId.get(upload.id) || [],
-        })),
-        total,
-      };
-    }),
+        const existing = attachmentsByRecordId.get(attachment.recordId) || [];
+        attachmentsByRecordId.set(attachment.recordId, [...existing, attachmentData]);
+      }),
+    );
+
+    return {
+      uploads: uploads.map((upload) => ({
+        ...upload,
+        attachments: attachmentsByRecordId.get(upload.id) || [],
+      })),
+    };
+  }),
 });

@@ -11,7 +11,6 @@ import DataTable, { createColumnHelper, useTable } from "@/components/DataTable"
 import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
-import PaginationSection, { usePage } from "@/components/PaginationSection";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
 import { Button } from "@/components/ui/button";
@@ -22,10 +21,9 @@ import { trpc, useCanAccess } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 
-const perPage = 50;
 const stripePromise = loadStripe(env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
-type ExpenseCardCharge = RouterOutput["expenseCards"]["charges"]["list"]["items"][number];
+type ExpenseCardCharge = RouterOutput["expenseCards"]["charges"]["list"][number];
 export default function ExpensesPage() {
   const user = useCurrentUser();
 
@@ -59,18 +57,14 @@ const companyColumns = [
 ];
 
 function CompanyExpenses() {
-  const [page] = usePage();
   const company = useCurrentCompany();
-  const [data] = trpc.expenseCards.charges.list.useSuspenseQuery({ companyId: company.id, page, perPage });
-  const table = useTable({ columns: companyColumns, data: data.items });
+  const [data] = trpc.expenseCards.charges.list.useSuspenseQuery({ companyId: company.id });
+  const table = useTable({ columns: companyColumns, data });
 
   return (
     <MainLayout title="Expenses">
-      {data.items.length ? (
-        <>
-          <DataTable table={table} />
-          <PaginationSection total={data.total} perPage={perPage} />
-        </>
+      {data.length ? (
+        <DataTable table={table} />
       ) : (
         <Placeholder icon={CheckCircleIcon}>
           <span>No expenses yet.</span>
@@ -168,7 +162,6 @@ const contractorColumns = [
 ];
 
 function ContractorExpenses() {
-  const [page] = usePage();
   const user = useCurrentUser();
   if (!user.roles.worker) notFound();
   const company = useCurrentCompany();
@@ -177,8 +170,6 @@ function ContractorExpenses() {
   const [expenseCardCharges] = trpc.expenseCards.charges.list.useSuspenseQuery({
     companyId: company.id,
     contractorId: user.roles.worker.id,
-    page,
-    perPage,
   });
 
   const [{ card }, { refetch }] = trpc.expenseCards.getActive.useSuspenseQuery({ companyId: company.id });
@@ -191,7 +182,7 @@ function ContractorExpenses() {
     },
   });
 
-  const table = useTable({ columns: contractorColumns, data: expenseCardCharges.items });
+  const table = useTable({ columns: contractorColumns, data: expenseCardCharges });
 
   return (
     <MainLayout
@@ -209,11 +200,8 @@ function ContractorExpenses() {
         <CardDisplay />
       </Elements>
 
-      {expenseCardCharges.items.length ? (
-        <>
-          <DataTable table={table} />
-          <PaginationSection total={expenseCardCharges.total} perPage={perPage} />
-        </>
+      {expenseCardCharges.length ? (
+        <DataTable table={table} />
       ) : (
         <Placeholder icon={CheckCircleIcon}>No expenses to display.</Placeholder>
       )}

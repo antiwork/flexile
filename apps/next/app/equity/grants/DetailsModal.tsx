@@ -16,7 +16,7 @@ import { formatMoney } from "@/utils/formatMoney";
 import { formatDate, humanizeMonths } from "@/utils/time";
 import { optionGrantTypeDisplayNames, relationshipDisplayNames } from ".";
 
-type EquityGrant = RouterOutput["equityGrants"]["list"]["equityGrants"][number];
+type EquityGrant = RouterOutput["equityGrants"]["list"][number];
 const DetailsModal = ({
   equityGrant,
   userId,
@@ -136,7 +136,7 @@ const DetailsModal = ({
     () => [
       {
         label: "Board approval date",
-        value: formatDate(equityGrant.boardApprovalDate),
+        value: equityGrant.boardApprovalDate ? formatDate(equityGrant.boardApprovalDate) : "N/A",
       },
       {
         label: "State/Country of Residency",

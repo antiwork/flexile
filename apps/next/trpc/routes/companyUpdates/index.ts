@@ -4,7 +4,7 @@ import { and, desc, eq, gte, isNotNull, isNull, lte, or } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { pick, truncate } from "lodash-es";
 import { z } from "zod";
-import { db, pagination, paginationSchema } from "@/db";
+import { db } from "@/db";
 import { companyMonthlyFinancialReports, companyUpdates } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { type CompanyContext, companyProcedure, createRouter, renderTiptapToText } from "@/trpc";
@@ -25,7 +25,7 @@ const dataSchema = createInsertSchema(companyUpdates).pick({
   showNetIncome: true,
 });
 export const companyUpdatesRouter = createRouter({
-  list: companyProcedure.input(paginationSchema).query(async ({ ctx, input }) => {
+  list: companyProcedure.query(async ({ ctx }) => {
     if (
       !ctx.company.companyUpdatesEnabled ||
       (!ctx.companyAdministrator && !isActive(ctx.companyContractor) && !ctx.companyInvestor)
@@ -37,16 +37,14 @@ export const companyUpdatesRouter = createRouter({
     );
     const rows = await db.query.companyUpdates.findMany({
       where,
-      ...pagination(input),
       orderBy: desc(companyUpdates.createdAt),
     });
-    const total = await db.$count(companyUpdates, where);
     const updates = rows.map((update) => ({
       ...pick(update, ["title", "sentAt"]),
       id: update.externalId,
       summary: truncate(renderTiptapToText(update.body), { length: 300 }),
     }));
-    return { updates, total };
+    return { updates };
   }),
   get: companyProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
     if (

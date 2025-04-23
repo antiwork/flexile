@@ -59,7 +59,7 @@ group :test do
   gem "rails-controller-testing", "~> 1.0"
   gem "rspec-sidekiq", "~> 5.1"
   gem "rspec-retry", "~> 0.6"
-  gem "selenium-webdriver", "~> 4.30.0"
+  gem "selenium-webdriver", "~> 4.31.0"
   gem "shoulda-matchers", "~> 6.0"
   gem "webmock", "~> 3.18", require: "webmock/rspec"
   gem "vcr", "~> 6.1"

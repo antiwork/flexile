@@ -1,14 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import Image from "next/image";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import MutationButton from "@/components/MutationButton";
+import ComboBox from "@/components/ComboBox";
+import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import Status from "@/components/Status";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCurrentCompany } from "@/global";
 import quickbooksLogo from "@/images/quickbooks.svg";
 import { trpc } from "@/trpc/client";
@@ -72,30 +73,29 @@ export default function QuickbooksRow() {
   });
 
   const saveMutation = useMutation({
-    mutationFn: async () => {
-      await form.handleSubmit(async (data) => {
-        await Promise.all([
-          updateQuickbooksConfiguration.mutateAsync({
+    mutationFn: async (data: QuickbooksFormValues) => {
+      await Promise.all([
+        updateQuickbooksConfiguration.mutateAsync({
+          companyId: company.id,
+          consultingServicesExpenseAccountId: data.consultingServicesExpenseAccountId,
+          flexileFeesExpenseAccountId: data.flexileFeesExpenseAccountId,
+          equityCompensationExpenseAccountId: data.equityCompensationExpenseAccountId,
+          defaultBankAccountId: data.defaultBankAccountId,
+        }),
+        ...Object.entries(data.expenseCategoryAccounts).map(([id, accountId]) =>
+          updateExpenseCategory.mutateAsync({
             companyId: company.id,
-            consultingServicesExpenseAccountId: data.consultingServicesExpenseAccountId,
-            flexileFeesExpenseAccountId: data.flexileFeesExpenseAccountId,
-            equityCompensationExpenseAccountId: data.equityCompensationExpenseAccountId,
-            defaultBankAccountId: data.defaultBankAccountId,
+            id: BigInt(id),
+            expenseAccountId: accountId,
           }),
-          ...Object.entries(data.expenseCategoryAccounts).map(([id, accountId]) =>
-            updateExpenseCategory.mutateAsync({
-              companyId: company.id,
-              id: BigInt(id),
-              expenseAccountId: accountId,
-            }),
-          ),
-        ]);
-        setShowAccountsModal(false);
-        void refetch();
-      })();
+        ),
+      ]);
+      setShowAccountsModal(false);
+      void refetch();
     },
     onSuccess: () => setTimeout(() => saveMutation.reset(), 2000),
   });
+  const submit = form.handleSubmit((values) => saveMutation.mutate(values));
 
   const expenseAccountOptions = (quickbooksIntegration?.expenseAccounts ?? []).map((account) => ({
     label: account.name,
@@ -132,7 +132,7 @@ export default function QuickbooksRow() {
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold">
-              <img src={quickbooksLogo.src} className="inline size-6" alt="" />
+              <Image src={quickbooksLogo.src} className="inline size-6" alt="" />
               &ensp;QuickBooks
             </h2>
             {quickbooksIntegration?.status === "active" ? <Status variant="success">Connected</Status> : null}
@@ -173,70 +173,65 @@ export default function QuickbooksRow() {
             <DialogTitle>Set up QuickBooks integration</DialogTitle>
           </DialogHeader>
           <Form {...form}>
-            {expenseAccountFields.map((name) => (
+            <form onSubmit={(e) => void submit(e)}>
+              {expenseAccountFields.map((name) => (
+                <FormField
+                  key={name}
+                  control={form.control}
+                  name={name}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Expense account for {expenseAccountLabels[name]}</FormLabel>
+                      <FormControl>
+                        <ComboBox
+                          options={expenseAccountOptions}
+                          value={field.value ?? ""}
+                          onChange={(value) => field.onChange(value)}
+                          placeholder="Select an account"
+                        />
+                      </FormControl>
+                      {name === "consultingServicesExpenseAccountId" ? (
+                        <FormDescription>This can be overridden for individual roles.</FormDescription>
+                      ) : null}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ))}
+
+              <div className="border-b border-gray-100" />
+
               <FormField
-                key={name}
                 control={form.control}
-                name={name}
+                name="defaultBankAccountId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Expense account for {expenseAccountLabels[name]}</FormLabel>
+                    <FormLabel>Bank account</FormLabel>
                     <FormControl>
-                      <Select value={field.value ?? ""} onValueChange={field.onChange}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select an account" />
-                        </SelectTrigger>
-                        <SelectContent align="center">
-                          {expenseAccountOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <ComboBox
+                        options={bankAccountOptions}
+                        value={field.value}
+                        onChange={(value) => field.onChange(value)}
+                        placeholder="Select an account"
+                      />
                     </FormControl>
-                    {name === "consultingServicesExpenseAccountId" ? (
-                      <FormDescription>This can be overridden for individual roles.</FormDescription>
-                    ) : null}
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            ))}
-
-            <div className="border-b border-gray-100" />
-
-            <FormField
-              control={form.control}
-              name="defaultBankAccountId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Bank account</FormLabel>
-                  <FormControl>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select an account" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {bankAccountOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="mt-6 flex justify-between">
-              <div className="ml-auto flex gap-2">
-                <MutationButton mutation={saveMutation} loadingText="Saving..." successText="Saved!">
-                  Save
-                </MutationButton>
+              <div className="mt-6 flex justify-between">
+                <div className="ml-auto flex gap-2">
+                  <MutationStatusButton
+                    mutation={saveMutation}
+                    type="submit"
+                    loadingText="Saving..."
+                    successText="Saved!"
+                  >
+                    Save
+                  </MutationStatusButton>
+                </div>
               </div>
-            </div>
+            </form>
           </Form>
         </DialogContent>
       </Dialog>

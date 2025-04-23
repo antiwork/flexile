@@ -10,11 +10,13 @@ export enum DocumentType {
   ShareCertificate,
   TaxDocument,
   ExerciseNotice,
+  BoardConsent,
 }
 
 export enum DocumentTemplateType {
   ConsultingContract = 0,
   EquityPlanContract,
+  BoardConsent,
 }
 
 export enum RoleApplicationStatus {
@@ -34,4 +36,10 @@ export enum TaxClassification {
   CCorporation = 0,
   SCorporation,
   Partnership,
+}
+
+export enum BoardConsentStatus {
+  Pending = "pending",
+  LawyerApproved = "lawyer_approved",
+  BoardApproved = "board_approved",
 }

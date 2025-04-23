@@ -3,6 +3,13 @@
 class EquityAllocation < ApplicationRecord
   belongs_to :company_worker, foreign_key: :company_contractor_id
 
+  enum :status, {
+    pending_confirmation: "pending_confirmation",
+    pending_grant_creation: "pending_grant_creation",
+    pending_approval: "pending_approval",
+    approved: "approved",
+  }
+
   validates :equity_percentage, allow_nil: true,
                                 numericality: {
                                   only_integer: true,
@@ -15,6 +22,7 @@ class EquityAllocation < ApplicationRecord
   validate :equity_percentage_cannot_be_unset
   validate :locked_equity_percentage_cannot_change, on: :update
   validate :equity_percentage_must_be_set_if_locked
+  validates :status, inclusion: { in: statuses.values }
 
   private
     def equity_percentage_cannot_be_unset

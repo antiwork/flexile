@@ -17,7 +17,6 @@ RSpec.describe EquityGrantCreation do
       period_started_at: Date.new(2018, 1, 1),
       period_ended_at: Date.new(2018, 12, 31),
       issue_date_relationship: "employee",
-      board_approval_date: Date.new(2020, 1, 1),
       option_grant_type: "iso",
       option_expiry_months: 36,
       vesting_trigger: "invoice_paid",
@@ -73,7 +72,7 @@ RSpec.describe EquityGrantCreation do
     expect(result.equity_grant.issued_at).to be_within(2.seconds).of(Time.current)
     expect(result.equity_grant.expires_at).to be_within(2.seconds).of(Time.current + 36.months)
     expect(result.equity_grant.issue_date_relationship_employee?).to be(true)
-    expect(result.equity_grant.board_approval_date).to eq(Date.new(2020, 1, 1))
+    expect(result.equity_grant.board_approval_date).to eq(nil)
     expect(result.equity_grant.option_grant_type_iso?).to be(true)
     expect(result.equity_grant.vesting_trigger_invoice_paid?).to be(true)
     expect(result.equity_grant.vesting_events).to be_empty
@@ -146,6 +145,35 @@ RSpec.describe EquityGrantCreation do
     expect(result.success?).to be(true)
     expect(result.equity_grant).to be_persisted
     expect(result.equity_grant.name).to eq("XY12235")
+  end
+
+  it "cancels the existing grant when the new grant is for the same period" do
+    equity_grant = create(:equity_grant, option_pool:, company_investor:,
+                                         name: "XY12234",
+                                         period_started_at: Date.new(2018, 1, 1),
+                                         period_ended_at: Date.new(2018, 12, 31),
+                                         forfeited_shares: 0,
+                                         vested_shares: 100,
+                                         unvested_shares: 900,
+                                         exercised_shares: 0,
+                                         number_of_shares: 1_000,)
+    company_investor.update!(total_options: 1_000)
+    result = nil
+    expect do
+      result = described_class.new(**args).process
+    end.to change { EquityGrant.count }.by(1)
+       .and change { CompanyInvestorEntity.count }.by(1)
+
+    expect(result.success?).to be(true)
+    expect(equity_grant.reload.vested_shares).to eq(100)
+    expect(equity_grant.unvested_shares).to eq(0)
+    expect(equity_grant.forfeited_shares).to eq(900)
+    expect(equity_grant.equity_grant_transactions.count).to eq(1)
+    expect(equity_grant.equity_grant_transactions.first.transaction_type).to eq("cancellation")
+    expect(equity_grant.equity_grant_transactions.first.forfeited_shares).to eq(900)
+    expect(company_investor.reload.total_options).to eq(1101)
+    expect(option_pool.reload.issued_shares).to eq(1101)
+    expect(option_pool.available_shares).to eq(900)
   end
 
   describe "Option holder name" do

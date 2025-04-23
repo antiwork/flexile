@@ -36,7 +36,9 @@ export const test = baseTest.extend<{
 
 export const expect = baseExpect.extend({
   async toBeValid(locator: Locator) {
-    const actual = await locator.evaluate((el: HTMLInputElement) => el.validity.valid);
+    const actual =
+      (await locator.evaluate((el: HTMLInputElement) => el.validity.valid)) &&
+      (await locator.getAttribute("aria-invalid")) !== "true";
 
     return {
       message: () => `expected element to be ${this.isNot ? "invalid" : "valid"}`,

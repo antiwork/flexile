@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
-import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import { optionGrantTypeDisplayNames, relationshipDisplayNames, vestingTriggerDisplayNames } from "@/app/equity/grants";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
@@ -16,8 +15,9 @@ import Select from "@/components/Select";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { useCurrentCompany } from "@/global";
-import { DocumentTemplateType, trpc } from "@/trpc/client";
+import { trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
+
 const MAX_VESTING_DURATION_IN_MONTHS = 120;
 
 const fieldAttributeName = z.enum([
@@ -27,7 +27,6 @@ const fieldAttributeName = z.enum([
   "issue_date_relationship",
   "option_grant_type",
   "expires_at",
-  "board_approval_date",
   "vesting_commencement_date",
   "vesting_trigger",
   "vesting_schedule_id",
@@ -103,7 +102,6 @@ export default function NewEquityGrant() {
   const [issueDateRelationship, setIssueDateRelationship] = useState<IssueDateRelationship | undefined>();
   const [grantType, setGrantType] = useState<OptionGrantType>("nso");
   const [expiryInMonths, setExpiryInMonths] = useState<number | null>(null);
-  const [boardApprovalDate, setBoardApprovalDate] = useState(today);
   const [vestingTrigger, setVestingTrigger] = useState<VestingTrigger | undefined>();
   const [vestingScheduleId, setVestingScheduleId] = useState<string | undefined>();
   const [vestingCommencementDate, setVestingCommencementDate] = useState(today);
@@ -122,7 +120,6 @@ export default function NewEquityGrant() {
   const [deathExercisePeriodInMonths, setDeathExercisePeriodInMonths] = useState<number | null>(null);
   const [disabilityExercisePeriodInMonths, setDisabilityExercisePeriodInMonths] = useState<number | null>(null);
   const [retirementExercisePeriodInMonths, setRetirementExercisePeriodInMonths] = useState<number | null>(null);
-  const [docusealTemplateId, setDocusealTemplateId] = useState<string | null>(null);
 
   const [errorInfo, setErrorInfo] = useState<ErrorInfo | null>(null);
 
@@ -132,7 +129,6 @@ export default function NewEquityGrant() {
   const relationshipRef = useRef<HTMLSelectElement>(null);
   const grantTypeRef = useRef<HTMLSelectElement>(null);
   const expiryRef = useRef<HTMLInputElement>(null);
-  const boardApprovalRef = useRef<HTMLInputElement>(null);
   const vestingTriggerRef = useRef<HTMLSelectElement>(null);
   const vestingScheduleRef = useRef<HTMLSelectElement>(null);
   const vestingCommencementRef = useRef<HTMLInputElement>(null);
@@ -205,7 +201,6 @@ export default function NewEquityGrant() {
       issueDateRelationship,
       grantType,
       expiryInMonths,
-      boardApprovalDate,
       vestingTrigger,
       vestingScheduleId,
       vestingCommencementDate,
@@ -264,12 +259,6 @@ export default function NewEquityGrant() {
     if (expiryInMonths === null || expiryInMonths < 0) {
       setErrorInfo({ error: "Must be present and greater than or equal to 0.", attribute_name: "expires_at" });
       expiryRef.current?.focus();
-      return false;
-    }
-
-    if (!boardApprovalDate || new Date(boardApprovalDate) > new Date()) {
-      setErrorInfo({ error: "Must be present and must not be a future date.", attribute_name: "board_approval_date" });
-      boardApprovalRef.current?.focus();
       return false;
     }
 
@@ -402,13 +391,13 @@ export default function NewEquityGrant() {
   };
 
   const createEquityGrant = trpc.equityGrants.create.useMutation({
-    onSuccess: async (data) => {
+    onSuccess: async () => {
       await trpcUtils.equityGrants.list.invalidate();
       await trpcUtils.equityGrants.totals.invalidate();
       await trpcUtils.equityGrants.byCountry.invalidate();
       await trpcUtils.capTable.show.invalidate();
       await trpcUtils.documents.list.invalidate();
-      router.push(`/documents?${new URLSearchParams({ sign: data.documentId.toString(), next: "/equity/grants" })}`);
+      router.push(`/equity/grants`);
     },
     onError: (error) => {
       const errorInfoSchema = z.object({
@@ -447,14 +436,12 @@ export default function NewEquityGrant() {
         deathExerciseMonths: deathExercisePeriodInMonths ?? 0,
         disabilityExerciseMonths: disabilityExercisePeriodInMonths ?? 0,
         retirementExerciseMonths: retirementExercisePeriodInMonths ?? 0,
-        boardApprovalDate,
         vestingTrigger: vestingTrigger ?? "scheduled",
         vestingScheduleId: isCustomVestingSchedule ? null : (vestingScheduleId ?? ""),
         vestingCommencementDate: vestingTrigger === "scheduled" ? vestingCommencementDate : null,
         totalVestingDurationMonths: isCustomVestingSchedule ? totalVestingDurationMonths : null,
         cliffDurationMonths: isCustomVestingSchedule ? cliffDurationMonths : null,
         vestingFrequencyMonths: isCustomVestingSchedule ? vestingFrequencyMonths : null,
-        docusealTemplateId: docusealTemplateId ?? "",
       });
     },
   });
@@ -545,17 +532,6 @@ export default function NewEquityGrant() {
                 errorInfo,
                 "If not exercised, options will expire after this period.",
               )}
-            />
-          </fieldset>
-          <fieldset>
-            <Input
-              label="Board approval date"
-              type="date"
-              max={today}
-              value={boardApprovalDate}
-              onChange={setBoardApprovalDate}
-              ref={boardApprovalRef}
-              {...invalidFieldAttrs("board_approval_date", errorInfo)}
             />
           </fieldset>
         </CardContent>
@@ -705,12 +681,6 @@ export default function NewEquityGrant() {
               {...invalidFieldAttrs("retirement_exercise_months", errorInfo)}
             />
           </fieldset>
-          <TemplateSelector
-            selected={docusealTemplateId}
-            setSelected={setDocusealTemplateId}
-            companyId={company.id}
-            type={DocumentTemplateType.EquityPlanContract}
-          />
         </CardContent>
       </FormSection>
       <div className="grid gap-x-5 gap-y-3 md:grid-cols-[25%_1fr]">

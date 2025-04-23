@@ -1,16 +1,16 @@
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Map as ImmutableMap } from "immutable";
 import { set } from "lodash-es";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import Input from "@/components/Input";
-import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import RadioButtons from "@/components/RadioButtons";
-import Select from "@/components/Select";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import {
   CURRENCIES,
   type Currency,
@@ -18,6 +18,7 @@ import {
   currencyCodes,
   supportedCountries,
 } from "@/models/constants";
+import { cn } from "@/utils";
 import { request } from "@/utils/request";
 import { save_bank_account_onboarding_path, wise_account_requirements_path } from "@/utils/routes";
 
@@ -118,6 +119,8 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
   detailsRef.current = details;
   const [errors, setErrors] = useState(new Map<string, string>());
   const previousForms = useRef<Form[] | null>(null);
+  const uid = useId();
+
   const nestedDetails = () => {
     const result = {};
     const values =
@@ -391,102 +394,123 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
   }, [allFields, billingDetails]);
 
   return (
-    <Modal open={open} onClose={onClose} title="Bank account">
-      <Select
-        value={currency}
-        onChange={(value) => setCurrency(z.enum(currencyCodes).parse(value))}
-        options={CURRENCIES.map(({ value, name }) => ({ value, label: name }))}
-        label="Currency"
-      />
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Bank account</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-2">
+          <Label htmlFor={`currency-${uid}`}>Currency</Label>
+          <ComboBox
+            id={`currency-${uid}`}
+            value={currency}
+            onChange={(value) => setCurrency(z.enum(currencyCodes).parse(value))}
+            options={CURRENCIES.map(({ value, name }) => ({ value, label: name }))}
+          />
+        </div>
 
-      {formSwitch ? (
-        <Checkbox
-          checked={(selectedFormIndex !== defaultFormIndex) !== formSwitch.defaultOn}
-          role="switch"
-          label={formSwitch.label}
-          disabled={isPending}
-          onCheckedChange={() => setSelectedFormIndex((prev) => (prev + 1) % 2)}
-        />
-      ) : forms.length > 2 ? (
-        <Select
-          value={selectedFormIndex.toString()}
-          onChange={(value) => setSelectedFormIndex(Number(value))}
-          placeholder="Choose account type"
-          options={forms.map((form, i) => ({ value: i.toString(), label: form.title }))}
-          label="Account Type"
-          disabled={isPending}
-        />
-      ) : null}
+        {formSwitch ? (
+          <Checkbox
+            checked={(selectedFormIndex !== defaultFormIndex) !== formSwitch.defaultOn}
+            role="switch"
+            label={formSwitch.label}
+            disabled={isPending}
+            onCheckedChange={() => setSelectedFormIndex((prev) => (prev + 1) % 2)}
+          />
+        ) : forms.length > 2 ? (
+          <div className="grid gap-2">
+            <Label htmlFor={`form-${uid}`}>Account Type</Label>
+            <ComboBox
+              id={`form-${uid}`}
+              value={selectedFormIndex.toString()}
+              onChange={(value) => setSelectedFormIndex(Number(value))}
+              options={forms.map((form, i) => ({ value: i.toString(), label: form.title }))}
+              disabled={isPending}
+            />
+          </div>
+        ) : null}
 
-      {visibleFields?.map((field) => {
-        if (field.type === "select" || field.type === "radio") {
-          if (!field.valuesAllowed || field.valuesAllowed.length > 5) {
+        {visibleFields?.map((field) => {
+          if (field.type === "select" || field.type === "radio") {
+            const errorMessage = errors.get(field.key);
+            const selectOptions = (field.valuesAllowed ?? []).map(({ key, name }) => ({ value: key, label: name }));
+
+            if (!field.valuesAllowed || field.valuesAllowed.length > 5) {
+              return (
+                <div key={field.key} className="grid gap-2">
+                  <Label
+                    className="leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    htmlFor={field.key}
+                  >
+                    {field.name}
+                  </Label>
+                  <ComboBox
+                    id={field.key}
+                    value={details.get(field.key) ?? ""}
+                    onChange={(value) => {
+                      setDetails((prev) => prev.set(field.key, value));
+                      setTimeout(() => fieldUpdated(field), 0);
+                    }}
+                    modal
+                    options={selectOptions}
+                    disabled={isPending}
+                    className={cn(errors.has(field.key) && "border-red-500 focus-visible:ring-red-500")}
+                  />
+                  {errorMessage ? <div className="text-sm text-red-500">{errorMessage}</div> : null}
+                </div>
+              );
+            }
+
             return (
-              <ComboBox
+              <RadioButtons
                 key={field.key}
                 value={details.get(field.key) ?? ""}
                 onChange={(value) => {
                   setDetails((prev) => prev.set(field.key, value));
                   setTimeout(() => fieldUpdated(field), 0);
                 }}
-                options={field.valuesAllowed ?? []}
-                invalid={errors.has(field.key)}
-                disabled={isPending}
                 label={field.name}
-                help={errors.get(field.key)}
+                options={selectOptions}
+                invalid={errors.has(field.key)}
+                help={errorMessage}
               />
             );
           }
 
           return (
-            <RadioButtons
+            <BankAccountField
               key={field.key}
               value={details.get(field.key) ?? ""}
               onChange={(value) => {
                 setDetails((prev) => prev.set(field.key, value));
                 setTimeout(() => fieldUpdated(field), 0);
               }}
-              label={field.name}
-              options={field.valuesAllowed.map(({ key, name }) => ({ label: name, value: key }))}
+              field={field}
               invalid={errors.has(field.key)}
               help={errors.get(field.key)}
             />
           );
-        }
+        })}
 
-        return (
-          <BankAccountField
-            key={field.key}
-            value={details.get(field.key) ?? ""}
-            onChange={(value) => {
-              setDetails((prev) => prev.set(field.key, value));
-              setTimeout(() => fieldUpdated(field), 0);
-            }}
-            field={field}
-            invalid={errors.has(field.key)}
-            help={errors.get(field.key)}
-          />
-        );
-      })}
-
-      <div className="mt-4 flex items-center justify-between gap-4">
-        {showBillingDetails ? (
-          <Button variant="link" className="mr-auto" onClick={() => setShowBillingDetails(false)}>
-            ← Back
-          </Button>
-        ) : null}
-        <span>Step {showBillingDetails ? 2 : 1} of 2</span>
-        {showBillingDetails ? (
-          <MutationButton mutation={submitMutation} loadingText="Saving bank account...">
-            Save bank account
-          </MutationButton>
-        ) : (
-          <Button disabled={hasVisibleErrors} onClick={() => setShowBillingDetails(true)}>
-            Continue
-          </Button>
-        )}
-      </div>
-    </Modal>
+        <div className="mt-4 flex items-center justify-between gap-4">
+          {showBillingDetails ? (
+            <Button variant="link" className="mr-auto" onClick={() => setShowBillingDetails(false)}>
+              ← Back
+            </Button>
+          ) : null}
+          <span>Step {showBillingDetails ? 2 : 1} of 2</span>
+          {showBillingDetails ? (
+            <MutationButton mutation={submitMutation} loadingText="Saving bank account...">
+              Save bank account
+            </MutationButton>
+          ) : (
+            <Button disabled={hasVisibleErrors} onClick={() => setShowBillingDetails(true)}>
+              Continue
+            </Button>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

@@ -27,6 +27,7 @@ class Document < ApplicationRecord
     share_certificate: 2,
     tax_document: 3,
     exercise_notice: 4,
+    board_consent: 5,
   }
 
   scope :irs_tax_forms, -> { tax_document.where(name: TaxDocument::SUPPORTED_IRS_TAX_FORM_NAMES) }

@@ -2,7 +2,7 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
-import { expect, test } from "@test/index";
+import { expect, test, withinModal } from "@test/index";
 
 test.describe("Document templates", () => {
   test("allows viewing and managing document templates", async ({ page, next }) => {
@@ -27,18 +27,23 @@ test.describe("Document templates", () => {
     });
 
     await login(page, adminUser);
-    await page.goto("/document_templates");
-    await expect(page.locator("tbody tr")).toHaveCount(1);
+    await page.goto("/documents");
+    await page.getByRole("button", { name: "Edit templates" }).click();
+    await withinModal(
+      async (modal) => {
+        await expect(modal.locator("tbody tr")).toHaveCount(1);
+        await modal.getByRole("link", { name: "Consulting agreement" }).click();
+      },
+      { page },
+    );
 
-    await page.getByRole("link", { name: "Consulting agreement" }).click();
     await expect(
       page.getByText("This is our default template. Replace it with your own to fully customize it."),
     ).toBeVisible();
     await expect(page.getByText("Default Consulting Agreement")).toBeVisible();
     await page.getByRole("button", { name: "Replace default template" }).click();
     await expect(page.getByText("Consulting agreement", { exact: true })).toBeVisible();
-    await page.getByRole("link", { name: "Back to templates" }).click();
-    await expect(page.locator("tbody tr")).toHaveCount(1);
+    await page.getByRole("link", { name: "Back to documents" }).click();
 
     next.onFetch(async (request) => {
       if (request.url === "https://api.docuseal.com/templates/pdf") {
@@ -49,17 +54,24 @@ test.describe("Document templates", () => {
         return Response.json({ name: "Equity grant contract", ...docusealData });
       }
     });
-    await page.getByRole("button", { name: "New template" }).click();
-    await expect(
-      page.getByText(
-        "By creating a custom document template, you acknowledge that Flexile shall not be liable for any claims, liabilities, or damages arising from or related to such documents. See our Terms of Service for more details.",
-      ),
-    ).toBeVisible();
-    await page.getByRole("button", { name: "Equity grant contract" }).click();
+    await page.getByRole("button", { name: "Edit templates" }).click();
+    await withinModal(
+      async (modal) => {
+        await expect(modal.locator("tbody tr")).toHaveCount(1);
+        await expect(
+          modal.getByText(
+            "By creating a custom document template, you acknowledge that Flexile shall not be liable for any claims, liabilities, or damages arising from or related to such documents. See our Terms of Service for more details.",
+          ),
+        ).toBeVisible();
+        await modal.getByRole("button", { name: "Equity grant contract" }).click();
+      },
+      { page },
+    );
 
     await expect(page.locator("#title_container").getByText("Equity grant contract")).toBeVisible();
-    await page.getByRole("link", { name: "Back to templates" }).click();
+    await page.getByRole("link", { name: "Back to documents" }).click();
 
-    await expect(page.locator("tbody tr")).toHaveCount(2);
+    await page.getByRole("button", { name: "Edit templates" }).click();
+    await withinModal(async (modal) => expect(modal.locator("tbody tr")).toHaveCount(2), { page });
   });
 });

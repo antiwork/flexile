@@ -6,6 +6,7 @@ import { useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Modal from "@/components/Modal";
+import MutationButton from "@/components/MutationButton";
 import Status from "@/components/Status";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -21,9 +22,10 @@ const typeLabels = {
   [DocumentType.TaxDocument]: "Tax form",
   [DocumentType.ExerciseNotice]: "Exercise notice",
   [DocumentType.EquityPlanContract]: "Equity plan",
+  [DocumentType.BoardConsent]: "Board consent",
 };
 
-type Document = RouterOutput["documents"]["list"]["documents"][number];
+type Document = RouterOutput["documents"]["list"][number];
 
 function DocumentStatus({ document }: { document: Document }) {
   const completedAt = document.signatories.every((signatory) => signatory.signedAt)
@@ -43,8 +45,13 @@ function DocumentStatus({ document }: { document: Document }) {
     case DocumentType.ShareCertificate:
     case DocumentType.ExerciseNotice:
       return <Status variant="success">Issued</Status>;
+    case DocumentType.BoardConsent:
     case DocumentType.ConsultingContract:
     case DocumentType.EquityPlanContract:
+      if (document.type === DocumentType.BoardConsent && !document.lawyerApproved) {
+        return <Status variant="secondary">Waiting approval</Status>;
+      }
+
       return completedAt ? (
         <Status variant="success">Signed</Status>
       ) : (
@@ -64,14 +71,32 @@ const List = ({ userId, documents }: { userId: string | null; documents: Documen
   );
   const [signDocumentParam] = useQueryState("sign");
   const [signDocumentId, setSignDocumentId] = useState<bigint | null>(null);
-  const isSignable = (document: Document): document is SignableDocument =>
-    !!document.docusealSubmissionId && document.signatories.some((signatory) => !signatory.signedAt);
+  const isSignable = (document: Document): document is SignableDocument => {
+    if (document.type === DocumentType.BoardConsent && !document.lawyerApproved) {
+      return false;
+    }
+
+    if (
+      document.type === DocumentType.BoardConsent &&
+      user.activeRole === "administrator" &&
+      !user.roles.administrator?.isBoardMember
+    ) {
+      return false;
+    }
+
+    return !!document.docusealSubmissionId && document.signatories.some((signatory) => !signatory.signedAt);
+  };
+  const isLawyerApprovable = (document: Document): document is SignableDocument =>
+    document.type === DocumentType.BoardConsent && !document.lawyerApproved;
   const signDocument = signDocumentId
-    ? documents.find((document): document is SignableDocument => document.id === signDocumentId && isSignable(document))
+    ? documents.find(
+        (document): document is SignableDocument =>
+          document.id === signDocumentId && (isSignable(document) || isLawyerApprovable(document)),
+      )
     : null;
   useEffect(() => {
     const document = signDocumentParam ? documents.find((document) => document.id === BigInt(signDocumentParam)) : null;
-    if (document && isSignable(document)) setSignDocumentId(document.id);
+    if (document && (isSignable(document) || isLawyerApprovable(document))) setSignDocumentId(document.id);
   }, [documents, signDocumentParam]);
   useEffect(() => {
     if (downloadUrl) window.location.href = downloadUrl;
@@ -84,7 +109,9 @@ const List = ({ userId, documents }: { userId: string | null; documents: Documen
           : columnHelper.display({
               header: "Signer",
               cell: (info) =>
-                assertDefined(info.row.original.signatories.find((signatory) => signatory.title === "Signer")).name,
+                assertDefined(
+                  info.row.original.signatories.find((signatory) => signatory.title !== "Company Representative"),
+                ).name,
             }),
         columnHelper.simple("name", "Document"),
         columnHelper.simple("type", "Type", (value) => typeLabels[value]),
@@ -97,6 +124,19 @@ const List = ({ userId, documents }: { userId: string | null; documents: Documen
           id: "actions",
           cell: (info) => {
             const document = info.row.original;
+
+            if (
+              document.type === DocumentType.BoardConsent &&
+              user.activeRole === "lawyer" &&
+              !document.lawyerApproved
+            ) {
+              return (
+                <Button variant="outline" size="small" onClick={() => setSignDocumentId(document.id)}>
+                  Approve
+                </Button>
+              );
+            }
+
             return (
               <>
                 {isSignable(document) ? (
@@ -145,8 +185,28 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
     companyId: company.id,
   });
   const trpcUtils = trpc.useUtils();
-  const signDocument = trpc.documents.sign.useMutation({
+  const documentLawyerApproval = trpc.documents.approveByLawyer.useMutation({
     onSuccess: async () => {
+      await trpcUtils.documents.list.invalidate();
+      router.push("/documents");
+      onClose();
+    },
+  });
+  const documentMemberApproval = trpc.documents.approveByMember.useMutation({
+    onSuccess: async () => {
+      await trpcUtils.documents.list.invalidate();
+      router.push("/documents");
+      onClose();
+    },
+  });
+  const signDocument = trpc.documents.sign.useMutation({
+    onSuccess: async (data) => {
+      if (data.complete) {
+        documentMemberApproval.mutate({
+          companyId: company.id,
+          id: data.documentId,
+        });
+      }
       await trpcUtils.documents.list.refetch();
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- not ideal, but there's no good way to assert this right now
       if (redirectUrl) router.push(redirectUrl as Route);
@@ -156,14 +216,35 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
 
   return (
     <Modal open onClose={onClose}>
+      {user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent && (
+        <header className="flex justify-end gap-4">
+          <MutationButton
+            mutation={documentLawyerApproval}
+            param={{ companyId: company.id, id: document.id }}
+            loadingText="Approving..."
+            successText="Approved!"
+            errorText="Failed to approve"
+          >
+            Approve
+          </MutationButton>
+        </header>
+      )}
       <DocusealForm
         src={`https://docuseal.com/s/${slug}`}
         readonlyFields={readonlyFields}
+        preview={user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent}
         onComplete={() => {
           const userIsSigner = document.signatories.some(
             (signatory) => signatory.id === user.id && signatory.title === "Signer",
           );
-          const role = userIsSigner ? "Signer" : "Company Representative";
+          const role = userIsSigner
+            ? "Signer"
+            : document.type === DocumentType.BoardConsent
+              ? assertDefined(
+                  document.signatories.find((signatory) => signatory.id === user.id)?.title,
+                  "User is not a board member",
+                )
+              : "Company Representative";
           signDocument.mutate({
             companyId: company.id,
             id: document.id,

@@ -40,7 +40,7 @@ FactoryBot.define do
       end
 
       if evaluator.equity_percentage
-        create(:equity_allocation, company_worker:, equity_percentage: evaluator.equity_percentage)
+        create(:equity_allocation, company_worker:, equity_percentage: evaluator.equity_percentage, status: "approved")
       end
     end
   end

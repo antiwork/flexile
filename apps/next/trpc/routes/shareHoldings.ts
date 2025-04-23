@@ -2,35 +2,30 @@ import { TRPCError } from "@trpc/server";
 import { and, desc, eq, sum } from "drizzle-orm";
 import { pick } from "lodash-es";
 import { z } from "zod";
-import { byExternalId, db, paginate, paginationSchema } from "@/db";
+import { byExternalId, db } from "@/db";
 import { companyInvestors, shareClasses, shareHoldings } from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 
 export const shareHoldingsRouter = createRouter({
-  list: companyProcedure
-    .input(paginationSchema.and(z.object({ investorId: z.string() })))
-    .query(async ({ input, ctx }) => {
-      if (
-        !ctx.companyAdministrator &&
-        !ctx.companyLawyer &&
-        !(ctx.companyInvestor && ctx.companyInvestor.externalId === input.investorId)
-      )
-        throw new TRPCError({ code: "FORBIDDEN" });
+  list: companyProcedure.input(z.object({ investorId: z.string() })).query(async ({ input, ctx }) => {
+    if (
+      !ctx.companyAdministrator &&
+      !ctx.companyLawyer &&
+      !(ctx.companyInvestor && ctx.companyInvestor.externalId === input.investorId)
+    )
+      throw new TRPCError({ code: "FORBIDDEN" });
 
-      const query = db
-        .select({
-          shareClassName: shareClasses.name,
-          ...pick(shareHoldings, "numberOfShares", "sharePriceUsd", "totalAmountInCents", "issuedAt"),
-        })
-        .from(shareHoldings)
-        .innerJoin(companyInvestors, eq(shareHoldings.companyInvestorId, companyInvestors.id))
-        .innerJoin(shareClasses, eq(shareHoldings.shareClassId, shareClasses.id))
-        .where(and(eq(shareClasses.companyId, ctx.company.id), eq(companyInvestors.externalId, input.investorId)))
-        .orderBy(desc(shareHoldings.id));
-      const total = await db.$count(query.as("shareHoldings"));
-
-      return { shareHoldings: await paginate(query, input), total };
-    }),
+    return await db
+      .select({
+        shareClassName: shareClasses.name,
+        ...pick(shareHoldings, "numberOfShares", "sharePriceUsd", "totalAmountInCents", "issuedAt"),
+      })
+      .from(shareHoldings)
+      .innerJoin(companyInvestors, eq(shareHoldings.companyInvestorId, companyInvestors.id))
+      .innerJoin(shareClasses, eq(shareHoldings.shareClassId, shareClasses.id))
+      .where(and(eq(shareClasses.companyId, ctx.company.id), eq(companyInvestors.externalId, input.investorId)))
+      .orderBy(desc(shareHoldings.id));
+  }),
   sumByShareClass: companyProcedure
     .input(z.object({ investorId: z.string().optional() }))
     .query(async ({ input, ctx }) => {
