@@ -30,7 +30,7 @@ const visibleDocuments = (companyId: bigint, userId: bigint | SQLWrapper | undef
   );
 export const documentsRouter = createRouter({
   list: companyProcedure
-    .input(z.object({ userId: z.string().nullable(), year: z.number().optional(), signable: z.boolean().optional() }))
+    .input(z.object({ userId: z.string().nullable(), signable: z.boolean().optional() }))
     .query(async ({ ctx, input }) => {
       if (input.userId !== ctx.user.externalId && !ctx.companyAdministrator && !ctx.companyLawyer)
         throw new TRPCError({ code: "FORBIDDEN" });
@@ -40,7 +40,6 @@ export const documentsRouter = createRouter({
       );
       const where = and(
         visibleDocuments(ctx.company.id, input.userId ? byExternalId(users, input.userId) : undefined),
-        input.year ? eq(documents.year, input.year) : undefined,
         input.signable != null ? (input.signable ? signable : not(signable)) : undefined,
       );
       const rows = await db
@@ -98,19 +97,6 @@ export const documentsRouter = createRouter({
           })),
       }));
     }),
-  years: companyProcedure.input(z.object({ userId: z.string().nullable() })).query(async ({ ctx, input }) => {
-    if (input.userId !== ctx.user.externalId && !ctx.companyAdministrator && !ctx.companyLawyer)
-      throw new TRPCError({ code: "FORBIDDEN" });
-
-    const where = visibleDocuments(ctx.company.id, input.userId ? byExternalId(users, input.userId) : undefined);
-    const rows = await db
-      .selectDistinct(pick(documents, "year"))
-      .from(documents)
-      .innerJoin(documentSignatures, eq(documents.id, documentSignatures.documentId))
-      .where(where)
-      .orderBy(desc(documents.year));
-    return rows.map((row) => row.year);
-  }),
   getUrl: companyProcedure.input(z.object({ id: z.bigint() })).query(async ({ ctx, input }) => {
     const [document] = await db
       .select({ docusealSubmissionId: documents.docusealSubmissionId })

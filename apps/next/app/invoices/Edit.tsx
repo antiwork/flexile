@@ -10,11 +10,11 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import EquityPercentageLockModal from "@/app/invoices/EquityPercentageLockModal";
+import ComboBox from "@/components/ComboBox";
 import DecimalInput from "@/components/DecimalInput";
 import DurationInput from "@/components/DurationInput";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
-import Select from "@/components/Select";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -461,14 +461,14 @@ const Edit = () => {
                       />
                     </TableCell>
                     <TableCell>
-                      <Select
+                      <ComboBox
                         value={expense.category_id.toString()}
                         options={data.company.expenses.categories.map((category) => ({
                           value: category.id.toString(),
                           label: category.name,
                         }))}
                         aria-label="Category"
-                        invalid={expense.errors?.includes("category")}
+                        aria-invalid={expense.errors?.includes("category")}
                         onChange={(value) => updateExpense(rowIndex, { category_id: Number(value) })}
                       />
                     </TableCell>

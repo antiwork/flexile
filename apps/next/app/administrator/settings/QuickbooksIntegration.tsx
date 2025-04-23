@@ -185,8 +185,8 @@ export default function QuickbooksRow() {
                       <FormControl>
                         <ComboBox
                           options={expenseAccountOptions}
-                          value={[field.value ?? ""]}
-                          onChange={(value) => field.onChange(value[0])}
+                          value={field.value ?? ""}
+                          onChange={(value) => field.onChange(value)}
                           placeholder="Select an account"
                         />
                       </FormControl>
@@ -210,8 +210,8 @@ export default function QuickbooksRow() {
                     <FormControl>
                       <ComboBox
                         options={bankAccountOptions}
-                        value={[field.value]}
-                        onChange={(value) => field.onChange(value[0])}
+                        value={field.value}
+                        onChange={(value) => field.onChange(value)}
                         placeholder="Select an account"
                       />
                     </FormControl>
