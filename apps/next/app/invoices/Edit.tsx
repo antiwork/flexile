@@ -364,7 +364,9 @@ const Edit = () => {
                     <>
                       <TableCell>
                         <div className="grid gap-2">
-                          <Label htmlFor={`hours-${rowIndex}`} className="sr-only">Hours</Label>
+                          <Label htmlFor={`hours-${rowIndex}`} className="sr-only">
+                            Hours
+                          </Label>
                           <DurationInput
                             id={`hours-${rowIndex}`}
                             value={item.minutes}

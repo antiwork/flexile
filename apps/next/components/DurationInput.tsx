@@ -23,10 +23,7 @@ const DurationInput = ({ value, onChange, ...props }: DurationInputProps) => {
         const hours = parseFloat(valueSplit[0] ?? "0");
         const minutes = parseFloat(valueSplit[1] ?? "0");
 
-        onChange(
-          Math.floor(isNaN(hours) ? 0 : hours * 60) +
-            (isNaN(minutes) ? 0 : minutes)
-        );
+        onChange(Math.floor(isNaN(hours) ? 0 : hours * 60) + (isNaN(minutes) ? 0 : minutes));
       }}
       placeholder="HH:MM"
     />
