@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Set } from "immutable";
 import { useEffect, useRef, useState } from "react";
 import ComboBox from "@/components/ComboBox";
-import DecimalInput from "@/components/DecimalInput";
+import NumberInput from "@/components/NumberInput";
 import FormSection from "@/components/FormSection";
 import MutationButton from "@/components/MutationButton";
 import { CardContent, CardFooter } from "@/components/ui/card";
@@ -154,6 +154,10 @@ export default function Equity() {
     },
   });
 
+  const [minimumPercentage, setMinimumPercentage] = useState(0);
+  const [maximumPercentage, setMaximumPercentage] = useState(100);
+  const [defaultPercentage, setDefaultPercentage] = useState(0);
+
   return (
     <>
       <FormSection
@@ -162,37 +166,73 @@ export default function Equity() {
       >
         <CardContent>
           <div className="grid gap-4">
-            <div>
+            <div className="grid gap-2">
               <Label htmlFor="share-price">Current share price (USD)</Label>
-              <DecimalInput
+              <NumberInput
                 id="share-price"
                 value={sharePriceInUsd ?? null}
-                onChange={setSharePriceInUsd}
+                onChange={(value) => setSharePriceInUsd(value ?? 0)}
                 invalid={errors.has("sharePriceInUsd")}
                 prefix="$"
                 minimumFractionDigits={2}
+                decimal
               />
             </div>
-            <div>
+            <div className="grid gap-2">
               <Label htmlFor="fmv-price">Current 409A valuation (USD per share)</Label>
-              <DecimalInput
+              <NumberInput
                 id="fmv-price"
                 value={fmvPerShareInUsd ?? null}
-                onChange={setFmvPerShareInUsd}
+                onChange={(value) => setFmvPerShareInUsd(value ?? 0)}
                 invalid={errors.has("fmvPerShareInUsd")}
                 prefix="$"
                 minimumFractionDigits={2}
+                decimal
               />
             </div>
-            <div>
+            <div className="grid gap-2">
               <Label htmlFor="conversion-price">Conversion share price (USD)</Label>
-              <DecimalInput
+              <NumberInput
                 id="conversion-price"
                 value={conversionSharePriceUsd ?? null}
-                onChange={setConversionSharePriceUsd}
+                onChange={(value) => setConversionSharePriceUsd(value ?? 0)}
                 invalid={errors.has("conversionSharePriceUsd")}
                 prefix="$"
                 minimumFractionDigits={2}
+                decimal
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="minimum-allocation">Minimum allocation</Label>
+              <NumberInput
+                id="minimum-allocation"
+                value={minimumPercentage}
+                onChange={(value) => setMinimumPercentage(value ?? 0)}
+                placeholder="0"
+                prefix="%"
+                decimal
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="maximum-allocation">Maximum allocation</Label>
+              <NumberInput
+                id="maximum-allocation"
+                value={maximumPercentage}
+                onChange={(value) => setMaximumPercentage(value ?? 0)}
+                placeholder="100"
+                prefix="%"
+                decimal
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="default-allocation">Default allocation</Label>
+              <NumberInput
+                id="default-allocation"
+                value={defaultPercentage}
+                onChange={(value) => setDefaultPercentage(value ?? 0)}
+                placeholder="0"
+                prefix="%"
+                decimal
               />
             </div>
           </div>

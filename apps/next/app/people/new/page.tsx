@@ -7,8 +7,6 @@ import { parseAsInteger, useQueryState } from "nuqs";
 import React, { useEffect, useState } from "react";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import RoleSelector from "@/app/roles/Selector";
-import DecimalInput from "@/components/DecimalInput";
-import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
 import MutationButton from "@/components/MutationButton";
@@ -22,6 +20,7 @@ import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
 import { AVG_TRIAL_HOURS } from "@/models/constants";
 import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
 import { useOnChange } from "@/utils/useOnChange";
+import FormSection from "@/components/FormSection";
 
 function Create() {
   const company = useCurrentCompany();
@@ -106,27 +105,32 @@ function Create() {
                 label="Skip trial period"
               />
             ) : null}
-            <div>
+            <div className="grid gap-2">
               <Label htmlFor="rate">Rate</Label>
-              <div className="flex items-center gap-1">
-                <DecimalInput id="rate" value={rateUsd} onChange={(value) => setRateUsd(value ?? 0)} prefix="$" />
-                <span className="text-muted-foreground text-sm">
-                  {role?.payRateType === PayRateType.ProjectBased
-                    ? "/ project"
-                    : role?.payRateType === PayRateType.Salary
-                      ? "/ year"
-                      : "/ hour"}
-                </span>
-              </div>
+              <NumberInput
+                id="rate"
+                value={rateUsd}
+                onChange={(value) => setRateUsd(value ?? 0)}
+                prefix="$"
+                suffix={role?.payRateType === PayRateType.ProjectBased
+                  ? "/ project"
+                  : role?.payRateType === PayRateType.Salary
+                    ? "/ year"
+                    : "/ hour"}
+                decimal
+              />
             </div>
             {role?.payRateType === PayRateType.Hourly && (
-              <NumberInput
-                value={hours}
-                onChange={(value) => setHours(value ?? 0)}
-                label="Average hours"
-                placeholder={DEFAULT_WORKING_HOURS_PER_WEEK.toString()}
-                suffix="/ week"
-              />
+              <div className="grid gap-2">
+                <Label htmlFor="hours">Average hours</Label>
+                <NumberInput
+                  id="hours"
+                  value={hours}
+                  onChange={(value) => setHours(value ?? 0)}
+                  placeholder={DEFAULT_WORKING_HOURS_PER_WEEK.toString()}
+                  suffix="/ week"
+                />
+              </div>
             )}
           </div>
 

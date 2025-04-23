@@ -17,7 +17,6 @@ import RoleSelector from "@/app/roles/Selector";
 import { formatAbsencesForUpdate } from "@/app/updates/team/CompanyWorkerUpdate";
 import { Task as CompanyWorkerTask } from "@/app/updates/team/Task";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import DecimalInput from "@/components/DecimalInput";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
@@ -329,9 +328,9 @@ export default function ContractorPage() {
 
       <Modal open={issuePaymentModalOpen} onClose={closeIssuePaymentModal} title="Issue one-time payment">
         <div className="grid gap-4">
-          <div>
+          <div className="grid gap-2">
             <Label htmlFor="payment-amount">Amount</Label>
-            <DecimalInput
+            <NumberInput
               id="payment-amount"
               value={paymentAmountInCents ? paymentAmountInCents / 100 : null}
               onChange={(value) => {
@@ -344,6 +343,7 @@ export default function ContractorPage() {
               }}
               placeholder="Enter amount"
               prefix="$"
+              decimal
             />
           </div>
           <Input
@@ -511,36 +511,35 @@ const DetailsTab = ({
             ) : null}
             <RoleSelector value={selectedRoleId} onChange={setSelectedRoleId} />
             <div className="grid items-start gap-4 md:grid-cols-2">
-              <div>
+              <div className="grid gap-2">
                 <Label htmlFor="pay-rate">Rate</Label>
-                <div className="flex items-center gap-1">
-                  <DecimalInput
-                    id="pay-rate"
-                    value={payRateInSubunits / 100}
-                    onChange={(value) => setPayRateInSubunits((value ?? 0) * 100)}
-                    placeholder="0"
-                    disabled={!!contractor.endedAt}
-                    prefix="$"
-                  />
-                  <span className="text-muted-foreground text-sm">
-                    /{" "}
-                    {contractor.payRateType === PayRateType.ProjectBased
-                      ? "project"
-                      : hoursPerWeek === null
-                        ? "year"
-                        : "hour"}
-                  </span>
-                </div>
+                <NumberInput
+                  id="pay-rate"
+                  value={payRateInSubunits / 100}
+                  onChange={(value) => setPayRateInSubunits((value ?? 0) * 100)}
+                  placeholder="0"
+                  disabled={!!contractor.endedAt}
+                  prefix="$"
+                  suffix={contractor.payRateType === PayRateType.ProjectBased
+                    ? "/ project"
+                    : hoursPerWeek === null
+                      ? "/ year"
+                      : "/ hour"}
+                  decimal
+                />
               </div>
               {contractor.payRateType !== PayRateType.ProjectBased && hoursPerWeek !== null && (
-                <NumberInput
-                  value={hoursPerWeek}
-                  onChange={(value) => setHoursPerWeek(value ?? 0)}
-                  label="Average hours"
-                  placeholder={DEFAULT_WORKING_HOURS_PER_WEEK.toString()}
-                  disabled={!!contractor.endedAt}
-                  suffix="/ week"
-                />
+                <div className="grid gap-2">
+                  <Label htmlFor="hours-per-week">Average hours</Label>
+                  <NumberInput
+                    id="hours-per-week"
+                    value={hoursPerWeek}
+                    onChange={(value) => setHoursPerWeek(value ?? 0)}
+                    placeholder={DEFAULT_WORKING_HOURS_PER_WEEK.toString()}
+                    disabled={!!contractor.endedAt}
+                    suffix="/ week"
+                  />
+                </div>
               )}
             </div>
             {contractor.payRateType !== PayRateType.ProjectBased && company.flags.includes("equity_compensation") && (

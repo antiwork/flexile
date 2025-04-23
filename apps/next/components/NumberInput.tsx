@@ -1,30 +1,164 @@
-import React, { useEffect, useState } from "react";
-import Input from "@/components/Input";
+"use client";
 
+import React, { useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/utils";
+
+const MAXIMUM_FRACTION_DIGITS_ALLOWED_BY_SPEC = 100;
+
+/**
+ * NumberInput component for numeric input with optional decimal support and prefix/suffix.
+ *
+ * This component should be used with a separate Label component and error messages should be
+ * handled outside the component. Example usage:
+ *
+ * ```tsx
+ * <div className="grid gap-2">
+ *   <Label htmlFor="amount">Amount</Label>
+ *   <NumberInput
+ *     id="amount"
+ *     value={amount}
+ *     onChange={setAmount}
+ *     prefix="$"
+ *     decimal
+ *     invalid={hasError}
+ *   />
+ *   {hasError && <p className="text-destructive text-sm">Please enter a valid amount</p>}
+ * </div>
+ * ```
+ */
 const NumberInput = ({
   value,
   onChange,
+  onBlur,
+  onFocus,
+  prefix,
+  suffix,
+  invalid,
+  decimal = false,
+  maximumFractionDigits = MAXIMUM_FRACTION_DIGITS_ALLOWED_BY_SPEC,
+  minimumFractionDigits,
+  className,
+  id,
   ...props
 }: {
   value: number | null;
   onChange: (value: number | null) => void;
-} & Omit<React.ComponentProps<typeof Input>, "value" | "onChange" | "inputMode">) => {
-  const [input, setInput] = useState(value?.toString() ?? "");
-  useEffect(() => setInput(value?.toString() ?? ""), [value]);
+  onBlur?: React.FocusEventHandler<HTMLInputElement>;
+  onFocus?: React.FocusEventHandler<HTMLInputElement>;
+  prefix?: string;
+  suffix?: string;
+  invalid?: boolean;
+  decimal?: boolean;
+  maximumFractionDigits?: number;
+  minimumFractionDigits?: number;
+  id?: string;
+} & Omit<
+  React.ComponentProps<typeof Input>,
+  "value" | "onChange" | "onFocus" | "onBlur" | "inputMode" | "prefix" | "aria-invalid"
+>) => {
+  const [isFocused, setIsFocused] = useState(false);
+  const [inputValue, setInputValue] = useState<string>("");
+
+  const formatDisplayValue = (num: number | null) =>
+    num?.toLocaleString(undefined, {
+      maximumFractionDigits: decimal ? maximumFractionDigits : 0,
+      minimumFractionDigits: decimal ? minimumFractionDigits : 0,
+      useGrouping: false,
+    }) ?? "";
+
+  useEffect(() => {
+    if (!isFocused) {
+      setInputValue(formatDisplayValue(value));
+    }
+  }, [value, isFocused, formatDisplayValue]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const currentInput = e.target.value;
+
+    if (currentInput === "" || currentInput === "-" || (decimal && currentInput === ".")) {
+      setInputValue(currentInput);
+      onChange(null);
+      return;
+    }
+
+    const sanitized = currentInput
+      .replace(decimal ? /[^\d.-]/gu : /[^\d-]/gu, "")
+      .replace(decimal ? /(\..*)\./gu : /\./gu, "$1")
+      .replace(/(?!^)-/gu, "");
+
+    if (sanitized !== currentInput && currentInput !== "-" && (decimal && currentInput !== ".")) {
+      e.target.value = sanitized;
+    }
+
+    let valueToParse = sanitized;
+    if (decimal) {
+      const parts = sanitized.split(".");
+      if (parts[1] && parts[1].length > maximumFractionDigits) {
+        parts[1] = parts[1].slice(0, maximumFractionDigits);
+        valueToParse = parts.join(".");
+        e.target.value = valueToParse;
+      }
+    }
+
+    const parsed = decimal ? parseFloat(valueToParse) : parseInt(valueToParse, 10);
+
+    if (!isNaN(parsed)) {
+      setInputValue(valueToParse);
+      onChange(parsed);
+    } else if (valueToParse === "-") {
+      setInputValue(valueToParse);
+      onChange(null);
+    } else {
+      setInputValue(formatDisplayValue(value));
+      onChange(value);
+    }
+  };
+
+  const handleBlur: React.FocusEventHandler<HTMLInputElement> = (e) => {
+    setIsFocused(false);
+    setInputValue(formatDisplayValue(value));
+    onBlur?.(e);
+  };
+
+  const handleFocus: React.FocusEventHandler<HTMLInputElement> = (e) => {
+    setIsFocused(true);
+    onFocus?.(e);
+    e.target.select();
+  };
+
+  const inputClasses = cn(
+    className,
+    prefix && "pl-7",
+    suffix && "pr-10"
+  );
 
   return (
-    <Input
-      value={input}
-      onChange={(value) => {
-        const newInput = value.replace(/\D/gu, "");
-        setInput(newInput);
+    <div className="relative">
+      <Input
+        id={id}
+        value={inputValue}
+        onChange={handleChange}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        inputMode={decimal ? "decimal" : "numeric"}
+        className={inputClasses}
+        aria-invalid={invalid}
+        {...props}
+      />
 
-        const parsed = parseInt(newInput, 10);
-        onChange(isNaN(parsed) ? null : parsed);
-      }}
-      inputMode="numeric"
-      {...props}
-    />
+      {prefix && (
+        <span className="text-muted-foreground pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm peer-disabled:opacity-50">
+          {prefix}
+        </span>
+      )}
+
+      {suffix && (
+        <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm peer-disabled:opacity-50">
+          {suffix}
+        </span>
+      )}
+    </div>
   );
 };
 

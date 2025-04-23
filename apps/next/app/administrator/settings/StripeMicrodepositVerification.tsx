@@ -4,7 +4,7 @@ import { fromUnixTime } from "date-fns";
 import { Map } from "immutable";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import DecimalInput from "@/components/DecimalInput";
+import NumberInput from "@/components/NumberInput";
 import Input from "@/components/Input";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
@@ -125,12 +125,13 @@ const StripeMicrodepositVerification = () => {
           <div className="grid gap-4">
             <div>
               <Label htmlFor="amount-1">Amount 1</Label>
-              <DecimalInput
+              <NumberInput
                 id="amount-1"
                 value={firstAmount}
-                onChange={setFirstAmount}
+                onChange={(value) => setFirstAmount(value)}
                 invalid={errors.has("firstAmount")}
                 prefix="$"
+                decimal
                 {...(errors.has("firstAmount") && { "aria-invalid": true })}
               />
               {errors.get("firstAmount") && (
@@ -140,12 +141,13 @@ const StripeMicrodepositVerification = () => {
 
             <div>
               <Label htmlFor="amount-2">Amount 2</Label>
-              <DecimalInput
+              <NumberInput
                 id="amount-2"
                 value={secondAmount}
-                onChange={setSecondAmount}
+                onChange={(value) => setSecondAmount(value)}
                 invalid={errors.has("secondAmount")}
                 prefix="$"
+                decimal
                 {...(errors.has("secondAmount") && { "aria-invalid": true })}
               />
               {errors.get("secondAmount") && (

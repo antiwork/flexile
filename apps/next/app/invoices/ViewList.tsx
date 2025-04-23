@@ -8,7 +8,6 @@ import { useMemo, useState } from "react";
 import EquityPercentageLockModal from "@/app/invoices/EquityPercentageLockModal";
 import { StatusWithTooltip } from "@/app/invoices/Status";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import DecimalInput from "@/components/DecimalInput";
 import DurationInput from "@/components/DurationInput";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
@@ -26,6 +25,7 @@ import { request } from "@/utils/request";
 import { company_invoices_path } from "@/utils/routes";
 import { formatDate, formatDuration } from "@/utils/time";
 import { EDITABLE_INVOICE_STATES } from ".";
+import NumberInput from "@/components/NumberInput";
 
 const useData = () => {
   const company = useCurrentCompany();
@@ -225,7 +225,7 @@ const QuickInvoiceSection = ({ disabled }: { disabled?: boolean }) => {
             {isProjectBased ? (
               <div className="grid gap-2">
                 <Label htmlFor="amount-to-bill">Amount to bill</Label>
-                <DecimalInput
+                <NumberInput
                   id="amount-to-bill"
                   value={amountUsd}
                   onChange={setAmountUsd}

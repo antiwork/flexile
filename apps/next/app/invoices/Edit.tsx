@@ -11,7 +11,6 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import EquityPercentageLockModal from "@/app/invoices/EquityPercentageLockModal";
 import ComboBox from "@/components/ComboBox";
-import DecimalInput from "@/components/DecimalInput";
 import DurationInput from "@/components/DurationInput";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
@@ -32,6 +31,7 @@ import {
   new_company_invoice_path,
 } from "@/utils/routes";
 import { LegacyAddress as Address } from ".";
+import NumberInput from "@/components/NumberInput";
 
 const addressSchema = z.object({
   street_address: z.string(),
@@ -380,12 +380,13 @@ const Edit = () => {
                   )}
                   <TableCell>
                     {data.user.project_based ? (
-                      <DecimalInput
+                      <NumberInput
                         value={item.total_amount_cents / 100}
-                        onChange={(value) => updateLineItem(rowIndex, { total_amount_cents: (value ?? 0) * 100 })}
+                        onChange={(value: number | null) => updateLineItem(rowIndex, { total_amount_cents: (value ?? 0) * 100 })}
                         aria-label="Amount"
                         placeholder="0"
                         prefix="$"
+                        decimal
                       />
                     ) : (
                       formatMoneyFromCents(item.total_amount_cents)
@@ -473,13 +474,14 @@ const Edit = () => {
                       />
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
-                      <DecimalInput
+                      <NumberInput
                         value={expense.total_amount_in_cents / 100}
                         placeholder="0"
-                        onChange={(value) => updateExpense(rowIndex, { total_amount_in_cents: (value ?? 0) * 100 })}
+                        onChange={(value: number | null) => updateExpense(rowIndex, { total_amount_in_cents: (value ?? 0) * 100 })}
                         aria-label="Amount"
                         invalid={expense.errors?.includes("amount") ?? false}
                         prefix="$"
+                        decimal
                       />
                     </TableCell>
                     <TableCell>
