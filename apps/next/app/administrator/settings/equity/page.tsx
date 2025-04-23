@@ -154,10 +154,6 @@ export default function Equity() {
     },
   });
 
-  const [minimumPercentage, setMinimumPercentage] = useState(0);
-  const [maximumPercentage, setMaximumPercentage] = useState(100);
-  const [defaultPercentage, setDefaultPercentage] = useState(0);
-
   return (
     <>
       <FormSection
@@ -199,39 +195,6 @@ export default function Equity() {
                 invalid={errors.has("conversionSharePriceUsd")}
                 prefix="$"
                 minimumFractionDigits={2}
-                decimal
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="minimum-allocation">Minimum allocation</Label>
-              <NumberInput
-                id="minimum-allocation"
-                value={minimumPercentage}
-                onChange={(value) => setMinimumPercentage(value ?? 0)}
-                placeholder="0"
-                prefix="%"
-                decimal
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="maximum-allocation">Maximum allocation</Label>
-              <NumberInput
-                id="maximum-allocation"
-                value={maximumPercentage}
-                onChange={(value) => setMaximumPercentage(value ?? 0)}
-                placeholder="100"
-                prefix="%"
-                decimal
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="default-allocation">Default allocation</Label>
-              <NumberInput
-                id="default-allocation"
-                value={defaultPercentage}
-                onChange={(value) => setDefaultPercentage(value ?? 0)}
-                placeholder="0"
-                prefix="%"
                 decimal
               />
             </div>
