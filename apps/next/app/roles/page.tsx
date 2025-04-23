@@ -77,8 +77,12 @@ export default function RolesPage() {
       columnHelper.display({
         id: "actions",
         cell: (info) => (
-          <div className="flex flex-wrap items-center justify-end gap-4">
-            <CopyButton variant="outline" copyText={getRoleUrl(toSlug(info.row.original.name), info.row.original.id)}>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <CopyButton
+              size="small"
+              variant="outline"
+              copyText={getRoleUrl(toSlug(info.row.original.name), info.row.original.id)}
+            >
               <LinkIcon className="size-4" />
               Copy link
             </CopyButton>

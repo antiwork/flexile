@@ -93,7 +93,7 @@ export default function RolePage({ countryCode }: { countryCode: string }) {
       hideHeader
       title={
         <div className="flex flex-col items-center gap-4">
-          <Image src={company.logoUrl ?? ""} className="size-12 justify-self-center rounded-md" alt="" />
+          <Image width={48} height={48} src={company.logoUrl ?? ""} className="rounded-md" alt="" />
           <div>
             {role.name} at {company.name}
           </div>
