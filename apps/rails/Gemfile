@@ -109,7 +109,7 @@ gem "maxmind-geoip2", "~> 1.1"
 
 gem "sidekiq-cron", "~> 2.0"
 
-gem "stripe", "~> 14.0"
+gem "stripe", "~> 15.0"
 
 gem "flipper", "1.3.4"
 

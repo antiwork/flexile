@@ -649,7 +649,7 @@ GEM
       activesupport (>= 6.1)
       sprockets (>= 3.0.0)
     stringio (3.1.6)
-    stripe (14.0.0)
+    stripe (15.0.0)
     strscan (3.1.2)
     super_diff (0.15.0)
       attr_extras (>= 6.2.4)
@@ -766,7 +766,7 @@ DEPENDENCIES
   slack-notifier (~> 2.4)
   sprockets (~> 4.0)
   sprockets-rails (~> 3.4)
-  stripe (~> 14.0)
+  stripe (~> 15.0)
   super_diff (~> 0.15.0)
   timecop (~> 0.9)
   tzinfo-data
