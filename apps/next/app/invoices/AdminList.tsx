@@ -267,7 +267,6 @@ const TasksModal = ({
   onClose: () => void;
   onReject: () => void;
 }) => {
-  const company = useCurrentCompany();
   const isActionable = useIsActionable();
 
   return (

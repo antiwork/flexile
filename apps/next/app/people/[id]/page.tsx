@@ -1,10 +1,10 @@
 "use client";
 import { CheckIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { CheckCircleIcon, DocumentDuplicateIcon, InboxIcon, NoSymbolIcon } from "@heroicons/react/24/outline";
+import { CheckCircleIcon, DocumentDuplicateIcon, InboxIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/react-query";
-import { areIntervalsOverlapping, format, formatISO, isFuture } from "date-fns";
+import { formatISO } from "date-fns";
 import { Decimal } from "decimal.js";
 import { useParams, useRouter } from "next/navigation";
 import { parseAsString, useQueryState } from "nuqs";
@@ -28,12 +28,12 @@ import Tabs from "@/components/Tabs";
 import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { CardContent, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { DEFAULT_WORKING_HOURS_PER_WEEK, MAXIMUM_EQUITY_PERCENTAGE, MINIMUM_EQUITY_PERCENTAGE } from "@/models";
-import { formatDateRange } from "@/models/period";
+
 import type { RouterOutput } from "@/trpc";
 import { PayRateType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
