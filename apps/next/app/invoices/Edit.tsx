@@ -363,17 +363,21 @@ const Edit = () => {
                   {data.user.project_based ? null : (
                     <>
                       <TableCell>
-                        <DurationInput
-                          value={item.minutes}
-                          aria-label="Hours"
-                          invalid={item.errors?.includes("minutes")}
-                          onChange={(value) =>
-                            updateLineItem(rowIndex, {
-                              minutes: value,
-                              total_amount_cents: Math.ceil(item.pay_rate_in_subunits * ((value ?? 0) / 60)),
-                            })
-                          }
-                        />
+                        <div className="grid gap-2">
+                          <Label htmlFor={`hours-${rowIndex}`} className="sr-only">Hours</Label>
+                          <DurationInput
+                            id={`hours-${rowIndex}`}
+                            value={item.minutes}
+                            aria-label="Hours"
+                            aria-invalid={item.errors?.includes("minutes")}
+                            onChange={(value) =>
+                              updateLineItem(rowIndex, {
+                                minutes: value,
+                                total_amount_cents: Math.ceil(item.pay_rate_in_subunits * ((value ?? 0) / 60)),
+                              })
+                            }
+                          />
+                        </div>
                       </TableCell>
                       <TableCell>{`${formatMoneyFromCents(item.pay_rate_in_subunits)} / hour`}</TableCell>
                     </>

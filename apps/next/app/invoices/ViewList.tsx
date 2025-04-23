@@ -237,7 +237,15 @@ const QuickInvoiceSection = ({ disabled }: { disabled?: boolean }) => {
                 />
               </div>
             ) : (
-              <DurationInput value={duration} onChange={setDuration} label="Hours worked" disabled={submit.isPending} />
+              <div className="grid gap-2">
+                <Label htmlFor="quick-invoice-hours">Hours worked</Label>
+                <DurationInput
+                  id="quick-invoice-hours"
+                  value={duration}
+                  onChange={setDuration}
+                  disabled={submit.isPending}
+                />
+              </div>
             )}
             {equityAllocation !== null &&
             equityCalculation.selectedPercentage == null &&
