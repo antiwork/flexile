@@ -149,30 +149,68 @@ RSpec.describe Payment do
     let!(:invoice_integration_record) { create(:integration_record, integratable: invoice, integration:) }
     let(:payment) { create(:payment, invoice:) }
 
-    it "returns the serialized object" do
-      expect(payment.serialize(namespace: "Quickbooks")).to eq(
-        {
-          Line: [
-            {
-              Amount: 60.0,
-              LinkedTxn: [
-                TxnId: invoice_integration_record.integration_external_id,
-                TxnType: "Bill",
-              ],
-            }
-          ],
-          TotalAmt: 60.0,
-          PayType: "Check",
-          CheckPayment: {
-            BankAccountRef: {
-              value: integration.flexile_clearance_bank_account_id,
+    context "when invoice has no paid_at date" do
+      it "returns the serialized object with current date as TxnDate" do
+        expect(payment.serialize(namespace: "Quickbooks")).to eq(
+          {
+            Line: [
+              {
+                Amount: 60.0,
+                LinkedTxn: [
+                  TxnId: invoice_integration_record.integration_external_id,
+                  TxnType: "Bill",
+                ],
+              }
+            ],
+            TotalAmt: 60.0,
+            TxnDate: Date.current.iso8601,
+            PayType: "Check",
+            CheckPayment: {
+              BankAccountRef: {
+                value: integration.flexile_clearance_bank_account_id,
+              },
             },
-          },
-          VendorRef: {
-            value: contractor.integration_external_id,
-          },
-        }.to_json
-      )
+            VendorRef: {
+              value: contractor.integration_external_id,
+            },
+          }.to_json
+        )
+      end
+    end
+
+    context "when invoice has a paid_at date" do
+      let(:paid_date) { Date.new(2025, 1, 15) }
+
+      before do
+        invoice.update!(paid_at: paid_date)
+      end
+
+      it "returns the serialized object with invoice's paid_at date as TxnDate" do
+        expect(payment.serialize(namespace: "Quickbooks")).to eq(
+          {
+            Line: [
+              {
+                Amount: 60.0,
+                LinkedTxn: [
+                  TxnId: invoice_integration_record.integration_external_id,
+                  TxnType: "Bill",
+                ],
+              }
+            ],
+            TotalAmt: 60.0,
+            TxnDate: paid_date.iso8601,
+            PayType: "Check",
+            CheckPayment: {
+              BankAccountRef: {
+                value: integration.flexile_clearance_bank_account_id,
+              },
+            },
+            VendorRef: {
+              value: contractor.integration_external_id,
+            },
+          }.to_json
+        )
+      end
     end
   end
 end
