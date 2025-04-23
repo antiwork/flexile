@@ -66,7 +66,7 @@ const NumberInput = ({
       .replace(decimal ? /(\..*)\./gu : /\./gu, "$1")
       .replace(/(?!^)-/gu, "");
 
-    if (sanitized !== currentInput && currentInput !== "-" && (decimal && currentInput !== ".")) {
+    if (sanitized !== currentInput && currentInput !== "-" && decimal && currentInput !== ".") {
       e.target.value = sanitized;
     }
 
@@ -106,11 +106,7 @@ const NumberInput = ({
     e.target.select();
   };
 
-  const inputClasses = cn(
-    className,
-    prefix && "pl-7",
-    suffix && "pr-10"
-  );
+  const inputClasses = cn(className, prefix && "pl-7", suffix && "pr-10");
 
   return (
     <div className="relative">
@@ -126,17 +122,17 @@ const NumberInput = ({
         {...props}
       />
 
-      {prefix && (
+      {prefix ? (
         <span className="text-muted-foreground pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm peer-disabled:opacity-50">
           {prefix}
         </span>
-      )}
+      ) : null}
 
-      {suffix && (
+      {suffix ? (
         <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm peer-disabled:opacity-50">
           {suffix}
         </span>
-      )}
+      ) : null}
     </div>
   );
 };

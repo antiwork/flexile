@@ -7,6 +7,7 @@ import { parseAsInteger, useQueryState } from "nuqs";
 import React, { useEffect, useState } from "react";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import RoleSelector from "@/app/roles/Selector";
+import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
 import MutationButton from "@/components/MutationButton";
@@ -20,7 +21,6 @@ import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
 import { AVG_TRIAL_HOURS } from "@/models/constants";
 import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
 import { useOnChange } from "@/utils/useOnChange";
-import FormSection from "@/components/FormSection";
 
 function Create() {
   const company = useCurrentCompany();
@@ -112,11 +112,13 @@ function Create() {
                 value={rateUsd}
                 onChange={(value) => setRateUsd(value ?? 0)}
                 prefix="$"
-                suffix={role?.payRateType === PayRateType.ProjectBased
-                  ? "/ project"
-                  : role?.payRateType === PayRateType.Salary
-                    ? "/ year"
-                    : "/ hour"}
+                suffix={
+                  role?.payRateType === PayRateType.ProjectBased
+                    ? "/ project"
+                    : role?.payRateType === PayRateType.Salary
+                      ? "/ year"
+                      : "/ hour"
+                }
                 decimal
               />
             </div>

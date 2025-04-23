@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { z } from "zod";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
+import FormSection from "@/components/FormSection";
 import MainLayout from "@/components/layouts/Main";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
@@ -15,7 +16,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DocumentTemplateType, PayRateType } from "@/db/enums";
 import { trpc } from "@/trpc/client";
-import FormSection from "@/components/FormSection";
 
 export default function CreateCompanyInvitation() {
   const router = useRouter();
@@ -69,9 +69,7 @@ export default function CreateCompanyInvitation() {
                 placeholder="CEO's email"
                 aria-invalid={!!errors["user.email"]}
               />
-              {errors["user.email"] && (
-                <span className="text-destructive text-sm">{errors["user.email"]}</span>
-              )}
+              {errors["user.email"] ? <span className="text-destructive text-sm">{errors["user.email"]}</span> : null}
             </div>
 
             <div className="grid gap-2">
@@ -103,9 +101,9 @@ export default function CreateCompanyInvitation() {
                 onChange={(e) => setRoleName(e.target.value)}
                 aria-invalid={!!errors["company_role.name"]}
               />
-              {errors["company_role.name"] && (
+              {errors["company_role.name"] ? (
                 <span className="text-destructive text-sm">{errors["company_role.name"]}</span>
-              )}
+              ) : null}
             </div>
 
             <RadioButtons

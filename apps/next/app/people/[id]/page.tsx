@@ -520,11 +520,13 @@ const DetailsTab = ({
                   placeholder="0"
                   disabled={!!contractor.endedAt}
                   prefix="$"
-                  suffix={contractor.payRateType === PayRateType.ProjectBased
-                    ? "/ project"
-                    : hoursPerWeek === null
-                      ? "/ year"
-                      : "/ hour"}
+                  suffix={
+                    contractor.payRateType === PayRateType.ProjectBased
+                      ? "/ project"
+                      : hoursPerWeek === null
+                        ? "/ year"
+                        : "/ hour"
+                  }
                   decimal
                 />
               </div>

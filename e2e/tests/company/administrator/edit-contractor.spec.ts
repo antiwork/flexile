@@ -150,8 +150,8 @@ test.describe("Edit contractor", () => {
 
     await page.getByLabel("Name", { exact: true }).fill("Example Role");
 
-    const rateInput = page.getByRole('dialog', { name: 'New role' }).locator('#pay-rate');
-    await rateInput.waitFor({ state: 'visible' });
+    const rateInput = page.getByRole("dialog", { name: "New role" }).locator("#pay-rate");
+    await rateInput.waitFor({ state: "visible" });
     await rateInput.fill("200");
 
     await page.getByRole("button", { name: "Create", exact: true }).click();

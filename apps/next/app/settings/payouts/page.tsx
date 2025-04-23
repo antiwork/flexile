@@ -13,6 +13,7 @@ import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardFooter } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { currencyCodes, sanctionedCountries, supportedCountries } from "@/models/constants";
@@ -23,7 +24,6 @@ import { request } from "@/utils/request";
 import { settings_bank_account_path, settings_bank_accounts_path, settings_dividend_path } from "@/utils/routes";
 import SettingsLayout from "../Layout";
 import BankAccountModal, { type BankAccount, bankAccountSchema } from "./BankAccountModal";
-import { Label } from "@/components/ui/label";
 
 export default function PayoutsPage() {
   const user = useCurrentUser();

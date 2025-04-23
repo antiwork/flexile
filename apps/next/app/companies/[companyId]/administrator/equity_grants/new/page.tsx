@@ -497,9 +497,9 @@ export default function NewEquityGrant() {
                 ref={numberOfSharesRef}
                 {...invalidFieldAttrs("number_of_shares", errorInfo)}
               />
-              {invalidFieldAttrs("number_of_shares", errorInfo).help && (
+              {invalidFieldAttrs("number_of_shares", errorInfo).help ? (
                 <div className="text-destructive text-sm">{invalidFieldAttrs("number_of_shares", errorInfo).help}</div>
-              )}
+              ) : null}
             </div>
           </fieldset>
           <fieldset>
@@ -542,9 +542,9 @@ export default function NewEquityGrant() {
                   "If not exercised, options will expire after this period.",
                 )}
               />
-              {invalidFieldAttrs("expires_at", errorInfo).help && (
+              {invalidFieldAttrs("expires_at", errorInfo).help ? (
                 <div className="text-destructive text-sm">{invalidFieldAttrs("expires_at", errorInfo).help}</div>
-              )}
+              ) : null}
             </div>
           </fieldset>
         </CardContent>
@@ -600,9 +600,11 @@ export default function NewEquityGrant() {
                         ref={totalVestingDurationRef}
                         {...invalidFieldAttrs("total_vesting_duration_months", errorInfo)}
                       />
-                      {invalidFieldAttrs("total_vesting_duration_months", errorInfo).help && (
-                        <div className="text-destructive text-sm">{invalidFieldAttrs("total_vesting_duration_months", errorInfo).help}</div>
-                      )}
+                      {invalidFieldAttrs("total_vesting_duration_months", errorInfo).help ? (
+                        <div className="text-destructive text-sm">
+                          {invalidFieldAttrs("total_vesting_duration_months", errorInfo).help}
+                        </div>
+                      ) : null}
                     </div>
                   </fieldset>
                   <fieldset>
@@ -617,9 +619,11 @@ export default function NewEquityGrant() {
                         ref={cliffDurationRef}
                         {...invalidFieldAttrs("cliff_duration_months", errorInfo)}
                       />
-                      {invalidFieldAttrs("cliff_duration_months", errorInfo).help && (
-                        <div className="text-destructive text-sm">{invalidFieldAttrs("cliff_duration_months", errorInfo).help}</div>
-                      )}
+                      {invalidFieldAttrs("cliff_duration_months", errorInfo).help ? (
+                        <div className="text-destructive text-sm">
+                          {invalidFieldAttrs("cliff_duration_months", errorInfo).help}
+                        </div>
+                      ) : null}
                     </div>
                   </fieldset>
                   <fieldset>
@@ -654,9 +658,11 @@ export default function NewEquityGrant() {
                 ref={voluntaryTerminationRef}
                 {...invalidFieldAttrs("voluntary_termination_exercise_months", errorInfo)}
               />
-              {invalidFieldAttrs("voluntary_termination_exercise_months", errorInfo).help && (
-                <div className="text-destructive text-sm">{invalidFieldAttrs("voluntary_termination_exercise_months", errorInfo).help}</div>
-              )}
+              {invalidFieldAttrs("voluntary_termination_exercise_months", errorInfo).help ? (
+                <div className="text-destructive text-sm">
+                  {invalidFieldAttrs("voluntary_termination_exercise_months", errorInfo).help}
+                </div>
+              ) : null}
             </div>
           </fieldset>
           <fieldset>
@@ -671,9 +677,11 @@ export default function NewEquityGrant() {
                 ref={involuntaryTerminationRef}
                 {...invalidFieldAttrs("involuntary_termination_exercise_months", errorInfo)}
               />
-              {invalidFieldAttrs("involuntary_termination_exercise_months", errorInfo).help && (
-                <div className="text-destructive text-sm">{invalidFieldAttrs("involuntary_termination_exercise_months", errorInfo).help}</div>
-              )}
+              {invalidFieldAttrs("involuntary_termination_exercise_months", errorInfo).help ? (
+                <div className="text-destructive text-sm">
+                  {invalidFieldAttrs("involuntary_termination_exercise_months", errorInfo).help}
+                </div>
+              ) : null}
             </div>
           </fieldset>
           <fieldset>
@@ -688,9 +696,11 @@ export default function NewEquityGrant() {
                 ref={terminationWithCauseRef}
                 {...invalidFieldAttrs("termination_with_cause_exercise_months", errorInfo)}
               />
-              {invalidFieldAttrs("termination_with_cause_exercise_months", errorInfo).help && (
-                <div className="text-destructive text-sm">{invalidFieldAttrs("termination_with_cause_exercise_months", errorInfo).help}</div>
-              )}
+              {invalidFieldAttrs("termination_with_cause_exercise_months", errorInfo).help ? (
+                <div className="text-destructive text-sm">
+                  {invalidFieldAttrs("termination_with_cause_exercise_months", errorInfo).help}
+                </div>
+              ) : null}
             </div>
           </fieldset>
           <fieldset>
@@ -705,9 +715,11 @@ export default function NewEquityGrant() {
                 ref={deathExerciseRef}
                 {...invalidFieldAttrs("death_exercise_months", errorInfo)}
               />
-              {invalidFieldAttrs("death_exercise_months", errorInfo).help && (
-                <div className="text-destructive text-sm">{invalidFieldAttrs("death_exercise_months", errorInfo).help}</div>
-              )}
+              {invalidFieldAttrs("death_exercise_months", errorInfo).help ? (
+                <div className="text-destructive text-sm">
+                  {invalidFieldAttrs("death_exercise_months", errorInfo).help}
+                </div>
+              ) : null}
             </div>
           </fieldset>
           <fieldset>
@@ -722,9 +734,11 @@ export default function NewEquityGrant() {
                 ref={disabilityExerciseRef}
                 {...invalidFieldAttrs("disability_exercise_months", errorInfo)}
               />
-              {invalidFieldAttrs("disability_exercise_months", errorInfo).help && (
-                <div className="text-destructive text-sm">{invalidFieldAttrs("disability_exercise_months", errorInfo).help}</div>
-              )}
+              {invalidFieldAttrs("disability_exercise_months", errorInfo).help ? (
+                <div className="text-destructive text-sm">
+                  {invalidFieldAttrs("disability_exercise_months", errorInfo).help}
+                </div>
+              ) : null}
             </div>
           </fieldset>
           <fieldset>
@@ -739,9 +753,11 @@ export default function NewEquityGrant() {
                 ref={retirementExerciseRef}
                 {...invalidFieldAttrs("retirement_exercise_months", errorInfo)}
               />
-              {invalidFieldAttrs("retirement_exercise_months", errorInfo).help && (
-                <div className="text-destructive text-sm">{invalidFieldAttrs("retirement_exercise_months", errorInfo).help}</div>
-              )}
+              {invalidFieldAttrs("retirement_exercise_months", errorInfo).help ? (
+                <div className="text-destructive text-sm">
+                  {invalidFieldAttrs("retirement_exercise_months", errorInfo).help}
+                </div>
+              ) : null}
             </div>
           </fieldset>
         </CardContent>

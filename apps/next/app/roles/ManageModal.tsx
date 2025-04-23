@@ -186,9 +186,7 @@ const ManageModal = ({
                     : ""
               }
             />
-            {errors.includes("payRateInSubunits") && (
-              <div className="text-destructive text-sm">Rate is required</div>
-            )}
+            {errors.includes("payRateInSubunits") && <div className="text-destructive text-sm">Rate is required</div>}
           </div>
           {expenseAccounts.length > 0 && (
             <div className="grid gap-2">

@@ -12,6 +12,7 @@ import DurationInput from "@/components/DurationInput";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
 import { linkClasses } from "@/components/Link";
+import NumberInput from "@/components/NumberInput";
 import Placeholder from "@/components/Placeholder";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,6 @@ import { request } from "@/utils/request";
 import { company_invoices_path } from "@/utils/routes";
 import { formatDate, formatDuration } from "@/utils/time";
 import { EDITABLE_INVOICE_STATES } from ".";
-import NumberInput from "@/components/NumberInput";
 
 const useData = () => {
   const company = useCurrentCompany();
