@@ -71,7 +71,7 @@ test.describe("New Contractor", () => {
     await page.reload();
     await expect(page.getByText("Create equity plan contract and board consent templates")).not.toBeVisible();
     await page.getByRole("link", { name: "New option grant" }).click();
-    await selectComboboxOption(page, "Recipient", contractorUser.preferredName);
+    await selectComboboxOption(page, "Recipient", contractorUser.preferredName ?? "");
     await page.getByLabel("Number of options").fill("10");
     await selectComboboxOption(page, "Relationship to company", "Consultant");
     await page.getByRole("button", { name: "Create option grant" }).click();
@@ -93,7 +93,7 @@ test.describe("New Contractor", () => {
     );
 
     await page.getByRole("link", { name: "New option grant" }).click();
-    await selectComboboxOption(page, "Recipient", projectBasedUser.preferredName);
+    await selectComboboxOption(page, "Recipient", projectBasedUser.preferredName ?? "");
     await page.getByLabel("Number of options").fill("20");
     await selectComboboxOption(page, "Relationship to company", "Consultant");
     await page.getByRole("button", { name: "Create option grant" }).click();
