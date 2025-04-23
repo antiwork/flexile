@@ -101,15 +101,16 @@ test.describe("invoice creation", () => {
     await page.getByPlaceholder("Description").fill("I worked on invoices");
     await page.getByLabel("Date").fill("2023-08-08");
 
-    await expect(page.locator("footer")).toMatchAriaSnapshot(`
+    const totalsLocator = page.locator("footer > div:last-child");
+    await expect(totalsLocator).toMatchAriaSnapshot(`
       - strong: Total services
       - text: $205
     `);
-    await expect(page.locator("footer")).toMatchAriaSnapshot(`
+    await expect(totalsLocator).toMatchAriaSnapshot(`
       - strong: Swapped for equity (not paid in cash)
       - text: $41
     `);
-    await expect(page.locator("footer")).toMatchAriaSnapshot(`
+    await expect(totalsLocator).toMatchAriaSnapshot(`
       - strong: Net amount in cash
       - text: $164
     `);
@@ -160,15 +161,16 @@ test.describe("invoice creation", () => {
     await page.getByLabel("Amount").fill("1000");
     await page.getByLabel("Date").fill("2023-08-08");
 
-    await expect(page.locator("footer")).toMatchAriaSnapshot(`
+    const projectTotalsLocator = page.locator("footer > div:last-child");
+    await expect(projectTotalsLocator).toMatchAriaSnapshot(`
       - strong: Total services
       - text: $1,000
     `);
-    await expect(page.locator("footer")).toMatchAriaSnapshot(`
+    await expect(projectTotalsLocator).toMatchAriaSnapshot(`
       - strong: Swapped for equity (not paid in cash)
       - text: $500
     `);
-    await expect(page.locator("footer")).toMatchAriaSnapshot(`
+    await expect(projectTotalsLocator).toMatchAriaSnapshot(`
       - strong: Net amount in cash
       - text: $500
     `);
@@ -215,8 +217,9 @@ test.describe("invoice creation", () => {
     await page.getByPlaceholder("Description").fill("I worked on invoices");
     await page.getByLabel("Date").fill("2021-08-08");
 
-    await expect(page.locator("footer")).toMatchAriaSnapshot(`
-      - strong: Total
+    const yearTotalsLocator = page.locator("footer > div:last-child");
+    await expect(yearTotalsLocator).toMatchAriaSnapshot(`
+      - text: Total
       - text: $205
     `);
     await expect(page.getByText("Swapped for equity")).not.toBeVisible();
@@ -225,15 +228,15 @@ test.describe("invoice creation", () => {
     await page.getByLabel("Hours").fill("100:00");
     await page.getByPlaceholder("Description").fill("I worked on invoices");
 
-    await expect(page.locator("footer")).toMatchAriaSnapshot(`
+    await expect(yearTotalsLocator).toMatchAriaSnapshot(`
       - strong: Total services
       - text: $6,000
     `);
-    await expect(page.locator("footer")).toMatchAriaSnapshot(`
+    await expect(yearTotalsLocator).toMatchAriaSnapshot(`
       - strong: Swapped for equity (not paid in cash)
       - text: $1,200
     `);
-    await expect(page.locator("footer")).toMatchAriaSnapshot(`
+    await expect(yearTotalsLocator).toMatchAriaSnapshot(`
       - strong: Net amount in cash
       - text: $4,800
     `);
