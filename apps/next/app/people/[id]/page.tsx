@@ -1,13 +1,7 @@
 "use client";
 import { CheckIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import {
-  CheckCircleIcon,
-  CurrencyDollarIcon,
-  DocumentDuplicateIcon,
-  InboxIcon,
-  NoSymbolIcon,
-} from "@heroicons/react/24/outline";
+import { CheckCircleIcon, DocumentDuplicateIcon, InboxIcon, NoSymbolIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/react-query";
 import { areIntervalsOverlapping, format, formatISO, isFuture } from "date-fns";
@@ -23,7 +17,6 @@ import RoleSelector from "@/app/roles/Selector";
 import { formatAbsencesForUpdate } from "@/app/updates/team/CompanyWorkerUpdate";
 import { Task as CompanyWorkerTask } from "@/app/updates/team/Task";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import DecimalInput from "@/components/DecimalInput";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
@@ -335,20 +328,24 @@ export default function ContractorPage() {
 
       <Modal open={issuePaymentModalOpen} onClose={closeIssuePaymentModal} title="Issue one-time payment">
         <div className="grid gap-4">
-          <DecimalInput
-            value={paymentAmountInCents ? paymentAmountInCents / 100 : null}
-            onChange={(value) => {
-              if (value !== null) {
-                const cents = new Decimal(value).mul(100).toNumber();
-                setPaymentAmountInCents(cents);
-              } else {
-                setPaymentAmountInCents(null);
-              }
-            }}
-            label="Amount"
-            placeholder="Enter amount"
-            prefix="$"
-          />
+          <div className="grid gap-2">
+            <Label htmlFor="payment-amount">Amount</Label>
+            <NumberInput
+              id="payment-amount"
+              value={paymentAmountInCents ? paymentAmountInCents / 100 : null}
+              onChange={(value) => {
+                if (value !== null) {
+                  const cents = new Decimal(value).mul(100).toNumber();
+                  setPaymentAmountInCents(cents);
+                } else {
+                  setPaymentAmountInCents(null);
+                }
+              }}
+              placeholder="Enter amount"
+              prefix="$"
+              decimal
+            />
+          </div>
           <Input
             value={paymentDescription}
             onChange={setPaymentDescription}
@@ -514,24 +511,37 @@ const DetailsTab = ({
             ) : null}
             <RoleSelector value={selectedRoleId} onChange={setSelectedRoleId} />
             <div className="grid items-start gap-4 md:grid-cols-2">
-              <DecimalInput
-                value={payRateInSubunits / 100}
-                onChange={(value) => setPayRateInSubunits((value ?? 0) * 100)}
-                label="Rate"
-                placeholder="0"
-                disabled={!!contractor.endedAt}
-                prefix={<CurrencyDollarIcon className="size-4" />}
-                suffix={`/ ${contractor.payRateType === PayRateType.ProjectBased ? "project" : hoursPerWeek === null ? "year" : "hour"}`}
-              />
-              {contractor.payRateType !== PayRateType.ProjectBased && hoursPerWeek !== null && (
+              <div className="grid gap-2">
+                <Label htmlFor="pay-rate">Rate</Label>
                 <NumberInput
-                  value={hoursPerWeek}
-                  onChange={(value) => setHoursPerWeek(value ?? 0)}
-                  label="Average hours"
-                  placeholder={DEFAULT_WORKING_HOURS_PER_WEEK.toString()}
+                  id="pay-rate"
+                  value={payRateInSubunits / 100}
+                  onChange={(value) => setPayRateInSubunits((value ?? 0) * 100)}
+                  placeholder="0"
                   disabled={!!contractor.endedAt}
-                  suffix="/ week"
+                  prefix="$"
+                  suffix={
+                    contractor.payRateType === PayRateType.ProjectBased
+                      ? "/ project"
+                      : hoursPerWeek === null
+                        ? "/ year"
+                        : "/ hour"
+                  }
+                  decimal
                 />
+              </div>
+              {contractor.payRateType !== PayRateType.ProjectBased && hoursPerWeek !== null && (
+                <div className="grid gap-2">
+                  <Label htmlFor="hours-per-week">Average hours</Label>
+                  <NumberInput
+                    id="hours-per-week"
+                    value={hoursPerWeek}
+                    onChange={(value) => setHoursPerWeek(value ?? 0)}
+                    placeholder={DEFAULT_WORKING_HOURS_PER_WEEK.toString()}
+                    disabled={!!contractor.endedAt}
+                    suffix="/ week"
+                  />
+                </div>
               )}
             </div>
             {contractor.payRateType !== PayRateType.ProjectBased && company.flags.includes("equity_compensation") && (

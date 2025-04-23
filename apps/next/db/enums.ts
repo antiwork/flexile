@@ -43,3 +43,15 @@ export enum BoardConsentStatus {
   LawyerApproved = "lawyer_approved",
   BoardApproved = "board_approved",
 }
+
+export const optionGrantTypes = ["iso", "nso"] as const;
+export const optionGrantVestingTriggers = ["scheduled", "invoice_paid"] as const;
+export const optionGrantIssueDateRelationships = [
+  "employee",
+  "consultant",
+  "investor",
+  "founder",
+  "officer",
+  "executive",
+  "board_member",
+] as const;

@@ -13,6 +13,7 @@ import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardFooter } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { currencyCodes, sanctionedCountries, supportedCountries } from "@/models/constants";
@@ -79,17 +80,20 @@ const DividendSection = () => {
   return (
     <FormSection title="Dividends" onSubmit={e(() => saveMutation.mutate(), "prevent")}>
       <CardContent className="grid gap-4">
-        <NumberInput
-          value={minimumDividendPaymentAmount}
-          onChange={setMinimumDividendPaymentAmount}
-          label="Minimum dividend payout amount"
-          max={data.max_minimum_dividend_payment_in_cents / 100}
-          min={data.min_minimum_dividend_payment_in_cents / 100}
-          step={0.01}
-          placeholder="10"
-          prefix="$"
-          help="Payments below this threshold will be retained."
-        />
+        <div className="grid gap-2">
+          <Label htmlFor="minimum-dividend-payment">Minimum dividend payout amount</Label>
+          <NumberInput
+            id="minimum-dividend-payment"
+            value={minimumDividendPaymentAmount}
+            onChange={setMinimumDividendPaymentAmount}
+            max={data.max_minimum_dividend_payment_in_cents / 100}
+            min={data.min_minimum_dividend_payment_in_cents / 100}
+            step={0.01}
+            placeholder="10"
+            prefix="$"
+          />
+          <p className="text-muted-foreground text-sm">Payments below this threshold will be retained.</p>
+        </div>
       </CardContent>
       <CardFooter className="flex-wrap gap-4">
         <MutationButton type="submit" mutation={saveMutation} loadingText="Saving...">

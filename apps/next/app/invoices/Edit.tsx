@@ -11,9 +11,9 @@ import React, { useRef, useState } from "react";
 import { z } from "zod";
 import EquityPercentageLockModal from "@/app/invoices/EquityPercentageLockModal";
 import ComboBox from "@/components/ComboBox";
-import DecimalInput from "@/components/DecimalInput";
 import DurationInput from "@/components/DurationInput";
 import MainLayout from "@/components/layouts/Main";
+import NumberInput from "@/components/NumberInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -367,29 +367,38 @@ const Edit = () => {
                   {data.user.project_based ? null : (
                     <>
                       <TableCell>
-                        <DurationInput
-                          value={item.minutes}
-                          aria-label="Hours"
-                          invalid={item.errors?.includes("minutes")}
-                          onChange={(value) =>
-                            updateLineItem(rowIndex, {
-                              minutes: value,
-                              total_amount_cents: Math.ceil(item.pay_rate_in_subunits * ((value ?? 0) / 60)),
-                            })
-                          }
-                        />
+                        <div className="grid gap-2">
+                          <Label htmlFor={`hours-${rowIndex}`} className="sr-only">
+                            Hours
+                          </Label>
+                          <DurationInput
+                            id={`hours-${rowIndex}`}
+                            value={item.minutes}
+                            aria-label="Hours"
+                            aria-invalid={item.errors?.includes("minutes")}
+                            onChange={(value) =>
+                              updateLineItem(rowIndex, {
+                                minutes: value,
+                                total_amount_cents: Math.ceil(item.pay_rate_in_subunits * ((value ?? 0) / 60)),
+                              })
+                            }
+                          />
+                        </div>
                       </TableCell>
                       <TableCell>{`${formatMoneyFromCents(item.pay_rate_in_subunits)} / hour`}</TableCell>
                     </>
                   )}
                   <TableCell>
                     {data.user.project_based ? (
-                      <DecimalInput
+                      <NumberInput
                         value={item.total_amount_cents / 100}
-                        onChange={(value) => updateLineItem(rowIndex, { total_amount_cents: (value ?? 0) * 100 })}
+                        onChange={(value: number | null) =>
+                          updateLineItem(rowIndex, { total_amount_cents: (value ?? 0) * 100 })
+                        }
                         aria-label="Amount"
                         placeholder="0"
                         prefix="$"
+                        decimal
                       />
                     ) : (
                       formatMoneyFromCents(item.total_amount_cents)
@@ -477,13 +486,16 @@ const Edit = () => {
                       />
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
-                      <DecimalInput
+                      <NumberInput
                         value={expense.total_amount_in_cents / 100}
                         placeholder="0"
-                        onChange={(value) => updateExpense(rowIndex, { total_amount_in_cents: (value ?? 0) * 100 })}
+                        onChange={(value: number | null) =>
+                          updateExpense(rowIndex, { total_amount_in_cents: (value ?? 0) * 100 })
+                        }
                         aria-label="Amount"
-                        invalid={expense.errors?.includes("amount")}
+                        invalid={expense.errors?.includes("amount") ?? false}
                         prefix="$"
+                        decimal
                       />
                     </TableCell>
                     <TableCell>

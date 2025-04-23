@@ -1,15 +1,13 @@
 import { useEffect, useState } from "react";
-import Input from "@/components/Input";
+import { Input } from "@/components/ui/input";
 import { formatDuration } from "@/utils/time";
 
-const DurationInput = ({
-  value,
-  onChange,
-  ...props
-}: {
+type DurationInputProps = {
   value: number | null;
   onChange: (value: number | null) => void;
-} & Omit<React.ComponentProps<typeof Input>, "value" | "onChange">) => {
+} & Omit<React.ComponentProps<"input">, "value" | "onChange">;
+
+const DurationInput = ({ value, onChange, ...props }: DurationInputProps) => {
   const [rawValue, setRawValue] = useState("");
   useEffect(() => setRawValue(value ? formatDuration(value) : ""), [value]);
 
@@ -17,7 +15,7 @@ const DurationInput = ({
     <Input
       {...props}
       value={rawValue}
-      onChange={setRawValue}
+      onChange={(e) => setRawValue(e.target.value)}
       onBlur={() => {
         if (!rawValue.length) return onChange(null);
 

@@ -16,6 +16,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { PayRateType } from "@/db/enums";
@@ -169,27 +170,34 @@ const ManageModal = ({
           disabled={!!role.id}
         />
         <div className={`grid gap-3 ${expenseAccounts.length > 0 ? "md:grid-cols-2" : ""}`}>
-          <NumberInput
-            value={role.payRateInSubunits / 100}
-            onChange={(value) => updateRole({ payRateInSubunits: (value ?? 0) * 100 })}
-            invalid={errors.includes("payRateInSubunits")}
-            label="Rate"
-            prefix="$"
-            suffix={
-              role.payRateType === PayRateType.Hourly
-                ? "/ hour"
-                : role.payRateType === PayRateType.Salary
-                  ? "/ year"
-                  : undefined
-            }
-          />
-          {expenseAccounts.length > 0 && (
+          <div className="grid gap-2">
+            <Label htmlFor="pay-rate">Rate</Label>
             <NumberInput
-              value={role.capitalizedExpense ?? 0}
-              onChange={(value) => updateRole({ capitalizedExpense: value ?? 0 })}
-              label="Capitalized R&D expense"
-              suffix="%"
+              id="pay-rate"
+              value={role.payRateInSubunits / 100}
+              onChange={(value) => updateRole({ payRateInSubunits: (value ?? 0) * 100 })}
+              invalid={errors.includes("payRateInSubunits")}
+              prefix="$"
+              suffix={
+                role.payRateType === PayRateType.Hourly
+                  ? "/ hour"
+                  : role.payRateType === PayRateType.Salary
+                    ? "/ year"
+                    : ""
+              }
             />
+            {errors.includes("payRateInSubunits") && <div className="text-destructive text-sm">Rate is required</div>}
+          </div>
+          {expenseAccounts.length > 0 && (
+            <div className="grid gap-2">
+              <Label htmlFor="capitalized-expense">Capitalized R&D expense</Label>
+              <NumberInput
+                id="capitalized-expense"
+                value={role.capitalizedExpense ?? 0}
+                onChange={(value) => updateRole({ capitalizedExpense: value ?? 0 })}
+                suffix="%"
+              />
+            </div>
           )}
         </div>
         {role.id && contractorsToUpdate.length > 0 ? (
@@ -219,12 +227,15 @@ const ManageModal = ({
           />
         ) : null}
         {role.id && role.trialEnabled ? (
-          <NumberInput
-            value={role.trialPayRateInSubunits / 100}
-            onChange={(value) => updateRole({ trialPayRateInSubunits: (value ?? 0) * 100 })}
-            label="Rate during trial period"
-            prefix="$"
-          />
+          <div className="grid gap-2">
+            <Label htmlFor="trial-rate">Rate during trial period</Label>
+            <NumberInput
+              id="trial-rate"
+              value={role.trialPayRateInSubunits / 100}
+              onChange={(value) => updateRole({ trialPayRateInSubunits: (value ?? 0) * 100 })}
+              prefix="$"
+            />
+          </div>
         ) : null}
         {role.id ? (
           <Switch
@@ -234,14 +245,20 @@ const ManageModal = ({
           />
         ) : null}
         {role.id && role.expenseCardEnabled ? (
-          <NumberInput
-            value={Number(role.expenseCardSpendingLimitCents) / 100}
-            onChange={(value) => updateRole({ expenseCardSpendingLimitCents: BigInt((value ?? 0) * 100) })}
-            invalid={errors.includes("expenseCardSpendingLimitCents")}
-            label="Limit"
-            prefix="$"
-            suffix="/ month"
-          />
+          <div className="grid gap-2">
+            <Label htmlFor="expense-limit">Limit</Label>
+            <NumberInput
+              id="expense-limit"
+              value={Number(role.expenseCardSpendingLimitCents) / 100}
+              onChange={(value) => updateRole({ expenseCardSpendingLimitCents: BigInt((value ?? 0) * 100) })}
+              invalid={errors.includes("expenseCardSpendingLimitCents")}
+              prefix="$"
+              suffix="/ month"
+            />
+            {errors.includes("expenseCardSpendingLimitCents") && (
+              <div className="text-destructive text-sm">Limit is required</div>
+            )}
+          </div>
         ) : null}
         {role.id && !role.expenseCardEnabled && role.expenseCardsCount > 0 ? (
           <Alert variant="destructive">

@@ -6,7 +6,6 @@ import { addMonths, isFuture, isPast } from "date-fns";
 import { useParams } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import DecimalInput from "@/components/DecimalInput";
 import Figures from "@/components/Figures";
 import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
@@ -18,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -315,33 +315,38 @@ export default function TenderOfferView() {
                       label: `${holding.className} (${holding.count.toLocaleString()} shares)`,
                     }))}
                   />
-                  <NumberInput
-                    value={newBid.numberOfShares}
-                    onChange={(value) => setNewBid({ ...newBid, numberOfShares: value ?? 0 })}
-                    label="Number of shares"
-                    invalid={
-                      (newBid.numberOfShares <= 0 || newBid.numberOfShares > maxShares) && submitMutation.isError
-                    }
-                    help={
-                      (newBid.numberOfShares <= 0 || newBid.numberOfShares > maxShares) && submitMutation.isError
-                        ? `Number of shares must be between 1 and ${maxShares.toLocaleString()}`
-                        : ""
-                    }
-                  />
-                  <DecimalInput
-                    value={newBid.pricePerShare}
-                    onChange={(value) => setNewBid({ ...newBid, pricePerShare: value ?? 0 })}
-                    min={11.38}
-                    label="Price per share"
-                    invalid={newBid.pricePerShare <= 0 && submitMutation.isError}
-                    help={
-                      newBid.pricePerShare <= 0 && submitMutation.isError
-                        ? "Price per share must be greater than 0"
-                        : ""
-                    }
-                    className={newBid.pricePerShare <= 0 && submitMutation.isError ? "error" : ""}
-                    prefix="$"
-                  />
+                  <div className="grid gap-2">
+                    <Label htmlFor="number-of-shares">Number of shares</Label>
+                    <NumberInput
+                      id="number-of-shares"
+                      value={newBid.numberOfShares}
+                      onChange={(value) => setNewBid({ ...newBid, numberOfShares: value ?? 0 })}
+                      invalid={
+                        (newBid.numberOfShares <= 0 || newBid.numberOfShares > maxShares) && submitMutation.isError
+                      }
+                    />
+                    {(newBid.numberOfShares <= 0 || newBid.numberOfShares > maxShares) && submitMutation.isError ? (
+                      <span className="text-destructive text-sm">
+                        Number of shares must be between 1 and {maxShares.toLocaleString()}
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="price-per-share">Price per share</Label>
+                    <NumberInput
+                      id="price-per-share"
+                      value={newBid.pricePerShare}
+                      onChange={(value) => setNewBid({ ...newBid, pricePerShare: value ?? 0 })}
+                      min={11.38}
+                      invalid={newBid.pricePerShare <= 0 && submitMutation.isError}
+                      className={newBid.pricePerShare <= 0 && submitMutation.isError ? "error" : ""}
+                      prefix="$"
+                      decimal
+                    />
+                    {newBid.pricePerShare <= 0 && submitMutation.isError ? (
+                      <span className="text-destructive text-sm">Price per share must be greater than 0</span>
+                    ) : null}
+                  </div>
                   {totalAmount > 0 && (
                     <div className="info">
                       <strong>Total amount:</strong> {formatMoney(totalAmount)}
