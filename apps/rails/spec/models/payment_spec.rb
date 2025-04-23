@@ -180,7 +180,7 @@ RSpec.describe Payment do
 
     context "when invoice has a paid_at date" do
       let(:paid_date) { Date.new(2025, 1, 15) }
-      
+
       before do
         invoice.update!(paid_at: paid_date)
       end
