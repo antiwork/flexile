@@ -17,7 +17,7 @@ const ComboBox = ({
   ...props
 }: { options: { value: string; label: string }[]; placeholder?: string; modal?: boolean } & (
   | { multiple: true; value: string[]; onChange: (value: string[]) => void }
-  | { multiple?: false; value: string | null; onChange: (value: string) => void }
+  | { multiple?: false; value: string | null | undefined; onChange: (value: string) => void }
 ) &
   Omit<React.ComponentProps<typeof Button>, "value" | "onChange">) => {
   const [open, setOpen] = React.useState(false);
@@ -65,7 +65,7 @@ const ComboBox = ({
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      multiple ? (value.includes(option.value) ? "opacity-100" : "opacity-0") : option.value === value,
+                      multiple ? value.includes(option.value) : option.value === value ? "opacity-100" : "opacity-0",
                     )}
                   />
                   {option.label}

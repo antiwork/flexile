@@ -6,7 +6,7 @@ const NumberInput = ({
   onChange,
   ...props
 }: {
-  value: number | null;
+  value: number | null | undefined;
   onChange: (value: number | null) => void;
 } & Omit<React.ComponentProps<typeof Input>, "value" | "onChange" | "inputMode">) => {
   const [input, setInput] = useState(value?.toString() ?? "");

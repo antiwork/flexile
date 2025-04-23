@@ -31,11 +31,11 @@ const formSchema = z.object({
   optionGrantType: z.enum(optionGrantTypes),
   optionExpiryMonths: z.number().min(0),
   vestingTrigger: z.enum(optionGrantVestingTriggers),
-  vestingScheduleId: z.string().nullable(),
-  vestingCommencementDate: z.string().nullable(),
-  totalVestingDurationMonths: z.number().nullable(),
-  cliffDurationMonths: z.number().nullable(),
-  vestingFrequencyMonths: z.string().nullable(),
+  vestingScheduleId: z.string().nullish(),
+  vestingCommencementDate: z.string().nullish(),
+  totalVestingDurationMonths: z.number().nullish(),
+  cliffDurationMonths: z.number().nullish(),
+  vestingFrequencyMonths: z.string().nullish(),
   voluntaryTerminationExerciseMonths: z.number().min(0),
   involuntaryTerminationExerciseMonths: z.number().min(0),
   terminationWithCauseExerciseMonths: z.number().min(0),
@@ -68,6 +68,7 @@ export default function NewEquityGrant() {
       numberOfShares: 0,
       optionGrantType: "nso",
       vestingCommencementDate: today,
+      vestingTrigger: "invoice_paid",
     },
     context: {
       optionPools: data.optionPools,
@@ -149,7 +150,7 @@ export default function NewEquityGrant() {
           return form.setError("totalVestingDurationMonths", {
             message: `Must not be more than ${MAX_VESTING_DURATION_IN_MONTHS} months (${MAX_VESTING_DURATION_IN_MONTHS / 12} years).`,
           });
-        if (values.cliffDurationMonths === null || values.cliffDurationMonths < 0)
+        if (values.cliffDurationMonths == null || values.cliffDurationMonths < 0)
           return form.setError("cliffDurationMonths", { message: "Must be present and greater than or equal to 0." });
         if (values.cliffDurationMonths >= values.totalVestingDurationMonths)
           return form.setError("cliffDurationMonths", { message: "Must be less than total vesting duration." });
@@ -160,7 +161,15 @@ export default function NewEquityGrant() {
       }
     }
 
-    await createEquityGrant.mutateAsync({ companyId: company.id, ...values });
+    await createEquityGrant.mutateAsync({
+      companyId: company.id,
+      ...values,
+      totalVestingDurationMonths: values.totalVestingDurationMonths ?? null,
+      cliffDurationMonths: values.cliffDurationMonths ?? null,
+      vestingFrequencyMonths: values.vestingFrequencyMonths ?? null,
+      vestingCommencementDate: values.vestingCommencementDate ?? null,
+      vestingScheduleId: values.vestingScheduleId ?? null,
+    });
   });
 
   return (
@@ -172,8 +181,9 @@ export default function NewEquityGrant() {
         </Button>
       }
     >
+      {/*TODO use a <form> here after FormSection is cleaned up*/}
       <Form {...form}>
-        <form onSubmit={(e) => void submit(e)}>
+        <form onSubmit={(e) => void submit(e)} className="grid gap-6">
           <FormSection title="Grant details">
             <CardContent className="grid gap-4">
               <FormField
@@ -285,10 +295,7 @@ export default function NewEquityGrant() {
                   <FormItem>
                     <FormLabel>Expiry</FormLabel>
                     <FormControl>
-                      <div className="flex items-center">
-                        <NumberInput {...field} />
-                        <span className="ml-2 text-gray-600">months</span>
-                      </div>
+                      <NumberInput {...field} suffix="months" />
                     </FormControl>
                     <FormMessage />
                     <FormDescription>If not exercised, options will expire after this period.</FormDescription>
@@ -370,10 +377,7 @@ export default function NewEquityGrant() {
                           <FormItem>
                             <FormLabel>Total vesting duration</FormLabel>
                             <FormControl>
-                              <div className="flex items-center">
-                                <NumberInput {...field} />
-                                <span className="ml-2 text-gray-600">months</span>
-                              </div>
+                              <NumberInput {...field} suffix="months" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -387,10 +391,7 @@ export default function NewEquityGrant() {
                           <FormItem>
                             <FormLabel>Cliff period</FormLabel>
                             <FormControl>
-                              <div className="flex items-center">
-                                <NumberInput {...field} />
-                                <span className="ml-2 text-gray-600">months</span>
-                              </div>
+                              <NumberInput {...field} suffix="months" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -434,10 +435,7 @@ export default function NewEquityGrant() {
                   <FormItem>
                     <FormLabel>Voluntary termination exercise period</FormLabel>
                     <FormControl>
-                      <div className="flex items-center">
-                        <NumberInput {...field} />
-                        <span className="ml-2 text-gray-600">months</span>
-                      </div>
+                      <NumberInput {...field} suffix="months" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -451,10 +449,7 @@ export default function NewEquityGrant() {
                   <FormItem>
                     <FormLabel>Involuntary termination exercise period</FormLabel>
                     <FormControl>
-                      <div className="flex items-center">
-                        <NumberInput {...field} />
-                        <span className="ml-2 text-gray-600">months</span>
-                      </div>
+                      <NumberInput {...field} suffix="months" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -468,10 +463,7 @@ export default function NewEquityGrant() {
                   <FormItem>
                     <FormLabel>Termination with cause exercise period</FormLabel>
                     <FormControl>
-                      <div className="flex items-center">
-                        <NumberInput {...field} />
-                        <span className="ml-2 text-gray-600">months</span>
-                      </div>
+                      <NumberInput {...field} suffix="months" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -485,10 +477,7 @@ export default function NewEquityGrant() {
                   <FormItem>
                     <FormLabel>Death exercise period</FormLabel>
                     <FormControl>
-                      <div className="flex items-center">
-                        <NumberInput {...field} />
-                        <span className="ml-2 text-gray-600">months</span>
-                      </div>
+                      <NumberInput {...field} suffix="months" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -502,10 +491,7 @@ export default function NewEquityGrant() {
                   <FormItem>
                     <FormLabel>Disability exercise period</FormLabel>
                     <FormControl>
-                      <div className="flex items-center">
-                        <NumberInput {...field} />
-                        <span className="ml-2 text-gray-600">months</span>
-                      </div>
+                      <NumberInput {...field} suffix="months" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -519,10 +505,7 @@ export default function NewEquityGrant() {
                   <FormItem>
                     <FormLabel>Retirement exercise period</FormLabel>
                     <FormControl>
-                      <div className="flex items-center">
-                        <NumberInput {...field} />
-                        <span className="ml-2 text-gray-600">months</span>
-                      </div>
+                      <NumberInput {...field} suffix="months" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
