@@ -162,6 +162,7 @@ RSpec.describe Payment do
             }
           ],
           TotalAmt: 60.0,
+          TxnDate: Date.current.iso8601,
           PayType: "Check",
           CheckPayment: {
             BankAccountRef: {
