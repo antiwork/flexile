@@ -7,7 +7,6 @@ import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { companies } from "@/db/schema";
-import { disconnectSlack } from "@/lib/data/company";
 import { handleAssistantThreadMessage, handleMessage, isAgentThread } from "@/lib/slack/agent/handleMessages";
 import { verifySlackRequest } from "@/lib/slack/client";
 
@@ -29,7 +28,16 @@ export const POST = async (request: Request) => {
         where: and(eq(companies.slackTeamId, data.team_id), eq(companies.slackBotUserId, userId)),
       });
 
-      if (company) await disconnectSlack(company.id);
+      if (company) {
+        await db
+          .update(companies)
+          .set({
+            slackBotUserId: null,
+            slackBotToken: null,
+            slackTeamId: null,
+          })
+          .where(eq(companies.id, company.id));
+      }
     }
     return new Response(null, { status: 200 });
   }
