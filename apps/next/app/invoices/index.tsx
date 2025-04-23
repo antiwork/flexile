@@ -183,9 +183,7 @@ export const RejectModal = ({
       }
     >
       <div className="grid gap-2">
-        <Label htmlFor="reject-reason">
-          Explain why the invoice was rejected and how to fix it (optional)
-        </Label>
+        <Label htmlFor="reject-reason">Explain why the invoice was rejected and how to fix it (optional)</Label>
         <Textarea
           id="reject-reason"
           value={reason}

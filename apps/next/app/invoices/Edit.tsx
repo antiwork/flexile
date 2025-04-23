@@ -18,8 +18,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
@@ -520,20 +520,16 @@ const Edit = () => {
             />
             <div className="flex flex-col gap-2 md:self-start">
               {canManageExpenses || equityCalculation.amountInCents > 0 ? (
-                <>
-                  <div className="flex flex-col">
-                    <strong>Total services</strong>
-                    <span>{formatMoneyFromCents(totalServicesAmountInCents)}</span>
-                  </div>
-                </>
+                <div className="flex flex-col">
+                  <strong>Total services</strong>
+                  <span>{formatMoneyFromCents(totalServicesAmountInCents)}</span>
+                </div>
               ) : null}
               {canManageExpenses ? (
-                <>
-                  <div className="flex flex-col">
-                    <strong>Total expenses</strong>
-                    <span>{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
-                  </div>
-                </>
+                <div className="flex flex-col">
+                  <strong>Total expenses</strong>
+                  <span>{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
+                </div>
               ) : null}
               {equityCalculation.amountInCents > 0 ? (
                 <>
