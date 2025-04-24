@@ -7,22 +7,24 @@ import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import FormSection from "@/components/FormSection";
 import { MutationStatusButton } from "@/components/MutationButton";
+import { CardContent, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { CardContent, CardFooter } from "@/components/ui/card";
 import { useCurrentCompany } from "@/global";
 import { usStates } from "@/models";
 import { trpc } from "@/trpc/client";
 
 const formSchema = z.object({
   name: z.string().min(1, "This field is required."),
-  taxId: z.string()
+  taxId: z
+    .string()
     .min(1, "This field is required.")
-    .refine(val => val.replace(/\D/gu, "").length === 9, "Please check that your EIN is 9 numbers long.")
-    .refine(val => !/^(\d)\1{8}$/u.test(val.replace(/\D/gu, "")), "Your EIN can't have all identical digits."),
-  phoneNumber: z.string()
+    .refine((val) => val.replace(/\D/gu, "").length === 9, "Please check that your EIN is 9 numbers long.")
+    .refine((val) => !/^(\d)\1{8}$/u.test(val.replace(/\D/gu, "")), "Your EIN can't have all identical digits."),
+  phoneNumber: z
+    .string()
     .min(1, "This field is required.")
-    .refine(val => val.replace(/\D/gu, "").length === 10, "Please enter a valid U.S. phone number."),
+    .refine((val) => val.replace(/\D/gu, "").length === 10, "Please enter a valid U.S. phone number."),
   streetAddress: z.string().min(1, "This field is required."),
   city: z.string().min(1, "This field is required."),
   state: z.string().min(1, "This field is required."),
@@ -51,9 +53,9 @@ export default function Details() {
   const updateSettings = trpc.companies.update.useMutation();
   const saveMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
-      await updateSettings.mutateAsync({ 
-        companyId: company.id, 
-        ...values 
+      await updateSettings.mutateAsync({
+        companyId: company.id,
+        ...values,
       });
       await utils.companies.settings.invalidate();
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
@@ -97,7 +99,7 @@ export default function Details() {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="taxId"
@@ -105,8 +107,8 @@ export default function Details() {
                 <FormItem>
                   <FormLabel>EIN</FormLabel>
                   <FormControl>
-                    <Input 
-                      {...field} 
+                    <Input
+                      {...field}
                       placeholder="XX-XXXXXXX"
                       onChange={(e) => field.onChange(formatTaxId(e.target.value))}
                     />
@@ -115,7 +117,7 @@ export default function Details() {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="phoneNumber"
@@ -123,8 +125,8 @@ export default function Details() {
                 <FormItem>
                   <FormLabel>Phone number</FormLabel>
                   <FormControl>
-                    <Input 
-                      {...field} 
+                    <Input
+                      {...field}
                       placeholder="(000) 000-0000"
                       onChange={(e) => field.onChange(formatPhoneNumber(e.target.value))}
                     />
@@ -133,7 +135,7 @@ export default function Details() {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="streetAddress"
@@ -147,7 +149,7 @@ export default function Details() {
                 </FormItem>
               )}
             />
-            
+
             <div className="grid gap-3 md:grid-cols-3">
               <FormField
                 control={form.control}
@@ -162,7 +164,7 @@ export default function Details() {
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="state"
@@ -181,7 +183,7 @@ export default function Details() {
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="zipCode"
@@ -196,33 +198,29 @@ export default function Details() {
                 )}
               />
             </div>
-            
+
             <FormField
               name="country"
               render={() => (
                 <FormItem>
                   <FormLabel>Country</FormLabel>
                   <FormControl>
-                    <ComboBox
-                      value=""
-                      onChange={(value) => value}
-                      placeholder="United States"
-                      options={[]}
-                      disabled
-                    />
+                    <ComboBox value="" onChange={(value) => value} placeholder="United States" options={[]} disabled />
                   </FormControl>
-                  <FormMessage>Flexile is currently available only to companies incorporated in the United States.</FormMessage>
+                  <FormMessage>
+                    Flexile is currently available only to companies incorporated in the United States.
+                  </FormMessage>
                 </FormItem>
               )}
             />
           </div>
         </CardContent>
-        
+
         <CardFooter>
-          <MutationStatusButton 
-            mutation={saveMutation} 
+          <MutationStatusButton
+            mutation={saveMutation}
             type="submit"
-            loadingText="Saving..." 
+            loadingText="Saving..."
             successText="Changes saved"
           >
             Save changes
