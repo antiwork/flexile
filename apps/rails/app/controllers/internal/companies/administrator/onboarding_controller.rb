@@ -84,12 +84,12 @@ class Internal::Companies::Administrator::OnboardingController < Internal::Compa
           unsubscribed: false
         )
       rescue => e
-        Rails.logger.error("Failed to subscribe administrator to Resend: #{e.message}")
+        Rails.logger.error("Failed to subscribe user to Resend: #{e.message}")
         Bugsnag.notify(e) do |event|
           event.add_metadata(:resend, {
             action: "subscribe_administrator_to_newsletter",
             email: Current.user.email,
-            audience_id: ENV["RESEND_AUDIENCE_ID"]
+            audience_id: ENV["RESEND_AUDIENCE_ID"],
           })
         end
       end
