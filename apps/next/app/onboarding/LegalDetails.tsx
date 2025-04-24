@@ -147,6 +147,13 @@ const LegalDetails = <T extends string>({
     },
   });
 
+  const signMutation = useMutation({
+    mutationFn: async (signature: string) => {
+      console.log(`Received signature: ${signature}`);
+      return submit.mutateAsync(form.getValues());
+    }
+  });
+
   const onSubmit = form.handleSubmit((values) => {
     if (data.user.collect_tax_info && !values.tax_id) {
       setSignModalOpen(true);
@@ -337,11 +344,7 @@ const LegalDetails = <T extends string>({
             isForeignUser={data.user.is_foreign}
             isBusiness={isBusinessEntity}
             sticky
-            mutation={useMutation({
-              mutationFn: (_signature: string) => {
-                return submit.mutateAsync(form.getValues());
-              }
-            })}
+            mutation={signMutation}
           />
 
           <footer className="grid items-center gap-2">
