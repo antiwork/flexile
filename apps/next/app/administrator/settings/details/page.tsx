@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
@@ -52,17 +52,15 @@ export default function Details() {
     },
   });
 
-  const updateSettings = trpc.companies.update.useMutation();
-  const saveMutation = useMutation({
-    mutationFn: async (values: z.infer<typeof formSchema>) => {
-      await updateSettings.mutateAsync({ companyId: company.id, ...values });
+  const updateSettings = trpc.companies.update.useMutation({
+    onSuccess: async () => {
       await utils.companies.settings.invalidate();
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      setTimeout(() => updateSettings.reset(), 2000);
     },
-    onSuccess: () => setTimeout(() => saveMutation.reset(), 2000),
   });
 
-  const onSubmit = form.handleSubmit((values) => saveMutation.mutate(values));
+  const onSubmit = form.handleSubmit((values) => updateSettings.mutate({ companyId: company.id, ...values }));
 
   const formatPhoneNumber = (value: string) => {
     const digits = value.replace(/\D/gu, "");
@@ -216,7 +214,7 @@ export default function Details() {
 
         <CardFooter>
           <MutationStatusButton
-            mutation={saveMutation}
+            mutation={updateSettings}
             type="submit"
             loadingText="Saving..."
             successText="Changes saved"
