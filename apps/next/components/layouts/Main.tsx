@@ -2,7 +2,6 @@ import { SignOutButton } from "@clerk/nextjs";
 import {
   ArrowRightStartOnRectangleIcon,
   BriefcaseIcon,
-  BuildingOfficeIcon,
   ChartPieIcon,
   Cog6ToothIcon,
   CurrencyDollarIcon,
@@ -11,21 +10,18 @@ import {
   DocumentTextIcon,
   MagnifyingGlassIcon,
   MegaphoneIcon,
-  UserGroupIcon,
   UserIcon,
   UsersIcon,
 } from "@heroicons/react/24/outline";
 import {
   ArrowPathIcon,
   BriefcaseIcon as SolidBriefcaseIcon,
-  BuildingOfficeIcon as SolidBuildingOfficeIcon,
   ChartPieIcon as SolidChartPieIcon,
   Cog6ToothIcon as SolidCog6ToothIcon,
   CurrencyDollarIcon as SolidCurrencyDollarIcon,
   DocumentDuplicateIcon as SolidDocumentDuplicateIcon,
   DocumentTextIcon as SolidDocumentTextIcon,
   MegaphoneIcon as SolidMegaphoneIcon,
-  UserGroupIcon as SolidUserGroupIcon,
   UserIcon as SolidUserIcon,
   UsersIcon as SolidUsersIcon,
 } from "@heroicons/react/24/solid";
@@ -57,10 +53,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarProvider,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useCurrentUser, useUserStore } from "@/global";
 import defaultCompanyLogo from "@/images/default-company-logo.svg";
@@ -244,104 +238,110 @@ export default function MainLayout({
             <div>
               <header className="border-b bg-gray-200 px-3 pt-8 pb-4 md:px-16">
                 <div className="grid max-w-(--breakpoint-xl) gap-y-8">
-                  {user.companies.length > 0 && (
-                    <search className="relative print:hidden">
-                      <Input
-                        ref={searchInputRef}
-                        value={query}
-                        onChange={setQuery}
-                        className="rounded-full! border-0"
-                        placeholder={isRole("administrator") ? "Search invoices, people..." : "Search invoices"}
-                        role="combobox"
-                        aria-autocomplete="list"
-                        aria-expanded={
-                          !!searchFocused &&
-                          (searchResults?.invoices.length || 0) + (searchResults?.users.length || 0) > 0
-                        }
-                        prefix={<MagnifyingGlassIcon className="size-4" />}
-                        aria-controls={`${uid}results`}
-                        onFocus={() => setSearchFocused(true)}
-                        onBlur={() => setSearchFocused(false)}
-                        onKeyDown={(e) => {
-                          switch (e.key) {
-                            case "Enter":
-                              if ((searchResults?.invoices.length || 0) > 0 || (searchResults?.users.length || 0) > 0) {
-                                const links = searchResultsRef.current?.querySelectorAll("a");
-                                links?.[selectedResultIndex]?.click();
-                              }
-                              break;
-                            case "Escape":
-                              cancelSearch();
-                              break;
-                            case "ArrowDown":
-                              e.preventDefault();
-                              setSelectedResultIndex((prev) =>
-                                prev < (searchResults?.invoices.length || 0) + (searchResults?.users.length || 0) - 1
-                                  ? prev + 1
-                                  : prev,
-                              );
-                              break;
-                            case "ArrowUp":
-                              e.preventDefault();
-                              setSelectedResultIndex((prev) => (prev > 0 ? prev - 1 : prev));
-                              break;
+                  <div className="flex items-center justify-between gap-2">
+                    <SidebarTrigger />
+                    {user.companies.length > 0 && (
+                      <search className="relative flex-1 print:hidden">
+                        <Input
+                          ref={searchInputRef}
+                          value={query}
+                          onChange={setQuery}
+                          className="rounded-full! border-0"
+                          placeholder={isRole("administrator") ? "Search invoices, people..." : "Search invoices"}
+                          role="combobox"
+                          aria-autocomplete="list"
+                          aria-expanded={
+                            !!searchFocused &&
+                            (searchResults?.invoices.length || 0) + (searchResults?.users.length || 0) > 0
                           }
-                        }}
-                      />
+                          prefix={<MagnifyingGlassIcon className="size-4" />}
+                          aria-controls={`${uid}results`}
+                          onFocus={() => setSearchFocused(true)}
+                          onBlur={() => setSearchFocused(false)}
+                          onKeyDown={(e) => {
+                            switch (e.key) {
+                              case "Enter":
+                                if (
+                                  (searchResults?.invoices.length || 0) > 0 ||
+                                  (searchResults?.users.length || 0) > 0
+                                ) {
+                                  const links = searchResultsRef.current?.querySelectorAll("a");
+                                  links?.[selectedResultIndex]?.click();
+                                }
+                                break;
+                              case "Escape":
+                                cancelSearch();
+                                break;
+                              case "ArrowDown":
+                                e.preventDefault();
+                                setSelectedResultIndex((prev) =>
+                                  prev < (searchResults?.invoices.length || 0) + (searchResults?.users.length || 0) - 1
+                                    ? prev + 1
+                                    : prev,
+                                );
+                                break;
+                              case "ArrowUp":
+                                e.preventDefault();
+                                setSelectedResultIndex((prev) => (prev > 0 ? prev - 1 : prev));
+                                break;
+                            }
+                          }}
+                        />
 
-                      {searchResults &&
-                      searchFocused &&
-                      searchResults.invoices.length + searchResults.users.length > 0 ? (
-                        <div
-                          id={`${uid}results`}
-                          ref={searchResultsRef}
-                          role="listbox"
-                          className="absolute inset-x-0 top-full z-10 mt-2 rounded-xl border bg-white"
-                          onMouseDown={(e) => e.preventDefault()}
-                        >
-                          <SearchLinks
-                            links={searchResults.invoices}
-                            selectedResultIndex={selectedResultIndex}
-                            setSelectedResultIndex={setSelectedResultIndex}
-                            onClick={resetSearch}
-                            title="Invoices"
-                            className="mt-2"
+                        {searchResults &&
+                        searchFocused &&
+                        searchResults.invoices.length + searchResults.users.length > 0 ? (
+                          <div
+                            id={`${uid}results`}
+                            ref={searchResultsRef}
+                            role="listbox"
+                            className="absolute inset-x-0 top-full z-10 mt-2 rounded-xl border bg-white"
+                            onMouseDown={(e) => e.preventDefault()}
                           >
-                            {(invoice) => (
-                              <>
-                                <DocumentCurrencyDollarIcon className="size-6" />
-                                {invoice.title}
-                                <div className="text-xs">&mdash; {formatDate(invoice.invoice_date)}</div>
-                                <InvoiceStatus invoice={invoice} className="ml-auto text-xs" />
-                              </>
-                            )}
-                          </SearchLinks>
-                          <SearchLinks
-                            links={searchResults.users}
-                            selectedResultIndex={selectedResultIndex - searchResults.invoices.length}
-                            setSelectedResultIndex={(i) => setSelectedResultIndex(searchResults.invoices.length + i)}
-                            onClick={resetSearch}
-                            title="People"
-                            className="mt-2"
-                          >
-                            {(user) => (
-                              <>
-                                {user.name}
-                                <div className="text-xs">&mdash; {user.role}</div>
-                              </>
-                            )}
-                          </SearchLinks>
-                          <footer className="rounded-b-xl border-t bg-gray-50 px-3 py-1 text-xs text-gray-400">
-                            Pro tip: open search by pressing the
-                            <kbd className="rounded-full border border-gray-300 bg-white px-2 py-0.5 font-mono text-sm">
-                              /
-                            </kbd>{" "}
-                            key
-                          </footer>
-                        </div>
-                      ) : null}
-                    </search>
-                  )}
+                            <SearchLinks
+                              links={searchResults.invoices}
+                              selectedResultIndex={selectedResultIndex}
+                              setSelectedResultIndex={setSelectedResultIndex}
+                              onClick={resetSearch}
+                              title="Invoices"
+                              className="mt-2"
+                            >
+                              {(invoice) => (
+                                <>
+                                  <DocumentCurrencyDollarIcon className="size-6" />
+                                  {invoice.title}
+                                  <div className="text-xs">&mdash; {formatDate(invoice.invoice_date)}</div>
+                                  <InvoiceStatus invoice={invoice} className="ml-auto text-xs" />
+                                </>
+                              )}
+                            </SearchLinks>
+                            <SearchLinks
+                              links={searchResults.users}
+                              selectedResultIndex={selectedResultIndex - searchResults.invoices.length}
+                              setSelectedResultIndex={(i) => setSelectedResultIndex(searchResults.invoices.length + i)}
+                              onClick={resetSearch}
+                              title="People"
+                              className="mt-2"
+                            >
+                              {(user) => (
+                                <>
+                                  {user.name}
+                                  <div className="text-xs">&mdash; {user.role}</div>
+                                </>
+                              )}
+                            </SearchLinks>
+                            <footer className="rounded-b-xl border-t bg-gray-50 px-3 py-1 text-xs text-gray-400">
+                              Pro tip: open search by pressing the
+                              <kbd className="rounded-full border border-gray-300 bg-white px-2 py-0.5 font-mono text-sm">
+                                /
+                              </kbd>{" "}
+                              key
+                            </footer>
+                          </div>
+                        ) : null}
+                      </search>
+                    )}
+                  </div>
                   <div className="grid items-center justify-between gap-3 md:flex">
                     <div>
                       <h1 className="text-3xl/[2.75rem] font-bold">{title}</h1>
@@ -406,43 +406,14 @@ const NavLinks = ({ company }: { company: Company }) => {
   return (
     <SidebarMenu>
       {updatesPath ? (
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild>
-            <Link
-              href={updatesPath === "company_updates_company_index" ? "/updates/company" : "/updates/team"}
-              className={active && pathname.startsWith("/updates") ? "font-bold text-white" : ""}
-            >
-              {active && pathname.startsWith("/updates") ? <SolidMegaphoneIcon /> : <MegaphoneIcon />}
-              <span>Updates</span>
-            </Link>
-          </SidebarMenuButton>
-
-          {routes.has("Company") && routes.has("Team") && (
-            <SidebarMenuSub>
-              <SidebarMenuSubItem>
-                <SidebarMenuSubButton asChild isActive={!!active && pathname.startsWith("/updates/company")}>
-                  <Link href="/updates/company">
-                    {active && pathname.startsWith("/updates/company") ? (
-                      <SolidBuildingOfficeIcon />
-                    ) : (
-                      <BuildingOfficeIcon />
-                    )}
-                    <span>Company</span>
-                  </Link>
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-
-              <SidebarMenuSubItem>
-                <SidebarMenuSubButton asChild isActive={!!active && pathname.startsWith("/updates/team")}>
-                  <Link href="/updates/team">
-                    {active && pathname.startsWith("/updates/team") ? <SolidUserGroupIcon /> : <UserGroupIcon />}
-                    <span>Team</span>
-                  </Link>
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-            </SidebarMenuSub>
-          )}
-        </SidebarMenuItem>
+        <NavLink
+          href="/updates/company"
+          icon={MegaphoneIcon}
+          filledIcon={SolidMegaphoneIcon}
+          active={!!active && pathname.startsWith("/updates")}
+        >
+          Updates
+        </NavLink>
       ) : null}
       {routes.has("Invoices") && (
         <InvoicesNavLink

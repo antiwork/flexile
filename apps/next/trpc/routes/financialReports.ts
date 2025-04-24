@@ -8,10 +8,7 @@ import { companyProcedure, createRouter } from "@/trpc";
 export const financialReportsRouter = createRouter({
   get: companyProcedure.input(z.object({ years: z.array(z.number()).optional() })).query(async ({ ctx, input }) => {
     const isActiveContractor = ctx.companyContractor && !ctx.companyContractor.endedAt;
-    if (
-      !ctx.companyAdministrator &&
-      !(ctx.company.companyUpdatesEnabled && (ctx.companyInvestor || isActiveContractor))
-    ) {
+    if (!ctx.companyAdministrator && !(ctx.companyInvestor || isActiveContractor)) {
       throw new TRPCError({ code: "FORBIDDEN" });
     }
     return await db.query.companyMonthlyFinancialReports.findMany({

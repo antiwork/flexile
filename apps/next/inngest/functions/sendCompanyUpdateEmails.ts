@@ -86,7 +86,6 @@ export default inngest.createFunction(
       const recipientBatch = recipients.slice(start, start + BATCH_SIZE);
 
       return step.run(`send-update-emails-${batchIndex + 1}`, async () => {
-        // TODO (helen): use `sendEmails` after debugging failures
         const emails = recipientBatch.map((recipient) => ({
           from: `${name} via Flexile <noreply@${env.DOMAIN}>`,
           to: recipient.email,
