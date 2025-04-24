@@ -58,10 +58,14 @@ export default inngest.createFunction(
       const equityPlanDocument = grant.documents[0];
       if (!equityPlanDocument) throw new NonRetriableError(`Equity plan document for ${grant.id} not found`);
 
-      // Update the board approval date
+      // Update the equity grant
+      const boardApprovedAt = assertDefined(boardConsent.boardApprovedAt);
       const [updatedGrant] = await db
         .update(equityGrants)
-        .set({ boardApprovalDate: formatISO(assertDefined(boardConsent.boardApprovedAt), { representation: "date" }) })
+        .set({
+          acceptedAt: boardApprovedAt,
+          boardApprovalDate: formatISO(boardApprovedAt, { representation: "date" }),
+        })
         .where(eq(equityGrants.id, grant.id))
         .returning();
 

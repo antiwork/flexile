@@ -38,11 +38,11 @@ export default function Equity() {
     if (worker.onTrial) {
       return "You'll be able to select an equity split after your trial period.";
     }
-    if (allocation?.locked) {
-      return `You'll be able to select a new allocation for ${new Date().getFullYear() + 1} later this year.`;
-    }
     if (allocation?.status === "pending_grant_creation" || allocation?.status === "pending_approval") {
       return "Your allocation is pending board approval. You can submit invoices for this year, but they're only going to be paid once the allocation is approved.";
+    }
+    if (allocation?.locked) {
+      return `You'll be able to select a new allocation for ${new Date().getFullYear() + 1} later this year.`;
     }
     return null;
   };
