@@ -120,7 +120,9 @@ const LegalDetails = <T extends string>({
     if (data.user.collect_tax_info && !values.birth_date)
       return form.setError("birth_date", { message: "This field is required" });
     if (!data.user.is_foreign && data.user.collect_tax_info && tinDigits?.length !== 9)
-      return form.setError("tax_id", { message: "This doesn't look like a valid tax ID" });
+      return form.setError("tax_id", {
+        message: `Your ${tinName} is too short. Make sure it contains 9 numerical characters.`,
+      });
     if (data.user.collect_tax_info) return setSignModalOpen(true);
     save.mutate("");
   });
