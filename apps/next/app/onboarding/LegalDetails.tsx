@@ -128,7 +128,7 @@ const LegalDetails = <T extends string>({
   return (
     <OnboardingLayout stepIndex={steps.indexOf("Billing info")} steps={steps} title={header} subtitle={subheading}>
       <Form {...form}>
-        <form className="grid gap-4" onSubmit={() => void submit()}>
+        <form className="grid gap-4" onSubmit={(e) => void submit(e)}>
           <RadioButtons
             value={isBusinessEntity.toString()}
             onChange={(value) => form.setValue("business_entity", value === "true")}
