@@ -27,7 +27,6 @@ import {
 } from "@heroicons/react/24/solid";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { capitalize } from "lodash-es";
-import { ChevronsUpDown } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -68,6 +67,7 @@ import { request } from "@/utils/request";
 import { company_search_path, company_switch_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import { useOnGlobalEvent } from "@/utils/useOnGlobalEvent";
+import { ChevronsUpDown } from "lucide-react";
 
 type CompanyAccessRole = "administrator" | "worker" | "investor" | "lawyer";
 
@@ -150,7 +150,7 @@ export default function MainLayout({
               <SidebarMenuItem>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <SidebarMenuButton size="lg" className="text-base">
+                    <SidebarMenuButton size="lg" className="text-base" aria-label="Switch company">
                       <CompanyName company={openCompany} />
                       <ChevronsUpDown className="ml-auto" />
                     </SidebarMenuButton>
