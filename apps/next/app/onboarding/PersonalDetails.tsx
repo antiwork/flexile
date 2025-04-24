@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import ComboBox from "@/components/ComboBox";
 import Modal from "@/components/Modal";
-import Select from "@/components/Select";
+import { MutationStatusButton } from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -17,18 +18,11 @@ import { request } from "@/utils/request";
 import { onboarding_path } from "@/utils/routes";
 
 const formSchema = z.object({
-  legal_name: z
-    .string()
-    .min(1, "This field is required")
-    .refine((val) => /\S+\s+\S+/u.test(val), {
-      message: "This doesn't look like a complete full name.",
-    }),
+  legal_name: z.string().refine((val) => /\S+\s+\S+/u.test(val), "This doesn't look like a complete full name."),
   preferred_name: z.string().min(1, "This field is required"),
   country_code: z.string().min(1, "This field is required"),
   citizenship_country_code: z.string().min(1, "This field is required"),
 });
-
-type FormValues = z.infer<typeof formSchema>;
 
 const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T> }) => {
   const user = useCurrentUser();
@@ -51,7 +45,7 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmNoPayout, setConfirmNoPayout] = useState(false);
 
-  const form = useForm<FormValues>({
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       legal_name: data.legal_name || "",
@@ -61,38 +55,34 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
     },
   });
 
-  const submit = useMutation({
-    mutationFn: async (values: FormValues) => {
-      if (!confirmNoPayout && sanctionedCountries.has(values.country_code)) {
-        setModalOpen(true);
-        throw new Error("Sanctioned country");
-      }
-
+  const save = useMutation({
+    mutationFn: async () => {
       await request({
         method: "PATCH",
         url: onboarding_path(),
         accept: "json",
-        jsonData: { user: values },
+        jsonData: { user: form.getValues() },
         assertOk: true,
       });
       router.push(nextLinkTo);
     },
   });
 
-  const onSubmit = form.handleSubmit((values) => submit.mutate(values));
+  const submit = form.handleSubmit((values) => {
+    if (!confirmNoPayout && sanctionedCountries.has(values.country_code)) {
+      setModalOpen(true);
+      throw new Error("Sanctioned country");
+    }
+
+    save.mutate();
+  });
 
   const countryOptions = [...countries].map(([code, name]) => ({ value: code, label: name }));
 
   return (
     <>
       <Form {...form}>
-        <form
-          className="grid gap-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void onSubmit();
-          }}
-        >
+        <form className="grid gap-4" onSubmit={() => void submit()}>
           <FormField
             control={form.control}
             name="legal_name"
@@ -100,7 +90,7 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
               <FormItem>
                 <FormLabel>Full legal name (must match your ID)</FormLabel>
                 <FormControl>
-                  <Input {...field} autoFocus aria-invalid={!!form.formState.errors.legal_name} />
+                  <Input {...field} autoFocus />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -114,7 +104,7 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
               <FormItem>
                 <FormLabel>Preferred name (visible to others)</FormLabel>
                 <FormControl>
-                  <Input {...field} aria-invalid={!!form.formState.errors.preferred_name} />
+                  <Input {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -129,13 +119,7 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
                 <FormItem>
                   <FormLabel>Country of residence</FormLabel>
                   <FormControl>
-                    <Select
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder="Select country"
-                      options={countryOptions}
-                      invalid={!!form.formState.errors.country_code}
-                    />
+                    <ComboBox {...field} placeholder="Select country" options={countryOptions} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -149,13 +133,7 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
                 <FormItem>
                   <FormLabel>Country of citizenship</FormLabel>
                   <FormControl>
-                    <Select
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder="Select country"
-                      options={countryOptions}
-                      invalid={!!form.formState.errors.citizenship_country_code}
-                    />
+                    <ComboBox {...field} placeholder="Select country" options={countryOptions} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -164,9 +142,9 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
           </div>
 
           <footer className="grid items-center gap-2">
-            <Button type="submit" disabled={submit.isPending}>
-              {submit.isPending ? "Saving..." : "Continue"}
-            </Button>
+            <MutationStatusButton type="submit" mutation={save} loadingText="Saving...">
+              Continue
+            </MutationStatusButton>
           </footer>
         </form>
       </Form>
@@ -186,7 +164,7 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
             onClick={() => {
               setConfirmNoPayout(true);
               setModalOpen(false);
-              void onSubmit();
+              save.mutate();
             }}
           >
             Proceed
