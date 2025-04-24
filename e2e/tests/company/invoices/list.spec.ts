@@ -477,6 +477,4 @@ test.describe("Invoices admin flow", () => {
 
     sharedInvoiceTests(test, setup);
   });
-
-
 });
