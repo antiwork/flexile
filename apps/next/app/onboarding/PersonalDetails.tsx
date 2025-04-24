@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import ComboBox from "@/components/ComboBox";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
+import Select from "@/components/Select";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -130,7 +130,13 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
                 <FormItem>
                   <FormLabel>Country of residence</FormLabel>
                   <FormControl>
-                    <ComboBox {...field} placeholder="Select country" options={countryOptions} />
+                    <Select
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select country"
+                      options={countryOptions}
+                      invalid={!!form.formState.errors.country_code}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -144,7 +150,13 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
                 <FormItem>
                   <FormLabel>Country of citizenship</FormLabel>
                   <FormControl>
-                    <ComboBox {...field} placeholder="Select country" options={countryOptions} />
+                    <Select
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select country"
+                      options={countryOptions}
+                      invalid={!!form.formState.errors.citizenship_country_code}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
