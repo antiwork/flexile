@@ -7,7 +7,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import Modal from "@/components/Modal";
-import MutationButton from "@/components/MutationButton";
 import Select from "@/components/Select";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -165,9 +164,9 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
           </div>
 
           <footer className="grid items-center gap-2">
-            <MutationButton mutation={submit} loadingText="Saving..." param={form.getValues()}>
-              Continue
-            </MutationButton>
+            <Button type="submit" disabled={submit.isPending}>
+              {submit.isPending ? "Saving..." : "Continue"}
+            </Button>
           </footer>
         </form>
       </Form>
@@ -187,7 +186,7 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
             onClick={() => {
               setConfirmNoPayout(true);
               setModalOpen(false);
-              submit.mutate(form.getValues());
+              void onSubmit();
             }}
           >
             Proceed
