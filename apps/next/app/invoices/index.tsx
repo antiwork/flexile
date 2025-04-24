@@ -1,10 +1,11 @@
 import { CurrencyDollarIcon } from "@heroicons/react/20/solid";
 import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
-import Input from "@/components/Input";
+import React, { useState } from "react";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -181,12 +182,14 @@ export const RejectModal = ({
         </>
       }
     >
-      <Input
-        value={reason}
-        onChange={setReason}
-        type="textarea"
-        label="Explain why the invoice was rejected and how to fix it (optional)"
-      />
+      <div className="grid gap-2">
+        <Label htmlFor="reject-reason">Explain why the invoice was rejected and how to fix it (optional)</Label>
+        <Textarea
+          id="reject-reason"
+          value={reason}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setReason(e.target.value)}
+        />
+      </div>
     </Modal>
   );
 };

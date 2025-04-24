@@ -4,12 +4,13 @@ import { fromUnixTime } from "date-fns";
 import { Map } from "immutable";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import DecimalInput from "@/components/DecimalInput";
 import Input from "@/components/Input";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
+import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assert } from "@/utils/assert";
@@ -121,28 +122,39 @@ const StripeMicrodepositVerification = () => {
             help={errors.get("verificationCode")}
           />
         ) : (
-          <>
-            <DecimalInput
-              value={firstAmount}
-              onChange={setFirstAmount}
-              invalid={errors.has("firstAmount")}
-              min="0"
-              placeholder="0"
-              label="Amount 1"
-              prefix="$"
-              help={errors.get("firstAmount")}
-            />
-            <DecimalInput
-              value={secondAmount}
-              onChange={setSecondAmount}
-              invalid={errors.has("secondAmount")}
-              min="0"
-              placeholder="0"
-              label="Amount 2"
-              prefix="$"
-              help={errors.get("secondAmount")}
-            />
-          </>
+          <div className="grid gap-4">
+            <div>
+              <Label htmlFor="amount-1">Amount 1</Label>
+              <NumberInput
+                id="amount-1"
+                value={firstAmount}
+                onChange={(value) => setFirstAmount(value)}
+                invalid={errors.has("firstAmount")}
+                prefix="$"
+                decimal
+                {...(errors.has("firstAmount") && { "aria-invalid": true })}
+              />
+              {errors.get("firstAmount") && (
+                <span className="text-destructive text-sm">{errors.get("firstAmount")}</span>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="amount-2">Amount 2</Label>
+              <NumberInput
+                id="amount-2"
+                value={secondAmount}
+                onChange={(value) => setSecondAmount(value)}
+                invalid={errors.has("secondAmount")}
+                prefix="$"
+                decimal
+                {...(errors.has("secondAmount") && { "aria-invalid": true })}
+              />
+              {errors.get("secondAmount") && (
+                <span className="text-destructive text-sm">{errors.get("secondAmount")}</span>
+              )}
+            </div>
+          </div>
         )}
 
         <div className="modal-footer">

@@ -284,7 +284,7 @@ const TasksModal = ({
       title={invoice.billFrom}
       footer={
         isActionable(invoice) ? (
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-4">
             <Button variant="outline" onClick={onReject}>
               Reject
             </Button>

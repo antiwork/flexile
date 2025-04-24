@@ -7,12 +7,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import Input from "@/components/Input";
 import OnboardingLayout from "@/components/layouts/Onboarding";
 import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
 import RadioButtons from "@/components/RadioButtons";
 import Select from "@/components/Select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { e } from "@/utils";
 import { getTinName } from "@/utils/legal";
 import { request } from "@/utils/request";
@@ -138,64 +139,79 @@ const LegalDetails = <T extends string>({
         />
 
         {isBusinessEntity ? (
-          <Input
-            value={businessName}
-            onChange={setBusinessName}
-            label="Full legal name of entity"
-            disabled={!!data.user.business_name}
-            invalid={errors.has("business_name")}
-            help={
-              !data.user.is_foreign ? (
+          <div className="grid gap-2">
+            <Label htmlFor="business-name">Full legal name of entity</Label>
+            <Input
+              id="business-name"
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              disabled={!!data.user.business_name}
+              aria-invalid={errors.has("business_name")}
+            />
+            <p className="group-has-invalid:text-red text-xs text-gray-500">
+              {!data.user.is_foreign ? (
                 <>
                   Please ensure this information matches the business name you used on your{" "}
                   <Link href="https://www.irs.gov/businesses/small-businesses-self-employed/online-ein-frequently-asked-questions#:~:text=how%20best%20to%20enter%20your%20business%20name%20into%20the%20online%20EIN%20application">
                     EIN application
                   </Link>
                 </>
-              ) : undefined
-            }
-          />
+              ) : null}
+            </p>
+          </div>
         ) : null}
 
         {data.user.collect_tax_info ? (
           <>
-            <Input
-              value={tin}
-              onChange={setTin}
-              invalid={errors.has("tax_id")}
-              label={
-                data.user.is_foreign ? "Foreign tax identification number" : `Tax identification number (${tinName})`
-              }
-              help={
-                errors.has("tax_id") && !data.user.is_foreign
+            <div className="grid gap-2">
+              <Label htmlFor="tin">
+                {data.user.is_foreign ? "Foreign tax identification number" : `Tax identification number (${tinName})`}
+              </Label>
+              <Input
+                id="tin"
+                value={tin}
+                onChange={(e) => setTin(e.target.value)}
+                aria-invalid={errors.has("tax_id")}
+              />
+              <p className="group-has-invalid:text-red text-xs text-gray-500">
+                {errors.has("tax_id") && !data.user.is_foreign
                   ? `Your ${tinName} is too short. Make sure it contains 9 numerical characters.`
                   : `${
                       data.user.is_foreign
                         ? "We use this for identity verification and tax reporting."
                         : `We use your ${tinName} for identity verification and tax reporting.`
-                    } Rest assured, your information is encrypted and securely stored.`
-              }
-            />
+                    } Rest assured, your information is encrypted and securely stored.`}
+              </p>
+            </div>
 
-            <Input
-              value={birthDate}
-              onChange={setBirthDate}
-              type="date"
-              label="Date of birth"
-              invalid={errors.has("birth_date")}
-            />
+            <div className="grid gap-2">
+              <Label htmlFor="birth-date">Date of birth</Label>
+              <Input
+                id="birth-date"
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
+                type="date"
+                aria-invalid={errors.has("birth_date")}
+              />
+            </div>
           </>
         ) : null}
 
-        <Input
-          value={streetAddress}
-          onChange={setStreetAddress}
-          label="Residential address (street name, number, apartment)"
-          invalid={errors.has("street_address")}
-        />
+        <div className="grid gap-2">
+          <Label htmlFor="street-address">Residential address (street name, number, apartment)</Label>
+          <Input
+            id="street-address"
+            value={streetAddress}
+            onChange={(e) => setStreetAddress(e.target.value)}
+            aria-invalid={errors.has("street_address")}
+          />
+        </div>
 
         <div className="grid gap-3 md:grid-cols-3">
-          <Input value={city} onChange={setCity} label="City" invalid={errors.has("city")} />
+          <div className="grid gap-2">
+            <Label htmlFor="city">City</Label>
+            <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} aria-invalid={errors.has("city")} />
+          </div>
 
           <Select
             value={state}
@@ -206,12 +222,15 @@ const LegalDetails = <T extends string>({
             invalid={errors.has("state")}
           />
 
-          <Input
-            value={zipCode}
-            onChange={setZipCode}
-            label={data.user.zip_code_label}
-            invalid={errors.has("zip_code")}
-          />
+          <div className="grid gap-2">
+            <Label htmlFor="zip-code">{data.user.zip_code_label}</Label>
+            <Input
+              id="zip-code"
+              value={zipCode}
+              onChange={(e) => setZipCode(e.target.value)}
+              aria-invalid={errors.has("zip_code")}
+            />
+          </div>
         </div>
 
         <LegalCertificationModal

@@ -13,7 +13,7 @@ const Selector = ({ value, onChange }: { value: string | null; onChange: (id: st
   const uid = useId();
 
   return (
-    <>
+    <div className="grid gap-2">
       <Label htmlFor={`role-${uid}`} className="flex items-center justify-between">
         Role
         <Button variant="link" onClick={() => setCreatingRole(true)}>
@@ -27,7 +27,7 @@ const Selector = ({ value, onChange }: { value: string | null; onChange: (id: st
         options={roles.map((role) => ({ value: role.id, label: role.name }))}
       />
       {creatingRole ? <ManageModal open onClose={() => setCreatingRole(false)} id={null} onCreated={onChange} /> : null}
-    </>
+    </div>
   );
 };
 

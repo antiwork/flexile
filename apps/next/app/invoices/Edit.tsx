@@ -7,19 +7,19 @@ import { formatISO } from "date-fns";
 import { List } from "immutable";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { z } from "zod";
 import EquityPercentageLockModal from "@/app/invoices/EquityPercentageLockModal";
 import ComboBox from "@/components/ComboBox";
-import DecimalInput from "@/components/DecimalInput";
 import DurationInput from "@/components/DurationInput";
-import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
+import NumberInput from "@/components/NumberInput";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
@@ -316,20 +316,22 @@ const Edit = () => {
               <br />
               <Address address={data.company.address} />
             </div>
-            <div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="invoice-id">Invoice ID</Label>
               <Input
+                id="invoice-id"
                 value={invoiceNumber}
-                onChange={setInvoiceNumber}
-                label="Invoice ID"
-                invalid={errorField === "invoiceNumber"}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInvoiceNumber(e.target.value)}
+                aria-invalid={errorField === "invoiceNumber"}
               />
             </div>
-            <div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="invoice-date">Date</Label>
               <Input
+                id="invoice-date"
                 value={issueDate}
-                onChange={setIssueDate}
-                label="Date"
-                invalid={errorField === "issueDate"}
+                onChange={(e) => setIssueDate(e.target.value)}
+                aria-invalid={errorField === "issueDate"}
                 type="date"
               />
             </div>
@@ -356,36 +358,47 @@ const Edit = () => {
                     <Input
                       value={item.description}
                       placeholder="Description"
-                      invalid={item.errors?.includes("description")}
-                      onChange={(value) => updateLineItem(rowIndex, { description: value })}
+                      aria-invalid={item.errors?.includes("description")}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        updateLineItem(rowIndex, { description: e.target.value })
+                      }
                     />
                   </TableCell>
                   {data.user.project_based ? null : (
                     <>
                       <TableCell>
-                        <DurationInput
-                          value={item.minutes}
-                          aria-label="Hours"
-                          invalid={item.errors?.includes("minutes")}
-                          onChange={(value) =>
-                            updateLineItem(rowIndex, {
-                              minutes: value,
-                              total_amount_cents: Math.ceil(item.pay_rate_in_subunits * ((value ?? 0) / 60)),
-                            })
-                          }
-                        />
+                        <div className="grid gap-2">
+                          <Label htmlFor={`hours-${rowIndex}`} className="sr-only">
+                            Hours
+                          </Label>
+                          <DurationInput
+                            id={`hours-${rowIndex}`}
+                            value={item.minutes}
+                            aria-label="Hours"
+                            aria-invalid={item.errors?.includes("minutes")}
+                            onChange={(value) =>
+                              updateLineItem(rowIndex, {
+                                minutes: value,
+                                total_amount_cents: Math.ceil(item.pay_rate_in_subunits * ((value ?? 0) / 60)),
+                              })
+                            }
+                          />
+                        </div>
                       </TableCell>
                       <TableCell>{`${formatMoneyFromCents(item.pay_rate_in_subunits)} / hour`}</TableCell>
                     </>
                   )}
                   <TableCell>
                     {data.user.project_based ? (
-                      <DecimalInput
+                      <NumberInput
                         value={item.total_amount_cents / 100}
-                        onChange={(value) => updateLineItem(rowIndex, { total_amount_cents: (value ?? 0) * 100 })}
+                        onChange={(value: number | null) =>
+                          updateLineItem(rowIndex, { total_amount_cents: (value ?? 0) * 100 })
+                        }
                         aria-label="Amount"
                         placeholder="0"
                         prefix="$"
+                        decimal
                       />
                     ) : (
                       formatMoneyFromCents(item.total_amount_cents)
@@ -456,8 +469,8 @@ const Edit = () => {
                       <Input
                         value={expense.description}
                         aria-label="Merchant"
-                        invalid={expense.errors?.includes("description")}
-                        onChange={(description) => updateExpense(rowIndex, { description })}
+                        aria-invalid={expense.errors?.includes("description")}
+                        onChange={(e) => updateExpense(rowIndex, { description: e.target.value })}
                       />
                     </TableCell>
                     <TableCell>
@@ -473,13 +486,16 @@ const Edit = () => {
                       />
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
-                      <DecimalInput
+                      <NumberInput
                         value={expense.total_amount_in_cents / 100}
                         placeholder="0"
-                        onChange={(value) => updateExpense(rowIndex, { total_amount_in_cents: (value ?? 0) * 100 })}
+                        onChange={(value: number | null) =>
+                          updateExpense(rowIndex, { total_amount_in_cents: (value ?? 0) * 100 })
+                        }
                         aria-label="Amount"
-                        invalid={expense.errors?.includes("amount")}
+                        invalid={expense.errors?.includes("amount") ?? false}
                         prefix="$"
+                        decimal
                       />
                     </TableCell>
                     <TableCell>
@@ -508,55 +524,46 @@ const Edit = () => {
           ) : null}
 
           <footer className="flex flex-col gap-3 lg:flex-row lg:justify-between">
-            <Input
+            <Textarea
               value={notes}
-              onChange={setNotes}
-              type="textarea"
+              onChange={(e) => setNotes(e.target.value)}
               placeholder="Enter notes about your invoice (optional)"
-              className="w-full border-dashed border-gray-100 lg:w-96"
+              className="w-full lg:w-96"
             />
-            <Card className="md:self-start">
-              <CardContent>
-                {canManageExpenses || equityCalculation.amountInCents > 0 ? (
-                  <>
-                    <div className="flex justify-between gap-2">
-                      <strong>Total services</strong>
-                      <span>{formatMoneyFromCents(totalServicesAmountInCents)}</span>
-                    </div>
-                    <Separator />
-                  </>
-                ) : null}
-                {canManageExpenses ? (
-                  <>
-                    <div className="flex justify-between gap-2">
-                      <strong>Total expenses</strong>
-                      <span>{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
-                    </div>
-                    <Separator />
-                  </>
-                ) : null}
-                {equityCalculation.amountInCents > 0 ? (
-                  <>
-                    <div className="flex justify-between gap-2">
-                      <strong>Swapped for equity (not paid in cash)</strong>
-                      <span>{formatMoneyFromCents(equityCalculation.amountInCents)}</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between gap-2">
-                      <strong>Net amount in cash</strong>
-                      <span className="numeric">
-                        {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.amountInCents)}
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex justify-between gap-2">
-                    <strong>Total</strong>
-                    <span className="numeric">{formatMoneyFromCents(totalInvoiceAmountInCents)}</span>
+            <div className="flex flex-col gap-2 md:self-start">
+              {canManageExpenses || equityCalculation.amountInCents > 0 ? (
+                <div className="flex flex-col">
+                  <strong>Total services</strong>
+                  <span>{formatMoneyFromCents(totalServicesAmountInCents)}</span>
+                </div>
+              ) : null}
+              {canManageExpenses ? (
+                <div className="flex flex-col">
+                  <strong>Total expenses</strong>
+                  <span>{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
+                </div>
+              ) : null}
+              {equityCalculation.amountInCents > 0 ? (
+                <>
+                  <div className="flex flex-col">
+                    <strong>Swapped for equity (not paid in cash)</strong>
+                    <span>{formatMoneyFromCents(equityCalculation.amountInCents)}</span>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                  <Separator />
+                  <div className="flex flex-col">
+                    <strong>Net amount in cash</strong>
+                    <span className="numeric">
+                      {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.amountInCents)}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col gap-1 lg:items-end">
+                  <span>Total</span>
+                  <span className="numeric text-3xl">{formatMoneyFromCents(totalInvoiceAmountInCents)}</span>
+                </div>
+              )}
+            </div>
           </footer>
         </div>
       </section>

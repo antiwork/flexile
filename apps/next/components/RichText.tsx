@@ -2,10 +2,10 @@ import { Bars2Icon, BoldIcon, ItalicIcon, LinkIcon, ListBulletIcon, UnderlineIco
 import type { Content } from "@tiptap/core";
 import { EditorContent, isList, useEditor } from "@tiptap/react";
 import React, { useEffect, useState } from "react";
-import Input, { formGroupClasses } from "@/components/Input";
 import { linkClasses } from "@/components/Link";
-import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/utils";
 import { richTextExtensions } from "@/utils/richText";
@@ -96,14 +96,16 @@ export const Editor = ({
   };
 
   return (
-    <div className={formGroupClasses}>
+    <div className="group grid gap-2">
       {label ? (
         <Label htmlFor={id} className="cursor-pointer">
           {label}
         </Label>
       ) : null}
-      <div className={cn("rounded-md border", { "border-red": invalid })}>
-        <div className={cn("flex border-b", { "border-red": invalid })}>
+      <div
+        className={cn("border-input rounded-md border bg-transparent shadow-xs", invalid ? "border-destructive" : "")}
+      >
+        <div className={cn("flex border-b", invalid ? "border-destructive" : "border-input")}>
           {toolbarItems.map((item) => (
             <button
               type="button"
@@ -119,37 +121,46 @@ export const Editor = ({
         </div>
         {editor ? <EditorContent editor={editor} /> : null}
       </div>
-      <Modal open={!!addingLink} onClose={() => setAddingLink(null)} title="Insert Link">
-        <Input
-          value={addingLink?.url ?? ""}
-          onChange={(url) => setAddingLink({ url })}
-          type="url"
-          label="URL"
-          placeholder="https://example.com"
-          required
-        />
-        <div className="modal-footer">
-          <Button
-            variant="outline"
-            onClick={() => {
-              editor?.chain().focus().unsetLink().run();
-              setAddingLink(null);
-            }}
-          >
-            {currentLink ? "Unlink" : "Cancel"}
-          </Button>
-          <Button
-            type="submit"
-            onClick={() => {
-              if (!addingLink) return;
-              editor?.chain().focus().extendMarkRange("link").setLink({ href: addingLink.url }).run();
-              setAddingLink(null);
-            }}
-          >
-            Insert
-          </Button>
-        </div>
-      </Modal>
+      <Dialog open={!!addingLink} onOpenChange={(open) => !open && setAddingLink(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Insert Link</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-2">
+            <Label htmlFor="link-url">URL</Label>
+            <Input
+              id="link-url"
+              value={addingLink?.url ?? ""}
+              onChange={(e) => setAddingLink({ url: e.target.value })}
+              type="url"
+              placeholder="https://example.com"
+              required
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                editor?.chain().focus().unsetLink().run();
+                setAddingLink(null);
+              }}
+            >
+              {currentLink ? "Unlink" : "Cancel"}
+            </Button>
+            <Button
+              type="submit"
+              onClick={() => {
+                if (!addingLink?.url) return;
+                editor?.chain().focus().extendMarkRange("link").setLink({ href: addingLink.url }).run();
+                setAddingLink(null);
+              }}
+            >
+              Insert
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

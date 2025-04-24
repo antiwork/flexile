@@ -18,6 +18,7 @@ class Quickbooks::PaymentSerializer < BaseSerializer
         }
       ],
       TotalAmt: invoice.cash_amount_in_usd,
+      TxnDate: invoice.paid_at.present? ? invoice.paid_at.to_date.iso8601 : Date.current.iso8601,
       PayType: "Check",
       CheckPayment: {
         BankAccountRef: {
