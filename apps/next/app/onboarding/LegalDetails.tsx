@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery, type UseMutationResult } from "@tanstack/react-query";
 // import { Set } from "immutable";
 import type { Route } from "next";
 import Link from "next/link";
@@ -337,7 +337,25 @@ const LegalDetails = <T extends string>({
             isForeignUser={data.user.is_foreign}
             isBusiness={isBusinessEntity}
             sticky
-            mutation={submit as any}
+            mutation={
+              {
+                mutate: (_signature: string) => submit.mutate(form.getValues()),
+                mutateAsync: async (_signature: string) => submit.mutateAsync(form.getValues()),
+                data: undefined,
+                error: null,
+                isError: false,
+                isIdle: true,
+                isPending: false,
+                isSuccess: false,
+                reset: () => submit.reset(),
+                status: "idle",
+                variables: undefined,
+                context: undefined,
+                failureCount: 0,
+                failureReason: null,
+                isPaused: false
+              } as UseMutationResult<unknown, unknown, string>
+            }
           />
 
           <footer className="grid items-center gap-2">
