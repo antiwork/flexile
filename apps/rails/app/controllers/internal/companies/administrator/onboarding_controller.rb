@@ -20,6 +20,7 @@ class Internal::Companies::Administrator::OnboardingController < Internal::Compa
     if Current.user.initial_onboarding?
       company = Company.create!(email: Current.user.email, country_code: SignUpCompany::US_COUNTRY_CODE, default_currency: SignUpCompany::DEFAULT_CURRENCY)
       Current.user.company_administrators.create!(company:)
+      subscribe_administrator_to_newsletter
       reset_current
     end
     authorize Current.company, :update?
@@ -71,5 +72,26 @@ class Internal::Companies::Administrator::OnboardingController < Internal::Compa
       return if all_values_present && params[:legal_name].present?
 
       render json: { success: false, error_message: "Please input all values" }
+    end
+
+    def subscribe_administrator_to_newsletter
+      return unless ENV["RESEND_AUDIENCE_ID"].present?
+
+      begin
+        Resend::Contacts.create(
+          audience_id: ENV["RESEND_AUDIENCE_ID"],
+          email: Current.user.email,
+          unsubscribed: false
+        )
+      rescue => e
+        Rails.logger.error("Failed to subscribe administrator to Resend: #{e.message}")
+        Bugsnag.notify(e) do |event|
+          event.add_metadata(:resend, {
+            action: "subscribe_administrator_to_newsletter",
+            email: Current.user.email,
+            audience_id: ENV["RESEND_AUDIENCE_ID"]
+          })
+        end
+      end
     end
 end
