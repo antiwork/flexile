@@ -28,7 +28,7 @@ const formSchema = z.object({
   street_address: z.string().min(1, "This field is required"),
   state: z.string().min(1, "This field is required"),
   city: z.string().min(1, "This field is required"),
-  zip_code: z.string().refine((val) => !val || /\d/u.test(val), { message: "This doesn't look like a valid ZIP code" }),
+  zip_code: z.string().regex(/\d/u, { message: "This doesn't look like a valid ZIP code" }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -95,9 +95,8 @@ const LegalDetails = <T extends string>({
 
     const parts = isBusinessEntity ? [2, 7] : [3, 2, 4];
     let lastIndex = 0;
-    const formattedTin = parts.flatMap((part) => tinDigits.slice(lastIndex, (lastIndex += part)) || []).join(" - ");
-    form.setValue("tax_id", formattedTin);
-  }, [tinDigits, isBusinessEntity, data.user.is_foreign, form]);
+    form.setValue("tax_id", parts.flatMap((part) => tinDigits.slice(lastIndex, (lastIndex += part)) || []).join(" - "));
+  }, [tinDigits, isBusinessEntity]);
 
   const save = useMutation({
     mutationFn: async (signature: string) => {
