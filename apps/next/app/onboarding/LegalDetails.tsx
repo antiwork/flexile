@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { ComboBox } from "@/components/combobox";
+import ComboBox from "@/components/ComboBox";
 import OnboardingLayout from "@/components/layouts/Onboarding";
 import { linkClasses } from "@/components/Link";
 import { MutationStatusButton } from "@/components/MutationButton";
