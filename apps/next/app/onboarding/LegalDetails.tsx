@@ -2,18 +2,17 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
-// import { Set } from "immutable";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { ComboBox } from "@/components/combobox";
 import OnboardingLayout from "@/components/layouts/Onboarding";
 import { linkClasses } from "@/components/Link";
-import MutationButton from "@/components/MutationButton";
+import { MutationStatusButton } from "@/components/MutationButton";
 import RadioButtons from "@/components/RadioButtons";
-import Select from "@/components/Select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { getTinName } from "@/utils/legal";
@@ -23,32 +22,13 @@ import LegalCertificationModal from "./LegalCertificationModal";
 
 const formSchema = z.object({
   business_entity: z.boolean(),
-  business_name: z.string().nullable().optional(),
-  tax_id: z.string().nullable().optional(),
-  birth_date: z.string().nullable().optional(),
+  business_name: z.string().nullish(),
+  tax_id: z.string().nullish(),
+  birth_date: z.string().nullish(),
   street_address: z.string().min(1, "This field is required"),
   state: z.string().min(1, "This field is required"),
   city: z.string().min(1, "This field is required"),
-  zip_code: z.string().refine(
-    (val) => !val || /\d/u.test(val), 
-    { message: "ZIP code must contain at least one number" }
-  ),
-}).superRefine((data, ctx) => {
-  if (data.business_entity && !data.business_name) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "This field is required",
-      path: ["business_name"],
-    });
-  }
-  
-  if (data.tax_id && data.tax_id.replace(/\D/gu, "").length !== 9) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Your tax ID is too short. Make sure it contains 9 numerical characters.",
-      path: ["tax_id"],
-    });
-  }
+  zip_code: z.string().refine((val) => !val || /\d/u.test(val), { message: "This doesn't look like a valid ZIP code" }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -68,7 +48,7 @@ const LegalDetails = <T extends string>({
 }) => {
   const router = useRouter();
   const [signModalOpen, setSignModalOpen] = useState(false);
-  
+
   const { data } = useSuspenseQuery({
     queryKey: ["onboardingLegalDetails"],
     queryFn: async () => {
@@ -98,10 +78,7 @@ const LegalDetails = <T extends string>({
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      business_entity: data.user.business_entity,
-      business_name: data.user.business_name || null,
-      tax_id: data.user.tax_id || null,
-      birth_date: data.user.birth_date || null,
+      ...data.user,
       street_address: data.user.street_address || "",
       state: data.user.state || "",
       city: data.user.city || "",
@@ -109,10 +86,8 @@ const LegalDetails = <T extends string>({
     },
   });
 
-  const [isBusinessEntity, setIsBusinessEntity] = useState(data.user.business_entity);
-  
-  const tin = form.watch("tax_id");
-  const tinDigits = tin?.replace(/\D/gu, "");
+  const isBusinessEntity = form.watch("business_entity");
+  const tinDigits = form.watch("tax_id")?.replace(/\D/gu, "");
   const tinName = getTinName(isBusinessEntity);
 
   useEffect(() => {
@@ -124,9 +99,9 @@ const LegalDetails = <T extends string>({
     form.setValue("tax_id", formattedTin);
   }, [tinDigits, isBusinessEntity, data.user.is_foreign, form]);
 
-  const submit = useMutation({
-    mutationFn: async (values: FormValues) => {
-      if (data.user.collect_tax_info && !values.tax_id) {
+  const save = useMutation({
+    mutationFn: async (signature: string) => {
+      if (data.user.collect_tax_info && !signature) {
         setSignModalOpen(true);
         throw new Error("Signature required");
       }
@@ -135,46 +110,29 @@ const LegalDetails = <T extends string>({
         method: "PATCH",
         url: save_legal_onboarding_path(),
         accept: "json",
-        jsonData: { 
-          user: { 
-            ...values,
-            business_entity: isBusinessEntity,
-          } 
-        },
+        jsonData: { user: form.getValues() },
         assertOk: true,
       });
       router.push(nextLinkTo);
     },
   });
 
-  const signMutation = useMutation({
-    mutationFn: async (signature: string) => {
-      console.log(`Received signature: ${signature}`);
-      return submit.mutateAsync(form.getValues());
-    }
-  });
-
-  const onSubmit = form.handleSubmit((values) => {
-    if (data.user.collect_tax_info && !values.tax_id) {
-      setSignModalOpen(true);
-      return;
-    }
-    submit.mutate(values);
+  const submit = form.handleSubmit((values) => {
+    if (data.user.collect_tax_info && !values.birth_date)
+      return form.setError("birth_date", { message: "This field is required" });
+    if (!data.user.is_foreign && data.user.collect_tax_info && tinDigits?.length !== 9)
+      return form.setError("tax_id", { message: "This doesn't look like a valid tax ID" });
+    if (data.user.collect_tax_info) return setSignModalOpen(true);
+    save.mutate("");
   });
 
   return (
     <OnboardingLayout stepIndex={steps.indexOf("Billing info")} steps={steps} title={header} subtitle={subheading}>
       <Form {...form}>
-        <form className="grid gap-4" onSubmit={(e) => {
-          e.preventDefault();
-          void onSubmit();
-        }}>
+        <form className="grid gap-4" onSubmit={() => void submit()}>
           <RadioButtons
             value={isBusinessEntity.toString()}
-            onChange={(value) => {
-              setIsBusinessEntity(value === "true");
-              form.setValue("business_entity", value === "true");
-            }}
+            onChange={(value) => form.setValue("business_entity", value === "true")}
             label="Legal entity"
             options={[
               { label: "I'm an individual", value: "false" },
@@ -197,8 +155,7 @@ const LegalDetails = <T extends string>({
                       disabled={!!data.user.business_name}
                     />
                   </FormControl>
-                  <FormMessage />
-                  <p className="text-xs text-gray-500">
+                  <FormMessage>
                     {!data.user.is_foreign ? (
                       <>
                         Please ensure this information matches the business name you used on your{" "}
@@ -207,7 +164,7 @@ const LegalDetails = <T extends string>({
                         </Link>
                       </>
                     ) : null}
-                  </p>
+                  </FormMessage>
                 </FormItem>
               )}
             />
@@ -220,23 +177,20 @@ const LegalDetails = <T extends string>({
                 name="tax_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel htmlFor="tin">
-                      {data.user.is_foreign ? "Foreign tax identification number" : `Tax identification number (${tinName})`}
+                    <FormLabel>
+                      {data.user.is_foreign
+                        ? "Foreign tax identification number"
+                        : `Tax identification number (${tinName})`}
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        id="tin"
-                        {...field}
-                        value={field.value || ""}
-                      />
+                      <Input {...field} />
                     </FormControl>
-                    <FormMessage />
-                    <p className="text-xs text-gray-500">
+                    <FormMessage>
                       {data.user.is_foreign
                         ? "We use this for identity verification and tax reporting."
-                        : `We use your ${tinName} for identity verification and tax reporting.`
-                      } Rest assured, your information is encrypted and securely stored.
-                    </p>
+                        : `We use your ${tinName} for identity verification and tax reporting.`}{" "}
+                      Rest assured, your information is encrypted and securely stored.
+                    </FormMessage>
                   </FormItem>
                 )}
               />
@@ -246,14 +200,9 @@ const LegalDetails = <T extends string>({
                 name="birth_date"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel htmlFor="birth-date">Date of birth</FormLabel>
+                    <FormLabel>Date of birth</FormLabel>
                     <FormControl>
-                      <Input
-                        id="birth-date"
-                        type="date"
-                        {...field}
-                        value={field.value || ""}
-                      />
+                      <Input type="date" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -267,13 +216,9 @@ const LegalDetails = <T extends string>({
             name="street_address"
             render={({ field }) => (
               <FormItem>
-                <FormLabel htmlFor="street-address">Residential address (street name, number, apartment)</FormLabel>
+                <FormLabel>Residential address (street name, number, apartment)</FormLabel>
                 <FormControl>
-                  <Input
-                    id="street-address"
-                    {...field}
-                    value={field.value || ""}
-                  />
+                  <Input {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -286,13 +231,9 @@ const LegalDetails = <T extends string>({
               name="city"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel htmlFor="city">City</FormLabel>
+                  <FormLabel>City</FormLabel>
                   <FormControl>
-                    <Input
-                      id="city"
-                      {...field}
-                      value={field.value || ""}
-                    />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -306,11 +247,10 @@ const LegalDetails = <T extends string>({
                 <FormItem>
                   <FormLabel>State</FormLabel>
                   <FormControl>
-                    <Select
-                      value={field.value}
+                    <ComboBox
+                      {...field}
                       placeholder="Select state"
                       options={data.states.map(([label, value]) => ({ value, label }))}
-                      onChange={field.onChange}
                     />
                   </FormControl>
                   <FormMessage />
@@ -323,13 +263,9 @@ const LegalDetails = <T extends string>({
               name="zip_code"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel htmlFor="zip-code">{data.user.zip_code_label}</FormLabel>
+                  <FormLabel>{data.user.zip_code_label}</FormLabel>
                   <FormControl>
-                    <Input
-                      id="zip-code"
-                      {...field}
-                      value={field.value || ""}
-                    />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -344,13 +280,13 @@ const LegalDetails = <T extends string>({
             isForeignUser={data.user.is_foreign}
             isBusiness={isBusinessEntity}
             sticky
-            mutation={signMutation}
+            mutation={save}
           />
 
           <footer className="grid items-center gap-2">
-            <MutationButton mutation={submit} param={form.getValues()} type="submit" loadingText="Saving...">
+            <MutationStatusButton mutation={save} type="submit" loadingText="Saving...">
               Continue
-            </MutationButton>
+            </MutationStatusButton>
             <Link href={prevLinkTo} className={linkClasses}>
               Back to Personal details
             </Link>
