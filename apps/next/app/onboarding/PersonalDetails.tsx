@@ -102,9 +102,7 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
                 <FormControl>
                   <Input {...field} autoFocus aria-invalid={!!form.formState.errors.legal_name} />
                 </FormControl>
-                <FormMessage>
-                  {form.formState.errors.legal_name?.message}
-                </FormMessage>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -118,9 +116,7 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
                 <FormControl>
                   <Input {...field} aria-invalid={!!form.formState.errors.preferred_name} />
                 </FormControl>
-                <FormMessage>
-                  {form.formState.errors.preferred_name?.message}
-                </FormMessage>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -141,9 +137,7 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
                       invalid={!!form.formState.errors.country_code}
                     />
                   </FormControl>
-                  <FormMessage>
-                    {form.formState.errors.country_code?.message}
-                  </FormMessage>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -163,9 +157,7 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
                       invalid={!!form.formState.errors.citizenship_country_code}
                     />
                   </FormControl>
-                  <FormMessage>
-                    {form.formState.errors.citizenship_country_code?.message}
-                  </FormMessage>
+                  <FormMessage />
                 </FormItem>
               )}
             />
