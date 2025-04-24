@@ -509,7 +509,7 @@ const NavLink = ({
   const Icon = active && filledIcon ? filledIcon : icon;
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild isActive={active} className={className}>
+      <SidebarMenuButton asChild isActive={active ?? false} className={className}>
         <Link
           // @ts-expect-error see the above comment
           href={href}
