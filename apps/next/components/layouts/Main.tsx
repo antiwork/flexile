@@ -27,7 +27,6 @@ import {
 } from "@heroicons/react/24/solid";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { capitalize } from "lodash-es";
-import { ChevronsUpDown } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -68,6 +67,7 @@ import { request } from "@/utils/request";
 import { company_search_path, company_switch_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import { useOnGlobalEvent } from "@/utils/useOnGlobalEvent";
+import { ChevronsUpDown } from "lucide-react";
 
 type CompanyAccessRole = "administrator" | "worker" | "investor" | "lawyer";
 
@@ -502,8 +502,8 @@ const NavLink = ({
   className?: string;
   href: string; // TODO use Route<T> here once all of them are migrated
   active?: boolean;
-  icon: React.ComponentType<{ className: string }>;
-  filledIcon?: React.ComponentType<{ className: string }>;
+  icon: React.ComponentType;
+  filledIcon?: React.ComponentType;
   badge?: number | undefined;
 }) => {
   const Icon = active && filledIcon ? filledIcon : icon;
