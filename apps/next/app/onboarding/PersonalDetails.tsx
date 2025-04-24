@@ -100,9 +100,11 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
               <FormItem>
                 <FormLabel>Full legal name (must match your ID)</FormLabel>
                 <FormControl>
-                  <Input {...field} autoFocus />
+                  <Input {...field} autoFocus aria-invalid={!!form.formState.errors.legal_name} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage>
+                  {form.formState.errors.legal_name?.message}
+                </FormMessage>
               </FormItem>
             )}
           />
@@ -114,9 +116,11 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
               <FormItem>
                 <FormLabel>Preferred name (visible to others)</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input {...field} aria-invalid={!!form.formState.errors.preferred_name} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage>
+                  {form.formState.errors.preferred_name?.message}
+                </FormMessage>
               </FormItem>
             )}
           />
@@ -137,7 +141,9 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
                       invalid={!!form.formState.errors.country_code}
                     />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage>
+                    {form.formState.errors.country_code?.message}
+                  </FormMessage>
                 </FormItem>
               )}
             />
@@ -157,7 +163,9 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
                       invalid={!!form.formState.errors.citizenship_country_code}
                     />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage>
+                    {form.formState.errors.citizenship_country_code?.message}
+                  </FormMessage>
                 </FormItem>
               )}
             />
