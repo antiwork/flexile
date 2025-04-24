@@ -2,11 +2,6 @@ import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
-import { companyContractorUpdatesFactory } from "@test/factories/companyContractorUpdates";
-import {
-  companyContractorUpdateTasksFactory,
-  githubIntegrationRecordForTaskFactory,
-} from "@test/factories/companyContractorUpdateTasks";
 import { companyStripeAccountsFactory } from "@test/factories/companyStripeAccounts";
 import { invoiceApprovalsFactory } from "@test/factories/invoiceApprovals";
 import { invoicesFactory } from "@test/factories/invoices";
