@@ -11,6 +11,7 @@ import {
   DocumentDuplicateIcon,
   DocumentTextIcon,
   MagnifyingGlassIcon,
+  MegaphoneIcon,
   UserIcon,
   UsersIcon,
   XMarkIcon,
@@ -23,6 +24,7 @@ import {
   CurrencyDollarIcon as SolidCurrencyDollarIcon,
   DocumentDuplicateIcon as SolidDocumentDuplicateIcon,
   DocumentTextIcon as SolidDocumentTextIcon,
+  MegaphoneIcon as SolidMegaphoneIcon,
   UserIcon as SolidUserIcon,
   UsersIcon as SolidUsersIcon,
 } from "@heroicons/react/24/solid";
@@ -365,6 +367,7 @@ const NavLinks = ({ company }: { company: Company }) => {
   const routes = new Set(
     company.routes.flatMap((route) => [route.label, ...(route.subLinks?.map((subLink) => subLink.label) || [])]),
   );
+  const updatesPath = company.routes.find((route) => route.label === "Updates")?.name;
   const switchCompany = useSwitchCompanyOrRole();
   const isRole = (...roles: (typeof user.activeRole)[]) => roles.includes(user.activeRole);
   const equityNavLink = equityNavLinks(user, company)[0];
@@ -377,6 +380,16 @@ const NavLinks = ({ company }: { company: Company }) => {
         }
       }}
     >
+      {updatesPath ? (
+        <NavLink
+          href="/updates/company"
+          icon={MegaphoneIcon}
+          filledIcon={SolidMegaphoneIcon}
+          active={!!active && pathname.startsWith("/updates")}
+        >
+          Updates
+        </NavLink>
+      ) : null}
       {routes.has("Invoices") && (
         <InvoicesNavLink
           companyId={company.id}

@@ -8,6 +8,7 @@ import { financingRoundsRouter } from "@/trpc/routes/financingRounds";
 import { investorEntitiesRouter } from "@/trpc/routes/investorEntities";
 import { capTableUploadsRouter } from "./routes/capTableUploads";
 import { companyAdministratorsRouter } from "./routes/companyAdministrators";
+import { companyUpdatesRouter } from "./routes/companyUpdates";
 import { consolidatedInvoicesRouter } from "./routes/consolidatedInvoices";
 import { contractorsRouter } from "./routes/contractors";
 import { convertibleSecuritiesRouter } from "./routes/convertibleSecurities";
@@ -59,6 +60,7 @@ export const appRouter = createRouter({
   equitySettings: equitySettingsRouter,
   financingRounds: financingRoundsRouter,
   optionPools: optionPoolsRouter,
+  companyUpdates: companyUpdatesRouter,
   capTable: capTableRouter,
   capTableUploads: capTableUploadsRouter,
   companies: companiesRouter,
