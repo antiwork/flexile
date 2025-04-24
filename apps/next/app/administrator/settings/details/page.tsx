@@ -16,11 +16,13 @@ import { trpc } from "@/trpc/client";
 
 const formSchema = z.object({
   name: z.string().min(1, "This field is required."),
-  taxId: z
-    .string()
-    .min(1, "This field is required.")
-    .refine((val) => val.replace(/\D/gu, "").length === 9, "Please check that your EIN is 9 numbers long.")
-    .refine((val) => !/^(\d)\1{8}$/u.test(val.replace(/\D/gu, "")), "Your EIN can't have all identical digits."),
+  taxId: z.string().superRefine((val, ctx) => {
+    const taxIdDigits = val.replace(/\D/gu, "");
+    if (taxIdDigits.length !== 9)
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Please check that your EIN is 9 numbers long." });
+    if (/^(\d)\1{8}$/u.test(taxIdDigits))
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Your EIN can't have all identical digits." });
+  }),
   phoneNumber: z
     .string()
     .min(1, "This field is required.")
@@ -53,10 +55,7 @@ export default function Details() {
   const updateSettings = trpc.companies.update.useMutation();
   const saveMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
-      await updateSettings.mutateAsync({
-        companyId: company.id,
-        ...values,
-      });
+      await updateSettings.mutateAsync({ companyId: company.id, ...values });
       await utils.companies.settings.invalidate();
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     },
@@ -173,8 +172,7 @@ export default function Details() {
                     <FormLabel>State</FormLabel>
                     <FormControl>
                       <ComboBox
-                        value={field.value || undefined}
-                        onChange={field.onChange}
+                        {...field}
                         placeholder="Choose State"
                         options={usStates.map(({ name, code }) => ({ value: code, label: name }))}
                       />
