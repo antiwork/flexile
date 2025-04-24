@@ -82,7 +82,7 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
   return (
     <>
       <Form {...form}>
-        <form className="grid gap-4" onSubmit={() => void submit()}>
+        <form className="grid gap-4" onSubmit={(e) => void submit(e)}>
           <FormField
             control={form.control}
             name="legal_name"
