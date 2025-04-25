@@ -532,7 +532,7 @@
           "company_role": {
             "model_attributes": {
               "name": "Project-based engineer",
-              "job_description": "We're looking for a project-based engineer to build our next MVP.",
+              "job_description": "We're looking for a project-based engineer to build our next MVP."
             },
             "company_role_rate": {
               "model_attributes": {
