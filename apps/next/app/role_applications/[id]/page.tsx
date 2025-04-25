@@ -13,7 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
 import { PayRateType, trpc } from "@/trpc/client";
-import { calculateAnnualCompensation } from "@/trpc/routes/roles/applications/helpers";
+import { calculateAnnualCompensation } from "../helpers";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 import { useOnGlobalEvent } from "@/utils/useOnGlobalEvent";

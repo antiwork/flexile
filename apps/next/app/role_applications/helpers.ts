@@ -1,12 +1,15 @@
-import { PayRateType } from "@/db/enums";
-import type { companyRoleApplications, companyRoleRates } from "@/db/schema";
+export enum PayRateType {
+  Hourly = 0,
+  ProjectBased = 1,
+  Salary = 2,
+}
 
 export const calculateAnnualCompensation = ({
   role,
   application,
 }: {
-  role: Pick<typeof companyRoleRates.$inferSelect, "payRateType" | "payRateInSubunits">;
-  application: Pick<typeof companyRoleApplications.$inferSelect, "hoursPerWeek" | "weeksPerYear">;
+  role: { payRateType: number; payRateInSubunits: number };
+  application: { hoursPerWeek?: number; weeksPerYear?: number };
 }) => {
   switch (role.payRateType) {
     case PayRateType.ProjectBased:
@@ -17,5 +20,7 @@ export const calculateAnnualCompensation = ({
       return application.hoursPerWeek && application.weeksPerYear
         ? (role.payRateInSubunits / 100) * application.hoursPerWeek * application.weeksPerYear
         : 0;
+    default:
+      return 0;
   }
 };
