@@ -7,7 +7,7 @@ import React, { Fragment, useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
-import Modal from "@/components/Modal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -355,39 +355,44 @@ const WalletAddressModal = ({
   });
 
   return (
-    <Modal open={open} onClose={onClose} title="Get paid with ETH">
-      <div className="text-gray-500">
-        Payments will be sent to the specified Ethereum address. The amount will be based on the current exchange rate,
-        and Flexile will cover network fees.
-      </div>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Get paid with ETH</DialogTitle>
+        </DialogHeader>
+        <div className="text-gray-500">
+          Payments will be sent to the specified Ethereum address. The amount will be based on the current exchange rate,
+          and Flexile will cover network fees.
+        </div>
 
-      <Alert variant="destructive">
-        <ExclamationTriangleIcon />
-        <AlertDescription>
-          Ethereum transactions are irreversible. Please double-check your address before saving.
-        </AlertDescription>
-      </Alert>
+        <Alert variant="destructive">
+          <ExclamationTriangleIcon />
+          <AlertDescription>
+            Ethereum transactions are irreversible. Please double-check your address before saving.
+          </AlertDescription>
+        </Alert>
 
-      <Input
-        ref={inputRef}
-        value={walletAddress}
-        onChange={setWalletAddress}
-        label="Ethereum wallet address (ERC20 Network)"
-        aria-label="Wallet address"
-        placeholder="Paste or type your ETH address"
-        invalid={hasFormatError}
-        help={
-          hasFormatError
-            ? "The entered address is not a valid Ethereum address."
-            : "An Ethereum address is alphanumeric and always starts with 0x."
-        }
-      />
+        <Input
+          ref={inputRef}
+          value={walletAddress}
+          onChange={setWalletAddress}
+          label="Ethereum wallet address (ERC20 Network)"
+          aria-label="Wallet address"
+          placeholder="Paste or type your ETH address"
+          invalid={hasFormatError}
+          help={
+            hasFormatError
+              ? "The entered address is not a valid Ethereum address."
+              : "An Ethereum address is alphanumeric and always starts with 0x."
+          }
+        />
 
-      <div className="mt-6 flex justify-end">
-        <MutationButton mutation={saveMutation} disabled={!walletAddress}>
-          Save
-        </MutationButton>
-      </div>
-    </Modal>
+        <div className="mt-6 flex justify-end">
+          <MutationButton mutation={saveMutation} disabled={!walletAddress}>
+            Save
+          </MutationButton>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
