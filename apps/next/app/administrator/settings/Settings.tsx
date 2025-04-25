@@ -23,6 +23,7 @@ import { trpc } from "@/trpc/client";
 import { md5Checksum } from "@/utils";
 import GithubIntegration from "./GithubIntegration";
 import QuickbooksIntegration from "./QuickbooksIntegration";
+import SlackIntegration from "./SlackIntegration";
 import StripeMicrodepositVerification from "./StripeMicrodepositVerification";
 
 const formSchema = z.object({
@@ -94,12 +95,16 @@ export default function Settings({ githubOauthUrl }: { githubOauthUrl: string })
   return (
     <>
       <StripeMicrodepositVerification />
-      {company.flags.includes("quickbooks") || company.flags.includes("team_updates") ? (
+      {company.flags.includes("quickbooks") ||
+      company.flags.includes("team_updates") ||
+      company.flags.includes("slack") ? (
         <FormSection title="Integrations">
           <CardContent>
             {company.flags.includes("quickbooks") ? <QuickbooksIntegration /> : null}
             <Separator className="first:hidden last:hidden" />
             {company.flags.includes("team_updates") ? <GithubIntegration oauthUrl={githubOauthUrl} /> : null}
+            <Separator className="first:hidden last:hidden" />
+            {company.flags.includes("slack") ? <SlackIntegration /> : null}
           </CardContent>
         </FormSection>
       ) : null}

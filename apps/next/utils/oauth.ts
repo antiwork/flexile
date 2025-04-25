@@ -25,3 +25,8 @@ export const getOauthCode = (url: string) =>
       clearInterval(oauthRedirectChecker);
     };
   });
+
+export const hasOauthCode = () => {
+  const params = new URLSearchParams(window.location.search);
+  return params.has("code") && params.has("state");
+};

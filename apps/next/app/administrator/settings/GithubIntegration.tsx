@@ -3,7 +3,6 @@ import Image from "next/image";
 import MutationButton from "@/components/MutationButton";
 import Status from "@/components/Status";
 import { useCurrentCompany } from "@/global";
-import githubLogo from "@/images/github.svg";
 import { trpc } from "@/trpc/client";
 import { getOauthCode } from "@/utils/oauth";
 
@@ -33,10 +32,7 @@ export default function GithubIntegration({ oauthUrl }: { oauthUrl: string }) {
     <div className="flex justify-between gap-2">
       <div>
         <div className="flex items-center gap-2">
-          <h2 className="flex items-center text-xl font-bold">
-            <Image src={githubLogo.src} width={24} height={24} className="inline" alt="" />
-            &ensp;GitHub
-          </h2>
+          <h2 className="flex items-center text-xl font-bold">GitHub</h2>
           {integration?.status === "active" || integration?.status === "initialized" ? (
             <Status variant="success">Connected</Status>
           ) : integration?.status === "out_of_sync" ? (

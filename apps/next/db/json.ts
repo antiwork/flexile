@@ -16,3 +16,11 @@ export type GitHubIntegrationConfiguration = {
   access_token: string;
   webhooks: { id: string; organization: string }[];
 };
+
+export type SlackIntegrationConfiguration = {
+  team_id: string;
+  team_name?: string | null;
+  app_id: string;
+  bot_user_id: string;
+  bot_token: string; // Encrypted
+};

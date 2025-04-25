@@ -3,6 +3,7 @@
 - Always write ALL of the code
 - Don't add ANY new comments to the code
 - Don't apologize for errors, fix them
+- Use pnpm to install packages
 
 - To add a feature:
   - Add page to `apps/next/app/**/page.tsx`
@@ -18,6 +19,3 @@
 
 - For writing front-end code:
   - Do not use `React.FC`. Use the following syntax: `const Component = ({ prop1, prop2 }: { prop1: string; prop2: number }) => { ... }`
-
-- Tech debt:
-  - Add a `TODO (techdebt)` comment to document refactors that should be made in the future

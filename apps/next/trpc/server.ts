@@ -30,19 +30,22 @@ import { optionPoolsRouter } from "./routes/optionPools";
 import { quickbooksRouter } from "./routes/quickbooks";
 import { rolesRouter } from "./routes/roles";
 import { shareHoldingsRouter } from "./routes/shareHoldings";
+import { slackRouter } from "./routes/slack";
 import { tenderOffersRouter } from "./routes/tenderOffers";
 import { usersRouter } from "./routes/users";
 import { walletsRouter } from "./routes/wallets";
 import { workerAbsencesRouter } from "./routes/workerAbsences";
 import { createClient } from "./shared";
 import { createCallerFactory, createRouter } from "./";
+import { router } from "@/trpc/trpc";
 
-export const appRouter = createRouter({
+export const appRouter = router({
+  slack: slackRouter,
+  quickbooks: quickbooksRouter,
   users: usersRouter,
   wallets: walletsRouter,
   contractors: contractorsRouter,
   roles: rolesRouter,
-  quickbooks: quickbooksRouter,
   github: githubRouter,
   invoices: invoicesRouter,
   consolidatedInvoices: consolidatedInvoicesRouter,

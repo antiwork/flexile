@@ -13,7 +13,8 @@ import {
 import { type CompanyContext, companyProcedure, createRouter } from "@/trpc";
 import { assert, assertDefined } from "@/utils/assert";
 
-const oauthState = (ctx: CompanyContext) => Buffer.from(`${ctx.company.id}:${ctx.company.name}`).toString("base64");
+const oauthStateSecret = (ctx: CompanyContext) =>
+  Buffer.from(`${ctx.company.id}:${ctx.company.name}`).toString("base64");
 
 const companyIntegration = async (companyId: bigint) => {
   const integration = await db.query.integrations.findFirst({
@@ -62,7 +63,7 @@ export const quickbooksRouter = createRouter({
   getAuthUrl: companyProcedure.query(({ ctx }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-    return getQuickbooksAuthUrl(oauthState(ctx));
+    return getQuickbooksAuthUrl(oauthStateSecret(ctx));
   }),
 
   connect: companyProcedure
@@ -70,7 +71,8 @@ export const quickbooksRouter = createRouter({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-      if (input.state !== oauthState(ctx)) throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid OAuth state" });
+      if (input.state !== oauthStateSecret(ctx))
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid OAuth state" });
 
       const integration = await companyIntegration(ctx.company.id);
 

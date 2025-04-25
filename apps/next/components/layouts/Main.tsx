@@ -168,7 +168,7 @@ export default function MainLayout({
             </header>
             {subheader ? <div className="border-b bg-gray-200/50">{subheader}</div> : null}
           </div>
-          <div className="mx-3 flex max-w-(--breakpoint-xl) flex-col gap-6 md:mx-16">{children}</div>
+          <div className="mx-3 flex flex-col gap-6 md:mx-16">{children}</div>
         </main>
         {footer ? <div className="mt-auto">{footer}</div> : null}
       </div>

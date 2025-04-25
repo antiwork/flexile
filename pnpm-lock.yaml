@@ -103,6 +103,9 @@ importers:
       '@react-email/components':
         specifier: ^0.0.36
         version: 0.0.36(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@slack/oauth':
+        specifier: ^3.0.3
+        version: 3.0.3
       '@slack/web-api':
         specifier: ^7.8.0
         version: 7.8.0
@@ -2191,12 +2194,20 @@ packages:
     resolution: {integrity: sha512-Wz7QYfPAlG/DR+DfABddUZeNgoeY7d1J39OCR2jR+v7VBsB8ezulDK5szTnDDPDwLH5IWhLvXIHlCFZV7MSKgA==}
     engines: {node: '>= 18', npm: '>= 8.6.0'}
 
+  '@slack/oauth@3.0.3':
+    resolution: {integrity: sha512-N3pLJPacZ57bqmD1HzHDmHe/CNsL9pESZXRw7pfv6QXJVRgufPIW84aRpAez2Xb0616RpGBYZW5dZH0Nbskwyg==}
+    engines: {node: '>=18', npm: '>=8.6.0'}
+
   '@slack/types@2.14.0':
     resolution: {integrity: sha512-n0EGm7ENQRxlXbgKSrQZL69grzg1gHLAVd+GlRVQJ1NSORo0FrApR7wql/gaKdu2n4TO83Sq/AmeUOqD60aXUA==}
     engines: {node: '>= 12.13.0', npm: '>= 6.12.0'}
 
   '@slack/web-api@7.8.0':
     resolution: {integrity: sha512-d4SdG+6UmGdzWw38a4sN3lF/nTEzsDxhzU13wm10ejOpPehtmRoqBKnPztQUfFiWbNvSb4czkWYJD4kt+5+Fuw==}
+    engines: {node: '>= 18', npm: '>= 8.6.0'}
+
+  '@slack/web-api@7.9.1':
+    resolution: {integrity: sha512-qMcb1oWw3Y/KlUIVJhkI8+NcQXq1lNymwf+ewk93ggZsGd6iuz9ObQsOEbvlqlx1J+wd8DmIm3DORGKs0fcKdg==}
     engines: {node: '>= 18', npm: '>= 8.6.0'}
 
   '@smithy/abort-controller@4.0.1':
@@ -7739,9 +7750,37 @@ snapshots:
     dependencies:
       '@types/node': 22.13.10
 
+  '@slack/oauth@3.0.3':
+    dependencies:
+      '@slack/logger': 4.0.0
+      '@slack/web-api': 7.9.1
+      '@types/jsonwebtoken': 9.0.9
+      '@types/node': 22.13.10
+      jsonwebtoken: 9.0.2
+      lodash.isstring: 4.0.1
+    transitivePeerDependencies:
+      - debug
+
   '@slack/types@2.14.0': {}
 
   '@slack/web-api@7.8.0':
+    dependencies:
+      '@slack/logger': 4.0.0
+      '@slack/types': 2.14.0
+      '@types/node': 22.13.10
+      '@types/retry': 0.12.0
+      axios: 1.8.3
+      eventemitter3: 5.0.1
+      form-data: 4.0.2
+      is-electron: 2.2.2
+      is-stream: 2.0.1
+      p-queue: 6.6.2
+      p-retry: 4.6.2
+      retry: 0.13.1
+    transitivePeerDependencies:
+      - debug
+
+  '@slack/web-api@7.9.1':
     dependencies:
       '@slack/logger': 4.0.0
       '@slack/types': 2.14.0

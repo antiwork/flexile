@@ -21,7 +21,6 @@ Payroll & equity for everyone.
 - [Setup](#setup)
 - [Running the App](#running-the-app)
 - [Testing](#testing)
-- [Contributing](#contributing)
 - [License](#license)
 
 ## Setup
@@ -44,7 +43,9 @@ You can start the local app using [the `bin/dev` script](bin/dev) - or feel free
 
 Once the local services are up and running, the application will be available at `https://flexile.dev`
 
-Check [the seeds](apps/rails/config/data/seed_templates/gumroad.json) for default data created during setup.
+Note: If you have Clerk setup, you can login with hi@example.com / password. Check [the seeds](apps/rails/config/data/seed_templates/gumroad.json) for all the default data created during setup.
+
+Note #2: If you don't see demo data, please run `cd apps/rails && bin/rails db:reset` to seed the data. If this command fails, it's likely due to a flakey part of the code and you can retry it.
 
 ## Migrations
 
@@ -86,6 +87,7 @@ bundle exec rspec spec/system/roles/show_spec.rb:7 # Run a single spec
 
 # Run Playwright end-to-end tests
 pnpm playwright test
+pnpm playwright test e2e/tests/signup.spec.ts:9 # Run a single test
 ```
 
 ### Slack integration

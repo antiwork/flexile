@@ -33,6 +33,8 @@ const env = z
     SLACK_VERIFICATION_TOKEN: z.string(),
     SLACK_CLIENT_ID: z.string(),
     SLACK_CLIENT_SECRET: z.string(),
+    SLACK_STATE_SECRET: z.string(),
+    SLACK_SCOPES: z.string().default("commands,chat:write,users:read"),
     VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
     WISE_PROFILE_ID: z.string(),
     WISE_API_KEY: z.string(),

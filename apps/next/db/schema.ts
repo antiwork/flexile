@@ -32,7 +32,11 @@ import {
   RoleApplicationStatus,
   TaxClassification,
 } from "./enums";
-import type { GitHubIntegrationConfiguration, QuickbooksIntegrationConfiguration } from "./json";
+import type {
+  GitHubIntegrationConfiguration,
+  QuickbooksIntegrationConfiguration,
+  SlackIntegrationConfiguration,
+} from "./json";
 
 const nanoid = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 13);
 
@@ -911,9 +915,11 @@ export const integrations = pgTable(
   {
     id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
     companyId: bigint("company_id", { mode: "bigint" }).notNull(),
-    type: varchar().notNull().$type<"GithubIntegration" | "QuickbooksIntegration">(),
+    type: varchar().notNull().$type<"GithubIntegration" | "QuickbooksIntegration" | "SlackIntegration">(),
     status: integrationStatus().default("initialized").notNull(),
-    configuration: encryptedJson().$type<QuickbooksIntegrationConfiguration | GitHubIntegrationConfiguration>(),
+    configuration: encryptedJson().$type<
+      QuickbooksIntegrationConfiguration | GitHubIntegrationConfiguration | SlackIntegrationConfiguration
+    >(),
     syncError: text("sync_error"),
     lastSyncAt: timestamp("last_sync_at", { precision: 6, mode: "date" }),
     deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
