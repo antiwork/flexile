@@ -51,7 +51,11 @@ export const POST = async (request: SlackWebhookRequest) => {
       switch (event.type) {
         case "tokens_revoked": {
           const integration = await db.query.integrations.findFirst({
-            where: and(eq(integrations.type, "SlackIntegration"), eq(integrations.accountId, data.team_id)),
+            where: and(
+              eq(integrations.type, "SlackIntegration"),
+              eq(integrations.accountId, data.team_id),
+              eq(integrations.status, "active"),
+            ),
             with: {
               company: true,
             },
@@ -73,7 +77,11 @@ export const POST = async (request: SlackWebhookRequest) => {
             return NextResponse.json({ message: "Success!" }, { status: 200 });
           }
           const integration = await db.query.integrations.findFirst({
-            where: and(eq(integrations.type, "SlackIntegration"), eq(integrations.accountId, data.team_id)),
+            where: and(
+              eq(integrations.type, "SlackIntegration"),
+              eq(integrations.accountId, data.team_id),
+              eq(integrations.status, "active"),
+            ),
             with: {
               company: true,
             },
@@ -89,7 +97,11 @@ export const POST = async (request: SlackWebhookRequest) => {
 
         case "app_mention": {
           const integration = await db.query.integrations.findFirst({
-            where: and(eq(integrations.type, "SlackIntegration"), eq(integrations.accountId, data.team_id)),
+            where: and(
+              eq(integrations.type, "SlackIntegration"),
+              eq(integrations.accountId, data.team_id),
+              eq(integrations.status, "active"),
+            ),
             with: {
               company: true,
             },
@@ -101,7 +113,11 @@ export const POST = async (request: SlackWebhookRequest) => {
 
         case "assistant_thread_started": {
           const integration = await db.query.integrations.findFirst({
-            where: and(eq(integrations.type, "SlackIntegration"), eq(integrations.accountId, data.team_id)),
+            where: and(
+              eq(integrations.type, "SlackIntegration"),
+              eq(integrations.accountId, data.team_id),
+              eq(integrations.status, "active"),
+            ),
             with: {
               company: true,
             },
