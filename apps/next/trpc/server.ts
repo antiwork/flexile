@@ -30,8 +30,6 @@ import { optionPoolsRouter } from "./routes/optionPools";
 import { quickbooksRouter } from "./routes/quickbooks";
 import { rolesRouter } from "./routes/roles";
 import { shareHoldingsRouter } from "./routes/shareHoldings";
-import { teamUpdatesRouter } from "./routes/teamUpdates";
-import { teamUpdateTasksRouter } from "./routes/teamUpdateTasks";
 import { tenderOffersRouter } from "./routes/tenderOffers";
 import { usersRouter } from "./routes/users";
 import { walletsRouter } from "./routes/wallets";
@@ -56,8 +54,6 @@ export const appRouter = createRouter({
   dividends: dividendsRouter,
   dividendRounds: dividendRoundsRouter,
   equityGrantExercises: equityGrantExercisesRouter,
-  teamUpdates: teamUpdatesRouter,
-  teamUpdateTasks: teamUpdateTasksRouter,
   tenderOffers: tenderOffersRouter,
   workerAbsences: workerAbsencesRouter,
   financialReports: financialReportsRouter,
