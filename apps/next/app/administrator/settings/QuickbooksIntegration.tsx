@@ -131,8 +131,8 @@ export default function QuickbooksRow() {
       <div className="flex justify-between gap-2">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold">
-              <Image src={quickbooksLogo.src} className="inline size-6" alt="" />
+            <h2 className="flex items-center text-xl font-bold">
+              <Image src={quickbooksLogo.src} width={24} height={24} className="inline" alt="" />
               &ensp;QuickBooks
             </h2>
             {quickbooksIntegration?.status === "active" ? <Status variant="success">Connected</Status> : null}
