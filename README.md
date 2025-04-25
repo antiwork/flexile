@@ -82,7 +82,7 @@ bundle exec rspec spec/system/roles/show_spec.rb:7 # Run a single spec
 pnpm playwright test
 ```
 
-**Note:** The Playwright tests (`pnpm playwright test`) interact with the running application. If you are currently running the development server using `bin/dev`, you must stop it before executing the Playwright tests. They cannot be run concurrently.
+**Note:** The Playwright tests (`pnpm playwright test`) interact with the running application. If you are currently running the development server using `bin/dev`, you must stop it before executing the Playwright tests. They cannot be run concurrently because of a port conflict.
 
 ## Contributing
 
