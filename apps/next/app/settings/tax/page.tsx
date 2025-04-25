@@ -422,7 +422,9 @@ export default function TaxPage() {
                   <FormItem>
                     <FormLabel>
                       <div className="flex justify-between gap-2">
-                        {isForeign ? "Foreign tax ID" : `Tax ID (${formValues.business_entity ? "EIN" : "SSN or ITIN"})`}
+                        {isForeign
+                          ? "Foreign tax ID"
+                          : `Tax ID (${formValues.business_entity ? "EIN" : "SSN or ITIN"})`}
                         {!isForeign && field.value && !taxIdChanged ? (
                           <>
                             {taxIdStatus === "verified" && <Status variant="success">VERIFIED</Status>}
