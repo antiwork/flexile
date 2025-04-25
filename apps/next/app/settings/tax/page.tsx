@@ -7,13 +7,11 @@ import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { iso31662 } from "iso-3166";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import LegalCertificationModal from "@/app/onboarding/LegalCertificationModal";
-import FormSection from "@/components/FormSection";
 import RadioButtons from "@/components/RadioButtons";
-import Select from "@/components/Select";
 import Status from "@/components/Status";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -28,6 +26,8 @@ import { getTinName } from "@/utils/legal";
 import { request } from "@/utils/request";
 import { settings_tax_path } from "@/utils/routes";
 import SettingsLayout from "../Layout";
+import ComboBox from "@/components/ComboBox";
+import { MutationStatusButton } from "@/components/MutationButton";
 
 const dataSchema = z.object({
   birth_date: z.string().nullable(),
@@ -50,95 +50,35 @@ const dataSchema = z.object({
   zip_code: z.string(),
   contractor_for_companies: z.array(z.string()),
 });
-type Data = z.infer<typeof dataSchema>;
 
 const formSchema = z
   .object({
-    legal_name: z
-      .string()
-      .min(1, "Please add your full legal name.")
-      .refine((value) => /\S+\s+\S+/u.test(value), {
-        message: "This doesn't look like a complete full name.",
-      }),
+    legal_name: z.string().regex(/^\S+\s+\S+$/u, "This doesn't look like a complete full name."),
     citizenship_country_code: z.string(),
     business_entity: z.boolean(),
     business_name: z.string().nullable(),
-    business_type: z.number().nullable(),
-    tax_classification: z.number().nullable(),
+    business_type: z.nativeEnum(BusinessType).nullable(),
+    tax_classification: z.nativeEnum(TaxClassification).nullable(),
     country_code: z.string(),
-    tax_id: z.string().nullable(),
+    tax_id: z.string(),
     birth_date: z.string().nullable(),
     street_address: z.string().min(1, "Please add your residential address."),
     city: z.string().min(1, "Please add your city or town."),
     state: z.string(),
-    zip_code: z.string().min(1, "Please add your postal code."),
+    zip_code: z.string().regex(/\d/u, "Please add a valid postal code (must contain at least one number)."),
   })
-  .superRefine((data, ctx) => {
-    const isForeign = data.citizenship_country_code !== "US" && data.country_code !== "US";
-    const tinName = getTinName(data.business_entity);
-
-    if (!data.tax_id) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `Please add your ${isForeign ? "foreign tax ID" : tinName}.`,
-        path: ["tax_id"],
-      });
-    } else if (!isForeign) {
-      if (data.tax_id.length !== 9) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: `Please check that your ${tinName} is 9 numbers long.`,
-          path: ["tax_id"],
-        });
-      } else if (/^(\d)\1{8}$/u.test(data.tax_id)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: `Your ${tinName} can't have all identical digits.`,
-          path: ["tax_id"],
-        });
-      }
-    }
-
-    if (data.business_entity && !data.business_name) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Please add your business legal name.",
-        path: ["business_name"],
-      });
-    }
-
-    if (data.business_entity && data.business_type === null) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Please select a business type.",
-        path: ["business_type"],
-      });
-    }
-
-    if (data.business_entity && data.business_type === BusinessType.LLC && data.tax_classification === null) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Please select a tax classification.",
-        path: ["tax_classification"],
-      });
-    }
-
-    if (data.country_code === "US" && !/(^\d{5}|\d{9}|\d{5}[- ]\d{4})$/u.test(data.zip_code)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Please add a valid ZIP code (5 or 9 digits).",
-        path: ["zip_code"],
-      });
-    } else if (data.country_code !== "US" && !/\d/u.test(data.zip_code)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Please add a valid postal code (must contain at least one number).",
-        path: ["zip_code"],
-      });
-    }
+  .refine((data) => !data.business_entity || data.business_name, {
+    path: ["business_name"],
+    message: "Please add your business legal name.",
+  })
+  .refine((data) => !data.business_entity || data.business_type !== null, {
+    path: ["business_type"],
+    message: "Please select a business type.",
+  })
+  .refine((data) => data.business_type !== BusinessType.LLC || data.tax_classification !== null, {
+    path: ["tax_classification"],
+    message: "Please select a tax classification.",
   });
-
-type FormValues = z.infer<typeof formSchema>;
 
 export default function TaxPage() {
   const user = useCurrentUser();
@@ -154,14 +94,12 @@ export default function TaxPage() {
     },
   });
 
-  const [taxInfoChanged, setTaxInfoChanged] = useState(false);
   const [isTaxInfoConfirmed, setIsTaxInfoConfirmed] = useState(data.is_tax_information_confirmed);
   const [showCertificationModal, setShowCertificationModal] = useState(false);
-  const [taxIdChanged, setTaxIdChanged] = useState(false);
-  const [taxIdStatus, setTaxIdStatus] = useState<Data["tax_id_status"]>(data.tax_id_status);
+  const [taxIdStatus, setTaxIdStatus] = useState(data.tax_id_status);
   const [maskTaxId, setMaskTaxId] = useState(true);
 
-  const form = useForm<FormValues>({
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       legal_name: data.legal_name,
@@ -171,7 +109,7 @@ export default function TaxPage() {
       business_type: data.business_type,
       tax_classification: data.tax_classification,
       country_code: data.country_code,
-      tax_id: data.tax_id,
+      tax_id: data.tax_id ?? "",
       birth_date: data.birth_date,
       street_address: data.street_address,
       city: data.city,
@@ -181,14 +119,7 @@ export default function TaxPage() {
   });
 
   const formValues = form.watch();
-  const isForeign = useMemo(
-    () => formValues.citizenship_country_code !== "US" && formValues.country_code !== "US",
-    [formValues.citizenship_country_code, formValues.country_code],
-  );
-
-  useEffect(() => {
-    setTaxInfoChanged(true);
-  }, [formValues]);
+  const isForeign = formValues.citizenship_country_code !== "US" && formValues.country_code !== "US";
 
   const countryCodePrefix = `${formValues.country_code}-`;
   const countrySubdivisions = iso31662.filter((entry) => entry.code.startsWith(countryCodePrefix));
@@ -219,27 +150,12 @@ export default function TaxPage() {
     });
   };
 
-  const onSubmit = () => {
-    setShowCertificationModal(true);
-  };
-
   const saveMutation = useMutation({
     mutationFn: async (signature: string) => {
-      const formData = form.getValues();
-
-      const data = await updateTaxSettings.mutateAsync({
-        data: {
-          ...formData,
-          tax_id: normalizedTaxId(formData.tax_id),
-          signature,
-          is_tax_information_confirmed: true,
-        },
-      });
+      const data = await updateTaxSettings.mutateAsync({ data: { ...form.getValues(), signature } });
 
       setIsTaxInfoConfirmed(true);
-      setTaxInfoChanged(false);
-      if (taxIdChanged) setTaxIdStatus(null);
-      setTaxIdChanged(false);
+      if (form.getFieldState("tax_id").isDirty) setTaxIdStatus(null);
       setShowCertificationModal(false);
       if (data.documentId) {
         await trpcUtils.documents.list.invalidate();
@@ -248,15 +164,34 @@ export default function TaxPage() {
     },
   });
 
+  const submit = form.handleSubmit((values) => {
+    const isForeign = values.citizenship_country_code !== "US" && values.country_code !== "US";
+    const tinName = getTinName(values.business_entity);
+
+    if (!isForeign) {
+      if (values.tax_id.length !== 9) {
+        form.setError("tax_id", { message: `Please check that your ${tinName} is 9 numbers long.` });
+      } else if (/^(\d)\1{8}$/u.test(values.tax_id)) {
+        form.setError("tax_id", { message: `Your ${tinName} can't have all identical digits.` });
+      }
+    }
+
+    if (values.country_code === "US" && !/(^\d{5}|\d{9}|\d{5}[- ]\d{4})$/u.test(values.zip_code)) {
+      form.setError("zip_code", { message: "Please add a valid ZIP code (5 or 9 digits)." });
+    }
+    if (form.formState.isValid) setShowCertificationModal(true);
+  });
+
   return (
     <SettingsLayout>
       <Form {...form}>
-        <FormSection
-          title="Tax information"
-          description={`These details will be included in your ${
-            user.roles.worker ? "invoices and " : ""
-          }applicable tax forms.`}
-        >
+        <form onSubmit={(e) => void submit(e)}>
+          <hgroup>
+            <h2 className="text-xl font-bold">Tax information</h2>
+            <p className="text-gray-400">
+              These details will be included in your {user.roles.worker ? "invoices and " : ""}applicable tax forms.
+            </p>
+          </hgroup>
           <CardContent className="grid gap-4">
             {!isTaxInfoConfirmed && (
               <Alert variant="destructive">
@@ -301,12 +236,7 @@ export default function TaxPage() {
                 <FormItem>
                   <FormLabel>Country of citizenship</FormLabel>
                   <FormControl>
-                    <Select
-                      options={countryOptions}
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder="Select country"
-                    />
+                    <ComboBox {...field} options={countryOptions} placeholder="Select country" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -343,7 +273,7 @@ export default function TaxPage() {
                     <FormItem>
                       <FormLabel>Business legal name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter business legal name" {...field} value={field.value ?? ""} />
+                        <Input placeholder="Enter business legal name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -359,15 +289,16 @@ export default function TaxPage() {
                         <FormItem>
                           <FormLabel>Type</FormLabel>
                           <FormControl>
-                            <Select
+                            <ComboBox
+                              {...field}
+                              value={field.value?.toString() ?? ""}
+                              onChange={(value) => field.onChange(+value)}
                               options={[
                                 { label: "C corporation", value: BusinessType.CCorporation.toString() },
                                 { label: "S corporation", value: BusinessType.SCorporation.toString() },
                                 { label: "Partnership", value: BusinessType.Partnership.toString() },
                                 { label: "LLC", value: BusinessType.LLC.toString() },
                               ]}
-                              value={field.value?.toString() ?? ""}
-                              onChange={(value) => field.onChange(+value)}
                               placeholder="Select business type"
                             />
                           </FormControl>
@@ -384,14 +315,15 @@ export default function TaxPage() {
                           <FormItem>
                             <FormLabel>Tax classification</FormLabel>
                             <FormControl>
-                              <Select
+                              <ComboBox
+                                {...field}
+                                value={field.value?.toString() ?? ""}
+                                onChange={(value) => field.onChange(+value)}
                                 options={[
                                   { label: "C corporation", value: TaxClassification.CCorporation.toString() },
                                   { label: "S corporation", value: TaxClassification.SCorporation.toString() },
                                   { label: "Partnership", value: TaxClassification.Partnership.toString() },
                                 ]}
-                                value={field.value?.toString() ?? ""}
-                                onChange={(value) => field.onChange(+value)}
                                 placeholder="Select tax classification"
                               />
                             </FormControl>
@@ -412,12 +344,7 @@ export default function TaxPage() {
                 <FormItem>
                   <FormLabel>{`Country of ${formValues.business_entity ? "incorporation" : "residence"}`}</FormLabel>
                   <FormControl>
-                    <Select
-                      options={countryOptions}
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder="Select country"
-                    />
+                    <ComboBox {...field} options={countryOptions} placeholder="Select country" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -436,7 +363,7 @@ export default function TaxPage() {
                           ? "Foreign tax ID"
                           : `Tax ID (${formValues.business_entity ? "EIN" : "SSN or ITIN"})`}
                       </FormLabel>
-                      {!isForeign && field.value && !taxIdChanged ? (
+                      {!isForeign && field.value && !form.getFieldState("tax_id").isDirty ? (
                         <>
                           {taxIdStatus === "verified" && <Status variant="success">VERIFIED</Status>}
                           {taxIdStatus === "invalid" && <Status variant="critical">INVALID</Status>}
@@ -451,11 +378,8 @@ export default function TaxPage() {
                           placeholder={taxIdPlaceholder}
                           autoComplete="flexile-tax-id"
                           {...field}
-                          value={formatUSTaxId(field.value ?? "")}
-                          onChange={(e) => {
-                            field.onChange(normalizedTaxId(e.target.value));
-                            setTaxIdChanged(true);
-                          }}
+                          value={formatUSTaxId(field.value)}
+                          onChange={(e) => field.onChange(normalizedTaxId(e.target.value))}
                           className="rounded-r-none"
                         />
                         <Button
@@ -465,9 +389,6 @@ export default function TaxPage() {
                           onPointerDown={() => setMaskTaxId(false)}
                           onPointerUp={() => setMaskTaxId(true)}
                           onPointerLeave={() => setMaskTaxId(true)}
-                          onTouchStart={() => setMaskTaxId(false)}
-                          onTouchEnd={() => setMaskTaxId(true)}
-                          onTouchCancel={() => setMaskTaxId(true)}
                         >
                           {maskTaxId ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                         </Button>
@@ -485,7 +406,7 @@ export default function TaxPage() {
                   <FormItem>
                     <FormLabel>{`Date of ${formValues.business_entity ? "incorporation" : "birth"} (optional)`}</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} value={field.value ?? ""} />
+                      <Input type="date" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -529,13 +450,12 @@ export default function TaxPage() {
                   <FormItem>
                     <FormLabel>{stateLabel}</FormLabel>
                     <FormControl>
-                      <Select
+                      <ComboBox
+                        {...field}
                         options={countrySubdivisions.map((entry) => ({
                           value: entry.code.slice(countryCodePrefix.length),
                           label: entry.name,
                         }))}
-                        value={field.value}
-                        onChange={field.onChange}
                         disabled={!countrySubdivisions.length}
                         placeholder={`Select ${stateLabel.toLowerCase()}`}
                       />
@@ -562,15 +482,13 @@ export default function TaxPage() {
           </CardContent>
 
           <CardFooter className="flex-wrap gap-4">
-            <Button
-              type="button"
-              disabled={!taxInfoChanged && isTaxInfoConfirmed}
-              onClick={() => {
-                void form.handleSubmit(onSubmit)();
-              }}
+            <MutationStatusButton
+              type="submit"
+              disabled={!!isTaxInfoConfirmed && !form.formState.isDirty}
+              mutation={saveMutation}
             >
               Save changes
-            </Button>
+            </MutationStatusButton>
 
             {user.roles.worker ? (
               <div>
@@ -580,15 +498,15 @@ export default function TaxPage() {
               </div>
             ) : null}
           </CardFooter>
-        </FormSection>
+        </form>
       </Form>
 
       <LegalCertificationModal
         open={showCertificationModal}
         onClose={() => setShowCertificationModal(false)}
-        legalName={form.getValues().legal_name}
+        legalName={formValues.legal_name}
         isForeignUser={isForeign}
-        isBusiness={form.getValues().business_entity}
+        isBusiness={formValues.business_entity}
         mutation={saveMutation}
       />
     </SettingsLayout>
