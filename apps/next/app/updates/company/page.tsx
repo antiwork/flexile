@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
-import Modal from "@/components/Modal";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
@@ -102,24 +102,31 @@ const AdminList = () => {
   return (
     <>
       <DataTable table={table} onRowClicked={(row) => router.push(`/updates/company/${row.id}/edit`)} />
-      <Modal open={!!deletingUpdate} title="Delete update?" onClose={() => setDeletingUpdate(null)}>
-        <p>
-          "{updates.find((update) => update.id === deletingUpdate)?.title}" will be permanently deleted and cannot be
-          restored.
-        </p>
-        <div className="grid auto-cols-fr grid-flow-col items-center gap-3">
-          <Button variant="outline" onClick={() => setDeletingUpdate(null)}>
-            No, cancel
-          </Button>
-          <MutationButton
-            mutation={deleteMutation}
-            param={{ companyId: company.id, id: deletingUpdate ?? "" }}
-            loadingText="Deleting..."
-          >
-            Yes, delete
-          </MutationButton>
-        </div>
-      </Modal>
+      <Dialog open={!!deletingUpdate} onOpenChange={(isOpen) => !isOpen && setDeletingUpdate(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete update?</DialogTitle>
+          </DialogHeader>
+          <p>
+            "{updates.find((update) => update.id === deletingUpdate)?.title}" will be permanently deleted and cannot be
+            restored.
+          </p>
+          <DialogFooter>
+            <div className="grid auto-cols-fr grid-flow-col items-center gap-3">
+              <Button variant="outline" onClick={() => setDeletingUpdate(null)}>
+                No, cancel
+              </Button>
+              <MutationButton
+                mutation={deleteMutation}
+                param={{ companyId: company.id, id: deletingUpdate ?? "" }}
+                loadingText="Deleting..."
+              >
+                Yes, delete
+              </MutationButton>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

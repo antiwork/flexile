@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { stripeMerchantCategoryCodes } from "@/app/companies/[companyId]/expenses";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
-import Modal from "@/components/Modal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
@@ -206,26 +206,31 @@ function ContractorExpenses() {
         <Placeholder icon={CheckCircleIcon}>No expenses to display.</Placeholder>
       )}
 
-      <Modal open={cardTermsModalOpen} onClose={() => setCardTermsModalOpen(false)} title="Accept Card Terms">
-        <p>
-          By clicking Apply, you accept{" "}
-          <Link
-            href="https://stripe.com/legal/issuing/celtic-authorized-user-terms"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Celtic Bank Authorized User Terms
-          </Link>{" "}
-          and{" "}
-          <Link href="https://stripe.com/legal" target="_blank" rel="noopener noreferrer">
-            E-SIGN policy
-          </Link>
-          .
-        </p>
-        <MutationButton mutation={createExpenseCard} param={{ companyId: company.id }} loadingText="Applying...">
-          Apply
-        </MutationButton>
-      </Modal>
+      <Dialog open={cardTermsModalOpen} onOpenChange={(isOpen) => !isOpen && setCardTermsModalOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Accept Card Terms</DialogTitle>
+          </DialogHeader>
+          <p>
+            By clicking Apply, you accept{" "}
+            <Link
+              href="https://stripe.com/legal/issuing/celtic-authorized-user-terms"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Celtic Bank Authorized User Terms
+            </Link>{" "}
+            and{" "}
+            <Link href="https://stripe.com/legal" target="_blank" rel="noopener noreferrer">
+              E-SIGN policy
+            </Link>
+            .
+          </p>
+          <MutationButton mutation={createExpenseCard} param={{ companyId: company.id }} loadingText="Applying...">
+            Apply
+          </MutationButton>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }

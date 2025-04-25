@@ -8,7 +8,7 @@ import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
-import Modal from "@/components/Modal";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton from "@/components/MutationButton";
 import { Editor as RichTextEditor } from "@/components/RichText";
 import Select from "@/components/Select";
@@ -221,21 +221,28 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
           ) : null}
         </div>
       </div>
-      <Modal open={modalOpen} title="Publish update?" onClose={() => setModalOpen(false)}>
-        {update?.sentAt ? (
-          <p>Your update will be visible in Flexile. No new emails will be sent.</p>
-        ) : (
-          <p>Your update will be emailed to {recipientCount.toLocaleString()} stakeholders.</p>
-        )}
-        <div className="grid auto-cols-fr grid-flow-col items-center gap-3">
-          <Button variant="outline" onClick={() => setModalOpen(false)}>
-            No, cancel
-          </Button>
-          <MutationButton mutation={saveMutation} param={{ publish: !update?.sentAt }} loadingText="Sending...">
-            Yes, {update?.sentAt ? "update" : "publish"}
-          </MutationButton>
-        </div>
-      </Modal>
+      <Dialog open={modalOpen} onOpenChange={(isOpen) => !isOpen && setModalOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Publish update?</DialogTitle>
+          </DialogHeader>
+          {update?.sentAt ? (
+            <p>Your update will be visible in Flexile. No new emails will be sent.</p>
+          ) : (
+            <p>Your update will be emailed to {recipientCount.toLocaleString()} stakeholders.</p>
+          )}
+          <DialogFooter>
+            <div className="grid auto-cols-fr grid-flow-col items-center gap-3">
+              <Button variant="outline" onClick={() => setModalOpen(false)}>
+                No, cancel
+              </Button>
+              <MutationButton mutation={saveMutation} param={{ publish: !update?.sentAt }} loadingText="Sending...">
+                Yes, {update?.sentAt ? "update" : "publish"}
+              </MutationButton>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 };
