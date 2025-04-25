@@ -8,7 +8,7 @@ import { invoicesFactory } from "@test/factories/invoices";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { findRequiredTableRow, findTableRow } from "@test/helpers/matchers";
-import { expect, test } from "@test/index";
+import { expect, test, withinModal } from "@test/index";
 import { format } from "date-fns";
 import { and, eq, not } from "drizzle-orm";
 import { companies, companyRoles, consolidatedInvoices, invoiceApprovals, invoices, users } from "@/db/schema";
@@ -229,10 +229,14 @@ test.describe("Invoices admin flow", () => {
           expect(consolidatedInvoiceCount).toBe(0);
           // TODO missing check - need to verify ChargeConsolidatedInvoiceJob not enqueued
 
-          const modal = page.getByRole("dialog");
-          await expect(modal.getByText("$60")).toHaveCount(1);
-          await expect(modal.getByText("$75")).toHaveCount(1);
-          await modal.getByRole("button", { name: "Yes, proceed" }).click();
+          await withinModal(
+            async (modal) => {
+              await expect(modal.getByText("$60")).toHaveCount(1);
+              await expect(modal.getByText("$75")).toHaveCount(1);
+              await modal.getByRole("button", { name: "Yes, proceed" }).click();
+            },
+            { page },
+          );
 
           await expect(page.getByText("No invoices to display.")).toBeVisible();
           expect(await countInvoiceApprovals()).toBe(2);
@@ -331,11 +335,15 @@ test.describe("Invoices admin flow", () => {
               const invoiceApprovalsCountBefore = await countInvoiceApprovals();
               const consolidatedInvoicesCountBefore = await db.$count(consolidatedInvoices);
 
-              const modal = page.getByRole("dialog");
-              await expect(modal.getByText("You are paying $150 now.")).toBeVisible();
-              await expect(modal.getByText("$75")).toHaveCount(3); // partially-approved invoices being paid, plus one received invoice being approved
-              await expect(modal.getByText("$60")).toHaveCount(1); // received invoice being approved
-              await modal.getByRole("button", { name: "Yes, proceed" }).click();
+              await withinModal(
+                async (modal) => {
+                  await expect(modal.getByText("You are paying $150 now.")).toBeVisible();
+                  await expect(modal.getByText("$75")).toHaveCount(3); // partially-approved invoices being paid, plus one received invoice being approved
+                  await expect(modal.getByText("$60")).toHaveCount(1); // received invoice being approved
+                  await modal.getByRole("button", { name: "Yes, proceed" }).click();
+                },
+                { page },
+              );
 
               await expect(page.getByText("No invoices to display.")).toBeVisible();
               const consolidatedInvoicesCountAfter = await db.$count(consolidatedInvoices);

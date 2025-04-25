@@ -4,7 +4,7 @@ import { companyAdministratorsFactory } from "@test/factories/companyAdministrat
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
-import { expect, type Page, test } from "@test/index";
+import { expect, type Page, test, withinModal } from "@test/index";
 
 type User = Awaited<ReturnType<typeof usersFactory.create>>["user"];
 
@@ -132,19 +132,20 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await page.getByRole("button", { name: "Approve selected" }).click();
 
-    const approveModal = page.locator("dialog").filter({ hasText: "Approve these invoices?" });
-    await expect(approveModal).toBeVisible();
-
-    await expect(approveModal.getByText("You are paying $646 now.")).toBeVisible();
-    await expect(approveModal.getByText(workerUserA.legalName ?? "never")).toBeVisible();
-    await expect(approveModal.getByText("$623")).toBeVisible();
-    await expect(approveModal.getByText(workerUserB.legalName ?? "never")).toBeVisible();
-    await expect(approveModal.getByText("$23")).toBeVisible();
-    await expect(approveModal.getByRole("button", { name: "No, cancel" })).toBeVisible();
-    await expect(approveModal.getByRole("button", { name: "Yes, proceed" })).toBeVisible();
-
-    await approveModal.getByRole("button", { name: "No, cancel" }).click();
-    await expect(approveModal).not.toBeVisible();
+    await withinModal(
+      async (modal) => {
+        await expect(modal.getByText("You are paying $646 now.")).toBeVisible();
+        await expect(modal.getByText(workerUserA.legalName ?? "never")).toBeVisible();
+        await expect(modal.getByText("$623")).toBeVisible();
+        await expect(modal.getByText(workerUserB.legalName ?? "never")).toBeVisible();
+        await expect(modal.getByText("$23")).toBeVisible();
+        await expect(modal.getByRole("button", { name: "No, cancel" })).toBeVisible();
+        await expect(modal.getByRole("button", { name: "Yes, proceed" })).toBeVisible();
+        await modal.getByRole("button", { name: "No, cancel" }).click();
+      },
+      { page, title: "Approve these invoices?" },
+    );
+    await expect(page.getByRole("dialog")).not.toBeVisible();
 
     await page.getByRole("checkbox", { name: "Select all" }).uncheck();
     await page
@@ -157,7 +158,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByLabel("Explain why the invoice was").fill("Too little time");
 
     await page.getByRole("button", { name: "Yes, reject" }).click();
-    await expect(approveModal).not.toBeVisible();
+    await expect(page.getByRole("dialog")).not.toBeVisible();
     await expect(page.locator("tbody tr")).toHaveCount(1);
     await expect(openInvoicesBadge).toContainText("1");
 
