@@ -81,6 +81,7 @@ bundle exec rspec spec/system/roles/show_spec.rb:7 # Run a single spec
 # Run Playwright end-to-end tests
 pnpm playwright test
 ```
+
 ## Contributing
 
 We welcome contributions to Flexile! Please read our [Contributing Guide](CONTRIBUTING.md) for information on how to get started, coding standards, and more.
