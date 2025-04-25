@@ -3,8 +3,7 @@ import { PaperAirplaneIcon } from "@heroicons/react/16/solid";
 import { formatISO } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { parseAsInteger, useQueryState } from "nuqs";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import RoleSelector from "@/app/roles/Selector";
 import FormSection from "@/components/FormSection";
@@ -14,30 +13,45 @@ import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
+import { AVG_TRIAL_HOURS } from "@/models/constants";
 import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
+import { useOnChange } from "@/utils/useOnChange";
 
 function Create() {
   const company = useCurrentCompany();
   const router = useRouter();
-  const [applicationId] = useQueryState("application_id", parseAsInteger);
-  
+  const [roles] = trpc.roles.list.useSuspenseQuery({ companyId: company.id });
   const [templateId, setTemplateId] = useState<string | null>(null);
+
   const [email, setEmail] = useState("");
-  const [roleId, setRoleId] = useState<string | null>(null);
+  const [roleId, setRoleId] = useState(roles[0]?.id);
+  const role = roles.find((r) => r.id === roleId);
+  useEffect(() => {
+    if (!role) setRoleId(roles[0]?.id);
+  }, [roles, roleId]);
   const [rateUsd, setRateUsd] = useState(50);
-  const [hours, setHours] = useState(DEFAULT_WORKING_HOURS_PER_WEEK);
+  const [hours, setHours] = useState(0);
+  const [skipTrial, setSkipTrial] = useState(false);
   const [startDate, setStartDate] = useState(formatISO(new Date(), { representation: "date" }));
-  
-  const payRateType = PayRateType.Hourly;
-  const onTrial = false;
+  const onTrial = (role?.trialEnabled && !skipTrial && role.payRateType !== PayRateType.Salary) ?? false;
+
+  useOnChange(() => {
+    if (role) {
+      setRateUsd((onTrial ? role.trialPayRateInSubunits : role.payRateInSubunits) / 100);
+      setHours(role?.trialEnabled ? AVG_TRIAL_HOURS : 0);
+    }
+  }, [role, onTrial]);
 
   const valid =
     templateId &&
     email &&
-    hours > 0 &&
+    ((role?.payRateType === PayRateType.Hourly && hours) ||
+      role?.payRateType === PayRateType.ProjectBased ||
+      role?.payRateType === PayRateType.Salary) &&
     startDate.length > 0;
 
   const trpcUtils = trpc.useUtils();
@@ -66,7 +80,14 @@ function Create() {
           <div className="grid gap-4">
             <Input value={email} onChange={setEmail} type="email" label="Email" placeholder="Contractor's email" />
             <Input value={startDate} onChange={setStartDate} type="date" label="Start date" />
-            <RoleSelector value={roleId} onChange={setRoleId} />
+            <RoleSelector value={roleId ?? null} onChange={setRoleId} />
+            {role?.trialEnabled && role.payRateType !== PayRateType.Salary ? (
+              <Checkbox
+                checked={skipTrial}
+                onCheckedChange={(checked) => setSkipTrial(checked === true)}
+                label="Skip trial period"
+              />
+            ) : null}
             <div className="grid gap-2">
               <Label htmlFor="rate">Rate</Label>
               <NumberInput
@@ -74,20 +95,28 @@ function Create() {
                 value={rateUsd}
                 onChange={(value) => setRateUsd(value ?? 0)}
                 prefix="$"
-                suffix="/ hour"
+                suffix={
+                  role?.payRateType === PayRateType.ProjectBased
+                    ? "/ project"
+                    : role?.payRateType === PayRateType.Salary
+                      ? "/ year"
+                      : "/ hour"
+                }
                 decimal
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="hours">Average hours</Label>
-              <NumberInput
-                id="hours"
-                value={hours}
-                onChange={(value) => setHours(value ?? 0)}
-                placeholder={DEFAULT_WORKING_HOURS_PER_WEEK.toString()}
-                suffix="/ week"
-              />
-            </div>
+            {role?.payRateType === PayRateType.Hourly && (
+              <div className="grid gap-2">
+                <Label htmlFor="hours">Average hours</Label>
+                <NumberInput
+                  id="hours"
+                  value={hours}
+                  onChange={(value) => setHours(value ?? 0)}
+                  placeholder={DEFAULT_WORKING_HOURS_PER_WEEK.toString()}
+                  suffix="/ week"
+                />
+              </div>
+            )}
           </div>
 
           <TemplateSelector
@@ -112,9 +141,9 @@ function Create() {
               // parsed as midnight in the local timezone rather than UTC.
               startedAt: formatISO(new Date(`${startDate}T00:00:00`)),
               payRateInSubunits: rateUsd * 100,
-              payRateType,
+              payRateType: role?.payRateType ?? PayRateType.Hourly,
               onTrial,
-              roleId,
+              roleId: role?.id ?? null,
               hoursPerWeek: hours,
               documentTemplateId: templateId ?? "",
             }}

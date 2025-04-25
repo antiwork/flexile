@@ -68,9 +68,6 @@ Rails.application.routes.draw do
     constraints api_domain_constraint do
       namespace :v1 do
         resources :user_leads, only: :create
-        resources :companies do
-          resources :roles, only: [:index], controller: "roles"
-        end
       end
       namespace :helper do
         resource :users, only: :show
@@ -89,9 +86,6 @@ Rails.application.routes.draw do
   get "/invoices/:id/edit", to: redirect("/companies/_/invoices/%{id}/edit")
   get "/people", to: redirect("/companies/_/people")
   get "/people/new", to: redirect { |_path_params, req| "/companies/_/people/new#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/roles", to: redirect("/companies/_/roles")
-  get "/role_applications/:id", to: redirect("/companies/_/role_applications/%{id}")
-  get "/roles/:id/applications", to: redirect("/companies/_/roles/%{id}/applications")
   get "/onboarding/invitation", to: redirect { |path_params, req| "/companies/_/worker/onboarding/invitation#{path_params[:id]}#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   get "/onboarding/contract", to: redirect("/companies/_/worker/onboarding/contract")
   get "/investor_onboarding", to: redirect("/companies/_/investor/onboarding")

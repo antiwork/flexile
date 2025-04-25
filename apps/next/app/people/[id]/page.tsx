@@ -79,7 +79,8 @@ export default function ContractorPage() {
 
   const [selectedRoleId, setSelectedRoleId] = useState(contractor?.role ?? "");
   useEffect(() => setSelectedRoleId(contractor?.role ?? ""), [contractor]);
-  const selectedRole = null;
+  const [roles] = trpc.roles.list.useSuspenseQuery({ companyId: company.id });
+  const selectedRole = roles.find((role) => role.id === selectedRoleId);
   const [endModalOpen, setEndModalOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [endDate, setEndDate] = useState(formatISO(new Date(), { representation: "date" }));
@@ -462,9 +463,10 @@ const DetailsTab = ({
   const router = useRouter();
   const [user] = trpc.users.get.useSuspenseQuery({ companyId: company.id, id: userId });
   const [contractor] = trpc.contractors.get.useSuspenseQuery({ companyId: company.id, userId });
+  const [roles] = trpc.roles.list.useSuspenseQuery({ companyId: company.id });
   const [payRateInSubunits, setPayRateInSubunits] = useState(contractor.payRateInSubunits);
   const [hoursPerWeek, setHoursPerWeek] = useState(contractor.hoursPerWeek);
-  const selectedRole = null;
+  const selectedRole = roles.find((role) => role.id === selectedRoleId);
   useEffect(() => {
     if (selectedRole && selectedRoleId !== contractor.role) setPayRateInSubunits(selectedRole.payRateInSubunits);
   }, [selectedRole]);
