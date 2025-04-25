@@ -145,7 +145,7 @@ const EditTemplates = () => {
               for more details.
             </AlertDescription>
           </Alert>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <MutationButton
               idleVariant="outline"
               className="h-auto rounded-md p-6"
@@ -379,7 +379,7 @@ export default function DocumentsPage() {
             <DataTable
               table={table}
               actions={isCompanyRepresentative ? <EditTemplates /> : undefined}
-              searchColumn="Signer"
+              {...(!(userId && user.activeRole === "contractorOrInvestor") && { searchColumn: "Signer" })}
             />
             {signDocument ? (
               <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} />

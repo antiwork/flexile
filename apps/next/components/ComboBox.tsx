@@ -66,7 +66,13 @@ const ComboBox = ({
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      multiple ? value.includes(option.value) : option.value === value ? "opacity-100" : "opacity-0",
+                      multiple
+                        ? value.includes(option.value)
+                          ? "opacity-100"
+                          : "opacity-0"
+                        : option.value === value
+                          ? "opacity-100"
+                          : "opacity-0",
                     )}
                   />
                   {option.label}

@@ -55,7 +55,8 @@ test.describe("Contractor for multiple companies", () => {
 
     await clerk.signOut({ page });
     await login(page, contractorUser);
-    await page.getByRole("navigation").getByText("Second Company").click();
+    await page.getByRole("button", { name: "Switch company" }).click();
+    await page.getByRole("menuitem", { name: "Second Company" }).click();
     await page.getByRole("link", { name: "Invoices" }).click();
     await expect(page.getByText("You have an unsigned contract")).toBeVisible();
     await page.getByRole("link", { name: "Review & sign" }).click();

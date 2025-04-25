@@ -9,7 +9,7 @@ export default clerkMiddleware((_, req) => {
     .slice(0, -1);
   const { NODE_ENV } = process.env; // destructure to prevent inlining
   const s3Urls = [env.S3_PRIVATE_BUCKET, env.S3_PUBLIC_BUCKET]
-    .map((bucket) => `https://${bucket}.s3.${env.AWS_REGION}.amazonaws.com`)
+    .map((bucket) => `https://${bucket}.s3.${env.AWS_REGION}.amazonaws.com https://${bucket}.s3.amazonaws.com`)
     .join(" ");
 
   const cspHeader = `
