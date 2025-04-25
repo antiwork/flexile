@@ -14,12 +14,14 @@
   --color-white: #ffffff;
   --color-blue-50: #d9e4fa;
   --color-blue-600: #006ceb;
-  --color-red: #c94b20;
+  --color-red: #D44312;
+  --color-red-700: #C93604;
   --color-green: #00850d;
   --color-gray-50: #f1f1f1;
   --color-gray-100: #d1d1cf;
   --color-gray-300: #a3a3a0;
   --color-gray-600: #6e6f6a;
+  --color-gray-800: #333333;
   --font-signature: "Caveat", cursive;
 }
 
@@ -38,7 +40,7 @@
   --muted-foreground: hsl(0 0% 45%);
   --accent: hsl(0 0% 93.1%);
   --accent-foreground: hsl(0 0% 9%);
-  --destructive: hsl(0 84.2% 60.2%);
+  --destructive: hsl(15, 96%, 40%);
   --destructive-foreground: hsl(0 0% 98%);
   --border: hsl(0 0% 89.8%);
   --input: hsl(0 0% 80%);
