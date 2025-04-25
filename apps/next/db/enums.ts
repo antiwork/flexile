@@ -19,7 +19,6 @@ export enum DocumentTemplateType {
   BoardConsent,
 }
 
-
 export enum BusinessType {
   LLC = 0,
   CCorporation,

@@ -42,7 +42,7 @@ function Create() {
   useOnChange(() => {
     if (role) {
       setRateUsd((onTrial ? role.trialPayRateInSubunits : role.payRateInSubunits) / 100);
-      setHours(role?.trialEnabled ? AVG_TRIAL_HOURS : 0);
+      setHours(role.trialEnabled ? AVG_TRIAL_HOURS : 0);
     }
   }, [role, onTrial]);
 
