@@ -3,8 +3,6 @@
 import React, { useId } from "react";
 import ComboBox from "@/components/ComboBox";
 import { Label } from "@/components/ui/label";
-import { useCurrentCompany } from "@/global";
-import { trpc } from "@/trpc/client";
 
 interface RoleSelectorProps {
   value: string | null;
@@ -18,17 +16,8 @@ interface RoleOption {
 
 export default function RoleSelector({ value, onChange }: RoleSelectorProps) {
   const uid = useId();
-  const company = useCurrentCompany();
-  const [roles] = trpc.roles.list.useSuspenseQuery({ companyId: company.id });
   
-  const defaultOptions: RoleOption[] = [{ label: "No roles available", value: "placeholder" }];
-  
-  const options: RoleOption[] = Array.isArray(roles) && roles.length > 0
-    ? roles.map((role: any) => ({
-        label: typeof role.name === 'string' ? role.name : 'Unknown',
-        value: typeof role.id === 'string' ? role.id : 'unknown'
-      }))
-    : defaultOptions;
+  const options: RoleOption[] = [{ label: "No roles available", value: "placeholder" }];
   
   return (
     <div className="grid gap-2">
