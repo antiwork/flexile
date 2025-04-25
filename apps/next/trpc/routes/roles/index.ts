@@ -1,11 +1,11 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
 import { PayRateType } from "@/db/enums";
-import { companyRoleRates, companyRoles, expenseCards } from "@/db/schema";
+import { companyRoleRates, companyRoles } from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 import { assertDefined } from "@/utils/assert";
 
@@ -15,8 +15,6 @@ const inputSchema = createInsertSchema(companyRoles)
     jobDescription: true,
     capitalizedExpense: true,
     expenseAccountId: true,
-    expenseCardEnabled: true,
-    expenseCardSpendingLimitCents: true,
     trialEnabled: true,
   })
   .merge(
@@ -36,11 +34,6 @@ export const rolesRouter = createRouter({
       with: {
         rates: { orderBy: [desc(companyRoleRates.createdAt)], limit: 1 },
       },
-      extras: {
-        expenseCardsCount: db
-          .$count(expenseCards, and(eq(sql`active`, true), eq(sql`company_role_id`, companyRoles.id)))
-          .as("expense_cards"),
-      },
       orderBy: [desc(companyRoles.createdAt)],
     });
 
@@ -54,10 +47,7 @@ export const rolesRouter = createRouter({
           "jobDescription",
           "capitalizedExpense",
           "expenseAccountId",
-          "expenseCardEnabled",
-          "expenseCardSpendingLimitCents",
           "trialEnabled",
-          "expenseCardsCount",
         ),
         ...pick(rate, "payRateType", "payRateInSubunits", "trialPayRateInSubunits"),
       };
@@ -97,8 +87,6 @@ export const rolesRouter = createRouter({
             "jobDescription",
             "capitalizedExpense",
             "expenseAccountId",
-            "expenseCardEnabled",
-            "expenseCardSpendingLimitCents",
             "trialEnabled",
           ),
         })
@@ -128,8 +116,6 @@ export const rolesRouter = createRouter({
             "jobDescription",
             "capitalizedExpense",
             "expenseAccountId",
-            "expenseCardEnabled",
-            "expenseCardSpendingLimitCents",
             "trialEnabled",
           ),
         )

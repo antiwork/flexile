@@ -19,7 +19,6 @@ import { equityAllocationsRouter } from "./routes/equityAllocations";
 import { equityGrantExercisesRouter } from "./routes/equityGrantExercises";
 import { equityGrantsRouter } from "./routes/equityGrants";
 import { equitySettingsRouter } from "./routes/equitySettings";
-import { expenseCardsRouter } from "./routes/expenseCards";
 import { expenseCategoriesRouter } from "./routes/expenseCategories";
 import { financialReportsRouter } from "./routes/financialReports";
 import { githubRouter } from "./routes/github";
@@ -66,7 +65,6 @@ export const appRouter = createRouter({
   companies: companiesRouter,
   files: filesRouter,
   expenseCategories: expenseCategoriesRouter,
-  expenseCards: expenseCardsRouter,
   investorEntities: investorEntitiesRouter,
   equityAllocations: equityAllocationsRouter,
   equityCalculations: equityCalculationsRouter,

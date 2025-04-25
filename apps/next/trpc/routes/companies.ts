@@ -128,7 +128,6 @@ export const companiesRouter = createRouter({
         "website",
         "description",
         "equityGrantsEnabled",
-        "expenseCardsEnabled",
         "sharePriceInUsd",
         "fmvPerShareInUsd",
       ),

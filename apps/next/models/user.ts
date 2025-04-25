@@ -34,7 +34,6 @@ const companySchema = z.object({
   investorCount: z.number().nullable(),
   primaryAdminName: z.string().nullable(),
   isTrusted: z.boolean(),
-  expenseCardsEnabled: z.boolean(),
 });
 
 export const currentUserSchema = z.object({
@@ -68,7 +67,7 @@ export const currentUserSchema = z.object({
         endedAt: z.string().nullable(),
         payRateType: z.enum(["hourly", "project_based", "salary"]),
         inviting_company: z.boolean(),
-        role: z.object({ name: z.string(), expenseCardEnabled: z.boolean() }),
+        role: z.object({ name: z.string() }),
         onTrial: z.boolean(),
         hoursPerWeek: z.number().nullable(),
         payRateInSubunits: z.number().nullable(),

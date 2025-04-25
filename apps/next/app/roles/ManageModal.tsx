@@ -1,4 +1,3 @@
-import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { InformationCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { pick } from "lodash-es";
@@ -56,9 +55,6 @@ const ManageModal = ({
       jobDescription: "",
       capitalizedExpense: 50,
       expenseAccountId: null,
-      expenseCardEnabled: false,
-      expenseCardSpendingLimitCents: 0n,
-      expenseCardsCount: 0,
     };
     const lastRole = roles[0];
     return lastRole
@@ -234,35 +230,6 @@ const ManageModal = ({
               prefix="$"
             />
           </div>
-        ) : null}
-        {role.id ? (
-          <Switch
-            checked={role.expenseCardEnabled}
-            onCheckedChange={(expenseCardEnabled) => updateRole({ expenseCardEnabled })}
-            label="Role should get expense card"
-          />
-        ) : null}
-        {role.id && role.expenseCardEnabled ? (
-          <div className="grid gap-2">
-            <Label htmlFor="expense-limit">Limit</Label>
-            <NumberInput
-              id="expense-limit"
-              value={Number(role.expenseCardSpendingLimitCents) / 100}
-              onChange={(value) => updateRole({ expenseCardSpendingLimitCents: BigInt((value ?? 0) * 100) })}
-              invalid={errors.includes("expenseCardSpendingLimitCents")}
-              prefix="$"
-              suffix="/ month"
-            />
-            {errors.includes("expenseCardSpendingLimitCents") && (
-              <div className="text-destructive text-sm">Limit is required</div>
-            )}
-          </div>
-        ) : null}
-        {role.id && !role.expenseCardEnabled && role.expenseCardsCount > 0 ? (
-          <Alert variant="destructive">
-            <ExclamationTriangleIcon />
-            <AlertDescription>{role.expenseCardsCount} issued cards will no longer be usable.</AlertDescription>
-          </Alert>
         ) : null}
         {role.id ? (
           <RichTextEditor
