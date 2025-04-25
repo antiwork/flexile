@@ -1,10 +1,8 @@
 import { SignOutButton } from "@clerk/nextjs";
 import {
   ArrowRightStartOnRectangleIcon,
-  Bars3Icon,
   BriefcaseIcon,
   ChartPieIcon,
-  ChevronDownIcon,
   Cog6ToothIcon,
   CurrencyDollarIcon,
   DocumentDuplicateIcon,
@@ -12,7 +10,6 @@ import {
   MegaphoneIcon,
   UserIcon,
   UsersIcon,
-  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import {
   ArrowPathIcon,
@@ -28,26 +25,41 @@ import {
 } from "@heroicons/react/24/solid";
 import { useQueryClient } from "@tanstack/react-query";
 import { capitalize } from "lodash-es";
+import { ChevronsUpDown } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { navLinks as equityNavLinks } from "@/app/equity";
-import { linkClasses } from "@/components/Link";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { useCurrentUser, useUserStore } from "@/global";
 import defaultCompanyLogo from "@/images/default-company-logo.svg";
 import logo from "@/images/flexile-logo.svg";
 import { type Company } from "@/models/user";
 import { trpc } from "@/trpc/client";
-import { cn, e } from "@/utils";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
 
 type CompanyAccessRole = "administrator" | "worker" | "investor" | "lawyer";
-
-const navItemClasses = "flex items-center gap-3 px-4 py-3";
-const navLinkClasses = "flex items-center gap-3 px-4 py-3 no-underline hover:font-bold hover:text-white cursor-pointer";
 
 export default function MainLayout({
   children,
@@ -65,114 +77,131 @@ export default function MainLayout({
   footer?: React.ReactNode;
 }) {
   const user = useCurrentUser();
-  const [navOpen, setNavOpen] = useState(false);
+
   const [openCompanyId, setOpenCompanyId] = useState(user.currentCompanyId);
   useEffect(() => setOpenCompanyId(user.currentCompanyId), [user.currentCompanyId]);
   const openCompany = user.companies.find((company) => company.id === openCompanyId);
   const pathname = usePathname();
 
-  const toggleButton = (
-    <button
-      className={cn(linkClasses, "ml-auto md:hidden")}
-      aria-label="Toggle Main Menu"
-      aria-expanded={navOpen}
-      onClick={() => setNavOpen(!navOpen)}
-    >
-      {navOpen ? <XMarkIcon className="size-6" /> : <Bars3Icon className="size-6" />}
-    </button>
-  );
+  const switchCompany = useSwitchCompanyOrRole();
 
   return (
-    <div className={cn("grid md:grid-cols-[14rem_1fr]" /* { "h-full": appConfig.is_demo_mode } */)}>
-      <nav
-        className={cn("inset-0 z-10 bg-black text-gray-400 md:static print:hidden", { fixed: navOpen })}
-        aria-label="Main Menu"
-      >
-        {!navOpen ? (
-          <div className={cn(navItemClasses, "font-bold text-white md:hidden")}>
-            {openCompany ? (
+    <SidebarProvider>
+      <Sidebar collapsible="offcanvas">
+        <SidebarHeader>
+          {user.companies.length > 1 && openCompany ? (
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <SidebarMenuButton size="lg" className="text-base" aria-label="Switch company">
+                      <CompanyName company={openCompany} />
+                      <ChevronsUpDown className="ml-auto" />
+                    </SidebarMenuButton>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-(radix-dropdown-menu-trigger-width)" align="start">
+                    {user.companies.map((company) => (
+                      <DropdownMenuItem
+                        key={company.id}
+                        onSelect={() => {
+                          if (user.currentCompanyId !== company.id) void switchCompany(company.id);
+                        }}
+                        className="flex items-center gap-2"
+                      >
+                        <Image
+                          src={company.logo_url || defaultCompanyLogo}
+                          width={20}
+                          height={20}
+                          className="rounded-xs"
+                          alt=""
+                        />
+                        <span className="line-clamp-1">{company.name}</span>
+                        {company.id === user.currentCompanyId && (
+                          <div className="ml-auto size-2 rounded-full bg-blue-500"></div>
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          ) : openCompany ? (
+            <div className="flex items-center gap-2 p-2">
               <CompanyName company={openCompany} />
-            ) : (
-              <Image src={logo} className="invert" alt="Flexile" />
-            )}
-            {toggleButton}
-          </div>
-        ) : null}
-        <div className={cn("h-full flex-col overflow-y-auto text-gray-400 md:flex", navOpen ? "flex" : "hidden")}>
-          {!user.companies.length ? (
-            <div className="flex items-center gap-3 px-4 py-3">
-              <Image src={logo} className="w-auto invert md:h-14" alt="Flexile" />
-              {toggleButton}
             </div>
+          ) : (
+            <Image src={logo} className="invert" alt="Flexile" />
+          )}
+        </SidebarHeader>
+        <SidebarContent>
+          {openCompany ? (
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <NavLinks company={openCompany} />
+              </SidebarGroupContent>
+            </SidebarGroup>
           ) : null}
-          {user.companies.map((company, i) => (
-            <details key={company.id} open={company.id === openCompanyId}>
-              <summary
-                className={`list-none text-white [&::-webkit-details-marker]:hidden ${navItemClasses} ${company.id === openCompanyId ? "cursor-default" : "cursor-pointer"}`}
-                onClick={e(() => setOpenCompanyId(company.id), "prevent")}
-              >
-                <CompanyName company={company} />
-                {user.companies.length > 1 && (
-                  <ChevronDownIcon
-                    className={cn("size-5 text-white transition-transform md:ml-auto", {
-                      "rotate-180": company.id === openCompanyId,
-                    })}
-                  />
+
+          <SidebarGroup className="mt-auto">
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {!user.companies.length && (
+                  <NavLink
+                    href="/company_invitations"
+                    icon={BriefcaseIcon}
+                    filledIcon={SolidBriefcaseIcon}
+                    active={pathname.startsWith("/company_invitations")}
+                  >
+                    Invite companies
+                  </NavLink>
                 )}
-                {i === 0 && toggleButton}
-              </summary>
-              <NavLinks company={company} />
-            </details>
-          ))}
-          <div className="mt-auto">
-            {!user.companies.length && (
-              <NavLink
-                href="/company_invitations"
-                icon={BriefcaseIcon}
-                filledIcon={SolidBriefcaseIcon}
-                active={pathname.startsWith("/company_invitations")}
-              >
-                Invite companies
-              </NavLink>
-            )}
-            <NavLink
-              href="/settings"
-              icon={UserIcon}
-              filledIcon={SolidUserIcon}
-              active={pathname.startsWith("/settings")}
-            >
-              Account
-            </NavLink>
-            <SignOutButton>
-              <button className={cn(navLinkClasses, "w-full")}>
-                <ArrowRightStartOnRectangleIcon className="h-6 w-8" />
-                Log out
-              </button>
-            </SignOutButton>
-          </div>
-        </div>
-      </nav>
-      <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
-        <main className="flex flex-1 flex-col gap-6 pb-4 not-print:overflow-y-auto">
-          <div>
-            <header className="border-b bg-gray-200 px-3 pt-8 pb-4 md:px-16">
-              <div className="grid max-w-(--breakpoint-xl) gap-y-8">
-                <div className="grid items-center justify-between gap-3 md:flex">
-                  <div>
-                    <h1 className="text-3xl/[2.75rem] font-bold">{title}</h1>
-                    {subtitle}
+                <NavLink
+                  href="/settings"
+                  icon={UserIcon}
+                  filledIcon={SolidUserIcon}
+                  active={pathname.startsWith("/settings")}
+                >
+                  Account
+                </NavLink>
+                <SidebarMenuItem>
+                  <SignOutButton>
+                    <SidebarMenuButton className="cursor-pointer">
+                      <ArrowRightStartOnRectangleIcon className="size-6" />
+                      <span>Log out</span>
+                    </SidebarMenuButton>
+                  </SignOutButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+      </Sidebar>
+      <SidebarInset>
+        <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
+          <main className="flex flex-1 flex-col gap-6 pb-4 not-print:overflow-y-auto">
+            <div>
+              <header className="border-b bg-gray-200 px-3 pt-8 pb-4 md:px-16">
+                <div className="grid max-w-(--breakpoint-xl) gap-y-8">
+                  <div className="grid items-center justify-between gap-3 md:flex">
+                    <div>
+                      <div className="flex items-center justify-between gap-2">
+                        <SidebarTrigger className="md:hidden" />
+                        <h1 className="text-3xl/[2.75rem] font-bold">{title}</h1>
+                      </div>
+                      {subtitle}
+                    </div>
+                    {headerActions ? <div className="flex items-center gap-3 print:hidden">{headerActions}</div> : null}
                   </div>
-                  {headerActions ? <div className="flex items-center gap-3 print:hidden">{headerActions}</div> : null}
                 </div>
-              </div>
-            </header>
-            {subheader ? <div className="border-b bg-gray-200/50">{subheader}</div> : null}
-          </div>
-          <div className="mx-3 flex flex-col gap-6 md:mx-16">{children}</div>
-        </main>
-        {footer ? <div className="mt-auto">{footer}</div> : null}
-      </div>
-    </div>
+              </header>
+              {subheader ? <div className="border-b bg-gray-200/50">{subheader}</div> : null}
+            </div>
+            <div className="mx-3 flex flex-col gap-6 md:mx-16">{children}</div>
+          </main>
+          {footer ? <div className="mt-auto">{footer}</div> : null}
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
 
@@ -214,18 +243,11 @@ const NavLinks = ({ company }: { company: Company }) => {
     company.routes.flatMap((route) => [route.label, ...(route.subLinks?.map((subLink) => subLink.label) || [])]),
   );
   const updatesPath = company.routes.find((route) => route.label === "Updates")?.name;
-  const switchCompany = useSwitchCompanyOrRole();
   const isRole = (...roles: (typeof user.activeRole)[]) => roles.includes(user.activeRole);
   const equityNavLink = equityNavLinks(user, company)[0];
 
   return (
-    <div
-      onClick={() => {
-        if (user.currentCompanyId !== company.id) {
-          void switchCompany(company.id);
-        }
-      }}
-    >
+    <SidebarMenu>
       {updatesPath ? (
         <NavLink
           href="/updates/company"
@@ -283,7 +305,6 @@ const NavLinks = ({ company }: { company: Company }) => {
           Roles
         </NavLink>
       )}
-
       {routes.has("Equity") && equityNavLink ? (
         <NavLink
           href={equityNavLink.route}
@@ -307,7 +328,7 @@ const NavLinks = ({ company }: { company: Company }) => {
       {company.other_access_roles.map((accessRole) => (
         <SwitchRoleNavLink key={accessRole} accessRole={accessRole} companyId={company.id} />
       ))}
-    </div>
+    </SidebarMenu>
   );
 };
 
@@ -324,31 +345,28 @@ const NavLink = ({
   className?: string;
   href: string; // TODO use Route<T> here once all of them are migrated
   active?: boolean;
-  icon: React.ComponentType<{ className: string }>;
-  filledIcon?: React.ComponentType<{ className: string }>;
+  icon: React.ComponentType;
+  filledIcon?: React.ComponentType;
   badge?: number | undefined;
 }) => {
   const Icon = active && filledIcon ? filledIcon : icon;
   return (
-    <Link
-      className={cn(navLinkClasses, { "font-bold text-white": active }, className)}
-      // @ts-expect-error see the above comment
-      href={href}
-    >
-      <div className="relative">
-        <Icon className="h-6 w-8" />
-        {badge && badge > 0 ? (
-          <Badge
-            role="status"
-            color="blue"
-            className="absolute -top-2 right-0 h-4 w-auto min-w-4 translate-x-1/4 px-1 text-xs"
-          >
-            {badge > 10 ? "10+" : badge}
-          </Badge>
-        ) : null}
-      </div>
-      <span className="truncate">{children}</span>
-    </Link>
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild isActive={active ?? false} className={className}>
+        <Link
+          // @ts-expect-error see the above comment
+          href={href}
+        >
+          <Icon />
+          <span>{children}</span>
+          {badge && badge > 0 ? (
+            <Badge role="status" className="ml-auto h-4 w-auto min-w-4 bg-blue-500 px-1 text-xs text-white">
+              {badge > 10 ? "10+" : badge}
+            </Badge>
+          ) : null}
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   );
 };
 
@@ -378,23 +396,14 @@ function InvoicesNavLink({ companyId, active, isAdmin }: { companyId: string; ac
 }
 
 function SwitchRoleNavLink({ accessRole, companyId }: { accessRole: CompanyAccessRole; companyId: string }) {
-  const router = useRouter();
   const switchCompany = useSwitchCompanyOrRole();
 
-  const handleSwitchRole = (e: React.MouseEvent) => {
-    e.preventDefault();
-    void (async () => {
-      await switchCompany(companyId, accessRole);
-      router.push("/dashboard");
-    })();
-  };
-
-  const roleLabel = accessRole === "administrator" ? "admin" : accessRole;
   return (
-    <div onClick={handleSwitchRole}>
-      <NavLink href="/" icon={ArrowPathIcon}>
-        <span className="truncate">Use as {roleLabel}</span>
-      </NavLink>
-    </div>
+    <SidebarMenuItem>
+      <SidebarMenuButton onClick={() => void switchCompany(companyId, accessRole)}>
+        <ArrowPathIcon />
+        <span>Use as {accessRole === "administrator" ? "admin" : accessRole}</span>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   );
 }
