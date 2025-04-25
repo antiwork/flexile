@@ -21,6 +21,7 @@ export default defineConfig({
       ignoreHTTPSErrors: true,
     },
     locale: "en-US",
+    headless: false,
   },
   expect: { timeout: 30000 },
   timeout: process.env.CI ? 30000 : 120000,
