@@ -1,5 +1,4 @@
 import { useMutation } from "@tanstack/react-query";
-import Image from "next/image";
 import MutationButton from "@/components/MutationButton";
 import Status from "@/components/Status";
 import { useCurrentCompany } from "@/global";

@@ -37,15 +37,14 @@ import { walletsRouter } from "./routes/wallets";
 import { workerAbsencesRouter } from "./routes/workerAbsences";
 import { createClient } from "./shared";
 import { createCallerFactory, createRouter } from "./";
-import { router } from "@/trpc/trpc";
 
-export const appRouter = router({
+export const appRouter = createRouter({
   slack: slackRouter,
-  quickbooks: quickbooksRouter,
   users: usersRouter,
   wallets: walletsRouter,
   contractors: contractorsRouter,
   roles: rolesRouter,
+  quickbooks: quickbooksRouter,
   github: githubRouter,
   invoices: invoicesRouter,
   consolidatedInvoices: consolidatedInvoicesRouter,
