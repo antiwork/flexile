@@ -1,10 +1,10 @@
 import { PopoverTrigger } from "@radix-ui/react-popover";
+import { Check, ChevronsUpDown } from "lucide-react";
 import React from "react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent } from "@/components/ui/popover";
 import { cn } from "@/utils";
 import { Button } from "./ui/button";
-import { Check, ChevronsUpDown } from "lucide-react";
 
 const ComboBox = ({
   options,

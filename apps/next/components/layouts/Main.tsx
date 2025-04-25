@@ -25,6 +25,7 @@ import {
 } from "@heroicons/react/24/solid";
 import { useQueryClient } from "@tanstack/react-query";
 import { capitalize } from "lodash-es";
+import { ChevronsUpDown } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -57,7 +58,6 @@ import { type Company } from "@/models/user";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
-import { ChevronsUpDown } from "lucide-react";
 
 type CompanyAccessRole = "administrator" | "worker" | "investor" | "lawyer";
 
