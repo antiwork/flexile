@@ -1451,25 +1451,6 @@ export const company_role_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"
  */
 export const company_role_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"roles"],[2,[7,"/"],[2,[3,"id"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]);
 
-/**
- * Generates rails route to
- * /internal/companies/:company_id/roles/:role_id/applications(.:format)
- * @param {any} company_id
- * @param {any} role_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const company_role_applications_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"role_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"roles"],[2,[7,"/"],[2,[3,"role_id"],[2,[7,"/"],[2,[6,"applications"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]], true);
-
-/**
- * Generates rails route to
- * /internal/companies/:company_id/roles/:role_id/applications(.:format)
- * @param {any} company_id
- * @param {any} role_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const company_role_applications_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"role_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"roles"],[2,[7,"/"],[2,[3,"role_id"],[2,[7,"/"],[2,[6,"applications"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]]);
 
 /**
  * Generates rails route to
@@ -2551,23 +2532,6 @@ export const role_url = /*#__PURE__*/ __jsr.r({"id":{"r":true},"format":{}}, [2,
  */
 export const role_path = /*#__PURE__*/ __jsr.r({"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"roles"],[2,[7,"/"],[2,[3,"id"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
 
-/**
- * Generates rails route to
- * /internal/roles/:role_id/applications(.:format)
- * @param {any} role_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const role_applications_url = /*#__PURE__*/ __jsr.r({"role_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"roles"],[2,[7,"/"],[2,[3,"role_id"],[2,[7,"/"],[2,[6,"applications"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]], true);
-
-/**
- * Generates rails route to
- * /internal/roles/:role_id/applications(.:format)
- * @param {any} role_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const role_applications_path = /*#__PURE__*/ __jsr.r({"role_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"roles"],[2,[7,"/"],[2,[3,"role_id"],[2,[7,"/"],[2,[6,"applications"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]);
 
 /**
  * Generates rails route to

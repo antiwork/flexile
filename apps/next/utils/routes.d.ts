@@ -1274,33 +1274,6 @@ export const company_role_path: ((
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
-/**
- * Generates rails route to
- * /internal/companies/:company_id/roles/:role_id/applications(.:format)
- * @param {any} company_id
- * @param {any} role_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const company_role_applications_url: ((
-  company_id: RequiredRouteParameter,
-  role_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/companies/:company_id/roles/:role_id/applications(.:format)
- * @param {any} company_id
- * @param {any} role_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const company_role_applications_path: ((
-  company_id: RequiredRouteParameter,
-  role_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
 
 /**
  * Generates rails route to
@@ -2706,29 +2679,6 @@ export const role_path: ((
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
-/**
- * Generates rails route to
- * /internal/roles/:role_id/applications(.:format)
- * @param {any} role_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const role_applications_url: ((
-  role_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/roles/:role_id/applications(.:format)
- * @param {any} role_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const role_applications_path: ((
-  role_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
 
 /**
  * Generates rails route to
