@@ -7,10 +7,8 @@ import {
   ChevronDownIcon,
   Cog6ToothIcon,
   CurrencyDollarIcon,
-  DocumentCurrencyDollarIcon,
   DocumentDuplicateIcon,
   DocumentTextIcon,
-  MagnifyingGlassIcon,
   MegaphoneIcon,
   UserIcon,
   UsersIcon,
@@ -28,17 +26,13 @@ import {
   UserIcon as SolidUserIcon,
   UsersIcon as SolidUsersIcon,
 } from "@heroicons/react/24/solid";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { capitalize } from "lodash-es";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
-import { useDebounce } from "use-debounce";
-import { z } from "zod";
+import React, { useEffect, useState } from "react";
 import { navLinks as equityNavLinks } from "@/app/equity";
-import InvoiceStatus, { invoiceSchema } from "@/app/invoices/LegacyStatus";
-import Input from "@/components/Input";
 import { linkClasses } from "@/components/Link";
 import { Badge } from "@/components/ui/badge";
 import { useCurrentUser, useUserStore } from "@/global";
@@ -47,18 +41,10 @@ import logo from "@/images/flexile-logo.svg";
 import { type Company } from "@/models/user";
 import { trpc } from "@/trpc/client";
 import { cn, e } from "@/utils";
-import { assertDefined } from "@/utils/assert";
 import { request } from "@/utils/request";
-import { company_search_path, company_switch_path } from "@/utils/routes";
-import { formatDate } from "@/utils/time";
-import { useOnGlobalEvent } from "@/utils/useOnGlobalEvent";
+import { company_switch_path } from "@/utils/routes";
 
 type CompanyAccessRole = "administrator" | "worker" | "investor" | "lawyer";
-
-const searchResultsSchema = z.object({
-  invoices: z.array(invoiceSchema),
-  users: z.array(z.object({ name: z.string(), role: z.string(), url: z.string() })),
-});
 
 const navItemClasses = "flex items-center gap-3 px-4 py-3";
 const navLinkClasses = "flex items-center gap-3 px-4 py-3 no-underline hover:font-bold hover:text-white cursor-pointer";
@@ -79,53 +65,11 @@ export default function MainLayout({
   footer?: React.ReactNode;
 }) {
   const user = useCurrentUser();
-  const isRole = (...roles: (typeof user.activeRole)[]) => roles.includes(user.activeRole);
   const [navOpen, setNavOpen] = useState(false);
   const [openCompanyId, setOpenCompanyId] = useState(user.currentCompanyId);
   useEffect(() => setOpenCompanyId(user.currentCompanyId), [user.currentCompanyId]);
   const openCompany = user.companies.find((company) => company.id === openCompanyId);
   const pathname = usePathname();
-  const [query, setQuery] = useState("");
-  const [debouncedQuery] = useDebounce(query, 200);
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [selectedResultIndex, setSelectedResultIndex] = useState(0);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const searchResultsRef = useRef<HTMLDivElement>(null);
-
-  const uid = React.useId();
-
-  const { data: searchResults } = useQuery({
-    queryKey: ["search", debouncedQuery, user.currentCompanyId],
-    queryFn: async () => {
-      const response = await request({
-        method: "GET",
-        url: company_search_path(assertDefined(user.currentCompanyId), { query: debouncedQuery }),
-        accept: "json",
-      });
-      return searchResultsSchema.parse(await response.json());
-    },
-    enabled: debouncedQuery.length > 0 && !!user.currentCompanyId,
-  });
-  useEffect(() => setSelectedResultIndex(0), [searchResults]);
-
-  useOnGlobalEvent("keydown", (event) => {
-    if (
-      document.activeElement instanceof HTMLElement &&
-      (["INPUT", "TEXTAREA"].includes(document.activeElement.nodeName) || document.activeElement.isContentEditable)
-    )
-      return;
-    if (event.key === "/") {
-      event.preventDefault();
-      searchInputRef.current?.focus();
-    }
-  });
-
-  const cancelSearch = () => searchInputRef.current?.blur();
-
-  const resetSearch = () => {
-    cancelSearch();
-    setQuery("");
-  };
 
   const toggleButton = (
     <button
@@ -213,104 +157,6 @@ export default function MainLayout({
           <div>
             <header className="border-b bg-gray-200 px-3 pt-8 pb-4 md:px-16">
               <div className="grid max-w-(--breakpoint-xl) gap-y-8">
-                {user.companies.length > 0 && (
-                  <search className="relative print:hidden">
-                    <Input
-                      ref={searchInputRef}
-                      value={query}
-                      onChange={setQuery}
-                      className="rounded-full! border-0"
-                      placeholder={isRole("administrator") ? "Search invoices, people..." : "Search invoices"}
-                      role="combobox"
-                      aria-autocomplete="list"
-                      aria-expanded={
-                        !!searchFocused &&
-                        (searchResults?.invoices.length || 0) + (searchResults?.users.length || 0) > 0
-                      }
-                      prefix={<MagnifyingGlassIcon className="size-4" />}
-                      aria-controls={`${uid}results`}
-                      onFocus={() => setSearchFocused(true)}
-                      onBlur={() => setSearchFocused(false)}
-                      onKeyDown={(e) => {
-                        switch (e.key) {
-                          case "Enter":
-                            if ((searchResults?.invoices.length || 0) > 0 || (searchResults?.users.length || 0) > 0) {
-                              const links = searchResultsRef.current?.querySelectorAll("a");
-                              links?.[selectedResultIndex]?.click();
-                            }
-                            break;
-                          case "Escape":
-                            cancelSearch();
-                            break;
-                          case "ArrowDown":
-                            e.preventDefault();
-                            setSelectedResultIndex((prev) =>
-                              prev < (searchResults?.invoices.length || 0) + (searchResults?.users.length || 0) - 1
-                                ? prev + 1
-                                : prev,
-                            );
-                            break;
-                          case "ArrowUp":
-                            e.preventDefault();
-                            setSelectedResultIndex((prev) => (prev > 0 ? prev - 1 : prev));
-                            break;
-                        }
-                      }}
-                    />
-
-                    {searchResults &&
-                    searchFocused &&
-                    searchResults.invoices.length + searchResults.users.length > 0 ? (
-                      <div
-                        id={`${uid}results`}
-                        ref={searchResultsRef}
-                        role="listbox"
-                        className="absolute inset-x-0 top-full z-10 mt-2 rounded-xl border bg-white"
-                        onMouseDown={(e) => e.preventDefault()}
-                      >
-                        <SearchLinks
-                          links={searchResults.invoices}
-                          selectedResultIndex={selectedResultIndex}
-                          setSelectedResultIndex={setSelectedResultIndex}
-                          onClick={resetSearch}
-                          title="Invoices"
-                          className="mt-2"
-                        >
-                          {(invoice) => (
-                            <>
-                              <DocumentCurrencyDollarIcon className="size-6" />
-                              {invoice.title}
-                              <div className="text-xs">&mdash; {formatDate(invoice.invoice_date)}</div>
-                              <InvoiceStatus invoice={invoice} className="ml-auto text-xs" />
-                            </>
-                          )}
-                        </SearchLinks>
-                        <SearchLinks
-                          links={searchResults.users}
-                          selectedResultIndex={selectedResultIndex - searchResults.invoices.length}
-                          setSelectedResultIndex={(i) => setSelectedResultIndex(searchResults.invoices.length + i)}
-                          onClick={resetSearch}
-                          title="People"
-                          className="mt-2"
-                        >
-                          {(user) => (
-                            <>
-                              {user.name}
-                              <div className="text-xs">&mdash; {user.role}</div>
-                            </>
-                          )}
-                        </SearchLinks>
-                        <footer className="rounded-b-xl border-t bg-gray-50 px-3 py-1 text-xs text-gray-400">
-                          Pro tip: open search by pressing the
-                          <kbd className="rounded-full border border-gray-300 bg-white px-2 py-0.5 font-mono text-sm">
-                            /
-                          </kbd>{" "}
-                          key
-                        </footer>
-                      </div>
-                    ) : null}
-                  </search>
-                )}
                 <div className="grid items-center justify-between gap-3 md:flex">
                   <div>
                     <h1 className="text-3xl/[2.75rem] font-bold">{title}</h1>
@@ -552,37 +398,3 @@ function SwitchRoleNavLink({ accessRole, companyId }: { accessRole: CompanyAcces
     </div>
   );
 }
-
-const SearchLinks = <T extends { url: string }>({
-  links,
-  selectedResultIndex,
-  setSelectedResultIndex,
-  onClick,
-  children,
-  title,
-  className,
-}: {
-  links: T[];
-  selectedResultIndex: number;
-  setSelectedResultIndex: (index: number) => void;
-  onClick: () => void;
-  children: (link: T) => React.ReactNode;
-  title: string;
-  className?: string;
-}) => (
-  <div role="group" className={className}>
-    <h4 className="mt-2 px-3 text-xs text-gray-400">{title}</h4>
-    {links.map((link, i) => (
-      <a
-        key={link.url}
-        href={link.url}
-        className={cn("flex items-center gap-1 px-3 py-1", { "text-blue-600": i === selectedResultIndex })}
-        role="option"
-        onClick={onClick}
-        onMouseOver={() => setSelectedResultIndex(i)}
-      >
-        {children(link)}
-      </a>
-    ))}
-  </div>
-);
