@@ -379,7 +379,7 @@ export default function DocumentsPage() {
             <DataTable
               table={table}
               actions={isCompanyRepresentative ? <EditTemplates /> : undefined}
-              searchColumn="Signer"
+              {...(!(userId && user.activeRole === "contractorOrInvestor") && { searchColumn: "Signer" })}
             />
             {signDocument ? (
               <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} />
