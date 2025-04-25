@@ -13,7 +13,7 @@ import DocusealForm from "@/app/documents/DocusealForm";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
-import Modal from "@/components/Modal";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import Status, { type Variant as StatusVariant } from "@/components/Status";
@@ -111,40 +111,44 @@ const EditTemplates = () => {
         <PencilIcon className="size-4" />
         Edit templates
       </Button>
-      <Modal open={open} onClose={() => setOpen(false)} title="Edit templates">
-        <div className="grid gap-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTemplates.map((template) => (
-                <TableRow key={template.id}>
-                  <TableCell>
-                    <Link href={`/document_templates/${template.id}`} className="after:absolute after:inset-0">
-                      {template.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{templateTypeLabels[template.type]}</TableCell>
+      <Dialog open={open} onOpenChange={(isOpen) => !isOpen && setOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit templates</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Type</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <h3 className="text-lg font-medium">Create a new template</h3>
-          <Alert>
-            <InformationCircleIcon />
-            <AlertDescription>
-              By creating a custom document template, you acknowledge that Flexile shall not be liable for any claims,
-              liabilities, or damages arising from or related to such documents. See our{" "}
-              <Link href="/terms" className="text-blue-600 hover:underline">
-                Terms of Service
-              </Link>{" "}
-              for more details.
-            </AlertDescription>
-          </Alert>
+              </TableHeader>
+              <TableBody>
+                {filteredTemplates.map((template) => (
+                  <TableRow key={template.id}>
+                    <TableCell>
+                      <Link href={`/document_templates/${template.id}`} className="after:absolute after:inset-0">
+                        {template.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell>{templateTypeLabels[template.type]}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <h3 className="text-lg font-medium">Create a new template</h3>
+            <Alert>
+              <InformationCircleIcon />
+              <AlertDescription>
+                By creating a custom document template, you acknowledge that Flexile shall not be liable for any claims,
+                liabilities, or damages arising from or related to such documents. See our{" "}
+                <Link href="/terms" className="text-blue-600 hover:underline">
+                  Terms of Service
+                </Link>{" "}
+                for more details.
+              </AlertDescription>
+            </Alert>
           <div className="grid grid-cols-3 gap-4">
             <MutationButton
               idleVariant="outline"
@@ -192,8 +196,9 @@ const EditTemplates = () => {
               </div>
             </MutationButton>
           </div>
-        </div>
-      </Modal>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
@@ -389,28 +394,33 @@ export default function DocumentsPage() {
           <Placeholder icon={CheckCircleIcon}>No documents yet.</Placeholder>
         )}
       </div>
-      <Modal open={showInviteModal} onClose={() => setShowInviteModal(false)} title="Who's joining?">
-        <form>
-          <Input
-            value={lawyerEmail}
-            onChange={(e) => setLawyerEmail(e)}
-            label="Email"
-            placeholder="Lawyer's email"
-            type="email"
-            invalid={inviteLawyerMutation.isError}
-            help={inviteLawyerMutation.error?.message}
-          />
-          <MutationButton
-            mutation={inviteLawyerMutation}
-            className="mt-4 w-full"
-            disabled={!lawyerEmail}
-            loadingText="Inviting..."
-          >
-            <PaperAirplaneIcon className="size-5" />
-            Invite
-          </MutationButton>
-        </form>
-      </Modal>
+      <Dialog open={showInviteModal} onOpenChange={(isOpen) => !isOpen && setShowInviteModal(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Who's joining?</DialogTitle>
+          </DialogHeader>
+          <form>
+            <Input
+              value={lawyerEmail}
+              onChange={(e) => setLawyerEmail(e)}
+              label="Email"
+              placeholder="Lawyer's email"
+              type="email"
+              invalid={inviteLawyerMutation.isError}
+              help={inviteLawyerMutation.error?.message}
+            />
+            <MutationButton
+              mutation={inviteLawyerMutation}
+              className="mt-4 w-full"
+              disabled={!lawyerEmail}
+              loadingText="Inviting..."
+            >
+              <PaperAirplaneIcon className="size-5" />
+              Invite
+            </MutationButton>
+          </form>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }
@@ -455,43 +465,47 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
   });
 
   return (
-    <Modal open onClose={onClose}>
-      {user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent && (
-        <header className="flex justify-end gap-4">
-          <MutationButton
-            mutation={documentLawyerApproval}
-            param={{ companyId: company.id, id: document.id }}
-            loadingText="Approving..."
-            successText="Approved!"
-            errorText="Failed to approve"
-          >
-            Approve
-          </MutationButton>
-        </header>
-      )}
-      <DocusealForm
-        src={`https://docuseal.com/s/${slug}`}
-        readonlyFields={readonlyFields}
-        preview={user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent}
-        onComplete={() => {
-          const userIsSigner = document.signatories.some(
-            (signatory) => signatory.id === user.id && signatory.title === "Signer",
-          );
-          const role = userIsSigner
-            ? "Signer"
-            : document.type === DocumentType.BoardConsent
-              ? assertDefined(
-                  document.signatories.find((signatory) => signatory.id === user.id)?.title,
-                  "User is not a board member",
-                )
-              : "Company Representative";
-          signDocument.mutate({
-            companyId: company.id,
-            id: document.id,
-            role,
-          });
-        }}
-      />
-    </Modal>
+    <Dialog open={true} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent>
+        {user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent && (
+          <DialogHeader>
+            <div className="flex justify-end gap-4">
+              <MutationButton
+                mutation={documentLawyerApproval}
+                param={{ companyId: company.id, id: document.id }}
+                loadingText="Approving..."
+                successText="Approved!"
+                errorText="Failed to approve"
+              >
+                Approve
+              </MutationButton>
+            </div>
+          </DialogHeader>
+        )}
+        <DocusealForm
+          src={`https://docuseal.com/s/${slug}`}
+          readonlyFields={readonlyFields}
+          preview={user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent}
+          onComplete={() => {
+            const userIsSigner = document.signatories.some(
+              (signatory) => signatory.id === user.id && signatory.title === "Signer",
+            );
+            const role = userIsSigner
+              ? "Signer"
+              : document.type === DocumentType.BoardConsent
+                ? assertDefined(
+                    document.signatories.find((signatory) => signatory.id === user.id)?.title,
+                    "User is not a board member",
+                  )
+                : "Company Representative";
+            signDocument.mutate({
+              companyId: company.id,
+              id: document.id,
+              role,
+            });
+          }}
+        />
+      </DialogContent>
+    </Dialog>
   );
 };
