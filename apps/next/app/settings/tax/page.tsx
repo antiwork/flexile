@@ -2,6 +2,7 @@
 
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { iso31662 } from "iso-3166";
 import { Eye, EyeOff } from "lucide-react";
@@ -9,7 +10,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import LegalCertificationModal from "@/app/onboarding/LegalCertificationModal";
 import ComboBox from "@/components/ComboBox";
 import FormSection from "@/components/FormSection";
@@ -52,89 +52,91 @@ const dataSchema = z.object({
 });
 type Data = z.infer<typeof dataSchema>;
 
-const formSchema = z.object({
-  legal_name: z
-    .string()
-    .min(1, "Please add your full legal name.")
-    .refine((value) => /\S+\s+\S+/u.test(value), {
-      message: "This doesn't look like a complete full name.",
-    }),
-  citizenship_country_code: z.string(),
-  business_entity: z.boolean(),
-  business_name: z.string().nullable(),
-  business_type: z.number().nullable(),
-  tax_classification: z.number().nullable(),
-  country_code: z.string(),
-  tax_id: z.string().nullable(),
-  birth_date: z.string().nullable(),
-  street_address: z.string().min(1, "Please add your residential address."),
-  city: z.string().min(1, "Please add your city or town."),
-  state: z.string(),
-  zip_code: z.string().min(1, "Please add your postal code."),
-}).superRefine((data, ctx) => {
-  const isForeign = data.citizenship_country_code !== "US" && data.country_code !== "US";
-  const tinName = getTinName(data.business_entity);
-  
-  if (!data.tax_id) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: `Please add your ${isForeign ? "foreign tax ID" : tinName}.`,
-      path: ["tax_id"],
-    });
-  } else if (!isForeign) {
-    if (data.tax_id.length !== 9) {
+const formSchema = z
+  .object({
+    legal_name: z
+      .string()
+      .min(1, "Please add your full legal name.")
+      .refine((value) => /\S+\s+\S+/u.test(value), {
+        message: "This doesn't look like a complete full name.",
+      }),
+    citizenship_country_code: z.string(),
+    business_entity: z.boolean(),
+    business_name: z.string().nullable(),
+    business_type: z.number().nullable(),
+    tax_classification: z.number().nullable(),
+    country_code: z.string(),
+    tax_id: z.string().nullable(),
+    birth_date: z.string().nullable(),
+    street_address: z.string().min(1, "Please add your residential address."),
+    city: z.string().min(1, "Please add your city or town."),
+    state: z.string(),
+    zip_code: z.string().min(1, "Please add your postal code."),
+  })
+  .superRefine((data, ctx) => {
+    const isForeign = data.citizenship_country_code !== "US" && data.country_code !== "US";
+    const tinName = getTinName(data.business_entity);
+
+    if (!data.tax_id) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Please check that your ${tinName} is 9 numbers long.`,
+        message: `Please add your ${isForeign ? "foreign tax ID" : tinName}.`,
         path: ["tax_id"],
       });
-    } else if (/^(\d)\1{8}$/u.test(data.tax_id)) {
+    } else if (!isForeign) {
+      if (data.tax_id.length !== 9) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Please check that your ${tinName} is 9 numbers long.`,
+          path: ["tax_id"],
+        });
+      } else if (/^(\d)\1{8}$/u.test(data.tax_id)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Your ${tinName} can't have all identical digits.`,
+          path: ["tax_id"],
+        });
+      }
+    }
+
+    if (data.business_entity && !data.business_name) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Your ${tinName} can't have all identical digits.`,
-        path: ["tax_id"],
+        message: "Please add your business legal name.",
+        path: ["business_name"],
       });
     }
-  }
 
-  if (data.business_entity && !data.business_name) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Please add your business legal name.",
-      path: ["business_name"],
-    });
-  }
+    if (data.business_entity && data.business_type === null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please select a business type.",
+        path: ["business_type"],
+      });
+    }
 
-  if (data.business_entity && data.business_type === null) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Please select a business type.",
-      path: ["business_type"],
-    });
-  }
+    if (data.business_entity && data.business_type === BusinessType.LLC && data.tax_classification === null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please select a tax classification.",
+        path: ["tax_classification"],
+      });
+    }
 
-  if (data.business_entity && data.business_type === BusinessType.LLC && data.tax_classification === null) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Please select a tax classification.",
-      path: ["tax_classification"],
-    });
-  }
-  
-  if (data.country_code === "US" && !/(^\d{5}|\d{9}|\d{5}[- ]\d{4})$/u.test(data.zip_code)) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Please add a valid ZIP code (5 or 9 digits).",
-      path: ["zip_code"],
-    });
-  } else if (data.country_code !== "US" && !/\d/u.test(data.zip_code)) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Please add a valid postal code (must contain at least one number).",
-      path: ["zip_code"],
-    });
-  }
-});
+    if (data.country_code === "US" && !/(^\d{5}|\d{9}|\d{5}[- ]\d{4})$/u.test(data.zip_code)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please add a valid ZIP code (5 or 9 digits).",
+        path: ["zip_code"],
+      });
+    } else if (data.country_code !== "US" && !/\d/u.test(data.zip_code)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please add a valid postal code (must contain at least one number).",
+        path: ["zip_code"],
+      });
+    }
+  });
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -181,7 +183,7 @@ export default function TaxPage() {
   const formValues = form.watch();
   const isForeign = useMemo(
     () => formValues.citizenship_country_code !== "US" && formValues.country_code !== "US",
-    [formValues.citizenship_country_code, formValues.country_code]
+    [formValues.citizenship_country_code, formValues.country_code],
   );
 
   useEffect(() => {
@@ -217,17 +219,17 @@ export default function TaxPage() {
     });
   };
 
-  const onSubmit = async () => {
+  const onSubmit = () => {
     setShowCertificationModal(true);
   };
 
   const saveMutation = useMutation({
     mutationFn: async (signature: string) => {
       const formData = form.getValues();
-      
+
       const data = await updateTaxSettings.mutateAsync({
-        data: { 
-          ...formData, 
+        data: {
+          ...formData,
           tax_id: normalizedTaxId(formData.tax_id),
           signature,
           is_tax_information_confirmed: true,
@@ -270,9 +272,10 @@ export default function TaxPage() {
                 <InformationCircleIcon />
                 <AlertTitle>Review your tax information</AlertTitle>
                 <AlertDescription>
-                  Since there's a mismatch between the legal name and {tinName} you provided and your government records,
-                  please note that your payments could experience a tax withholding rate of 24%. If you think this may be
-                  due to a typo or recent changes to your name or legal entity, please update your information.
+                  Since there's a mismatch between the legal name and {tinName} you provided and your government
+                  records, please note that your payments could experience a tax withholding rate of 24%. If you think
+                  this may be due to a typo or recent changes to your name or legal entity, please update your
+                  information.
                 </AlertDescription>
               </Alert>
             )}
@@ -298,10 +301,7 @@ export default function TaxPage() {
                 <FormItem>
                   <FormLabel>Country of citizenship</FormLabel>
                   <FormControl>
-                    <ComboBox
-                      options={countryOptions}
-                      {...field}
-                    />
+                    <ComboBox options={countryOptions} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -407,10 +407,7 @@ export default function TaxPage() {
                 <FormItem>
                   <FormLabel>{`Country of ${formValues.business_entity ? "incorporation" : "residence"}`}</FormLabel>
                   <FormControl>
-                    <ComboBox
-                      options={countryOptions}
-                      {...field}
-                    />
+                    <ComboBox options={countryOptions} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -555,7 +552,9 @@ export default function TaxPage() {
             <Button 
               type="button"
               disabled={!taxInfoChanged && isTaxInfoConfirmed} 
-              onClick={form.handleSubmit(onSubmit)}
+              onClick={() => {
+                form.handleSubmit(onSubmit)();
+              }}
             >
               Save changes
             </Button>
