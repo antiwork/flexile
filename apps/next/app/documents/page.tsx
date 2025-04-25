@@ -13,7 +13,7 @@ import DocusealForm from "@/app/documents/DocusealForm";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import Status, { type Variant as StatusVariant } from "@/components/Status";
@@ -317,7 +317,7 @@ export default function DocumentsPage() {
               <>
                 {isSignable(document) ? (
                   <Button variant="outline" size="small" onClick={() => setSignDocumentId(document.id)}>
-                    Review & sign
+                    Review and sign
                   </Button>
                 ) : null}
                 {document.attachment ? (
