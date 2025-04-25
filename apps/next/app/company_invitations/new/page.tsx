@@ -6,14 +6,14 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { z } from "zod";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
-import DecimalInput from "@/components/DecimalInput";
 import FormSection from "@/components/FormSection";
-import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import RadioButtons from "@/components/RadioButtons";
 import { CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { DocumentTemplateType, PayRateType } from "@/db/enums";
 import { trpc } from "@/trpc/client";
 
@@ -59,21 +59,29 @@ export default function CreateCompanyInvitation() {
       <div className="space-y-6">
         <FormSection title="Company details">
           <CardContent className="grid gap-4">
-            <Input
-              value={companyAdministratorEmail}
-              onChange={setCompanyAdministratorEmail}
-              label="Email"
-              placeholder="CEO's email"
-              type="email"
-              invalid={!!errors["user.email"]}
-              help={errors["user.email"]}
-            />
-            <Input
-              value={companyName}
-              onChange={setCompanyName}
-              label="Company name"
-              placeholder="Company's legal name"
-            />
+            <div className="grid gap-2">
+              <Label htmlFor="admin-email">Email</Label>
+              <Input
+                id="admin-email"
+                type="email"
+                value={companyAdministratorEmail}
+                onChange={(e) => setCompanyAdministratorEmail(e.target.value)}
+                placeholder="CEO's email"
+                aria-invalid={!!errors["user.email"]}
+              />
+              {errors["user.email"] ? <span className="text-destructive text-sm">{errors["user.email"]}</span> : null}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="company-name">Company name</Label>
+              <Input
+                id="company-name"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                placeholder="Company's legal name"
+              />
+            </div>
+
             <TemplateSelector
               selected={templateId}
               setSelected={setTemplateId}
@@ -85,13 +93,19 @@ export default function CreateCompanyInvitation() {
 
         <FormSection title="Role details">
           <CardContent className="grid gap-4">
-            <Input
-              value={roleName}
-              onChange={setRoleName}
-              label="Role name"
-              invalid={!!errors["company_role.name"]}
-              help={errors["company_role.name"]}
-            />
+            <div className="grid gap-2">
+              <Label htmlFor="role-name">Role name</Label>
+              <Input
+                id="role-name"
+                value={roleName}
+                onChange={(e) => setRoleName(e.target.value)}
+                aria-invalid={!!errors["company_role.name"]}
+              />
+              {errors["company_role.name"] ? (
+                <span className="text-destructive text-sm">{errors["company_role.name"]}</span>
+              ) : null}
+            </div>
+
             <RadioButtons
               value={rolePayRateType}
               onChange={setRolePayRateType}
@@ -103,24 +117,37 @@ export default function CreateCompanyInvitation() {
               invalid={!!errors["company_role.rate.pay_rate_type"]}
               help={errors["company_role.rate.pay_rate_type"]}
             />
-            <DecimalInput
-              value={roleRate}
-              onChange={setRoleRate}
-              label="Rate"
-              prefix="$"
-              suffix={rolePayRateType === "hourly" ? "/ hour" : "/ project"}
-              invalid={!!errors["company_role.rate.pay_rate_in_subunits"]}
-              help={errors["company_role.rate.pay_rate_in_subunits"]}
-            />
-            {rolePayRateType === "hourly" && (
+
+            <div className="grid gap-2">
+              <Label htmlFor="role-rate">Rate</Label>
               <NumberInput
-                value={roleHours}
-                onChange={setRoleHours}
-                label="Average hours"
-                suffix="/ week"
-                invalid={!!errors["company_worker.hours_per_week"]}
-                help={errors["company_worker.hours_per_week"]}
+                id="role-rate"
+                value={roleRate}
+                onChange={(value) => setRoleRate(value ?? null)}
+                prefix="$"
+                suffix={rolePayRateType === "hourly" ? "/ hour" : "/ project"}
+                invalid={!!errors["company_role.rate.pay_rate_in_subunits"]}
+                decimal
               />
+              {errors["company_role.rate.pay_rate_in_subunits"] ? (
+                <span className="text-destructive text-sm">{errors["company_role.rate.pay_rate_in_subunits"]}</span>
+              ) : null}
+            </div>
+
+            {rolePayRateType === "hourly" && (
+              <div className="grid gap-2">
+                <Label htmlFor="role-hours">Average hours</Label>
+                <NumberInput
+                  id="role-hours"
+                  value={roleHours}
+                  onChange={(value) => setRoleHours(value ?? null)}
+                  suffix="/ week"
+                  invalid={!!errors["company_worker.hours_per_week"]}
+                />
+                {errors["company_worker.hours_per_week"] ? (
+                  <span className="text-destructive text-sm">{errors["company_worker.hours_per_week"]}</span>
+                ) : null}
+              </div>
             )}
           </CardContent>
         </FormSection>

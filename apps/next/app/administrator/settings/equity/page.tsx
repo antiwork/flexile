@@ -4,9 +4,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Set } from "immutable";
 import { useEffect, useRef, useState } from "react";
 import ComboBox from "@/components/ComboBox";
-import DecimalInput from "@/components/DecimalInput";
 import FormSection from "@/components/FormSection";
 import MutationButton from "@/components/MutationButton";
+import NumberInput from "@/components/NumberInput";
 import { CardContent, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
@@ -162,30 +162,42 @@ export default function Equity() {
       >
         <CardContent>
           <div className="grid gap-4">
-            <DecimalInput
-              value={sharePriceInUsd ?? null}
-              onChange={setSharePriceInUsd}
-              label="Current share price (USD)"
-              invalid={errors.has("sharePriceInUsd")}
-              prefix="$"
-              minimumFractionDigits={2}
-            />
-            <DecimalInput
-              value={fmvPerShareInUsd ?? null}
-              onChange={setFmvPerShareInUsd}
-              label="Current 409A valuation (USD per share)"
-              invalid={errors.has("fmvPerShareInUsd")}
-              prefix="$"
-              minimumFractionDigits={2}
-            />
-            <DecimalInput
-              value={conversionSharePriceUsd ?? null}
-              onChange={setConversionSharePriceUsd}
-              label="Conversion share price (USD)"
-              invalid={errors.has("conversionSharePriceUsd")}
-              prefix="$"
-              minimumFractionDigits={2}
-            />
+            <div className="grid gap-2">
+              <Label htmlFor="share-price">Current share price (USD)</Label>
+              <NumberInput
+                id="share-price"
+                value={sharePriceInUsd ?? null}
+                onChange={(value) => setSharePriceInUsd(value ?? 0)}
+                invalid={errors.has("sharePriceInUsd")}
+                prefix="$"
+                minimumFractionDigits={2}
+                decimal
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="fmv-price">Current 409A valuation (USD per share)</Label>
+              <NumberInput
+                id="fmv-price"
+                value={fmvPerShareInUsd ?? null}
+                onChange={(value) => setFmvPerShareInUsd(value ?? 0)}
+                invalid={errors.has("fmvPerShareInUsd")}
+                prefix="$"
+                minimumFractionDigits={2}
+                decimal
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="conversion-price">Conversion share price (USD)</Label>
+              <NumberInput
+                id="conversion-price"
+                value={conversionSharePriceUsd ?? null}
+                onChange={(value) => setConversionSharePriceUsd(value ?? 0)}
+                invalid={errors.has("conversionSharePriceUsd")}
+                prefix="$"
+                minimumFractionDigits={2}
+                decimal
+              />
+            </div>
           </div>
         </CardContent>
         <CardFooter>

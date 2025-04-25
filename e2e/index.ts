@@ -36,14 +36,20 @@ export const test = baseTest.extend<{
 
 export const expect = baseExpect.extend({
   async toBeValid(locator: Locator) {
-    const actual =
-      (await locator.evaluate((el: HTMLInputElement) => el.validity.valid)) &&
-      (await locator.getAttribute("aria-invalid")) !== "true";
+    let pass = !this.isNot;
+    try {
+      await expect
+        .poll(
+          async () =>
+            (await locator.evaluate((el: HTMLInputElement) => el.validity.valid)) &&
+            (await locator.getAttribute("aria-invalid")) !== "true",
+        )
+        .toBe(pass);
+    } catch {
+      pass = !pass;
+    }
 
-    return {
-      message: () => `expected element to be ${this.isNot ? "invalid" : "valid"}`,
-      pass: actual,
-    };
+    return { pass, message: () => `expected element to be ${this.isNot ? "invalid" : "valid"}` };
   },
 
   async toHaveTooltip(locator: Locator, expectedText: string, { exact = false }: { exact?: boolean } = {}) {

@@ -33,8 +33,8 @@ export default function GithubIntegration({ oauthUrl }: { oauthUrl: string }) {
     <div className="flex justify-between gap-2">
       <div>
         <div className="flex items-center gap-2">
-          <h2 className="text-xl font-bold">
-            <Image src={githubLogo.src} className="inline size-6" alt="" />
+          <h2 className="flex items-center text-xl font-bold">
+            <Image src={githubLogo.src} width={24} height={24} className="inline" alt="" />
             &ensp;GitHub
           </h2>
           {integration?.status === "active" || integration?.status === "initialized" ? (

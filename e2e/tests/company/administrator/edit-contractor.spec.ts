@@ -149,7 +149,11 @@ test.describe("Edit contractor", () => {
     await page.getByRole("button", { name: "Create new" }).click();
 
     await page.getByLabel("Name", { exact: true }).fill("Example Role");
-    await page.getByLabel("New role").getByLabel("Rate", { exact: true }).fill("200");
+
+    const rateInput = page.getByRole("dialog", { name: "New role" }).locator("#pay-rate");
+    await rateInput.waitFor({ state: "visible" });
+    await rateInput.fill("200");
+
     await page.getByRole("button", { name: "Create", exact: true }).click();
 
     await selectComboboxOption(page, "Role", "Example Role");

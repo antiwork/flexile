@@ -1,23 +1,42 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import { Set } from "immutable";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
-import Input from "@/components/Input";
+import ComboBox from "@/components/ComboBox";
 import OnboardingLayout from "@/components/layouts/Onboarding";
 import { linkClasses } from "@/components/Link";
-import MutationButton from "@/components/MutationButton";
+import { MutationStatusButton } from "@/components/MutationButton";
 import RadioButtons from "@/components/RadioButtons";
-import Select from "@/components/Select";
-import { e } from "@/utils";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { getTinName } from "@/utils/legal";
 import { request } from "@/utils/request";
 import { legal_onboarding_path, save_legal_onboarding_path } from "@/utils/routes";
 import LegalCertificationModal from "./LegalCertificationModal";
+
+const formSchema = z
+  .object({
+    business_entity: z.boolean(),
+    business_name: z.string().nullish(),
+    tax_id: z.string().nullish(),
+    birth_date: z.string().nullish(),
+    street_address: z.string().min(1, "This field is required"),
+    state: z.string().min(1, "This field is required"),
+    city: z.string().min(1, "This field is required"),
+    zip_code: z.string().regex(/\d/u, { message: "This doesn't look like a valid ZIP code" }),
+  })
+  .refine((data) => !data.business_entity || data.business_name, {
+    path: ["business_name"],
+    message: "This field is required",
+  });
+
+type FormValues = z.infer<typeof formSchema>;
 
 const LegalDetails = <T extends string>({
   header,
@@ -33,8 +52,8 @@ const LegalDetails = <T extends string>({
   steps: string[];
 }) => {
   const router = useRouter();
-  const [errors, setErrors] = useState(Set<string>());
   const [signModalOpen, setSignModalOpen] = useState(false);
+
   const { data } = useSuspenseQuery({
     queryKey: ["onboardingLegalDetails"],
     queryFn: async () => {
@@ -61,16 +80,19 @@ const LegalDetails = <T extends string>({
     },
   });
 
-  const [isBusinessEntity, setIsBusinessEntity] = useState(data.user.business_entity);
-  const [businessName, setBusinessName] = useState(data.user.business_name);
-  const [tin, setTin] = useState(data.user.tax_id);
-  const [birthDate, setBirthDate] = useState(data.user.birth_date);
-  const [streetAddress, setStreetAddress] = useState(data.user.street_address);
-  const [state, setState] = useState(data.user.state);
-  const [city, setCity] = useState(data.user.city);
-  const [zipCode, setZipCode] = useState(data.user.zip_code);
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      ...data.user,
+      street_address: data.user.street_address || "",
+      state: data.user.state || "",
+      city: data.user.city || "",
+      zip_code: data.user.zip_code || "",
+    },
+  });
 
-  const tinDigits = tin?.replace(/\D/gu, "");
+  const isBusinessEntity = form.watch("business_entity");
+  const tinDigits = form.watch("tax_id")?.replace(/\D/gu, "");
   const tinName = getTinName(isBusinessEntity);
 
   useEffect(() => {
@@ -78,36 +100,11 @@ const LegalDetails = <T extends string>({
 
     const parts = isBusinessEntity ? [2, 7] : [3, 2, 4];
     let lastIndex = 0;
-    setTin(parts.flatMap((part) => tinDigits.slice(lastIndex, (lastIndex += part)) || []).join(" - "));
-  }, [tinDigits]);
+    form.setValue("tax_id", parts.flatMap((part) => tinDigits.slice(lastIndex, (lastIndex += part)) || []).join(" - "));
+  }, [tinDigits, isBusinessEntity]);
 
-  const formData = {
-    tax_id: tin,
-    business_name: businessName,
-    birth_date: birthDate,
-    street_address: streetAddress,
-    state,
-    city,
-    zip_code: zipCode,
-  };
-  Object.entries(formData).forEach(([key, value]) => useEffect(() => setErrors(errors.delete(key)), [value]));
-
-  const submit = useMutation({
+  const save = useMutation({
     mutationFn: async (signature: string) => {
-      const newErrors = errors.clear().withMutations((errors) => {
-        for (const [key, value] of Object.entries(formData)) {
-          if (!isBusinessEntity && key === "business_name") continue;
-          if (!data.user.collect_tax_info && key === "birth_date") continue;
-          if (key !== "tax_id" && !value) errors.add(key);
-        }
-        // Only validate US tax ID format for US users
-        if (!data.user.is_foreign && data.user.collect_tax_info && tinDigits?.length !== 9) errors.add("tax_id");
-        // For ZIP codes, just check that they contain at least one number
-        if (formData.zip_code && !/\d/u.test(formData.zip_code)) errors.add("zip_code");
-      });
-      setErrors(newErrors);
-      if (newErrors.size > 0) throw new Error("Invalid form data");
-
       if (data.user.collect_tax_info && !signature) {
         setSignModalOpen(true);
         throw new Error("Signature required");
@@ -117,122 +114,186 @@ const LegalDetails = <T extends string>({
         method: "PATCH",
         url: save_legal_onboarding_path(),
         accept: "json",
-        jsonData: { user: { ...formData, signature, business_entity: isBusinessEntity } },
+        jsonData: { user: form.getValues() },
         assertOk: true,
       });
       router.push(nextLinkTo);
     },
   });
 
+  const submit = form.handleSubmit((values) => {
+    if (data.user.collect_tax_info && !values.birth_date)
+      return form.setError("birth_date", { message: "This field is required" });
+    if (!data.user.is_foreign && data.user.collect_tax_info && tinDigits?.length !== 9)
+      return form.setError("tax_id", {
+        message: `Your ${tinName} is too short. Make sure it contains 9 numerical characters.`,
+      });
+    if (data.user.collect_tax_info) return setSignModalOpen(true);
+    save.mutate("");
+  });
+
   return (
     <OnboardingLayout stepIndex={steps.indexOf("Billing info")} steps={steps} title={header} subtitle={subheading}>
-      <form className="grid gap-4" onSubmit={e(() => submit.mutate(""), "prevent")}>
-        <RadioButtons
-          value={isBusinessEntity.toString()}
-          onChange={(value) => setIsBusinessEntity(value === "true")}
-          label="Legal entity"
-          options={[
-            { label: "I'm an individual", value: "false" },
-            { label: "I'm a business", value: "true" },
-          ]}
-        />
-
-        {isBusinessEntity ? (
-          <Input
-            value={businessName}
-            onChange={setBusinessName}
-            label="Full legal name of entity"
-            disabled={!!data.user.business_name}
-            invalid={errors.has("business_name")}
-            help={
-              !data.user.is_foreign ? (
-                <>
-                  Please ensure this information matches the business name you used on your{" "}
-                  <Link href="https://www.irs.gov/businesses/small-businesses-self-employed/online-ein-frequently-asked-questions#:~:text=how%20best%20to%20enter%20your%20business%20name%20into%20the%20online%20EIN%20application">
-                    EIN application
-                  </Link>
-                </>
-              ) : undefined
-            }
+      <Form {...form}>
+        <form className="grid gap-4" onSubmit={(e) => void submit(e)}>
+          <RadioButtons
+            value={isBusinessEntity.toString()}
+            onChange={(value) => form.setValue("business_entity", value === "true")}
+            label="Legal entity"
+            options={[
+              { label: "I'm an individual", value: "false" },
+              { label: "I'm a business", value: "true" },
+            ]}
           />
-        ) : null}
 
-        {data.user.collect_tax_info ? (
-          <>
-            <Input
-              value={tin}
-              onChange={setTin}
-              invalid={errors.has("tax_id")}
-              label={
-                data.user.is_foreign ? "Foreign tax identification number" : `Tax identification number (${tinName})`
-              }
-              help={
-                errors.has("tax_id") && !data.user.is_foreign
-                  ? `Your ${tinName} is too short. Make sure it contains 9 numerical characters.`
-                  : `${
-                      data.user.is_foreign
+          {isBusinessEntity ? (
+            <FormField
+              control={form.control}
+              name="business_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel htmlFor="business-name">Full legal name of entity</FormLabel>
+                  <FormControl>
+                    <Input id="business-name" {...field} disabled={!!data.user.business_name} />
+                  </FormControl>
+                  <FormMessage>
+                    {!data.user.is_foreign ? (
+                      <>
+                        Please ensure this information matches the business name you used on your{" "}
+                        <Link href="https://www.irs.gov/businesses/small-businesses-self-employed/online-ein-frequently-asked-questions#:~:text=how%20best%20to%20enter%20your%20business%20name%20into%20the%20online%20EIN%20application">
+                          EIN application
+                        </Link>
+                      </>
+                    ) : null}
+                  </FormMessage>
+                </FormItem>
+              )}
+            />
+          ) : null}
+
+          {data.user.collect_tax_info ? (
+            <>
+              <FormField
+                control={form.control}
+                name="tax_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      {data.user.is_foreign
+                        ? "Foreign tax identification number"
+                        : `Tax identification number (${tinName})`}
+                    </FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage>
+                      {data.user.is_foreign
                         ? "We use this for identity verification and tax reporting."
-                        : `We use your ${tinName} for identity verification and tax reporting.`
-                    } Rest assured, your information is encrypted and securely stored.`
-              }
-            />
+                        : `We use your ${tinName} for identity verification and tax reporting.`}{" "}
+                      Rest assured, your information is encrypted and securely stored.
+                    </FormMessage>
+                  </FormItem>
+                )}
+              />
 
-            <Input
-              value={birthDate}
-              onChange={setBirthDate}
-              type="date"
-              label="Date of birth"
-              invalid={errors.has("birth_date")}
-            />
-          </>
-        ) : null}
+              <FormField
+                control={form.control}
+                name="birth_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date of birth</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </>
+          ) : null}
 
-        <Input
-          value={streetAddress}
-          onChange={setStreetAddress}
-          label="Residential address (street name, number, apartment)"
-          invalid={errors.has("street_address")}
-        />
-
-        <div className="grid gap-3 md:grid-cols-3">
-          <Input value={city} onChange={setCity} label="City" invalid={errors.has("city")} />
-
-          <Select
-            value={state}
-            onChange={setState}
-            placeholder="Select state"
-            options={data.states.map(([label, value]) => ({ value, label }))}
-            label="State"
-            invalid={errors.has("state")}
+          <FormField
+            control={form.control}
+            name="street_address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Residential address (street name, number, apartment)</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
 
-          <Input
-            value={zipCode}
-            onChange={setZipCode}
-            label={data.user.zip_code_label}
-            invalid={errors.has("zip_code")}
+          <div className="grid gap-3 md:grid-cols-3">
+            <FormField
+              control={form.control}
+              name="city"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>City</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="state"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>State</FormLabel>
+                  <FormControl>
+                    <ComboBox
+                      {...field}
+                      placeholder="Select state"
+                      options={data.states.map(([label, value]) => ({ value, label }))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="zip_code"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{data.user.zip_code_label}</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <LegalCertificationModal
+            open={signModalOpen}
+            onClose={() => setSignModalOpen(false)}
+            legalName={data.user.legal_name}
+            isForeignUser={data.user.is_foreign}
+            isBusiness={isBusinessEntity}
+            sticky
+            mutation={save}
           />
-        </div>
 
-        <LegalCertificationModal
-          open={signModalOpen}
-          onClose={() => setSignModalOpen(false)}
-          legalName={data.user.legal_name}
-          isForeignUser={data.user.is_foreign}
-          isBusiness={isBusinessEntity}
-          sticky
-          mutation={submit}
-        />
-
-        <footer className="grid items-center gap-2">
-          <MutationButton mutation={submit} param="" type="submit" loadingText="Saving...">
-            Continue
-          </MutationButton>
-          <Link href={prevLinkTo} className={linkClasses}>
-            Back to Personal details
-          </Link>
-        </footer>
-      </form>
+          <footer className="grid items-center gap-2">
+            <MutationStatusButton mutation={save} type="submit" loadingText="Saving...">
+              Continue
+            </MutationStatusButton>
+            <Link href={prevLinkTo} className={linkClasses}>
+              Back to Personal details
+            </Link>
+          </footer>
+        </form>
+      </Form>
     </OnboardingLayout>
   );
 };

@@ -9,6 +9,7 @@ import { equityAllocationsFactory } from "@test/factories/equityAllocations";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { optionPoolsFactory } from "@test/factories/optionPools";
 import { usersFactory } from "@test/factories/users";
+import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
@@ -70,9 +71,9 @@ test.describe("New Contractor", () => {
     await page.reload();
     await expect(page.getByText("Create equity plan contract and board consent templates")).not.toBeVisible();
     await page.getByRole("link", { name: "New option grant" }).click();
-    await page.getByLabel("Recipient").selectOption(contractorUser.preferredName);
+    await selectComboboxOption(page, "Recipient", contractorUser.preferredName ?? "");
     await page.getByLabel("Number of options").fill("10");
-    await page.getByLabel("Relationship to company").selectOption("Consultant");
+    await selectComboboxOption(page, "Relationship to company", "Consultant");
     await page.getByRole("button", { name: "Create option grant" }).click();
 
     await expect(page.getByRole("table")).toHaveCount(2);
@@ -92,9 +93,9 @@ test.describe("New Contractor", () => {
     );
 
     await page.getByRole("link", { name: "New option grant" }).click();
-    await page.getByLabel("Recipient").selectOption(projectBasedUser.preferredName);
+    await selectComboboxOption(page, "Recipient", projectBasedUser.preferredName ?? "");
     await page.getByLabel("Number of options").fill("20");
-    await page.getByLabel("Relationship to company").selectOption("Consultant");
+    await selectComboboxOption(page, "Relationship to company", "Consultant");
     await page.getByRole("button", { name: "Create option grant" }).click();
 
     await expect(page.getByRole("table")).toHaveCount(2);
@@ -180,7 +181,7 @@ test.describe("New Contractor", () => {
     await page.getByRole("button", { name: "Exercise Options" }).click();
     await withinModal(
       async (modal) => {
-        await modal.getByLabel("Options to exercise").fill("10");
+        await modal.getByLabel("Options to exercise value").fill("10");
         await expect(modal.getByText("Exercise cost$50")).toBeVisible();
         await expect(modal.getByText("Options valueBased on 2M valuation$1,000")).toBeVisible();
         await modal.getByRole("button", { name: "Proceed" }).click();

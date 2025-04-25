@@ -3,6 +3,7 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { usersFactory } from "@test/factories/users";
+import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { eq } from "drizzle-orm";
@@ -38,8 +39,8 @@ test.describe("Investor onboarding - personal details", () => {
 
     await expect(page.getByText("Let's get to know you")).toBeVisible();
 
-    await expect(page.getByLabel("Country of residence")).toHaveValue("US");
-    await expect(page.getByLabel("Country of citizenship")).toHaveValue("US");
+    await expect(page.getByLabel("Country of residence")).toHaveText("United States");
+    await expect(page.getByLabel("Country of citizenship")).toHaveText("United States");
 
     await page.getByLabel("Full legal name").fill("");
     await page.getByRole("button", { name: "Continue" }).click();
@@ -54,8 +55,8 @@ test.describe("Investor onboarding - personal details", () => {
 
     await page.getByLabel("Full legal name").fill("Wade Wilson");
     await page.getByLabel("Preferred name (visible to others)").fill("Wade");
-    await page.getByLabel("Country of citizenship").selectOption("Canada");
-    await page.getByLabel("Country of residence").selectOption("Canada");
+    await selectComboboxOption(page, "Country of citizenship", "Canada");
+    await selectComboboxOption(page, "Country of residence", "Canada");
 
     await page.getByRole("button", { name: "Continue" }).click();
 
@@ -77,8 +78,8 @@ test.describe("Investor onboarding - personal details", () => {
 
     await page.getByLabel("Full legal name").fill("Wade Wilson");
     await page.getByLabel("Preferred name (visible to others)").fill("Wade");
-    await page.getByLabel("Country of citizenship").selectOption("Canada");
-    await page.getByLabel("Country of residence").selectOption("Cuba");
+    await selectComboboxOption(page, "Country of citizenship", "Canada");
+    await selectComboboxOption(page, "Country of residence", "Cuba");
 
     await page.getByRole("button", { name: "Continue" }).click();
 
@@ -119,12 +120,12 @@ test.describe("Investor onboarding - personal details", () => {
 
     await login(page, onboardingUser);
 
-    await expect(page.getByLabel("Country of residence")).toHaveValue("US");
+    await expect(page.getByLabel("Country of residence")).toHaveText("United States");
 
     await page.getByLabel("Full legal name").fill("Wade Wilson");
     await page.getByLabel("Preferred name (visible to others)").fill("Wade");
-    await page.getByLabel("Country of citizenship").selectOption("Canada");
-    await page.getByLabel("Country of residence").selectOption("Canada");
+    await selectComboboxOption(page, "Country of citizenship", "Canada");
+    await selectComboboxOption(page, "Country of residence", "Canada");
 
     await page.getByRole("button", { name: "Continue" }).click();
 

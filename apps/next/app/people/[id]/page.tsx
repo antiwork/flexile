@@ -1,16 +1,10 @@
 "use client";
 import { CheckIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import {
-  CheckCircleIcon,
-  CurrencyDollarIcon,
-  DocumentDuplicateIcon,
-  InboxIcon,
-  NoSymbolIcon,
-} from "@heroicons/react/24/outline";
+import { CheckCircleIcon, DocumentDuplicateIcon, InboxIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/react-query";
-import { areIntervalsOverlapping, format, formatISO, isFuture } from "date-fns";
+import { formatISO, isFuture } from "date-fns";
 import { Decimal } from "decimal.js";
 import { useParams, useRouter } from "next/navigation";
 import { parseAsString, useQueryState } from "nuqs";
@@ -20,10 +14,7 @@ import EquityGrantExerciseStatusIndicator from "@/app/equity/EquityGrantExercise
 import DetailsModal from "@/app/equity/grants/DetailsModal";
 import InvoiceStatus from "@/app/invoices/Status";
 import RoleSelector from "@/app/roles/Selector";
-import { formatAbsencesForUpdate } from "@/app/updates/team/CompanyWorkerUpdate";
-import { Task as CompanyWorkerTask } from "@/app/updates/team/Task";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import DecimalInput from "@/components/DecimalInput";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
@@ -36,12 +27,11 @@ import Tabs from "@/components/Tabs";
 import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { CardContent, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { DEFAULT_WORKING_HOURS_PER_WEEK, MAXIMUM_EQUITY_PERCENTAGE, MINIMUM_EQUITY_PERCENTAGE } from "@/models";
-import { formatDateRange } from "@/models/period";
 import type { RouterOutput } from "@/trpc";
 import { PayRateType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
@@ -129,7 +119,6 @@ export default function ContractorPage() {
     convertiblesData?.convertibleSecurities.length ? ({ label: "Convertibles", tab: `convertibles` } as const) : null,
     equityGrantExercises?.length ? ({ label: "Exercises", tab: `exercises` } as const) : null,
     dividends?.length ? ({ label: "Dividends", tab: `dividends` } as const) : null,
-    contractor && company.flags.includes("team_updates") ? ({ label: "Updates", tab: `updates` } as const) : null,
   ].filter((link) => !!link);
   const [selectedTab] = useQueryState("tab", parseAsString.withDefault(tabs[0]?.tab ?? ""));
 
@@ -335,20 +324,24 @@ export default function ContractorPage() {
 
       <Modal open={issuePaymentModalOpen} onClose={closeIssuePaymentModal} title="Issue one-time payment">
         <div className="grid gap-4">
-          <DecimalInput
-            value={paymentAmountInCents ? paymentAmountInCents / 100 : null}
-            onChange={(value) => {
-              if (value !== null) {
-                const cents = new Decimal(value).mul(100).toNumber();
-                setPaymentAmountInCents(cents);
-              } else {
-                setPaymentAmountInCents(null);
-              }
-            }}
-            label="Amount"
-            placeholder="Enter amount"
-            prefix="$"
-          />
+          <div className="grid gap-2">
+            <Label htmlFor="payment-amount">Amount</Label>
+            <NumberInput
+              id="payment-amount"
+              value={paymentAmountInCents ? paymentAmountInCents / 100 : null}
+              onChange={(value) => {
+                if (value !== null) {
+                  const cents = new Decimal(value).mul(100).toNumber();
+                  setPaymentAmountInCents(cents);
+                } else {
+                  setPaymentAmountInCents(null);
+                }
+              }}
+              placeholder="Enter amount"
+              prefix="$"
+              decimal
+            />
+          </div>
           <Input
             value={paymentDescription}
             onChange={setPaymentDescription}
@@ -429,8 +422,7 @@ export default function ContractorPage() {
         switch (selectedTab) {
           case "invoices":
             return contractor ? <InvoicesTab data={invoicesData} /> : null;
-          case "updates":
-            return contractor ? <UpdatesTab contractorId={contractor.id} /> : null;
+
           case "options":
             return investor ? <OptionsTab investorId={investor.id} userId={id} /> : null;
           case "shares":
@@ -514,24 +506,37 @@ const DetailsTab = ({
             ) : null}
             <RoleSelector value={selectedRoleId} onChange={setSelectedRoleId} />
             <div className="grid items-start gap-4 md:grid-cols-2">
-              <DecimalInput
-                value={payRateInSubunits / 100}
-                onChange={(value) => setPayRateInSubunits((value ?? 0) * 100)}
-                label="Rate"
-                placeholder="0"
-                disabled={!!contractor.endedAt}
-                prefix={<CurrencyDollarIcon className="size-4" />}
-                suffix={`/ ${contractor.payRateType === PayRateType.ProjectBased ? "project" : hoursPerWeek === null ? "year" : "hour"}`}
-              />
-              {contractor.payRateType !== PayRateType.ProjectBased && hoursPerWeek !== null && (
+              <div className="grid gap-2">
+                <Label htmlFor="pay-rate">Rate</Label>
                 <NumberInput
-                  value={hoursPerWeek}
-                  onChange={(value) => setHoursPerWeek(value ?? 0)}
-                  label="Average hours"
-                  placeholder={DEFAULT_WORKING_HOURS_PER_WEEK.toString()}
+                  id="pay-rate"
+                  value={payRateInSubunits / 100}
+                  onChange={(value) => setPayRateInSubunits((value ?? 0) * 100)}
+                  placeholder="0"
                   disabled={!!contractor.endedAt}
-                  suffix="/ week"
+                  prefix="$"
+                  suffix={
+                    contractor.payRateType === PayRateType.ProjectBased
+                      ? "/ project"
+                      : hoursPerWeek === null
+                        ? "/ year"
+                        : "/ hour"
+                  }
+                  decimal
                 />
+              </div>
+              {contractor.payRateType !== PayRateType.ProjectBased && hoursPerWeek !== null && (
+                <div className="grid gap-2">
+                  <Label htmlFor="hours-per-week">Average hours</Label>
+                  <NumberInput
+                    id="hours-per-week"
+                    value={hoursPerWeek}
+                    onChange={(value) => setHoursPerWeek(value ?? 0)}
+                    placeholder={DEFAULT_WORKING_HOURS_PER_WEEK.toString()}
+                    disabled={!!contractor.endedAt}
+                    suffix="/ week"
+                  />
+                </div>
               )}
             </div>
             {contractor.payRateType !== PayRateType.ProjectBased && company.flags.includes("equity_compensation") && (
@@ -656,83 +661,6 @@ const InvoicesTab = ({ data }: { data: RouterOutput["invoices"]["list"] }) => {
     <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
   ) : (
     <Placeholder icon={InboxIcon}>Invoices issued by this contractor will show up here.</Placeholder>
-  );
-};
-
-const UpdatesTab = ({ contractorId }: { contractorId: string }) => {
-  const company = useCurrentCompany();
-  const [updates] = trpc.teamUpdates.list.useSuspenseQuery({ companyId: company.id, contractorId });
-  const [absences] = trpc.workerAbsences.list.useSuspenseQuery({
-    companyId: company.id,
-    contractorId,
-  });
-  const futureAbsences = absences.filter((absence) => isFuture(absence.endsOn));
-
-  return (
-    <>
-      {futureAbsences.length > 0 && (
-        <div className="grid gap-x-5 gap-y-3 md:grid-cols-[25%_1fr]">
-          <hgroup>
-            <h2 className="text-xl font-bold">Time off</h2>
-          </hgroup>
-
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-gray-600">Upcoming</p>
-              <ul className="mt-4 grid gap-3">
-                {futureAbsences.map((absence) => (
-                  <li key={absence.id} className="flex items-center">
-                    <NoSymbolIcon className="mr-2 h-5 w-5" />
-                    {formatDateRange(absence, { includeWeekday: true })}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-      {updates.map((update) => {
-        const absencesInPeriod = absences.filter((absence) =>
-          areIntervalsOverlapping(
-            { start: absence.startsOn, end: absence.endsOn },
-            { start: update.periodStartsOn, end: update.periodEndsOn },
-          ),
-        );
-        return (
-          <div key={update.id} className="grid gap-x-5 gap-y-3 md:grid-cols-[25%_1fr]">
-            <hgroup>
-              <h2 className="text-xl font-bold">
-                {formatDateRange({ startsOn: update.periodStartsOn, endsOn: update.periodEndsOn })}
-              </h2>
-              <p className="text-gray-600">
-                {update.publishedAt ? `Posted on ${format(update.publishedAt, "EEEE, MMM d")}` : "Unpublished"}
-              </p>
-            </hgroup>
-
-            <Card>
-              <CardContent className="p-6">
-                {absencesInPeriod.length > 0 || update.tasks.length > 0 ? (
-                  <ul className="grid gap-3">
-                    {absencesInPeriod.length > 0 && (
-                      <li className="flex">
-                        <NoSymbolIcon className="mr-2 h-5 w-5 text-gray-600" />
-                        <i>Off {formatAbsencesForUpdate(update, absencesInPeriod)}</i>
-                      </li>
-                    )}
-                    {update.tasks.map((task) => (
-                      <CompanyWorkerTask key={task.id} task={task} />
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No tasks or time off recorded</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        );
-      })}
-      {!updates.length ? <Placeholder icon={CheckCircleIcon}>No team updates to display.</Placeholder> : null}
-    </>
   );
 };
 

@@ -25,6 +25,9 @@ import {
   BusinessType,
   DocumentTemplateType,
   DocumentType,
+  optionGrantIssueDateRelationships,
+  optionGrantTypes,
+  optionGrantVestingTriggers,
   PayRateType,
   RoleApplicationStatus,
   TaxClassification,
@@ -41,17 +44,12 @@ export const equityGrantTransactionsTransactionType = pgEnum("equity_grant_trans
   "manual_adjustment",
   "end_of_period_forfeiture",
 ]);
-export const equityGrantsIssueDateRelationship = pgEnum("equity_grants_issue_date_relationship", [
-  "employee",
-  "consultant",
-  "investor",
-  "founder",
-  "officer",
-  "executive",
-  "board_member",
-]);
-export const equityGrantsOptionGrantType = pgEnum("equity_grants_option_grant_type", ["iso", "nso"]);
-export const equityGrantsVestingTrigger = pgEnum("equity_grants_vesting_trigger", ["scheduled", "invoice_paid"]);
+export const equityGrantsIssueDateRelationship = pgEnum(
+  "equity_grants_issue_date_relationship",
+  optionGrantIssueDateRelationships,
+);
+export const equityGrantsOptionGrantType = pgEnum("equity_grants_option_grant_type", optionGrantTypes);
+export const equityGrantsVestingTrigger = pgEnum("equity_grants_vesting_trigger", optionGrantVestingTriggers);
 export const expenseCardsProcessors = pgEnum("expense_cards_processors", ["stripe"]);
 export const integrationStatus = pgEnum("integration_status", ["initialized", "active", "out_of_sync", "deleted"]);
 export const taxDocumentsStatus = pgEnum("tax_documents_status", ["initialized", "submitted", "deleted"]);
