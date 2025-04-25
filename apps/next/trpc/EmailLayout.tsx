@@ -9,7 +9,7 @@ export default function EmailLayout({ children, footer }: { children: React.Reac
       </Head>
       <Tailwind>
         <div className="font-sans">
-          <div className="mx-auto my-8 max-w-xl rounded-lg border border-solid border-black p-8">{children}</div>
+          <div className="border-muted mx-auto my-8 max-w-xl rounded-lg border border-solid p-8">{children}</div>
           <footer className="mt-8 w-full p-4 text-center text-sm text-gray-600">
             {footer}
             548 Market Street, San Francisco, CA 94104-5401
