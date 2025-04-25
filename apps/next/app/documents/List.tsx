@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import Status from "@/components/Status";
+import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -215,44 +215,48 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
   });
 
   return (
-    <Modal open onClose={onClose}>
-      {user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent && (
-        <header className="flex justify-end gap-4">
-          <MutationButton
-            mutation={documentLawyerApproval}
-            param={{ companyId: company.id, id: document.id }}
-            loadingText="Approving..."
-            successText="Approved!"
-            errorText="Failed to approve"
-          >
-            Approve
-          </MutationButton>
-        </header>
-      )}
-      <DocusealForm
-        src={`https://docuseal.com/s/${slug}`}
-        readonlyFields={readonlyFields}
-        preview={user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent}
-        onComplete={() => {
-          const userIsSigner = document.signatories.some(
-            (signatory) => signatory.id === user.id && signatory.title === "Signer",
-          );
-          const role = userIsSigner
-            ? "Signer"
-            : document.type === DocumentType.BoardConsent
-              ? assertDefined(
-                  document.signatories.find((signatory) => signatory.id === user.id)?.title,
-                  "User is not a board member",
-                )
-              : "Company Representative";
-          signDocument.mutate({
-            companyId: company.id,
-            id: document.id,
-            role,
-          });
-        }}
-      />
-    </Modal>
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent>
+        {user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent && (
+          <DialogHeader>
+            <div className="flex justify-end gap-4">
+              <MutationButton
+                mutation={documentLawyerApproval}
+                param={{ companyId: company.id, id: document.id }}
+                loadingText="Approving..."
+                successText="Approved!"
+                errorText="Failed to approve"
+              >
+                Approve
+              </MutationButton>
+            </div>
+          </DialogHeader>
+        )}
+        <DocusealForm
+          src={`https://docuseal.com/s/${slug}`}
+          readonlyFields={readonlyFields}
+          preview={user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent}
+          onComplete={() => {
+            const userIsSigner = document.signatories.some(
+              (signatory) => signatory.id === user.id && signatory.title === "Signer",
+            );
+            const role = userIsSigner
+              ? "Signer"
+              : document.type === DocumentType.BoardConsent
+                ? assertDefined(
+                    document.signatories.find((signatory) => signatory.id === user.id)?.title,
+                    "User is not a board member",
+                  )
+                : "Company Representative";
+            signDocument.mutate({
+              companyId: company.id,
+              id: document.id,
+              role,
+            });
+          }}
+        />
+      </DialogContent>
+    </Dialog>
   );
 };
 
