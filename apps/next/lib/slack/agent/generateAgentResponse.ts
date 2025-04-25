@@ -24,13 +24,6 @@ type UserSuccess = {
 // Union type for functions that return user information
 type UserResult = UserError | UserSuccess;
 
-// Expose tool functions on 'this' for internal references
-interface ToolContext {
-  getCurrentSlackUser: {
-    execute: (params: Record<string, never>) => Promise<UserResult>;
-  };
-}
-
 export const generateAgentResponse = async (
   messages: CoreMessage[],
   company: typeof companies.$inferSelect,
