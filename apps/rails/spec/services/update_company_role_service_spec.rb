@@ -6,7 +6,6 @@ RSpec.describe UpdateCompanyRoleService do
   let(:params) do
     {
       name: "Updated Role",
-      actively_hiring: false,
       job_description: "Updated job description",
       capitalized_expense: 30,
       trial_enabled: true,
@@ -27,7 +26,6 @@ RSpec.describe UpdateCompanyRoleService do
         expect(process_service[:success]).to be true
         expect(company_role.reload.attributes).to include(
           "name" => "Updated Role",
-          "actively_hiring" => false,
           "job_description" => "Updated job description",
           "capitalized_expense" => 30,
         )

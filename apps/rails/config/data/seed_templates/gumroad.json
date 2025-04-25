@@ -329,7 +329,6 @@
             "model_attributes": {
               "name": "Software engineer",
               "job_description": "We're looking for a software engineer to join our team.",
-              "actively_hiring": true,
               "expense_card_enabled": true
             },
             "company_role_rate": {
@@ -338,20 +337,6 @@
                 "trial_pay_rate_in_subunits": 5225,
                 "pay_rate_type": "hourly"
               }
-            },
-            "company_role_applications": {
-              "records": [
-                {
-                  "model_attributes": {
-                    "name": "Sam Eugene",
-                    "country_code": "US",
-                    "description": "<p>I'm a passionate software engineer with 5 years of experience.</p>",
-                    "hours_per_week": 35,
-                    "weeks_per_year": 48,
-                    "equity_percent": 20
-                  }
-                }
-              ]
             }
           },
           "company_workers": [
@@ -500,7 +485,6 @@
             "model_attributes": {
               "name": "Product designer",
               "job_description": "Improve Gumroad by designing product features, primarily in Figma. You will be expected to write some code (HTML, CSS, TypeScript, JavaScript). You should have familiarity with improving a high-quality app in production.",
-              "actively_hiring": true,
               "expense_card_enabled": true
             },
             "company_role_rate": {
@@ -509,20 +493,6 @@
                 "trial_pay_rate_in_subunits": 9800,
                 "pay_rate_type": "hourly"
               }
-            },
-            "company_role_applications": {
-              "records": [
-                {
-                  "model_attributes": {
-                    "name": "Paige Designwell",
-                    "country_code": "US",
-                    "description": "<p>I'm a creative product designer with a keen eye for user experience and 8 years of industry expertise.</p>",
-                    "hours_per_week": 30,
-                    "weeks_per_year": 44,
-                    "equity_percent": 25
-                  }
-                }
-              ]
             }
           },
           "company_workers": [
@@ -562,8 +532,7 @@
           "company_role": {
             "model_attributes": {
               "name": "Project-based engineer",
-              "job_description": "We're looking for a project-based engineer to build our next MVP.",
-              "actively_hiring": true
+              "job_description": "We're looking for a project-based engineer to build our next MVP."
             },
             "company_role_rate": {
               "model_attributes": {
@@ -571,18 +540,6 @@
                 "trial_pay_rate_in_subunits": 50000,
                 "pay_rate_type": "project_based"
               }
-            },
-            "company_role_applications": {
-              "records": [
-                {
-                  "model_attributes": {
-                    "name": "Parker Eriksen",
-                    "country_code": "US",
-                    "description": "<p>I'm an experienced project-based engineer with a track record of successfully delivering MVPs and complex software projects.</p>",
-                    "equity_percent": 0
-                  }
-                }
-              ]
             }
           },
           "company_workers": [
@@ -619,8 +576,7 @@
           "company_role": {
             "model_attributes": {
               "name": "Customer supporter",
-              "job_description": "<p>If you're interested, watch our last public board meeting here:</p><p>https://youtu.be/qUYSTvJnIXA</p><p>Then, pick an upcoming feature from the roadmap and include in your application:</p><p>- 3 sample support queries and their answers</p><p>- A draft Help Center article</p>",
-              "actively_hiring": false
+              "job_description": "<p>If you're interested, watch our last public board meeting here:</p><p>https://youtu.be/qUYSTvJnIXA</p><p>Then, pick an upcoming feature from the roadmap and include in your application:</p><p>- 3 sample support queries and their answers</p><p>- A draft Help Center article</p>"
             },
             "company_role_rate": {
               "model_attributes": {
@@ -628,20 +584,6 @@
                 "trial_pay_rate_in_subunits": 6100,
                 "pay_rate_type": "hourly"
               }
-            },
-            "company_role_applications": {
-              "records": [
-                {
-                  "model_attributes": {
-                    "name": "Olivia Supportson",
-                    "country_code": "US",
-                    "description": "<p>I'm an experienced customer support professional with a track record of resolving complex issues and maintaining high customer satisfaction. I have excellent communication skills and a deep understanding of various support tools and methodologies.</p>",
-                    "hours_per_week": 15,
-                    "weeks_per_year": 35,
-                    "equity_percent": 0
-                  }
-                }
-              ]
             }
           },
           "company_workers": [

@@ -3,7 +3,6 @@ import { PaperAirplaneIcon } from "@heroicons/react/16/solid";
 import { formatISO } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { parseAsInteger, useQueryState } from "nuqs";
 import React, { useEffect, useState } from "react";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import RoleSelector from "@/app/roles/Selector";
@@ -25,16 +24,6 @@ import { useOnChange } from "@/utils/useOnChange";
 function Create() {
   const company = useCurrentCompany();
   const router = useRouter();
-  const [applicationId] = useQueryState("application_id", parseAsInteger);
-  const [{ workers }] = trpc.contractors.list.useSuspenseQuery({
-    companyId: company.id,
-    order: "desc",
-  });
-  const lastContractor = workers[0];
-  const { data: application } = trpc.roles.applications.get.useQuery(
-    { companyId: company.id, id: BigInt(applicationId ?? 0) },
-    { enabled: !!applicationId },
-  );
   const [roles] = trpc.roles.list.useSuspenseQuery({ companyId: company.id });
   const [templateId, setTemplateId] = useState<string | null>(null);
 
@@ -48,18 +37,12 @@ function Create() {
   const [hours, setHours] = useState(0);
   const [skipTrial, setSkipTrial] = useState(false);
   const [startDate, setStartDate] = useState(formatISO(new Date(), { representation: "date" }));
-  const defaultHours = role?.trialEnabled ? AVG_TRIAL_HOURS : (application?.hoursPerWeek ?? 0);
-  useEffect(() => {
-    setEmail(application?.email ?? "");
-    setRoleId(application?.role.id ?? lastContractor?.role.id);
-    setHours(defaultHours);
-  }, [application]);
   const onTrial = (role?.trialEnabled && !skipTrial && role.payRateType !== PayRateType.Salary) ?? false;
 
   useOnChange(() => {
     if (role) {
       setRateUsd((onTrial ? role.trialPayRateInSubunits : role.payRateInSubunits) / 100);
-      setHours(defaultHours);
+      setHours(role.trialEnabled ? AVG_TRIAL_HOURS : 0);
     }
   }, [role, onTrial]);
 
@@ -152,7 +135,6 @@ function Create() {
             disabled={!valid}
             param={{
               companyId: company.id,
-              applicationId,
               email,
               // startDate only contains the date without a timezone. Appending T00:00:00 ensures the date is
               // parsed as midnight in the local timezone rather than UTC.

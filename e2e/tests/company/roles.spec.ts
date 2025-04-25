@@ -37,13 +37,7 @@ test.describe("Company roles", () => {
     await page.getByRole("link", { name: "Roles" }).click();
     await expect(page.locator("tbody tr")).toHaveCount(1);
     await expect(page.locator("tbody tr > td")).toHaveText(
-      [
-        role.name,
-        `${formatMoneyFromCents(rate.payRateInSubunits)} / hr`,
-        "0 candidates",
-        "Not hiring",
-        "Copy link\nEdit",
-      ],
+      [role.name, `${formatMoneyFromCents(rate.payRateInSubunits)} / hr`, "Copy link\nEdit"],
       { useInnerText: true },
     );
     await page.getByRole("button", { name: "Edit" }).click();
@@ -54,7 +48,7 @@ test.describe("Company roles", () => {
     await page.getByLabel("Job description").fill("Job description");
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.locator("tbody tr > td")).toHaveText(
-      ["Role 1", `${formatMoneyFromCents(100000)} / hr`, "0 candidates", "Not hiring", "Copy link\nEdit"],
+      ["Role 1", `${formatMoneyFromCents(100000)} / hr`, "Copy link\nEdit"],
       { useInnerText: true },
     );
     ({ role, rate } = await fetchRole());

@@ -53,8 +53,6 @@ const ManageModal = ({
       payRateType: PayRateType.Hourly,
       trialEnabled: false,
       trialPayRateInSubunits: 0,
-      applicationCount: 0,
-      activelyHiring: false,
       jobDescription: "",
       capitalizedExpense: 50,
       expenseAccountId: null,
@@ -284,13 +282,6 @@ const ManageModal = ({
             label="Expense account"
           />
         ) : null}
-        {role.id ? (
-          <Switch
-            checked={role.activelyHiring}
-            onCheckedChange={(activelyHiring) => updateRole({ activelyHiring })}
-            label="Accepting candidates"
-          />
-        ) : null}
         <div className="flex w-full gap-3">
           <Button className="flex-1" onClick={onSave}>
             {role.id ? "Save changes" : "Create"}
@@ -347,7 +338,6 @@ const ManageModal = ({
         </Card>
       </Modal>
       <Modal title="Permanently delete role?" open={confirmingDelete} onClose={() => setConfirmingDelete(false)}>
-        {role.applicationCount ? <p>This will remove {role.applicationCount} candidates.</p> : null}
         <p>This action cannot be undone.</p>
         <div className="flex justify-end gap-4">
           <Button variant="outline" onClick={() => setConfirmingDelete(false)}>

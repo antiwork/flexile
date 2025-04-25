@@ -4,18 +4,15 @@ import { createInsertSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
-import { PayRateType, RoleApplicationStatus } from "@/db/enums";
-import { companyRoleApplications, companyRoleRates, companyRoles, expenseCards } from "@/db/schema";
+import { PayRateType } from "@/db/enums";
+import { companyRoleRates, companyRoles, expenseCards } from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 import { assertDefined } from "@/utils/assert";
-import { roleApplicationsRouter } from "./applications";
-import { publicRolesRouter } from "./public";
 
 const inputSchema = createInsertSchema(companyRoles)
   .pick({
     name: true,
     jobDescription: true,
-    activelyHiring: true,
     capitalizedExpense: true,
     expenseAccountId: true,
     expenseCardEnabled: true,
@@ -40,17 +37,6 @@ export const rolesRouter = createRouter({
         rates: { orderBy: [desc(companyRoleRates.createdAt)], limit: 1 },
       },
       extras: {
-        // using sql here to work around https://github.com/drizzle-team/drizzle-orm/issues/3564
-        applicationCount: db
-          .$count(
-            companyRoleApplications,
-            and(
-              isNull(sql`deleted_at`),
-              eq(sql`status`, RoleApplicationStatus.Pending),
-              eq(sql`company_role_id`, companyRoles.id),
-            ),
-          )
-          .as("applications"),
         expenseCardsCount: db
           .$count(expenseCards, and(eq(sql`active`, true), eq(sql`company_role_id`, companyRoles.id)))
           .as("expense_cards"),
@@ -66,13 +52,11 @@ export const rolesRouter = createRouter({
           role,
           "name",
           "jobDescription",
-          "activelyHiring",
           "capitalizedExpense",
           "expenseAccountId",
           "expenseCardEnabled",
           "expenseCardSpendingLimitCents",
           "trialEnabled",
-          "applicationCount",
           "expenseCardsCount",
         ),
         ...pick(rate, "payRateType", "payRateInSubunits", "trialPayRateInSubunits"),
@@ -85,7 +69,7 @@ export const rolesRouter = createRouter({
 
     const [role] = await db
       .select({
-        ...pick(companyRoles, "id", "name", "jobDescription", "activelyHiring", "capitalizedExpense"),
+        ...pick(companyRoles, "id", "name", "jobDescription", "capitalizedExpense"),
         ...pick(companyRoleRates, "payRateType", "payRateInSubunits", "trialPayRateInSubunits"),
       })
       .from(companyRoles)
@@ -111,7 +95,6 @@ export const rolesRouter = createRouter({
             input,
             "name",
             "jobDescription",
-            "activelyHiring",
             "capitalizedExpense",
             "expenseAccountId",
             "expenseCardEnabled",
@@ -143,7 +126,6 @@ export const rolesRouter = createRouter({
             input,
             "name",
             "jobDescription",
-            "activelyHiring",
             "capitalizedExpense",
             "expenseAccountId",
             "expenseCardEnabled",
@@ -177,6 +159,4 @@ export const rolesRouter = createRouter({
 
     if (!result) throw new TRPCError({ code: "NOT_FOUND" });
   }),
-  applications: roleApplicationsRouter,
-  public: publicRolesRouter,
 });

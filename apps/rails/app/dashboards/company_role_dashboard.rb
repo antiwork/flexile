@@ -11,7 +11,6 @@ class CompanyRoleDashboard < Administrate::BaseDashboard
   # on pages throughout the dashboard.
   ATTRIBUTE_TYPES = {
     id: Field::Number,
-    actively_hiring: Field::Boolean,
     capitalized_expense: Field::Number,
     company: Field::BelongsTo,
     rate: Field::HasOne,
@@ -33,7 +32,6 @@ class CompanyRoleDashboard < Administrate::BaseDashboard
   COLLECTION_ATTRIBUTES = %i[
     id
     name
-    actively_hiring
     capitalized_expense
     company
   ].freeze
@@ -42,7 +40,6 @@ class CompanyRoleDashboard < Administrate::BaseDashboard
   # an array of attributes that will be displayed on the model's show page.
   SHOW_PAGE_ATTRIBUTES = %i[
     id
-    actively_hiring
     capitalized_expense
     company
     rate
@@ -60,7 +57,6 @@ class CompanyRoleDashboard < Administrate::BaseDashboard
   # an array of attributes that will be displayed
   # on the model's form (`new` and `edit`) pages.
   FORM_ATTRIBUTES = %i[
-    actively_hiring
     capitalized_expense
     company
     rate
