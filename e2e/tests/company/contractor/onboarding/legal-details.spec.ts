@@ -3,6 +3,7 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
+import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, type Page, test, withinModal } from "@test/index";
 import { eq } from "drizzle-orm";
@@ -44,7 +45,7 @@ test.describe("Contractor onboarding - legal details", () => {
   test("allows the contractor to fill in legal details", async ({ page }) => {
     await login(page, onboardingUser);
 
-    await page.getByLabel("I'm an individual").check();
+    await page.locator("label").filter({ hasText: "I'm an individual" }).click();
     await page.getByRole("button", { name: "Continue" }).click();
 
     await expect(page.getByLabel("Residential address")).not.toBeValid();
@@ -61,7 +62,7 @@ test.describe("Contractor onboarding - legal details", () => {
   test("allows for specifying a legal entity name for businesses", async ({ page }) => {
     await login(page, onboardingUser);
 
-    await page.getByLabel("I'm a business").check();
+    await page.locator("label").filter({ hasText: "I'm a business" }).click();
 
     await fillInUSAddress(page);
     await page.getByRole("button", { name: "Continue" }).click();
@@ -82,7 +83,7 @@ test.describe("Contractor onboarding - legal details", () => {
     test("allows to fill in legal details as an individual US citizen", async ({ page }) => {
       await login(page, onboardingUser);
 
-      await page.getByLabel("I'm an individual").check();
+      await page.locator("label").filter({ hasText: "I'm an individual" }).click();
 
       await fillInUSAddress(page);
       await page.getByLabel("Date of birth").fill("1980-06-07");
@@ -123,7 +124,7 @@ test.describe("Contractor onboarding - legal details", () => {
     test("allows to fill in legal details as a US business", async ({ page }) => {
       await login(page, onboardingUser);
 
-      await page.getByLabel("I'm a business").check();
+      await page.locator("label").filter({ hasText: "I'm a business" }).click();
       await page.getByLabel("Full legal name of entity").fill("Antiwork Inc.");
 
       await expect(
@@ -173,7 +174,7 @@ test.describe("Contractor onboarding - legal details", () => {
       test("allows to fill in legal details as an individual", async ({ page }) => {
         await login(page, onboardingUser);
 
-        await page.getByLabel("I'm an individual").check();
+        await page.locator("label").filter({ hasText: "I'm an individual" }).click();
         await fillInFranceAddress(page);
 
         await page.getByLabel("Foreign tax identification number").fill("1234567890");
@@ -218,7 +219,7 @@ test.describe("Contractor onboarding - legal details", () => {
       test("allows for specifying a legal entity name for businesses", async ({ page }) => {
         await login(page, onboardingUser);
 
-        await page.getByLabel("I'm a business").check();
+        await page.locator("label").filter({ hasText: "I'm a business" }).click();
 
         await page.getByLabel("Full legal name of entity").fill("Antiwork Inc.");
         await fillInFranceAddress(page);
@@ -268,14 +269,14 @@ test.describe("Contractor onboarding - legal details", () => {
   const fillInUSAddress = async (page: Page) => {
     await page.getByLabel("Residential address (street name, number, apartment)").fill("123 Main St");
     await page.getByLabel("City").fill("New York");
-    await page.getByLabel("State").selectOption("New York");
+    await selectComboboxOption(page, "State", "New York");
     await page.getByLabel("Zip code").fill("12345");
   };
 
   const fillInFranceAddress = async (page: Page) => {
     await page.getByLabel("Residential address (street name, number, apartment)").fill("15 Rue de la Paix");
     await page.getByLabel("City").fill("Paris");
-    await page.getByLabel("State").selectOption("Île-de-France");
+    await selectComboboxOption(page, "State", "Île-de-France");
     await page.getByLabel("Postal code").fill("75002");
   };
 

@@ -101,9 +101,7 @@ export default function HomePage() {
       <main className="min-h-screen bg-white pt-20">
         <Section className="bg-blue-600 py-16">
           <h1 className="text-[84px] leading-[0.9] font-medium tracking-tight sm:text-8xl md:text-[12rem]">
-            Payroll &amp;
-            <br />
-            equity for
+            Equity for
             <br />
             everyone
           </h1>

@@ -51,7 +51,7 @@
     "typecheck:watch": "pnpm run typecheck --watch --preserveWatchOutput",
     "setup": "cd apps/rails && bundle exec rails js:routes:typescript",
     "lint-fast": "DISABLE_TYPE_CHECKED=1 pnpm eslint",
-    "build-next": "pnpm next build apps/next"
+    "build-next": "pnpm next build apps/next --no-lint"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.2.4",

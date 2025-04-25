@@ -24,6 +24,10 @@ Payroll & equity for everyone.
 - [Contributing](#contributing)
 - [License](#license)
 
+## Contributing
+
+If you're working on a task that requires significant effort, feel free to ask for a bounty increase by commenting "could you increase the bounty on this because it would be a big lift" on the issue or pull request.
+
 ## Setup
 
 You'll need:
@@ -45,6 +49,31 @@ You can start the local app using [the `bin/dev` script](bin/dev) - or feel free
 Once the local services are up and running, the application will be available at `https://flexile.dev`
 
 Check [the seeds](apps/rails/config/data/seed_templates/gumroad.json) for default data created during setup.
+
+### Adding shadcn/ui Components
+
+When adding new UI components from [shadcn/ui](https://ui.shadcn.com/) to the `apps/next` workspace, follow these steps due to the use of React 19 and the structure of the monorepo:
+
+1.  Navigate to the Next.js app directory:
+    ```shell
+    cd apps/next
+    ```
+2.  The shadcn/ui CLI requires a `package.json` to exist in the directory it runs from. Create a temporary, empty one:
+    ```shell
+    touch package.json
+    ```
+    Alternatively: `echo "{}" > package.json`
+3.  Run the shadcn/ui CLI using `pnpm dlx` (to avoid global installation), specifying the `@canary` tag for React 19 compatibility:
+    ```shell
+    pnpm dlx shadcn-ui@canary add <component_name>
+    ```
+    Replace `<component_name>` with the component you want to add (e.g., `button`, `dialog`).
+4.  Clean up the temporary files in apps/next:
+    ```shell
+    rm package.json
+    rm -rf node_modules # Remove if created by the CLI
+    ```
+    The component files will be added to the appropriate directory (usually `apps/next/components/ui`).
 
 ## Testing
 

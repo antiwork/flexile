@@ -3,11 +3,11 @@ import * as React from "react";
 import { cn } from "@/utils";
 
 const alertVariants = cva(
-  "relative w-full rounded-lg border px-4 py-3 text-sm grid has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-3 gap-y-0.5 items-start [&>svg]:size-5 [&>svg]:translate-y-0.5 [&>svg]:text-current",
+  "relative w-full rounded-lg border px-4 py-3 text-base grid has-[>svg]:grid-cols-[auto_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-3 gap-y-0.5 items-center [&>svg]:size-5 [&>svg]:text-current flex-row flex-wrap",
   {
     variants: {
       variant: {
-        default: "bg-card text-card-foreground",
+        default: "bg-blue-50 text-black [&>svg]:text-blue-600 border-0",
         destructive:
           "text-destructive bg-card [&>svg]:text-current *:data-[slot=alert-description]:text-destructive/90",
       },
@@ -26,7 +26,7 @@ function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="alert-title"
-      className={cn("col-start-2 line-clamp-1 min-h-4 font-medium tracking-tight", className)}
+      className={cn("col-start-2 line-clamp-1 min-h-4 font-medium tracking-tight text-black", className)}
       {...props}
     />
   );
@@ -36,7 +36,7 @@ function AlertDescription({ className, ...props }: React.ComponentProps<"div">) 
   return (
     <div
       data-slot="alert-description"
-      className={cn("text-muted-foreground col-start-2 text-sm [&_p]:leading-relaxed", className)}
+      className={cn("col-start-2 text-base text-black [&_p]:leading-relaxed", className)}
       {...props}
     />
   );
