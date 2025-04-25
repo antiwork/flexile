@@ -1,12 +1,17 @@
+/* eslint-disable @typescript-eslint/consistent-type-assertions */
 import { type SlackEvent } from "@slack/web-api";
 import { waitUntil } from "@vercel/functions";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { companies } from "@/db/schema";
-import { handleAssistantThreadMessage, handleMessage, isAgentThread } from "@/lib/slack/agent/handleMessages";
+import { integrations } from "@/db/schema";
+import {
+  handleAssistantThreadMessage,
+  handleMessage,
+  isAgentThread,
+  type SlackIntegration,
+} from "@/lib/slack/agent/handleMessages";
 import { validSlackWebhookRequest } from "@/lib/slack/client";
-
 interface SlackUrlVerification {
   type: "url_verification";
   token: string;
@@ -44,59 +49,66 @@ export const POST = async (request: SlackWebhookRequest) => {
       const event = data.event;
 
       switch (event.type) {
-        case "tokens_revoked":
-          for (const userId of event.tokens.bot ?? []) {
-            const company = await db.query.companies.findFirst({
-              where: and(eq(companies.slackTeamId, data.team_id), eq(companies.slackBotUserId, userId)),
-            });
+        case "tokens_revoked": {
+          const integration = await db.query.integrations.findFirst({
+            where: and(eq(integrations.type, "SlackIntegration"), eq(integrations.accountId, data.team_id)),
+            with: {
+              company: true,
+            },
+          });
 
-            if (company) {
-              await db
-                .update(companies)
-                .set({
-                  slackBotUserId: null,
-                  slackBotToken: null,
-                  slackTeamId: null,
-                })
-                .where(eq(companies.id, company.id));
-            }
+          if (integration) {
+            await db
+              .update(integrations)
+              .set({
+                status: "deleted",
+              })
+              .where(eq(integrations.id, integration.id));
           }
           return NextResponse.json({ message: "Success!" }, { status: 200 });
-
+        }
         case "message": {
           if (event.subtype || event.bot_id || event.bot_profile) {
             // No messages we need to handle
             return NextResponse.json({ message: "Success!" }, { status: 200 });
           }
-          const companyMessage = await db.query.companies.findFirst({
-            where: eq(companies.slackTeamId, data.team_id),
+          const integration = await db.query.integrations.findFirst({
+            where: and(eq(integrations.type, "SlackIntegration"), eq(integrations.accountId, data.team_id)),
+            with: {
+              company: true,
+            },
           });
-          if (!companyMessage) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+          if (!integration) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
-          if (event.channel_type === "im" || (await isAgentThread(event, companyMessage))) {
-            waitUntil(handleMessage(event, companyMessage));
+          if (event.channel_type === "im" || (await isAgentThread(event, integration as SlackIntegration))) {
+            waitUntil(handleMessage(event, integration as SlackIntegration));
             return NextResponse.json({ message: "Success!" }, { status: 200 });
           }
           break;
         }
 
         case "app_mention": {
-          const companyAppMention = await db.query.companies.findFirst({
-            where: eq(companies.slackTeamId, data.team_id),
+          const integration = await db.query.integrations.findFirst({
+            where: and(eq(integrations.type, "SlackIntegration"), eq(integrations.accountId, data.team_id)),
+            with: {
+              company: true,
+            },
           });
-          if (!companyAppMention) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-
-          waitUntil(handleMessage(event, companyAppMention));
+          if (!integration) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+          waitUntil(handleMessage(event, integration as SlackIntegration));
           return NextResponse.json({ message: "Success!" }, { status: 200 });
         }
 
         case "assistant_thread_started": {
-          const companyAssistant = await db.query.companies.findFirst({
-            where: eq(companies.slackTeamId, data.team_id),
+          const integration = await db.query.integrations.findFirst({
+            where: and(eq(integrations.type, "SlackIntegration"), eq(integrations.accountId, data.team_id)),
+            with: {
+              company: true,
+            },
           });
-          if (!companyAssistant) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+          if (!integration) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
-          waitUntil(handleAssistantThreadMessage(event, companyAssistant));
+          waitUntil(handleAssistantThreadMessage(event, integration as SlackIntegration));
           return NextResponse.json({ message: "Success!" }, { status: 200 });
         }
 

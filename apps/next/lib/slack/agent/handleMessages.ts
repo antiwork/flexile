@@ -5,33 +5,33 @@ import {
   WebClient,
 } from "@slack/web-api";
 import { type CoreMessage } from "ai";
-import { companies } from "@/db/schema";
+import { type SlackIntegrationConfiguration } from "@/db/json";
+import { companies, integrations } from "@/db/schema";
 import { generateAgentResponse } from "@/lib/slack/agent/generateAgentResponse";
 import { getThreadMessages } from "@/lib/slack/client";
 import { assertDefined } from "@/utils/assert";
 
-type Company = typeof companies.$inferSelect;
+export type SlackIntegration = typeof integrations.$inferSelect & {
+  configuration: SlackIntegrationConfiguration;
+  company: typeof companies.$inferSelect;
+};
 
-export async function handleMessage(event: GenericMessageEvent | AppMentionEvent, company: Company) {
-  if (!company.slackBotUserId || event.bot_id || event.bot_id === company.slackBotUserId || event.bot_profile) return;
+export async function handleMessage(event: GenericMessageEvent | AppMentionEvent, integration: SlackIntegration) {
+  const botUserId = integration.configuration.bot_user_id;
+  if (!botUserId || event.bot_id || event.bot_id === botUserId || event.bot_profile) return;
 
   const { thread_ts, channel } = event;
-  const { showStatus, showResult } = await replyHandler(new WebClient(assertDefined(company.slackBotToken)), event);
+  const { showStatus, showResult } = await replyHandler(new WebClient(integration.configuration.access_token), event);
 
   const messages: CoreMessage[] = thread_ts
-    ? await getThreadMessages(
-        assertDefined(company.slackBotToken),
-        channel,
-        thread_ts,
-        assertDefined(company.slackBotUserId),
-      )
+    ? await getThreadMessages(integration.configuration.access_token, channel, thread_ts, botUserId)
     : [{ role: "user", content: event.text ?? "" }];
-  const result = await generateAgentResponse(messages, company, event.user, showStatus);
+  const result = await generateAgentResponse(messages, integration, event.user, showStatus);
   await showResult(result);
 }
 
-export async function handleAssistantThreadMessage(event: AssistantThreadStartedEvent, company: Company) {
-  const client = new WebClient(assertDefined(company.slackBotToken));
+export async function handleAssistantThreadMessage(event: AssistantThreadStartedEvent, integration: SlackIntegration) {
+  const client = new WebClient(integration.configuration.access_token);
   const { channel_id, thread_ts } = event.assistant_thread;
 
   await client.chat.postMessage({
@@ -60,14 +60,15 @@ export async function handleAssistantThreadMessage(event: AssistantThreadStarted
   });
 }
 
-export const isAgentThread = async (event: GenericMessageEvent, company: Company) => {
-  if (!company.slackBotToken || !company.slackBotUserId || !event.thread_ts || event.thread_ts === event.ts) {
+export const isAgentThread = async (event: GenericMessageEvent, integration: SlackIntegration) => {
+  const botUserId = integration.configuration.bot_user_id;
+  if (!botUserId || !event.thread_ts || event.thread_ts === event.ts) {
     return false;
   }
 
   if (event.text?.includes("(aside)")) return false;
 
-  const client = new WebClient(company.slackBotToken);
+  const client = new WebClient(integration.configuration.access_token);
   const { messages } = await client.conversations.replies({
     channel: event.channel,
     ts: event.thread_ts,
@@ -75,7 +76,7 @@ export const isAgentThread = async (event: GenericMessageEvent, company: Company
   });
 
   for (const message of messages ?? []) {
-    if (message.user === company.slackBotUserId) return true;
+    if (message.user === botUserId) return true;
   }
 
   return false;

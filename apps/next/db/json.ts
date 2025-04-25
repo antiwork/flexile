@@ -18,7 +18,7 @@ export type GitHubIntegrationConfiguration = {
 };
 
 export type SlackIntegrationConfiguration = {
-  teamId: string;
-  botUserId: string;
-  accessToken: string;
+  team_id: string;
+  bot_user_id: string;
+  access_token: string;
 };

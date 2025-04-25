@@ -4,8 +4,8 @@ import { type CoreMessage, generateText, tool } from "ai";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { companies, companyContractors } from "@/db/schema";
-import { assertDefined } from "@/utils/assert";
+import { companyContractors } from "@/db/schema";
+import { type SlackIntegration } from "@/lib/slack/agent/handleMessages";
 
 // Define comprehensive user info type used across functions
 type UserError = {
@@ -26,7 +26,7 @@ type UserResult = UserError | UserSuccess;
 
 export const generateAgentResponse = async (
   messages: CoreMessage[],
-  company: typeof companies.$inferSelect,
+  integration: SlackIntegration,
   slackUserId: string | undefined,
   showStatus: (status: string | null, debugContent?: Record<string, unknown> | string | null) => Promise<void>,
 ) => {
@@ -34,7 +34,7 @@ export const generateAgentResponse = async (
     model: openai("gpt-4o"),
     system: `You are Flexile's Slack bot assistant for team operations. Keep your responses concise and to the point.
 
-You are currently in the company: ${company.name}.
+You are currently in the company: ${integration.company.name}.
 
 IMPORTANT GUIDELINES:
 - Always identify as "Flexile" (never as "Flexile AI" or any other variation)
@@ -70,7 +70,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities (e
           if (!contractor) return { error: "User not found as a contractor" };
 
           // Get user details from Slack
-          const client = new WebClient(assertDefined(company.slackBotToken));
+          const client = new WebClient(integration.configuration.access_token);
           const { user } = await client.users.info({ user: slackUserId });
 
           return {

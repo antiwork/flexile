@@ -1,4 +1,3 @@
-import { WebClient } from "@slack/web-api";
 import { TRPCError } from "@trpc/server";
 import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
@@ -27,9 +26,9 @@ export const getSlackAccessToken = async (code: string) => {
   const data = await response.json();
 
   return {
-    teamId: data.team?.id,
-    botUserId: data.bot_user_id,
-    accessToken: data.access_token,
+    team_id: data.team?.id,
+    bot_user_id: data.bot_user_id,
+    access_token: data.access_token,
   };
 };
 
@@ -73,9 +72,9 @@ export const slackRouter = createRouter({
 
       const integration = await companyIntegration(ctx.company.id);
 
-      const { teamId, botUserId, accessToken } = await getSlackAccessToken(input.code);
+      const { team_id, bot_user_id, access_token } = await getSlackAccessToken(input.code);
 
-      if (!teamId) throw new Error("Slack team ID not found in response");
+      if (!team_id) throw new Error("Slack team ID not found in response");
 
       if (integration) {
         await db
@@ -84,17 +83,21 @@ export const slackRouter = createRouter({
             status: "active",
             configuration: {
               ...integration.configuration,
-              ...{ teamId, botUserId: assertDefined(botUserId), accessToken: assertDefined(accessToken) },
+              ...{ team_id, bot_user_id: assertDefined(bot_user_id), access_token: assertDefined(access_token) },
             },
           })
           .where(eq(integrations.id, integration.id));
       } else {
         await db.insert(integrations).values({
           type: "SlackIntegration",
-          accountId: teamId,
+          accountId: team_id,
           companyId: ctx.company.id,
           status: "active",
-          configuration: { teamId, botUserId: assertDefined(botUserId), accessToken: assertDefined(accessToken) },
+          configuration: {
+            team_id,
+            bot_user_id: assertDefined(bot_user_id),
+            access_token: assertDefined(access_token),
+          },
         });
       }
     }),
@@ -103,12 +106,17 @@ export const slackRouter = createRouter({
 
     const integration = await companyIntegration(ctx.company.id);
     if (!integration?.configuration) throw new TRPCError({ code: "NOT_FOUND" });
-    if (!("teamId" in integration.configuration)) {
+    if (!("team_id" in integration.configuration)) {
       throw new TRPCError({ code: "BAD_REQUEST", message: "Not a Slack integration" });
     }
 
-    const slack = new WebClient(integration.configuration.accessToken);
-    await slack.auth.revoke({ token: integration.configuration.accessToken });
+    await fetch("https://slack.com/api/auth.revoke", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Bearer ${integration.configuration.access_token}`,
+      },
+    });
 
     await db
       .update(integrations)
