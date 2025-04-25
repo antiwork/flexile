@@ -60,7 +60,7 @@ const formSchema = z
     business_type: z.nativeEnum(BusinessType).nullable(),
     tax_classification: z.nativeEnum(TaxClassification).nullable(),
     country_code: z.string(),
-    tax_id: z.string(),
+    tax_id: z.string().min(1, "This field is required."),
     birth_date: z.string().nullable(),
     street_address: z.string().min(1, "Please add your residential address."),
     city: z.string().min(1, "Please add your city or town."),
@@ -101,21 +101,7 @@ export default function TaxPage() {
 
   const form = useForm({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      legal_name: data.legal_name,
-      citizenship_country_code: data.citizenship_country_code,
-      business_entity: data.business_entity,
-      business_name: data.business_name,
-      business_type: data.business_type,
-      tax_classification: data.tax_classification,
-      country_code: data.country_code,
-      tax_id: data.tax_id ?? "",
-      birth_date: data.birth_date,
-      street_address: data.street_address,
-      city: data.city,
-      state: data.state,
-      zip_code: data.zip_code,
-    },
+    defaultValues: { ...data, tax_id: data.tax_id ?? "" },
   });
 
   const formValues = form.watch();
@@ -130,8 +116,7 @@ export default function TaxPage() {
   const stateLabel = formValues.country_code === "US" ? "State" : "Province";
   const countryOptions = [...countries].map(([value, label]) => ({ value, label }));
 
-  const normalizedTaxId = (taxId: string | null) => {
-    if (!taxId) return null;
+  const normalizedTaxId = (taxId: string) => {
     if (isForeign) return taxId.toUpperCase().replace(/[^A-Z0-9]/gu, "");
     return taxId.replace(/[^0-9]/gu, "");
   };
@@ -371,8 +356,8 @@ export default function TaxPage() {
                         </>
                       ) : null}
                     </div>
-                    <FormControl>
-                      <div className="flex">
+                    <div className="flex">
+                      <FormControl>
                         <Input
                           type={maskTaxId ? "password" : "text"}
                           placeholder={taxIdPlaceholder}
@@ -382,18 +367,18 @@ export default function TaxPage() {
                           onChange={(e) => field.onChange(normalizedTaxId(e.target.value))}
                           className="rounded-r-none"
                         />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="rounded-l-none"
-                          onPointerDown={() => setMaskTaxId(false)}
-                          onPointerUp={() => setMaskTaxId(true)}
-                          onPointerLeave={() => setMaskTaxId(true)}
-                        >
-                          {maskTaxId ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                        </Button>
-                      </div>
-                    </FormControl>
+                      </FormControl>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="rounded-l-none"
+                        onPointerDown={() => setMaskTaxId(false)}
+                        onPointerUp={() => setMaskTaxId(true)}
+                        onPointerLeave={() => setMaskTaxId(true)}
+                      >
+                        {maskTaxId ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                      </Button>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
