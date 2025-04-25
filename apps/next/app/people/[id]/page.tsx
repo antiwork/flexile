@@ -599,7 +599,7 @@ const DetailsTab = ({
               loadingText="Saving..."
             >
               Save changes
-            </MutationButton>
+            </MutationStatusButton>
           </CardFooter>
         )}
       </FormSection>
