@@ -11,9 +11,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import LegalCertificationModal from "@/app/onboarding/LegalCertificationModal";
-import ComboBox from "@/components/ComboBox";
 import FormSection from "@/components/FormSection";
 import RadioButtons from "@/components/RadioButtons";
+import Select from "@/components/Select";
 import Status from "@/components/Status";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -301,7 +301,12 @@ export default function TaxPage() {
                 <FormItem>
                   <FormLabel>Country of citizenship</FormLabel>
                   <FormControl>
-                    <ComboBox options={countryOptions} {...field} />
+                    <Select
+                      options={countryOptions}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select country"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -354,7 +359,7 @@ export default function TaxPage() {
                         <FormItem>
                           <FormLabel>Type</FormLabel>
                           <FormControl>
-                            <ComboBox
+                            <Select
                               options={[
                                 { label: "C corporation", value: BusinessType.CCorporation.toString() },
                                 { label: "S corporation", value: BusinessType.SCorporation.toString() },
@@ -379,7 +384,7 @@ export default function TaxPage() {
                           <FormItem>
                             <FormLabel>Tax classification</FormLabel>
                             <FormControl>
-                              <ComboBox
+                              <Select
                                 options={[
                                   { label: "C corporation", value: TaxClassification.CCorporation.toString() },
                                   { label: "S corporation", value: TaxClassification.SCorporation.toString() },
@@ -407,7 +412,12 @@ export default function TaxPage() {
                 <FormItem>
                   <FormLabel>{`Country of ${formValues.business_entity ? "incorporation" : "residence"}`}</FormLabel>
                   <FormControl>
-                    <ComboBox options={countryOptions} {...field} />
+                    <Select
+                      options={countryOptions}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select country"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -519,12 +529,13 @@ export default function TaxPage() {
                   <FormItem>
                     <FormLabel>{stateLabel}</FormLabel>
                     <FormControl>
-                      <ComboBox
+                      <Select
                         options={countrySubdivisions.map((entry) => ({
                           value: entry.code.slice(countryCodePrefix.length),
                           label: entry.name,
                         }))}
-                        {...field}
+                        value={field.value}
+                        onChange={field.onChange}
                         disabled={!countrySubdivisions.length}
                         placeholder={`Select ${stateLabel.toLowerCase()}`}
                       />
