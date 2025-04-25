@@ -153,9 +153,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_18_135243) do
     t.boolean "equity_compensation_enabled", default: false, null: false
     t.boolean "team_updates_enabled", default: false, null: false
     t.jsonb "json_data", default: {"flags" => []}, null: false
-    t.string "slack_bot_user_id"
-    t.string "slack_team_id"
-    t.string "slack_bot_token"
     t.index ["external_id"], name: "index_companies_on_external_id", unique: true
   end
 

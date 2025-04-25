@@ -288,15 +288,4 @@ export const companiesRouter = createRouter({
       await db.update(users).set({ invitingCompany: false }).where(eq(users.id, ctx.user.id));
       return { documentId: assertDefined(document?.id) };
     }),
-  disconnectSlack: companyProcedure.mutation(async ({ ctx }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
-    await db
-      .update(companies)
-      .set({
-        slackBotUserId: null,
-        slackBotToken: null,
-        slackTeamId: null,
-      })
-      .where(eq(companies.id, ctx.company.id));
-  }),
 });
