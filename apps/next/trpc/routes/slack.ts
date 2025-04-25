@@ -10,22 +10,26 @@ import { assertDefined } from "@/utils/assert";
 
 const oauthState = (ctx: CompanyContext) => Buffer.from(`${ctx.company.id}:${ctx.company.name}`).toString("base64");
 export const getSlackAccessToken = async (code: string) => {
-  const client = new WebClient();
-  const response = await client.oauth.v2.access({
-    client_id: env.SLACK_CLIENT_ID,
-    client_secret: env.SLACK_CLIENT_SECRET,
-    code,
-    redirect_uri: env.SLACK_REDIRECT_URL,
+  const response = await fetch("https://slack.com/api/oauth.v2.access", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      client_id: env.SLACK_CLIENT_ID,
+      client_secret: env.SLACK_CLIENT_SECRET,
+      code,
+      redirect_uri: env.SLACK_REDIRECT_URL,
+      grant_type: "authorization_code",
+    }).toString(),
   });
-
-  if (!response.ok) {
-    throw new Error(response.error || "Failed to get Slack access token");
-  }
+  if (!response.ok) throw new Error("Failed to get Slack access token");
+  const data = await response.json();
 
   return {
-    teamId: response.team?.id,
-    botUserId: response.bot_user_id,
-    accessToken: response.access_token,
+    teamId: data.team?.id,
+    botUserId: data.bot_user_id,
+    accessToken: data.access_token,
   };
 };
 
