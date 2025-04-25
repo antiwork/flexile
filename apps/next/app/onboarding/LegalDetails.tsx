@@ -20,16 +20,21 @@ import { request } from "@/utils/request";
 import { legal_onboarding_path, save_legal_onboarding_path } from "@/utils/routes";
 import LegalCertificationModal from "./LegalCertificationModal";
 
-const formSchema = z.object({
-  business_entity: z.boolean(),
-  business_name: z.string().nullish(),
-  tax_id: z.string().nullish(),
-  birth_date: z.string().nullish(),
-  street_address: z.string().min(1, "This field is required"),
-  state: z.string().min(1, "This field is required"),
-  city: z.string().min(1, "This field is required"),
-  zip_code: z.string().regex(/\d/u, { message: "This doesn't look like a valid ZIP code" }),
-});
+const formSchema = z
+  .object({
+    business_entity: z.boolean(),
+    business_name: z.string().nullish(),
+    tax_id: z.string().nullish(),
+    birth_date: z.string().nullish(),
+    street_address: z.string().min(1, "This field is required"),
+    state: z.string().min(1, "This field is required"),
+    city: z.string().min(1, "This field is required"),
+    zip_code: z.string().regex(/\d/u, { message: "This doesn't look like a valid ZIP code" }),
+  })
+  .refine((data) => !data.business_entity || data.business_name, {
+    path: ["business_name"],
+    message: "This field is required",
+  });
 
 type FormValues = z.infer<typeof formSchema>;
 
