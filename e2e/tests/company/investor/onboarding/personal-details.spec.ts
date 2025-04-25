@@ -120,7 +120,7 @@ test.describe("Investor onboarding - personal details", () => {
 
     await login(page, onboardingUser);
 
-    await expect(page.getByLabel("Country of residence")).toHaveText("US");
+    await expect(page.getByLabel("Country of residence")).toHaveText("United States");
 
     await page.getByLabel("Full legal name").fill("Wade Wilson");
     await page.getByLabel("Preferred name (visible to others)").fill("Wade");
