@@ -130,7 +130,6 @@ export const contractorsRouter = createRouter({
         hoursPerWeek: z.number(),
         onTrial: z.boolean(),
         roleId: z.string().nullable(),
-        applicationId: z.number().nullable(),
         documentTemplateId: z.string(),
       }),
     )

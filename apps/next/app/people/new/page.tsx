@@ -135,7 +135,6 @@ function Create() {
             disabled={!valid}
             param={{
               companyId: company.id,
-              applicationId,
               email,
               // startDate only contains the date without a timezone. Appending T00:00:00 ensures the date is
               // parsed as midnight in the local timezone rather than UTC.

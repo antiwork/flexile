@@ -263,7 +263,6 @@ export const companyMonthlyFinancialReports = pgTable(
   ],
 );
 
-
 export const companyRoleRates = pgTable(
   "company_role_rates",
   {
@@ -1995,7 +1994,6 @@ export const companyRoles = pgTable(
     updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
       .notNull()
       .$onUpdate(() => new Date()),
-    activelyHiring: boolean("actively_hiring").default(false).notNull(),
     capitalizedExpense: integer("capitalized_expense"),
     slug: varchar(),
     deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
@@ -2974,7 +2972,6 @@ export const expenseCardChargeRelations = relations(expenseCardCharges, ({ one }
     references: [expenseCards.id],
   }),
 }));
-
 
 export const integrationRecordsRelations = relations(integrationRecords, ({ one }) => ({
   integration: one(integrations, {
