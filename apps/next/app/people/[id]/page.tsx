@@ -79,8 +79,7 @@ export default function ContractorPage() {
 
   const [selectedRoleId, setSelectedRoleId] = useState(contractor?.role ?? "");
   useEffect(() => setSelectedRoleId(contractor?.role ?? ""), [contractor]);
-  const [roles] = trpc.roles.list.useSuspenseQuery({ companyId: company.id });
-  const selectedRole = roles.find((role) => role.id === selectedRoleId);
+  const selectedRole = null;
   const [endModalOpen, setEndModalOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [endDate, setEndDate] = useState(formatISO(new Date(), { representation: "date" }));
