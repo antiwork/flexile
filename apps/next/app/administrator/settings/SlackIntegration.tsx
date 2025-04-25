@@ -1,39 +1,17 @@
 import { useMutation } from "@tanstack/react-query";
-import { useEffect } from "react";
 import MutationButton from "@/components/MutationButton";
 import Status from "@/components/Status";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
-import { getOauthCode, hasOauthCode } from "@/utils/oauth";
-
+import { assertDefined } from "@/utils/assert";
+import { getOauthCode } from "@/utils/oauth";
 export default function SlackIntegration() {
   const company = useCurrentCompany();
   const utils = trpc.useUtils();
-
   // Fetch integration status
   const [integration, { refetch }] = trpc.slack.get.useSuspenseQuery({ companyId: company.id });
 
-  const connectSlack = trpc.slack.connect.useMutation({
-    onSuccess: () => {
-      void refetch();
-      // Clean the URL
-      window.history.replaceState(
-        {},
-        document.title,
-        window.location.pathname + window.location.search.replace(/[?&]code=[^&]+/, "").replace(/[?&]state=[^&]+/, ""),
-      );
-      setTimeout(() => connectSlack.reset(), 2000);
-    },
-    onError: () => {
-      // Clean the URL even on error
-      window.history.replaceState(
-        {},
-        document.title,
-        window.location.pathname + window.location.search.replace(/[?&]code=[^&]+/, "").replace(/[?&]state=[^&]+/, ""),
-      );
-    },
-  });
-
+  const connectSlack = trpc.slack.connect.useMutation();
   const disconnectSlack = trpc.slack.disconnect.useMutation({
     onSuccess: () => {
       void refetch();
@@ -41,33 +19,15 @@ export default function SlackIntegration() {
     },
   });
 
-  const getAuthUrlMutation = trpc.slack.getAuthUrl.useMutation({
-    onSuccess: (url: string) => {
-      window.location.href = url; // Redirect user to Slack OAuth page
+  const connectMutation = useMutation({
+    mutationFn: async () => {
+      const authUrl = await utils.slack.getAuthUrl.fetch({ companyId: company.id });
+      const { code, params } = await getOauthCode(authUrl);
+      await connectSlack.mutateAsync({ companyId: company.id, code, state: assertDefined(params.get("state")) });
+      void refetch();
     },
+    onSuccess: () => setTimeout(() => connectMutation.reset(), 2000),
   });
-
-  // Effect to handle the OAuth callback
-  useEffect(() => {
-    if (hasOauthCode() && !connectSlack.isLoading && !connectSlack.isSuccess) {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get("code");
-      const state = params.get("state");
-      if (code && state) {
-        connectSlack.mutate({ companyId: company.id, code, state });
-      } else {
-        console.error("Missing code or state in OAuth callback");
-        // Optionally show an error message to the user
-        // Clean the URL
-        window.history.replaceState(
-          {},
-          document.title,
-          window.location.pathname +
-            window.location.search.replace(/[?&]code=[^&]+/, "").replace(/[?&]state=[^&]+/, ""),
-        );
-      }
-    }
-  }, [company.id, connectSlack]);
 
   return (
     <div className="flex justify-between gap-2">
@@ -94,12 +54,7 @@ export default function SlackIntegration() {
             Disconnect
           </MutationButton>
         ) : (
-          <MutationButton
-            mutation={getAuthUrlMutation}
-            param={undefined}
-            loadingText={connectSlack.isLoading ? "Connecting..." : "Redirecting..."}
-            disabled={connectSlack.isLoading || getAuthUrlMutation.isLoading}
-          >
+          <MutationButton mutation={connectMutation} loadingText="Connecting...">
             Connect
           </MutationButton>
         )}
