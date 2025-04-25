@@ -154,12 +154,7 @@ const LegalDetails = <T extends string>({
                 <FormItem>
                   <FormLabel htmlFor="business-name">Full legal name of entity</FormLabel>
                   <FormControl>
-                    <Input
-                      id="business-name"
-                      {...field}
-                      value={field.value || ""}
-                      disabled={!!data.user.business_name}
-                    />
+                    <Input id="business-name" {...field} disabled={!!data.user.business_name} />
                   </FormControl>
                   <FormMessage>
                     {!data.user.is_foreign ? (
