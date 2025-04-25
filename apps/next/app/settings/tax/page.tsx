@@ -549,11 +549,11 @@ export default function TaxPage() {
           </CardContent>
 
           <CardFooter className="flex-wrap gap-4">
-            <Button 
+            <Button
               type="button"
-              disabled={!taxInfoChanged && isTaxInfoConfirmed} 
+              disabled={!taxInfoChanged && isTaxInfoConfirmed}
               onClick={() => {
-                form.handleSubmit(onSubmit)();
+                void form.handleSubmit(onSubmit)();
               }}
             >
               Save changes
