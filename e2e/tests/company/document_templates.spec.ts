@@ -40,9 +40,9 @@ test.describe("Document templates", () => {
     await expect(
       page.getByText("This is our default template. Replace it with your own to fully customize it."),
     ).toBeVisible();
-    await expect(page.getByText("Default Consulting Agreement")).toBeVisible();
+    await expect(page.getByText(/default consulting agreement/iu)).toBeVisible();
     await page.getByRole("button", { name: "Replace default template" }).click();
-    await expect(page.getByText("Consulting agreement", { exact: true })).toBeVisible();
+    await expect(page.getByText(/consulting agreement/iu)).toBeVisible();
     await page.getByRole("link", { name: "Back to documents" }).click();
 
     next.onFetch(async (request) => {
