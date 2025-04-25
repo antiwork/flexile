@@ -1,20 +1,28 @@
 "use client";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import { Set } from "immutable";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
-import Input from "@/components/Input";
+import ComboBox from "@/components/ComboBox";
 import Modal from "@/components/Modal";
-import MutationButton from "@/components/MutationButton";
-import Select from "@/components/Select";
+import { MutationStatusButton } from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { useCurrentUser } from "@/global";
 import { countries, sanctionedCountries } from "@/models/constants";
-import { e } from "@/utils";
 import { request } from "@/utils/request";
 import { onboarding_path } from "@/utils/routes";
+
+const formSchema = z.object({
+  legal_name: z.string().refine((val) => /\S+\s+\S+/u.test(val), "This doesn't look like a complete full name."),
+  preferred_name: z.string().min(1, "This field is required"),
+  country_code: z.string().min(1, "This field is required"),
+  citizenship_country_code: z.string().min(1, "This field is required"),
+});
 
 const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T> }) => {
   const user = useCurrentUser();
@@ -36,91 +44,110 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
 
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmNoPayout, setConfirmNoPayout] = useState(false);
-  const [errors, setErrors] = useState(Set<string>());
 
-  const [legalName, setLegalName] = useState(data.legal_name);
-  const [preferredName, setPreferredName] = useState(data.preferred_name);
-  const [country, setCountry] = useState(data.country_code);
-  const [citizenshipCountry, setCitizenshipCountry] = useState(data.citizenship_country_code);
-  const formData = {
-    legal_name: legalName,
-    preferred_name: preferredName,
-    country_code: country,
-    citizenship_country_code: citizenshipCountry,
-  };
-  Object.entries(formData).forEach(([key, value]) => useEffect(() => setErrors(errors.delete(key)), [value]));
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      legal_name: data.legal_name || "",
+      preferred_name: data.preferred_name || "",
+      country_code: data.country_code || "",
+      citizenship_country_code: data.citizenship_country_code || "",
+    },
+  });
 
-  const submit = useMutation({
+  const save = useMutation({
     mutationFn: async () => {
-      const newErrors = errors.clear().withMutations((errors) => {
-        Object.entries(formData).forEach(([field, value]) => {
-          if (!value) errors.add(field);
-        });
-
-        if (!/\S+\s+\S+/u.test(legalName || "")) errors.add("legal_name");
-      });
-
-      setErrors(newErrors);
-      if (newErrors.size > 0) throw new Error("Invalid data");
-
-      if (!confirmNoPayout && sanctionedCountries.has(country || "")) {
-        setModalOpen(true);
-        throw new Error("Sanctioned country");
-      }
-
       await request({
         method: "PATCH",
         url: onboarding_path(),
         accept: "json",
-        jsonData: { user: formData },
+        jsonData: { user: form.getValues() },
         assertOk: true,
       });
       router.push(nextLinkTo);
     },
   });
 
+  const submit = form.handleSubmit((values) => {
+    if (!confirmNoPayout && sanctionedCountries.has(values.country_code)) {
+      setModalOpen(true);
+      throw new Error("Sanctioned country");
+    }
+
+    save.mutate();
+  });
+
   const countryOptions = [...countries].map(([code, name]) => ({ value: code, label: name }));
 
   return (
     <>
-      <form className="grid gap-4" onSubmit={e(() => submit.mutate(), "prevent")}>
-        <Input
-          value={legalName}
-          onChange={setLegalName}
-          label="Full legal name (must match your ID)"
-          invalid={errors.has("legal_name")}
-          autoFocus
-          help={errors.has("legal_name") ? "This doesn't look like a complete full name." : undefined}
-        />
-        <Input
-          value={preferredName}
-          onChange={setPreferredName}
-          label="Preferred name (visible to others)"
-          invalid={errors.has("preferred_name")}
-        />
-        <div className="grid gap-3 md:grid-cols-2">
-          <Select
-            value={country}
-            onChange={setCountry}
-            placeholder="Select country"
-            options={countryOptions}
-            label="Country of residence"
-            invalid={errors.has("country_code")}
+      <Form {...form}>
+        <form className="grid gap-4" onSubmit={(e) => void submit(e)}>
+          <FormField
+            control={form.control}
+            name="legal_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Full legal name (must match your ID)</FormLabel>
+                <FormControl>
+                  <Input {...field} autoFocus />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          <Select
-            value={citizenshipCountry}
-            onChange={setCitizenshipCountry}
-            placeholder="Select country"
-            options={countryOptions}
-            label="Country of citizenship"
+
+          <FormField
+            control={form.control}
+            name="preferred_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Preferred name (visible to others)</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-        <footer className="grid items-center gap-2">
-          <MutationButton mutation={submit} loadingText="Saving...">
-            Continue
-          </MutationButton>
-        </footer>
-      </form>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="country_code"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Country of residence</FormLabel>
+                  <FormControl>
+                    <ComboBox {...field} placeholder="Select country" options={countryOptions} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="citizenship_country_code"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Country of citizenship</FormLabel>
+                  <FormControl>
+                    <ComboBox {...field} placeholder="Select country" options={countryOptions} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <footer className="grid items-center gap-2">
+            <MutationStatusButton type="submit" mutation={save} loadingText="Saving...">
+              Continue
+            </MutationStatusButton>
+          </footer>
+        </form>
+      </Form>
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Important notice">
         <p>
@@ -137,7 +164,7 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
             onClick={() => {
               setConfirmNoPayout(true);
               setModalOpen(false);
-              submit.mutate();
+              save.mutate();
             }}
           >
             Proceed

@@ -1,5 +1,4 @@
 import * as LabelPrimitive from "@radix-ui/react-label";
-import { Slot } from "@radix-ui/react-slot";
 import * as React from "react";
 import {
   Controller,
@@ -13,6 +12,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { cn } from "@/utils";
 import { assertDefined } from "@/utils/assert";
+import { Slot } from "@radix-ui/react-slot";
 
 const Form = FormProvider;
 
@@ -131,7 +131,7 @@ function FormMessage({ className, ...props }: React.ComponentProps<"p">) {
     <p
       data-slot="form-message"
       id={formMessageId}
-      className={cn("text-destructive text-sm font-medium", className)}
+      className={cn("text-sm font-medium", { "text-destructive": error }, className)}
       {...props}
     >
       {body}

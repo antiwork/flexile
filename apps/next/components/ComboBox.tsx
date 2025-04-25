@@ -1,10 +1,10 @@
 import { PopoverTrigger } from "@radix-ui/react-popover";
-import { Check, ChevronsUpDown } from "lucide-react";
 import React from "react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent } from "@/components/ui/popover";
 import { cn } from "@/utils";
 import { Button } from "./ui/button";
+import { Check, ChevronsUpDown } from "lucide-react";
 
 const ComboBox = ({
   options,
@@ -65,7 +65,13 @@ const ComboBox = ({
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      multiple ? value.includes(option.value) : option.value === value ? "opacity-100" : "opacity-0",
+                      multiple
+                        ? value.includes(option.value)
+                          ? "opacity-100"
+                          : "opacity-0"
+                        : option.value === value
+                          ? "opacity-100"
+                          : "opacity-0",
                     )}
                   />
                   {option.label}

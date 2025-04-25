@@ -3,6 +3,7 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
+import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, type Page, test, withinModal } from "@test/index";
 import { eq } from "drizzle-orm";
@@ -268,14 +269,14 @@ test.describe("Contractor onboarding - legal details", () => {
   const fillInUSAddress = async (page: Page) => {
     await page.getByLabel("Residential address (street name, number, apartment)").fill("123 Main St");
     await page.getByLabel("City").fill("New York");
-    await page.getByLabel("State").selectOption("New York");
+    await selectComboboxOption(page, "State", "New York");
     await page.getByLabel("Zip code").fill("12345");
   };
 
   const fillInFranceAddress = async (page: Page) => {
     await page.getByLabel("Residential address (street name, number, apartment)").fill("15 Rue de la Paix");
     await page.getByLabel("City").fill("Paris");
-    await page.getByLabel("State").selectOption("Île-de-France");
+    await selectComboboxOption(page, "State", "Île-de-France");
     await page.getByLabel("Postal code").fill("75002");
   };
 

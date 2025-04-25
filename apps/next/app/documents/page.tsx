@@ -3,7 +3,6 @@ import { ArrowDownTrayIcon, InformationCircleIcon } from "@heroicons/react/16/so
 import { BriefcaseIcon, CheckCircleIcon, PaperAirplaneIcon, PencilIcon } from "@heroicons/react/24/outline";
 import { skipToken, useMutation } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import { FileTextIcon, GavelIcon, PercentIcon } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -25,6 +24,7 @@ import type { RouterOutput } from "@/trpc";
 import { DocumentTemplateType, DocumentType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
 import { formatDate } from "@/utils/time";
+import { FileTextIcon, GavelIcon, PercentIcon } from "lucide-react";
 
 type Document = RouterOutput["documents"]["list"][number];
 type SignableDocument = Document & { docusealSubmissionId: number };
@@ -145,7 +145,7 @@ const EditTemplates = () => {
               for more details.
             </AlertDescription>
           </Alert>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <MutationButton
               idleVariant="outline"
               className="h-auto rounded-md p-6"
