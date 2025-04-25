@@ -173,19 +173,4 @@ RSpec.describe InviteWorker do
     worker_params.delete(:role_id)
     expect(invite_contractor).to eq({ success: false, error_message: "Role not found" })
   end
-
-  context "when an application is passed in" do
-    let(:application) { create(:company_role_application, company_role: create(:company_role, company:)) }
-
-    it "updates the application to accepted if there are no errors" do
-      described_class.new(current_user:, company:, company_administrator:, worker_params:, application:).perform
-      expect(application.reload.accepted?).to eq true
-    end
-
-    it "does not update the application if there is an error" do
-      worker_params[:pay_rate_in_subunits] = -1
-      described_class.new(current_user:, company:, company_administrator:, worker_params:, application:).perform
-      expect(application.reload.pending?).to eq true
-    end
-  end
 end

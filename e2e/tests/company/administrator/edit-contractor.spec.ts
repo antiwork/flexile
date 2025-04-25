@@ -168,7 +168,6 @@ test.describe("Edit contractor", () => {
     });
     assert(newRole !== undefined);
     expect(newRole.name).toBe("Example Role");
-    expect(newRole.activelyHiring).toBe(false);
 
     const updatedContractor = await db.query.companyContractors.findFirst({
       where: eq(users.id, companyContractor.id),

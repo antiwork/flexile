@@ -14,6 +14,15 @@ bundle install
 bin/rails db:prepare
 cd ../..
 
+function kill_process_listening_on_port {
+  lsof -i :$1 | grep LISTEN | awk '{print $2}' | xargs -r kill -9
+}
+
+echo "Starting application services"
+kill_process_listening_on_port 3000
+kill_process_listening_on_port 3001
+kill_process_listening_on_port 8288 # inngest
+
 export NODE_EXTRA_CA_CERTS="$(node docker/createCertificate.js)"
 make local
 foreman start -f Procfile.dev "$@"

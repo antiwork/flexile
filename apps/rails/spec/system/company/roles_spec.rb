@@ -10,7 +10,6 @@ RSpec.describe "Company roles" do
   end
 
   it "allows company admins to manage roles" do
-    create_list(:company_role_application, 2, company_role:)
     company.update!(name: "The company")
     company_role.update!(name: "The role")
     visit spa_company_roles_path(company.external_id)

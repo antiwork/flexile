@@ -19,12 +19,6 @@ export enum DocumentTemplateType {
   BoardConsent,
 }
 
-export enum RoleApplicationStatus {
-  Pending = 0,
-  Accepted,
-  Denied,
-}
-
 export enum BusinessType {
   LLC = 0,
   CCorporation,

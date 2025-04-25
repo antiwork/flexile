@@ -14,7 +14,6 @@ class Internal::Companies::WorkersController < Internal::Companies::BaseControll
       company: Current.company,
       company_administrator: Current.company_administrator,
       worker_params:,
-      application: params[:application_id] && Current.company.company_role_applications.pending.find(params[:application_id]),
     ).perform
 
     if result[:success]

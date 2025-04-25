@@ -2,16 +2,15 @@
 
 class InviteWorker
   attr_reader :current_user, :company, :company_administrator, :email,
-              :attachment, :application, :docuseal_submission_id
+              :attachment, :docuseal_submission_id
   attr_accessor :params
 
-  def initialize(current_user:, company:, company_administrator:, worker_params:, application: nil)
+  def initialize(current_user:, company:, company_administrator:, worker_params:)
     @current_user = current_user
     @company = company
     @company_administrator = company_administrator
     @params = worker_params.dup
     @email = @params.delete(:email)
-    @application = application
   end
 
   def perform
@@ -48,7 +47,6 @@ class InviteWorker
     if user.errors.blank? && company_worker.errors.blank?
       document = CreateConsultingContract.new(company_worker:, company_administrator:, current_user:).perform!
       GenerateContractorInvitationJob.perform_async(company_worker.id, is_existing_user)
-      @application&.accepted!
 
       { success: true, company_worker:, document: }
     else

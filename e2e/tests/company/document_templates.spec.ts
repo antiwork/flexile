@@ -7,18 +7,37 @@ import { expect, test, withinModal } from "@test/index";
 test.describe("Document templates", () => {
   test("allows viewing and managing document templates", async ({ page, next }) => {
     const docusealData = { documents: [], fields: [], submitters: [], schema: [] };
+    let expectedTemplateName = "Consulting agreement"; // Initial expected name
+
     next.onFetch(async (request) => {
+      // Load default template
       if (request.url === "https://docuseal.com/embed/templates/1") {
         return Response.json({ name: "Default consulting agreement", ...docusealData });
       }
+      // Create/Replace template API call
       if (request.url === "https://api.docuseal.com/templates/pdf") {
-        expect(await request.json()).toMatchObject({ name: "Consulting agreement" });
-        return Response.json({ id: 2 });
+        const payload: unknown = await request.json();
+        if (payload && typeof payload === "object" && "name" in payload) {
+          expect(payload).toMatchObject({ name: expectedTemplateName });
+        } else {
+          throw new Error("Invalid payload received from /templates/pdf");
+        }
+        if (expectedTemplateName === "Consulting agreement") {
+          return Response.json({ id: 2 }); // ID for replaced template
+        } else if (expectedTemplateName === "Equity grant contract") {
+          return Response.json({ id: 3 }); // ID for new template
+        }
       }
+      // Load replaced template
       if (request.url === "https://docuseal.com/embed/templates/2") {
         return Response.json({ name: "Consulting agreement", ...docusealData });
       }
+      // Load new equity template
+      if (request.url === "https://docuseal.com/embed/templates/3") {
+        return Response.json({ name: "Equity grant contract", ...docusealData });
+      }
     });
+
     const { company } = await companiesFactory.createCompletedOnboarding();
     const { user: adminUser } = await usersFactory.create();
     await companyAdministratorsFactory.create({
@@ -40,20 +59,15 @@ test.describe("Document templates", () => {
     await expect(
       page.getByText("This is our default template. Replace it with your own to fully customize it."),
     ).toBeVisible();
-    await expect(page.getByText("Default Consulting Agreement")).toBeVisible();
+    await expect(page.getByText(/default consulting agreement/iu)).toBeVisible();
     await page.getByRole("button", { name: "Replace default template" }).click();
-    await expect(page.getByText("Consulting agreement", { exact: true })).toBeVisible();
+    // Wait for the main page title to update after replacement
+    await expect(page.locator("h1").getByText(/edit consulting agreement/iu)).toBeVisible();
     await page.getByRole("link", { name: "Back to documents" }).click();
 
-    next.onFetch(async (request) => {
-      if (request.url === "https://api.docuseal.com/templates/pdf") {
-        expect(await request.json()).toMatchObject({ name: "Equity grant contract" });
-        return Response.json({ id: 3 });
-      }
-      if (request.url === "https://docuseal.com/embed/templates/3") {
-        return Response.json({ name: "Equity grant contract", ...docusealData });
-      }
-    });
+    // Update the expected name for the next template creation
+    expectedTemplateName = "Equity grant contract";
+
     await page.getByRole("button", { name: "Edit templates" }).click();
     await withinModal(
       async (modal) => {
@@ -68,7 +82,8 @@ test.describe("Document templates", () => {
       { page },
     );
 
-    await expect(page.locator("#title_container").getByText("Equity grant contract")).toBeVisible();
+    // Check the main page title rendered by MainLayout
+    await expect(page.locator("h1").getByText(/equity grant contract/iu)).toBeVisible();
     await page.getByRole("link", { name: "Back to documents" }).click();
 
     await page.getByRole("button", { name: "Edit templates" }).click();

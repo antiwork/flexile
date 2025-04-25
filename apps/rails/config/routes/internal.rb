@@ -18,9 +18,7 @@ scope path: :internal, module: :internal do
     patch :save_bank_account
   end
 
-  resources :roles, only: [:index, :show] do
-    resources :applications, only: :create, controller: "role_applications"
-  end
+  resources :roles, only: [:index, :show]
 
   # Company portal routes
   resources :companies, only: [], module: :companies do
@@ -77,9 +75,7 @@ scope path: :internal, module: :internal do
         delete :disconnect
       end
     end
-    resources :roles, only: [:index, :create, :update, :destroy] do
-      resources :applications, only: :index, controller: "role_applications"
-    end
+    resources :roles, only: [:index, :create, :update, :destroy]
     resources :stripe_ephemeral_keys, only: :create
   end
 

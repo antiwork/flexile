@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from "react";
-import { formControlClasses, formHelpClasses } from "@/components/Input";
 import { Label } from "@/components/ui/label";
 
 function RadioButtons<T extends string | number>({
@@ -29,12 +28,12 @@ function RadioButtons<T extends string | number>({
 
   return (
     <fieldset className="group">
-      {label ? <legend className="mb-2">{label}</legend> : null}
-      <div ref={ref} role="radiogroup" className="grid auto-cols-fr gap-2 md:grid-flow-col">
+      {label ? <legend className="mb-2 font-medium">{label}</legend> : null}
+      <div ref={ref} role="radiogroup" className="grid auto-cols-fr gap-3 md:grid-flow-col">
         {options.map((option) => (
           <Label
             key={option.label}
-            className={`has-invalid:border-red flex cursor-pointer items-center gap-2 p-3 has-disabled:cursor-not-allowed has-disabled:opacity-50 ${formControlClasses}`}
+            className={`border-input hover:bg-accent hover:text-accent-foreground has-[:checked]:text-primary flex cursor-pointer items-center gap-3 rounded-md border bg-transparent p-4 shadow-xs transition-[color,background-color,box-shadow,border-color] has-[:checked]:border-blue-600 has-[:checked]:bg-blue-500/10 ${invalid ? "border-destructive ring-destructive/20 has-[:checked]:border-destructive ring-2" : ""} ${disabled ? "pointer-events-none cursor-not-allowed opacity-50" : ""}`}
           >
             <input
               type="radio"
@@ -42,20 +41,29 @@ function RadioButtons<T extends string | number>({
               checked={value === option.value}
               onChange={() => onChange(option.value)}
               disabled={disabled}
-              className="invalid:accent-red size-5 outline-hidden"
+              className="sr-only"
+              aria-invalid={invalid}
+              aria-describedby={help ? `radio-help-${label}` : undefined}
             />
             {option.description ? (
               <div>
                 <div className="font-medium">{option.label}</div>
-                <span className="text-gray-500">{option.description}</span>
+                <span className="text-muted-foreground text-sm leading-none">{option.description}</span>
               </div>
             ) : (
-              option.label
+              <span className="font-medium">{option.label}</span>
             )}
           </Label>
         ))}
       </div>
-      {help ? <div className={`mt-2 ${formHelpClasses}`}>{help}</div> : null}
+      {help ? (
+        <div
+          id={help ? `radio-help-${label}` : undefined}
+          className={`mt-2 text-sm ${invalid ? "text-destructive" : "text-muted-foreground"}`}
+        >
+          {help}
+        </div>
+      ) : null}
     </fieldset>
   );
 }

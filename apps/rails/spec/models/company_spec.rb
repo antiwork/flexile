@@ -15,7 +15,6 @@ RSpec.describe Company do
     it { is_expected.to have_many(:company_investor_entities) }
     it { is_expected.to have_many(:investors).through(:company_investors).source(:user) }
     it { is_expected.to have_many(:company_roles).conditions(deleted_at: nil) }
-    it { is_expected.to have_many(:company_role_applications).through(:company_roles) }
     it { is_expected.to have_many(:convertible_investments) }
     it { is_expected.to have_many(:consolidated_invoices) }
     it { is_expected.to have_many(:contractors).through(:company_workers).source(:user) }

@@ -24,7 +24,7 @@ test.describe("Contractor for multiple companies", () => {
     await companyContractorsFactory.create({ userId: contractorUser.id });
 
     const { company: secondCompany } = await companiesFactory.create({ name: "Second Company" });
-    await companyRolesFactory.create({ companyId: secondCompany.id, activelyHiring: true });
+    await companyRolesFactory.create({ companyId: secondCompany.id });
     const { user: adminUser } = await usersFactory.create({ email: "admin@example.com" });
     await companyAdministratorsFactory.create({ companyId: secondCompany.id, userId: adminUser.id });
     const { mockForm } = mockDocuseal(next, {
@@ -55,7 +55,8 @@ test.describe("Contractor for multiple companies", () => {
 
     await clerk.signOut({ page });
     await login(page, contractorUser);
-    await page.getByRole("navigation").getByText("Second Company").click();
+    await page.getByRole("button", { name: "Switch company" }).click();
+    await page.getByRole("menuitem", { name: "Second Company" }).click();
     await page.getByRole("link", { name: "Invoices" }).click();
     await expect(page.getByText("You have an unsigned contract")).toBeVisible();
     await page.getByRole("link", { name: "Review & sign" }).click();
