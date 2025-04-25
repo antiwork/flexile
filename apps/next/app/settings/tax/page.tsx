@@ -420,20 +420,20 @@ export default function TaxPage() {
                 name="tax_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      <div className="flex justify-between gap-2">
+                    <div className="flex justify-between gap-2">
+                      <FormLabel>
                         {isForeign
                           ? "Foreign tax ID"
                           : `Tax ID (${formValues.business_entity ? "EIN" : "SSN or ITIN"})`}
-                        {!isForeign && field.value && !taxIdChanged ? (
-                          <>
-                            {taxIdStatus === "verified" && <Status variant="success">VERIFIED</Status>}
-                            {taxIdStatus === "invalid" && <Status variant="critical">INVALID</Status>}
-                            {!taxIdStatus && <Status variant="primary">VERIFYING</Status>}
-                          </>
-                        ) : null}
-                      </div>
-                    </FormLabel>
+                      </FormLabel>
+                      {!isForeign && field.value && !taxIdChanged ? (
+                        <>
+                          {taxIdStatus === "verified" && <Status variant="success">VERIFIED</Status>}
+                          {taxIdStatus === "invalid" && <Status variant="critical">INVALID</Status>}
+                          {!taxIdStatus && <Status variant="primary">VERIFYING</Status>}
+                        </>
+                      ) : null}
+                    </div>
                     <FormControl>
                       <div className="flex">
                         <Input
