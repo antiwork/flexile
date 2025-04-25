@@ -462,10 +462,9 @@ const DetailsTab = ({
   const router = useRouter();
   const [user] = trpc.users.get.useSuspenseQuery({ companyId: company.id, id: userId });
   const [contractor] = trpc.contractors.get.useSuspenseQuery({ companyId: company.id, userId });
-  const [roles] = trpc.roles.list.useSuspenseQuery({ companyId: company.id });
   const [payRateInSubunits, setPayRateInSubunits] = useState(contractor.payRateInSubunits);
   const [hoursPerWeek, setHoursPerWeek] = useState(contractor.hoursPerWeek);
-  const selectedRole = roles.find((role) => role.id === selectedRoleId);
+  const selectedRole = null;
   useEffect(() => {
     if (selectedRole && selectedRoleId !== contractor.role) setPayRateInSubunits(selectedRole.payRateInSubunits);
   }, [selectedRole]);
