@@ -95,16 +95,14 @@ export default function Settings({ githubOauthUrl }: { githubOauthUrl: string })
   return (
     <>
       <StripeMicrodepositVerification />
-      {company.flags.includes("quickbooks") ||
-      company.flags.includes("team_updates") ||
-      company.flags.includes("slack") ? (
+      {company.flags.includes("quickbooks") || company.flags.includes("team_updates") ? (
         <FormSection title="Integrations">
           <CardContent>
             {company.flags.includes("quickbooks") ? <QuickbooksIntegration /> : null}
             <Separator className="first:hidden last:hidden" />
             {company.flags.includes("team_updates") ? <GithubIntegration oauthUrl={githubOauthUrl} /> : null}
             <Separator className="first:hidden last:hidden" />
-            {company.flags.includes("slack") ? <SlackIntegration /> : null}
+            <SlackIntegration />
           </CardContent>
         </FormSection>
       ) : null}
