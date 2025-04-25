@@ -3,8 +3,8 @@ import { useMutation, type UseMutationResult } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import Input from "@/components/Input";
 import { linkClasses } from "@/components/Link";
-import Modal from "@/components/Modal";
-import MutationButton from "@/components/MutationButton";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { MutationStatusButton } from "@/components/MutationButton";
 
 const LegalCertificationModal = ({
   open,
@@ -35,12 +35,11 @@ const LegalCertificationModal = ({
   });
 
   return (
-    <Modal
-      open={open}
-      title={`${certificateType} Certification and Tax Forms Delivery`}
-      sticky={sticky}
-      onClose={onClose}
-    >
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className={sticky ? "sticky top-0" : ""}>
+        <DialogHeader>
+          <DialogTitle>{`${certificateType} Certification and Tax Forms Delivery`}</DialogTitle>
+        </DialogHeader>
       {isForeignUser ? (
         <>
           <div>
@@ -190,12 +189,13 @@ const LegalCertificationModal = ({
         help="I agree that the signature will be the electronic representation of my signature and for all purposes when I use them on documents just the same as a pen-and-paper signature."
       />
 
-      <div className="modal-footer">
-        <MutationButton mutation={signMutation} loadingText="Saving..." disabled={!signature}>
+      <DialogFooter>
+        <MutationStatusButton mutation={signMutation} loadingText="Saving..." disabled={!signature}>
           Save
-        </MutationButton>
-      </div>
-    </Modal>
+        </MutationStatusButton>
+      </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
