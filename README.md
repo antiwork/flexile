@@ -1,7 +1,7 @@
 # Flexile
 
 [![CI](https://github.com/antiwork/flexile/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/antiwork/flexile/actions/workflows/ci.yml?query=branch%3Amain)
-[![License: Flexile Community License](https://img.shields.io/badge/License-Flexile%20Community-blue.svg)](https://github.com/antiwork/flexile/blob/main/LICENSE.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/antiwork/flexile/blob/main/LICENSE.md)
 
 Equity for everyone.
 
@@ -40,4 +40,4 @@ pnpm playwright test
 
 ## License
 
-Flexile is licensed under the [Flexile Community License](LICENSE.md).
+Flexile is licensed under the [MIT License](LICENSE.md).
