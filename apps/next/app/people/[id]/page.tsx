@@ -770,7 +770,10 @@ function ExercisesTab({ investorId }: { investorId: string }) {
         id: "actions",
         cell: (info) =>
           info.row.original.status === "signed" ? (
-            <MutationStatusButton mutation={confirmPaymentMutation} param={info.row.original.id} size="small">
+            <MutationStatusButton 
+              mutation={() => confirmPaymentMutation.mutate(info.row.original.id)} 
+              size="small"
+            >
               Confirm payment
             </MutationStatusButton>
           ) : undefined,
