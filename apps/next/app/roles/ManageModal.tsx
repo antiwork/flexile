@@ -8,7 +8,6 @@ import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import RadioButtons from "@/components/RadioButtons";
-import { Editor as RichTextEditor } from "@/components/RichText";
 import Select from "@/components/Select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -52,7 +51,7 @@ const ManageModal = ({
       payRateType: PayRateType.Hourly,
       trialEnabled: false,
       trialPayRateInSubunits: 0,
-      jobDescription: "",
+      
       capitalizedExpense: 50,
       expenseAccountId: null,
     };
@@ -232,10 +231,6 @@ const ManageModal = ({
           </div>
         ) : null}
         {role.id ? (
-          <RichTextEditor
-            value={role.jobDescription}
-            onChange={(jobDescription) => updateRole({ jobDescription })}
-            label="Job description"
           />
         ) : null}
         {expenseAccounts.length > 0 ? (
