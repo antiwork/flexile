@@ -123,7 +123,6 @@ class UserPresenter
         inviting_company: user.inviting_company,
         role: role ? { name: role.name, expenseCardEnabled: role.expense_card_enabled? } : nil,
         payRateInSubunits: worker.pay_rate_in_subunits,
-        onTrial: worker.on_trial?,
         hoursPerWeek: worker.hours_per_week,
       }
     end

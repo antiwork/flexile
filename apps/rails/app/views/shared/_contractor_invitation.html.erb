@@ -1,10 +1,6 @@
 <h1 class="text-3xl leading-9 font-bold">
   <% inviter = url ? user.invited_by.name : company.name %>
-  <% title_ending = if contractor.on_trial
-       " and start your paid trial"
-     else
-       "#{contractor.hourly? ? ", track your hours," : nil} and get paid"
-     end %>
+  <% title_ending = "#{contractor.hourly? ? ", track your hours," : nil} and get paid" %>
   <%= "#{inviter} has invited you to join Flexile to sign your contract#{title_ending}." %>
 </h1>
 <p class="mb-4">
@@ -17,12 +13,10 @@
   <dt>Start date</dt>
   <dd><b><%= contractor.started_at.strftime("%B %d, %Y") %></b></dd>
 
-  <dt><%= "Compensation #{contractor.on_trial ? "during trial" : nil}" %></dt>
+  <dt>Compensation</dt>
   <dd>
     <b>
-      <% if contractor.on_trial %>
-        <%= "$#{contractor.pay_rate_in_subunits / 100.0}/hr" %>
-      <% elsif contractor.hourly? %>
+      <% if contractor.hourly? %>
         <%= "$#{contractor.pay_rate_in_subunits / 100.0}/hr, " \
             "$#{number_to_human(contractor.avg_yearly_usd, format: "%n%u", precision: 0,
                                                            units: { thousand: "K", million: "M" })}" \
