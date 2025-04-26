@@ -75,9 +75,13 @@ export default function AdminList() {
         header: "Sent on",
         cell: (info) => (info.getValue() ? formatDate(info.getValue()) : "N/A"),
         meta: {
-          filterOptions: [...new Set(data.map((invoice) => 
-            invoice.invoiceDate ? new Date(invoice.invoiceDate).getFullYear().toString() : ""
-          ).filter(Boolean))],
+          filterOptions: [
+            ...new Set(
+              data
+                .map((invoice) => (invoice.invoiceDate ? new Date(invoice.invoiceDate).getFullYear().toString() : ""))
+                .filter(Boolean),
+            ),
+          ],
         },
         filterFn: (row, _, filterValue) =>
           Array.isArray(filterValue) && row.original.invoiceDate
@@ -207,11 +211,7 @@ export default function AdminList() {
             />
           </div>
 
-          <DataTable 
-            table={table} 
-            onRowClicked={setDetailInvoice} 
-            searchColumn="billFrom"
-          />
+          <DataTable table={table} onRowClicked={setDetailInvoice} searchColumn="billFrom" />
         </div>
       )}
 

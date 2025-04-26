@@ -69,9 +69,13 @@ export default function ViewList() {
           header: "Sent on",
           cell: (info) => (info.getValue() ? formatDate(info.getValue()) : "N/A"),
           meta: {
-            filterOptions: [...new Set(data.map((invoice) => 
-              invoice.invoiceDate ? new Date(invoice.invoiceDate).getFullYear().toString() : ""
-            ).filter(Boolean))],
+            filterOptions: [
+              ...new Set(
+                data
+                  .map((invoice) => (invoice.invoiceDate ? new Date(invoice.invoiceDate).getFullYear().toString() : ""))
+                  .filter(Boolean),
+              ),
+            ],
           },
           filterFn: (row, _, filterValue) =>
             Array.isArray(filterValue) && row.original.invoiceDate
@@ -116,7 +120,7 @@ export default function ViewList() {
   );
 
   const table = useTable({
-    columns, 
+    columns,
     data,
     initialState: {
       sorting: [{ id: "invoiceDate", desc: true }],
@@ -146,9 +150,7 @@ export default function ViewList() {
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>You have an unsigned contract. Please sign it before creating new invoices.</div>
               <Button asChild variant="outline" size="small" disabled={!!unsignedContractId}>
-                <a href={`/documents?sign=${unsignedContractId.toString()}&next=/invoices`}>
-                  Review & sign
-                </a>
+                <a href={`/documents?sign=${unsignedContractId.toString()}&next=/invoices`}>Review & sign</a>
               </Button>
             </div>
           </AlertDescription>
@@ -158,8 +160,8 @@ export default function ViewList() {
       <QuickInvoiceSection disabled={!!unsignedContractId} />
 
       {data.length > 0 ? (
-        <DataTable 
-          table={table} 
+        <DataTable
+          table={table}
           onRowClicked={(row) => router.push(`/invoices/${row.id}`)}
           searchColumn="invoiceNumber"
         />
