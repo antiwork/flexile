@@ -25,7 +25,6 @@ RSpec.describe "End Contract" do
         click_on "Yes, end contract"
         wait_for_ajax
       end.to change { company_worker.reload.ended_at }.from(nil).to(Time.current)
-         .and have_enqueued_mail(CompanyWorkerMailer, :contract_ended).with(company_worker_id: company_worker.id)
 
       select_tab "Alumni"
       expect(page).to have_text(contractor.name)

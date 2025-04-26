@@ -346,7 +346,7 @@ RSpec.describe CompanyWorker do
           expect do
             company_worker.end_contract!
           end.to_not change { company_worker.reload.ended_at }.from(1.day.ago)
-        end.to_not have_enqueued_mail(CompanyWorkerMailer, :contract_ended).with(company_worker_id: company_worker.id)
+        end
       end
     end
 
@@ -357,7 +357,6 @@ RSpec.describe CompanyWorker do
         expect do
           company_worker.end_contract!
         end.to change { company_worker.reload.ended_at }.from(nil).to(Time.current)
-        .and have_enqueued_mail(CompanyWorkerMailer, :contract_ended).with(company_worker_id: company_worker.id)
       end
     end
   end

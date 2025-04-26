@@ -134,7 +134,6 @@ class CompanyWorker < ApplicationRecord
     return if alumni?
 
     update!(ended_at: Time.current)
-    CompanyWorkerMailer.contract_ended(company_worker_id: id).deliver_later
   end
 
   def quickbooks_entity
