@@ -353,6 +353,7 @@ export const contractorsRouter = createRouter({
         .set({ endedAt: new Date(input.endDate) })
         .where(eq(companyContractors.id, activeContractor.id));
 
+      void(ContractEnded);
     }),
   completeTrial: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
