@@ -275,7 +275,6 @@ export const companyRoleRates = pgTable(
       .$onUpdate(() => new Date()),
     payRateInSubunits: integer("pay_rate_in_subunits").notNull(),
     payRateCurrency: varchar("pay_rate_currency").default("usd").notNull(),
-    trialPayRateInSubunits: integer("trial_pay_rate_in_subunits").notNull(),
   },
   (table) => [
     index("index_company_role_rates_on_company_role_id").using(
@@ -2055,7 +2054,6 @@ export const companyContractors = pgTable(
     externalId: varchar("external_id").$default(nanoid).notNull(),
     payRateType: integer("pay_rate_type").$type<PayRateType>().default(PayRateType.Hourly).notNull(),
     sentEquityPercentSelectionEmail: boolean("sent_equity_percent_selection_email").notNull().default(false),
-    onTrial: boolean("on_trial").notNull().default(false),
     payRateInSubunits: integer("pay_rate_in_subunits").notNull(),
     payRateCurrency: varchar("pay_rate_currency").default("usd").notNull(),
   },

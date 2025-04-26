@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_25_145222) do
+ActiveRecord::Schema[8.0].define(version: 2025_04_26_024711) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -161,8 +161,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_25_145222) do
     t.bigint "company_id", null: false
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
-    t.string "external_id", null: false
     t.boolean "board_member", default: false, null: false
+    t.string "external_id", null: false
     t.index ["company_id"], name: "index_company_administrators_on_company_id"
     t.index ["external_id"], name: "index_company_administrators_on_external_id", unique: true
     t.index ["user_id", "company_id"], name: "index_company_administrators_on_user_id_and_company_id", unique: true
@@ -217,7 +217,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_25_145222) do
     t.string "external_id", null: false
     t.integer "pay_rate_type", default: 0, null: false
     t.boolean "sent_equity_percent_selection_email", default: false, null: false
-    t.boolean "on_trial", default: false, null: false
     t.integer "pay_rate_in_subunits", null: false
     t.string "pay_rate_currency", default: "usd", null: false
     t.index ["company_id"], name: "index_company_contractors_on_company_id"
@@ -294,7 +293,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_25_145222) do
     t.datetime "updated_at", null: false
     t.integer "pay_rate_in_subunits", null: false
     t.string "pay_rate_currency", default: "usd", null: false
-    t.integer "trial_pay_rate_in_subunits", null: false
     t.index ["company_role_id"], name: "index_company_role_rates_on_company_role_id"
   end
 
@@ -310,7 +308,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_25_145222) do
     t.string "expense_account_id"
     t.string "external_id", null: false
     t.bigint "expense_card_spending_limit_cents", default: 0, null: false
-    t.boolean "trial_enabled", default: false, null: false
     t.boolean "expense_card_enabled", default: false, null: false
     t.index ["company_id"], name: "index_company_roles_on_company_id"
     t.index ["external_id"], name: "index_company_roles_on_external_id", unique: true

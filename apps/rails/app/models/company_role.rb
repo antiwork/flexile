@@ -13,10 +13,9 @@ class CompanyRole < ApplicationRecord
   validates :company_id, presence: true
   validates :name, presence: true
   validates :expense_card_spending_limit_cents, numericality: { greater_than_or_equal_to: 0, only_integer: true }, presence: true, if: :expense_card_enabled?
-  validate :only_hourly_rate_can_have_trial_enabled
   validate :cannot_delete_with_active_contractors
 
-  delegate :pay_rate_in_subunits, :trial_pay_rate_in_subunits, :pay_rate_type, :hourly?, :project_based?, :salary?, to: :rate
+  delegate :pay_rate_in_subunits, :pay_rate_type, :hourly?, :project_based?, :salary?, to: :rate
 
   def alive?
     deleted_at.nil?
@@ -27,12 +26,6 @@ class CompanyRole < ApplicationRecord
   end
 
   private
-    def only_hourly_rate_can_have_trial_enabled
-      if trial_enabled? && !rate.hourly?
-        errors.add(:base, "Can only set trials with hourly contracts")
-      end
-    end
-
     def cannot_delete_with_active_contractors
       if deleted_at.present? && deleted_at_changed?
         errors.add(:base, "Cannot delete role with active contractors") if company_workers.active.present?
