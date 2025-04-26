@@ -28,7 +28,6 @@ export const companyRolesFactory = {
         companyRoleId: role.id,
         payRateInSubunits: faker.number.int({ min: 10000, max: 20000 }),
         payRateType: PayRateType.Hourly,
-        trialPayRateInSubunits: Math.floor(faker.number.int({ min: 10000, max: 20000 }) / 2),
         ...rateOverrides,
       })
       .returning();

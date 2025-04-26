@@ -8,7 +8,6 @@ import { byExternalId, db } from "@/db";
 import { DocumentTemplateType, DocumentType, PayRateType } from "@/db/enums";
 import {
   companyContractors,
-  companyRoleRates,
   companyRoles,
   documents,
   documentSignatures,
@@ -18,7 +17,6 @@ import {
   users,
 } from "@/db/schema";
 import env from "@/env";
-import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
 import { sanctionedCountries } from "@/models/constants";
 import { companyProcedure, createRouter } from "@/trpc";
 import { sendEmail } from "@/trpc/email";
@@ -29,7 +27,6 @@ import { latestUserComplianceInfo, simpleUser, type User } from "../users";
 import ContractEndCanceled from "./ContractEndCanceled";
 import ContractEnded from "./ContractEnded";
 import RateUpdated from "./RateUpdated";
-import TrialPassed from "./TrialPassed";
 
 type CompanyContractor = typeof companyContractors.$inferSelect;
 
@@ -45,7 +42,7 @@ export const contractorsRouter = createRouter({
     .query(async ({ ctx, input }) => {
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
       const onboarding = assertDefined(
-        or(gt(companyContractors.startedAt, new Date()), eq(companyContractors.onTrial, true)),
+        gt(companyContractors.startedAt, new Date()),
       );
       const where = and(
         eq(companyContractors.companyId, ctx.company.id),
@@ -72,7 +69,7 @@ export const contractorsRouter = createRouter({
         orderBy: (input.order === "asc" ? asc : desc)(companyContractors.id),
       });
       const workers = rows.map((worker) => ({
-        ...pick(worker, ["startedAt", "payRateInSubunits", "hoursPerWeek", "onTrial", "endedAt"]),
+        ...pick(worker, ["startedAt", "payRateInSubunits", "hoursPerWeek", "endedAt"]),
         id: worker.externalId,
         user: {
           ...simpleUser(worker.user),
@@ -128,7 +125,6 @@ export const contractorsRouter = createRouter({
         payRateInSubunits: z.number(),
         payRateType: z.nativeEnum(PayRateType),
         hoursPerWeek: z.number(),
-        onTrial: z.boolean(),
         roleId: z.string().nullable(),
         documentTemplateId: z.string(),
       }),
@@ -159,7 +155,6 @@ export const contractorsRouter = createRouter({
                 : input.payRateType === PayRateType.ProjectBased
                   ? "project_based"
                   : "salary",
-            on_trial: input.onTrial,
             role_id: input.roleId,
             ...(input.payRateType === PayRateType.Hourly && { hours_per_week: input.hoursPerWeek }),
           },
@@ -369,48 +364,6 @@ export const contractorsRouter = createRouter({
         });
       }
     }),
-  completeTrial: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
-
-    const contractor = await db.query.companyContractors.findFirst({
-      with: {
-        user: true,
-        role: { with: { rates: { orderBy: [desc(companyRoleRates.id)], limit: 1 } } },
-      },
-      where: and(
-        eq(companyContractors.externalId, input.id),
-        eq(companyContractors.companyId, ctx.company.id),
-        eq(companyContractors.onTrial, true),
-      ),
-    });
-
-    if (!contractor) throw new TRPCError({ code: "NOT_FOUND" });
-
-    const [updatedContractor] = await db
-      .update(companyContractors)
-      .set({
-        onTrial: false,
-        payRateInSubunits: contractor.role.rates[0]?.payRateInSubunits,
-        hoursPerWeek: DEFAULT_WORKING_HOURS_PER_WEEK,
-      })
-      .where(eq(companyContractors.id, contractor.id))
-      .returning();
-
-    if (updatedContractor) {
-      await sendEmail({
-        from: `Flexile <support@${env.DOMAIN}>`,
-        to: contractor.user.email,
-        replyTo: ctx.company.email,
-        subject: `🎉 You did it! Welcome to ${ctx.company.name}`,
-        react: TrialPassed({
-          company: ctx.company,
-          host: ctx.host,
-          oldPayRateInSubunits: contractor.payRateInSubunits,
-          newPayRateInSubunits: updatedContractor.payRateInSubunits,
-        }),
-      });
-    }
-  }),
 });
 
 type UserComplianceInfo = typeof userComplianceInfos.$inferSelect;

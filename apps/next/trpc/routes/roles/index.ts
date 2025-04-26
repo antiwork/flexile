@@ -16,13 +16,11 @@ const inputSchema = createInsertSchema(companyRoles)
     expenseAccountId: true,
     expenseCardEnabled: true,
     expenseCardSpendingLimitCents: true,
-    trialEnabled: true,
   })
   .merge(
     createInsertSchema(companyRoleRates, { payRateType: z.nativeEnum(PayRateType) }).pick({
       payRateInSubunits: true,
       payRateType: true,
-      trialPayRateInSubunits: true,
     }),
   );
 
@@ -54,10 +52,9 @@ export const rolesRouter = createRouter({
           "expenseAccountId",
           "expenseCardEnabled",
           "expenseCardSpendingLimitCents",
-          "trialEnabled",
           "expenseCardsCount",
         ),
-        ...pick(rate, "payRateType", "payRateInSubunits", "trialPayRateInSubunits"),
+        ...pick(rate, "payRateType", "payRateInSubunits"),
       };
     });
   }),
@@ -68,7 +65,7 @@ export const rolesRouter = createRouter({
     const [role] = await db
       .select({
         ...pick(companyRoles, "id", "name", "capitalizedExpense"),
-        ...pick(companyRoleRates, "payRateType", "payRateInSubunits", "trialPayRateInSubunits"),
+        ...pick(companyRoleRates, "payRateType", "payRateInSubunits"),
       })
       .from(companyRoles)
       .innerJoin(companyRoleRates, eq(companyRoles.id, companyRoleRates.companyRoleId))
@@ -97,7 +94,6 @@ export const rolesRouter = createRouter({
             "expenseAccountId",
             "expenseCardEnabled",
             "expenseCardSpendingLimitCents",
-            "trialEnabled",
           ),
         })
         .returning(pick(companyRoles, "id", "externalId"));
@@ -105,7 +101,7 @@ export const rolesRouter = createRouter({
       const role = assertDefined(result[0]);
       await tx.insert(companyRoleRates).values({
         companyRoleId: role.id,
-        ...pick(input, "payRateType", "payRateInSubunits", "trialPayRateInSubunits"),
+        ...pick(input, "payRateType", "payRateInSubunits"),
         payRateCurrency: "usd",
       });
 
@@ -128,7 +124,6 @@ export const rolesRouter = createRouter({
             "expenseAccountId",
             "expenseCardEnabled",
             "expenseCardSpendingLimitCents",
-            "trialEnabled",
           ),
         })
         .where(and(eq(companyRoles.externalId, input.id), eq(companyRoles.companyId, ctx.company.id)))
@@ -140,7 +135,7 @@ export const rolesRouter = createRouter({
         .update(companyRoleRates)
         .set({
           companyRoleId: role.id,
-          ...pick(input, "payRateType", "payRateInSubunits", "trialPayRateInSubunits"),
+          ...pick(input, "payRateType", "payRateInSubunits"),
           payRateCurrency: "usd",
         })
         .where(eq(companyRoleRates.companyRoleId, role.id));
