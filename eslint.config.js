@@ -56,15 +56,6 @@ export default [
       "require-unicode-regexp": "error",
       yoda: "error",
       "import/no-duplicates": "error",
-      "import/order": [
-        "error",
-        {
-          "newlines-between": "never",
-          named: true,
-          alphabetize: { order: "asc", caseInsensitive: true },
-          pathGroups: [{ pattern: "@/**", group: "parent", position: "before" }],
-        },
-      ],
     },
     settings: {
       next: { rootDir: "apps/next" },

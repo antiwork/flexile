@@ -45,7 +45,7 @@ test.describe("Contractor onboarding - legal details", () => {
   test("allows the contractor to fill in legal details", async ({ page }) => {
     await login(page, onboardingUser);
 
-    await page.getByLabel("I'm an individual").check();
+    await page.locator("label").filter({ hasText: "I'm an individual" }).click();
     await page.getByRole("button", { name: "Continue" }).click();
 
     await expect(page.getByLabel("Residential address")).not.toBeValid();
@@ -62,7 +62,7 @@ test.describe("Contractor onboarding - legal details", () => {
   test("allows for specifying a legal entity name for businesses", async ({ page }) => {
     await login(page, onboardingUser);
 
-    await page.getByLabel("I'm a business").check();
+    await page.locator("label").filter({ hasText: "I'm a business" }).click();
 
     await fillInUSAddress(page);
     await page.getByRole("button", { name: "Continue" }).click();
@@ -83,7 +83,7 @@ test.describe("Contractor onboarding - legal details", () => {
     test("allows to fill in legal details as an individual US citizen", async ({ page }) => {
       await login(page, onboardingUser);
 
-      await page.getByLabel("I'm an individual").check();
+      await page.locator("label").filter({ hasText: "I'm an individual" }).click();
 
       await fillInUSAddress(page);
       await page.getByLabel("Date of birth").fill("1980-06-07");
@@ -124,7 +124,7 @@ test.describe("Contractor onboarding - legal details", () => {
     test("allows to fill in legal details as a US business", async ({ page }) => {
       await login(page, onboardingUser);
 
-      await page.getByLabel("I'm a business").check();
+      await page.locator("label").filter({ hasText: "I'm a business" }).click();
       await page.getByLabel("Full legal name of entity").fill("Antiwork Inc.");
 
       await expect(
@@ -174,7 +174,7 @@ test.describe("Contractor onboarding - legal details", () => {
       test("allows to fill in legal details as an individual", async ({ page }) => {
         await login(page, onboardingUser);
 
-        await page.getByLabel("I'm an individual").check();
+        await page.locator("label").filter({ hasText: "I'm an individual" }).click();
         await fillInFranceAddress(page);
 
         await page.getByLabel("Foreign tax identification number").fill("1234567890");
@@ -219,7 +219,7 @@ test.describe("Contractor onboarding - legal details", () => {
       test("allows for specifying a legal entity name for businesses", async ({ page }) => {
         await login(page, onboardingUser);
 
-        await page.getByLabel("I'm a business").check();
+        await page.locator("label").filter({ hasText: "I'm a business" }).click();
 
         await page.getByLabel("Full legal name of entity").fill("Antiwork Inc.");
         await fillInFranceAddress(page);

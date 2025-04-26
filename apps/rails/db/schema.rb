@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_18_135243) do
+ActiveRecord::Schema[8.0].define(version: 2025_04_25_145222) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -288,22 +288,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_18_135243) do
     t.index ["company_id"], name: "index_company_monthly_financial_reports_on_company_id"
   end
 
-  create_table "company_role_applications", force: :cascade do |t|
-    t.bigint "company_role_id", null: false
-    t.string "name", null: false
-    t.string "email", null: false
-    t.text "description", null: false
-    t.integer "hours_per_week"
-    t.integer "weeks_per_year"
-    t.integer "equity_percent", default: 0, null: false
-    t.datetime "deleted_at"
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.integer "status", default: 0, null: false
-    t.string "country_code", null: false
-    t.index ["company_role_id"], name: "index_company_role_applications_on_company_role_id"
-  end
-
   create_table "company_role_rates", force: :cascade do |t|
     t.integer "pay_rate_type", default: 0, null: false
     t.bigint "company_role_id", null: false
@@ -321,7 +305,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_18_135243) do
     t.string "name", null: false
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
-    t.boolean "actively_hiring", default: false, null: false
     t.integer "capitalized_expense"
     t.string "slug"
     t.datetime "deleted_at"

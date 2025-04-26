@@ -9,7 +9,6 @@ import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import RadioButtons from "@/components/RadioButtons";
-import { Editor as RichTextEditor } from "@/components/RichText";
 import Select from "@/components/Select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -53,9 +52,6 @@ const ManageModal = ({
       payRateType: PayRateType.Hourly,
       trialEnabled: false,
       trialPayRateInSubunits: 0,
-      applicationCount: 0,
-      activelyHiring: false,
-      jobDescription: "",
       capitalizedExpense: 50,
       expenseAccountId: null,
       expenseCardEnabled: false,
@@ -266,13 +262,7 @@ const ManageModal = ({
             <AlertDescription>{role.expenseCardsCount} issued cards will no longer be usable.</AlertDescription>
           </Alert>
         ) : null}
-        {role.id ? (
-          <RichTextEditor
-            value={role.jobDescription}
-            onChange={(jobDescription) => updateRole({ jobDescription })}
-            label="Job description"
-          />
-        ) : null}
+        {/* Job description editor removed */}
         {expenseAccounts.length > 0 ? (
           <Select
             value={role.expenseAccountId ?? ""}
@@ -282,13 +272,6 @@ const ManageModal = ({
               ...expenseAccounts.map(({ id, name }) => ({ value: id, label: name })),
             ]}
             label="Expense account"
-          />
-        ) : null}
-        {role.id ? (
-          <Switch
-            checked={role.activelyHiring}
-            onCheckedChange={(activelyHiring) => updateRole({ activelyHiring })}
-            label="Accepting candidates"
           />
         ) : null}
         <div className="flex w-full gap-3">
@@ -347,7 +330,6 @@ const ManageModal = ({
         </Card>
       </Modal>
       <Modal title="Permanently delete role?" open={confirmingDelete} onClose={() => setConfirmingDelete(false)}>
-        {role.applicationCount ? <p>This will remove {role.applicationCount} candidates.</p> : null}
         <p>This action cannot be undone.</p>
         <div className="flex justify-end gap-4">
           <Button variant="outline" onClick={() => setConfirmingDelete(false)}>

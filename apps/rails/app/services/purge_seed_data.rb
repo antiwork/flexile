@@ -177,7 +177,6 @@ class PurgeSeedData
 
     def purge_company_roles!(company)
       company.company_roles.find_each do |company_role|
-        company_role.company_role_applications.each(&:destroy!)
         company_role.company_role_rates.each(&:destroy!)
         company_role.destroy!
       end

@@ -24,7 +24,7 @@ test.describe("Contractor for multiple companies", () => {
     await companyContractorsFactory.create({ userId: contractorUser.id });
 
     const { company: secondCompany } = await companiesFactory.create({ name: "Second Company" });
-    await companyRolesFactory.create({ companyId: secondCompany.id, activelyHiring: true });
+    await companyRolesFactory.create({ companyId: secondCompany.id });
     const { user: adminUser } = await usersFactory.create({ email: "admin@example.com" });
     await companyAdministratorsFactory.create({ companyId: secondCompany.id, userId: adminUser.id });
     const { mockForm } = mockDocuseal(next, {

@@ -2,7 +2,6 @@
 
 RSpec.describe CompanyRole do
   it { is_expected.to belong_to(:company) }
-  it { is_expected.to have_many(:company_role_applications).dependent(:destroy) }
   it { is_expected.to have_many(:company_workers) }
   it { is_expected.to have_many(:expense_cards) }
   it { is_expected.to have_one(:rate).conditions(order: { id: :desc }).class_name("CompanyRoleRate").required(true).autosave(true) }
@@ -52,17 +51,6 @@ RSpec.describe CompanyRole do
       contractor.update!(ended_at: Date.yesterday)
       company_role.update(deleted_at: Date.yesterday)
       expect(company_role.valid?).to eq true
-    end
-  end
-
-  describe "scopes" do
-    let!(:company_role) { create(:company_role) }
-
-    describe ".actively_hiring" do
-      it "only returns roles that are actively hiring" do
-        hiring = create(:company_role, actively_hiring: true)
-        expect(described_class.actively_hiring).to eq [hiring]
-      end
     end
   end
 

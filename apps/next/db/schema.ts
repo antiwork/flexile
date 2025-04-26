@@ -29,7 +29,6 @@ import {
   optionGrantTypes,
   optionGrantVestingTriggers,
   PayRateType,
-  RoleApplicationStatus,
   TaxClassification,
 } from "./enums";
 import type {
@@ -264,33 +263,6 @@ export const companyMonthlyFinancialReports = pgTable(
       table.companyId.asc().nullsLast().op("int8_ops"),
       table.year.asc().nullsLast().op("int4_ops"),
       table.month.asc().nullsLast().op("int4_ops"),
-    ),
-  ],
-);
-
-export const companyRoleApplications = pgTable(
-  "company_role_applications",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    companyRoleId: bigint("company_role_id", { mode: "bigint" }).notNull(),
-    name: varchar().notNull(),
-    email: varchar().notNull(),
-    description: text().notNull(),
-    hoursPerWeek: integer("hours_per_week"),
-    weeksPerYear: integer("weeks_per_year"),
-    equityPercent: integer("equity_percent").default(0).notNull(),
-    deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-    status: integer().$type<RoleApplicationStatus>().default(RoleApplicationStatus.Pending).notNull(),
-    countryCode: varchar("country_code").notNull(),
-  },
-  (table) => [
-    index("index_company_role_applications_on_company_role_id").using(
-      "btree",
-      table.companyRoleId.asc().nullsLast().op("int8_ops"),
     ),
   ],
 );
@@ -2028,7 +2000,6 @@ export const companyRoles = pgTable(
     updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
       .notNull()
       .$onUpdate(() => new Date()),
-    activelyHiring: boolean("actively_hiring").default(false).notNull(),
     capitalizedExpense: integer("capitalized_expense"),
     slug: varchar(),
     deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
@@ -2985,7 +2956,6 @@ export const companyRolesRelations = relations(companyRoles, ({ one, many }) => 
     references: [companies.id],
   }),
   rates: many(companyRoleRates),
-  applications: many(companyRoleApplications),
   expenseCards: many(expenseCards),
   contractors: many(companyContractors),
 }));
@@ -3005,13 +2975,6 @@ export const expenseCardChargeRelations = relations(expenseCardCharges, ({ one }
   expenseCard: one(expenseCards, {
     fields: [expenseCardCharges.expenseCardId],
     references: [expenseCards.id],
-  }),
-}));
-
-export const companyRoleApplicationsRelations = relations(companyRoleApplications, ({ one }) => ({
-  role: one(companyRoles, {
-    fields: [companyRoleApplications.companyRoleId],
-    references: [companyRoles.id],
   }),
 }));
 

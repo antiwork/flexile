@@ -576,7 +576,7 @@ class SeedDataGeneratorFromTemplate
     def create_company_roles_and_contractors!(company, company_roles_and_contractors_data, company_worker_updates_data)
       company_administrator = company.primary_admin
       company_roles_and_contractors_data.each do |company_role_and_contractor_data|
-        company_role = create_company_role_and_applications!(company, company_role_and_contractor_data.fetch("company_role"))
+        company_role = create_company_role!(company, company_role_and_contractor_data.fetch("company_role"))
         company_role_and_contractor_data.fetch("company_workers", []).each do |company_worker_data|
           company_worker_attributes = company_worker_data.fetch("company_worker").fetch("model_attributes")
           ended_at = company_worker_attributes.delete("ended_at")
@@ -855,29 +855,12 @@ class SeedDataGeneratorFromTemplate
       print_message("Created consolidated invoices.")
     end
 
-    def create_company_role_and_applications!(company, data)
+    def create_company_role!(company, data)
       company_role = company.company_roles.build(data.fetch("model_attributes"))
       company_role.build_rate(data.fetch("company_role_rate").fetch("model_attributes"))
       company_role.save!
       print_message("Created #{company_role.pay_rate_type} #{company_role.name} role.")
-      if data.key?("company_role_applications")
-        create_company_role_applications!(company_role, data.fetch("company_role_applications"))
-        print_message("Created role applications for #{company_role.name} role.")
-      end
       company_role
-    end
-
-    def create_company_role_applications!(company_role, data)
-      if data.key?("records")
-        data.fetch("records").each do |record|
-          model_attributes = record.fetch("model_attributes")
-          company_role.company_role_applications.create!(
-            model_attributes.reverse_merge(
-              email: generate_email(model_attributes.fetch("name")),
-            )
-          )
-        end
-      end
     end
 
     def create_company_worker_equity_grant!(company_worker, equity_grant_data)

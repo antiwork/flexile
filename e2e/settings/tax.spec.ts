@@ -86,7 +86,7 @@ test.describe("Tax settings", () => {
       await expect(page.getByLabel("Province")).not.toBeEnabled();
       await page.getByLabel("Country of citizenship").selectOption("AS");
 
-      await page.getByRole("radio", { name: "Business" }).check();
+      await page.locator("label").filter({ hasText: "Business" }).click();
       await expect(page.getByText("Please select a business type.")).not.toBeVisible();
       await expect(page.getByText("Please select a tax classification.")).not.toBeVisible();
       await page.getByLabel("Country of citizenship").selectOption("MX");
@@ -380,7 +380,7 @@ test.describe("Tax settings", () => {
       await page.getByLabel("Tax ID (SSN or ITIN)").fill("12345");
       await expect(page.getByLabel("Tax ID (SSN or ITIN)")).toHaveValue("123-45");
 
-      await page.getByRole("radio", { name: "Business" }).check();
+      await page.locator("label").filter({ hasText: "Business" }).click();
       await page.getByLabel("Business legal name").fill("Test Business LLC");
       await page.getByLabel("Type").selectOption(BusinessType.LLC.toString());
       await page.getByLabel("Tax classification").selectOption(TaxClassification.Partnership.toString());

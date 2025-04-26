@@ -6,7 +6,6 @@ import DataTable, { createColumnHelper, useTable } from "@/components/DataTable"
 import MainLayout from "@/components/layouts/Main";
 import Placeholder from "@/components/Placeholder";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { PayRateType } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
 import { type RouterOutput } from "@/trpc";
@@ -21,17 +20,13 @@ export default function RolesPage() {
   const company = useCurrentCompany();
   const companySlug = toSlug(company.name ?? "");
 
-  const [roles, { refetch }] = trpc.roles.list.useSuspenseQuery({ companyId: company.id });
+  const [roles] = trpc.roles.list.useSuspenseQuery({ companyId: company.id });
 
   const [editingRole, setEditingRole] = useState<{ id: string | null } | null>(null);
 
   const getRolesUrl = () => new URL(`roles/${companySlug}-${company.id}`, window.location.origin).toString();
   const getRoleUrl = (roleSlug: string, roleId: string) =>
     new URL(`roles/${companySlug}/${roleSlug}-${roleId}`, window.location.origin).toString();
-
-  const updateMutation = trpc.roles.update.useMutation({
-    onSuccess: () => refetch(),
-  });
 
   const columnHelper = createColumnHelper<Role>();
   const columns = useMemo(
@@ -47,31 +42,6 @@ export default function RolesPage() {
           return `${formatMoneyFromCents(info.getValue())}${
             type === PayRateType.Hourly ? " / hr" : type === PayRateType.Salary ? " / year" : ""
           }`;
-        },
-      }),
-      columnHelper.accessor("applicationCount", {
-        header: "Candidates",
-        cell: (info) => (
-          <a href={`/roles/${info.row.original.id}/applications`}>
-            {`${info.getValue()} candidate${info.getValue() === 1 ? "" : "s"}`}
-          </a>
-        ),
-      }),
-      columnHelper.accessor("activelyHiring", {
-        header: "Status",
-        cell: (info) => {
-          const role = info.row.original;
-          return (
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={role.activelyHiring}
-                onCheckedChange={() =>
-                  updateMutation.mutate({ companyId: company.id, id: role.id, activelyHiring: !role.activelyHiring })
-                }
-                label={role.activelyHiring ? "Hiring" : "Not hiring"}
-              />
-            </div>
-          );
         },
       }),
       columnHelper.display({

@@ -17,7 +17,7 @@ const abcWhyte = localFont({
 
 export const metadata: Metadata = {
   title: "Flexile",
-  description: "Payroll & equity for everyone",
+  description: "Equity for everyone",
   icons: [
     {
       rel: "icon",
@@ -47,25 +47,25 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             layout: { socialButtonsPlacement: "bottom" },
             elements: {
               rootBox: "w-full!",
-              cardBox: "w-full! shadow-none! border! border-black!",
+              cardBox: "w-full! shadow-none! border! border-muted!",
               headerTitle: "text-2xl! text-black!",
               headerSubtitle: "text-gray-500!",
               form: "gap-4!",
-              formFieldInput: "border! border-black! shadow-none! focus:outline-blue-50! focus:outline-offset-0!",
+              formFieldInput: "border! border-muted! shadow-none! focus:outline-blue-50! focus:outline-offset-0!",
               formButtonPrimary:
-                "rounded-full bg-black! text-white! hover:bg-blue-600! hover:border-blue-600! border! border-black! font-normal! [&::after]:bg-none! shadow-none! focus:ring-0! focus:outline! focus:outline-2! focus:outline-blue-50! focus:outline-offset-0!",
+                "rounded-full bg-black! text-white! hover:bg-blue-600! hover:border-blue-600! border! border-muted! font-normal! [&::after]:bg-none! shadow-none! focus:ring-0! focus:outline! focus:outline-2! focus:outline-blue-50! focus:outline-offset-0!",
               dividerText: "text-gray-500!",
               dividerLine: "bg-black!",
               socialButtonsBlockButton:
-                "rounded-full! text-black! hover:border-blue-600! hover:text-blue-600! border! border-black! shadow-none! bg-none! focus:ring-0! focus:outline! focus:outline-2! focus:outline-blue-50! focus:outline-offset-0!",
+                "rounded-full! text-black! hover:border-blue-600! hover:text-blue-600! border! border-muted! shadow-none! bg-none! focus:ring-0! focus:outline! focus:outline-2! focus:outline-blue-50! focus:outline-offset-0!",
               socialButtonsBlockButtonText: "font-normal!",
               buttonArrowIcon: "hidden!",
-              footer: "bg-none! bg-gray-50! border-t! border-black! mt-0! pt-0!",
+              footer: "bg-none! bg-gray-50! border-t! border-muted! mt-0! pt-0!",
               card: "rounded-none! shadow-none!",
               footerActionLink: "hover:text-blue-600!",
               footerActionText: "text-gray-600!",
               formFieldCheckboxInput:
-                "h-4! w-4! border! border-black! rounded-xs bg-white! checked:bg-blue-600! checked:border-blue-600! focus:ring-2! focus:ring-blue-50!",
+                "h-4! w-4! border! border-muted! rounded-xs bg-white! checked:bg-blue-600! checked:border-blue-600! focus:ring-2! focus:ring-blue-50!",
             },
           }}
         >

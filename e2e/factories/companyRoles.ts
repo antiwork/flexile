@@ -15,7 +15,7 @@ export const companyRolesFactory = {
       .values({
         companyId: overrides.companyId || (await companiesFactory.create()).company.id,
         name: faker.person.jobTitle(),
-        jobDescription: faker.lorem.sentence(),
+        jobDescription: "", // Empty string but still required by schema
         capitalizedExpense: faker.number.int({ min: 0, max: 80 }),
         ...overrides,
       })
