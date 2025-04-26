@@ -62,7 +62,7 @@ export default function PeoplePage() {
                 workers
                   .map((worker) => worker.user.countryCode)
                   .filter(Boolean)
-                  .map((code) => typeof code === 'string' ? countries.get(code) || "" : ""),
+                  .map((code) => (typeof code === "string" ? countries.get(code) || "" : "")),
               ),
             ],
           },
