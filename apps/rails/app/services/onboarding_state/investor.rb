@@ -6,8 +6,6 @@ class OnboardingState::Investor < OnboardingState::BaseUser
       spa_company_investor_onboarding_path(company.external_id)
     elsif !has_legal_details? || !has_tax_info?
       spa_company_investor_onboarding_legal_path(company.external_id)
-    elsif !has_payout_details?
-      spa_company_investor_onboarding_bank_account_path(company.external_id)
     end
   end
 

@@ -6,8 +6,6 @@ class OnboardingState::WorkerWithoutCompany < OnboardingState::BaseUser
       spa_onboarding_path
     elsif !has_legal_details?
       spa_onboarding_legal_path
-    elsif !has_bank_details? && !user.sanctioned_country_resident?
-      spa_onboarding_bank_account_path
     end
   end
 

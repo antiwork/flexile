@@ -50,6 +50,6 @@ class OnboardingState::BaseUser
     end
 
     def has_payout_details?
-      has_bank_details? || user.sanctioned_country_resident?
+      true
     end
 end

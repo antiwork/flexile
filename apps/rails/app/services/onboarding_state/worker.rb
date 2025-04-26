@@ -10,8 +10,6 @@ class OnboardingState::Worker < OnboardingState::BaseUser
       spa_company_worker_onboarding_path(company.external_id)
     elsif !has_legal_details?
       spa_company_worker_onboarding_legal_path(company.external_id)
-    elsif !has_bank_details? && !user.sanctioned_country_resident?
-      spa_company_worker_onboarding_bank_account_path(company.external_id)
     end
   end
 
