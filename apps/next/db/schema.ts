@@ -825,7 +825,6 @@ export const integrationRecords = pgTable(
   ],
 );
 
-
 export const expenseCategories = pgTable(
   "expense_categories",
   {
@@ -1367,7 +1366,6 @@ export const tenderOfferBids = pgTable(
     ),
   ],
 );
-
 
 export const financingRounds = pgTable(
   "financing_rounds",
@@ -2873,7 +2871,6 @@ export const companyRolesRelations = relations(companyRoles, ({ one, many }) => 
   rates: many(companyRoleRates),
   contractors: many(companyContractors),
 }));
-
 
 export const integrationRecordsRelations = relations(integrationRecords, ({ one }) => ({
   integration: one(integrations, {

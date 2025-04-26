@@ -40,13 +40,7 @@ export const rolesRouter = createRouter({
       const rate = assertDefined(role.rates[0]);
       return {
         id: role.externalId,
-        ...pick(
-          role,
-          "name",
-          "capitalizedExpense",
-          "expenseAccountId",
-          "trialEnabled",
-        ),
+        ...pick(role, "name", "capitalizedExpense", "expenseAccountId", "trialEnabled"),
         ...pick(rate, "payRateType", "payRateInSubunits", "trialPayRateInSubunits"),
       };
     });
@@ -80,13 +74,7 @@ export const rolesRouter = createRouter({
         .values({
           companyId: ctx.company.id,
           jobDescription: "", // Empty string but required by schema
-          ...pick(
-            input,
-            "name",
-            "capitalizedExpense",
-            "expenseAccountId",
-            "trialEnabled",
-          ),
+          ...pick(input, "name", "capitalizedExpense", "expenseAccountId", "trialEnabled"),
         })
         .returning(pick(companyRoles, "id", "externalId"));
 
@@ -109,13 +97,7 @@ export const rolesRouter = createRouter({
         .update(companyRoles)
         .set({
           jobDescription: "", // Empty string but required by schema
-          ...pick(
-            input,
-            "name",
-            "capitalizedExpense",
-            "expenseAccountId",
-            "trialEnabled",
-          ),
+          ...pick(input, "name", "capitalizedExpense", "expenseAccountId", "trialEnabled"),
         })
         .where(and(eq(companyRoles.externalId, input.id), eq(companyRoles.companyId, ctx.company.id)))
         .returning({ id: companyRoles.id, externalId: companyRoles.externalId });
