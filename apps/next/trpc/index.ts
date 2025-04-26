@@ -141,7 +141,8 @@ export const companyProcedure = protectedProcedure.input(z.object({ companyId: z
 
 export type ProtectedContext = inferProcedureBuilderResolverOptions<typeof protectedProcedure>["ctx"];
 export type CompanyContext = inferProcedureBuilderResolverOptions<typeof companyProcedure>["ctx"];
-export const canAccess = (policy: keyof typeof policies, ctx: CompanyContext) => policies[policy](ctx);
+export const canAccess = (policy: keyof typeof policies, ctx: CompanyContext) =>
+  policies[policy] ? policies[policy](ctx) : false;
 
 export type RouterInput = inferRouterInputs<AppRouter>;
 export type RouterOutput = inferRouterOutputs<AppRouter>;

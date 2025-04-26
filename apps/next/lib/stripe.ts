@@ -1,5 +1,5 @@
 import { Stripe } from "stripe";
-import env from "@/env/client";
+import env from "@/env";
 
 // The NPM package `stripe` should match the API version we use.
 export const STRIPE_API_VERSION = "2024-04-10";

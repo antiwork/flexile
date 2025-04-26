@@ -45,19 +45,21 @@ export const useCanAccess = () => {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   return (policy: keyof typeof policies) =>
-    policies[policy]({
-      company,
-      user,
-      companyAdministrator: !!user.roles.administrator,
-      companyContractor: user.roles.worker
-        ? {
-            ...user.roles.worker,
-            endedAt: user.roles.worker.endedAt ? parseISO(user.roles.worker.endedAt) : null,
-          }
-        : undefined,
-      companyInvestor: !!user.roles.investor,
-      companyLawyer: !!user.roles.lawyer,
-    });
+    policies[policy]
+      ? policies[policy]({
+          company,
+          user,
+          companyAdministrator: !!user.roles.administrator,
+          companyContractor: user.roles.worker
+            ? {
+                ...user.roles.worker,
+                endedAt: user.roles.worker.endedAt ? parseISO(user.roles.worker.endedAt) : null,
+              }
+            : undefined,
+          companyInvestor: !!user.roles.investor,
+          companyLawyer: !!user.roles.lawyer,
+        })
+      : false;
 };
 
 let queryClient: QueryClient | undefined;

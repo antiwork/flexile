@@ -2,7 +2,9 @@ import { companies, companyContractors } from "@/db/schema";
 
 type Company = typeof companies.$inferSelect;
 type CompanyContractor = typeof companyContractors.$inferSelect;
-export const policies = {} satisfies Record<
+export const policies = {
+  "dummy.policy": (ctx) => true,
+} satisfies Record<
   string,
   (ctx: {
     user: unknown;
