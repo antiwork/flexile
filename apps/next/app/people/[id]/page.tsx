@@ -582,15 +582,14 @@ const DetailsTab = ({
           <CardFooter>
             <MutationStatusButton
               size="small"
-              mutation={updateContractor}
-              param={{
+              mutation={() => updateContractor.mutate({
                 companyId: company.id,
                 id: contractor.id,
                 payRateType: selectedRole?.payRateType ?? contractor.payRateType,
                 hoursPerWeek,
                 payRateInSubunits,
                 roleId: selectedRole?.id,
-              }}
+              })}
               disabled={
                 contractor.payRateType === PayRateType.ProjectBased
                   ? !payRateInSubunits
