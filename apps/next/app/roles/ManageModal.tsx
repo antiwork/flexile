@@ -51,7 +51,6 @@ const ManageModal = ({
       payRateType: PayRateType.Hourly,
       trialEnabled: false,
       trialPayRateInSubunits: 0,
-      
       capitalizedExpense: 50,
       expenseAccountId: null,
     };
@@ -229,9 +228,6 @@ const ManageModal = ({
               prefix="$"
             />
           </div>
-        ) : null}
-        {role.id ? (
-          />
         ) : null}
         {expenseAccounts.length > 0 ? (
           <Select
