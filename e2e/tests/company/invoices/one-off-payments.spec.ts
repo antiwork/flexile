@@ -407,7 +407,6 @@ test.describe("One-off payments", () => {
       await page.getByRole("option", { name: "payment_pending" }).click();
       await page.getByRole("option", { name: "paid" }).click();
       await page.getByRole("option", { name: "rejected" }).click();
-
       await expect(page.getByText("No invoices to display.")).not.toBeVisible();
       await expect(page.getByRole("row", { name: "$123.45" })).toBeVisible();
 
