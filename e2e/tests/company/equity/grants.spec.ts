@@ -75,10 +75,10 @@ test.describe("New Contractor", () => {
     await page.getByLabel("Number of options").fill("10");
     await selectComboboxOption(page, "Relationship to company", "Consultant");
     await page.getByRole("button", { name: "Create option grant" }).click();
-    
+
     await page.waitForTimeout(1000);
     await expect(page.getByRole("table")).toBeVisible();
-    
+
     let rows = page.locator("tbody tr");
     await expect(rows).toBeVisible();
     let row = rows.first();
@@ -99,10 +99,10 @@ test.describe("New Contractor", () => {
     await page.getByLabel("Number of options").fill("20");
     await selectComboboxOption(page, "Relationship to company", "Consultant");
     await page.getByRole("button", { name: "Create option grant" }).click();
-    
+
     await page.waitForTimeout(1000);
     await expect(page.getByRole("table")).toBeVisible();
-    
+
     rows = page.locator("tbody tr");
     await expect(rows).toBeVisible();
     row = rows.first();
