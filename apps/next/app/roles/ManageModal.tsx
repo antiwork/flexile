@@ -6,10 +6,9 @@ import { Fragment, useEffect, useState } from "react";
 import Delta from "@/components/Delta";
 import Input from "@/components/Input";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import MutationButton from "@/components/MutationButton";
+import { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import RadioButtons from "@/components/RadioButtons";
-import { Editor as RichTextEditor } from "@/components/RichText";
 import Select from "@/components/Select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -53,7 +52,6 @@ const ManageModal = ({
       payRateType: PayRateType.Hourly,
       trialEnabled: false,
       trialPayRateInSubunits: 0,
-      jobDescription: "",
       capitalizedExpense: 50,
       expenseAccountId: null,
       expenseCardEnabled: false,
@@ -268,13 +266,7 @@ const ManageModal = ({
               <AlertDescription>{role.expenseCardsCount} issued cards will no longer be usable.</AlertDescription>
             </Alert>
           ) : null}
-          {role.id ? (
-            <RichTextEditor
-              value={role.jobDescription}
-              onChange={(jobDescription) => updateRole({ jobDescription })}
-              label="Job description"
-            />
-          ) : null}
+          {/* Job description editor removed */}
           {expenseAccounts.length > 0 ? (
             <Select
               value={role.expenseAccountId ?? ""}
@@ -337,7 +329,7 @@ const ManageModal = ({
             <Button variant="outline" onClick={() => setConfirmingRateUpdate(false)}>
               Cancel
             </Button>
-            <MutationButton mutation={saveMutation}>Yes, change</MutationButton>
+            <MutationStatusButton mutation={saveMutation}>Yes, change</MutationStatusButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -351,9 +343,9 @@ const ManageModal = ({
             <Button variant="outline" onClick={() => setConfirmingDelete(false)}>
               No, cancel
             </Button>
-            <MutationButton mutation={deleteMutation} param={{ companyId: company.id, id: role.id }}>
+            <MutationStatusButton mutation={deleteMutation}>
               Yes, delete
-            </MutationButton>
+            </MutationStatusButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
