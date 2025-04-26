@@ -95,6 +95,10 @@ test.describe("Invoice submission, approval and rejection", () => {
     await clerk.signOut({ page });
     await login(page, adminUser);
 
+    await page.getByRole("combobox", { name: "Status" }).click();
+    await page.getByRole("option", { name: "pending" }).click();
+    await page.waitForTimeout(500);
+
     const firstRow = page.locator("tbody tr").first();
     const secondRow = page.locator("tbody tr").nth(1);
     const thirdRow = page.locator("tbody tr").nth(2);
