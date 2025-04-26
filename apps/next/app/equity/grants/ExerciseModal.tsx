@@ -208,7 +208,7 @@ const ExerciseModal = ({
             </div>
             
             <DialogFooter>
-              {!signing && (
+              {signing ? null : (
                 <Button onClick={() => setSigning(true)} disabled={optionsToExercise === 0}>
                   Proceed
                 </Button>
