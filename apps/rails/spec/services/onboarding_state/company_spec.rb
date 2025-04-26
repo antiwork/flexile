@@ -38,11 +38,11 @@ RSpec.describe OnboardingState::Company do
   end
 
   describe "#redirect_path_from_onboarding_details" do
-    it "returns nil if company details are not set" do
+    it "returns the people path if company details are not set" do
       company.city = nil
       company.save(validate: false)
 
-      expect(described_class.new(company).redirect_path_from_onboarding_details).to eq(spa_company_administrator_onboarding_details_path(company.external_id))
+      expect(described_class.new(company).redirect_path_from_onboarding_details).to eq(Rails.application.routes.url_helpers.people_path)
     end
 
     it "returns the people path if company details are set" do
