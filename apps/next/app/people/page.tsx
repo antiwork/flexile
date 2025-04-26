@@ -45,7 +45,7 @@ export default function People() {
         }),
         columnHelper.simple("role.name", "Role", (value) => value || "N/A"),
         columnHelper.simple("user.countryCode", "Country", (v) => v && countries.get(v)),
-        columnHelper.simple("startedAt", "Start Date", (date) => (date ? formatDate(date) : "")),
+        columnHelper.simple("startedAt", "Start Date", formatDate),
         ...(type === "active" &&
         workers.some((person) => {
           const endDate = person.endedAt;
@@ -73,9 +73,7 @@ export default function People() {
               header: "Status",
               cell: (info) =>
                 info.getValue() ? (
-                  <Status variant="success">
-                    Starts on {info.row.original.startedAt ? formatDate(info.row.original.startedAt) : ""}
-                  </Status>
+                  <Status variant="success">Starts on {formatDate(info.row.original.startedAt)}</Status>
                 ) : info.row.original.user.invitationAcceptedAt ? (
                   <Status variant="primary">In Progress</Status>
                 ) : (
