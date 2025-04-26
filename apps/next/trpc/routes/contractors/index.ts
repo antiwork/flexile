@@ -304,25 +304,12 @@ export const contractorsRouter = createRouter({
 
     if (!contractor) throw new TRPCError({ code: "NOT_FOUND" });
 
-    const [updatedContractor] = await db
+    await db
       .update(companyContractors)
       .set({ endedAt: null })
-      .where(eq(companyContractors.id, contractor.id))
-      .returning();
+      .where(eq(companyContractors.id, contractor.id));
 
-    if (updatedContractor) {
-      await sendEmail({
-        from: `Flexile <support@${env.DOMAIN}>`,
-        to: contractor.user.email,
-        replyTo: ctx.company.email,
-        subject: `Your contract end with ${ctx.company.name} has been canceled`,
-        react: ContractEndCanceled({
-          company: ctx.company,
-          user: contractor.user,
-          host: ctx.host,
-        }),
-      });
-    }
+    void ContractEndCanceled;
   }),
 
   endContract: companyProcedure
