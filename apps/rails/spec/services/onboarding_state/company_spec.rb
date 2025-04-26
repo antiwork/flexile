@@ -42,7 +42,7 @@ RSpec.describe OnboardingState::Company do
       company.city = nil
       company.save(validate: false)
 
-      expect(described_class.new(company).redirect_path_from_onboarding_details).to be_nil
+      expect(described_class.new(company).redirect_path_from_onboarding_details).to eq(spa_company_administrator_onboarding_details_path(company.external_id))
     end
 
     it "returns the people path if company details are set" do
@@ -78,8 +78,8 @@ RSpec.describe OnboardingState::Company do
       expect(described_class.new(company).redirect_path_from_onboarding_payment_details).to eq spa_company_administrator_onboarding_details_path(company.external_id)
     end
 
-    it "returns nil if company details are set but bank account is not" do
-      expect(described_class.new(company).redirect_path_from_onboarding_payment_details).to be_nil
+    it "returns the people path if company details are set but bank account is not" do
+      expect(described_class.new(company).redirect_path_from_onboarding_payment_details).to eq Rails.application.routes.url_helpers.people_path
     end
 
     it "returns the people path if onboarding is complete" do
