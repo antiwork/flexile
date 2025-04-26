@@ -27,6 +27,7 @@ import { assertDefined } from "@/utils/assert";
 import { company_workers_url } from "@/utils/routes";
 import { latestUserComplianceInfo, simpleUser, type User } from "../users";
 import ContractEndCanceled from "./ContractEndCanceled";
+import ContractEnded from "./ContractEnded";
 import RateUpdated from "./RateUpdated";
 import TrialPassed from "./TrialPassed";
 

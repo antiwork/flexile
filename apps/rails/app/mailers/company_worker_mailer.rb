@@ -4,10 +4,6 @@ class CompanyWorkerMailer < ApplicationMailer
   helper :application
   default from: SUPPORT_EMAIL_WITH_NAME
 
-  def contract_ended(company_worker_id: nil, company_contractor_id: nil)
-    return nil
-  end
-
   def invite_worker(company_worker_id)
     @company_worker = CompanyWorker.find(company_worker_id)
     @company = @company_worker.company
