@@ -18,7 +18,7 @@ class OnboardingState::Company
 
   def redirect_path_from_onboarding_details
     return completed_redirect_path if complete?
-    
+
     completed_redirect_path
   end
 
