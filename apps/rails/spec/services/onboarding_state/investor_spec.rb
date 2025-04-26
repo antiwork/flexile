@@ -103,10 +103,10 @@ RSpec.describe OnboardingState::Investor do
       expect(service.complete?).to eq(false)
     end
 
-    it "returns false if the bank account is missing" do
+    it "returns true even if the bank account is missing" do
       user.bank_accounts.destroy_all
 
-      expect(service.complete?).to eq(false)
+      expect(service.complete?).to eq(true)
     end
 
     it "returns true if the bank account is missing but the user is from a sanctioned country" do
@@ -170,17 +170,17 @@ RSpec.describe OnboardingState::Investor do
       expect(service.redirect_path).to eq(spa_company_investor_onboarding_legal_path(company.external_id))
     end
 
-    it "returns the path to the bank account page if the user is missing bank details" do
+    it "returns nil if the user is missing bank details" do
       user.bank_accounts.destroy_all
 
-      expect(service.redirect_path).to eq(spa_company_investor_onboarding_bank_account_path(company.external_id))
+      expect(service.redirect_path).to be_nil
     end
 
-    it "returns the path to the bank account page if the user is from a restricted payout country and is missing a wallet address" do
+    it "returns nil if the user is from a restricted payout country and is missing a wallet address" do
       user.bank_accounts.destroy_all
       user.update!(country_code: "NG")
 
-      expect(service.redirect_path).to eq(spa_company_investor_onboarding_bank_account_path(company.external_id))
+      expect(service.redirect_path).to be_nil
     end
 
     it "returns nil if the user is missing bank details and is from a sanctioned country" do
