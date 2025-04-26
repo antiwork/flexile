@@ -304,10 +304,7 @@ export const contractorsRouter = createRouter({
 
     if (!contractor) throw new TRPCError({ code: "NOT_FOUND" });
 
-    await db
-      .update(companyContractors)
-      .set({ endedAt: null })
-      .where(eq(companyContractors.id, contractor.id));
+    await db.update(companyContractors).set({ endedAt: null }).where(eq(companyContractors.id, contractor.id));
 
     void ContractEndCanceled;
   }),
