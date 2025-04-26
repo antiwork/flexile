@@ -27,7 +27,6 @@ import { assertDefined } from "@/utils/assert";
 import { company_workers_url } from "@/utils/routes";
 import { latestUserComplianceInfo, simpleUser, type User } from "../users";
 import ContractEndCanceled from "./ContractEndCanceled";
-import ContractEnded from "./ContractEnded";
 import RateUpdated from "./RateUpdated";
 import TrialPassed from "./TrialPassed";
 
@@ -348,26 +347,11 @@ export const contractorsRouter = createRouter({
 
       if (!activeContractor) throw new TRPCError({ code: "NOT_FOUND" });
 
-      const [inactiveContractor] = await db
+      await db
         .update(companyContractors)
         .set({ endedAt: new Date(input.endDate) })
-        .where(eq(companyContractors.id, activeContractor.id))
-        .returning();
+        .where(eq(companyContractors.id, activeContractor.id));
 
-      if (inactiveContractor) {
-        await sendEmail({
-          from: `Flexile <support@${env.DOMAIN}>`,
-          to: activeContractor.user.email,
-          replyTo: ctx.company.email,
-          subject: `Your contract with ${ctx.company.name} has ended`,
-          react: ContractEnded({
-            contractor: inactiveContractor,
-            company: ctx.company,
-            user: activeContractor.user,
-            host: ctx.host,
-          }),
-        });
-      }
     }),
   completeTrial: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
