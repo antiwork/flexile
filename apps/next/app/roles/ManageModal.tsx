@@ -161,7 +161,7 @@ const ManageModal = ({
           ].filter((option) => !!option)}
           disabled={!!role.id}
         />
-        <div className={`grid gap-3 ${expenseAccounts.length > 0 ? "md:grid-cols-2" : ""}`}>
+        <div className="grid gap-3">
           <div className="grid gap-2">
             <Label htmlFor="pay-rate">Rate</Label>
             <NumberInput
@@ -180,18 +180,20 @@ const ManageModal = ({
             />
             {errors.includes("payRateInSubunits") && <div className="text-destructive text-sm">Rate is required</div>}
           </div>
-          {expenseAccounts.length > 0 && (
-            <div className="grid gap-2">
-              <Label htmlFor="capitalized-expense">Capitalized R&D expense</Label>
-              <NumberInput
-                id="capitalized-expense"
-                value={role.capitalizedExpense ?? 0}
-                onChange={(value) => updateRole({ capitalizedExpense: value ?? 0 })}
-                suffix="%"
-              />
-            </div>
-          )}
         </div>
+
+        {expenseAccounts.length > 0 ? (
+          <div className="grid gap-2">
+            <Label htmlFor="capitalized-expense">Capitalized R&D expense</Label>
+            <NumberInput
+              id="capitalized-expense"
+              value={role.capitalizedExpense ?? 0}
+              onChange={(value) => updateRole({ capitalizedExpense: value ?? 0 })}
+              suffix="%"
+            />
+          </div>
+        ) : null}
+
         {role.id && contractorsToUpdate.length > 0 ? (
           <>
             {!updateContractorRates && (
@@ -211,6 +213,7 @@ const ManageModal = ({
             />
           </>
         ) : null}
+
         {role.id && role.payRateType === PayRateType.Hourly ? (
           <Switch
             checked={role.trialEnabled}
@@ -218,6 +221,7 @@ const ManageModal = ({
             label="Start with trial period"
           />
         ) : null}
+
         {role.id && role.trialEnabled ? (
           <div className="grid gap-2">
             <Label htmlFor="trial-rate">Rate during trial period</Label>
@@ -229,6 +233,7 @@ const ManageModal = ({
             />
           </div>
         ) : null}
+
         {expenseAccounts.length > 0 ? (
           <Select
             value={role.expenseAccountId ?? ""}
@@ -240,6 +245,7 @@ const ManageModal = ({
             label="Expense account"
           />
         ) : null}
+
         <div className="flex w-full gap-3">
           <Button className="flex-1" onClick={onSave}>
             {role.id ? "Save changes" : "Create"}
@@ -261,6 +267,7 @@ const ManageModal = ({
           ) : null}
         </div>
       </Modal>
+
       <Modal
         open={confirmingRateUpdate}
         onClose={() => setConfirmingRateUpdate(false)}
@@ -295,6 +302,7 @@ const ManageModal = ({
           </CardContent>
         </Card>
       </Modal>
+
       <Modal title="Permanently delete role?" open={confirmingDelete} onClose={() => setConfirmingDelete(false)}>
         <p>This action cannot be undone.</p>
         <div className="flex justify-end gap-4">
