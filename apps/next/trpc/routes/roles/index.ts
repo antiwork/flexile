@@ -12,7 +12,6 @@ import { assertDefined } from "@/utils/assert";
 const inputSchema = createInsertSchema(companyRoles)
   .pick({
     name: true,
-    jobDescription: true,
     capitalizedExpense: true,
     expenseAccountId: true,
     expenseCardEnabled: true,
@@ -51,7 +50,6 @@ export const rolesRouter = createRouter({
         ...pick(
           role,
           "name",
-          "jobDescription",
           "capitalizedExpense",
           "expenseAccountId",
           "expenseCardEnabled",
@@ -69,7 +67,7 @@ export const rolesRouter = createRouter({
 
     const [role] = await db
       .select({
-        ...pick(companyRoles, "id", "name", "jobDescription", "capitalizedExpense"),
+        ...pick(companyRoles, "id", "name", "capitalizedExpense"),
         ...pick(companyRoleRates, "payRateType", "payRateInSubunits", "trialPayRateInSubunits"),
       })
       .from(companyRoles)
@@ -91,10 +89,10 @@ export const rolesRouter = createRouter({
         .insert(companyRoles)
         .values({
           companyId: ctx.company.id,
+          jobDescription: "", // Empty string but required by schema
           ...pick(
             input,
             "name",
-            "jobDescription",
             "capitalizedExpense",
             "expenseAccountId",
             "expenseCardEnabled",
@@ -121,18 +119,18 @@ export const rolesRouter = createRouter({
     return await db.transaction(async (tx) => {
       const [role] = await tx
         .update(companyRoles)
-        .set(
-          pick(
+        .set({
+          jobDescription: "", // Empty string but required by schema
+          ...pick(
             input,
             "name",
-            "jobDescription",
             "capitalizedExpense",
             "expenseAccountId",
             "expenseCardEnabled",
             "expenseCardSpendingLimitCents",
             "trialEnabled",
           ),
-        )
+        })
         .where(and(eq(companyRoles.externalId, input.id), eq(companyRoles.companyId, ctx.company.id)))
         .returning({ id: companyRoles.id, externalId: companyRoles.externalId });
 
