@@ -108,7 +108,7 @@ export const contractorsRouter = createRouter({
     });
     if (!contractor) throw new TRPCError({ code: "NOT_FOUND" });
     return {
-      ...pick(contractor, ["payRateInSubunits", "hoursPerWeek", "endedAt", "onTrial"]),
+      ...pick(contractor, ["payRateInSubunits", "hoursPerWeek", "endedAt"]),
       id: contractor.externalId,
       role: contractor.role.externalId,
       payRateType: contractor.payRateType,
