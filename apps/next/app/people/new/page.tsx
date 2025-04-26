@@ -38,7 +38,7 @@ function Create() {
 
   useOnChange(() => {
     if (role) {
-      setRateUsd(role.payRateInSubunits ? role.payRateInSubunits / 100 : 50);
+      setRateUsd(role.payRateInSubunits / 100);
       setHours(0);
     }
   }, [role]);
