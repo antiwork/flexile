@@ -57,7 +57,14 @@ export default function PeoplePage() {
             return countryCode ? countries.get(countryCode) : "";
           },
           meta: {
-            filterOptions: [...new Set(workers.map((worker) => worker.user.countryCode).filter(Boolean).map(code => countries.get(code as string) || ""))],
+            filterOptions: [
+              ...new Set(
+                workers
+                  .map((worker) => worker.user.countryCode)
+                  .filter(Boolean)
+                  .map((code) => typeof code === 'string' ? countries.get(code) || "" : ""),
+              ),
+            ],
           },
         }),
         columnHelper.accessor("startedAt", {
@@ -67,7 +74,8 @@ export default function PeoplePage() {
             filterOptions: [...new Set(workers.map((worker) => new Date(worker.startedAt).getFullYear().toString()))],
           },
           filterFn: (row, _, filterValue) =>
-            Array.isArray(filterValue) && filterValue.includes(new Date(row.original.startedAt).getFullYear().toString()),
+            Array.isArray(filterValue) &&
+            filterValue.includes(new Date(row.original.startedAt).getFullYear().toString()),
         }),
         ...(type === "active" &&
         workers.some((person) => {
@@ -91,44 +99,42 @@ export default function PeoplePage() {
               ),
             ]
           : []),
-        columnHelper.accessor((row) => {
-          if (row.endedAt) return "Inactive";
-          return row.onTrial ? "Trial" : "Active";
-        }, {
-          id: "status",
-          header: "Status",
-          meta: {
-            filterOptions: ["Active", "Trial", "Inactive"],
+        columnHelper.accessor(
+          (row) => {
+            if (row.endedAt) return "Inactive";
+            return row.onTrial ? "Trial" : "Active";
           },
-          cell: (info) => {
-            const status = info.getValue();
-            return (
-              <Status
-                variant={
-                  status === "Active"
-                    ? "success"
-                    : status === "Trial"
-                    ? "primary"
-                    : "secondary"
-                }
-              >
-                {status}
-              </Status>
-            );
+          {
+            id: "status",
+            header: "Status",
+            meta: {
+              filterOptions: ["Active", "Trial", "Inactive"],
+            },
+            cell: (info) => {
+              const status = info.getValue();
+              return (
+                <Status variant={status === "Active" ? "success" : status === "Trial" ? "primary" : "secondary"}>
+                  {status}
+                </Status>
+              );
+            },
           },
-        }),
-        columnHelper.accessor((row) => {
-          if (row.onTrial || new Date(row.startedAt) > new Date()) return "Onboarding";
-          if (row.endedAt && new Date(row.endedAt) < new Date()) return "Alumni";
-          return "Active";
-        }, {
-          id: "type",
-          header: "Type",
-          meta: {
-            filterOptions: ["Onboarding", "Active", "Alumni"],
+        ),
+        columnHelper.accessor(
+          (row) => {
+            if (row.onTrial || new Date(row.startedAt) > new Date()) return "Onboarding";
+            if (row.endedAt && new Date(row.endedAt) < new Date()) return "Alumni";
+            return "Active";
           },
-        }),
-      ].filter((column) => !!column),
+          {
+            id: "type",
+            header: "Type",
+            meta: {
+              filterOptions: ["Onboarding", "Active", "Alumni"],
+            },
+          },
+        ),
+      ].filter(Boolean),
     [type],
   );
 
@@ -137,12 +143,12 @@ export default function PeoplePage() {
     data: workers,
     initialState: {
       sorting: [{ id: "user.name", desc: false }],
-      columnFilters: type ? [
+      columnFilters: [
         {
           id: "type",
           value: [type === "onboarding" ? "Onboarding" : type === "alumni" ? "Alumni" : "Active"],
         },
-      ] : [],
+      ],
     },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -163,10 +169,10 @@ export default function PeoplePage() {
       }
     >
       {workers.length > 0 ? (
-        <DataTable 
-          table={table} 
+        <DataTable
+          table={table}
           searchColumn="user.name"
-          onRowClicked={user.activeRole === "administrator" ? () => "" : undefined} 
+          onRowClicked={user.activeRole === "administrator" ? () => "" : undefined}
         />
       ) : (
         <Placeholder icon={UsersIcon}>Contractors will show up here.</Placeholder>
