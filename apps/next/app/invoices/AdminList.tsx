@@ -1,5 +1,6 @@
 import { ArrowDownTrayIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { CheckCircleIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
+import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import { partition } from "lodash-es";
 import Link from "next/link";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
@@ -19,7 +20,6 @@ import MainLayout from "@/components/layouts/Main";
 import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
-import Tabs from "@/components/Tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -67,25 +67,49 @@ export default function AdminList() {
             <div className="text-xs text-gray-500">{info.row.original.contractor.role.name}</div>
           </>
         ),
+        meta: {
+          filterOptions: [...new Set(data.map((invoice) => invoice.billFrom))],
+        },
       }),
-      columnHelper.simple("invoiceDate", "Sent on", (value) => (value ? formatDate(value) : "N/A")),
-      columnHelper.simple("totalMinutes", "Hours", (value) => (value ? formatDuration(value) : "N/A"), "numeric"),
-      columnHelper.simple(
-        "totalAmountInUsdCents",
-        "Amount",
-        (value) => (value ? formatMoneyFromCents(value) : "N/A"),
-        "numeric",
-      ),
+      columnHelper.accessor("invoiceDate", {
+        header: "Sent on",
+        cell: (info) => (info.getValue() ? formatDate(info.getValue()) : "N/A"),
+        meta: {
+          filterOptions: [...new Set(data.map((invoice) => 
+            invoice.invoiceDate ? new Date(invoice.invoiceDate).getFullYear().toString() : ""
+          ).filter(Boolean))],
+        },
+        filterFn: (row, _, filterValue) =>
+          Array.isArray(filterValue) && row.original.invoiceDate
+            ? filterValue.includes(new Date(row.original.invoiceDate).getFullYear().toString())
+            : true,
+      }),
+      columnHelper.accessor("totalMinutes", {
+        header: "Hours",
+        cell: (info) => {
+          const value = info.getValue();
+          return value ? formatDuration(Number(value)) : "N/A";
+        },
+        meta: { numeric: true },
+      }),
+      columnHelper.accessor("totalAmountInUsdCents", {
+        header: "Amount",
+        cell: (info) => (info.getValue() ? formatMoneyFromCents(info.getValue()) : "N/A"),
+        meta: { numeric: true },
+      }),
       columnHelper.accessor("status", {
         header: "Status",
         cell: (info) => <StatusWithTooltip invoice={info.row.original} />,
+        meta: {
+          filterOptions: [...new Set(data.map((invoice) => invoice.status))],
+        },
       }),
       columnHelper.display({
         id: "actions",
         cell: (info) => (isActionable(info.row.original) ? <ApproveButton invoice={info.row.original} /> : null),
       }),
     ],
-    [company.requiredInvoiceApprovals],
+    [data, company.requiredInvoiceApprovals],
   );
 
   const table = useTable({
@@ -93,6 +117,12 @@ export default function AdminList() {
     data,
     getRowId: (invoice) => invoice.id,
     enableRowSelection: invoiceFilter === "actionable",
+    initialState: {
+      sorting: [{ id: "invoiceDate", desc: true }],
+      columnFilters: invoiceFilter === "actionable" ? [{ id: "status", value: ["pending"] }] : [],
+    },
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
   });
 
   const selectedRows = table.getSelectedRowModel().rows;
@@ -113,13 +143,6 @@ export default function AdminList() {
         )
       }
     >
-      <Tabs
-        links={[
-          { label: "Open", route: "?" },
-          { label: "History", route: "?tab=history" },
-        ]}
-      />
-
       <StripeMicrodepositVerification />
 
       {data.length > 0 && (
@@ -184,7 +207,11 @@ export default function AdminList() {
             />
           </div>
 
-          <DataTable table={table} onRowClicked={setDetailInvoice} />
+          <DataTable 
+            table={table} 
+            onRowClicked={setDetailInvoice} 
+            searchColumn="billFrom"
+          />
         </div>
       )}
 
