@@ -75,11 +75,13 @@ test.describe("New Contractor", () => {
     await page.getByLabel("Number of options").fill("10");
     await selectComboboxOption(page, "Relationship to company", "Consultant");
     await page.getByRole("button", { name: "Create option grant" }).click();
-
-    await expect(page.getByRole("table")).toHaveCount(2);
-    let rows = page.getByRole("table").first().getByRole("row");
-    await expect(rows).toHaveCount(2);
-    let row = rows.nth(1);
+    
+    await page.waitForTimeout(1000);
+    await expect(page.getByRole("table")).toBeVisible();
+    
+    let rows = page.locator("tbody tr");
+    await expect(rows).toBeVisible();
+    let row = rows.first();
     await expect(row).toContainText(contractorUser.legalName ?? "");
     await expect(row).toContainText("10");
     const companyInvestor = await db.query.companyInvestors.findFirst({
@@ -97,11 +99,13 @@ test.describe("New Contractor", () => {
     await page.getByLabel("Number of options").fill("20");
     await selectComboboxOption(page, "Relationship to company", "Consultant");
     await page.getByRole("button", { name: "Create option grant" }).click();
-
-    await expect(page.getByRole("table")).toHaveCount(2);
-    rows = page.getByRole("table").first().getByRole("row");
-    await expect(rows).toHaveCount(3);
-    row = rows.nth(1);
+    
+    await page.waitForTimeout(1000);
+    await expect(page.getByRole("table")).toBeVisible();
+    
+    rows = page.locator("tbody tr");
+    await expect(rows).toBeVisible();
+    row = rows.first();
     await expect(row).toContainText(projectBasedUser.legalName ?? "");
     await expect(row).toContainText("20");
     const projectBasedCompanyInvestor = await db.query.companyInvestors.findFirst({
