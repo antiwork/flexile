@@ -1,5 +1,6 @@
 "use client";
 import { UserPlusIcon, UsersIcon } from "@heroicons/react/24/outline";
+import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import Link from "next/link";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import React, { useMemo } from "react";
@@ -7,7 +8,6 @@ import DataTable, { createColumnHelper, useTable } from "@/components/DataTable"
 import MainLayout from "@/components/layouts/Main";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
-import Tabs from "@/components/Tabs";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { countries } from "@/models/constants";
@@ -17,7 +17,7 @@ import { formatDate } from "@/utils/time";
 
 type Contractor = RouterOutput["contractors"]["list"]["workers"][number];
 
-export default function People() {
+export default function PeoplePage() {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const [type] = useQueryState(
@@ -43,9 +43,32 @@ export default function People() {
             );
           },
         }),
-        columnHelper.simple("role.name", "Role", (value) => value || "N/A"),
-        columnHelper.simple("user.countryCode", "Country", (v) => v && countries.get(v)),
-        columnHelper.simple("startedAt", "Start Date", formatDate),
+        columnHelper.accessor("role.name", {
+          header: "Role",
+          cell: (info) => info.getValue() || "N/A",
+          meta: {
+            filterOptions: [...new Set(workers.map((worker) => worker.role.name))],
+          },
+        }),
+        columnHelper.accessor("user.countryCode", {
+          header: "Country",
+          cell: (info) => {
+            const countryCode = info.getValue();
+            return countryCode ? countries.get(countryCode) : "";
+          },
+          meta: {
+            filterOptions: [...new Set(workers.map((worker) => worker.user.countryCode).filter(Boolean).map(code => countries.get(code as string) || ""))],
+          },
+        }),
+        columnHelper.accessor("startedAt", {
+          header: "Start date",
+          cell: (info) => formatDate(info.getValue()),
+          meta: {
+            filterOptions: [...new Set(workers.map((worker) => new Date(worker.startedAt).getFullYear().toString()))],
+          },
+          filterFn: (row, _, filterValue) =>
+            Array.isArray(filterValue) && filterValue.includes(new Date(row.original.startedAt).getFullYear().toString()),
+        }),
         ...(type === "active" &&
         workers.some((person) => {
           const endDate = person.endedAt;
@@ -59,7 +82,7 @@ export default function People() {
                 },
                 {
                   id: "endedAt",
-                  header: "End Date",
+                  header: "End date",
                   cell: (info) => {
                     const value = info.getValue();
                     return value ? formatDate(value) : "";
@@ -68,28 +91,62 @@ export default function People() {
               ),
             ]
           : []),
-        type === "onboarding"
-          ? columnHelper.accessor("user.onboardingCompleted", {
-              header: "Status",
-              cell: (info) =>
-                info.getValue() ? (
-                  info.row.original.onTrial ? (
-                    <Status variant="success">On trial</Status>
-                  ) : (
-                    <Status variant="success">Starts on {formatDate(info.row.original.startedAt)}</Status>
-                  )
-                ) : info.row.original.user.invitationAcceptedAt ? (
-                  <Status variant="primary">In Progress</Status>
-                ) : (
-                  <Status variant="primary">Invited</Status>
-                ),
-            })
-          : null,
+        columnHelper.accessor((row) => {
+          if (row.endedAt) return "Inactive";
+          return row.onTrial ? "Trial" : "Active";
+        }, {
+          id: "status",
+          header: "Status",
+          meta: {
+            filterOptions: ["Active", "Trial", "Inactive"],
+          },
+          cell: (info) => {
+            const status = info.getValue();
+            return (
+              <Status
+                variant={
+                  status === "Active"
+                    ? "success"
+                    : status === "Trial"
+                    ? "primary"
+                    : "secondary"
+                }
+              >
+                {status}
+              </Status>
+            );
+          },
+        }),
+        columnHelper.accessor((row) => {
+          if (row.onTrial || new Date(row.startedAt) > new Date()) return "Onboarding";
+          if (row.endedAt && new Date(row.endedAt) < new Date()) return "Alumni";
+          return "Active";
+        }, {
+          id: "type",
+          header: "Type",
+          meta: {
+            filterOptions: ["Onboarding", "Active", "Alumni"],
+          },
+        }),
       ].filter((column) => !!column),
     [type],
   );
 
-  const table = useTable({ columns, data: workers });
+  const table = useTable({
+    columns,
+    data: workers,
+    initialState: {
+      sorting: [{ id: "user.name", desc: false }],
+      columnFilters: type ? [
+        {
+          id: "type",
+          value: [type === "onboarding" ? "Onboarding" : type === "alumni" ? "Alumni" : "Active"],
+        },
+      ] : [],
+    },
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+  });
 
   return (
     <MainLayout
@@ -105,16 +162,12 @@ export default function People() {
         ) : null
       }
     >
-      <Tabs
-        links={[
-          { label: "Onboarding", route: "?type=onboarding" },
-          { label: "Active", route: "?" },
-          { label: "Alumni", route: "?type=alumni" },
-        ]}
-      />
-
       {workers.length > 0 ? (
-        <DataTable table={table} onRowClicked={user.activeRole === "administrator" ? () => "" : undefined} />
+        <DataTable 
+          table={table} 
+          searchColumn="user.name"
+          onRowClicked={user.activeRole === "administrator" ? () => "" : undefined} 
+        />
       ) : (
         <Placeholder icon={UsersIcon}>Contractors will show up here.</Placeholder>
       )}
