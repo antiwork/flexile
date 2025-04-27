@@ -303,9 +303,7 @@ class SeedDataGeneratorFromTemplate
     end
 
     def create_financing_rounds!(company, company_data)
-      company_data.fetch("financing_rounds").each do |financing_round_data|
-        company.financing_rounds.create!(financing_round_data)
-      end
+      return
     end
 
     def create_equity_buyback_rounds!(company, company_data)
