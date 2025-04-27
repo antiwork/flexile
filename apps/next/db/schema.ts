@@ -1444,8 +1444,6 @@ export const expenseCardCharges = pgTable(
   ],
 );
 
-
-
 export const equityBuybackRounds = pgTable(
   "equity_buyback_rounds",
   {
