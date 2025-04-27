@@ -56,6 +56,7 @@ test.describe("One-off payments", () => {
 
       await page.waitForLoadState("networkidle");
 
+      console.log(await page.content());
       const invoiceRow = await findRequiredTableRow(page, {
         "Invoice ID": "O-0001",
         "Sent on": format(new Date(), "MMM d, yyyy"),
