@@ -15,7 +15,7 @@ import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { md5Checksum } from "@/utils";
 
-export default function NewTenderOffer() {
+export default function NewBuyback() {
   const company = useCurrentCompany();
   const router = useRouter();
 
@@ -64,7 +64,7 @@ export default function NewTenderOffer() {
 
   return (
     <MainLayout
-      title="Start new tender offer"
+      title="Start new buyback"
       headerActions={
         <Button variant="outline" asChild>
           <Link href="/equity/tender_offers">Cancel</Link>
@@ -98,7 +98,7 @@ export default function NewTenderOffer() {
         </CardContent>
         <CardFooter>
           <MutationButton mutation={createMutation} disabled={!valid} loadingText="Creating...">
-            Create tender offer
+            Create buyback
           </MutationButton>
         </CardFooter>
       </FormSection>
