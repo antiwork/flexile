@@ -9,7 +9,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
-import LegalCertificationModal from "@/app/onboarding/LegalCertificationModal";
+import LegalCertificationModal from "./LegalCertificationModal";
 import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import RadioButtons from "@/components/RadioButtons";
