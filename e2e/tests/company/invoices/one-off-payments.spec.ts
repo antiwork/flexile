@@ -54,9 +54,8 @@ test.describe("One-off payments", () => {
         { page },
       );
 
-      await page.waitForLoadState("networkidle");
+      await expect(page.getByRole("row")).toBeVisible();
 
-      console.log(await page.content());
       const invoiceRow = await findRequiredTableRow(page, {
         "Invoice ID": "O-0001",
         "Sent on": format(new Date(), "MMM d, yyyy"),
@@ -147,7 +146,7 @@ test.describe("One-off payments", () => {
           { page },
         );
 
-        await page.waitForLoadState("networkidle");
+        await expect(page.getByRole("row")).toBeVisible();
 
         const invoiceRow = await findRequiredTableRow(page, {
           "Invoice ID": "O-0001",
@@ -229,7 +228,7 @@ test.describe("One-off payments", () => {
           { page },
         );
 
-        await page.waitForLoadState("networkidle");
+        await expect(page.getByRole("row")).toBeVisible();
 
         const invoiceRow = await findRequiredTableRow(page, {
           "Invoice ID": "O-0001",
