@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Input from "@/components/Input";
 import { linkClasses } from "@/components/Link";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MutationStatusButton } from "@/components/MutationButton";
+import MutationButton from "@/components/MutationButton";
 
 const LegalCertificationModal = ({
   open,
@@ -190,9 +190,9 @@ const LegalCertificationModal = ({
         />
 
         <DialogFooter>
-          <MutationStatusButton mutation={signMutation} loadingText="Saving..." disabled={!signature}>
+          <MutationButton mutation={signMutation} loadingText="Saving..." disabled={!signature}>
             Save
-          </MutationStatusButton>
+          </MutationButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>
