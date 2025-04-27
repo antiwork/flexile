@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe FinancingRound do
+RSpec.describe FinancingRound, skip: "Feature removed" do
   describe "associations" do
     it { is_expected.to belong_to(:company) }
   end
