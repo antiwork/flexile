@@ -24,8 +24,6 @@ import { createSubmission } from "@/trpc/routes/documents/templates";
 import { assertDefined } from "@/utils/assert";
 import { company_workers_url } from "@/utils/routes";
 import { latestUserComplianceInfo, simpleUser, type User } from "../users";
-import ContractEndCanceled from "./ContractEndCanceled";
-import ContractEnded from "./ContractEnded";
 import RateUpdated from "./RateUpdated";
 
 type CompanyContractor = typeof companyContractors.$inferSelect;
@@ -298,8 +296,6 @@ export const contractorsRouter = createRouter({
     if (!contractor) throw new TRPCError({ code: "NOT_FOUND" });
 
     await db.update(companyContractors).set({ endedAt: null }).where(eq(companyContractors.id, contractor.id));
-
-    void ContractEndCanceled;
   }),
 
   endContract: companyProcedure
@@ -329,8 +325,6 @@ export const contractorsRouter = createRouter({
         .update(companyContractors)
         .set({ endedAt: new Date(input.endDate) })
         .where(eq(companyContractors.id, activeContractor.id));
-
-      void ContractEnded;
     }),
 });
 

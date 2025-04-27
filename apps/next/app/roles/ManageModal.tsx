@@ -207,7 +207,6 @@ const ManageModal = ({
             />
           </>
         ) : null}
-        {/* Trial-related UI components removed */}
         {role.id ? (
           <Switch
             checked={role.expenseCardEnabled}
@@ -237,7 +236,6 @@ const ManageModal = ({
             <AlertDescription>{role.expenseCardsCount} issued cards will no longer be usable.</AlertDescription>
           </Alert>
         ) : null}
-        {/* Job description editor removed */}
         {expenseAccounts.length > 0 ? (
           <Select
             value={role.expenseAccountId ?? ""}

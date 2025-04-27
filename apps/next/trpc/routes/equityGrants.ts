@@ -314,9 +314,7 @@ export const equityGrantsRouter = createRouter({
       },
       where: and(
         eq(companyContractors.companyId, ctx.company.id),
-        // Active workers
         isNull(companyContractors.endedAt),
-        // Started on or before today
         lte(companyContractors.startedAt, new Date()),
       ),
     });

@@ -1,7 +1,6 @@
 <h1 class="text-3xl leading-9 font-bold">
   <% inviter = url ? user.invited_by.name : company.name %>
-  <% title_ending = "#{contractor.hourly? ? ", track your hours," : nil} and get paid" %>
-  <%= "#{inviter} has invited you to join Flexile to sign your contract#{title_ending}." %>
+  <%= "#{inviter} has invited you to join Flexile to sign your contract#{contractor.hourly? ? ", track your hours," : nil} and get paid." %>
 </h1>
 <p class="mb-4">
   It takes a few minutes to sign up–we'll need your personal information and your bank account info to pay you out.

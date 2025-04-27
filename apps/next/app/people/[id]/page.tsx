@@ -236,8 +236,6 @@ export default function ContractorPage() {
         ) : null
       }
     >
-      {/* Trial-related modal removed */}
-
       <Modal
         open={endModalOpen}
         onClose={() => setEndModalOpen(false)}

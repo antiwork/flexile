@@ -13,7 +13,6 @@ import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
-
 import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
@@ -37,10 +36,7 @@ function Create() {
   const [startDate, setStartDate] = useState(formatISO(new Date(), { representation: "date" }));
 
   useOnChange(() => {
-    if (role) {
-      setRateUsd(role.payRateInSubunits / 100);
-      setHours(0);
-    }
+    if (role) setRateUsd(role.payRateInSubunits / 100);
   }, [role]);
 
   const valid =
@@ -77,7 +73,7 @@ function Create() {
           <div className="grid gap-4">
             <Input value={email} onChange={setEmail} type="email" label="Email" placeholder="Contractor's email" />
             <Input value={startDate} onChange={setStartDate} type="date" label="Start date" />
-            <RoleSelector value={roleId ? String(roleId) : null} onChange={setRoleId} />
+            <RoleSelector value={roleId ?? null} onChange={setRoleId} />
             <div className="grid gap-2">
               <Label htmlFor="rate">Rate</Label>
               <NumberInput

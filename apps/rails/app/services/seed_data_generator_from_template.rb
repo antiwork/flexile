@@ -70,7 +70,6 @@ class SeedDataGeneratorFromTemplate
         enable_feature_flags!(company, company_data.fetch("feature_flags"))
         create_convertible_investments!(company, company_data)
         create_dividend_rounds!(company, company_data)
-        create_financing_rounds!(company, company_data)
         create_tender_offer!(company, company_data.fetch("tender_offer"))
         create_equity_buyback_rounds!(company, company_data)
         create_company_monthly_financial_reports!(company, company_data.fetch("company_monthly_financial_reports"))
@@ -300,10 +299,6 @@ class SeedDataGeneratorFromTemplate
         )
         created_at += 1.year
       end
-    end
-
-    def create_financing_rounds!(company, company_data)
-      nil
     end
 
     def create_equity_buyback_rounds!(company, company_data)
@@ -855,9 +850,7 @@ class SeedDataGeneratorFromTemplate
 
     def create_company_role!(company, data)
       company_role = company.company_roles.build(data.fetch("model_attributes"))
-      rate_attributes = data.fetch("company_role_rate").fetch("model_attributes").dup
-      rate_attributes.delete(:trial_pay_rate_in_subunits) if rate_attributes.key?(:trial_pay_rate_in_subunits)
-      company_role.build_rate(rate_attributes)
+      company_role.build_rate(data.fetch("company_role_rate").fetch("model_attributes"))
       company_role.save!
       print_message("Created #{company_role.pay_rate_type} #{company_role.name} role.")
       company_role
