@@ -236,7 +236,7 @@ export default function HomePage() {
                   >
                     <div
                       className={cn(
-                        "flex h-10 w-10 items-center justify-center rounded-full border border-solid border-black",
+                        "border-muted flex h-10 w-10 items-center justify-center rounded-full border border-solid",
                         { "bg-green text-white": currentEquityTab === index },
                       )}
                     >
@@ -244,12 +244,12 @@ export default function HomePage() {
                     </div>
                     {tab.label}
                     {index < 2 ? (
-                      <div className="hidden h-0.5 w-8 border-t-0 border-r-0 border-b border-l-0 border-dashed border-black md:block"></div>
+                      <div className="border-muted hidden h-0.5 w-8 border-t-0 border-r-0 border-b border-l-0 border-dashed md:block"></div>
                     ) : null}
                   </button>
                 ))}
               </div>
-              <div className="overflow-hidden rounded-xl border border-solid border-black">
+              <div className="border-muted overflow-hidden rounded-xl border border-solid">
                 {equityTabs.map((tab, index) => (
                   <div
                     key={index}

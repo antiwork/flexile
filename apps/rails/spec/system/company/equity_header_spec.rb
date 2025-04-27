@@ -42,20 +42,18 @@ RSpec.describe "Equity section navigation" do
 
     it "shows the expected nav link and tabs if all features are enabled" do
       Flipper.enable(:cap_table, company)
-      Flipper.enable(:financing_rounds, company)
       company.update!(dividends_allowed: true, equity_grants_enabled: true)
 
       visit root_path
 
       click_on "Equity"
-      expect(page).to have_current_path(spa_company_financing_rounds_path(company.external_id))
+      expect(page).to have_current_path(spa_company_cap_table_path(company.external_id))
       expect(page).to have_link("Options", href: spa_company_equity_grants_path(company.external_id))
       expect(page).to_not have_link("Shares")
       expect(page).to_not have_link("Convertibles")
       expect(page).to have_link("Dividends", href: spa_company_dividend_rounds_path(company.external_id))
       expect(page).to have_link("Option pools", href: spa_company_option_pools_path(company.external_id))
       expect(page).to have_link("Cap table", href: spa_company_cap_table_path(company.external_id))
-      expect(page).to have_link("Rounds", href: spa_company_financing_rounds_path(company.external_id))
     end
   end
 
@@ -110,21 +108,18 @@ RSpec.describe "Equity section navigation" do
       expect(page).to have_current_path(spa_company_dividends_path(company.external_id))
     end
 
-    it "shows the expected nav link and tabs if the equity_grants, tender_offers & financing_rounds features are " \
-       "enabled" do
-      Flipper.enable(:financing_rounds, company)
+    it "shows the expected nav link and tabs if the equity_grants and tender_offers features are enabled" do
       company.update!(equity_grants_enabled: true, tender_offers_enabled: true)
 
       visit root_path
 
       click_on "Equity"
-      expect(page).to have_current_path(spa_company_financing_rounds_path(company.external_id))
+      expect(page).to have_current_path(spa_company_dividends_path(company.external_id))
       expect(page).to have_link("Options", href: spa_company_equity_grants_path(company.external_id))
       expect(page).to have_link("Shares", href: spa_company_shares_path(company.external_id))
       expect(page).to have_link("Convertibles", href: spa_company_convertibles_path(company.external_id))
       expect(page).to have_link("Dividends", href: spa_company_dividends_path(company.external_id))
       expect(page).to have_link("Tender offers", href: spa_company_tender_offers_path(company.external_id))
-      expect(page).to have_link("Rounds", href: spa_company_financing_rounds_path(company.external_id))
       expect(page).not_to have_link("Option pools")
     end
   end

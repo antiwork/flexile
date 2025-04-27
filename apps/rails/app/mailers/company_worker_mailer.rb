@@ -4,15 +4,6 @@ class CompanyWorkerMailer < ApplicationMailer
   helper :application
   default from: SUPPORT_EMAIL_WITH_NAME
 
-  def contract_ended(company_worker_id: nil, company_contractor_id: nil)
-    id = find_id!(company_worker_id:, company_contractor_id:)
-    @company_worker = CompanyWorker.find(id)
-    return unless @company_worker.alumni?
-    @company = @company_worker.company
-    @user = @company_worker.user
-    mail(to: @user.email, reply_to: @company.email, subject: "Your contract with #{@company.name} is ending")
-  end
-
   def invite_worker(company_worker_id)
     @company_worker = CompanyWorker.find(company_worker_id)
     @company = @company_worker.company

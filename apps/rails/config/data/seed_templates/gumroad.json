@@ -31,7 +31,6 @@
         "dividends_allowed": true,
         "equity_grants_enabled": true,
         "is_gumroad": true,
-        "financing_rounds_enabled": true,
         "tender_offers_enabled": true,
         "cap_table_enabled": true,
         "equity_compensation_enabled": true,
@@ -87,46 +86,6 @@
           "account_number": "123456789"
         }
       },
-      "financing_rounds": [
-        {
-          "name": "Series Seed",
-          "issued_at": "2023-01-01",
-          "shares_issued": 1000000,
-          "price_per_share_cents": 120,
-          "amount_raised_cents": 120000000,
-          "post_money_valuation_cents": 500000000,
-          "status": "Issued",
-          "investors": [
-            {
-              "name": "ABC Ventures",
-              "amount_invested_cents": 22000000
-            },
-            {
-              "name": "Richie Rich",
-              "amount_invested_cents": 98000000
-            }
-          ]
-        },
-        {
-          "name": "Series A",
-          "issued_at": "2024-01-01",
-          "shares_issued": 2000000,
-          "price_per_share_cents": 220,
-          "amount_raised_cents": 440000000,
-          "post_money_valuation_cents": 1000000000,
-          "status": "Issued",
-          "investors": [
-            {
-              "name": "XYZ Ventures",
-              "amount_invested_cents": 220000000
-            },
-            {
-              "name": "A & B Investments",
-              "amount_invested_cents": 220000000
-            }
-          ]
-        }
-      ],
       "share_classes": [
         {
           "model_attributes": {
@@ -334,7 +293,6 @@
             "company_role_rate": {
               "model_attributes": {
                 "pay_rate_in_subunits": 19950,
-                "trial_pay_rate_in_subunits": 5225,
                 "pay_rate_type": "hourly"
               }
             }
@@ -490,7 +448,6 @@
             "company_role_rate": {
               "model_attributes": {
                 "pay_rate_in_subunits": 19800,
-                "trial_pay_rate_in_subunits": 9800,
                 "pay_rate_type": "hourly"
               }
             }
@@ -537,7 +494,6 @@
             "company_role_rate": {
               "model_attributes": {
                 "pay_rate_in_subunits": 100000,
-                "trial_pay_rate_in_subunits": 50000,
                 "pay_rate_type": "project_based"
               }
             }
@@ -581,7 +537,6 @@
             "company_role_rate": {
               "model_attributes": {
                 "pay_rate_in_subunits": 12400,
-                "trial_pay_rate_in_subunits": 6100,
                 "pay_rate_type": "hourly"
               }
             }

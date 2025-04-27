@@ -15,7 +15,6 @@ RSpec.describe InviteWorker do
       hours_per_week: 10,
       role_id: role.external_id,
       pay_rate_in_subunits: 50_00,
-      on_trial: true,
     }
   end
   let(:current_user) { create(:user, email: "flexi.bob@example.org", legal_name: "Flexi Bob") }
@@ -43,7 +42,6 @@ RSpec.describe InviteWorker do
     expect(contractor.started_at).to eq(yesterday)
     expect(contractor.hours_per_week).to eq(10)
     expect(contractor.pay_rate_in_subunits).to eq(50_00)
-    expect(contractor.on_trial).to eq(true)
     expect(contractor.company_role).to eq(role)
 
     contract = user.documents.consulting_contract.first
@@ -109,7 +107,6 @@ RSpec.describe InviteWorker do
         expect(contractor.started_at).to eq(yesterday)
         expect(contractor.hours_per_week).to eq(10)
         expect(contractor.pay_rate_in_subunits).to eq(50_00)
-        expect(contractor.on_trial).to eq(true)
         expect(contractor.company_role).to eq(role)
       end
     end
@@ -137,7 +134,6 @@ RSpec.describe InviteWorker do
       expect(company_worker.ended_at).to eq(nil)
       expect(company_worker.hours_per_week).to eq(10)
       expect(company_worker.pay_rate_in_subunits).to eq(50_00)
-      expect(company_worker.on_trial).to eq(true)
       expect(company_worker.company_role).to eq(role)
     end
   end

@@ -16,7 +16,6 @@ class CompanyWorkerDashboard < Administrate::BaseDashboard
     started_at: Field::DateTime,
     hours_per_week: Field::Number,
     pay_rate_in_subunits: Field::Number,
-    on_trial: Field::Boolean,
     company_role: Field::BelongsTo,
     created_at: Field::DateTime,
     updated_at: Field::DateTime,
@@ -43,7 +42,6 @@ class CompanyWorkerDashboard < Administrate::BaseDashboard
     started_at
     hours_per_week
     pay_rate_in_subunits
-    on_trial
     company_role
     created_at
     updated_at
@@ -58,7 +56,6 @@ class CompanyWorkerDashboard < Administrate::BaseDashboard
     started_at
     hours_per_week
     pay_rate_in_subunits
-    on_trial
     company_role
   ].freeze
 

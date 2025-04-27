@@ -45,14 +45,13 @@ test.describe("Company roles", () => {
     await page.getByLabel("Rate", { exact: true }).fill("1000");
     expect(await page.getByLabel("Update rate for all contractors with this role").isChecked()).toBe(false);
     await expect(page.getByText("1 contractor has a different rate that won't be updated")).toBeVisible();
-    await page.getByLabel("Job description").fill("Job description");
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.locator("tbody tr > td")).toHaveText(
       ["Role 1", `${formatMoneyFromCents(100000)} / hr`, "Copy link\nEdit"],
       { useInnerText: true },
     );
     ({ role, rate } = await fetchRole());
-    expect(role).toMatchObject({ name: "Role 1", jobDescription: "<p>Job description</p>" });
+    expect(role).toMatchObject({ name: "Role 1" });
     expect(rate).toMatchObject({ payRateInSubunits: 100000 });
     expect(sentEmails).toHaveLength(0);
 
@@ -64,7 +63,7 @@ test.describe("Company roles", () => {
     await page.getByRole("button", { name: "Yes, change" }).click();
     await expect(page.getByText("Edit role")).not.toBeVisible();
     ({ role, rate } = await fetchRole());
-    expect(role).toMatchObject({ name: "Role 1", jobDescription: "<p>Job description</p>" });
+    expect(role).toMatchObject({ name: "Role 1" });
     expect(rate).toMatchObject({ payRateInSubunits: 100000 });
     companyContractor = assertDefined(
       await db.query.companyContractors.findFirst({ where: eq(companyContractors.id, companyContractor.id) }),

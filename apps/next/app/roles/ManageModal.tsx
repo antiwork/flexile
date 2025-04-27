@@ -9,7 +9,6 @@ import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import RadioButtons from "@/components/RadioButtons";
-import { Editor as RichTextEditor } from "@/components/RichText";
 import Select from "@/components/Select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -51,9 +50,6 @@ const ManageModal = ({
       name: "",
       payRateInSubunits: 0,
       payRateType: PayRateType.Hourly,
-      trialEnabled: false,
-      trialPayRateInSubunits: 0,
-      jobDescription: "",
       capitalizedExpense: 50,
       expenseAccountId: null,
       expenseCardEnabled: false,
@@ -61,9 +57,7 @@ const ManageModal = ({
       expenseCardsCount: 0,
     };
     const lastRole = roles[0];
-    return lastRole
-      ? { ...defaults, ...pick(lastRole, "payRateInSubunits", "trialPayRateInSubunits", "capitalizedExpense") }
-      : defaults;
+    return lastRole ? { ...defaults, ...pick(lastRole, "payRateInSubunits", "capitalizedExpense") } : defaults;
   };
   const [role, setRole] = useState(getSelectedRole);
   useEffect(() => setRole(getSelectedRole()), [id]);
@@ -86,10 +80,6 @@ const ManageModal = ({
     },
   });
   const updateRole = (update: Partial<Role>) => setRole((prev) => ({ ...prev, ...update }));
-
-  useEffect(() => {
-    if (!role.id) setRole((prev) => ({ ...prev, trialPayRateInSubunits: Math.floor(prev.payRateInSubunits / 2) }));
-  }, [role.payRateInSubunits, role.id]);
 
   const onSave = () => {
     if (contractorsToUpdate.length > 0 && updateContractorRates && role.id) {
@@ -217,24 +207,6 @@ const ManageModal = ({
             />
           </>
         ) : null}
-        {role.id && role.payRateType === PayRateType.Hourly ? (
-          <Switch
-            checked={role.trialEnabled}
-            onCheckedChange={(trialEnabled) => updateRole({ trialEnabled })}
-            label="Start with trial period"
-          />
-        ) : null}
-        {role.id && role.trialEnabled ? (
-          <div className="grid gap-2">
-            <Label htmlFor="trial-rate">Rate during trial period</Label>
-            <NumberInput
-              id="trial-rate"
-              value={role.trialPayRateInSubunits / 100}
-              onChange={(value) => updateRole({ trialPayRateInSubunits: (value ?? 0) * 100 })}
-              prefix="$"
-            />
-          </div>
-        ) : null}
         {role.id ? (
           <Switch
             checked={role.expenseCardEnabled}
@@ -263,13 +235,6 @@ const ManageModal = ({
             <ExclamationTriangleIcon />
             <AlertDescription>{role.expenseCardsCount} issued cards will no longer be usable.</AlertDescription>
           </Alert>
-        ) : null}
-        {role.id ? (
-          <RichTextEditor
-            value={role.jobDescription}
-            onChange={(jobDescription) => updateRole({ jobDescription })}
-            label="Job description"
-          />
         ) : null}
         {expenseAccounts.length > 0 ? (
           <Select

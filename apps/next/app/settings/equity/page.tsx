@@ -35,9 +35,6 @@ export default function Equity() {
   const submitMutation = trpc.equitySettings.update.useMutation();
 
   const getNoticeMessage = () => {
-    if (worker.onTrial) {
-      return "You'll be able to select an equity split after your trial period.";
-    }
     if (allocation?.status === "pending_grant_creation" || allocation?.status === "pending_approval") {
       return "Your allocation is pending board approval. You can submit invoices for this year, but they're only going to be paid once the allocation is approved.";
     }

@@ -72,7 +72,7 @@ const HoldingsTable = ({ holdings, caption }: { holdings: Holding[]; caption: st
   </Table>
 );
 
-export default function TenderOfferView() {
+export default function BuybackView() {
   const { id } = useParams<{ id: string }>();
   const company = useCurrentCompany();
   const user = useCurrentUser();
@@ -196,7 +196,7 @@ export default function TenderOfferView() {
   const buttonTooltip = !signed ? "Please sign the letter of transmittal before submitting a bid" : null;
 
   return (
-    <MainLayout title='Tender offer details ("Sell Elections")'>
+    <MainLayout title='Buyback details ("Sell Elections")'>
       <Figures
         items={[
           { caption: "Start date", value: formatDate(data.startsAt) },
@@ -263,7 +263,7 @@ export default function TenderOfferView() {
                       </p>
                     </div>
                   </div>
-                  <h2 className="text-xl font-bold">Tender offer details</h2>
+                  <h2 className="text-xl font-bold">Buyback details</h2>
                   <div className="overflow-x-auto">
                     <Table>
                       <TableCaption>Company financials (unaudited)</TableCaption>
@@ -295,7 +295,7 @@ export default function TenderOfferView() {
                     <Button variant="outline" asChild>
                       <a href={data.attachment ?? ""}>
                         <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
-                        Download tender offer documents
+                        Download buyback documents
                       </a>
                     </Button>
                   </p>

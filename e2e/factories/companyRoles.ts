@@ -15,7 +15,6 @@ export const companyRolesFactory = {
       .values({
         companyId: overrides.companyId || (await companiesFactory.create()).company.id,
         name: faker.person.jobTitle(),
-        jobDescription: faker.lorem.sentence(),
         capitalizedExpense: faker.number.int({ min: 0, max: 80 }),
         ...overrides,
       })
@@ -28,7 +27,6 @@ export const companyRolesFactory = {
         companyRoleId: role.id,
         payRateInSubunits: faker.number.int({ min: 10000, max: 20000 }),
         payRateType: PayRateType.Hourly,
-        trialPayRateInSubunits: Math.floor(faker.number.int({ min: 10000, max: 20000 }) / 2),
         ...rateOverrides,
       })
       .returning();
