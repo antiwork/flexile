@@ -1,6 +1,5 @@
-import { companies, companyContractors } from "@/db/schema";
+import { companyContractors } from "@/db/schema";
 
-type Company = typeof companies.$inferSelect;
 type CompanyContractor = typeof companyContractors.$inferSelect;
 export const policies = {
   "dummy.policy": (_ctx) => true,
@@ -8,7 +7,7 @@ export const policies = {
   string,
   (ctx: {
     user: unknown;
-    company: Pick<Company, "id">;
+    company: { id: string | bigint };
     companyAdministrator: unknown;
     companyContractor: Pick<CompanyContractor, "endedAt"> | undefined;
     companyInvestor: unknown;
