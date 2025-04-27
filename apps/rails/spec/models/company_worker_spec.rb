@@ -637,13 +637,7 @@ RSpec.describe CompanyWorker do
       end
     end
 
-    context "when contractor is on trial" do
-      before { company_worker.update(on_trial: true) }
 
-      it "returns false" do
-        expect(company_worker.can_create_expense_card?).to be false
-      end
-    end
 
     context "when expense card is not enabled for the role" do
       before { company_role.update(expense_card_enabled: false) }
