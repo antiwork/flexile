@@ -1,7 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { formatISO } from "date-fns";
-import { and, desc, eq, gte, inArray, isNull, lt, lte, not, notInArray } from "drizzle-orm";
-import { union } from "drizzle-orm/pg-core";
+import { and, desc, eq, gte, inArray, isNull, lte } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
@@ -9,9 +8,7 @@ import { byExternalId, db } from "@/db";
 import {
   activeStorageAttachments,
   activeStorageBlobs,
-  companies,
   companyContractors,
-  invoiceApprovals,
   invoiceLineItems,
   invoices,
   users,
@@ -26,52 +23,9 @@ import OneOffInvoiceCreated from "@/trpc/routes/OneOffInvoiceCreated";
 import { latestUserComplianceInfo, simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
 
-const actionableByUserInvoiceIds = async (userId: bigint, company: typeof companies.$inferSelect) => {
-  const payableQuery = db
-    .select({ id: invoices.id })
-    .from(invoices)
-    .where(
-      and(
-        eq(invoices.companyId, company.id),
-        inArray(invoices.status, ["approved", "failed"]),
-        gte(invoices.invoiceApprovalsCount, company.requiredInvoiceApprovalCount),
-        requiresAcceptanceByPayeeFilter ? not(requiresAcceptanceByPayeeFilter) : undefined,
-      ),
-    );
-
-  const approvedInvoiceIds = await db.query.invoiceApprovals.findMany({
-    columns: { invoiceId: true },
-    where: eq(invoiceApprovals.approverId, userId),
-  });
-
-  const needsApprovalQuery = db
-    .select({ id: invoices.id })
-    .from(invoices)
-    .where(
-      and(
-        eq(invoices.companyId, company.id),
-        inArray(invoices.status, ["received", "approved", "failed"]),
-        lt(invoices.invoiceApprovalsCount, company.requiredInvoiceApprovalCount),
-        notInArray(
-          invoices.id,
-          approvedInvoiceIds.map((row) => row.invoiceId),
-        ),
-      ),
-    );
-
-  const result = await union(payableQuery, needsApprovalQuery);
-
-  return result.map((row) => row.id);
-};
-
 const requiresAcceptanceByPayee = (
   invoice: Pick<typeof invoices.$inferSelect, "createdById" | "userId" | "acceptedAt">,
 ) => invoice.createdById !== invoice.userId && invoice.acceptedAt === null;
-
-const requiresAcceptanceByPayeeFilter = and(
-  not(eq(invoices.createdById, invoices.userId)),
-  isNull(invoices.acceptedAt),
-);
 
 const INITIAL_ADMIN_INVOICE_NUMBER = "O-0001";
 const getNextAdminInvoiceNumber = async (companyId: bigint, userId: bigint) => {
@@ -345,7 +299,6 @@ export const invoicesRouter = createRouter({
     .input(
       z.object({
         contractorId: z.string().optional(),
-        invoiceFilter: z.enum(["history", "actionable"]).optional(),
         after: z.string().optional(),
         before: z.string().optional(),
       }),
@@ -365,16 +318,6 @@ export const invoicesRouter = createRouter({
       );
       if (input.before) where = and(where, lte(invoices.invoiceDate, input.before));
       if (input.after) where = and(where, gte(invoices.invoiceDate, input.after));
-      if (input.invoiceFilter) {
-        const actionableIds = await actionableByUserInvoiceIds(ctx.user.id, ctx.company);
-        where = and(
-          where,
-          requiresAcceptanceByPayeeFilter ? not(requiresAcceptanceByPayeeFilter) : undefined,
-          input.invoiceFilter === "actionable"
-            ? inArray(invoices.id, actionableIds)
-            : notInArray(invoices.id, actionableIds),
-        );
-      }
       const rows = await db.query.invoices.findMany({
         with: {
           rejector: { columns: simpleUser.columns },

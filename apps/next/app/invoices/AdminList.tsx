@@ -3,7 +3,6 @@ import { CheckCircleIcon, InformationCircleIcon } from "@heroicons/react/24/outl
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import { partition } from "lodash-es";
 import Link from "next/link";
-import { parseAsStringLiteral, useQueryState } from "nuqs";
 import React, { Fragment, useMemo, useState } from "react";
 import StripeMicrodepositVerification from "@/app/administrator/settings/StripeMicrodepositVerification";
 import {
@@ -36,10 +35,6 @@ import { formatDate, formatDuration } from "@/utils/time";
 type Invoice = RouterOutput["invoices"]["list"][number];
 export default function AdminList() {
   const company = useCurrentCompany();
-  const [invoiceFilter] = useQueryState(
-    "tab",
-    parseAsStringLiteral(["history", "actionable"]).withDefault("actionable"),
-  );
   const [openModal, setOpenModal] = useState<"approve" | "reject" | null>(null);
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
   const isActionable = useIsActionable();
@@ -47,7 +42,6 @@ export default function AdminList() {
   const areTaxRequirementsMet = useAreTaxRequirementsMet();
   const [data, { refetch }] = trpc.invoices.list.useSuspenseQuery({
     companyId: company.id,
-    invoiceFilter,
   });
 
   const approveInvoices = useApproveInvoices(() => {
@@ -67,40 +61,15 @@ export default function AdminList() {
             <div className="text-xs text-gray-500">{info.row.original.contractor.role.name}</div>
           </>
         ),
-        meta: {
-          filterOptions: [...new Set(data.map((invoice) => invoice.billFrom))],
-        },
       }),
-      columnHelper.accessor("invoiceDate", {
-        header: "Sent on",
-        cell: (info) => (info.getValue() ? formatDate(info.getValue()) : "N/A"),
-        meta: {
-          filterOptions: [
-            ...new Set(
-              data
-                .map((invoice) => (invoice.invoiceDate ? new Date(invoice.invoiceDate).getFullYear().toString() : ""))
-                .filter(Boolean),
-            ),
-          ],
-        },
-        filterFn: (row, _, filterValue) =>
-          Array.isArray(filterValue) && row.original.invoiceDate
-            ? filterValue.includes(new Date(row.original.invoiceDate).getFullYear().toString())
-            : true,
-      }),
-      columnHelper.accessor("totalMinutes", {
-        header: "Hours",
-        cell: (info) => {
-          const value = info.getValue();
-          return value ? formatDuration(Number(value)) : "N/A";
-        },
-        meta: { numeric: true },
-      }),
-      columnHelper.accessor("totalAmountInUsdCents", {
-        header: "Amount",
-        cell: (info) => (info.getValue() ? formatMoneyFromCents(info.getValue()) : "N/A"),
-        meta: { numeric: true },
-      }),
+      columnHelper.simple("invoiceDate", "Sent on", (value) => (value ? formatDate(value) : "N/A")),
+      columnHelper.simple("totalMinutes", "Hours", (value) => (value ? formatDuration(value) : "N/A"), "numeric"),
+      columnHelper.simple(
+        "totalAmountInUsdCents",
+        "Amount",
+        (value) => (value ? formatMoneyFromCents(value) : "N/A"),
+        "numeric",
+      ),
       columnHelper.accessor("status", {
         header: "Status",
         cell: (info) => <StatusWithTooltip invoice={info.row.original} />,
@@ -120,10 +89,8 @@ export default function AdminList() {
     columns,
     data,
     getRowId: (invoice) => invoice.id,
-    enableRowSelection: invoiceFilter === "actionable",
     initialState: {
       sorting: [{ id: "invoiceDate", desc: true }],
-      columnFilters: invoiceFilter === "actionable" ? [{ id: "status", value: ["pending"] }] : [],
     },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -137,14 +104,12 @@ export default function AdminList() {
     <MainLayout
       title="Invoicing"
       headerActions={
-        invoiceFilter === "history" && (
-          <Button variant="outline" asChild>
-            <a href={export_company_invoices_path(company.id)}>
-              <ArrowDownTrayIcon className="size-4" />
-              Download CSV
-            </a>
-          </Button>
-        )
+        <Button variant="outline" asChild>
+          <a href={export_company_invoices_path(company.id)}>
+            <ArrowDownTrayIcon className="size-4" />
+            Download CSV
+          </a>
+        </Button>
       }
     >
       <StripeMicrodepositVerification />
@@ -173,7 +138,7 @@ export default function AdminList() {
             </Alert>
           ) : null}
 
-          {invoiceFilter === "actionable" && data.some((invoice) => !areTaxRequirementsMet(invoice)) && (
+          {data.some((invoice) => !areTaxRequirementsMet(invoice)) && (
             <Alert variant="destructive">
               <ExclamationTriangleIcon />
               <AlertTitle>Missing tax information.</AlertTitle>
@@ -183,7 +148,7 @@ export default function AdminList() {
             </Alert>
           )}
 
-          {invoiceFilter === "actionable" && selectedRows.length > 0 && (
+          {selectedApprovableInvoices.length > 0 && (
             <Alert className="fixed right-0 bottom-0 left-0 z-50 flex items-center justify-between rounded-none border-r-0 border-b-0 border-l-0">
               <div className="flex items-center gap-2">
                 <InformationCircleIcon className="size-4" />
