@@ -334,7 +334,6 @@
             "company_role_rate": {
               "model_attributes": {
                 "pay_rate_in_subunits": 19950,
-                "trial_pay_rate_in_subunits": 5225,
                 "pay_rate_type": "hourly"
               }
             }
@@ -490,7 +489,6 @@
             "company_role_rate": {
               "model_attributes": {
                 "pay_rate_in_subunits": 19800,
-                "trial_pay_rate_in_subunits": 9800,
                 "pay_rate_type": "hourly"
               }
             }
@@ -537,7 +535,6 @@
             "company_role_rate": {
               "model_attributes": {
                 "pay_rate_in_subunits": 100000,
-                "trial_pay_rate_in_subunits": 50000,
                 "pay_rate_type": "project_based"
               }
             }
@@ -581,7 +578,6 @@
             "company_role_rate": {
               "model_attributes": {
                 "pay_rate_in_subunits": 12400,
-                "trial_pay_rate_in_subunits": 6100,
                 "pay_rate_type": "hourly"
               }
             }
