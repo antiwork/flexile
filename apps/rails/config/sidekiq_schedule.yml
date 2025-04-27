@@ -8,10 +8,7 @@ wise_top_up_reminder_job:
   class: WiseTopUpReminderJob
   description: Sends Slack message to remind us to top up Flexile's Wise account
 
-company_administrator_digest_email_job:
-  cron: "0 16 * * *" # Every day at UTC 16:00
-  class: CompanyAdministratorDigestEmailJob
-  description: Sends digest email to company administrators
+# Digest email job removed
 
 company_administrator_tax_details_reminder_job:
   cron: "0 16 5 1 *" # the 5th of January at UTC 16:00

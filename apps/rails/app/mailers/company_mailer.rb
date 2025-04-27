@@ -26,35 +26,6 @@ class CompanyMailer < ApplicationMailer
     mail(to: administrator.email, subject: "🔴 Action needed: complete #{@company.display_name}'s tax info")
   end
 
-  def digest(admin_id:)
-    @administrator = CompanyAdministrator.find(admin_id)
-    @company = @administrator.company
-    @invoices_pending_approval_from_recipient = @company.invoices_pending_approval_from(@administrator).includes(:user)
-    @invoices_pending_approval_from_recipient_count = @invoices_pending_approval_from_recipient.count
-    @open_invoices = @company.open_invoices_for_digest_email.includes(:user)
-    @invoices_pending_admin_approval = @open_invoices.where.not(id: @invoices_pending_approval_from_recipient.pluck(:id))
-    @invoices_pending_admin_approval_count = @invoices_pending_admin_approval.count
-    @rejected_invoices = @company.rejected_invoices_not_resubmitted
-    @rejected_invoices_count = @rejected_invoices.count
-    @date = Date.current.to_fs(:long)
-    @records_per_section = DIGEST_EMAIL_RECORDS_PER_SECTION
-    @processing_invoices = @company.processing_invoices_for_digest_email
-    @processing_invoices_count = @processing_invoices.count
-
-    # Add these lines to fetch pending exercise payments
-    @pending_exercise_payments = @company.equity_grant_exercises.where(status: EquityGrantExercise::SIGNED)
-    @pending_exercise_payments_count = @pending_exercise_payments.count
-    @pending_exercise_payments = @pending_exercise_payments.includes(company_investor: :user).order(created_at: :desc).limit(DIGEST_EMAIL_RECORDS_PER_SECTION)
-
-    # Update the subject line to include pending exercise payments
-    subjects = []
-    subjects << "#{@invoices_pending_approval_from_recipient.count} #{'invoice'.pluralize(@invoices_pending_approval_from_recipient.count)} #{'requires'.pluralize(@invoices_pending_approval_from_recipient.count)} your approval" if @invoices_pending_approval_from_recipient.present?
-    subjects << "#{@rejected_invoices_count} rejected #{'invoice'.pluralize(@rejected_invoices_count)}" if @rejected_invoices.present?
-    subjects << "#{@pending_exercise_payments_count} exercise #{'request'.pluralize(@pending_exercise_payments_count)}" if @pending_exercise_payments.present?
-    subject = subjects.join(", ")
-
-    mail(to: @administrator.email, subject:)
-  end
 
   def consolidated_invoice_receipt(user_id:, consolidated_payment_id:, processed_date:)
     user = User.find(user_id)
