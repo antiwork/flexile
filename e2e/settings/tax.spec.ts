@@ -88,7 +88,7 @@ test.describe("Tax settings", () => {
 
       await page.locator("label").filter({ hasText: "Business" }).click();
       await expect(page.getByLabel("Type")).toBeValid();
-      await expect(page.getByLabel("Tax classification")).toBeValid();
+      await expect(page.getByLabel("Tax classification")).not.toBeVisible();
       await selectComboboxOption(page, "Country of citizenship", "Mexico");
       await selectComboboxOption(page, "Country of incorporation", "United States");
       await page.getByLabel("Tax ID (EIN)").fill("111111111");
@@ -96,26 +96,22 @@ test.describe("Tax settings", () => {
       await page.getByRole("button", { name: "Save changes" }).click();
 
       await expect(page.getByLabel("Business legal name")).not.toBeValid();
-      await expect(page.getByLabel("Your EIN can't have all identical digits.")).toBeVisible();
-
-      await page.getByLabel("Business legal name").fill("Flexile Inc.");
-      await page.getByRole("button", { name: "Save changes" }).click();
-
       await expect(page.getByText("Please select a business type.")).toBeVisible();
 
-      await page.getByRole("button", { name: "Save changes" }).click();
-      await selectComboboxOption(page, "Type", BusinessType.LLC.toString());
+      await page.getByLabel("Business legal name").fill("Flexile Inc.");
+      await selectComboboxOption(page, "Type", "LLC");
+
       await page.getByRole("button", { name: "Save changes" }).click();
 
       await expect(page.getByText("Please select a tax classification.")).toBeVisible();
 
-      await page.getByRole("button", { name: "Save changes" }).click();
-
-      await page.getByLabel("Business legal name").fill("Flexile Inc.");
-      await selectComboboxOption(page, "Tax classification", TaxClassification.Partnership.toString());
-      await page.getByLabel("Tax ID (EIN)").fill("55-5666789");
+      await selectComboboxOption(page, "Tax classification", "Partnership");
       await page.getByLabel("Date of incorporation (optional)").fill("1980-06-07");
       await selectComboboxOption(page, "State", "New York");
+      await page.getByRole("button", { name: "Save changes" }).click();
+
+      await expect(page.getByText("Your EIN can't have all identical digits.")).toBeVisible();
+      await page.getByLabel("Tax ID (EIN)").fill("55-5666789");
       await page.getByRole("button", { name: "Save changes" }).click();
 
       await expect(page.getByText("W-9 Certification and Tax Forms Delivery")).toBeVisible();
@@ -378,8 +374,8 @@ test.describe("Tax settings", () => {
 
       await page.locator("label").filter({ hasText: "Business" }).click();
       await page.getByLabel("Business legal name").fill("Test Business LLC");
-      await selectComboboxOption(page, "Type", BusinessType.LLC.toString());
-      await selectComboboxOption(page, "Tax classification", TaxClassification.Partnership.toString());
+      await selectComboboxOption(page, "Type", "LLC");
+      await selectComboboxOption(page, "Tax classification", "Partnership");
 
       await page.getByLabel("Tax ID (EIN)").fill("123456789");
 

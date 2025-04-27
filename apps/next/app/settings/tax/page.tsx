@@ -154,17 +154,15 @@ export default function TaxPage() {
     const tinName = getTinName(values.business_entity);
 
     if (!isForeign) {
-      if (values.tax_id.length !== 9) {
-        form.setError("tax_id", { message: `Please check that your ${tinName} is 9 numbers long.` });
-      } else if (/^(\d)\1{8}$/u.test(values.tax_id)) {
-        form.setError("tax_id", { message: `Your ${tinName} can't have all identical digits.` });
-      }
+      if (values.tax_id.length !== 9)
+        return form.setError("tax_id", { message: `Please check that your ${tinName} is 9 numbers long.` });
+      else if (/^(\d)\1{8}$/u.test(values.tax_id))
+        return form.setError("tax_id", { message: `Your ${tinName} can't have all identical digits.` });
     }
 
-    if (values.country_code === "US" && !/(^\d{5}|\d{9}|\d{5}[- ]\d{4})$/u.test(values.zip_code)) {
-      form.setError("zip_code", { message: "Please add a valid ZIP code (5 or 9 digits)." });
-    }
-    if (form.formState.isValid) setShowCertificationModal(true);
+    if (values.country_code === "US" && !/(^\d{5}|\d{9}|\d{5}[- ]\d{4})$/u.test(values.zip_code))
+      return form.setError("zip_code", { message: "Please add a valid ZIP code (5 or 9 digits)." });
+    setShowCertificationModal(true);
   });
 
   return (
