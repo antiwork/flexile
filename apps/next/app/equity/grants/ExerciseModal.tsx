@@ -93,27 +93,34 @@ const ExerciseModal = ({
   });
 
   return (
-    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="ml-auto min-h-screen md:mr-0 max-w-prose">
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="ml-auto min-h-screen max-w-prose md:mr-0">
         <DialogHeader>
           <DialogTitle>Exercise your options</DialogTitle>
         </DialogHeader>
         {signing ? (
-          <DocusealForm
-            src={`https://docuseal.com/d/${env.NEXT_PUBLIC_EQUITY_EXERCISE_DOCUSEAL_ID}`}
-            externalId={new Date().toISOString()}
-            onComplete={(data) =>
-              submitMutation.mutate(z.object({ submission_id: z.number() }).parse(data).submission_id)
-            }
-            values={{
-              __companyName: company.name,
-              __name: user.legalName,
-              __email: user.email,
-              __address1: user.address.street_address,
-              __address2: `${user.address.city}, ${user.address.state} ${user.address.zip_code}`,
-              __address3: user.address.country,
-            }}
-          />
+          <>
+            <DocusealForm
+              src={`https://docuseal.com/d/${env.NEXT_PUBLIC_EQUITY_EXERCISE_DOCUSEAL_ID}`}
+              externalId={new Date().toISOString()}
+              onComplete={(data) =>
+                submitMutation.mutate(z.object({ submission_id: z.number() }).parse(data).submission_id)
+              }
+              values={{
+                __companyName: company.name,
+                __name: user.legalName,
+                __email: user.email,
+                __address1: user.address.street_address,
+                __address2: `${user.address.city}, ${user.address.state} ${user.address.zip_code}`,
+                __address3: user.address.country,
+              }}
+            />
+            <DialogFooter>
+              <Button onClick={() => setSigning(true)} disabled={optionsToExercise === 0}>
+                Proceed
+              </Button>
+            </DialogFooter>
+          </>
         ) : (
           <>
             <RangeInput
@@ -206,14 +213,6 @@ const ExerciseModal = ({
                 </CardContent>
               </Card>
             </div>
-            
-            <DialogFooter>
-              {signing ? null : (
-                <Button onClick={() => setSigning(true)} disabled={optionsToExercise === 0}>
-                  Proceed
-                </Button>
-              )}
-            </DialogFooter>
           </>
         )}
       </DialogContent>

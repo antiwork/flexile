@@ -147,7 +147,7 @@ const ManageModal = ({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <Dialog open={open} onOpenChange={onClose}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{role.id ? "Edit role" : "New role"}</DialogTitle>
@@ -300,7 +300,7 @@ const ManageModal = ({
           </div>
         </DialogContent>
       </Dialog>
-      <Dialog open={confirmingRateUpdate} onOpenChange={(isOpen) => !isOpen && setConfirmingRateUpdate(false)}>
+      <Dialog open={confirmingRateUpdate} onOpenChange={setConfirmingRateUpdate}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{`Update rates for ${contractorsToUpdate.length} ${pluralize("contractor", contractorsToUpdate.length)} to match role rate?`}</DialogTitle>
@@ -333,7 +333,7 @@ const ManageModal = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog open={confirmingDelete} onOpenChange={(isOpen) => !isOpen && setConfirmingDelete(false)}>
+      <Dialog open={confirmingDelete} onOpenChange={setConfirmingDelete}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Permanently delete role?</DialogTitle>
@@ -343,9 +343,7 @@ const ManageModal = ({
             <Button variant="outline" onClick={() => setConfirmingDelete(false)}>
               No, cancel
             </Button>
-            <MutationStatusButton mutation={deleteMutation}>
-              Yes, delete
-            </MutationStatusButton>
+            <MutationStatusButton mutation={deleteMutation}>Yes, delete</MutationStatusButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

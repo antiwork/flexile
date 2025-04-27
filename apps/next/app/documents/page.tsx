@@ -111,7 +111,7 @@ const EditTemplates = () => {
         <PencilIcon className="size-4" />
         Edit templates
       </Button>
-      <Dialog open={open} onOpenChange={(isOpen) => !isOpen && setOpen(false)}>
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit templates</DialogTitle>
@@ -149,53 +149,53 @@ const EditTemplates = () => {
                 for more details.
               </AlertDescription>
             </Alert>
-          <div className="grid grid-cols-3 gap-4">
-            <MutationButton
-              idleVariant="outline"
-              className="h-auto rounded-md p-6"
-              mutation={createTemplate}
-              param={{
-                companyId: company.id,
-                name: "Consulting agreement",
-                type: DocumentTemplateType.ConsultingContract,
-              }}
-            >
-              <div className="flex flex-col items-center">
-                <FileTextIcon className="size-6" />
-                <span className="mt-2">Consulting agreement</span>
-              </div>
-            </MutationButton>
-            <MutationButton
-              idleVariant="outline"
-              className="h-auto rounded-md p-6"
-              mutation={createTemplate}
-              param={{
-                companyId: company.id,
-                name: "Equity grant contract",
-                type: DocumentTemplateType.EquityPlanContract,
-              }}
-            >
-              <div className="flex flex-col items-center">
-                <PercentIcon className="size-6" />
-                <span className="mt-2">Equity grant contract</span>
-              </div>
-            </MutationButton>
-            <MutationButton
-              idleVariant="outline"
-              className="h-auto rounded-md p-6"
-              mutation={createTemplate}
-              param={{
-                companyId: company.id,
-                name: "Option grant board consent",
-                type: DocumentTemplateType.BoardConsent,
-              }}
-            >
-              <div className="flex flex-col items-center">
-                <GavelIcon className="size-6" />
-                <span className="mt-2 whitespace-normal">Option grant board consent</span>
-              </div>
-            </MutationButton>
-          </div>
+            <div className="grid grid-cols-3 gap-4">
+              <MutationButton
+                idleVariant="outline"
+                className="h-auto rounded-md p-6"
+                mutation={createTemplate}
+                param={{
+                  companyId: company.id,
+                  name: "Consulting agreement",
+                  type: DocumentTemplateType.ConsultingContract,
+                }}
+              >
+                <div className="flex flex-col items-center">
+                  <FileTextIcon className="size-6" />
+                  <span className="mt-2">Consulting agreement</span>
+                </div>
+              </MutationButton>
+              <MutationButton
+                idleVariant="outline"
+                className="h-auto rounded-md p-6"
+                mutation={createTemplate}
+                param={{
+                  companyId: company.id,
+                  name: "Equity grant contract",
+                  type: DocumentTemplateType.EquityPlanContract,
+                }}
+              >
+                <div className="flex flex-col items-center">
+                  <PercentIcon className="size-6" />
+                  <span className="mt-2">Equity grant contract</span>
+                </div>
+              </MutationButton>
+              <MutationButton
+                idleVariant="outline"
+                className="h-auto rounded-md p-6"
+                mutation={createTemplate}
+                param={{
+                  companyId: company.id,
+                  name: "Option grant board consent",
+                  type: DocumentTemplateType.BoardConsent,
+                }}
+              >
+                <div className="flex flex-col items-center">
+                  <GavelIcon className="size-6" />
+                  <span className="mt-2 whitespace-normal">Option grant board consent</span>
+                </div>
+              </MutationButton>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -394,7 +394,7 @@ export default function DocumentsPage() {
           <Placeholder icon={CheckCircleIcon}>No documents yet.</Placeholder>
         )}
       </div>
-      <Dialog open={showInviteModal} onOpenChange={(isOpen) => !isOpen && setShowInviteModal(false)}>
+      <Dialog open={showInviteModal} onOpenChange={setShowInviteModal}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Who's joining?</DialogTitle>
@@ -465,7 +465,7 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
   });
 
   return (
-    <Dialog open={true} onOpenChange={(isOpen) => !isOpen && onClose()}>
+    <Dialog open onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent>
         {user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent && (
           <DialogHeader>

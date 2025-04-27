@@ -206,7 +206,7 @@ function ContractorExpenses() {
         <Placeholder icon={CheckCircleIcon}>No expenses to display.</Placeholder>
       )}
 
-      <Dialog open={cardTermsModalOpen} onOpenChange={(isOpen) => !isOpen && setCardTermsModalOpen(false)}>
+      <Dialog open={cardTermsModalOpen} onOpenChange={setCardTermsModalOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Accept Card Terms</DialogTitle>

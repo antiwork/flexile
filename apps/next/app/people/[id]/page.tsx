@@ -264,7 +264,7 @@ export default function ContractorPage() {
         ) : null
       }
     >
-      <Dialog open={completeTrialModalOpen} onOpenChange={(isOpen) => !isOpen && setCompleteTrialModalOpen(false)}>
+      <Dialog open={completeTrialModalOpen} onOpenChange={setCompleteTrialModalOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{`Hire ${user.displayName}?`}</DialogTitle>
@@ -284,7 +284,7 @@ export default function ContractorPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={endModalOpen} onOpenChange={(isOpen) => !isOpen && setEndModalOpen(false)}>
+      <Dialog open={endModalOpen} onOpenChange={setEndModalOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{`End contract with ${user.displayName}?`}</DialogTitle>
@@ -294,7 +294,9 @@ export default function ContractorPage() {
           <div className="grid gap-3">
             <Status variant="success">{user.displayName} will be able to submit invoices after contract end.</Status>
             <Status variant="success">{user.displayName} will receive upcoming payments.</Status>
-            <Status variant="success">{user.displayName} will be able to see and download their invoice history.</Status>
+            <Status variant="success">
+              {user.displayName} will be able to see and download their invoice history.
+            </Status>
             <Status variant="critical">
               {user.displayName} won't see any of {company.name}'s information.
             </Status>
@@ -308,7 +310,7 @@ export default function ContractorPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={cancelModalOpen} onOpenChange={(isOpen) => !isOpen && setCancelModalOpen(false)}>
+      <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{`Cancel contract end with ${user.displayName}?`}</DialogTitle>
@@ -323,7 +325,7 @@ export default function ContractorPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={issuePaymentModalOpen} onOpenChange={(isOpen) => !isOpen && closeIssuePaymentModal()}>
+      <Dialog open={issuePaymentModalOpen} onOpenChange={closeIssuePaymentModal}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Issue one-time payment</DialogTitle>
@@ -582,14 +584,16 @@ const DetailsTab = ({
           <CardFooter>
             <MutationStatusButton
               size="small"
-              mutation={() => updateContractor.mutate({
-                companyId: company.id,
-                id: contractor.id,
-                payRateType: selectedRole?.payRateType ?? contractor.payRateType,
-                hoursPerWeek,
-                payRateInSubunits,
-                roleId: selectedRole?.id,
-              })}
+              mutation={() =>
+                updateContractor.mutate({
+                  companyId: company.id,
+                  id: contractor.id,
+                  payRateType: selectedRole?.payRateType ?? contractor.payRateType,
+                  hoursPerWeek,
+                  payRateInSubunits,
+                  roleId: selectedRole?.id,
+                })
+              }
               disabled={
                 contractor.payRateType === PayRateType.ProjectBased
                   ? !payRateInSubunits
@@ -769,10 +773,7 @@ function ExercisesTab({ investorId }: { investorId: string }) {
         id: "actions",
         cell: (info) =>
           info.row.original.status === "signed" ? (
-            <MutationStatusButton 
-              mutation={() => confirmPaymentMutation.mutate(info.row.original.id)} 
-              size="small"
-            >
+            <MutationStatusButton mutation={() => confirmPaymentMutation.mutate(info.row.original.id)} size="small">
               Confirm payment
             </MutationStatusButton>
           ) : undefined,

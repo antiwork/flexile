@@ -190,7 +190,7 @@ export default function AdminList() {
 
       {data.length === 0 && <Placeholder icon={CheckCircleIcon}>No invoices to display.</Placeholder>}
 
-      <Dialog open={openModal === "approve"} onOpenChange={(isOpen) => !isOpen && setOpenModal(null)}>
+      <Dialog open={openModal === "approve"} onOpenChange={() => setOpenModal(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Approve these invoices?</DialogTitle>
@@ -269,7 +269,7 @@ const TasksModal = ({
   const isActionable = useIsActionable();
 
   return (
-    <Dialog open={true} onOpenChange={(isOpen) => !isOpen && onClose()}>
+    <Dialog open onOpenChange={onClose}>
       <DialogContent className="w-110 p-3">
         <DialogHeader>
           <DialogTitle>{invoice.billFrom}</DialogTitle>

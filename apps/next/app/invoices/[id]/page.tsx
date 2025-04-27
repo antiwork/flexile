@@ -125,7 +125,7 @@ export default function InvoicePage() {
       }
     >
       {invoice.requiresAcceptanceByPayee && user.id === invoice.userId ? (
-        <Dialog open={acceptPaymentModalOpen} onOpenChange={(isOpen) => !isOpen && setAcceptPaymentModalOpen(false)}>
+        <Dialog open={acceptPaymentModalOpen} onOpenChange={setAcceptPaymentModalOpen}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Accept invoice</DialogTitle>

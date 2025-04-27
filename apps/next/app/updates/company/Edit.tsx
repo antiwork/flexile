@@ -221,7 +221,7 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
           ) : null}
         </div>
       </div>
-      <Dialog open={modalOpen} onOpenChange={(isOpen) => !isOpen && setModalOpen(false)}>
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Publish update?</DialogTitle>

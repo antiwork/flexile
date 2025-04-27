@@ -89,16 +89,16 @@ const StripeMicrodepositVerification = () => {
         </AlertDescription>
       </Alert>
 
-      <Dialog open={showVerificationModal} onOpenChange={(isOpen) => !isOpen && setShowVerificationModal(false)}>
+      <Dialog open={showVerificationModal} onOpenChange={setShowVerificationModal}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Verify your bank account</DialogTitle>
           </DialogHeader>
           {microdepositVerificationDetails.microdeposit_type === "descriptor_code" ? (
             <p>
-              Check your {microdepositVerificationDetails.bank_account_number || ""} bank account for a $0.01 deposit from
-              Stripe on {arrivalDate}. The transaction's description will have your 6-digit verification code starting
-              with 'SM'.
+              Check your {microdepositVerificationDetails.bank_account_number || ""} bank account for a $0.01 deposit
+              from Stripe on {arrivalDate}. The transaction's description will have your 6-digit verification code
+              starting with 'SM'.
             </p>
           ) : (
             <p>
@@ -109,8 +109,8 @@ const StripeMicrodepositVerification = () => {
           )}
 
           <p>
-            If {microdepositVerificationDetails.microdeposit_type === "descriptor_code" ? "it's" : "they're"} not visible
-            yet, please check in 1-2 days.
+            If {microdepositVerificationDetails.microdeposit_type === "descriptor_code" ? "it's" : "they're"} not
+            visible yet, please check in 1-2 days.
           </p>
 
           {microdepositVerificationDetails.microdeposit_type === "descriptor_code" ? (

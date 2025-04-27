@@ -102,7 +102,7 @@ const AdminList = () => {
   return (
     <>
       <DataTable table={table} onRowClicked={(row) => router.push(`/updates/company/${row.id}/edit`)} />
-      <Dialog open={!!deletingUpdate} onOpenChange={(isOpen) => !isOpen && setDeletingUpdate(null)}>
+      <Dialog open={!!deletingUpdate} onOpenChange={() => setDeletingUpdate(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete update?</DialogTitle>

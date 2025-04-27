@@ -149,7 +149,7 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
         </form>
       </Form>
 
-      <Dialog open={modalOpen} onOpenChange={(isOpen) => !isOpen && setModalOpen(false)}>
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Important notice</DialogTitle>

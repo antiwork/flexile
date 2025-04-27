@@ -355,14 +355,14 @@ const WalletAddressModal = ({
   });
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Get paid with ETH</DialogTitle>
         </DialogHeader>
         <div className="text-gray-500">
-          Payments will be sent to the specified Ethereum address. The amount will be based on the current exchange rate,
-          and Flexile will cover network fees.
+          Payments will be sent to the specified Ethereum address. The amount will be based on the current exchange
+          rate, and Flexile will cover network fees.
         </div>
 
         <Alert variant="destructive">

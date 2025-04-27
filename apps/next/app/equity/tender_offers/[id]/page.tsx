@@ -379,21 +379,19 @@ export default function TenderOfferView() {
       {bids.length > 0 ? <DataTable table={bidsTable} /> : null}
 
       {cancelingBid ? (
-        <Dialog open={true} onOpenChange={(open) => !open && setCancelingBid(null)}>
+        <Dialog open onOpenChange={() => setCancelingBid(null)}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Cancel bid?</DialogTitle>
             </DialogHeader>
-            <div>
-              <p>Are you sure you want to cancel this bid?</p>
-              <p>
-                Share class: {cancelingBid.shareClass}
-                <br />
-                Number of shares: {cancelingBid.numberOfShares.toLocaleString()}
-                <br />
-                Bid price: {formatMoneyFromCents(cancelingBid.sharePriceCents)}
-              </p>
-            </div>
+            <p>Are you sure you want to cancel this bid?</p>
+            <p>
+              Share class: {cancelingBid.shareClass}
+              <br />
+              Number of shares: {cancelingBid.numberOfShares.toLocaleString()}
+              <br />
+              Bid price: {formatMoneyFromCents(cancelingBid.sharePriceCents)}
+            </p>
             <DialogFooter>
               <Button variant="outline" onClick={() => setCancelingBid(null)}>
                 No, keep bid
