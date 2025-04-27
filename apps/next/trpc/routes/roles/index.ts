@@ -21,7 +21,10 @@ const inputSchema = createInsertSchema(companyRoles)
       payRateInSubunits: true,
       payRateType: true,
     }),
-  );
+  )
+  .extend({
+    trialPayRateInSubunits: z.number().optional(),
+  });
 
 export const rolesRouter = createRouter({
   list: companyProcedure.query(async ({ ctx }) => {
@@ -41,6 +44,7 @@ export const rolesRouter = createRouter({
         id: role.externalId,
         ...pick(role, "name", "capitalizedExpense", "expenseAccountId", "trialEnabled"),
         ...pick(rate, "payRateType", "payRateInSubunits"),
+        trialPayRateInSubunits: 0, // Default value for backward compatibility
       };
     });
   }),
