@@ -14,7 +14,7 @@ import { formatMoney } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 import EquityLayout from "../Layout";
 
-export default function TenderOffers() {
+export default function Buybacks() {
   const company = useCurrentCompany();
   const router = useRouter();
   const user = useCurrentUser();
@@ -39,7 +39,7 @@ export default function TenderOffers() {
           <Button asChild>
             <Link href="/equity/tender_offers/new">
               <PencilIcon className="size-4" />
-              New tender offer
+              New buyback
             </Link>
           </Button>
         ) : null
@@ -48,7 +48,7 @@ export default function TenderOffers() {
       {data.length ? (
         <DataTable table={table} onRowClicked={(row) => router.push(`/equity/tender_offers/${row.id}`)} />
       ) : (
-        <Placeholder icon={CheckCircleIcon}>There are no tender offers yet.</Placeholder>
+        <Placeholder icon={CheckCircleIcon}>There are no buybacks yet.</Placeholder>
       )}
     </EquityLayout>
   );

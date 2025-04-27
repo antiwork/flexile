@@ -14,7 +14,7 @@ class CreateOrUpdateEquityAllocation
 
     unvested_equity_grant = company_worker.unique_unvested_equity_grant_for_year(Date.current.year)
     equity_allocation = company_worker.equity_allocations.find_or_initialize_by(year: Date.current.year)
-    if unvested_equity_grant.nil? || company_worker.on_trial? || equity_allocation.locked?
+    if unvested_equity_grant.nil? || equity_allocation.locked?
       raise Error, "User #{company_worker.user_id} is not ready to save equity percentage."
     end
 

@@ -13,7 +13,6 @@ class CompanyRoleRateDashboard < Administrate::BaseDashboard
     id: Field::Number,
     company_role: Field::BelongsTo,
     pay_rate_in_subunits: Field::Number,
-    trial_pay_rate_in_subunits: Field::Number,
     pay_rate_type: Field::Select.with_options(collection: CompanyRoleRate.pay_rate_types.keys),
     created_at: Field::DateTime,
     updated_at: Field::DateTime,
@@ -28,7 +27,6 @@ class CompanyRoleRateDashboard < Administrate::BaseDashboard
     id
     company_role
     pay_rate_in_subunits
-    trial_pay_rate_in_subunits
     pay_rate_type
   ].freeze
 
@@ -38,7 +36,6 @@ class CompanyRoleRateDashboard < Administrate::BaseDashboard
     id
     company_role
     pay_rate_in_subunits
-    trial_pay_rate_in_subunits
     pay_rate_type
     created_at
     updated_at
@@ -49,7 +46,6 @@ class CompanyRoleRateDashboard < Administrate::BaseDashboard
   # on the model's form (`new` and `edit`) pages.
   FORM_ATTRIBUTES = %i[
     pay_rate_in_subunits
-    trial_pay_rate_in_subunits
     pay_rate_type
   ].freeze
 
