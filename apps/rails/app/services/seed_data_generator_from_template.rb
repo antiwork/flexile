@@ -857,7 +857,9 @@ class SeedDataGeneratorFromTemplate
 
     def create_company_role!(company, data)
       company_role = company.company_roles.build(data.fetch("model_attributes"))
-      company_role.build_rate(data.fetch("company_role_rate").fetch("model_attributes"))
+      rate_attributes = data.fetch("company_role_rate").fetch("model_attributes").dup
+      rate_attributes.delete(:trial_pay_rate_in_subunits) if rate_attributes.key?(:trial_pay_rate_in_subunits)
+      company_role.build_rate(rate_attributes)
       company_role.save!
       print_message("Created #{company_role.pay_rate_type} #{company_role.name} role.")
       company_role
