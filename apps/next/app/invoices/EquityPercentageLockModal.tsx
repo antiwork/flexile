@@ -18,7 +18,9 @@ const EquityPercentageLockModal = ({
   <Dialog open={open} onOpenChange={onClose}>
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>Lock {percentage}% in equity for all {year}?</DialogTitle>
+        <DialogTitle>
+          Lock {percentage}% in equity for all {year}?
+        </DialogTitle>
       </DialogHeader>
       <p>
         By submitting this invoice, your current equity selection of {percentage}% will be locked for all {year}.{" "}
