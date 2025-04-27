@@ -30,7 +30,6 @@ export const companyContractorsFactory = {
         hoursPerWeek: 40,
         payRateInSubunits: 6000,
         payRateType: PayRateType.Hourly,
-        onTrial: false,
         ...overrides,
       })
       .returning();

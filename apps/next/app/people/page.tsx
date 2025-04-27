@@ -73,11 +73,7 @@ export default function People() {
               header: "Status",
               cell: (info) =>
                 info.getValue() ? (
-                  info.row.original.onTrial ? (
-                    <Status variant="success">On trial</Status>
-                  ) : (
-                    <Status variant="success">Starts on {formatDate(info.row.original.startedAt)}</Status>
-                  )
+                  <Status variant="success">Starts on {formatDate(info.row.original.startedAt)}</Status>
                 ) : info.row.original.user.invitationAcceptedAt ? (
                   <Status variant="primary">In Progress</Status>
                 ) : (

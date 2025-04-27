@@ -8,13 +8,11 @@ RSpec.describe UpdateCompanyRoleService do
       name: "Updated Role",
       job_description: "Updated job description",
       capitalized_expense: 30,
-      trial_enabled: true,
     }
   end
   let(:rate_params) do
     {
       pay_rate_in_subunits: 15000,
-      trial_pay_rate_in_subunits: 7500,
     }
   end
 
@@ -29,9 +27,7 @@ RSpec.describe UpdateCompanyRoleService do
           "job_description" => "Updated job description",
           "capitalized_expense" => 30,
         )
-        expect(company_role.trial_enabled).to be true
         expect(company_role.rate.pay_rate_in_subunits).to eq 15000
-        expect(company_role.rate.trial_pay_rate_in_subunits).to eq 7500
       end
 
       it "updates rates for contractors with the same rate only unless update_all_rates is true" do
@@ -52,7 +48,6 @@ RSpec.describe UpdateCompanyRoleService do
     context "when updating expense cards" do
       let!(:company_workers) { create_list(:company_worker, 3, company:, company_role:) }
       let!(:inactive_contractor) { create(:company_worker, company:, company_role:, ended_at: 1.day.ago) }
-      let!(:trial_contractor) { create(:company_worker, company:, company_role:, on_trial: true) }
 
       before do
         company_role.update!(expense_card_enabled: false, expense_card_spending_limit_cents: 0)
@@ -79,7 +74,6 @@ RSpec.describe UpdateCompanyRoleService do
           expect(ExpenseCardGrantEmailJob).to have_enqueued_sidekiq_job(company_worker.id)
         end
         expect(ExpenseCardGrantEmailJob).not_to have_enqueued_sidekiq_job(inactive_contractor.id)
-        expect(ExpenseCardGrantEmailJob).not_to have_enqueued_sidekiq_job(trial_contractor.id)
       end
 
       context "when Stripe::ExpenseCardsUpdateService fails" do

@@ -1,5 +1,4 @@
 "use client";
-import { CheckIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { CheckCircleIcon, DocumentDuplicateIcon, InboxIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
@@ -79,12 +78,9 @@ export default function ContractorPage() {
 
   const [selectedRoleId, setSelectedRoleId] = useState(contractor?.role ?? "");
   useEffect(() => setSelectedRoleId(contractor?.role ?? ""), [contractor]);
-  const [roles] = trpc.roles.list.useSuspenseQuery({ companyId: company.id });
-  const selectedRole = roles.find((role) => role.id === selectedRoleId);
   const [endModalOpen, setEndModalOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [endDate, setEndDate] = useState(formatISO(new Date(), { representation: "date" }));
-  const [completeTrialModalOpen, setCompleteTrialModalOpen] = useState(false);
   const [issuePaymentModalOpen, setIssuePaymentModalOpen] = useState(false);
   const [paymentAmountInCents, setPaymentAmountInCents] = useState<number | null>(null);
   const [paymentDescription, setPaymentDescription] = useState("");
@@ -149,19 +145,6 @@ export default function ContractorPage() {
       });
       await trpcUtils.contractors.list.invalidate({ companyId: company.id });
       await refetch();
-      router.push(`/people`);
-    },
-  });
-
-  const completeTrial = trpc.contractors.completeTrial.useMutation();
-  const completeTrialMutation = useMutation({
-    mutationFn: async () => {
-      if (!contractor) return;
-
-      await completeTrial.mutateAsync({
-        companyId: company.id,
-        id: contractor.id,
-      });
       router.push(`/people`);
     },
   });
@@ -244,17 +227,6 @@ export default function ContractorPage() {
             <Button onClick={() => setIssuePaymentModalOpen(true)}>Issue payment</Button>
             {contractor.endedAt && !isFuture(contractor.endedAt) ? (
               <Status variant="critical">Alumni</Status>
-            ) : contractor.onTrial ? (
-              <>
-                <Button variant="outline" onClick={() => setEndModalOpen(true)}>
-                  <XMarkIcon className="size-4" />
-                  End trial
-                </Button>
-                <Button onClick={() => setCompleteTrialModalOpen(true)}>
-                  <CheckIcon className="size-4" />
-                  Complete trial
-                </Button>
-              </>
             ) : !contractor.endedAt || isFuture(contractor.endedAt) ? (
               <Button variant="outline" onClick={() => setEndModalOpen(true)}>
                 End contract
@@ -264,22 +236,7 @@ export default function ContractorPage() {
         ) : null
       }
     >
-      <Modal
-        open={completeTrialModalOpen}
-        onClose={() => setCompleteTrialModalOpen(false)}
-        title={`Hire ${user.displayName}?`}
-      >
-        <p>
-          You're hiring {user.displayName} as a {selectedRole?.name} for{" "}
-          {formatMoneyFromCents(selectedRole?.payRateInSubunits ?? 0)} / hour. Do you want to proceed?
-        </p>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={() => setCompleteTrialModalOpen(false)}>
-            No, cancel
-          </Button>
-          <MutationButton mutation={completeTrialMutation}>Yes, hire</MutationButton>
-        </div>
-      </Modal>
+      {/* Trial-related modal removed */}
 
       <Modal
         open={endModalOpen}

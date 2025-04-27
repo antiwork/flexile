@@ -24,7 +24,9 @@ import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { pluralize } from "@/utils/pluralize";
 
-type Role = RouterOutput["roles"]["list"][number];
+type Role = RouterOutput["roles"]["list"][number] & {
+  trialPayRateInSubunits?: number;
+};
 
 const ManageModal = ({
   open,
@@ -55,9 +57,7 @@ const ManageModal = ({
       expenseAccountId: null,
     };
     const lastRole = roles[0];
-    return lastRole
-      ? { ...defaults, ...pick(lastRole, "payRateInSubunits", "trialPayRateInSubunits", "capitalizedExpense") }
-      : defaults;
+    return lastRole ? { ...defaults, ...pick(lastRole, "payRateInSubunits", "trialPayRateInSubunits", "capitalizedExpense") } : defaults;
   };
   const [role, setRole] = useState(getSelectedRole);
   useEffect(() => setRole(getSelectedRole()), [id]);
@@ -233,7 +233,6 @@ const ManageModal = ({
             />
           </div>
         ) : null}
-
         {expenseAccounts.length > 0 ? (
           <Select
             value={role.expenseAccountId ?? ""}

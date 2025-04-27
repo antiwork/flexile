@@ -247,10 +247,7 @@ const QuickInvoiceSection = ({ disabled }: { disabled?: boolean }) => {
                 />
               </div>
             )}
-            {equityAllocation !== null &&
-            equityCalculation.selectedPercentage == null &&
-            !user.roles.worker.onTrial &&
-            !isProjectBased ? (
+            {equityAllocation !== null && equityCalculation.selectedPercentage == null && !isProjectBased ? (
               <Link href="/settings/equity" className={linkClasses}>
                 Swap some cash for equity
               </Link>

@@ -274,7 +274,6 @@ export const companyRoleRates = pgTable(
       .$onUpdate(() => new Date()),
     payRateInSubunits: integer("pay_rate_in_subunits").notNull(),
     payRateCurrency: varchar("pay_rate_currency").default("usd").notNull(),
-    trialPayRateInSubunits: integer("trial_pay_rate_in_subunits").notNull(),
   },
   (table) => [
     index("index_company_role_rates_on_company_role_id").using(
@@ -1391,7 +1390,6 @@ export const financingRounds = pgTable(
     index("index_financing_rounds_on_external_id").using("btree", table.externalId.asc().nullsLast().op("text_ops")),
   ],
 );
-
 export const equityBuybackRounds = pgTable(
   "equity_buyback_rounds",
   {
@@ -1975,7 +1973,6 @@ export const companyContractors = pgTable(
     externalId: varchar("external_id").$default(nanoid).notNull(),
     payRateType: integer("pay_rate_type").$type<PayRateType>().default(PayRateType.Hourly).notNull(),
     sentEquityPercentSelectionEmail: boolean("sent_equity_percent_selection_email").notNull().default(false),
-    onTrial: boolean("on_trial").notNull().default(false),
     payRateInSubunits: integer("pay_rate_in_subunits").notNull(),
     payRateCurrency: varchar("pay_rate_currency").default("usd").notNull(),
   },
@@ -2140,7 +2137,7 @@ export const companies = pgTable(
     showAnalyticsToContractors: boolean("show_analytics_to_contractors").notNull().default(false),
     companyUpdatesEnabled: boolean("company_updates_enabled").notNull().default(false),
     defaultCurrency: varchar("default_currency").default("usd").notNull(),
-    financingRoundsEnabled: boolean("financing_rounds_enabled").notNull().default(false),
+
     tenderOffersEnabled: boolean("tender_offers_enabled").notNull().default(false),
     capTableEnabled: boolean("cap_table_enabled").default(false).notNull(),
     lawyersEnabled: boolean("lawyers_enabled").notNull().default(false),

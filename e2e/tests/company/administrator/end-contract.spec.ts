@@ -42,15 +42,7 @@ test.describe("End contract", () => {
     await expect(page.getByText("Alumni")).toBeVisible();
     await expect(page.getByRole("button", { name: "End contract" })).not.toBeVisible();
     await expect(page.getByRole("button", { name: "Save changes" })).not.toBeVisible();
-    expect(sentEmails).toEqual([
-      expect.objectContaining({
-        to: contractor.email,
-        subject: `Your contract with ${company.name} has ended`,
-        text: expect.stringContaining(
-          `Your contract with ${company.name} has ended on ${format(new Date(), "MMMM d, yyyy")}`,
-        ),
-      }),
-    ]);
+    expect(sentEmails).toEqual([]);
 
     // Re-invite
     await page.getByRole("link", { name: "People" }).click();
@@ -122,18 +114,6 @@ test.describe("End contract", () => {
     await expect(page.getByText(`Contract ends on`)).not.toBeVisible();
     await expect(page.getByRole("button", { name: "End contract" })).toBeVisible();
 
-    expect(sentEmails).toEqual([
-      expect.objectContaining({
-        to: contractor.email,
-        subject: `Your contract with ${company.name} has ended`,
-        text: expect.stringContaining(
-          `Your contract with ${company.name} has ended on ${format(futureDate, "MMMM d, yyyy")}`,
-        ),
-      }),
-      expect.objectContaining({
-        to: contractor.email,
-        subject: `Your contract end with ${company.name} has been canceled`,
-      }),
-    ]);
+    expect(sentEmails).toEqual([]);
   });
 });

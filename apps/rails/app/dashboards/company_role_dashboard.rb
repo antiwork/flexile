@@ -14,7 +14,6 @@ class CompanyRoleDashboard < Administrate::BaseDashboard
     capitalized_expense: Field::Number,
     company: Field::BelongsTo,
     rate: Field::HasOne,
-    trial_enabled: Field::Boolean,
     company_workers: Field::HasMany,
     deleted_at: Field::DateTime,
     job_description: Field::Text,
@@ -43,7 +42,6 @@ class CompanyRoleDashboard < Administrate::BaseDashboard
     capitalized_expense
     company
     rate
-    trial_enabled
     company_workers
     deleted_at
     job_description
@@ -60,7 +58,6 @@ class CompanyRoleDashboard < Administrate::BaseDashboard
     capitalized_expense
     company
     rate
-    trial_enabled
     company_workers
     deleted_at
     job_description

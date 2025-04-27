@@ -3,14 +3,14 @@ import { companies, companyContractors } from "@/db/schema";
 type Company = typeof companies.$inferSelect;
 type CompanyContractor = typeof companyContractors.$inferSelect;
 export const policies = {
-  "dummy.policy": (ctx) => true,
+  "dummy.policy": () => true,
 } satisfies Record<
   string,
   (ctx: {
     user: unknown;
     company: Pick<Company, "id">;
     companyAdministrator: unknown;
-    companyContractor: Pick<CompanyContractor, "endedAt" | "onTrial"> | undefined;
+    companyContractor: Pick<CompanyContractor, "endedAt"> | undefined;
     companyInvestor: unknown;
     companyLawyer: unknown;
   }) => unknown
