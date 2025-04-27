@@ -54,7 +54,7 @@ test.describe("One-off payments", () => {
         { page },
       );
 
-      await expect(page.getByRole("row")).toBeVisible();
+      await expect(page.getByRole("row").getByText("O-0001")).toBeVisible();
 
       const invoiceRow = await findRequiredTableRow(page, {
         "Invoice ID": "O-0001",
@@ -146,7 +146,7 @@ test.describe("One-off payments", () => {
           { page },
         );
 
-        await expect(page.getByRole("row")).toBeVisible();
+        await expect(page.getByRole("row").getByText("O-0001")).toBeVisible();
 
         const invoiceRow = await findRequiredTableRow(page, {
           "Invoice ID": "O-0001",
@@ -228,7 +228,7 @@ test.describe("One-off payments", () => {
           { page },
         );
 
-        await expect(page.getByRole("row")).toBeVisible();
+        await expect(page.getByRole("row").getByText("O-0001")).toBeVisible();
 
         const invoiceRow = await findRequiredTableRow(page, {
           "Invoice ID": "O-0001",
