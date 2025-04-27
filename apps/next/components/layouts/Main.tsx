@@ -58,8 +58,6 @@ import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
 
-
-
 export default function MainLayout({
   children,
   title,
@@ -213,7 +211,6 @@ const CompanyName = ({ company }: { company: Company }) => (
       <span className="line-clamp-1 font-bold" title={company.name ?? ""}>
         {company.name}
       </span>
-
     </div>
   </>
 );
