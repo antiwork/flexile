@@ -4,7 +4,6 @@ import { capTableRouter } from "@/trpc/routes/capTable";
 import { companiesRouter } from "@/trpc/routes/companies";
 import { equityCalculationsRouter } from "@/trpc/routes/equityCalculations";
 import { filesRouter } from "@/trpc/routes/files";
-import { financingRoundsRouter } from "@/trpc/routes/financingRounds";
 import { investorEntitiesRouter } from "@/trpc/routes/investorEntities";
 import { capTableUploadsRouter } from "./routes/capTableUploads";
 import { companyAdministratorsRouter } from "./routes/companyAdministrators";
@@ -58,7 +57,7 @@ export const appRouter = createRouter({
   workerAbsences: workerAbsencesRouter,
   financialReports: financialReportsRouter,
   equitySettings: equitySettingsRouter,
-  financingRounds: financingRoundsRouter,
+
   optionPools: optionPoolsRouter,
   companyUpdates: companyUpdatesRouter,
   capTable: capTableRouter,

@@ -6,9 +6,6 @@ export const navLinks = (user: CurrentUser, company: Company): TabLink[] => {
   const isLawyer = user.activeRole === "lawyer";
   const isInvestor = user.activeRole === "contractorOrInvestor" && "investor" in user.roles;
   const links: (TabLink | null)[] = [
-    company.flags.includes("financing_rounds") && (isAdmin || isLawyer || isInvestor)
-      ? { label: "Rounds", route: "/equity/financing_rounds" }
-      : null,
     company.flags.includes("cap_table") && (isAdmin || isLawyer || isInvestor)
       ? { label: "Cap table", route: "/equity/cap_table" }
       : null,

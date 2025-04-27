@@ -1444,30 +1444,7 @@ export const expenseCardCharges = pgTable(
   ],
 );
 
-export const financingRounds = pgTable(
-  "financing_rounds",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    externalId: varchar("external_id").$default(nanoid).notNull(),
-    companyId: bigint("company_id", { mode: "bigint" }).notNull(),
-    name: varchar().notNull(),
-    issuedAt: timestamp("issued_at", { precision: 6, mode: "date" }).notNull(),
-    sharesIssued: bigint("shares_issued", { mode: "bigint" }).notNull(),
-    pricePerShareCents: bigint("price_per_share_cents", { mode: "bigint" }).notNull(),
-    amountRaisedCents: bigint("amount_raised_cents", { mode: "bigint" }).notNull(),
-    postMoneyValuationCents: bigint("post_money_valuation_cents", { mode: "bigint" }).notNull(),
-    investors: jsonb().default([]).$type<{ name: string; amount_invested_cents: number }[]>().notNull(),
-    status: varchar().notNull(),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-  },
-  (table) => [
-    index("index_financing_rounds_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
-    index("index_financing_rounds_on_external_id").using("btree", table.externalId.asc().nullsLast().op("text_ops")),
-  ],
-);
+
 
 export const equityBuybackRounds = pgTable(
   "equity_buyback_rounds",
@@ -2221,7 +2198,7 @@ export const companies = pgTable(
     showAnalyticsToContractors: boolean("show_analytics_to_contractors").notNull().default(false),
     companyUpdatesEnabled: boolean("company_updates_enabled").notNull().default(false),
     defaultCurrency: varchar("default_currency").default("usd").notNull(),
-    financingRoundsEnabled: boolean("financing_rounds_enabled").notNull().default(false),
+
     tenderOffersEnabled: boolean("tender_offers_enabled").notNull().default(false),
     capTableEnabled: boolean("cap_table_enabled").default(false).notNull(),
     expenseCardsEnabled: boolean("expense_cards_enabled").notNull().default(false),
