@@ -29,37 +29,40 @@ import RateUpdated from "./RateUpdated";
 type CompanyContractor = typeof companyContractors.$inferSelect;
 
 export const contractorsRouter = createRouter({
-  list: companyProcedure.input(z.object({ roleId: z.string().optional() })).query(async ({ ctx, input }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
-    const where = and(
-      eq(companyContractors.companyId, ctx.company.id),
-      input.roleId ? eq(companyContractors.companyRoleId, byExternalId(companyRoles, input.roleId)) : undefined,
-    );
-    const rows = await db.query.companyContractors.findMany({
-      where,
-      with: {
-        user: {
-          with: {
-            userComplianceInfos: latestUserComplianceInfo,
-            wiseRecipients: { columns: { id: true }, limit: 1 },
+  list: companyProcedure
+    .input(z.object({ roleId: z.string().optional(), excludeAlumni: z.boolean().optional() }))
+    .query(async ({ ctx, input }) => {
+      if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+      const where = and(
+        eq(companyContractors.companyId, ctx.company.id),
+        input.excludeAlumni ? isNull(companyContractors.endedAt) : undefined,
+        input.roleId ? eq(companyContractors.companyRoleId, byExternalId(companyRoles, input.roleId)) : undefined,
+      );
+      const rows = await db.query.companyContractors.findMany({
+        where,
+        with: {
+          user: {
+            with: {
+              userComplianceInfos: latestUserComplianceInfo,
+              wiseRecipients: { columns: { id: true }, limit: 1 },
+            },
           },
+          role: true,
         },
-        role: true,
-      },
-      orderBy: desc(companyContractors.id),
-    });
-    const workers = rows.map((worker) => ({
-      ...pick(worker, ["startedAt", "payRateInSubunits", "hoursPerWeek", "endedAt"]),
-      id: worker.externalId,
-      user: {
-        ...simpleUser(worker.user),
-        ...pick(worker.user, "countryCode", "invitationAcceptedAt"),
-        onboardingCompleted: isOnboardingCompleted(worker.user),
-      } as const,
-      role: { id: worker.role.externalId, name: worker.role.name },
-    }));
-    return { workers };
-  }),
+        orderBy: desc(companyContractors.id),
+      });
+      const workers = rows.map((worker) => ({
+        ...pick(worker, ["startedAt", "payRateInSubunits", "hoursPerWeek", "endedAt"]),
+        id: worker.externalId,
+        user: {
+          ...simpleUser(worker.user),
+          ...pick(worker.user, "countryCode", "invitationAcceptedAt"),
+          onboardingCompleted: isOnboardingCompleted(worker.user),
+        } as const,
+        role: { id: worker.role.externalId, name: worker.role.name },
+      }));
+      return { workers };
+    }),
   listForTeamUpdates: companyProcedure.query(async ({ ctx }) => {
     if (!ctx.companyAdministrator && !isActive(ctx.companyContractor)) throw new TRPCError({ code: "FORBIDDEN" });
     const contractors = await db.query.companyContractors.findMany({
