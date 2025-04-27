@@ -394,7 +394,7 @@ function InvoicesNavLink({ companyId, active, isAdmin }: { companyId: string; ac
   );
 }
 
-function SwitchRoleNavLink({ accessRole, companyId }: { accessRole: CompanyAccessRole; companyId: string }) {
+function _SwitchRoleNavLink({ accessRole, companyId }: { accessRole: CompanyAccessRole; companyId: string }) {
   const switchCompany = useSwitchCompanyOrRole();
 
   return (
