@@ -21,7 +21,7 @@ The easiest way to set up the development environment is to use the [`bin/setup`
 
 ## Running the App
 
-You can start the local app using [the `bin/dev` script](bin/dev) - or feel free to run the commands contained in it yourself.
+You can start the local app using the [`bin/dev` script](bin/dev) - or feel free to run the commands contained in it yourself.
 
 Once the local services are up and running, the application will be available at `https://flexile.dev`
 
