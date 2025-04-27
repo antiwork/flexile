@@ -99,28 +99,21 @@ const ExerciseModal = ({
           <DialogTitle>Exercise your options</DialogTitle>
         </DialogHeader>
         {signing ? (
-          <>
-            <DocusealForm
-              src={`https://docuseal.com/d/${env.NEXT_PUBLIC_EQUITY_EXERCISE_DOCUSEAL_ID}`}
-              externalId={new Date().toISOString()}
-              onComplete={(data) =>
-                submitMutation.mutate(z.object({ submission_id: z.number() }).parse(data).submission_id)
-              }
-              values={{
-                __companyName: company.name,
-                __name: user.legalName,
-                __email: user.email,
-                __address1: user.address.street_address,
-                __address2: `${user.address.city}, ${user.address.state} ${user.address.zip_code}`,
-                __address3: user.address.country,
-              }}
-            />
-            <DialogFooter>
-              <Button onClick={() => setSigning(true)} disabled={optionsToExercise === 0}>
-                Proceed
-              </Button>
-            </DialogFooter>
-          </>
+          <DocusealForm
+            src={`https://docuseal.com/d/${env.NEXT_PUBLIC_EQUITY_EXERCISE_DOCUSEAL_ID}`}
+            externalId={new Date().toISOString()}
+            onComplete={(data) =>
+              submitMutation.mutate(z.object({ submission_id: z.number() }).parse(data).submission_id)
+            }
+            values={{
+              __companyName: company.name,
+              __name: user.legalName,
+              __email: user.email,
+              __address1: user.address.street_address,
+              __address2: `${user.address.city}, ${user.address.state} ${user.address.zip_code}`,
+              __address3: user.address.country,
+            }}
+          />
         ) : (
           <>
             <RangeInput
@@ -215,6 +208,11 @@ const ExerciseModal = ({
             </div>
           </>
         )}
+        <DialogFooter>
+          <Button onClick={() => setSigning(true)} disabled={optionsToExercise === 0}>
+            Proceed
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
