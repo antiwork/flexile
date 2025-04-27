@@ -35,6 +35,7 @@ class InviteWorker
     company_worker = user.company_workers.find_or_initialize_by(company:)
     user.inviting_company = false
     company_worker.company_role = role if role
+    params.delete(:on_trial) if params.key?(:on_trial)
     company_worker.assign_attributes(**params, ended_at: nil)
 
     if is_existing_user
