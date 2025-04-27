@@ -4,7 +4,6 @@ FactoryBot.define do
   factory :company_role do
     company
     name { Faker::Job.title }
-    job_description { Faker::Quote.famous_last_words }
     capitalized_expense { Faker::Number.between(from: 0, to: 80) }
 
     transient do
@@ -25,7 +24,6 @@ FactoryBot.define do
     after :build do |company_role, evaluator|
       company_role.rate = build(:company_role_rate, pay_rate_in_subunits: evaluator.pay_rate_in_subunits,
                                                     pay_rate_type: evaluator.pay_rate_type,
-                                                    trial_pay_rate_in_subunits: evaluator.pay_rate_in_subunits / 2,
                                                     company_role: nil)
     end
   end

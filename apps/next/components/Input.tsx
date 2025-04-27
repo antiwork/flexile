@@ -3,7 +3,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 export const formGroupClasses = "group grid gap-2";
-export const formControlClasses = "rounded-md border bg-white focus-within:ring-3 focus-within:ring-blue-50";
+export const formControlClasses =
+  "rounded-md border-muted border bg-white focus-within:ring-3 focus-within:ring-blue-50";
 export const formHelpClasses = "text-xs text-gray-500 group-has-invalid:text-red";
 
 export type InputProps = Omit<

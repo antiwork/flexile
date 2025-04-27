@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe "Financing rounds page" do
+RSpec.describe "Financing rounds page", skip: "Feature removed" do
   let(:company) do
     company = create(:company, fully_diluted_shares: 12_000_000)
     Flipper.enable(:financing_rounds, company)

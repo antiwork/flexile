@@ -29,7 +29,7 @@ RSpec.describe "New Contractor" do
     select "Australia", from: "Country of residence"
   end
 
-  it "allows inviting a contractor and skipping trials if work trials are enabled" do
+  it "allows inviting a contractor" do
     fill_in_form
     fill_in "Rate", with: "99"
 
@@ -62,60 +62,6 @@ RSpec.describe "New Contractor" do
 
     contractor = CompanyWorker.last
     expect(contractor).to have_attributes({ company_role: role, pay_rate_usd: 99 })
-
-    role.update!(trial_enabled: true)
-
-    click_on "Invite contractor"
-    expect(page).to have_text("Who's joining?")
-
-    fill_in "Email", with: trialer_email
-    select "Australia", from: "Country of residence"
-    fill_in "Start date", with: "08/08/2025"
-    select role.name, from: "Role"
-
-    expect(page).to have_field("Rate", with: role.trial_pay_rate_usd)
-    expect(page).to have_field("Average hours", with: 10)
-
-    check "Skip trial period"
-
-    expect(page).to have_field("Rate", with: role.pay_rate_usd)
-    expect(page).to have_field("Average hours", with: 25)
-
-    uncheck "Skip trial period"
-
-    expect(page).to have_selector("h2", text: "Gumroad")
-    expect(page).to have_selector("h1", text: "Consulting agreement")
-    expect(page).to have_selector("li", text: "$#{role.trial_pay_rate_usd} per hour")
-    section = find(:section, "Consulting agreement", section_element: :section, heading_level: 1)
-    expect(section).to have_text("Client: Signature ‌ Name Gumroad Title Chief Executive Officer Email sahil@gumroad.com Country United States Address 548 Market Street San Francisco, CA 94104-5401 Contractor: Signature ‌ Name ‌ Legal entity ‌ Country Australia", normalize_ws: true)
-
-    click_on "Add your signature"
-    expect(section).to have_text("Client: Signature Sahil Lavingia", normalize_ws: true)
-
-    click_on "Send invite"
-    wait_for_ajax
-
-    expect(GenerateContractorInvitationJob).to have_enqueued_sidekiq_job(CompanyWorker.last.id, false)
-
-    expect(page).to have_selector(
-      :table_row,
-      {
-        "Contractor" => trialer_email,
-        "Country" => "Australia",
-        "Start Date" => "Aug 8, 2025",
-        "Average hours" => "10",
-        "Rate" => "$#{role.trial_pay_rate_usd}",
-        "Status" => "Invited",
-      }
-    )
-
-    company_worker = CompanyWorker.last
-    expect(company_worker).to have_attributes({
-      company_role: role,
-      hours_per_week: 10,
-      pay_rate_usd: role.trial_pay_rate_usd,
-      on_trial: true,
-    })
   end
 
   it "allows inviting a project-based contractor" do

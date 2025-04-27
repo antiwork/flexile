@@ -123,7 +123,6 @@ class UserPresenter
         inviting_company: user.inviting_company,
         role: role ? { name: role.name, expenseCardEnabled: role.expense_card_enabled? } : nil,
         payRateInSubunits: worker.pay_rate_in_subunits,
-        onTrial: worker.on_trial?,
         hoursPerWeek: worker.hours_per_week,
       }
     end
@@ -134,7 +133,6 @@ class UserPresenter
         flags.push("team_updates") if company.team_updates_enabled?
         flags.push("equity_compensation") if company.equity_compensation_enabled?
         flags.push("equity_grants") if company.equity_grants_enabled?
-        flags.push("financing_rounds") if company.financing_rounds_enabled?
         flags.push("dividends") if company.dividends_allowed?
         flags.push("quickbooks") if company.quickbooks_enabled?
         flags.push("tender_offers") if company.tender_offers_enabled?
@@ -220,7 +218,6 @@ class UserPresenter
       end
       if company_investor.present?
         result[:flags][:cap_table] ||= true if company.cap_table_enabled?
-        result[:flags][:financing_rounds] ||= true if company.financing_rounds_enabled?
         result[:flags][:option_exercising] = company.json_flag?("option_exercising")
         result[:flags][:equity_grants] = company.equity_grants_enabled?
         result[:flags][:upcoming_dividend] ||= Flipper.enabled?(:upcoming_dividend, company)
@@ -246,7 +243,6 @@ class UserPresenter
         flags: {
           equity_grants: company.equity_grants_enabled?,
           cap_table: company.cap_table_enabled?,
-          financing_rounds: company.financing_rounds_enabled?,
           upcoming_dividend: Flipper.enabled?(:upcoming_dividend, company),
           tender_offers: company.tender_offers_enabled?,
           dividends: company.dividends_allowed?,

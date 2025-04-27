@@ -43,7 +43,6 @@ export const equitySettingsRouter = createRouter({
 
 const assertPermissions = (contractor: typeof companyContractors.$inferSelect) => {
   if (contractor.endedAt && new Date() > contractor.endedAt) throw new TRPCError({ code: "FORBIDDEN" });
-  if (contractor.onTrial) throw new TRPCError({ code: "FORBIDDEN" });
 };
 
 const getEquityAllocation = async (contractorId: bigint) =>

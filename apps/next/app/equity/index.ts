@@ -6,9 +6,6 @@ export const navLinks = (user: CurrentUser, company: Company): TabLink[] => {
   const isLawyer = user.activeRole === "lawyer";
   const isInvestor = user.activeRole === "contractorOrInvestor" && "investor" in user.roles;
   const links: (TabLink | null)[] = [
-    company.flags.includes("financing_rounds") && (isAdmin || isLawyer || isInvestor)
-      ? { label: "Rounds", route: "/equity/financing_rounds" }
-      : null,
     company.flags.includes("cap_table") && (isAdmin || isLawyer || isInvestor)
       ? { label: "Cap table", route: "/equity/cap_table" }
       : null,
@@ -28,7 +25,7 @@ export const navLinks = (user: CurrentUser, company: Company): TabLink[] => {
         ? { label: "Dividends", route: "/equity/dividend_rounds" }
         : null,
     company.flags.includes("tender_offers") && (isAdmin || isInvestor)
-      ? { label: "Tender offers", route: "/equity/tender_offers" }
+      ? { label: "Buybacks", route: "/equity/tender_offers" }
       : null,
   ];
   return links.filter((link) => !!link);

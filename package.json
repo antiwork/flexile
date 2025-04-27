@@ -7,7 +7,7 @@
     "url": "git+https://github.com/gumroad/flexile.git"
   },
   "author": "Flexile Developers",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "private": true,
   "engines": {
     "node": "22.14.0"
