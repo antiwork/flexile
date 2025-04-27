@@ -12,7 +12,6 @@ import {
   UsersIcon,
 } from "@heroicons/react/24/outline";
 import {
-  ArrowPathIcon,
   BriefcaseIcon as SolidBriefcaseIcon,
   ChartPieIcon as SolidChartPieIcon,
   Cog6ToothIcon as SolidCog6ToothIcon,
@@ -325,8 +324,7 @@ const NavLinks = ({ company }: { company: Company }) => {
           Settings
         </NavLink>
       )}
-      {/* Role switching functionality removed as per requirement */}
-      {/* Users who are both admin and worker will always see the admin view */}
+
     </SidebarMenu>
   );
 };
@@ -391,18 +389,5 @@ function InvoicesNavLink({ companyId, active, isAdmin }: { companyId: string; ac
     >
       Invoices
     </NavLink>
-  );
-}
-
-function _SwitchRoleNavLink({ accessRole, companyId }: { accessRole: CompanyAccessRole; companyId: string }) {
-  const switchCompany = useSwitchCompanyOrRole();
-
-  return (
-    <SidebarMenuItem>
-      <SidebarMenuButton onClick={() => void switchCompany(companyId, accessRole)}>
-        <ArrowPathIcon />
-        <span>Use as {accessRole === "administrator" ? "admin" : accessRole}</span>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
   );
 }
