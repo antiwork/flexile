@@ -185,7 +185,6 @@ test.describe("New Contractor", () => {
   });
 
   // TODO: write these tests after the most important tests are done
-  // TODO: write test - allows inviting a contractor and skipping trials if work trials are enabled
   // TODO: write test - allows reactivating an alumni contractor
   // TODO: write test - excludes equity paragraphs when equity compensation is disabled
   // TODO: write test - includes equity paragraphs when equity compensation is enabled

@@ -6,8 +6,8 @@ import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
 
-test.describe("Tender offer creation", () => {
-  test("allows creating a new tender offer", async ({ page }) => {
+test.describe("Buyback creation", () => {
+  test("allows creating a new buyback", async ({ page }) => {
     const { company } = await companiesFactory.create({
       tenderOffersEnabled: true,
       capTableEnabled: true,
@@ -25,16 +25,16 @@ test.describe("Tender offer creation", () => {
     await login(page, user);
 
     await page.getByRole("link", { name: "Equity" }).click();
-    await page.getByRole("tab", { name: "Tender offers" }).click();
-    await page.getByRole("link", { name: "New tender offer" }).click();
+    await page.getByRole("tab", { name: "Buybacks" }).click();
+    await page.getByRole("link", { name: "New buyback" }).click();
 
     await page.getByLabel("Minimum valuation").fill("100000000");
     await page.getByLabel("Start date").fill("2022-08-08");
     await page.getByLabel("End date").fill("2022-09-09");
     await page.getByLabel("Attachment").setInputFiles("e2e/samples/sample.zip");
 
-    await page.getByRole("button", { name: "Create tender offer" }).click();
-    await expect(page.getByText("There are no tender offers yet.")).toBeVisible();
+    await page.getByRole("button", { name: "Create buyback" }).click();
+    await expect(page.getByText("There are no buybacks yet.")).toBeVisible();
     await page.reload();
 
     await expect(

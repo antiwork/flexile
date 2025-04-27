@@ -6,7 +6,7 @@ import { Fragment, useEffect, useState } from "react";
 import Delta from "@/components/Delta";
 import Input from "@/components/Input";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MutationStatusButton } from "@/components/MutationButton";
+import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import RadioButtons from "@/components/RadioButtons";
 import Select from "@/components/Select";
@@ -50,8 +50,6 @@ const ManageModal = ({
       name: "",
       payRateInSubunits: 0,
       payRateType: PayRateType.Hourly,
-      trialEnabled: false,
-      trialPayRateInSubunits: 0,
       capitalizedExpense: 50,
       expenseAccountId: null,
       expenseCardEnabled: false,
@@ -59,9 +57,7 @@ const ManageModal = ({
       expenseCardsCount: 0,
     };
     const lastRole = roles[0];
-    return lastRole
-      ? { ...defaults, ...pick(lastRole, "payRateInSubunits", "trialPayRateInSubunits", "capitalizedExpense") }
-      : defaults;
+    return lastRole ? { ...defaults, ...pick(lastRole, "payRateInSubunits", "capitalizedExpense") } : defaults;
   };
   const [role, setRole] = useState(getSelectedRole);
   useEffect(() => setRole(getSelectedRole()), [id]);
@@ -84,10 +80,6 @@ const ManageModal = ({
     },
   });
   const updateRole = (update: Partial<Role>) => setRole((prev) => ({ ...prev, ...update }));
-
-  useEffect(() => {
-    if (!role.id) setRole((prev) => ({ ...prev, trialPayRateInSubunits: Math.floor(prev.payRateInSubunits / 2) }));
-  }, [role.payRateInSubunits, role.id]);
 
   const onSave = () => {
     if (contractorsToUpdate.length > 0 && updateContractorRates && role.id) {
@@ -219,24 +211,6 @@ const ManageModal = ({
               />
             </>
           ) : null}
-          {role.id && role.payRateType === PayRateType.Hourly ? (
-            <Switch
-              checked={role.trialEnabled}
-              onCheckedChange={(trialEnabled) => updateRole({ trialEnabled })}
-              label="Start with trial period"
-            />
-          ) : null}
-          {role.id && role.trialEnabled ? (
-            <div className="grid gap-2">
-              <Label htmlFor="trial-rate">Rate during trial period</Label>
-              <NumberInput
-                id="trial-rate"
-                value={role.trialPayRateInSubunits / 100}
-                onChange={(value) => updateRole({ trialPayRateInSubunits: (value ?? 0) * 100 })}
-                prefix="$"
-              />
-            </div>
-          ) : null}
           {role.id ? (
             <Switch
               checked={role.expenseCardEnabled}
@@ -266,7 +240,6 @@ const ManageModal = ({
               <AlertDescription>{role.expenseCardsCount} issued cards will no longer be usable.</AlertDescription>
             </Alert>
           ) : null}
-          {/* Job description editor removed */}
           {expenseAccounts.length > 0 ? (
             <Select
               value={role.expenseAccountId ?? ""}
@@ -329,7 +302,7 @@ const ManageModal = ({
             <Button variant="outline" onClick={() => setConfirmingRateUpdate(false)}>
               Cancel
             </Button>
-            <MutationStatusButton mutation={saveMutation}>Yes, change</MutationStatusButton>
+            <MutationButton mutation={saveMutation}>Yes, change</MutationButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -343,7 +316,9 @@ const ManageModal = ({
             <Button variant="outline" onClick={() => setConfirmingDelete(false)}>
               No, cancel
             </Button>
-            <MutationStatusButton mutation={deleteMutation}>Yes, delete</MutationStatusButton>
+            <MutationButton mutation={deleteMutation} param={{ companyId: company.id, id: role.id }}>
+              Yes, delete
+            </MutationButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

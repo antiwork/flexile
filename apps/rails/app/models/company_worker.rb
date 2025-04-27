@@ -36,7 +36,6 @@ class CompanyWorker < ApplicationRecord
                              numericality: { only_integer: true, greater_than: 0 },
                              if: :hourly?
   validates :pay_rate_in_subunits, presence: true, numericality: { only_integer: true, greater_than: 0 }
-  validate :only_hourly_contractor_can_be_on_trial
 
   scope :active, -> { where(ended_at: nil) }
   scope :active_as_of, ->(date) { active.or(where("ended_at > ?", date)) }
@@ -103,8 +102,6 @@ class CompanyWorker < ApplicationRecord
       .merge(CompanyWorkerAbsence.for_period(starts_on: period.starts_on, ends_on: period.ends_on))
       .distinct
   end
-  scope :not_on_trial, -> { where(on_trial: false) }
-  scope :on_trial, -> { where(on_trial: true) }
 
   after_commit :notify_rate_updated, on: :update, if: -> { saved_change_to_pay_rate_in_subunits? && hourly? }
 
@@ -117,7 +114,7 @@ class CompanyWorker < ApplicationRecord
   end
 
   def can_create_expense_card?
-    active? && !on_trial? && company_role&.expense_card_enabled?
+    active? && company_role&.expense_card_enabled?
   end
 
   def active? = ended_at.nil?
@@ -134,7 +131,6 @@ class CompanyWorker < ApplicationRecord
     return if alumni?
 
     update!(ended_at: Time.current)
-    CompanyWorkerMailer.contract_ended(company_worker_id: id).deliver_later
   end
 
   def quickbooks_entity
@@ -171,12 +167,6 @@ class CompanyWorker < ApplicationRecord
   end
 
   private
-    def only_hourly_contractor_can_be_on_trial
-      if on_trial? && !hourly?
-        errors.add(:base, "Can only set trials with hourly contracts")
-      end
-    end
-
     def notify_rate_updated
       sync_with_quickbooks
     end

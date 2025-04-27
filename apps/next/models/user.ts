@@ -69,7 +69,6 @@ export const currentUserSchema = z.object({
         payRateType: z.enum(["hourly", "project_based", "salary"]),
         inviting_company: z.boolean(),
         role: z.object({ name: z.string(), expenseCardEnabled: z.boolean() }),
-        onTrial: z.boolean(),
         hoursPerWeek: z.number().nullable(),
         payRateInSubunits: z.number().nullable(),
       })

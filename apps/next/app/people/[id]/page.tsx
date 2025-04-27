@@ -1,5 +1,4 @@
 "use client";
-import { CheckIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { CheckCircleIcon, DocumentDuplicateIcon, InboxIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
@@ -19,7 +18,7 @@ import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MutationStatusButton } from "@/components/MutationButton";
+import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
@@ -79,12 +78,9 @@ export default function ContractorPage() {
 
   const [selectedRoleId, setSelectedRoleId] = useState(contractor?.role ?? "");
   useEffect(() => setSelectedRoleId(contractor?.role ?? ""), [contractor]);
-  const [roles] = trpc.roles.list.useSuspenseQuery({ companyId: company.id });
-  const selectedRole = roles.find((role) => role.id === selectedRoleId);
   const [endModalOpen, setEndModalOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [endDate, setEndDate] = useState(formatISO(new Date(), { representation: "date" }));
-  const [completeTrialModalOpen, setCompleteTrialModalOpen] = useState(false);
   const [issuePaymentModalOpen, setIssuePaymentModalOpen] = useState(false);
   const [paymentAmountInCents, setPaymentAmountInCents] = useState<number | null>(null);
   const [paymentDescription, setPaymentDescription] = useState("");
@@ -149,19 +145,6 @@ export default function ContractorPage() {
       });
       await trpcUtils.contractors.list.invalidate({ companyId: company.id });
       await refetch();
-      router.push(`/people`);
-    },
-  });
-
-  const completeTrial = trpc.contractors.completeTrial.useMutation();
-  const completeTrialMutation = useMutation({
-    mutationFn: async () => {
-      if (!contractor) return;
-
-      await completeTrial.mutateAsync({
-        companyId: company.id,
-        id: contractor.id,
-      });
       router.push(`/people`);
     },
   });
@@ -244,17 +227,6 @@ export default function ContractorPage() {
             <Button onClick={() => setIssuePaymentModalOpen(true)}>Issue payment</Button>
             {contractor.endedAt && !isFuture(contractor.endedAt) ? (
               <Status variant="critical">Alumni</Status>
-            ) : contractor.onTrial ? (
-              <>
-                <Button variant="outline" onClick={() => setEndModalOpen(true)}>
-                  <XMarkIcon className="size-4" />
-                  End trial
-                </Button>
-                <Button onClick={() => setCompleteTrialModalOpen(true)}>
-                  <CheckIcon className="size-4" />
-                  Complete trial
-                </Button>
-              </>
             ) : !contractor.endedAt || isFuture(contractor.endedAt) ? (
               <Button variant="outline" onClick={() => setEndModalOpen(true)}>
                 End contract
@@ -264,26 +236,6 @@ export default function ContractorPage() {
         ) : null
       }
     >
-      <Dialog open={completeTrialModalOpen} onOpenChange={setCompleteTrialModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{`Hire ${user.displayName}?`}</DialogTitle>
-          </DialogHeader>
-          <p>
-            You're hiring {user.displayName} as a {selectedRole?.name} for{" "}
-            {formatMoneyFromCents(selectedRole?.payRateInSubunits ?? 0)} / hour. Do you want to proceed?
-          </p>
-          <DialogFooter>
-            <div className="flex items-center gap-3">
-              <Button variant="outline" onClick={() => setCompleteTrialModalOpen(false)}>
-                No, cancel
-              </Button>
-              <MutationStatusButton mutation={completeTrialMutation}>Yes, hire</MutationStatusButton>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       <Dialog open={endModalOpen} onOpenChange={setEndModalOpen}>
         <DialogContent>
           <DialogHeader>
@@ -305,7 +257,7 @@ export default function ContractorPage() {
             <Button variant="outline" onClick={() => setEndModalOpen(false)}>
               No, cancel
             </Button>
-            <MutationStatusButton mutation={endContractMutation}>Yes, end contract</MutationStatusButton>
+            <MutationButton mutation={endContractMutation}>Yes, end contract</MutationButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -320,7 +272,7 @@ export default function ContractorPage() {
             <Button variant="outline" onClick={() => setCancelModalOpen(false)}>
               No, keep end date
             </Button>
-            <MutationStatusButton mutation={cancelContractEndMutation}>Yes, cancel contract end</MutationStatusButton>
+            <MutationButton mutation={cancelContractEndMutation}>Yes, cancel contract end</MutationButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -413,14 +365,14 @@ export default function ContractorPage() {
 
           <DialogFooter>
             <div className="flex justify-end">
-              <MutationStatusButton
+              <MutationButton
                 mutation={issuePaymentMutation}
                 successText="Payment submitted!"
                 loadingText="Saving..."
                 disabled={!hasValidPaymentInfo()}
               >
                 Issue payment
-              </MutationStatusButton>
+              </MutationButton>
             </div>
           </DialogFooter>
         </DialogContent>
@@ -582,18 +534,17 @@ const DetailsTab = ({
         </CardContent>
         {!contractor.endedAt && (
           <CardFooter>
-            <MutationStatusButton
+            <MutationButton
               size="small"
-              mutation={() =>
-                updateContractor.mutate({
-                  companyId: company.id,
-                  id: contractor.id,
-                  payRateType: selectedRole?.payRateType ?? contractor.payRateType,
-                  hoursPerWeek,
-                  payRateInSubunits,
-                  roleId: selectedRole?.id,
-                })
-              }
+              mutation={updateContractor}
+              param={{
+                companyId: company.id,
+                id: contractor.id,
+                payRateType: selectedRole?.payRateType ?? contractor.payRateType,
+                hoursPerWeek,
+                payRateInSubunits,
+                roleId: selectedRole?.id,
+              }}
               disabled={
                 contractor.payRateType === PayRateType.ProjectBased
                   ? !payRateInSubunits
@@ -602,7 +553,7 @@ const DetailsTab = ({
               loadingText="Saving..."
             >
               Save changes
-            </MutationStatusButton>
+            </MutationButton>
           </CardFooter>
         )}
       </FormSection>
@@ -773,9 +724,9 @@ function ExercisesTab({ investorId }: { investorId: string }) {
         id: "actions",
         cell: (info) =>
           info.row.original.status === "signed" ? (
-            <MutationStatusButton mutation={() => confirmPaymentMutation.mutate(info.row.original.id)} size="small">
+            <MutationButton mutation={confirmPaymentMutation} param={info.row.original.id} size="small">
               Confirm payment
-            </MutationStatusButton>
+            </MutationButton>
           ) : undefined,
       }),
     ],

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_25_145222) do
+ActiveRecord::Schema[8.0].define(version: 2025_04_27_193714) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -143,7 +143,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_25_145222) do
     t.boolean "equity_grants_enabled", default: false, null: false
     t.boolean "show_analytics_to_contractors", default: false, null: false
     t.boolean "company_updates_enabled", default: false, null: false
-    t.boolean "financing_rounds_enabled", default: false, null: false
     t.string "default_currency", default: "usd", null: false
     t.boolean "cap_table_enabled", default: false, null: false
     t.boolean "tender_offers_enabled", default: false, null: false
@@ -217,7 +216,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_25_145222) do
     t.string "external_id", null: false
     t.integer "pay_rate_type", default: 0, null: false
     t.boolean "sent_equity_percent_selection_email", default: false, null: false
-    t.boolean "on_trial", default: false, null: false
     t.integer "pay_rate_in_subunits", null: false
     t.string "pay_rate_currency", default: "usd", null: false
     t.index ["company_id"], name: "index_company_contractors_on_company_id"
@@ -294,13 +292,11 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_25_145222) do
     t.datetime "updated_at", null: false
     t.integer "pay_rate_in_subunits", null: false
     t.string "pay_rate_currency", default: "usd", null: false
-    t.integer "trial_pay_rate_in_subunits", null: false
     t.index ["company_role_id"], name: "index_company_role_rates_on_company_role_id"
   end
 
   create_table "company_roles", force: :cascade do |t|
     t.bigint "company_id", null: false
-    t.text "job_description", null: false
     t.string "name", null: false
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
@@ -310,7 +306,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_25_145222) do
     t.string "expense_account_id"
     t.string "external_id", null: false
     t.bigint "expense_card_spending_limit_cents", default: 0, null: false
-    t.boolean "trial_enabled", default: false, null: false
     t.boolean "expense_card_enabled", default: false, null: false
     t.index ["company_id"], name: "index_company_roles_on_company_id"
     t.index ["external_id"], name: "index_company_roles_on_external_id", unique: true
@@ -814,23 +809,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_25_145222) do
     t.datetime "updated_at", null: false
     t.string "expense_account_id"
     t.index ["company_id"], name: "index_expense_categories_on_company_id"
-  end
-
-  create_table "financing_rounds", force: :cascade do |t|
-    t.string "external_id", null: false
-    t.bigint "company_id", null: false
-    t.string "name", null: false
-    t.datetime "issued_at", null: false
-    t.bigint "shares_issued", null: false
-    t.bigint "price_per_share_cents", null: false
-    t.bigint "amount_raised_cents", null: false
-    t.bigint "post_money_valuation_cents", null: false
-    t.jsonb "investors", default: [], null: false
-    t.string "status", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.index ["company_id"], name: "index_financing_rounds_on_company_id"
-    t.index ["external_id"], name: "index_financing_rounds_on_external_id", unique: true
   end
 
   create_table "integration_records", force: :cascade do |t|
