@@ -177,7 +177,7 @@ export default function MainLayout({
         <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
           <main className="flex flex-1 flex-col gap-6 pb-4 not-print:overflow-y-auto">
             <div>
-              <header className="border-b bg-gray-200 px-3 pt-8 pb-4 md:px-16">
+              <header className="bg-gray-200 px-3 pt-8 pb-4 md:px-16">
                 <div className="grid max-w-(--breakpoint-xl) gap-y-8">
                   <div className="grid items-center justify-between gap-3 md:flex">
                     <div>
@@ -191,7 +191,7 @@ export default function MainLayout({
                   </div>
                 </div>
               </header>
-              {subheader ? <div className="border-b bg-gray-200/50">{subheader}</div> : null}
+              {subheader ? <div className="bg-gray-200/50">{subheader}</div> : null}
             </div>
             <div className="mx-3 flex max-w-(--breakpoint-xl) flex-col gap-6 md:mx-16">{children}</div>
           </main>
