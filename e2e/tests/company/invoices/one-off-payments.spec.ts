@@ -53,7 +53,7 @@ test.describe("One-off payments", () => {
         },
         { page },
       );
-      
+
       await page.waitForLoadState("networkidle");
 
       const invoiceRow = await findRequiredTableRow(page, {
@@ -145,7 +145,7 @@ test.describe("One-off payments", () => {
           },
           { page },
         );
-        
+
         await page.waitForLoadState("networkidle");
 
         const invoiceRow = await findRequiredTableRow(page, {
@@ -227,7 +227,7 @@ test.describe("One-off payments", () => {
           },
           { page },
         );
-        
+
         await page.waitForLoadState("networkidle");
 
         const invoiceRow = await findRequiredTableRow(page, {
@@ -289,7 +289,7 @@ test.describe("One-off payments", () => {
           },
           { page },
         );
-        
+
         await expect(page.getByRole("dialog")).not.toBeVisible();
         await expect(page.getByRole("button", { name: "Accept payment" })).not.toBeVisible();
       });
@@ -339,7 +339,7 @@ test.describe("One-off payments", () => {
           },
           { page },
         );
-        
+
         await expect(page.getByRole("dialog")).not.toBeVisible();
         await expect(page.getByRole("button", { name: "Confirm 25% split" })).not.toBeVisible();
 
@@ -377,7 +377,7 @@ test.describe("One-off payments", () => {
         },
         { page },
       );
-      
+
       await expect(page.getByRole("dialog")).not.toBeVisible();
 
       await page.getByRole("link", { name: "Invoices" }).click();
@@ -408,7 +408,7 @@ test.describe("One-off payments", () => {
         },
         { page },
       );
-      
+
       await expect(page.getByRole("dialog")).not.toBeVisible();
 
       await clerk.signOut({ page });
