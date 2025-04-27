@@ -6,7 +6,7 @@ class Company < ApplicationRecord
   # Must match the value set in application.ts
   PLACEHOLDER_COMPANY_ID = "_"
 
-  include Flipper::Identifier, DigestEmail, ExternalId
+  include Flipper::Identifier, ExternalId
 
   normalizes :tax_id, with: -> { _1.delete("^0-9") }
   normalizes :phone_number, with: -> { _1.delete("^0-9").delete_prefix("1") }
