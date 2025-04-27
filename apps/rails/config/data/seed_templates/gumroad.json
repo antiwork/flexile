@@ -287,7 +287,6 @@
           "company_role": {
             "model_attributes": {
               "name": "Software engineer",
-              "job_description": "We're looking for a software engineer to join our team.",
               "expense_card_enabled": true
             },
             "company_role_rate": {
@@ -442,7 +441,6 @@
           "company_role": {
             "model_attributes": {
               "name": "Product designer",
-              "job_description": "Improve Gumroad by designing product features, primarily in Figma. You will be expected to write some code (HTML, CSS, TypeScript, JavaScript). You should have familiarity with improving a high-quality app in production.",
               "expense_card_enabled": true
             },
             "company_role_rate": {
@@ -488,8 +486,7 @@
         {
           "company_role": {
             "model_attributes": {
-              "name": "Project-based engineer",
-              "job_description": "We're looking for a project-based engineer to build our next MVP."
+              "name": "Project-based engineer"
             },
             "company_role_rate": {
               "model_attributes": {
@@ -531,8 +528,7 @@
         {
           "company_role": {
             "model_attributes": {
-              "name": "Customer supporter",
-              "job_description": "<p>If you're interested, watch our last public board meeting here:</p><p>https://youtu.be/qUYSTvJnIXA</p><p>Then, pick an upcoming feature from the roadmap and include in your application:</p><p>- 3 sample support queries and their answers</p><p>- A draft Help Center article</p>"
+              "name": "Customer supporter"
             },
             "company_role_rate": {
               "model_attributes": {

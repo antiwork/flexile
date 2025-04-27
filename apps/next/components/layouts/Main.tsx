@@ -126,7 +126,7 @@ export default function MainLayout({
               <CompanyName company={openCompany} />
             </div>
           ) : (
-            <Image src={logo} className="invert" alt="Flexile" />
+            <Image src={logo} alt="Flexile" />
           )}
         </SidebarHeader>
         <SidebarContent>
