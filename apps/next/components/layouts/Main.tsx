@@ -23,7 +23,7 @@ import {
   UsersIcon as SolidUsersIcon,
 } from "@heroicons/react/24/solid";
 import { useQueryClient } from "@tanstack/react-query";
-import { capitalize } from "lodash-es";
+
 import { ChevronsUpDown } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -58,7 +58,7 @@ import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
 
-type CompanyAccessRole = "administrator" | "worker" | "investor" | "lawyer";
+
 
 export default function MainLayout({
   children,
@@ -213,20 +213,18 @@ const CompanyName = ({ company }: { company: Company }) => (
       <span className="line-clamp-1 font-bold" title={company.name ?? ""}>
         {company.name}
       </span>
-      {company.selected_access_role && company.other_access_roles.length > 0 ? (
-        <div className="text-xs">{capitalize(company.selected_access_role)}</div>
-      ) : null}
+
     </div>
   </>
 );
 
 const useSwitchCompanyOrRole = () => {
   const queryClient = useQueryClient();
-  return async (companyId: string, accessRole?: CompanyAccessRole) => {
+  return async (companyId: string) => {
     useUserStore.setState((state) => ({ ...state, pending: true }));
     await request({
       method: "POST",
-      url: company_switch_path(companyId, { access_role: accessRole }),
+      url: company_switch_path(companyId),
       accept: "json",
     });
     await queryClient.resetQueries({ queryKey: ["currentUser"] });
