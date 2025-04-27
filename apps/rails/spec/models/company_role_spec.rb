@@ -16,7 +16,6 @@ RSpec.describe CompanyRole do
   end
 
   describe "validations" do
-
     it "prevents deleting the role if it still has active contractors associated" do
       company_role = create(:company_role)
       contractor = create(:company_worker, company_role:)
