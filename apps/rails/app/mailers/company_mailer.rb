@@ -49,7 +49,6 @@ class CompanyMailer < ApplicationMailer
     # Update the subject line to include pending exercise payments
     subjects = []
     subjects << "#{@invoices_pending_approval_from_recipient.count} #{'invoice'.pluralize(@invoices_pending_approval_from_recipient.count)} #{'requires'.pluralize(@invoices_pending_approval_from_recipient.count)} your approval" if @invoices_pending_approval_from_recipient.present?
-    subjects << "#{@open_invoices.count} #{'invoice'.pluralize(@open_invoices.count)} pending" if @open_invoices.present?
     subjects << "#{@rejected_invoices_count} rejected #{'invoice'.pluralize(@rejected_invoices_count)}" if @rejected_invoices.present?
     subjects << "#{@pending_exercise_payments_count} exercise #{'request'.pluralize(@pending_exercise_payments_count)}" if @pending_exercise_payments.present?
     subject = subjects.join(", ")
