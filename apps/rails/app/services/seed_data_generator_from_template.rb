@@ -303,7 +303,7 @@ class SeedDataGeneratorFromTemplate
     end
 
     def create_financing_rounds!(company, company_data)
-      return
+      nil
     end
 
     def create_equity_buyback_rounds!(company, company_data)
