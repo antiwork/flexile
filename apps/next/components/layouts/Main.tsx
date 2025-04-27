@@ -325,9 +325,8 @@ const NavLinks = ({ company }: { company: Company }) => {
           Settings
         </NavLink>
       )}
-      {company.other_access_roles.map((accessRole) => (
-        <SwitchRoleNavLink key={accessRole} accessRole={accessRole} companyId={company.id} />
-      ))}
+      {/* Role switching functionality removed as per requirement */}
+      {/* Users who are both admin and worker will always see the admin view */}
     </SidebarMenu>
   );
 };
