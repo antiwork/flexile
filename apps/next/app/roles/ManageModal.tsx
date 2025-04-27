@@ -57,7 +57,9 @@ const ManageModal = ({
       expenseAccountId: null,
     };
     const lastRole = roles[0];
-    return lastRole ? { ...defaults, ...pick(lastRole, "payRateInSubunits", "trialPayRateInSubunits", "capitalizedExpense") } : defaults;
+    return lastRole
+      ? { ...defaults, ...pick(lastRole, "payRateInSubunits", "trialPayRateInSubunits", "capitalizedExpense") }
+      : defaults;
   };
   const [role, setRole] = useState(getSelectedRole);
   useEffect(() => setRole(getSelectedRole()), [id]);
