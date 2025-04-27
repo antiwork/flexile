@@ -324,7 +324,6 @@ const NavLinks = ({ company }: { company: Company }) => {
           Settings
         </NavLink>
       )}
-
     </SidebarMenu>
   );
 };
