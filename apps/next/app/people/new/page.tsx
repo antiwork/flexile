@@ -50,11 +50,12 @@ function Create() {
   const trpcUtils = trpc.useUtils();
   const saveMutation = trpc.contractors.create.useMutation({
     onSuccess: async (data) => {
+      await trpcUtils.contractors.list.invalidate();
       await trpcUtils.documents.list.invalidate();
       router.push(
         data.documentId
-          ? `/documents?${new URLSearchParams({ sign: data.documentId.toString(), next: "/people?type=onboarding" })}`
-          : `/people?type=onboarding`,
+          ? `/documents?${new URLSearchParams({ sign: data.documentId.toString(), next: "/people" })}`
+          : "/people",
       );
     },
   });

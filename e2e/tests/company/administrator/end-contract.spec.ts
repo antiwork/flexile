@@ -34,8 +34,7 @@ test.describe("End contract", () => {
 
     await page.getByRole("button", { name: "Yes, end contract" }).click();
 
-    await expect(page.getByText("Contractors will show up here.")).toBeVisible();
-    await page.getByRole("tab", { name: "Alumni" }).click();
+    await expect(page.getByRole("row").getByText(`Ended on ${format(new Date(), "MMM d, yyyy")}`)).toBeVisible();
     await page.getByRole("link", { name: contractor.preferredName }).click();
 
     await expect(page.getByText(`Contract ended on ${format(new Date(), "MMM d, yyyy")}`)).toBeVisible();
