@@ -1,7 +1,6 @@
 import { ArrowDownTrayIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { CheckCircleIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import { partition } from "lodash-es";
 import Link from "next/link";
 import React, { Fragment, useMemo, useState } from "react";
 import StripeMicrodepositVerification from "@/app/administrator/settings/StripeMicrodepositVerification";
@@ -50,12 +49,11 @@ export default function AdminList() {
   const isActionable = useIsActionable();
   const isPayable = useIsPayable();
   const areTaxRequirementsMet = useAreTaxRequirementsMet();
-  const [data, { refetch }] = trpc.invoices.list.useSuspenseQuery({ companyId: company.id });
+  const [data] = trpc.invoices.list.useSuspenseQuery({ companyId: company.id });
 
   const approveInvoices = useApproveInvoices(() => {
     setOpenModal(null);
     table.resetRowSelection();
-    void refetch();
   });
 
   const columnHelper = createColumnHelper<(typeof data)[number]>();
@@ -86,6 +84,7 @@ export default function AdminList() {
         },
       }),
       columnHelper.accessor(isActionable, {
+        id: "actions",
         header: "Actions",
         cell: (info) => (isActionable(info.row.original) ? <ApproveButton invoice={info.row.original} /> : null),
       }),
@@ -98,7 +97,7 @@ export default function AdminList() {
     data,
     getRowId: (invoice) => invoice.id,
     initialState: {
-      sorting: [{ id: "Actions", desc: true }],
+      sorting: [{ id: "actions", desc: true }],
     },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -107,7 +106,8 @@ export default function AdminList() {
 
   const selectedRows = table.getSelectedRowModel().rows;
   const selectedInvoices = selectedRows.map((row) => row.original);
-  const [selectedPayableInvoices, selectedApprovableInvoices] = partition(selectedInvoices, isPayable);
+  const selectedApprovableInvoices = selectedInvoices.filter(isActionable);
+  const selectedPayableInvoices = selectedApprovableInvoices.filter(isPayable);
 
   return (
     <MainLayout
@@ -332,7 +332,7 @@ const TasksModal = ({
               <Button variant="outline" onClick={onReject}>
                 Reject
               </Button>
-              <ApproveButton invoice={invoice} onApprove={() => setTimeout(() => onClose(), 500)} />
+              <ApproveButton invoice={invoice} onApprove={onClose} />
             </div>
           </DialogFooter>
         ) : null}
