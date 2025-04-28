@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { formatISO } from "date-fns";
-import { and, desc, eq, gte, inArray, isNull, lte } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
@@ -22,6 +22,7 @@ import { calculateInvoiceEquity } from "@/trpc/routes/equityCalculations";
 import OneOffInvoiceCreated from "@/trpc/routes/OneOffInvoiceCreated";
 import { latestUserComplianceInfo, simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
+import { invoiceStatuses } from "@/db/enums";
 
 const requiresAcceptanceByPayee = (
   invoice: Pick<typeof invoices.$inferSelect, "createdById" | "userId" | "acceptedAt">,
@@ -299,8 +300,7 @@ export const invoicesRouter = createRouter({
     .input(
       z.object({
         contractorId: z.string().optional(),
-        after: z.string().optional(),
-        before: z.string().optional(),
+        status: z.array(z.enum(invoiceStatuses)).optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -310,14 +310,6 @@ export const invoicesRouter = createRouter({
       )
         throw new TRPCError({ code: "FORBIDDEN" });
 
-      let where = and(
-        eq(invoices.companyId, ctx.company.id),
-        input.contractorId
-          ? eq(invoices.companyContractorId, byExternalId(companyContractors, input.contractorId))
-          : undefined,
-      );
-      if (input.before) where = and(where, lte(invoices.invoiceDate, input.before));
-      if (input.after) where = and(where, gte(invoices.invoiceDate, input.after));
       const rows = await db.query.invoices.findMany({
         with: {
           rejector: { columns: simpleUser.columns },
@@ -334,7 +326,13 @@ export const invoicesRouter = createRouter({
             },
           },
         },
-        where,
+        where: and(
+          eq(invoices.companyId, ctx.company.id),
+          input.contractorId
+            ? eq(invoices.companyContractorId, byExternalId(companyContractors, input.contractorId))
+            : undefined,
+          input.status ? inArray(invoices.status, input.status) : undefined,
+        ),
         orderBy: [desc(invoices.invoiceDate), desc(invoices.createdAt)],
       });
       return rows.map((invoice) => ({

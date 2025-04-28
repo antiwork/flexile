@@ -1,6 +1,6 @@
 "use client";
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { CheckCircleIcon, DocumentDuplicateIcon, InboxIcon } from "@heroicons/react/24/outline";
+import { CheckCircleIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/react-query";
 import { formatISO, isFuture } from "date-fns";
@@ -11,7 +11,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import DividendStatusIndicator from "@/app/equity/DividendStatusIndicator";
 import EquityGrantExerciseStatusIndicator from "@/app/equity/EquityGrantExerciseStatusIndicator";
 import DetailsModal from "@/app/equity/grants/DetailsModal";
-import InvoiceStatus from "@/app/invoices/Status";
 import RoleSelector from "@/app/roles/Selector";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import FormSection from "@/components/FormSection";
@@ -37,7 +36,7 @@ import { assertDefined } from "@/utils/assert";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { approve_company_invoices_path, company_equity_exercise_payment_path } from "@/utils/routes";
-import { formatDate, formatDuration } from "@/utils/time";
+import { formatDate } from "@/utils/time";
 
 export default function ContractorPage() {
   const currentUser = useCurrentUser();
@@ -71,10 +70,6 @@ export default function ContractorPage() {
     { companyId: company.id, investorId: investor?.id ?? "" },
     { enabled: !!investor },
   );
-  const [invoicesData, { refetch: refetchInvoices }] = trpc.invoices.list.useSuspenseQuery({
-    companyId: company.id,
-    contractorId: contractor?.id ?? "",
-  });
 
   const [selectedRoleId, setSelectedRoleId] = useState(contractor?.role ?? "");
   useEffect(() => setSelectedRoleId(contractor?.role ?? ""), [contractor]);
@@ -109,7 +104,6 @@ export default function ContractorPage() {
 
   const tabs = [
     contractor && ({ label: "Details", tab: `details` } as const),
-    contractor && ({ label: "Invoices", tab: `invoices` } as const),
     equityGrants?.length ? ({ label: "Options", tab: `options` } as const) : null,
     shareHoldings?.length ? ({ label: "Shares", tab: `shares` } as const) : null,
     convertiblesData?.convertibleSecurities.length ? ({ label: "Convertibles", tab: `convertibles` } as const) : null,
@@ -210,7 +204,7 @@ export default function ContractorPage() {
             : { pay_ids: [invoice.externalId] },
         assertOk: true,
       });
-      await refetchInvoices();
+      await trpcUtils.invoices.list.invalidate({ companyId: company.id });
       closeIssuePaymentModal();
     },
     onSettled: () => {
@@ -382,9 +376,6 @@ export default function ContractorPage() {
 
       {(() => {
         switch (selectedTab) {
-          case "invoices":
-            return contractor ? <InvoicesTab data={invoicesData} /> : null;
-
           case "options":
             return investor ? <OptionsTab investorId={investor.id} userId={id} /> : null;
           case "shares":
@@ -596,33 +587,6 @@ const DetailsTab = ({
         </CardContent>
       </FormSection>
     </>
-  );
-};
-
-type Invoice = RouterOutput["invoices"]["list"][number];
-const invoicesColumnHelper = createColumnHelper<Invoice>();
-const invoicesColumns = [
-  invoicesColumnHelper.accessor("invoiceNumber", {
-    header: "Invoice ID",
-    cell: ({ row }) => <a href={`/invoices/${row.original.id}`}>{row.original.invoiceNumber}</a>,
-  }),
-  invoicesColumnHelper.simple("invoiceDate", "Sent on", (v) => (v ? formatDate(v) : "-")),
-  invoicesColumnHelper.simple("paidAt", "Paid", (v) => (v ? formatDate(v) : "-")),
-  invoicesColumnHelper.simple("totalMinutes", "Hours", (v) => (v ? formatDuration(v) : "N/A"), "numeric"),
-  invoicesColumnHelper.simple("totalAmountInUsdCents", "Amount", (v) => formatMoneyFromCents(v), "numeric"),
-  invoicesColumnHelper.accessor("status", {
-    header: "Status",
-    cell: ({ row }) => <InvoiceStatus invoice={row.original} />,
-  }),
-];
-const InvoicesTab = ({ data }: { data: RouterOutput["invoices"]["list"] }) => {
-  const router = useRouter();
-  const table = useTable({ columns: invoicesColumns, data });
-
-  return data.length > 0 ? (
-    <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
-  ) : (
-    <Placeholder icon={InboxIcon}>Invoices issued by this contractor will show up here.</Placeholder>
   );
 };
 

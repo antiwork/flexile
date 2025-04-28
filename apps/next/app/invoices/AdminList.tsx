@@ -32,6 +32,16 @@ import { pluralize } from "@/utils/pluralize";
 import { export_company_invoices_path } from "@/utils/routes";
 import { formatDate, formatDuration } from "@/utils/time";
 
+const statusNames = {
+  received: "Awaiting approval",
+  approved: "Awaiting approval",
+  processing: "Processing",
+  payment_pending: "Processing",
+  paid: "Paid",
+  rejected: "Rejected",
+  failed: "Failed",
+};
+
 type Invoice = RouterOutput["invoices"]["list"][number];
 export default function AdminList() {
   const company = useCurrentCompany();
@@ -40,9 +50,7 @@ export default function AdminList() {
   const isActionable = useIsActionable();
   const isPayable = useIsPayable();
   const areTaxRequirementsMet = useAreTaxRequirementsMet();
-  const [data, { refetch }] = trpc.invoices.list.useSuspenseQuery({
-    companyId: company.id,
-  });
+  const [data, { refetch }] = trpc.invoices.list.useSuspenseQuery({ companyId: company.id });
 
   const approveInvoices = useApproveInvoices(() => {
     setOpenModal(null);
@@ -70,19 +78,19 @@ export default function AdminList() {
         (value) => (value ? formatMoneyFromCents(value) : "N/A"),
         "numeric",
       ),
-      columnHelper.accessor("status", {
+      columnHelper.accessor((row) => statusNames[row.status], {
         header: "Status",
         cell: (info) => <StatusWithTooltip invoice={info.row.original} />,
         meta: {
-          filterOptions: [...new Set(data.map((invoice) => invoice.status))],
+          filterOptions: [...new Set(data.map((invoice) => statusNames[invoice.status]))],
         },
       }),
-      columnHelper.display({
-        id: "actions",
+      columnHelper.accessor(isActionable, {
+        header: "Actions",
         cell: (info) => (isActionable(info.row.original) ? <ApproveButton invoice={info.row.original} /> : null),
       }),
     ],
-    [data, company.requiredInvoiceApprovals],
+    [data],
   );
 
   const table = useTable({
@@ -90,10 +98,11 @@ export default function AdminList() {
     data,
     getRowId: (invoice) => invoice.id,
     initialState: {
-      sorting: [{ id: "invoiceDate", desc: true }],
+      sorting: [{ id: "Actions", desc: true }],
     },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    enableRowSelection: true,
   });
 
   const selectedRows = table.getSelectedRowModel().rows;

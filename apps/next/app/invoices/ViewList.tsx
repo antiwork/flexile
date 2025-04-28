@@ -1,6 +1,6 @@
 import { CurrencyDollarIcon, ExclamationTriangleIcon, PencilIcon, PlusIcon } from "@heroicons/react/20/solid";
 import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
-import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
+import { getSortedRowModel } from "@tanstack/react-table";
 import { useMutation } from "@tanstack/react-query";
 import { formatISO } from "date-fns";
 import Link from "next/link";
@@ -61,48 +61,15 @@ export default function ViewList() {
               {info.getValue()}
             </Link>
           ),
-          meta: {
-            filterOptions: [...new Set(data.map((invoice) => invoice.invoiceNumber))],
-          },
         }),
-        columnHelper.accessor("invoiceDate", {
-          header: "Sent on",
-          cell: (info) => (info.getValue() ? formatDate(info.getValue()) : "N/A"),
-          meta: {
-            filterOptions: [
-              ...new Set(
-                data
-                  .map((invoice) => (invoice.invoiceDate ? new Date(invoice.invoiceDate).getFullYear().toString() : ""))
-                  .filter(Boolean),
-              ),
-            ],
-          },
-          filterFn: (row, _, filterValue) =>
-            Array.isArray(filterValue) && row.original.invoiceDate
-              ? filterValue.includes(new Date(row.original.invoiceDate).getFullYear().toString())
-              : true,
-        }),
+        columnHelper.simple("invoiceDate", "Sent on", (value) => (value ? formatDate(value) : "N/A")),
         isProjectBased
           ? null
-          : columnHelper.accessor("totalMinutes", {
-              header: "Hours",
-              cell: (info) => {
-                const value = info.getValue();
-                return value ? formatDuration(Number(value)) : "N/A";
-              },
-              meta: { numeric: true },
-            }),
-        columnHelper.accessor("totalAmountInUsdCents", {
-          header: "Amount",
-          cell: (info) => formatMoneyFromCents(info.getValue()),
-          meta: { numeric: true },
-        }),
+          : columnHelper.simple("totalMinutes", "Hours", (v) => (v ? formatDuration(v) : "N/A"), "numeric"),
+        columnHelper.simple("totalAmountInUsdCents", "Amount", (v) => formatMoneyFromCents(v), "numeric"),
         columnHelper.accessor("status", {
           header: "Status",
           cell: (info) => <StatusWithTooltip invoice={info.row.original} />,
-          meta: {
-            filterOptions: [...new Set(data.map((invoice) => invoice.status))],
-          },
         }),
         columnHelper.display({
           id: "actions",
@@ -116,7 +83,7 @@ export default function ViewList() {
           },
         }),
       ].filter((column) => !!column),
-    [data, isProjectBased],
+    [data],
   );
 
   const table = useTable({
@@ -126,7 +93,6 @@ export default function ViewList() {
       sorting: [{ id: "invoiceDate", desc: true }],
     },
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
   });
 
   return (
@@ -150,7 +116,11 @@ export default function ViewList() {
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>You have an unsigned contract. Please sign it before creating new invoices.</div>
               <Button asChild variant="outline" size="small" disabled={!!unsignedContractId}>
-                <a href={`/documents?sign=${unsignedContractId.toString()}&next=/invoices`}>Review & sign</a>
+                <Link
+                  href={`/documents?${new URLSearchParams({ sign: unsignedContractId.toString(), next: "/invoices" })}`}
+                >
+                  Review & sign
+                </Link>
               </Button>
             </div>
           </AlertDescription>
@@ -160,11 +130,7 @@ export default function ViewList() {
       <QuickInvoiceSection disabled={!!unsignedContractId} />
 
       {data.length > 0 ? (
-        <DataTable
-          table={table}
-          onRowClicked={(row) => router.push(`/invoices/${row.id}`)}
-          searchColumn="invoiceNumber"
-        />
+        <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
       ) : (
         <div>
           <Placeholder icon={CurrencyDollarIcon}>

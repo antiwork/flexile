@@ -199,11 +199,7 @@ test.describe("Invoices admin flow", () => {
           expect(updatedTargetInvoice?.status).toBe("approved");
           expect(updatedTargetInvoice?.approvals.length).toBe(1);
 
-          await page.getByRole("combobox", { name: "Status" }).click();
-          await page.getByRole("option", { name: "approved" }).click();
-          await page.getByRole("option", { name: "payment_pending" }).click();
-          await page.getByRole("option", { name: "paid" }).click();
-          await page.getByRole("option", { name: "rejected" }).click();
+          await page.getByRole("tab", { name: "History" }).click();
           await page.waitForLoadState("networkidle");
           await page.waitForTimeout(300);
           targetInvoiceRow = await findRequiredTableRow(page, targetInvoiceRowSelector);
@@ -287,11 +283,7 @@ test.describe("Invoices admin flow", () => {
           });
           expect(updatedInvoice?.status).toBe("approved");
 
-          await page.getByRole("combobox", { name: "Status" }).click();
-          await page.getByRole("option", { name: "approved" }).click();
-          await page.getByRole("option", { name: "payment_pending" }).click();
-          await page.getByRole("option", { name: "paid" }).click();
-          await page.getByRole("option", { name: "rejected" }).click();
+          await page.getByRole("tab", { name: "History" }).click();
 
           const approvedInvoiceSelector = {
             ...targetInvoiceRowSelector,
@@ -392,11 +384,7 @@ test.describe("Invoices admin flow", () => {
           expect(updatedInvoices.length).toBe(2);
           expect(updatedInvoices.every((invoice) => invoice.status === "rejected")).toBe(true);
 
-          await page.getByRole("combobox", { name: "Status" }).click();
-          await page.getByRole("option", { name: "approved" }).click();
-          await page.getByRole("option", { name: "payment_pending" }).click();
-          await page.getByRole("option", { name: "paid" }).click();
-          await page.getByRole("option", { name: "rejected" }).click();
+          await page.getByRole("tab", { name: "History" }).click();
           await Promise.all(
             updatedInvoices.map(async (invoice, index) => {
               expect(invoice.rejectionReason).toBeNull();
@@ -424,11 +412,7 @@ test.describe("Invoices admin flow", () => {
           expect(updatedInvoices.length).toBe(2);
           expect(updatedInvoices.every((invoice) => invoice.status === "rejected")).toBe(true);
 
-          await page.getByRole("combobox", { name: "Status" }).click();
-          await page.getByRole("option", { name: "approved" }).click();
-          await page.getByRole("option", { name: "payment_pending" }).click();
-          await page.getByRole("option", { name: "paid" }).click();
-          await page.getByRole("option", { name: "rejected" }).click();
+          await page.getByRole("tab", { name: "History" }).click();
           await Promise.all(
             updatedInvoices.map(async (invoice, index) => {
               expect(invoice.rejectionReason).toBe("Invoice issue date mismatch");

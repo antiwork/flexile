@@ -377,11 +377,8 @@ test.describe("One-off payments", () => {
 
       await page.getByRole("link", { name: "Invoices" }).click();
       await expect(page.getByText("No invoices to display.")).toBeVisible();
-      await page.getByRole("combobox", { name: "Status" }).click();
-      await page.getByRole("option", { name: "approved" }).click();
-      await page.getByRole("option", { name: "payment_pending" }).click();
-      await page.getByRole("option", { name: "paid" }).click();
-      await page.getByRole("option", { name: "rejected" }).click();
+      await page.getByRole("tab", { name: "History" }).click();
+      await page.waitForURL(/tab=history/u);
       await expect(page.getByText("No invoices to display.")).toBeVisible();
 
       await clerk.signOut({ page });
@@ -414,30 +411,26 @@ test.describe("One-off payments", () => {
 
       await page.getByRole("link", { name: "Invoices" }).click();
       await expect(page.getByText("No invoices to display.")).toBeVisible();
-
-      await page.getByRole("combobox", { name: "Status" }).click();
-      await page.getByRole("option", { name: "approved" }).click();
-      await page.getByRole("option", { name: "payment_pending" }).click();
-      await page.getByRole("option", { name: "paid" }).click();
-      await page.getByRole("option", { name: "rejected" }).click();
+      await page.getByRole("tab", { name: "History" }).click();
+      await page.waitForURL(/tab=history/u);
       await expect(page.getByText("No invoices to display.")).not.toBeVisible();
       await expect(page.getByRole("row", { name: "$123.45" })).toBeVisible();
 
       await db.update(companies).set({ requiredInvoiceApprovalCount: 1 }).where(eq(companies.id, company.id));
 
       await page.reload();
+      await page.waitForURL(/tab=history/u);
       await expect(page.getByText("No invoices to display.")).toBeVisible();
 
-      await page.getByRole("combobox", { name: "Status" }).click();
-      await page.getByRole("option", { name: "pending" }).click();
+      await page.getByRole("tab", { name: "Open" }).click();
+      await page.waitForURL(/invoices$/u);
       await expect(page.getByRole("row", { name: "$123.45" })).toBeVisible();
 
       await page.getByRole("button", { name: "Pay now" }).click();
 
       await expect(page.getByText("No invoices to display.")).toBeVisible();
-
-      await page.getByRole("combobox", { name: "Status" }).click();
-      await page.getByRole("option", { name: "payment_pending" }).click();
+      await page.getByRole("tab", { name: "History" }).click();
+      await page.waitForURL(/tab=history/u);
       await expect(page.getByRole("row", { name: "$123.45 Payment scheduled" })).toBeVisible();
     });
   });
