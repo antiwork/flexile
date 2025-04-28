@@ -165,12 +165,6 @@ test.describe("Invoices admin flow", () => {
           });
           assert(anotherInvoiceUser !== undefined);
           assert(anotherInvoiceUser.legalName !== null);
-          anotherInvoiceRowSelector = {
-            Contractor: anotherInvoiceUser.legalName,
-            "Sent on": format(targetInvoice.invoiceDate, "MMM d, yyyy"),
-            Hours: "02:00",
-            Amount: "$75",
-          };
         });
 
         testContext("allows approving an invoice", async ({ page }) => {
