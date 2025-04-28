@@ -37,6 +37,7 @@ export const calculateInvoiceEquity = async ({
   let isEquityAllocationLocked = null;
   let selectedPercentage = null;
   let equityPercentage = 0;
+  let equityAllocation = null;
 
   const serviceAmountCentsNumber =
     typeof serviceAmountCents === "bigint" ? Number(serviceAmountCents) : serviceAmountCents;
@@ -48,7 +49,7 @@ export const calculateInvoiceEquity = async ({
   }
   // Otherwise, get equity percentage from database
   else if (equityCompensationEnabled) {
-    const equityAllocation = await db.query.equityAllocations.findFirst({
+    equityAllocation = await db.query.equityAllocations.findFirst({
       where: and(
         eq(equityAllocations.companyContractorId, companyContractor.id),
         eq(equityAllocations.year, invoiceYear),
@@ -59,7 +60,15 @@ export const calculateInvoiceEquity = async ({
       selectedPercentage = equityAllocation.equityPercentage;
       equityPercentage = equityAllocation.equityPercentage;
     } else {
-      equityPercentage = 0;
+      const lastYearEquityAllocation = await db.query.equityAllocations.findFirst({
+        where: and(
+          eq(equityAllocations.companyContractorId, companyContractor.id),
+          eq(equityAllocations.year, invoiceYear - 1),
+        ),
+      });
+      isEquityAllocationLocked = lastYearEquityAllocation?.locked ?? null;
+      selectedPercentage = lastYearEquityAllocation?.equityPercentage ?? 0;
+      equityPercentage = selectedPercentage;
     }
   }
 
@@ -91,6 +100,23 @@ export const calculateInvoiceEquity = async ({
     equityPercentage = 0;
     equityAmountInCents = 0;
     equityAmountInOptions = 0;
+  }
+
+  if (equityPercentage !== 0 && unvestedGrant && unvestedGrant.unvestedShares < equityAmountInOptions) {
+    if (equityAllocation) {
+      await db
+        .update(equityAllocations)
+        .set({ status: "pending_grant_creation" })
+        .where(eq(equityAllocations.id, equityAllocation.id));
+    } else {
+      await db.insert(equityAllocations).values({
+        companyContractorId: companyContractor.id,
+        equityPercentage,
+        year: invoiceYear,
+        status: "pending_grant_creation",
+        locked: true,
+      });
+    }
   }
 
   return {
