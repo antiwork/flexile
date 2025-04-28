@@ -312,7 +312,7 @@ const NavLinks = ({ company }: { company: Company }) => {
       ) : null}
       {routes.has("Settings") && (
         <NavLink
-          href={isRole("administrator") ? `/administrator/settings` : `/settings/equity`}
+          href={isRole("administrator") ? `/administrator/settings` : `/settings`}
           active={!!active && pathname.startsWith("/settings")}
           icon={Cog6ToothIcon}
           filledIcon={SolidCog6ToothIcon}
