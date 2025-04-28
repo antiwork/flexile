@@ -32,7 +32,7 @@ import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { pluralize } from "@/utils/pluralize";
 import { export_company_invoices_path } from "@/utils/routes";
 import { formatDate, formatDuration } from "@/utils/time";
-
+import { EquityAllocationStatus } from "@/db/enums";
 type Invoice = RouterOutput["invoices"]["list"][number];
 export default function AdminList() {
   const company = useCurrentCompany();
@@ -152,6 +152,31 @@ export default function AdminList() {
               <AlertTitle>Missing tax information.</AlertTitle>
               <AlertDescription>
                 Some invoices are not payable until contractors provide tax information.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {data.some((invoice) => invoice.equityAllocationStatus === EquityAllocationStatus.PendingGrantCreation) && (
+            <Alert variant="destructive">
+              <ExclamationTriangleIcon />
+              <AlertTitle>Equity grants are pending.</AlertTitle>
+              <AlertDescription>
+                <div className="flex items-center justify-between">
+                  Some invoices are not payable until equity grants are created for{" "}
+                  {[
+                    ...new Set(
+                      data
+                        .filter(
+                          (invoice) => invoice.equityAllocationStatus === EquityAllocationStatus.PendingGrantCreation,
+                        )
+                        .map((invoice) => invoice.billFrom),
+                    ),
+                  ].join(", ")}
+                  .
+                  <Button variant="outline" size="small" asChild>
+                    <Link href={`/companies/${company.id}/administrator/equity_grants/new`}>Create equity grants</Link>
+                  </Button>
+                </div>
               </AlertDescription>
             </Alert>
           )}

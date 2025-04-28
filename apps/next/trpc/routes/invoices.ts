@@ -11,6 +11,7 @@ import {
   activeStorageBlobs,
   companies,
   companyContractors,
+  equityAllocations,
   invoiceApprovals,
   invoiceLineItems,
   invoices,
@@ -388,6 +389,10 @@ export const invoicesRouter = createRouter({
                   userComplianceInfos: { ...latestUserComplianceInfo, columns: { taxInformationConfirmedAt: true } },
                 },
               },
+              equityAllocations: {
+                columns: { status: true },
+                where: eq(equityAllocations.year, new Date().getFullYear()),
+              },
             },
           },
         },
@@ -418,6 +423,7 @@ export const invoicesRouter = createRouter({
           approvedAt: approval.approvedAt,
           approver: simpleUser(approval.approver),
         })),
+        equityAllocationStatus: invoice.contractor.equityAllocations[0]?.status,
         contractor: {
           ...pick(invoice.contractor, "role"),
           user: { complianceInfo: invoice.contractor.user.userComplianceInfos[0] },
