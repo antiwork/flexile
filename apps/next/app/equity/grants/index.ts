@@ -20,8 +20,7 @@ export const vestingTriggerDisplayNames = {
 export const useInvestorQueryParams = () => {
   const company = useCurrentCompany();
   const user = useCurrentUser();
-  const investorId =
-    !!user.roles.investor ? user.roles.investor?.id : "";
+  const investorId = user.roles.investor ? user.roles.investor.id : "";
   return {
     companyId: company.id,
     investorId,

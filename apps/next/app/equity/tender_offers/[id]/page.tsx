@@ -78,7 +78,7 @@ export default function BuybackView() {
   const user = useCurrentUser();
   const [data] = trpc.tenderOffers.get.useSuspenseQuery({ companyId: company.id, id });
   const isOpen = isPast(data.startsAt) && isFuture(data.endsAt);
-  const investorId = !!user.roles.administrator ? undefined : user.roles.investor?.id;
+  const investorId = user.roles.administrator ? undefined : user.roles.investor?.id;
   const [bids, { refetch: refetchBids }] = trpc.tenderOffers.bids.list.useSuspenseQuery({
     companyId: company.id,
     tenderOfferId: id,

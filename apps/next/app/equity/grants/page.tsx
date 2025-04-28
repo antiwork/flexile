@@ -42,7 +42,7 @@ const countryColumns = [
 export default function EquityGrants() {
   const user = useCurrentUser();
 
-  return (!!user.roles.worker || !!user.roles.investor) ? <InvestorGrantList /> : <CompanyGrantList />;
+  return !!user.roles.worker || !!user.roles.investor ? <InvestorGrantList /> : <CompanyGrantList />;
 }
 
 const companyGrantColumnHelper = createColumnHelper<EquityGrant>();

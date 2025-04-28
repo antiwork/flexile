@@ -241,7 +241,7 @@ export default function DocumentsPage() {
     if (
       document.type === DocumentType.BoardConsent &&
       !!user.roles.administrator &&
-      !user.roles.administrator?.isBoardMember
+      !user.roles.administrator.isBoardMember
     ) {
       return false;
     }
@@ -301,11 +301,7 @@ export default function DocumentsPage() {
           cell: (info) => {
             const document = info.row.original;
 
-            if (
-              document.type === DocumentType.BoardConsent &&
-              !!user.roles.lawyer &&
-              !document.lawyerApproved
-            ) {
+            if (document.type === DocumentType.BoardConsent && !!user.roles.lawyer && !document.lawyerApproved) {
               return (
                 <Button variant="outline" size="small" onClick={() => setSignDocumentId(document.id)}>
                   Approve

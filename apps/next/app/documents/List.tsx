@@ -79,7 +79,7 @@ const List = ({ userId, documents }: { userId: string | null; documents: Documen
     if (
       document.type === DocumentType.BoardConsent &&
       !!user.roles.administrator &&
-      !user.roles.administrator?.isBoardMember
+      !user.roles.administrator.isBoardMember
     ) {
       return false;
     }
@@ -125,11 +125,7 @@ const List = ({ userId, documents }: { userId: string | null; documents: Documen
           cell: (info) => {
             const document = info.row.original;
 
-            if (
-              document.type === DocumentType.BoardConsent &&
-              !!user.roles.lawyer &&
-              !document.lawyerApproved
-            ) {
+            if (document.type === DocumentType.BoardConsent && !!user.roles.lawyer && !document.lawyerApproved) {
               return (
                 <Button variant="outline" size="small" onClick={() => setSignDocumentId(document.id)}>
                   Approve
