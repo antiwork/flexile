@@ -9,7 +9,6 @@ import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { useRef, useState } from "react";
 import { z } from "zod";
-import EquityPercentageLockModal from "@/app/invoices/EquityPercentageLockModal";
 import ComboBox from "@/components/ComboBox";
 import DurationInput from "@/components/DurationInput";
 import MainLayout from "@/components/layouts/Main";
@@ -32,6 +31,11 @@ import {
   new_company_invoice_path,
 } from "@/utils/routes";
 import { LegacyAddress as Address } from ".";
+import { Card, CardContent } from "@/components/ui/card";
+import { MAX_EQUITY_PERCENTAGE } from "@/models";
+import RangeInput from "@/components/RangeInput";
+import { linkClasses } from "@/components/Link";
+import { EquityAllocationStatus } from "@/db/enums";
 
 const addressSchema = z.object({
   street_address: z.string(),
@@ -99,7 +103,6 @@ const Edit = () => {
   const searchParams = useSearchParams();
   const [showExpenses, setShowExpenses] = useState(!!searchParams.get("expenses"));
   const [errorField, setErrorField] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
   const uploadExpenseRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
@@ -117,6 +120,7 @@ const Edit = () => {
     },
   });
 
+  const [equityPercentage, setEquityPercent] = useState(data.equity_allocation?.percentage ?? 0);
   const [invoiceNumber, setInvoiceNumber] = useState(data.invoice.invoice_number);
   const [issueDate, setIssueDate] = useState(
     searchParams.get("date") || formatISO(data.invoice.invoice_date, { representation: "date" }),
@@ -143,6 +147,7 @@ const Edit = () => {
   });
   const [expenses, setExpenses] = useState(List<InvoiceFormExpense>(data.invoice.expenses));
 
+  const equityPercentageMutation = trpc.equitySettings.update.useMutation();
   const validate = () => {
     setErrorField(null);
     if (invoiceNumber.length === 0) setErrorField("invoiceNumber");
@@ -153,20 +158,8 @@ const Edit = () => {
     );
   };
 
-  const showModal = () => {
-    if (!validate()) return;
-
-    if (equityCalculation.isEquityAllocationLocked === false && equityCalculation.selectedPercentage != null) {
-      setModalOpen(true);
-    } else {
-      submit.mutate();
-    }
-  };
-
   const submit = useMutation({
     mutationFn: async () => {
-      setModalOpen(false);
-
       const formData = new FormData();
       formData.append("invoice[invoice_number]", invoiceNumber);
       formData.append("invoice[invoice_date]", issueDate);
@@ -194,6 +187,9 @@ const Edit = () => {
       }
       if (notes.length) formData.append("invoice[notes]", notes);
 
+      if (equityPercentage !== data.equity_allocation?.percentage) {
+        await equityPercentageMutation.mutateAsync({ companyId: company.id, equityPercentage });
+      }
       await request({
         method: id ? "PATCH" : "POST",
         url: id ? company_invoice_path(company.id, id) : company_invoices_path(company.id),
@@ -202,6 +198,7 @@ const Edit = () => {
         assertOk: true,
       });
       await trpcUtils.invoices.list.invalidate({ companyId: company.id });
+      await trpcUtils.documents.list.invalidate();
       router.push("/invoices");
     },
   });
@@ -237,10 +234,15 @@ const Edit = () => {
   const totalExpensesAmountInCents = expenses.reduce((acc, expense) => acc + expense.total_amount_in_cents, 0);
   const totalServicesAmountInCents = lineItems.reduce((acc, lineItem) => acc + lineItem.total_amount_cents, 0);
   const totalInvoiceAmountInCents = totalServicesAmountInCents + totalExpensesAmountInCents;
+  const [equityAllocation] = trpc.equityAllocations.forYear.useSuspenseQuery({
+    companyId: company.id,
+    year: invoiceYear,
+  });
   const [equityCalculation] = trpc.equityCalculations.calculate.useSuspenseQuery({
     companyId: company.id,
     servicesInCents: totalServicesAmountInCents,
     invoiceYear,
+    selectedPercentage: equityPercentage,
   });
   const canManageExpenses = showExpenses || expenses.size > 0;
   const updateLineItem = (index: number, update: Partial<InvoiceFormLineItem>) =>
@@ -282,21 +284,49 @@ const Edit = () => {
               <Link href="/invoices">Cancel</Link>
             </Button>
           )}
-          <Button variant="primary" onClick={showModal} disabled={submit.isPending}>
+          <Button variant="primary" onClick={() => validate() && submit.mutate()} disabled={submit.isPending}>
             <PaperAirplaneIcon className="size-4" />
             {submit.isPending ? "Sending..." : data.invoice.id ? "Re-submit invoice" : "Send invoice"}
           </Button>
         </>
       }
     >
-      {equityCalculation.selectedPercentage !== null ? (
-        <EquityPercentageLockModal
-          open={modalOpen}
-          onClose={() => setModalOpen(false)}
-          percentage={equityCalculation.selectedPercentage}
-          year={invoiceYear}
-          onComplete={submit.mutate}
-        />
+      {!equityAllocation || equityAllocation.status === EquityAllocationStatus.PendingConfirmation ? (
+        <section className="mb-6">
+          <Card>
+            <CardContent>
+              <div className="grid gap-4">
+                <RangeInput
+                  value={equityPercentage}
+                  onChange={setEquityPercent}
+                  min={0}
+                  max={MAX_EQUITY_PERCENTAGE}
+                  aria-label="Cash vs equity split"
+                  unit="%"
+                  label={
+                    <div className="flex justify-between gap-2">
+                      Confirm your equity split for {invoiceYear}
+                      <a
+                        className={linkClasses}
+                        href="https://sahillavingia.com/dividends"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Learn more
+                      </a>
+                    </div>
+                  }
+                />
+              </div>
+              <p className="mt-4">
+                By submitting this invoice, your current equity selection will be locked for all {invoiceYear}.{" "}
+                <strong>
+                  You won't be able to choose a different allocation until the next options grant for {invoiceYear + 1}.
+                </strong>
+              </p>
+            </CardContent>
+          </Card>
+        </section>
       ) : null}
 
       <section>

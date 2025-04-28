@@ -92,7 +92,7 @@ export const calculateInvoiceEquity = async ({
   let equityAmountInCents = Decimal.mul(serviceAmountCentsNumber, equityPercentage).div(100).round().toNumber();
   let equityAmountInOptions = 0;
 
-  if (equityPercentage !== 0 && unvestedGrant) {
+  if (equityPercentage !== 0 && sharePriceUsd !== 0) {
     equityAmountInOptions = Decimal.div(equityAmountInCents, Decimal.mul(sharePriceUsd, 100)).round().toNumber();
   }
 
@@ -137,6 +137,7 @@ export const equityCalculationsRouter = createRouter({
           .number()
           .optional()
           .default(() => new Date().getFullYear()),
+        selectedPercentage: z.number().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -149,6 +150,7 @@ export const equityCalculationsRouter = createRouter({
         serviceAmountCents: input.servicesInCents,
         invoiceYear: input.invoiceYear,
         equityCompensationEnabled: ctx.company.equityCompensationEnabled,
+        providedEquityPercentage: input.selectedPercentage ?? 0,
       });
 
       if (!result) {
