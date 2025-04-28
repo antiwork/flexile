@@ -67,8 +67,8 @@ export const calculateInvoiceEquity = async ({
         ),
       });
       isEquityAllocationLocked = lastYearEquityAllocation?.locked ?? null;
-      selectedPercentage = lastYearEquityAllocation?.equityPercentage ?? 0;
-      equityPercentage = selectedPercentage;
+      selectedPercentage = lastYearEquityAllocation?.equityPercentage;
+      equityPercentage = selectedPercentage ?? 0;
     }
   }
 
