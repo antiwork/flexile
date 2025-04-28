@@ -8,7 +8,7 @@ import MainLayout from "@/components/layouts/Main";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
 import { Button } from "@/components/ui/button";
-import { useCurrentCompany, useCurrentUser } from "@/global";
+import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -17,7 +17,6 @@ import { formatDate } from "@/utils/time";
 type Contractor = RouterOutput["contractors"]["list"]["workers"][number];
 
 export default function PeoplePage() {
-  const user = useCurrentUser();
   const company = useCurrentCompany();
   const [{ workers }] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id });
 
@@ -28,12 +27,10 @@ export default function PeoplePage() {
         header: "Name",
         cell: (info) => {
           const content = info.getValue();
-          return user.activeRole === "administrator" ? (
+          return (
             <Link href={`/people/${info.row.original.user.id}`} className="after:absolute after:inset-0">
               {content}
             </Link>
-          ) : (
-            <div>{content}</div>
           );
         },
       }),
@@ -77,22 +74,16 @@ export default function PeoplePage() {
     <MainLayout
       title="People"
       headerActions={
-        user.activeRole === "administrator" ? (
-          <Button asChild>
-            <Link href="/people/new">
-              <UserPlusIcon className="size-4" />
-              Invite contractor
-            </Link>
-          </Button>
-        ) : null
+        <Button asChild>
+          <Link href="/people/new">
+            <UserPlusIcon className="size-4" />
+            Invite contractor
+          </Link>
+        </Button>
       }
     >
       {workers.length > 0 ? (
-        <DataTable
-          table={table}
-          searchColumn="user_name"
-          onRowClicked={user.activeRole === "administrator" ? () => "" : undefined}
-        />
+        <DataTable table={table} searchColumn="user_name" />
       ) : (
         <Placeholder icon={UsersIcon}>Contractors will show up here.</Placeholder>
       )}
