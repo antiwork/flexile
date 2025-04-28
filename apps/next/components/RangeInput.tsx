@@ -17,6 +17,7 @@ const RangeInput = ({
   ariaLabel,
   invalid,
   className,
+  disabled,
 }: {
   min?: number;
   max?: number;
@@ -28,6 +29,7 @@ const RangeInput = ({
   ariaLabel?: string;
   invalid?: boolean;
   className?: string;
+  disabled?: boolean;
 }) => {
   const uid = React.useId();
   const componentId = id ?? uid;
@@ -111,6 +113,7 @@ const RangeInput = ({
           step={1}
           aria-label={ariaLabel ?? (typeof label === "string" ? label : "Range slider")}
           className="grow"
+          disabled={disabled ?? false}
         />
         <div className="relative flex h-8 items-center">
           <Input
@@ -127,6 +130,7 @@ const RangeInput = ({
             aria-label={ariaLabel ?? (typeof label === "string" ? `${label} value` : "Range value input")}
             inputMode="numeric"
             className={cn("h-full w-16 rounded-md px-2 py-1 text-right", unit ? "pr-6" : "")}
+            disabled={disabled}
           />
           {unit ? (
             <span className="pointer-events-none absolute right-1.5 ml-1 text-xs text-gray-500">{unit}</span>
