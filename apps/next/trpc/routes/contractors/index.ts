@@ -38,7 +38,7 @@ export const contractorsRouter = createRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+      if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
       const onboarding = assertDefined(gt(companyContractors.startedAt, new Date()));
       const where = and(
         eq(companyContractors.companyId, ctx.company.id),

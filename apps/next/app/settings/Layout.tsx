@@ -9,15 +9,15 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
 
   const links = [
     { label: "Settings", route: "/settings", isVisible: true },
-    { label: "Payouts", route: "/settings/payouts", isVisible: user.activeRole === "contractorOrInvestor" },
-    { label: "Tax info", route: "/settings/tax", isVisible: user.activeRole === "contractorOrInvestor" },
+    { label: "Payouts", route: "/settings/payouts", isVisible: (!!user.roles.worker || !!user.roles.investor) },
+    { label: "Tax info", route: "/settings/tax", isVisible: (!!user.roles.worker || !!user.roles.investor) },
     {
       label: "Equity",
       route: "/settings/equity",
       isVisible:
         user.roles.worker &&
         user.roles.worker.payRateType !== "salary" &&
-        user.activeRole === "contractorOrInvestor" &&
+        (!!user.roles.worker || !!user.roles.investor) &&
         company?.flags.includes("equity_compensation"),
     },
   ] as const;

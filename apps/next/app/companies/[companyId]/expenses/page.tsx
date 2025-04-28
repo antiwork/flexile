@@ -27,7 +27,7 @@ type ExpenseCardCharge = RouterOutput["expenseCards"]["charges"]["list"][number]
 export default function ExpensesPage() {
   const user = useCurrentUser();
 
-  return user.activeRole === "administrator" ? <CompanyExpenses /> : <ContractorExpenses />;
+  return !!user.roles.administrator ? <CompanyExpenses /> : <ContractorExpenses />;
 }
 
 const columnHelper = createColumnHelper<ExpenseCardCharge>();

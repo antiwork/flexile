@@ -151,7 +151,7 @@ const invoiceInputSchema = createInsertSchema(invoiceLineItems)
 
 export const invoicesRouter = createRouter({
   createAsAdmin: companyProcedure.input(invoiceInputSchema).mutation(async ({ ctx, input }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
     const invoicer = await db.query.users.findFirst({
       where: eq(users.externalId, input.userExternalId),

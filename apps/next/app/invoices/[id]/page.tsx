@@ -111,7 +111,7 @@ export default function InvoicePage() {
           ) : null}
           <InvoiceStatus aria-label="Status" invoice={invoice} />
 
-          {user.activeRole === "administrator" ? (
+          {!!user.roles.administrator ? (
             <CompanyHeader invoice={invoice} />
           ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
             <Button variant="outline" asChild>

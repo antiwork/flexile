@@ -21,7 +21,7 @@ export const companyIntegration = (id: bigint) =>
 
 export const githubRouter = createRouter({
   get: companyProcedure.query(async ({ ctx }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
     const integration = await db.query.integrations.findFirst({
       columns: { status: true },

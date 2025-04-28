@@ -187,7 +187,7 @@ export const documentsRouter = createRouter({
     });
   }),
   approveByMember: companyProcedure.input(z.object({ id: z.bigint() })).mutation(async ({ ctx, input }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
     const document = await db.query.documents.findFirst({
       where: and(eq(documents.id, input.id), eq(documents.companyId, ctx.company.id)),

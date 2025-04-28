@@ -2,9 +2,9 @@ import type { TabLink } from "@/components/Tabs";
 import { type Company, type CurrentUser } from "@/models/user";
 
 export const navLinks = (user: CurrentUser, company: Company): TabLink[] => {
-  const isAdmin = user.activeRole === "administrator";
-  const isLawyer = user.activeRole === "lawyer";
-  const isInvestor = user.activeRole === "contractorOrInvestor" && "investor" in user.roles;
+  const isAdmin = !!user.roles.administrator;
+  const isLawyer = !!user.roles.lawyer;
+  const isInvestor = (!!user.roles.worker || !!user.roles.investor) && "investor" in user.roles;
   const links: (TabLink | null)[] = [
     company.flags.includes("cap_table") && (isAdmin || isLawyer || isInvestor)
       ? { label: "Cap table", route: "/equity/cap_table" }

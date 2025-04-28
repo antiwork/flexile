@@ -78,7 +78,7 @@ export default function BuybackView() {
   const user = useCurrentUser();
   const [data] = trpc.tenderOffers.get.useSuspenseQuery({ companyId: company.id, id });
   const isOpen = isPast(data.startsAt) && isFuture(data.endsAt);
-  const investorId = user.activeRole === "administrator" ? undefined : user.roles.investor?.id;
+  const investorId = !!user.roles.administrator ? undefined : user.roles.investor?.id;
   const [bids, { refetch: refetchBids }] = trpc.tenderOffers.bids.list.useSuspenseQuery({
     companyId: company.id,
     tenderOfferId: id,
@@ -204,7 +204,7 @@ export default function BuybackView() {
           { caption: "Starting bid valuation", value: formatMoney(data.minimumValuation) },
         ]}
       />
-      {user.activeRole === "contractorOrInvestor" && user.roles.investor?.investedInAngelListRuv ? (
+      {(!!user.roles.worker || !!user.roles.investor) && user.roles.investor?.investedInAngelListRuv ? (
         <Alert variant="destructive">
           <ExclamationTriangleIcon />
           <AlertDescription>

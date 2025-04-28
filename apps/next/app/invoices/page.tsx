@@ -7,5 +7,5 @@ import ViewList from "./ViewList";
 export default function InvoicesPage() {
   const user = useCurrentUser();
 
-  return user.activeRole === "contractorOrInvestor" ? <ViewList /> : <AdminList />;
+  return (!!user.roles.worker || !!user.roles.investor) ? <ViewList /> : <AdminList />;
 }

@@ -56,7 +56,7 @@ export const companiesRouter = createRouter({
         .where(and(eq(users.invitedByType, "User"), eq(users.invitedById, BigInt(ctx.userId)))),
   ),
   settings: companyProcedure.query(({ ctx }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
     return pick(ctx.company, [
       "taxId",

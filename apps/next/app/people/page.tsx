@@ -34,7 +34,7 @@ export default function People() {
           header: "Name",
           cell: (info) => {
             const content = info.getValue();
-            return user.activeRole === "administrator" ? (
+            return !!user.roles.administrator ? (
               <Link href={`/people/${info.row.original.user.id}`} className="after:absolute after:inset-0">
                 {content}
               </Link>
@@ -91,7 +91,7 @@ export default function People() {
     <MainLayout
       title="People"
       headerActions={
-        user.activeRole === "administrator" ? (
+        !!user.roles.administrator ? (
           <Button asChild>
             <Link href="/people/new">
               <UserPlusIcon className="size-4" />
@@ -110,7 +110,7 @@ export default function People() {
       />
 
       {workers.length > 0 ? (
-        <DataTable table={table} onRowClicked={user.activeRole === "administrator" ? () => "" : undefined} />
+        <DataTable table={table} onRowClicked={!!user.roles.administrator ? () => "" : undefined} />
       ) : (
         <Placeholder icon={UsersIcon}>Contractors will show up here.</Placeholder>
       )}

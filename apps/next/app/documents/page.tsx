@@ -207,7 +207,7 @@ export default function DocumentsPage() {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const isCompanyRepresentative = user.activeRole === "administrator" || user.activeRole === "lawyer";
+  const isCompanyRepresentative = !!user.roles.administrator || !!user.roles.lawyer;
   const userId = isCompanyRepresentative ? null : user.id;
 
   const currentYear = new Date().getFullYear();
@@ -240,7 +240,7 @@ export default function DocumentsPage() {
 
     if (
       document.type === DocumentType.BoardConsent &&
-      user.activeRole === "administrator" &&
+      !!user.roles.administrator &&
       !user.roles.administrator?.isBoardMember
     ) {
       return false;
@@ -267,7 +267,7 @@ export default function DocumentsPage() {
   const columns = useMemo(
     () =>
       [
-        userId && user.activeRole === "contractorOrInvestor"
+        userId && (!!user.roles.worker || !!user.roles.investor)
           ? null
           : columnHelper.accessor(
               (row) =>
@@ -303,7 +303,7 @@ export default function DocumentsPage() {
 
             if (
               document.type === DocumentType.BoardConsent &&
-              user.activeRole === "lawyer" &&
+              !!user.roles.lawyer &&
               !document.lawyerApproved
             ) {
               return (
@@ -358,7 +358,7 @@ export default function DocumentsPage() {
       headerActions={
         <>
           {isCompanyRepresentative && documents.length === 0 ? <EditTemplates /> : null}
-          {user.activeRole === "administrator" && company.flags.includes("lawyers") ? (
+          {!!user.roles.administrator && company.flags.includes("lawyers") ? (
             <Button onClick={() => setShowInviteModal(true)}>
               <BriefcaseIcon className="size-4" />
               Invite lawyer
@@ -369,7 +369,7 @@ export default function DocumentsPage() {
     >
       <div className="grid gap-4">
         {company.flags.includes("irs_tax_forms") &&
-        user.activeRole === "administrator" &&
+        !!user.roles.administrator &&
         new Date() <= filingDueDateFor1099DIV ? (
           <Alert className="mb-4">
             <AlertTitle>Upcoming filing dates for 1099-NEC, 1099-DIV, and 1042-S</AlertTitle>
@@ -384,7 +384,7 @@ export default function DocumentsPage() {
             <DataTable
               table={table}
               actions={isCompanyRepresentative ? <EditTemplates /> : undefined}
-              {...(!(userId && user.activeRole === "contractorOrInvestor") && { searchColumn: "Signer" })}
+              {...(!(userId && (!!user.roles.worker || !!user.roles.investor)) && { searchColumn: "Signer" })}
             />
             {signDocument ? (
               <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} />
@@ -467,7 +467,7 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
   return (
     <Dialog open onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent>
-        {user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent && (
+        {!!user.roles.lawyer && document.type === DocumentType.BoardConsent && (
           <DialogHeader>
             <div className="flex justify-end gap-4">
               <MutationButton
@@ -485,7 +485,7 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
         <DocusealForm
           src={`https://docuseal.com/s/${slug}`}
           readonlyFields={readonlyFields}
-          preview={user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent}
+          preview={!!user.roles.lawyer && document.type === DocumentType.BoardConsent}
           onComplete={() => {
             const userIsSigner = document.signatories.some(
               (signatory) => signatory.id === user.id && signatory.title === "Signer",

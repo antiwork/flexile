@@ -26,7 +26,7 @@ const inputSchema = createInsertSchema(companyRoles)
 
 export const rolesRouter = createRouter({
   list: companyProcedure.query(async ({ ctx }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
     const roles = await db.query.companyRoles.findMany({
       where: and(eq(companyRoles.companyId, ctx.company.id), isNull(companyRoles.deletedAt)),
@@ -60,7 +60,7 @@ export const rolesRouter = createRouter({
   }),
 
   get: companyProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
     const [role] = await db
       .select({
@@ -79,7 +79,7 @@ export const rolesRouter = createRouter({
   }),
 
   create: companyProcedure.input(inputSchema.required()).mutation(async ({ ctx, input }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
     return await db.transaction(async (tx) => {
       const result = await tx
@@ -109,7 +109,7 @@ export const rolesRouter = createRouter({
   }),
 
   update: companyProcedure.input(inputSchema.partial().extend({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
     return await db.transaction(async (tx) => {
       const [role] = await tx
@@ -141,7 +141,7 @@ export const rolesRouter = createRouter({
   }),
 
   delete: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
     const [result] = await db
       .update(companyRoles)
       .set({ deletedAt: new Date() })

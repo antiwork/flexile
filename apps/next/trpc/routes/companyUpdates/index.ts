@@ -71,7 +71,7 @@ export const companyUpdatesRouter = createRouter({
     };
   }),
   create: companyProcedure.input(dataSchema.required()).mutation(async ({ ctx, input }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
     const [update] = await db
       .insert(companyUpdates)
@@ -83,7 +83,7 @@ export const companyUpdatesRouter = createRouter({
     return assertDefined(update).externalId;
   }),
   update: companyProcedure.input(dataSchema.extend({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
     const [update] = await db
       .update(companyUpdates)
       .set({
@@ -95,7 +95,7 @@ export const companyUpdatesRouter = createRouter({
     if (!update) throw new TRPCError({ code: "NOT_FOUND" });
   }),
   publish: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
     const [update] = await db
       .update(companyUpdates)
@@ -115,7 +115,7 @@ export const companyUpdatesRouter = createRouter({
     return update.externalId;
   }),
   sendTestEmail: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
     const update = await db.query.companyUpdates.findFirst({ where: byId(ctx, input.id) });
     if (!update) throw new TRPCError({ code: "NOT_FOUND" });
     await inngest.send({
@@ -127,7 +127,7 @@ export const companyUpdatesRouter = createRouter({
     });
   }),
   delete: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
     const result = await db.delete(companyUpdates).where(byId(ctx, input.id)).returning();
     if (result.length === 0) throw new TRPCError({ code: "NOT_FOUND" });
   }),

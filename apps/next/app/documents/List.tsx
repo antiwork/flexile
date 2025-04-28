@@ -78,7 +78,7 @@ const List = ({ userId, documents }: { userId: string | null; documents: Documen
 
     if (
       document.type === DocumentType.BoardConsent &&
-      user.activeRole === "administrator" &&
+      !!user.roles.administrator &&
       !user.roles.administrator?.isBoardMember
     ) {
       return false;
@@ -104,7 +104,7 @@ const List = ({ userId, documents }: { userId: string | null; documents: Documen
   const columns = useMemo(
     () =>
       [
-        userId && user.activeRole === "contractorOrInvestor"
+        userId && (!!user.roles.worker || !!user.roles.investor)
           ? null
           : columnHelper.display({
               header: "Signer",
@@ -127,7 +127,7 @@ const List = ({ userId, documents }: { userId: string | null; documents: Documen
 
             if (
               document.type === DocumentType.BoardConsent &&
-              user.activeRole === "lawyer" &&
+              !!user.roles.lawyer &&
               !document.lawyerApproved
             ) {
               return (
