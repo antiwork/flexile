@@ -56,6 +56,7 @@ import { type Company } from "@/models/user";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
+import { Separator } from "@/components/ui/separator";
 
 export default function MainLayout({
   children,
@@ -176,7 +177,7 @@ export default function MainLayout({
         <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
           <main className="flex flex-1 flex-col gap-6 pb-4 not-print:overflow-y-auto">
             <div>
-              <header className="bg-gray-200 px-3 pt-8 pb-4 md:px-16">
+              <header className="px-3 py-6 md:px-16">
                 <div className="grid max-w-(--breakpoint-xl) gap-y-8">
                   <div className="grid items-center justify-between gap-3 md:flex">
                     <div>
@@ -190,6 +191,7 @@ export default function MainLayout({
                   </div>
                 </div>
               </header>
+              <Separator className="my-0" />
               {subheader ? <div className="bg-gray-200/50">{subheader}</div> : null}
             </div>
             <div className="mx-3 flex max-w-(--breakpoint-xl) flex-col gap-6 md:mx-16">{children}</div>
