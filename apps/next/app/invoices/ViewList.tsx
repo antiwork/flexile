@@ -1,6 +1,6 @@
 "use client";
 
-import { CurrencyDollarIcon, ExclamationTriangleIcon, PencilIcon, PlusIcon } from "@heroicons/react/20/solid";
+import { ExclamationTriangleIcon, PencilIcon, PlusIcon } from "@heroicons/react/20/solid";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { formatISO } from "date-fns";
@@ -14,7 +14,6 @@ import DurationInput from "@/components/DurationInput";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
 import NumberInput from "@/components/NumberInput";
-import Placeholder from "@/components/Placeholder";
 import RangeInput from "@/components/RangeInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -404,23 +403,7 @@ export default function ViewList() {
 
       {/* --- Invoice List Table --- */}
       <div>
-        {data.length > 0 ? (
-          <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
-        ) : (
-          <div className={unsignedContractId ? "mt-8" : ""}>
-            <Placeholder icon={CurrencyDollarIcon}>
-              Create a new invoice to get started.
-              {!unsignedContractId && (
-                <Button asChild variant="outline" size="small" disabled={quickInvoiceDisabled}>
-                  <Link href="/invoices/new">
-                    <PlusIcon className="size-4" />
-                    New invoice
-                  </Link>
-                </Button>
-              )}
-            </Placeholder>
-          </div>
-        )}
+        {data.length > 0 && <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />}
       </div>
     </MainLayout>
   );
