@@ -94,7 +94,7 @@ RSpec.describe InvoiceEquityCalculator do
             expect(result[:equity_options]).to eq(0)
             expect(result[:equity_percentage]).to eq(0)
             expect(result[:is_equity_allocation_locked]).to eq(nil)
-            expect(result[:selected_percentage]).to eq(0)
+            expect(result[:selected_percentage]).to eq(nil)
           end
         end
       end
@@ -127,7 +127,7 @@ RSpec.describe InvoiceEquityCalculator do
         expect(result[:equity_options]).to eq(0)
         expect(result[:equity_percentage]).to eq(0)
         expect(result[:is_equity_allocation_locked]).to eq(nil)
-        expect(result[:selected_percentage]).to eq(0)
+        expect(result[:selected_percentage]).to eq(nil)
       end
     end
 

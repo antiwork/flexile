@@ -21,7 +21,8 @@ class InvoiceEquityCalculator
       else
         last_year_equity_allocation = company_worker.equity_allocation_for(invoice_year - 1)
         is_equity_allocation_locked = last_year_equity_allocation&.locked?
-        selected_percentage = last_year_equity_allocation&.equity_percentage || 0
+        selected_percentage = last_year_equity_allocation&.equity_percentage
+        last_year_equity_allocation&.equity_percentage || 0
       end
     else
       0
