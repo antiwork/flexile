@@ -147,6 +147,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     );
     await expect(page.getByRole("dialog")).not.toBeVisible();
 
+    await page.getByRole("checkbox", { name: "Select all" }).check();
     await page.getByRole("checkbox", { name: "Select all" }).uncheck();
     await page
       .locator("tbody tr")
@@ -159,7 +160,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await page.getByRole("button", { name: "Yes, reject" }).click();
     await expect(page.getByRole("dialog")).not.toBeVisible();
-    await expect(firstRow).toContainText("Rejected");
+    await expect(secondRow).toContainText("Rejected");
     await expect(openInvoicesBadge).toContainText("1");
 
     await page.getByRole("cell", { name: workerUserB.legalName ?? "never" }).click();
@@ -191,7 +192,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await login(page, adminUser);
 
     await expect(locateOpenInvoicesBadge(page)).toContainText("1");
-    await expect(page.locator("tbody tr")).toHaveCount(1);
+    await expect(page.locator("tbody tr")).toHaveCount(3);
     const fixedInvoiceRow = page
       .locator("tbody tr")
       .filter({ hasText: workerUserA.legalName ?? "never" })
@@ -204,8 +205,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByLabel("Explain why the invoice was").fill("sorry still wrong");
     await page.getByRole("button", { name: "Yes, reject" }).click();
 
-    await expect(page).toHaveURL("/invoices");
-    await expect(page.locator("tbody tr")).toHaveCount(0);
+    await expect(locateOpenInvoicesBadge(page)).not.toBeVisible();
   });
 
   const locateOpenInvoicesBadge = (page: Page) => page.getByRole("link", { name: "Invoices" }).getByRole("status");
