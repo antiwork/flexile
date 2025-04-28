@@ -239,7 +239,7 @@ export default function ContractorPage() {
       <Dialog open={endModalOpen} onOpenChange={setEndModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{`End contract with ${user.displayName}?`}</DialogTitle>
+            <DialogTitle>End contract with {user.displayName}?</DialogTitle>
           </DialogHeader>
           <p>This action cannot be undone.</p>
           <Input type="date" label="End date" value={endDate} onChange={setEndDate} />
@@ -265,7 +265,7 @@ export default function ContractorPage() {
       <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{`Cancel contract end with ${user.displayName}?`}</DialogTitle>
+            <DialogTitle>Cancel contract end with {user.displayName}?</DialogTitle>
           </DialogHeader>
           <p>This will remove the scheduled end date for this contract.</p>
           <DialogFooter>

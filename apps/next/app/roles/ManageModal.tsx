@@ -182,7 +182,7 @@ const ManageModal = ({
             </div>
             {expenseAccounts.length > 0 && (
               <div className="grid gap-2">
-                <Label htmlFor="capitalized-expense">Capitalized R and D expense</Label>
+                <Label htmlFor="capitalized-expense">Capitalized R&D expense</Label>
                 <NumberInput
                   id="capitalized-expense"
                   value={role.capitalizedExpense ?? 0}
@@ -276,7 +276,10 @@ const ManageModal = ({
       <Dialog open={confirmingRateUpdate} onOpenChange={setConfirmingRateUpdate}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{`Update rates for ${contractorsToUpdate.length} ${pluralize("contractor", contractorsToUpdate.length)} to match role rate?`}</DialogTitle>
+            <DialogTitle>
+              Update rates for {contractorsToUpdate.length} {pluralize("contractor", contractorsToUpdate.length)} to
+              match role rate?
+            </DialogTitle>
           </DialogHeader>
           <div>Rate changes will apply to future invoices.</div>
           <Card>

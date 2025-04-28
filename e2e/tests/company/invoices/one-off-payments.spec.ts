@@ -8,7 +8,7 @@ import { invoicesFactory } from "@test/factories/invoices";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { findRequiredTableRow } from "@test/helpers/matchers";
-import { expect, test, withinModal, type Locator } from "@test/index";
+import { expect, test, withinModal } from "@test/index";
 import { format } from "date-fns";
 import { and, eq } from "drizzle-orm";
 import { companies, equityGrants, invoices } from "@/db/schema";
@@ -46,7 +46,7 @@ test.describe("One-off payments", () => {
       await page.getByRole("button", { name: "Issue payment" }).click();
 
       await withinModal(
-        async (modal: Locator) => {
+        async (modal) => {
           await modal.getByLabel("Amount").fill("2154.30");
           await modal.getByLabel("What is this for?").fill("Bonus payment for Q4");
           await modal.getByRole("button", { name: "Issue payment" }).click();
@@ -118,7 +118,7 @@ test.describe("One-off payments", () => {
         await page.getByRole("button", { name: "Issue payment" }).click();
 
         await withinModal(
-          async (modal: Locator) => {
+          async (modal) => {
             await modal.getByLabel("Amount").fill("50000.00");
             await modal.getByLabel("What is this for?").fill("Bonus payment for Q4");
             await modal.getByPlaceholder("Enter percentage").fill("80");
@@ -137,7 +137,7 @@ test.describe("One-off payments", () => {
         await page.getByRole("button", { name: "Issue payment" }).click();
 
         await withinModal(
-          async (modal: Locator) => {
+          async (modal) => {
             await modal.getByLabel("Amount").fill("500.00");
             await modal.getByLabel("What is this for?").fill("Bonus payment for Q4");
             await modal.getByPlaceholder("Enter percentage").fill("10");
@@ -188,7 +188,7 @@ test.describe("One-off payments", () => {
         await page.getByRole("button", { name: "Issue payment" }).click();
 
         await withinModal(
-          async (modal: Locator) => {
+          async (modal) => {
             await modal.getByLabel("Amount").fill("500.00");
             await modal.getByLabel("What is this for?").fill("Bonus payment for Q4");
             await modal.getByLabel("Equity percentage range").click();
@@ -283,12 +283,7 @@ test.describe("One-off payments", () => {
         await page.getByRole("button", { name: "Accept payment" }).click();
         await page.waitForLoadState("networkidle");
 
-        await withinModal(
-          async (modal: Locator) => {
-            await modal.getByRole("button", { name: "Accept payment" }).click();
-          },
-          { page },
-        );
+        await withinModal(async (modal) => modal.getByRole("button", { name: "Accept payment" }).click(), { page });
 
         await expect(page.getByRole("dialog")).not.toBeVisible();
         await expect(page.getByRole("button", { name: "Accept payment" })).not.toBeVisible();
@@ -317,7 +312,7 @@ test.describe("One-off payments", () => {
         await page.waitForLoadState("networkidle");
 
         await withinModal(
-          async (modal: Locator) => {
+          async (modal) => {
             const sliderContainer = modal.locator('[data-orientation="horizontal"]').first();
             const containerBounds = await sliderContainer.boundingBox();
             if (!containerBounds) throw new Error("Could not get slider container bounds");
@@ -370,7 +365,7 @@ test.describe("One-off payments", () => {
       await page.getByRole("button", { name: "Issue payment" }).click();
 
       await withinModal(
-        async (modal: Locator) => {
+        async (modal) => {
           await modal.getByLabel("Amount").fill("123.45");
           await modal.getByLabel("What is this for?").fill("Bonus!");
           await modal.getByRole("button", { name: "Issue payment" }).click();
@@ -402,7 +397,7 @@ test.describe("One-off payments", () => {
 
       await page.getByRole("button", { name: "Accept payment" }).click();
       await withinModal(
-        async (modal: Locator) => {
+        async (modal) => {
           await expect(modal).toContainText("Total value $123.45", { useInnerText: true });
           await modal.getByRole("button", { name: "Accept payment" }).click();
         },

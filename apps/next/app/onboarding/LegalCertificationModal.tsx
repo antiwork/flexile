@@ -35,8 +35,13 @@ const LegalCertificationModal = ({
   });
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className={sticky ? "sticky top-0" : ""}>
+    <Dialog
+      open={open}
+      onOpenChange={() => {
+        if (!sticky) onClose();
+      }}
+    >
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{`${certificateType} Certification and Tax Forms Delivery`}</DialogTitle>
         </DialogHeader>

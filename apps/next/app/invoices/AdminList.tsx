@@ -331,12 +331,7 @@ const TasksModal = ({
               <Button variant="outline" onClick={onReject}>
                 Reject
               </Button>
-              <ApproveButton
-                invoice={invoice}
-                onApprove={() => {
-                  setTimeout(() => onClose(), 500);
-                }}
-              />
+              <ApproveButton invoice={invoice} onApprove={() => setTimeout(() => onClose(), 500)} />
             </div>
           </DialogFooter>
         ) : null}
