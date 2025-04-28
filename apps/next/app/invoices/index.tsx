@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
-import { trpc } from "@/trpc/client";
+import { EquityAllocationStatus, trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { approve_company_invoices_path, reject_company_invoices_path } from "@/utils/routes";
 
@@ -84,6 +84,7 @@ export function useIsPayable() {
     invoice.status === "failed" ||
     (["received", "approved"].includes(invoice.status) &&
       !invoice.requiresAcceptanceByPayee &&
+      (!company.equityCompensationEnabled || invoice.equityAllocationStatus === EquityAllocationStatus.Approved) &&
       company.requiredInvoiceApprovals - invoice.approvals.length <= (isApprovedByCurrentUser(invoice) ? 0 : 1));
 }
 

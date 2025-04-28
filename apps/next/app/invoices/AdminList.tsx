@@ -162,17 +162,24 @@ export default function AdminList() {
               <AlertTitle>Equity grants are pending.</AlertTitle>
               <AlertDescription>
                 <div className="flex items-center justify-between">
-                  Some invoices are not payable until equity grants are created for{" "}
-                  {[
-                    ...new Set(
-                      data
-                        .filter(
-                          (invoice) => invoice.equityAllocationStatus === EquityAllocationStatus.PendingGrantCreation,
-                        )
-                        .map((invoice) => invoice.billFrom),
-                    ),
-                  ].join(", ")}
-                  .
+                  {(() => {
+                    const pendingContractors = [
+                      ...new Set(
+                        data
+                          .filter(
+                            (invoice) => invoice.equityAllocationStatus === EquityAllocationStatus.PendingGrantCreation,
+                          )
+                          .map((invoice) => invoice.billFrom),
+                      ),
+                    ];
+                    return (
+                      <>
+                        Some invoices are not payable until equity{" "}
+                        {pendingContractors.length === 1 ? "grant is" : "grants are"} created for{" "}
+                        {pendingContractors.join(", ")}.
+                      </>
+                    );
+                  })()}
                   <Button variant="outline" size="small" asChild>
                     <Link href={`/companies/${company.id}/administrator/equity_grants/new`}>Create equity grants</Link>
                   </Button>

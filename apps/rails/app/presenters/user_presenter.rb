@@ -158,6 +158,7 @@ class UserPresenter
           },
           flags:,
           expenseCardsEnabled: company.expense_cards_enabled,
+          equityCompensationEnabled: company.equity_compensation_enabled,
           requiredInvoiceApprovals: company.required_invoice_approval_count,
           paymentProcessingDays: company.contractor_payment_processing_time_in_days,
           createdAt: company.created_at.iso8601,

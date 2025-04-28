@@ -457,6 +457,10 @@ export const invoicesRouter = createRouter({
                 },
               },
             },
+            equityAllocations: {
+              columns: { status: true },
+              where: eq(equityAllocations.year, new Date().getFullYear()),
+            },
           },
         },
         rejector: { columns: simpleUser.columns },
@@ -520,6 +524,7 @@ export const invoicesRouter = createRouter({
       })),
       lineItems: invoice.lineItems,
       id: invoice.externalId,
+      equityAllocationStatus: invoice.contractor.equityAllocations[0]?.status,
       approvals: invoice.approvals.map((approval) => ({
         approvedAt: approval.approvedAt,
         approver: simpleUser(approval.approver),
