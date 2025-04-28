@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
-import Modal from "@/components/Modal";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MutationStatusButton } from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -149,28 +149,33 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
         </form>
       </Form>
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Important notice">
-        <p>
-          Unfortunately, due to regulatory restrictions and compliance with international sanctions, individuals from
-          sanctioned countries are unable to receive payments through our platform.
-        </p>
-        <p>
-          You can still use Flexile's features such as
-          {user.roles.worker ? " sending invoices and " : " "} receiving equity, but
-          <b> you won't be able to set a payout method or receive any payments</b>.
-        </p>
-        <div className="modal-footer">
-          <Button
-            onClick={() => {
-              setConfirmNoPayout(true);
-              setModalOpen(false);
-              save.mutate();
-            }}
-          >
-            Proceed
-          </Button>
-        </div>
-      </Modal>
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Important notice</DialogTitle>
+          </DialogHeader>
+          <p>
+            Unfortunately, due to regulatory restrictions and compliance with international sanctions, individuals from
+            sanctioned countries are unable to receive payments through our platform.
+          </p>
+          <p>
+            You can still use Flexile's features such as
+            {user.roles.worker ? " sending invoices and " : " "} receiving equity, but
+            <b> you won't be able to set a payout method or receive any payments</b>.
+          </p>
+          <DialogFooter>
+            <Button
+              onClick={() => {
+                setConfirmNoPayout(true);
+                setModalOpen(false);
+                save.mutate();
+              }}
+            >
+              Proceed
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
