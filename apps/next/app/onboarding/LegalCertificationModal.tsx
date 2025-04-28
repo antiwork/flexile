@@ -43,7 +43,7 @@ const LegalCertificationModal = ({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{`${certificateType} Certification and Tax Forms Delivery`}</DialogTitle>
+          <DialogTitle>{certificateType} Certification and Tax Forms Delivery</DialogTitle>
         </DialogHeader>
         {isForeignUser ? (
           <>
