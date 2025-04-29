@@ -141,6 +141,104 @@ const ManageModal = ({
     },
   });
 
+  const renderCapitalizedExpense = () => {
+    if (expenseAccounts.length === 0) return null;
+    return (
+      <div className="grid gap-2">
+        <Label htmlFor="capitalized-expense">Capitalized R&D expense</Label>
+        <NumberInput
+          id="capitalized-expense"
+          value={role.capitalizedExpense ?? 0}
+          onChange={(value) => updateRole({ capitalizedExpense: value ?? 0 })}
+          suffix="%"
+        />
+      </div>
+    );
+  };
+
+  const renderContractorRatesUpdate = () => {
+    if (!role.id || contractorsToUpdate.length === 0) return null;
+    return (
+      <>
+        {!updateContractorRates && (
+          <Alert>
+            <InformationCircleIcon />
+            <AlertDescription>
+              {contractorsToUpdate.length}{" "}
+              {contractorsToUpdate.length === 1 ? "contractor has a" : "contractors have"} different{" "}
+              {pluralize("rate", contractorsToUpdate.length)} that won't be updated.
+            </AlertDescription>
+          </Alert>
+        )}
+        <Checkbox
+          checked={updateContractorRates}
+          onCheckedChange={(checked) => setUpdateContractorRates(checked === true)}
+          label="Update rate for all contractors with this role"
+        />
+      </>
+    );
+  };
+
+  const renderTrialPeriodSwitch = () => {
+    if (!role.id || role.payRateType !== PayRateType.Hourly) return null;
+    return (
+      <Switch
+        checked={role.trialEnabled}
+        onCheckedChange={(trialEnabled) => updateRole({ trialEnabled })}
+        label="Start with trial period"
+      />
+    );
+  };
+
+  const renderTrialRateInput = () => {
+    if (!role.id || !role.trialEnabled) return null;
+    return (
+      <div className="grid gap-2">
+        <Label htmlFor="trial-rate">Rate during trial period</Label>
+        <NumberInput
+          id="trial-rate"
+          value={role.trialPayRateInSubunits / 100}
+          onChange={(value) => updateRole({ trialPayRateInSubunits: (value ?? 0) * 100 })}
+          prefix="$"
+        />
+      </div>
+    );
+  };
+
+  const renderExpenseAccountSelect = () => {
+    if (expenseAccounts.length === 0) return null;
+    return (
+      <Select
+        value={role.expenseAccountId ?? ""}
+        onChange={(expenseAccountId) => updateRole({ expenseAccountId })}
+        options={[
+          { value: "", label: "Default" },
+          ...expenseAccounts.map(({ id, name }) => ({ value: id, label: name })),
+        ]}
+        label="Expense account"
+      />
+    );
+  };
+
+  const renderDeleteButton = () => {
+    if (!role.id) return null;
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild={canDelete}>
+          <Button
+            variant="critical"
+            aria-label="Delete role"
+            disabled={!canDelete}
+            onClick={() => setConfirmingDelete(true)}
+          >
+            <TrashIcon className="size-5" />
+          </Button>
+        </TooltipTrigger>
+        {!canDelete && <TooltipContent>You can't delete roles with active contractors</TooltipContent>}
+      </Tooltip>
+    );
+  };
+
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
@@ -186,90 +284,18 @@ const ManageModal = ({
             </div>
           </div>
 
-          {expenseAccounts.length > 0 && (
-            <div className="grid gap-2">
-              <Label htmlFor="capitalized-expense">Capitalized R&D expense</Label>
-              <NumberInput
-                id="capitalized-expense"
-                value={role.capitalizedExpense ?? 0}
-                onChange={(value) => updateRole({ capitalizedExpense: value ?? 0 })}
-                suffix="%"
-              />
-            </div>
-          )}
-
-          {role.id && contractorsToUpdate.length > 0 ? (
-            <>
-              {!updateContractorRates && (
-                <Alert>
-                  <InformationCircleIcon />
-                  <AlertDescription>
-                    {contractorsToUpdate.length}{" "}
-                    {contractorsToUpdate.length === 1 ? "contractor has a" : "contractors have"} different{" "}
-                    {pluralize("rate", contractorsToUpdate.length)} that won't be updated.
-                  </AlertDescription>
-                </Alert>
-              )}
-              <Checkbox
-                checked={updateContractorRates}
-                onCheckedChange={(checked) => setUpdateContractorRates(checked === true)}
-                label="Update rate for all contractors with this role"
-              />
-            </>
-          ) : null}
-
-          {role.id && role.payRateType === PayRateType.Hourly ? (
-            <Switch
-              checked={role.trialEnabled}
-              onCheckedChange={(trialEnabled) => updateRole({ trialEnabled })}
-              label="Start with trial period"
-            />
-          ) : null}
-
-          {role.id && role.trialEnabled ? (
-            <div className="grid gap-2">
-              <Label htmlFor="trial-rate">Rate during trial period</Label>
-              <NumberInput
-                id="trial-rate"
-                value={role.trialPayRateInSubunits / 100}
-                onChange={(value) => updateRole({ trialPayRateInSubunits: (value ?? 0) * 100 })}
-                prefix="$"
-              />
-            </div>
-          ) : null}
-
-          {expenseAccounts.length > 0 ? (
-            <Select
-              value={role.expenseAccountId ?? ""}
-              onChange={(expenseAccountId) => updateRole({ expenseAccountId })}
-              options={[
-                { value: "", label: "Default" },
-                ...expenseAccounts.map(({ id, name }) => ({ value: id, label: name })),
-              ]}
-              label="Expense account"
-            />
-          ) : null}
+          {renderCapitalizedExpense()}
+          {renderContractorRatesUpdate()}
+          {renderTrialPeriodSwitch()}
+          {renderTrialRateInput()}
+          {renderExpenseAccountSelect()}
 
           <DialogFooter>
             <div className="flex w-full gap-3">
               <Button className="flex-1" onClick={onSave}>
                 {role.id ? "Save changes" : "Create"}
               </Button>
-              {role.id ? (
-                <Tooltip>
-                  <TooltipTrigger asChild={canDelete}>
-                    <Button
-                      variant="critical"
-                      aria-label="Delete role"
-                      disabled={!canDelete}
-                      onClick={() => setConfirmingDelete(true)}
-                    >
-                      <TrashIcon className="size-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  {!canDelete ? <TooltipContent>You can't delete roles with active contractors</TooltipContent> : null}
-                </Tooltip>
-              ) : null}
+              {renderDeleteButton()}
             </div>
           </DialogFooter>
         </DialogContent>
