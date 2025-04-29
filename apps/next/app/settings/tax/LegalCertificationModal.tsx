@@ -2,7 +2,7 @@
 
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid";
 import { useMutation, type UseMutationResult } from "@tanstack/react-query";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Input from "@/components/Input";
 import { linkClasses } from "@/components/Link";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -26,6 +26,10 @@ const LegalCertificationModal = ({
   mutation: UseMutationResult<unknown, unknown, string>;
 }) => {
   const [signature, setSignature] = useState(legalName);
+  
+  useEffect(() => {
+    setSignature(legalName);
+  }, [legalName]);
   const certificateType = isForeignUser ? (isBusiness ? "W-8BEN-E" : "W-8BEN") : "W-9";
   const foreignEntityTitle = isBusiness ? "entity" : "individual";
   const signMutation = useMutation({
