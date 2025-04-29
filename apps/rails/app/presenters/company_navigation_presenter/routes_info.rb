@@ -65,15 +65,6 @@ class CompanyNavigationPresenter::RoutesInfo
       }
     end
 
-    def company_expenses_route_props
-      return unless Pundit.policy!(current_context, ExpenseCardCharge).index?
-
-      {
-        label: "Expenses",
-        name: "company_expenses",
-      }
-    end
-
     def company_documents_route_props
       {
         label: "Documents",

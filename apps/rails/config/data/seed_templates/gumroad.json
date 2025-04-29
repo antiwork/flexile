@@ -40,7 +40,6 @@
       "feature_flags": {
         "company_updates": true,
         "equity_grants": true,
-        "expense_cards": true,
         "expenses": true,
         "dividends": true,
         "quickbooks": true,
@@ -286,8 +285,7 @@
         {
           "company_role": {
             "model_attributes": {
-              "name": "Software engineer",
-              "expense_card_enabled": true
+              "name": "Software engineer"
             },
             "company_role_rate": {
               "model_attributes": {
@@ -327,11 +325,6 @@
               "contractor_profile_attributes": {
                 "available_hours_per_week": 5,
                 "available_for_hire": true
-              },
-              "expense_card_charge_data": {
-                "random_records_metadata": {
-                  "count": 5
-                }
               },
               "company_investor_attributes": {
                 "investment_amount_in_cents": 0
@@ -440,8 +433,7 @@
         {
           "company_role": {
             "model_attributes": {
-              "name": "Product designer",
-              "expense_card_enabled": true
+              "name": "Product designer"
             },
             "company_role_rate": {
               "model_attributes": {
