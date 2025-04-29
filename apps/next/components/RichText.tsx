@@ -121,7 +121,7 @@ export const Editor = ({
         </div>
         {editor ? <EditorContent editor={editor} /> : null}
       </div>
-      <Dialog open={!!addingLink} onOpenChange={(open) => !open && setAddingLink(null)}>
+      <Dialog open={!!addingLink} onOpenChange={() => setAddingLink(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Insert Link</DialogTitle>

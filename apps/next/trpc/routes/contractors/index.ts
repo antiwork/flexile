@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { isFuture } from "date-fns";
-import { and, asc, desc, eq, exists, gt, gte, isNotNull, isNull, lt, not, or, sql } from "drizzle-orm";
+import { and, desc, eq, exists, gte, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
@@ -24,33 +24,18 @@ import { createSubmission } from "@/trpc/routes/documents/templates";
 import { assertDefined } from "@/utils/assert";
 import { company_workers_url } from "@/utils/routes";
 import { latestUserComplianceInfo, simpleUser, type User } from "../users";
-import ContractEndCanceled from "./ContractEndCanceled";
-import ContractEnded from "./ContractEnded";
 import RateUpdated from "./RateUpdated";
 
 type CompanyContractor = typeof companyContractors.$inferSelect;
 
 export const contractorsRouter = createRouter({
   list: companyProcedure
-    .input(
-      z.object({
-        type: z.enum(["onboarding", "alumni", "active", "not_alumni"]).optional(),
-        roleId: z.string().optional(),
-        order: z.enum(["asc", "desc"]).default("asc"),
-      }),
-    )
+    .input(z.object({ roleId: z.string().optional(), excludeAlumni: z.boolean().optional() }))
     .query(async ({ ctx, input }) => {
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
-      const onboarding = assertDefined(gt(companyContractors.startedAt, new Date()));
       const where = and(
         eq(companyContractors.companyId, ctx.company.id),
-        input.type
-          ? input.type === "alumni"
-            ? and(isNotNull(companyContractors.endedAt), lt(companyContractors.endedAt, new Date()))
-            : or(isNull(companyContractors.endedAt), gte(companyContractors.endedAt, new Date()))
-          : undefined,
-        input.type === "onboarding" ? onboarding : input.type === "active" ? not(onboarding) : undefined,
-        input.type === "not_alumni" ? isNull(companyContractors.endedAt) : undefined,
+        input.excludeAlumni ? isNull(companyContractors.endedAt) : undefined,
         input.roleId ? eq(companyContractors.companyRoleId, byExternalId(companyRoles, input.roleId)) : undefined,
       );
       const rows = await db.query.companyContractors.findMany({
@@ -64,7 +49,7 @@ export const contractorsRouter = createRouter({
           },
           role: true,
         },
-        orderBy: (input.order === "asc" ? asc : desc)(companyContractors.id),
+        orderBy: desc(companyContractors.id),
       });
       const workers = rows.map((worker) => ({
         ...pick(worker, ["startedAt", "payRateInSubunits", "hoursPerWeek", "endedAt"]),
@@ -298,8 +283,6 @@ export const contractorsRouter = createRouter({
     if (!contractor) throw new TRPCError({ code: "NOT_FOUND" });
 
     await db.update(companyContractors).set({ endedAt: null }).where(eq(companyContractors.id, contractor.id));
-
-    void ContractEndCanceled;
   }),
 
   endContract: companyProcedure
@@ -329,8 +312,6 @@ export const contractorsRouter = createRouter({
         .update(companyContractors)
         .set({ endedAt: new Date(input.endDate) })
         .where(eq(companyContractors.id, activeContractor.id));
-
-      void ContractEnded;
     }),
 });
 

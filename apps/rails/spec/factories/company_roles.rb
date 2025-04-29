@@ -4,7 +4,6 @@ FactoryBot.define do
   factory :company_role do
     company
     name { Faker::Job.title }
-    job_description { Faker::Quote.famous_last_words }
     capitalized_expense { Faker::Number.between(from: 0, to: 80) }
 
     transient do

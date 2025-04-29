@@ -86,7 +86,6 @@ export const rolesRouter = createRouter({
         .insert(companyRoles)
         .values({
           companyId: ctx.company.id,
-          jobDescription: "", // Empty string but required by schema
           ...pick(
             input,
             "name",
@@ -116,7 +115,6 @@ export const rolesRouter = createRouter({
       const [role] = await tx
         .update(companyRoles)
         .set({
-          jobDescription: "", // Empty string but required by schema
           ...pick(
             input,
             "name",

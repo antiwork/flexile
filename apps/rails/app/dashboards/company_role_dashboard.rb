@@ -16,7 +16,6 @@ class CompanyRoleDashboard < Administrate::BaseDashboard
     rate: Field::HasOne,
     company_workers: Field::HasMany,
     deleted_at: Field::DateTime,
-    job_description: Field::Text,
     name: Field::String,
     slug: Field::String,
     created_at: Field::DateTime,
@@ -44,7 +43,6 @@ class CompanyRoleDashboard < Administrate::BaseDashboard
     rate
     company_workers
     deleted_at
-    job_description
     name
     slug
     created_at
@@ -60,7 +58,6 @@ class CompanyRoleDashboard < Administrate::BaseDashboard
     rate
     company_workers
     deleted_at
-    job_description
     name
     slug
   ].freeze

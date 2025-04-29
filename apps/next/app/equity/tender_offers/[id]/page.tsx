@@ -8,7 +8,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Figures from "@/components/Figures";
 import MainLayout from "@/components/layouts/Main";
-import Modal from "@/components/Modal";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import Select from "@/components/Select";
@@ -379,12 +379,20 @@ export default function BuybackView() {
       {bids.length > 0 ? <DataTable table={bidsTable} /> : null}
 
       {cancelingBid ? (
-        <Modal
-          open
-          title="Cancel bid?"
-          onClose={() => setCancelingBid(null)}
-          footer={
-            <>
+        <Dialog open onOpenChange={() => setCancelingBid(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Cancel bid?</DialogTitle>
+            </DialogHeader>
+            <p>Are you sure you want to cancel this bid?</p>
+            <p>
+              Share class: {cancelingBid.shareClass}
+              <br />
+              Number of shares: {cancelingBid.numberOfShares.toLocaleString()}
+              <br />
+              Bid price: {formatMoneyFromCents(cancelingBid.sharePriceCents)}
+            </p>
+            <DialogFooter>
               <Button variant="outline" onClick={() => setCancelingBid(null)}>
                 No, keep bid
               </Button>
@@ -395,20 +403,9 @@ export default function BuybackView() {
               >
                 Yes, cancel bid
               </MutationButton>
-            </>
-          }
-        >
-          <>
-            <p>Are you sure you want to cancel this bid?</p>
-            <p>
-              Share class: {cancelingBid.shareClass}
-              <br />
-              Number of shares: {cancelingBid.numberOfShares.toLocaleString()}
-              <br />
-              Bid price: {formatMoneyFromCents(cancelingBid.sharePriceCents)}
-            </p>
-          </>
-        </Modal>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       ) : null}
     </MainLayout>
   );

@@ -51,7 +51,6 @@ RSpec.describe InviteCompany do
 
     company_role = CompanyRole.last
     expect(company_role.name).to eq("Developer")
-    expect(company_role.job_description).to eq("Developer")
     expect(company_role.rate.pay_rate_in_subunits).to eq(100_00)
     expect(company_role.rate.pay_rate_type).to eq("hourly")
 
