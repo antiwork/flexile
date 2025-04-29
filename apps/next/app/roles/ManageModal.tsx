@@ -70,7 +70,7 @@ const ManageModal = ({
   const [{ workers: contractors }, { refetch: refetchContractors }] = trpc.contractors.list.useSuspenseQuery({
     companyId: company.id,
     roleId: role.id,
-    type: "not_alumni",
+    excludeAlumni: true,
   });
   const deleteMutation = trpc.roles.delete.useMutation({
     onSuccess: async () => {

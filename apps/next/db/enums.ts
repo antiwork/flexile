@@ -45,6 +45,16 @@ export enum EquityAllocationStatus {
   Approved = "approved",
 }
 
+export const invoiceStatuses = [
+  "received",
+  "approved",
+  "processing",
+  "payment_pending",
+  "paid",
+  "rejected",
+  "failed",
+] as const;
+
 export const optionGrantTypes = ["iso", "nso"] as const;
 export const optionGrantVestingTriggers = ["scheduled", "invoice_paid"] as const;
 export const optionGrantIssueDateRelationships = [

@@ -101,9 +101,13 @@ export const useApproveInvoices = (onSuccess?: () => void) => {
         jsonData: { approve_ids, pay_ids },
         assertOk: true,
       });
-      await utils.invoices.list.invalidate({ companyId: company.id });
     },
-    onSuccess: () => onSuccess?.(),
+    onSuccess: () => {
+      setTimeout(() => {
+        void utils.invoices.list.invalidate({ companyId: company.id });
+        onSuccess?.();
+      }, 500);
+    },
   });
 };
 
