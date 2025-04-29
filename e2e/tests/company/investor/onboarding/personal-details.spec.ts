@@ -60,7 +60,7 @@ test.describe("Investor onboarding - personal details", () => {
 
     await page.getByRole("button", { name: "Continue" }).click();
 
-    await expect(page.getByText("Payout method")).toBeVisible();
+    await expect(page.getByText("Set up a payout method")).toBeVisible();
 
     const updatedUser = await db.query.users.findFirst({
       where: eq(users.id, onboardingUser.id),
@@ -101,7 +101,7 @@ test.describe("Investor onboarding - personal details", () => {
       { page, title: "Important notice" },
     );
 
-    await expect(page.getByText("Payout method")).toBeVisible();
+    await expect(page.getByText("Set up a payout method")).toBeVisible();
 
     const updatedUser = await db.query.users.findFirst({
       where: eq(users.id, onboardingUser.id),
@@ -129,7 +129,7 @@ test.describe("Investor onboarding - personal details", () => {
 
     await page.getByRole("button", { name: "Continue" }).click();
 
-    await expect(page.getByText("Payout method")).toBeVisible();
+    await expect(page.getByText("Set up a payout method")).toBeVisible();
 
     const updatedUser = await db.query.users.findFirst({
       where: eq(users.id, onboardingUser.id),
