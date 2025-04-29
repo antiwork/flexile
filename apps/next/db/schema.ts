@@ -1918,8 +1918,6 @@ export const companyRoles = pgTable(
     deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
     expenseAccountId: varchar("expense_account_id"),
     externalId: varchar("external_id").$default(nanoid).notNull(),
-
-    trialEnabled: boolean("trial_enabled").notNull().default(false),
   },
   (table) => [
     index("index_company_roles_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),

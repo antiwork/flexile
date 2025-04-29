@@ -1,12 +1,13 @@
 import { InformationCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { pick } from "lodash-es";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
+import Delta from "@/components/Delta";
 import Input from "@/components/Input";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import RadioButtons from "@/components/RadioButtons";
-import Select from "@/components/Select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -14,17 +15,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import { PayRateType } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { pluralize } from "@/utils/pluralize";
+import Select from "@/components/Select";
 
-type Role = RouterOutput["roles"]["list"][number] & {
-  trialPayRateInSubunits?: number;
-};
+type Role = RouterOutput["roles"]["list"][number];
 
 const ManageModal = ({
   open,
@@ -49,15 +48,11 @@ const ManageModal = ({
       name: "",
       payRateInSubunits: 0,
       payRateType: PayRateType.Hourly,
-      trialEnabled: false,
-      trialPayRateInSubunits: 0,
       capitalizedExpense: 50,
       expenseAccountId: null,
     };
     const lastRole = roles[0];
-    return lastRole
-      ? { ...defaults, ...pick(lastRole, "payRateInSubunits", "trialPayRateInSubunits", "capitalizedExpense") }
-      : defaults;
+    return lastRole ? { ...defaults, ...pick(lastRole, "payRateInSubunits", "capitalizedExpense") } : defaults;
   };
   const [role, setRole] = useState(getSelectedRole);
   useEffect(() => setRole(getSelectedRole()), [id]);
@@ -80,10 +75,6 @@ const ManageModal = ({
     },
   });
   const updateRole = (update: Partial<Role>) => setRole((prev) => ({ ...prev, ...update }));
-
-  useEffect(() => {
-    if (!role.id) setRole((prev) => ({ ...prev, trialPayRateInSubunits: Math.floor(prev.payRateInSubunits / 2) }));
-  }, [role.payRateInSubunits, role.id]);
 
   const onSave = () => {
     if (contractorsToUpdate.length > 0 && updateContractorRates && role.id) {
@@ -141,103 +132,6 @@ const ManageModal = ({
     },
   });
 
-  const renderCapitalizedExpense = () => {
-    if (expenseAccounts.length === 0) return null;
-    return (
-      <div className="grid gap-2">
-        <Label htmlFor="capitalized-expense">Capitalized R&D expense</Label>
-        <NumberInput
-          id="capitalized-expense"
-          value={role.capitalizedExpense ?? 0}
-          onChange={(value) => updateRole({ capitalizedExpense: value ?? 0 })}
-          suffix="%"
-        />
-      </div>
-    );
-  };
-
-  const renderContractorRatesUpdate = () => {
-    if (!role.id || contractorsToUpdate.length === 0) return null;
-    return (
-      <>
-        {!updateContractorRates && (
-          <Alert>
-            <InformationCircleIcon />
-            <AlertDescription>
-              {contractorsToUpdate.length} {contractorsToUpdate.length === 1 ? "contractor has a" : "contractors have"}{" "}
-              different {pluralize("rate", contractorsToUpdate.length)} that won't be updated.
-            </AlertDescription>
-          </Alert>
-        )}
-        <Checkbox
-          checked={updateContractorRates}
-          onCheckedChange={(checked) => setUpdateContractorRates(checked === true)}
-          label="Update rate for all contractors with this role"
-        />
-      </>
-    );
-  };
-
-  const renderTrialPeriodSwitch = () => {
-    if (!role.id || role.payRateType !== PayRateType.Hourly) return null;
-    return (
-      <Switch
-        checked={role.trialEnabled}
-        onCheckedChange={(trialEnabled) => updateRole({ trialEnabled })}
-        label="Start with trial period"
-      />
-    );
-  };
-
-  const renderTrialRateInput = () => {
-    if (!role.id || !role.trialEnabled) return null;
-    return (
-      <div className="grid gap-2">
-        <Label htmlFor="trial-rate">Rate during trial period</Label>
-        <NumberInput
-          id="trial-rate"
-          value={role.trialPayRateInSubunits / 100}
-          onChange={(value) => updateRole({ trialPayRateInSubunits: (value ?? 0) * 100 })}
-          prefix="$"
-        />
-      </div>
-    );
-  };
-
-  const renderExpenseAccountSelect = () => {
-    if (expenseAccounts.length === 0) return null;
-    return (
-      <Select
-        value={role.expenseAccountId ?? ""}
-        onChange={(expenseAccountId) => updateRole({ expenseAccountId })}
-        options={[
-          { value: "", label: "Default" },
-          ...expenseAccounts.map(({ id, name }) => ({ value: id, label: name })),
-        ]}
-        label="Expense account"
-      />
-    );
-  };
-
-  const renderDeleteButton = () => {
-    if (!role.id) return null;
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild={canDelete}>
-          <Button
-            variant="critical"
-            aria-label="Delete role"
-            disabled={!canDelete}
-            onClick={() => setConfirmingDelete(true)}
-          >
-            <TrashIcon className="size-5" />
-          </Button>
-        </TooltipTrigger>
-        {!canDelete && <TooltipContent>You can't delete roles with active contractors</TooltipContent>}
-      </Tooltip>
-    );
-  };
-
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
@@ -262,7 +156,7 @@ const ManageModal = ({
             ].filter((option) => !!option)}
             disabled={!!role.id}
           />
-          <div className="grid gap-3">
+          <div className={`grid gap-3 ${expenseAccounts.length > 0 ? "md:grid-cols-2" : ""}`}>
             <div className="grid gap-2">
               <Label htmlFor="pay-rate">Rate</Label>
               <NumberInput
@@ -281,79 +175,119 @@ const ManageModal = ({
               />
               {errors.includes("payRateInSubunits") && <div className="text-destructive text-sm">Rate is required</div>}
             </div>
+            {expenseAccounts.length > 0 && (
+              <div className="grid gap-2">
+                <Label htmlFor="capitalized-expense">Capitalized R&D expense</Label>
+                <NumberInput
+                  id="capitalized-expense"
+                  value={role.capitalizedExpense ?? 0}
+                  onChange={(value) => updateRole({ capitalizedExpense: value ?? 0 })}
+                  suffix="%"
+                />
+              </div>
+            )}
           </div>
-
-          {renderCapitalizedExpense()}
-          {renderContractorRatesUpdate()}
-          {renderTrialPeriodSwitch()}
-          {renderTrialRateInput()}
-          {renderExpenseAccountSelect()}
-
-          <DialogFooter>
-            <div className="flex w-full gap-3">
-              <Button className="flex-1" onClick={onSave}>
-                {role.id ? "Save changes" : "Create"}
-              </Button>
-              {renderDeleteButton()}
-            </div>
-          </DialogFooter>
+          {role.id && contractorsToUpdate.length > 0 ? (
+            <>
+              {!updateContractorRates && (
+                <Alert>
+                  <InformationCircleIcon />
+                  <AlertDescription>
+                    {contractorsToUpdate.length}{" "}
+                    {contractorsToUpdate.length === 1 ? "contractor has a" : "contractors have"} different{" "}
+                    {pluralize("rate", contractorsToUpdate.length)} that won't be updated.
+                  </AlertDescription>
+                </Alert>
+              )}
+              <Checkbox
+                checked={updateContractorRates}
+                onCheckedChange={(checked) => setUpdateContractorRates(checked === true)}
+                label="Update rate for all contractors with this role"
+              />
+            </>
+          ) : null}
+          {expenseAccounts.length > 0 ? (
+            <Select
+              value={role.expenseAccountId ?? ""}
+              onChange={(expenseAccountId) => updateRole({ expenseAccountId })}
+              options={[
+                { value: "", label: "Default" },
+                ...expenseAccounts.map(({ id, name }) => ({ value: id, label: name })),
+              ]}
+              label="Expense account"
+            />
+          ) : null}
+          <div className="flex w-full gap-3">
+            <Button className="flex-1" onClick={onSave}>
+              {role.id ? "Save changes" : "Create"}
+            </Button>
+            {role.id ? (
+              <Tooltip>
+                <TooltipTrigger asChild={canDelete}>
+                  <Button
+                    variant="critical"
+                    aria-label="Delete role"
+                    disabled={!canDelete}
+                    onClick={() => setConfirmingDelete(true)}
+                  >
+                    <TrashIcon className="size-5" />
+                  </Button>
+                </TooltipTrigger>
+                {!canDelete ? <TooltipContent>You can't delete roles with active contractors</TooltipContent> : null}
+              </Tooltip>
+            ) : null}
+          </div>
         </DialogContent>
       </Dialog>
-
-      <Dialog open={confirmingRateUpdate} onOpenChange={() => setConfirmingRateUpdate(false)}>
+      <Dialog open={confirmingRateUpdate} onOpenChange={setConfirmingRateUpdate}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Update contractor rates?</DialogTitle>
+            <DialogTitle>
+              Update rates for {contractorsToUpdate.length} {pluralize("contractor", contractorsToUpdate.length)} to
+              match role rate?
+            </DialogTitle>
           </DialogHeader>
+          <div>Rate changes will apply to future invoices.</div>
           <Card>
-            <CardContent className="pt-6">
-              <div className="mb-4 flex items-center gap-2">
-                <div className="text-muted-foreground flex-1 text-sm">Current rate</div>
-                <div className="font-medium">
-                  {formatMoneyFromCents(contractorsToUpdate[0]?.payRateInSubunits ?? 0)}
-                  {role.payRateType === PayRateType.Hourly ? "/hour" : ""}
-                </div>
-              </div>
-              <div className="mb-4 flex items-center gap-2">
-                <div className="text-muted-foreground flex-1 text-sm">New rate</div>
-                <div className="font-medium">
-                  {formatMoneyFromCents(role.payRateInSubunits)}
-                  {role.payRateType === PayRateType.Hourly ? "/hour" : ""}
-                </div>
-              </div>
-              <Separator />
-              <div className="mt-4 flex items-center gap-2">
-                <div className="text-muted-foreground flex-1 text-sm">Contractors affected</div>
-                <div className="font-medium">{contractorsToUpdate.length}</div>
-              </div>
+            <CardContent>
+              {contractorsToUpdate.map((contractor, i) => (
+                <Fragment key={i}>
+                  <div className="flex justify-between gap-2">
+                    <b>{contractor.user.name}</b>
+                    <div>
+                      <del>{formatMoneyFromCents(contractor.payRateInSubunits)}</del>{" "}
+                      {formatMoneyFromCents(role.payRateInSubunits)}{" "}
+                      <span>
+                        (<Delta diff={role.payRateInSubunits / contractor.payRateInSubunits - 1} />)
+                      </span>
+                    </div>
+                  </div>
+                  {i !== contractorsToUpdate.length - 1 && <Separator />}
+                </Fragment>
+              ))}
             </CardContent>
           </Card>
           <DialogFooter>
-            <div className="flex w-full gap-3">
-              <Button variant="outline" onClick={() => setConfirmingRateUpdate(false)}>
-                Cancel
-              </Button>
-              <Button onClick={() => saveMutation.mutate()}>Update rates</Button>
-            </div>
+            <Button variant="outline" onClick={() => setConfirmingRateUpdate(false)}>
+              Cancel
+            </Button>
+            <MutationButton mutation={saveMutation}>Yes, change</MutationButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <Dialog open={confirmingDelete} onOpenChange={() => setConfirmingDelete(false)}>
+      <Dialog open={confirmingDelete} onOpenChange={setConfirmingDelete}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Permanently delete role?</DialogTitle>
           </DialogHeader>
           <p>This action cannot be undone.</p>
           <DialogFooter>
-            <div className="flex justify-end gap-4">
-              <Button variant="outline" onClick={() => setConfirmingDelete(false)}>
-                Cancel
-              </Button>
-              <Button variant="critical" onClick={() => deleteMutation.mutate({ companyId: company.id, id: role.id })}>
-                Delete
-              </Button>
-            </div>
+            <Button variant="outline" onClick={() => setConfirmingDelete(false)}>
+              No, cancel
+            </Button>
+            <MutationButton mutation={deleteMutation} param={{ companyId: company.id, id: role.id }}>
+              Yes, delete
+            </MutationButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

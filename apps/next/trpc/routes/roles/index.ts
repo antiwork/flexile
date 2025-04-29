@@ -10,21 +10,13 @@ import { companyProcedure, createRouter } from "@/trpc";
 import { assertDefined } from "@/utils/assert";
 
 const inputSchema = createInsertSchema(companyRoles)
-  .pick({
-    name: true,
-    capitalizedExpense: true,
-    expenseAccountId: true,
-    trialEnabled: true,
-  })
+  .pick({ name: true, capitalizedExpense: true, expenseAccountId: true })
   .merge(
     createInsertSchema(companyRoleRates, { payRateType: z.nativeEnum(PayRateType) }).pick({
       payRateInSubunits: true,
       payRateType: true,
     }),
-  )
-  .extend({
-    trialPayRateInSubunits: z.number().optional(),
-  });
+  );
 
 export const rolesRouter = createRouter({
   list: companyProcedure.query(async ({ ctx }) => {
@@ -42,9 +34,8 @@ export const rolesRouter = createRouter({
       const rate = assertDefined(role.rates[0]);
       return {
         id: role.externalId,
-        ...pick(role, "name", "capitalizedExpense", "expenseAccountId", "trialEnabled"),
+        ...pick(role, "name", "capitalizedExpense", "expenseAccountId"),
         ...pick(rate, "payRateType", "payRateInSubunits"),
-        trialPayRateInSubunits: 0, // Default value for backward compatibility
       };
     });
   }),
@@ -76,7 +67,7 @@ export const rolesRouter = createRouter({
         .insert(companyRoles)
         .values({
           companyId: ctx.company.id,
-          ...pick(input, "name", "capitalizedExpense", "expenseAccountId", "trialEnabled"),
+          ...pick(input, "name", "capitalizedExpense", "expenseAccountId"),
         })
         .returning(pick(companyRoles, "id", "externalId"));
 
@@ -98,7 +89,7 @@ export const rolesRouter = createRouter({
       const [role] = await tx
         .update(companyRoles)
         .set({
-          ...pick(input, "name", "capitalizedExpense", "expenseAccountId", "trialEnabled"),
+          ...pick(input, "name", "capitalizedExpense", "expenseAccountId"),
         })
         .where(and(eq(companyRoles.externalId, input.id), eq(companyRoles.companyId, ctx.company.id)))
         .returning({ id: companyRoles.id, externalId: companyRoles.externalId });
