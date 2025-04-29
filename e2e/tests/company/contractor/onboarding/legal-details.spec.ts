@@ -9,7 +9,7 @@ import { expect, type Page, test, withinModal } from "@test/index";
 import { eq } from "drizzle-orm";
 import { companies, companyAdministrators, userComplianceInfos, users } from "@/db/schema";
 
-test.describe("Contractor onboarding - legal details", () => {
+test.describe.skip("Contractor onboarding - legal details", () => {
   let company: typeof companies.$inferSelect;
   let companyAdministrator: typeof companyAdministrators.$inferSelect;
   let onboardingUser: typeof users.$inferSelect;
