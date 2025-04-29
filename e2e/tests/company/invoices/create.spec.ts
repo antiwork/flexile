@@ -90,6 +90,8 @@ test.describe("invoice creation", () => {
       companyContractorId: projectBasedContractor.id,
       equityPercentage: 50,
       year: 2023,
+      locked: true,
+      status: "approved",
     });
   });
 
