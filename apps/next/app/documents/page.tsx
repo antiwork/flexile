@@ -466,7 +466,7 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
 
   return (
     <Dialog open onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent>
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-4xl">
         {user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent && (
           <DialogHeader>
             <div className="flex justify-end gap-4">
