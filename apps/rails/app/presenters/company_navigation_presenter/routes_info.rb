@@ -16,7 +16,6 @@ class CompanyNavigationPresenter::RoutesInfo
       [
         company_updates_route_props,
         company_invoices_route_props,
-        company_expenses_route_props,
         company_documents_route_props,
         company_workers_route_props,
         company_roles_route_props,
