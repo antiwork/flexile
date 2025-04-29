@@ -164,9 +164,8 @@ const ManageModal = ({
           <Alert>
             <InformationCircleIcon />
             <AlertDescription>
-              {contractorsToUpdate.length}{" "}
-              {contractorsToUpdate.length === 1 ? "contractor has a" : "contractors have"} different{" "}
-              {pluralize("rate", contractorsToUpdate.length)} that won't be updated.
+              {contractorsToUpdate.length} {contractorsToUpdate.length === 1 ? "contractor has a" : "contractors have"}{" "}
+              different {pluralize("rate", contractorsToUpdate.length)} that won't be updated.
             </AlertDescription>
           </Alert>
         )}
