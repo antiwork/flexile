@@ -25,6 +25,7 @@ import {
   BusinessType,
   DocumentTemplateType,
   DocumentType,
+  invoiceStatuses,
   optionGrantIssueDateRelationships,
   optionGrantTypes,
   optionGrantVestingTriggers,
@@ -978,9 +979,7 @@ export const invoices = pgTable(
     invoiceDate: date("invoice_date", { mode: "string" }).notNull(),
     totalMinutes: integer("total_minutes"),
     totalAmountInUsdCents: bigint("total_amount_in_usd_cents", { mode: "bigint" }).notNull(),
-    status: varchar()
-      .$type<"received" | "approved" | "processing" | "payment_pending" | "paid" | "rejected" | "failed">()
-      .notNull(),
+    status: varchar({ enum: invoiceStatuses }).notNull(),
     createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
       .notNull()

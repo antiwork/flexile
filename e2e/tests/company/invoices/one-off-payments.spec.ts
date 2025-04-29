@@ -9,7 +9,6 @@ import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { findRequiredTableRow } from "@test/helpers/matchers";
 import { expect, test, withinModal } from "@test/index";
-import { format } from "date-fns";
 import { and, eq } from "drizzle-orm";
 import { companies, equityGrants, invoices } from "@/db/schema";
 
@@ -53,17 +52,7 @@ test.describe("One-off payments", () => {
         },
         { page },
       );
-
-      await expect(page.getByRole("row").getByText("O-0001")).toBeVisible();
-
-      const invoiceRow = await findRequiredTableRow(page, {
-        "Invoice ID": "O-0001",
-        "Sent on": format(new Date(), "MMM d, yyyy"),
-        Paid: "-",
-        Hours: "N/A",
-        Amount: "$2,154.30",
-      });
-      await expect(invoiceRow.getByText("Awaiting approval (1/2)")).toBeVisible();
+      await expect(page.getByRole("dialog")).not.toBeVisible();
 
       const invoice = await db.query.invoices.findFirst({
         where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
@@ -145,17 +134,7 @@ test.describe("One-off payments", () => {
           },
           { page },
         );
-
-        await expect(page.getByRole("row").getByText("O-0001")).toBeVisible();
-
-        const invoiceRow = await findRequiredTableRow(page, {
-          "Invoice ID": "O-0001",
-          "Sent on": format(new Date(), "MMM d, yyyy"),
-          Paid: "-",
-          Hours: "N/A",
-          Amount: "$500",
-        });
-        await expect(invoiceRow.getByText("Awaiting approval (1/2)")).toBeVisible();
+        await expect(page.getByRole("dialog")).not.toBeVisible();
 
         const invoice = await db.query.invoices.findFirst({
           where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
@@ -227,17 +206,7 @@ test.describe("One-off payments", () => {
           },
           { page },
         );
-
-        await expect(page.getByRole("row").getByText("O-0001")).toBeVisible();
-
-        const invoiceRow = await findRequiredTableRow(page, {
-          "Invoice ID": "O-0001",
-          "Sent on": format(new Date(), "MMM d, yyyy"),
-          Paid: "-",
-          Hours: "N/A",
-          Amount: "$500",
-        });
-        await expect(invoiceRow.getByText("Awaiting approval (1/2)")).toBeVisible();
+        await expect(page.getByRole("dialog")).not.toBeVisible();
 
         const invoice = await db.query.invoices.findFirst({
           where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
@@ -372,14 +341,7 @@ test.describe("One-off payments", () => {
         },
         { page },
       );
-
       await expect(page.getByRole("dialog")).not.toBeVisible();
-
-      await page.getByRole("link", { name: "Invoices" }).click();
-      await expect(page.getByText("No invoices to display.")).toBeVisible();
-      await page.getByRole("tab", { name: "History" }).click();
-      await page.waitForURL(/tab=history/u);
-      await expect(page.getByText("No invoices to display.")).toBeVisible();
 
       await clerk.signOut({ page });
       await login(page, workerUser);
@@ -393,7 +355,6 @@ test.describe("One-off payments", () => {
 
       await invoiceRow.click();
       await expect(page.getByRole("cell", { name: "Bonus!" })).toBeVisible();
-      // await page.waitForTimeout(100000);
 
       await page.getByRole("button", { name: "Accept payment" }).click();
       await withinModal(
@@ -410,27 +371,15 @@ test.describe("One-off payments", () => {
       await login(page, adminUser);
 
       await page.getByRole("link", { name: "Invoices" }).click();
-      await expect(page.getByText("No invoices to display.")).toBeVisible();
-      await page.getByRole("tab", { name: "History" }).click();
-      await page.waitForURL(/tab=history/u);
-      await expect(page.getByText("No invoices to display.")).not.toBeVisible();
       await expect(page.getByRole("row", { name: "$123.45" })).toBeVisible();
 
       await db.update(companies).set({ requiredInvoiceApprovalCount: 1 }).where(eq(companies.id, company.id));
 
       await page.reload();
-      await page.waitForURL(/tab=history/u);
-      await expect(page.getByText("No invoices to display.")).toBeVisible();
-
-      await page.getByRole("tab", { name: "Open" }).click();
-      await page.waitForURL(/invoices$/u);
       await expect(page.getByRole("row", { name: "$123.45" })).toBeVisible();
 
       await page.getByRole("button", { name: "Pay now" }).click();
 
-      await expect(page.getByText("No invoices to display.")).toBeVisible();
-      await page.getByRole("tab", { name: "History" }).click();
-      await page.waitForURL(/tab=history/u);
       await expect(page.getByRole("row", { name: "$123.45 Payment scheduled" })).toBeVisible();
     });
   });

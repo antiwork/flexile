@@ -73,6 +73,7 @@ export const useTable = <T extends RowData>(
 ) =>
   useReactTable({
     enableRowSelection: false,
+    autoResetPageIndex: false, // work around https://github.com/TanStack/table/issues/5026
     ...options,
     getCoreRowModel: getCoreRowModel(),
   });
