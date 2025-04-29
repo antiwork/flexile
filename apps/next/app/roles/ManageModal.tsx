@@ -186,7 +186,7 @@ const ManageModal = ({
             </div>
           </div>
 
-          {expenseAccounts.length > 0 ? (
+          {expenseAccounts.length > 0 && (
             <div className="grid gap-2">
               <Label htmlFor="capitalized-expense">Capitalized R&D expense</Label>
               <NumberInput
@@ -196,7 +196,7 @@ const ManageModal = ({
                 suffix="%"
               />
             </div>
-          ) : null}
+          )}
 
           {role.id && contractorsToUpdate.length > 0 ? (
             <>
