@@ -14,10 +14,10 @@ export const customCss = `
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0.5rem 1rem; /* Increased horizontal padding (px-4 equiv) */
+    padding: 0.5rem 1rem;
     border-width: 1px;
-    border-radius: 0.5rem; /* rounded-lg */
-    gap: 0.375rem; /* gap-1.5 */
+    border-radius: 0.5rem;
+    gap: 0.375rem;
     white-space: nowrap;
     cursor: pointer;
     background-color: black;
@@ -29,21 +29,21 @@ export const customCss = `
   /* Unique styles for expand button */
   #expand_form_button {
     width: auto !important;
-    min-width: 250px !important; /* Add minimum width */
-    position: absolute !important; /* Ensure absolute positioning is considered */
-    bottom: 0 !important; /* Keep original bottom positioning */
-    left: 50% !important; /* Position left edge at center */
-    transform: translateX(-50%) !important; /* Pull back by half its width */
-    margin-left: 0 !important; /* Remove auto margin */
-    margin-right: 0 !important; /* Remove auto margin */
-    margin-bottom: 0.75rem !important; /* Keep original mb-3 equivalent */
+    min-width: 250px !important;
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-bottom: 0.75rem !important;
   }
 
   #expand_form_button:hover,
   #submit_form_button:hover,
   .submitted-form-resubmit-button:hover {
-    background-color: #1f2937; /* gray-800 */
-    border-color: #1f2937; /* gray-800 */
+    background-color: #1f2937;
+    border-color: #1f2937;
   }
 
   #expand_form_button:disabled,
@@ -54,13 +54,10 @@ export const customCss = `
     cursor: default;
   }
 
-  /* Add styles for the form container */
   #form_container {
-    border-radius: 0.5rem !important; /* 8px, rounded-lg */
-    /* Add !important to override potential inline styles */
+    border-radius: 0.5rem !important;
   }
 
-  /* --- Styles for outline buttons (e.g., TYPE, UPLOAD) --- */
   #type_text_button,
   .upload-image-button {
     display: inline-flex !important;
@@ -81,11 +78,8 @@ export const customCss = `
 
   #type_text_button:hover,
   .upload-image-button:hover {
-    background-color: var(--accent) !important; /* Use app's accent color */
-    /* Text color might need adjustment on hover depending on accent color */
-    /* color: var(--accent-foreground) !important; */
+    background-color: var(--accent) !important;
   }
-  /* --- End outline button styles --- */
 
   .submitted-form-company-logo {
     display: none !important;
@@ -97,7 +91,6 @@ export const customCss = `
     margin-right: auto !important;
   }
 
-  /* Center the parent container of the resubmit button */
   div:has(> .submitted-form-resubmit-button) {
     text-align: center !important;
   }
@@ -109,14 +102,11 @@ export default function Form(props: Omit<React.ComponentProps<typeof DocusealFor
 
   return (
     <DocusealForm
-      // Set default/required props internally
       email={user.email}
       expand={false}
       sendCopyEmail={false}
       withTitle={false}
       withSendCopyButton={false}
-      // Remove internal application of customCss
-      // Pass through all other props from the parent, including potentially customCss
       {...props}
     />
   );
