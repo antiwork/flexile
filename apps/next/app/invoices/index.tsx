@@ -1,9 +1,9 @@
 import { CurrencyDollarIcon } from "@heroicons/react/20/solid";
 import { useMutation } from "@tanstack/react-query";
 import React, { useState } from "react";
-import Modal from "@/components/Modal";
 import MutationButton from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -100,9 +100,13 @@ export const useApproveInvoices = (onSuccess?: () => void) => {
         jsonData: { approve_ids, pay_ids },
         assertOk: true,
       });
-      await utils.invoices.list.invalidate({ companyId: company.id });
     },
-    onSuccess: () => onSuccess?.(),
+    onSuccess: () => {
+      setTimeout(() => {
+        void utils.invoices.list.invalidate({ companyId: company.id });
+        onSuccess?.();
+      }, 500);
+    },
   });
 };
 
@@ -167,29 +171,28 @@ export const RejectModal = ({
   const [reason, setReason] = useState("");
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title="Reject invoice?"
-      footer={
-        <>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Reject invoice?</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-2">
+          <Label htmlFor="reject-reason">Explain why the invoice was rejected and how to fix it (optional)</Label>
+          <Textarea
+            id="reject-reason"
+            value={reason}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setReason(e.target.value)}
+          />
+        </div>
+        <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             No, cancel
           </Button>
           <MutationButton mutation={rejectInvoices} param={{ ids, reason }} loadingText="Rejecting...">
             Yes, reject
           </MutationButton>
-        </>
-      }
-    >
-      <div className="grid gap-2">
-        <Label htmlFor="reject-reason">Explain why the invoice was rejected and how to fix it (optional)</Label>
-        <Textarea
-          id="reject-reason"
-          value={reason}
-          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setReason(e.target.value)}
-        />
-      </div>
-    </Modal>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };

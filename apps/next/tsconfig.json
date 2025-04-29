@@ -25,7 +25,8 @@
     "incremental": true,
     "esModuleInterop": true,
     "allowJs": true,
-    "exactOptionalPropertyTypes": true
+    "exactOptionalPropertyTypes": true,
+    "types": []
   },
   "include": [
     "next-env.d.ts",

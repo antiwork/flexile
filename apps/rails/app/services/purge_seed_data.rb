@@ -187,7 +187,6 @@ class PurgeSeedData
       company.convertible_investments.each(&:destroy!)
       company.share_classes.each(&:destroy!)
       company.option_pools.each(&:destroy!)
-      company.financing_rounds.each(&:destroy!)
       company.tender_offers.each(&:destroy!)
       EquityExerciseBankAccount.where(company:).each(&:destroy!)
     end

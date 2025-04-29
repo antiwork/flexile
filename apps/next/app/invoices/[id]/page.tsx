@@ -9,7 +9,7 @@ import { Fragment, useMemo, useState } from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
 import { linkClasses } from "@/components/Link";
-import Modal from "@/components/Modal";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton from "@/components/MutationButton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -125,69 +125,76 @@ export default function InvoicePage() {
       }
     >
       {invoice.requiresAcceptanceByPayee && user.id === invoice.userId ? (
-        <Modal open={acceptPaymentModalOpen} onClose={() => setAcceptPaymentModalOpen(false)} title="Accept invoice">
-          <div>
-            If everything looks correct, accept the invoice. Then your company administrator can initiate payment.
-          </div>
-          <Card>
-            <CardContent>
-              {invoice.minAllowedEquityPercentage !== null && invoice.maxAllowedEquityPercentage !== null ? (
-                <>
-                  <div>
-                    <div className="mb-4 flex items-center justify-between">
-                      <span className="mb-4 text-gray-600">Cash vs equity split</span>
-                      <span className="font-medium">
-                        {(equityPercentage / 100).toLocaleString(undefined, { style: "percent" })} equity
-                      </span>
+        <Dialog open={acceptPaymentModalOpen} onOpenChange={setAcceptPaymentModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Accept invoice</DialogTitle>
+            </DialogHeader>
+            <div>
+              If everything looks correct, accept the invoice. Then your company administrator can initiate payment.
+            </div>
+            <Card>
+              <CardContent>
+                {invoice.minAllowedEquityPercentage !== null && invoice.maxAllowedEquityPercentage !== null ? (
+                  <>
+                    <div>
+                      <div className="mb-4 flex items-center justify-between">
+                        <span className="mb-4 text-gray-600">Cash vs equity split</span>
+                        <span className="font-medium">
+                          {(equityPercentage / 100).toLocaleString(undefined, { style: "percent" })} equity
+                        </span>
+                      </div>
+                      <Slider
+                        className="mb-4"
+                        value={[equityPercentage]}
+                        onValueChange={([selection]) =>
+                          setEquityPercentageElected(selection ?? invoice.minAllowedEquityPercentage ?? 0)
+                        }
+                        min={invoice.minAllowedEquityPercentage}
+                        max={invoice.maxAllowedEquityPercentage}
+                      />
+                      <div className="flex justify-between text-gray-600">
+                        <span>
+                          {(invoice.minAllowedEquityPercentage / 100).toLocaleString(undefined, { style: "percent" })}{" "}
+                          equity
+                        </span>
+                        <span>
+                          {(invoice.maxAllowedEquityPercentage / 100).toLocaleString(undefined, { style: "percent" })}{" "}
+                          equity
+                        </span>
+                      </div>
                     </div>
-                    <Slider
-                      className="mb-4"
-                      value={[equityPercentage]}
-                      onValueChange={([selection]) =>
-                        setEquityPercentageElected(selection ?? invoice.minAllowedEquityPercentage ?? 0)
-                      }
-                      min={invoice.minAllowedEquityPercentage}
-                      max={invoice.maxAllowedEquityPercentage}
-                    />
-                    <div className="flex justify-between text-gray-600">
-                      <span>
-                        {(invoice.minAllowedEquityPercentage / 100).toLocaleString(undefined, { style: "percent" })}{" "}
-                        equity
-                      </span>
-                      <span>
-                        {(invoice.maxAllowedEquityPercentage / 100).toLocaleString(undefined, { style: "percent" })}{" "}
-                        equity
-                      </span>
-                    </div>
+                    <Separator />
+                  </>
+                ) : null}
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span>Cash amount</span>
+                    <span className="font-medium">{formatMoneyFromCents(cashAmountInCents)}</span>
                   </div>
-                  <Separator />
-                </>
-              ) : null}
-              <div>
-                <div className="flex items-center justify-between">
-                  <span>Cash amount</span>
-                  <span className="font-medium">{formatMoneyFromCents(cashAmountInCents)}</span>
+                  <div className="flex items-center justify-between">
+                    <span>Equity value</span>
+                    <span className="font-medium">{formatMoneyFromCents(equityAmountInCents)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Total value</span>
+                    <span className="font-medium">{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span>Equity value</span>
-                  <span className="font-medium">{formatMoneyFromCents(equityAmountInCents)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Total value</span>
-                  <span className="font-medium">{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <div className="flex justify-end">
-            <MutationButton mutation={acceptPaymentMutation} successText="Success!" loadingText="Saving...">
-              {invoice.minAllowedEquityPercentage !== null && invoice.maxAllowedEquityPercentage !== null
-                ? `Confirm ${(equityPercentage / 100).toLocaleString(undefined, { style: "percent" })} split`
-                : "Accept payment"}
-            </MutationButton>
-          </div>
-        </Modal>
+            <DialogFooter>
+              <div className="flex justify-end">
+                <MutationButton mutation={acceptPaymentMutation} successText="Success!" loadingText="Saving...">
+                  {invoice.minAllowedEquityPercentage !== null && invoice.maxAllowedEquityPercentage !== null
+                    ? `Confirm ${(equityPercentage / 100).toLocaleString(undefined, { style: "percent" })} split`
+                    : "Accept payment"}
+                </MutationButton>
+              </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       ) : null}
       <div className="flex flex-col gap-4">
         {!taxRequirementsMet(invoice) && (

@@ -4,7 +4,7 @@ import { pick } from "lodash-es";
 import { Fragment, useEffect, useState } from "react";
 import Delta from "@/components/Delta";
 import Input from "@/components/Input";
-import Modal from "@/components/Modal";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import RadioButtons from "@/components/RadioButtons";
@@ -72,7 +72,7 @@ const ManageModal = ({
   const [{ workers: contractors }, { refetch: refetchContractors }] = trpc.contractors.list.useSuspenseQuery({
     companyId: company.id,
     roleId: role.id,
-    type: "not_alumni",
+    excludeAlumni: true,
   });
   const deleteMutation = trpc.roles.delete.useMutation({
     onSuccess: async () => {
@@ -145,176 +145,195 @@ const ManageModal = ({
 
   return (
     <>
-      <Modal open={open} onClose={onClose} title={role.id ? "Edit role" : "New role"}>
-        <Input
-          value={role.name}
-          onChange={(name) => updateRole({ name })}
-          label="Name"
-          invalid={errors.includes("name")}
-        />
-        <RadioButtons
-          value={role.payRateType}
-          onChange={(payRateType) => updateRole({ payRateType })}
-          label="Type"
-          options={[
-            { label: "Hourly", value: PayRateType.Hourly } as const,
-            { label: "Project-based", value: PayRateType.ProjectBased } as const,
-            company.flags.includes("salary_roles") ? ({ label: "Salary", value: PayRateType.Salary } as const) : null,
-          ].filter((option) => !!option)}
-          disabled={!!role.id}
-        />
-        <div className="grid gap-3">
-          <div className="grid gap-2">
-            <Label htmlFor="pay-rate">Rate</Label>
-            <NumberInput
-              id="pay-rate"
-              value={role.payRateInSubunits / 100}
-              onChange={(value) => updateRole({ payRateInSubunits: (value ?? 0) * 100 })}
-              invalid={errors.includes("payRateInSubunits")}
-              prefix="$"
-              suffix={
-                role.payRateType === PayRateType.Hourly
-                  ? "/ hour"
-                  : role.payRateType === PayRateType.Salary
-                    ? "/ year"
-                    : ""
-              }
-            />
-            {errors.includes("payRateInSubunits") && <div className="text-destructive text-sm">Rate is required</div>}
-          </div>
-        </div>
-
-        {expenseAccounts.length > 0 ? (
-          <div className="grid gap-2">
-            <Label htmlFor="capitalized-expense">Capitalized R&D expense</Label>
-            <NumberInput
-              id="capitalized-expense"
-              value={role.capitalizedExpense ?? 0}
-              onChange={(value) => updateRole({ capitalizedExpense: value ?? 0 })}
-              suffix="%"
-            />
-          </div>
-        ) : null}
-
-        {role.id && contractorsToUpdate.length > 0 ? (
-          <>
-            {!updateContractorRates && (
-              <Alert>
-                <InformationCircleIcon />
-                <AlertDescription>
-                  {contractorsToUpdate.length}{" "}
-                  {contractorsToUpdate.length === 1 ? "contractor has a" : "contractors have"} different{" "}
-                  {pluralize("rate", contractorsToUpdate.length)} that won't be updated.
-                </AlertDescription>
-              </Alert>
-            )}
-            <Checkbox
-              checked={updateContractorRates}
-              onCheckedChange={(checked) => setUpdateContractorRates(checked === true)}
-              label="Update rate for all contractors with this role"
-            />
-          </>
-        ) : null}
-
-        {role.id && role.payRateType === PayRateType.Hourly ? (
-          <Switch
-            checked={role.trialEnabled}
-            onCheckedChange={(trialEnabled) => updateRole({ trialEnabled })}
-            label="Start with trial period"
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{role.id ? "Edit role" : "New role"}</DialogTitle>
+          </DialogHeader>
+          <Input
+            value={role.name}
+            onChange={(name) => updateRole({ name })}
+            label="Name"
+            invalid={errors.includes("name")}
           />
-        ) : null}
-
-        {role.id && role.trialEnabled ? (
-          <div className="grid gap-2">
-            <Label htmlFor="trial-rate">Rate during trial period</Label>
-            <NumberInput
-              id="trial-rate"
-              value={role.trialPayRateInSubunits / 100}
-              onChange={(value) => updateRole({ trialPayRateInSubunits: (value ?? 0) * 100 })}
-              prefix="$"
-            />
-          </div>
-        ) : null}
-        {expenseAccounts.length > 0 ? (
-          <Select
-            value={role.expenseAccountId ?? ""}
-            onChange={(expenseAccountId) => updateRole({ expenseAccountId })}
+          <RadioButtons
+            value={role.payRateType}
+            onChange={(payRateType) => updateRole({ payRateType })}
+            label="Type"
             options={[
-              { value: "", label: "Default" },
-              ...expenseAccounts.map(({ id, name }) => ({ value: id, label: name })),
-            ]}
-            label="Expense account"
+              { label: "Hourly", value: PayRateType.Hourly } as const,
+              { label: "Project-based", value: PayRateType.ProjectBased } as const,
+              company.flags.includes("salary_roles") ? ({ label: "Salary", value: PayRateType.Salary } as const) : null,
+            ].filter((option) => !!option)}
+            disabled={!!role.id}
           />
-        ) : null}
+          <div className="grid gap-3">
+            <div className="grid gap-2">
+              <Label htmlFor="pay-rate">Rate</Label>
+              <NumberInput
+                id="pay-rate"
+                value={role.payRateInSubunits / 100}
+                onChange={(value) => updateRole({ payRateInSubunits: (value ?? 0) * 100 })}
+                invalid={errors.includes("payRateInSubunits")}
+                prefix="$"
+                suffix={
+                  role.payRateType === PayRateType.Hourly
+                    ? "/ hour"
+                    : role.payRateType === PayRateType.Salary
+                      ? "/ year"
+                      : ""
+                }
+              />
+              {errors.includes("payRateInSubunits") && <div className="text-destructive text-sm">Rate is required</div>}
+            </div>
+          </div>
 
-        <div className="flex w-full gap-3">
-          <Button className="flex-1" onClick={onSave}>
-            {role.id ? "Save changes" : "Create"}
-          </Button>
-          {role.id ? (
-            <Tooltip>
-              <TooltipTrigger asChild={canDelete}>
-                <Button
-                  variant="critical"
-                  aria-label="Delete role"
-                  disabled={!canDelete}
-                  onClick={() => setConfirmingDelete(true)}
-                >
-                  <TrashIcon className="size-5" />
-                </Button>
-              </TooltipTrigger>
-              {!canDelete ? <TooltipContent>You can't delete roles with active contractors</TooltipContent> : null}
-            </Tooltip>
+          {expenseAccounts.length > 0 ? (
+            <div className="grid gap-2">
+              <Label htmlFor="capitalized-expense">Capitalized R&D expense</Label>
+              <NumberInput
+                id="capitalized-expense"
+                value={role.capitalizedExpense ?? 0}
+                onChange={(value) => updateRole({ capitalizedExpense: value ?? 0 })}
+                suffix="%"
+              />
+            </div>
           ) : null}
-        </div>
-      </Modal>
 
-      <Modal
-        open={confirmingRateUpdate}
-        onClose={() => setConfirmingRateUpdate(false)}
-        title={`Update rates for ${contractorsToUpdate.length} ${pluralize("contractor", contractorsToUpdate.length)} to match role rate?`}
-        footer={
-          <>
-            <Button variant="outline" onClick={() => setConfirmingRateUpdate(false)}>
-              Cancel
-            </Button>
-            <MutationButton mutation={saveMutation}>Yes, change</MutationButton>
-          </>
-        }
-      >
-        <div>Rate changes will apply to future invoices.</div>
-        <Card>
-          <CardContent>
-            {contractorsToUpdate.map((contractor, i) => (
-              <Fragment key={i}>
-                <div className="flex justify-between gap-2">
-                  <b>{contractor.user.name}</b>
-                  <div>
-                    <del>{formatMoneyFromCents(contractor.payRateInSubunits)}</del>{" "}
-                    {formatMoneyFromCents(role.payRateInSubunits)}{" "}
-                    <span>
-                      (<Delta diff={role.payRateInSubunits / contractor.payRateInSubunits - 1} />)
-                    </span>
-                  </div>
+          {role.id && contractorsToUpdate.length > 0 ? (
+            <>
+              {!updateContractorRates && (
+                <Alert>
+                  <InformationCircleIcon />
+                  <AlertDescription>
+                    {contractorsToUpdate.length}{" "}
+                    {contractorsToUpdate.length === 1 ? "contractor has a" : "contractors have"} different{" "}
+                    {pluralize("rate", contractorsToUpdate.length)} that won't be updated.
+                  </AlertDescription>
+                </Alert>
+              )}
+              <Checkbox
+                checked={updateContractorRates}
+                onCheckedChange={(checked) => setUpdateContractorRates(checked === true)}
+                label="Update rate for all contractors with this role"
+              />
+            </>
+          ) : null}
+
+          {role.id && role.payRateType === PayRateType.Hourly ? (
+            <Switch
+              checked={role.trialEnabled}
+              onCheckedChange={(trialEnabled) => updateRole({ trialEnabled })}
+              label="Start with trial period"
+            />
+          ) : null}
+
+          {role.id && role.trialEnabled ? (
+            <div className="grid gap-2">
+              <Label htmlFor="trial-rate">Rate during trial period</Label>
+              <NumberInput
+                id="trial-rate"
+                value={role.trialPayRateInSubunits / 100}
+                onChange={(value) => updateRole({ trialPayRateInSubunits: (value ?? 0) * 100 })}
+                prefix="$"
+              />
+            </div>
+          ) : null}
+
+          {expenseAccounts.length > 0 ? (
+            <Select
+              value={role.expenseAccountId ?? ""}
+              onChange={(expenseAccountId) => updateRole({ expenseAccountId })}
+              options={[
+                { value: "", label: "Default" },
+                ...expenseAccounts.map(({ id, name }) => ({ value: id, label: name })),
+              ]}
+              label="Expense account"
+            />
+          ) : null}
+
+          <DialogFooter>
+            <div className="flex w-full gap-3">
+              <Button className="flex-1" onClick={onSave}>
+                {role.id ? "Save changes" : "Create"}
+              </Button>
+              {role.id ? (
+                <Tooltip>
+                  <TooltipTrigger asChild={canDelete}>
+                    <Button
+                      variant="critical"
+                      aria-label="Delete role"
+                      disabled={!canDelete}
+                      onClick={() => setConfirmingDelete(true)}
+                    >
+                      <TrashIcon className="size-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  {!canDelete ? <TooltipContent>You can't delete roles with active contractors</TooltipContent> : null}
+                </Tooltip>
+              ) : null}
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={confirmingRateUpdate} onOpenChange={() => setConfirmingRateUpdate(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update contractor rates?</DialogTitle>
+          </DialogHeader>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="mb-4 flex items-center gap-2">
+                <div className="flex-1 text-sm text-muted-foreground">Current rate</div>
+                <div className="font-medium">
+                  {formatMoneyFromCents(contractorsToUpdate[0]?.payRateInSubunits ?? 0)}
+                  {role.payRateType === PayRateType.Hourly ? "/hour" : ""}
                 </div>
-                {i !== contractorsToUpdate.length - 1 && <Separator />}
-              </Fragment>
-            ))}
-          </CardContent>
-        </Card>
-      </Modal>
+              </div>
+              <div className="mb-4 flex items-center gap-2">
+                <div className="flex-1 text-sm text-muted-foreground">New rate</div>
+                <div className="font-medium">
+                  {formatMoneyFromCents(role.payRateInSubunits)}
+                  {role.payRateType === PayRateType.Hourly ? "/hour" : ""}
+                </div>
+              </div>
+              <Separator />
+              <div className="mt-4 flex items-center gap-2">
+                <div className="flex-1 text-sm text-muted-foreground">Contractors affected</div>
+                <div className="font-medium">{contractorsToUpdate.length}</div>
+              </div>
+            </CardContent>
+          </Card>
+          <DialogFooter>
+            <div className="flex w-full gap-3">
+              <Button variant="outline" onClick={() => setConfirmingRateUpdate(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => saveMutation.mutate()}>Update rates</Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      <Modal title="Permanently delete role?" open={confirmingDelete} onClose={() => setConfirmingDelete(false)}>
-        <p>This action cannot be undone.</p>
-        <div className="flex justify-end gap-4">
-          <Button variant="outline" onClick={() => setConfirmingDelete(false)}>
-            No, cancel
-          </Button>
-          <MutationButton mutation={deleteMutation} param={{ companyId: company.id, id: role.id }}>
-            Yes, delete
-          </MutationButton>
-        </div>
-      </Modal>
+      <Dialog open={confirmingDelete} onOpenChange={() => setConfirmingDelete(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Permanently delete role?</DialogTitle>
+          </DialogHeader>
+          <p>This action cannot be undone.</p>
+          <DialogFooter>
+            <div className="flex justify-end gap-4">
+              <Button variant="outline" onClick={() => setConfirmingDelete(false)}>
+                Cancel
+              </Button>
+              <Button variant="critical" onClick={() => deleteMutation.mutate({ companyId: company.id, id: role.id })}>
+                Delete
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

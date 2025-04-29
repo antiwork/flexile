@@ -34,17 +34,6 @@ class DeviseMailerPreview < ActionMailer::Preview
     })
   end
 
-  def trialer_invitation_instructions
-    company = Company.last
-    inviter = company.primary_admin.user
-    invitee = company.company_workers.on_trial.last.user
-    invitee.invited_by = inviter
-    DeviseMailer.invitation_instructions(invitee, "SomeInvitationToken", {
-      subject: "You're invited to #{company.name}'s team",
-      reply_to: company.email,
-    })
-  end
-
   def investor_invitation_instructions
     investor = CompanyInvestor.last
     company = investor.company

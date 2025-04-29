@@ -25,6 +25,7 @@ import {
   BusinessType,
   DocumentTemplateType,
   DocumentType,
+  invoiceStatuses,
   optionGrantIssueDateRelationships,
   optionGrantTypes,
   optionGrantVestingTriggers,
@@ -942,9 +943,7 @@ export const invoices = pgTable(
     invoiceDate: date("invoice_date", { mode: "string" }).notNull(),
     totalMinutes: integer("total_minutes"),
     totalAmountInUsdCents: bigint("total_amount_in_usd_cents", { mode: "bigint" }).notNull(),
-    status: varchar()
-      .$type<"received" | "approved" | "processing" | "payment_pending" | "paid" | "rejected" | "failed">()
-      .notNull(),
+    status: varchar({ enum: invoiceStatuses }).notNull(),
     createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
       .notNull()
@@ -1909,7 +1908,6 @@ export const companyRoles = pgTable(
   {
     id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
     companyId: bigint("company_id", { mode: "bigint" }).notNull(),
-    jobDescription: text("job_description").notNull(),
     name: varchar().notNull(),
     createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
@@ -2181,7 +2179,6 @@ export const users = pgTable(
     invitedByType: varchar("invited_by_type"),
     invitedById: bigint("invited_by_id", { mode: "bigint" }),
     invitationsCount: integer("invitations_count").default(0),
-
     birthDate: date("birth_date", { mode: "string" }),
     streetAddress: varchar("street_address"),
     city: varchar(),

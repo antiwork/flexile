@@ -56,7 +56,6 @@ export const appRouter = createRouter({
   workerAbsences: workerAbsencesRouter,
   financialReports: financialReportsRouter,
   equitySettings: equitySettingsRouter,
-
   optionPools: optionPoolsRouter,
   companyUpdates: companyUpdatesRouter,
   capTable: capTableRouter,

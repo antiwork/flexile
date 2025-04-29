@@ -73,6 +73,7 @@ export const useTable = <T extends RowData>(
 ) =>
   useReactTable({
     enableRowSelection: false,
+    autoResetPageIndex: false, // work around https://github.com/TanStack/table/issues/5026
     ...options,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -162,7 +163,7 @@ export default function DataTable<T extends RowData>({
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="small">
                     <div className="flex items-center gap-1">
-                      <FilterIcon className="size-4" />
+                      <FilterIcon className="text-muted-foreground size-4" />
                       Filter
                       {activeFilterCount > 0 && (
                         <Badge variant="secondary" className="rounded-sm px-1 font-normal">
@@ -269,39 +270,47 @@ export default function DataTable<T extends RowData>({
           ))}
         </TableHeader>
         <TableBody className="not-print:max-md:contents">
-          {data.rows.map((row) => (
-            <TableRow
-              key={row.id}
-              className={rowClasses}
-              data-state={row.getIsSelected() ? "selected" : undefined}
-              onClick={() => onRowClicked?.(row.original)}
-            >
-              {selectable ? (
-                <TableCell className={cellClasses(null)} onClick={(e) => e.stopPropagation()}>
-                  <Checkbox
-                    checked={row.getIsSelected()}
-                    aria-label="Select row"
-                    disabled={!row.getCanSelect()}
-                    onCheckedChange={row.getToggleSelectedHandler()}
-                  />
-                </TableCell>
-              ) : null}
-              {row.getVisibleCells().map((cell) => (
-                <TableCell
-                  key={cell.id}
-                  className={`${cellClasses(cell.column)} ${cell.column.id === "actions" ? "md:text-right print:hidden" : ""}`}
-                  onClick={(e) => cell.column.id === "actions" && e.stopPropagation()}
-                >
-                  {typeof cell.column.columnDef.header === "string" && (
-                    <div className="text-gray-500 md:hidden print:hidden" aria-hidden>
-                      {cell.column.columnDef.header}
-                    </div>
-                  )}
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
-              ))}
+          {data.rows.length > 0 ? (
+            data.rows.map((row) => (
+              <TableRow
+                key={row.id}
+                className={rowClasses}
+                data-state={row.getIsSelected() ? "selected" : undefined}
+                onClick={() => onRowClicked?.(row.original)}
+              >
+                {selectable ? (
+                  <TableCell className={cellClasses(null)} onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={row.getIsSelected()}
+                      aria-label="Select row"
+                      disabled={!row.getCanSelect()}
+                      onCheckedChange={row.getToggleSelectedHandler()}
+                    />
+                  </TableCell>
+                ) : null}
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell
+                    key={cell.id}
+                    className={`${cellClasses(cell.column)} ${cell.column.id === "actions" ? "md:text-right print:hidden" : ""}`}
+                    onClick={(e) => cell.column.id === "actions" && e.stopPropagation()}
+                  >
+                    {typeof cell.column.columnDef.header === "string" && (
+                      <div className="text-gray-500 md:hidden print:hidden" aria-hidden>
+                        {cell.column.columnDef.header}
+                      </div>
+                    )}
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : (
+            <TableRow className="h-24">
+              <TableCell colSpan={table.getAllColumns().length} className="text-center align-middle">
+                No results.
+              </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
         {data.footers.length > 0 && (
           <TableFooter>
