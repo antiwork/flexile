@@ -16,9 +16,6 @@ class CompanyWorkerMailerPreview < ActionMailer::Preview
     )
   end
 
-  def contract_ended
-    CompanyWorkerMailer.contract_ended(company_worker_id: CompanyWorker.inactive.last.id)
-  end
 
   def payment_sent
     CompanyWorkerMailer.payment_sent(Payment.last.id)

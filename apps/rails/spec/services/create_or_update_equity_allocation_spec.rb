@@ -50,17 +50,6 @@ RSpec.describe CreateOrUpdateEquityAllocation do
     end
   end
 
-  context "when the contractor is on trial" do
-    before do
-      company_worker.update!(on_trial: true)
-    end
-
-    it "raises an error" do
-      expect do
-        service.perform!
-      end.to raise_error(described_class::Error, "User #{user.id} is not ready to save equity percentage.")
-    end
-  end
 
   it "updates the equity allocation" do
     expect do

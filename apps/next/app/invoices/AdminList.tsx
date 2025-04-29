@@ -1,8 +1,7 @@
 import { ArrowDownTrayIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { CheckCircleIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
-import { partition } from "lodash-es";
+import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import Link from "next/link";
-import { parseAsStringLiteral, useQueryState } from "nuqs";
 import React, { Fragment, useMemo, useState } from "react";
 import StripeMicrodepositVerification from "@/app/administrator/settings/StripeMicrodepositVerification";
 import {
@@ -16,10 +15,9 @@ import {
 import { StatusWithTooltip } from "@/app/invoices/Status";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
-import Modal from "@/components/Modal";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
-import Tabs from "@/components/Tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -33,27 +31,29 @@ import { pluralize } from "@/utils/pluralize";
 import { export_company_invoices_path } from "@/utils/routes";
 import { formatDate, formatDuration } from "@/utils/time";
 
+const statusNames = {
+  received: "Awaiting approval",
+  approved: "Awaiting approval",
+  processing: "Processing",
+  payment_pending: "Processing",
+  paid: "Paid",
+  rejected: "Rejected",
+  failed: "Failed",
+};
+
 type Invoice = RouterOutput["invoices"]["list"][number];
 export default function AdminList() {
   const company = useCurrentCompany();
-  const [invoiceFilter] = useQueryState(
-    "tab",
-    parseAsStringLiteral(["history", "actionable"]).withDefault("actionable"),
-  );
   const [openModal, setOpenModal] = useState<"approve" | "reject" | null>(null);
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
   const isActionable = useIsActionable();
   const isPayable = useIsPayable();
   const areTaxRequirementsMet = useAreTaxRequirementsMet();
-  const [data, { refetch }] = trpc.invoices.list.useSuspenseQuery({
-    companyId: company.id,
-    invoiceFilter,
-  });
+  const [data] = trpc.invoices.list.useSuspenseQuery({ companyId: company.id });
 
   const approveInvoices = useApproveInvoices(() => {
     setOpenModal(null);
     table.resetRowSelection();
-    void refetch();
   });
 
   const columnHelper = createColumnHelper<(typeof data)[number]>();
@@ -76,50 +76,51 @@ export default function AdminList() {
         (value) => (value ? formatMoneyFromCents(value) : "N/A"),
         "numeric",
       ),
-      columnHelper.accessor("status", {
+      columnHelper.accessor((row) => statusNames[row.status], {
         header: "Status",
         cell: (info) => <StatusWithTooltip invoice={info.row.original} />,
+        meta: {
+          filterOptions: [...new Set(data.map((invoice) => statusNames[invoice.status]))],
+        },
       }),
-      columnHelper.display({
+      columnHelper.accessor(isActionable, {
         id: "actions",
+        header: "Actions",
         cell: (info) => (isActionable(info.row.original) ? <ApproveButton invoice={info.row.original} /> : null),
       }),
     ],
-    [company.requiredInvoiceApprovals],
+    [data],
   );
 
   const table = useTable({
     columns,
     data,
     getRowId: (invoice) => invoice.id,
-    enableRowSelection: invoiceFilter === "actionable",
+    initialState: {
+      sorting: [{ id: "actions", desc: true }],
+    },
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    enableRowSelection: true,
   });
 
   const selectedRows = table.getSelectedRowModel().rows;
   const selectedInvoices = selectedRows.map((row) => row.original);
-  const [selectedPayableInvoices, selectedApprovableInvoices] = partition(selectedInvoices, isPayable);
+  const selectedApprovableInvoices = selectedInvoices.filter(isActionable);
+  const selectedPayableInvoices = selectedApprovableInvoices.filter(isPayable);
 
   return (
     <MainLayout
       title="Invoicing"
       headerActions={
-        invoiceFilter === "history" && (
-          <Button variant="outline" asChild>
-            <a href={export_company_invoices_path(company.id)}>
-              <ArrowDownTrayIcon className="size-4" />
-              Download CSV
-            </a>
-          </Button>
-        )
+        <Button variant="outline" asChild>
+          <a href={export_company_invoices_path(company.id)}>
+            <ArrowDownTrayIcon className="size-4" />
+            Download CSV
+          </a>
+        </Button>
       }
     >
-      <Tabs
-        links={[
-          { label: "Open", route: "?" },
-          { label: "History", route: "?tab=history" },
-        ]}
-      />
-
       <StripeMicrodepositVerification />
 
       {data.length > 0 && (
@@ -146,7 +147,7 @@ export default function AdminList() {
             </Alert>
           ) : null}
 
-          {invoiceFilter === "actionable" && data.some((invoice) => !areTaxRequirementsMet(invoice)) && (
+          {data.some((invoice) => !areTaxRequirementsMet(invoice)) && (
             <Alert variant="destructive">
               <ExclamationTriangleIcon />
               <AlertTitle>Missing tax information.</AlertTitle>
@@ -156,7 +157,7 @@ export default function AdminList() {
             </Alert>
           )}
 
-          {invoiceFilter === "actionable" && selectedRows.length > 0 && (
+          {selectedApprovableInvoices.length > 0 && (
             <Alert className="fixed right-0 bottom-0 left-0 z-50 flex items-center justify-between rounded-none border-r-0 border-b-0 border-l-0">
               <div className="flex items-center gap-2">
                 <InformationCircleIcon className="size-4" />
@@ -184,18 +185,41 @@ export default function AdminList() {
             />
           </div>
 
-          <DataTable table={table} onRowClicked={setDetailInvoice} />
+          <DataTable table={table} onRowClicked={setDetailInvoice} searchColumn="billFrom" />
         </div>
       )}
 
       {data.length === 0 && <Placeholder icon={CheckCircleIcon}>No invoices to display.</Placeholder>}
 
-      <Modal
-        open={openModal === "approve"}
-        title="Approve these invoices?"
-        onClose={() => setOpenModal(null)}
-        footer={
-          <>
+      <Dialog open={openModal === "approve"} onOpenChange={() => setOpenModal(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Approve these invoices?</DialogTitle>
+          </DialogHeader>
+          {selectedPayableInvoices.length > 0 && (
+            <div>
+              You are paying{" "}
+              {formatMoneyFromCents(
+                selectedPayableInvoices.reduce((sum, invoice) => sum + invoice.totalAmountInUsdCents, 0n),
+              )}{" "}
+              now.
+            </div>
+          )}
+          <Card>
+            <CardContent>
+              {selectedInvoices.slice(0, 5).map((invoice, index, array) => (
+                <Fragment key={invoice.id}>
+                  <div className="flex justify-between gap-2">
+                    <b>{invoice.billFrom}</b>
+                    <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
+                  </div>
+                  {index !== array.length - 1 && <Separator />}
+                </Fragment>
+              ))}
+            </CardContent>
+          </Card>
+          {selectedInvoices.length > 6 && <div>and {data.length - 6} more</div>}
+          <DialogFooter>
             <Button variant="outline" onClick={() => setOpenModal(null)}>
               No, cancel
             </Button>
@@ -208,33 +232,9 @@ export default function AdminList() {
             >
               Yes, proceed
             </MutationButton>
-          </>
-        }
-      >
-        {selectedPayableInvoices.length > 0 && (
-          <div>
-            You are paying{" "}
-            {formatMoneyFromCents(
-              selectedPayableInvoices.reduce((sum, invoice) => sum + invoice.totalAmountInUsdCents, 0n),
-            )}{" "}
-            now.
-          </div>
-        )}
-        <Card>
-          <CardContent>
-            {selectedInvoices.slice(0, 5).map((invoice, index, array) => (
-              <Fragment key={invoice.id}>
-                <div className="flex justify-between gap-2">
-                  <b>{invoice.billFrom}</b>
-                  <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
-                </div>
-                {index !== array.length - 1 && <Separator />}
-              </Fragment>
-            ))}
-          </CardContent>
-        </Card>
-        {selectedInvoices.length > 6 && <div>and {data.length - 6} more</div>}
-      </Modal>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {detailInvoice && detailInvoice.invoiceType !== "other" ? (
         <TasksModal
@@ -270,79 +270,73 @@ const TasksModal = ({
   const isActionable = useIsActionable();
 
   return (
-    <Modal
-      open
-      onClose={onClose}
-      sidebar
-      className="w-110 p-3"
-      title={invoice.billFrom}
-      footer={
-        isActionable(invoice) ? (
-          <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" onClick={onReject}>
-              Reject
-            </Button>
-            <ApproveButton
-              invoice={invoice}
-              onApprove={() => {
-                setTimeout(() => onClose(), 500);
-              }}
-            />
-          </div>
-        ) : null
-      }
-    >
-      <div className="mt-4 grid gap-8">
-        {invoice.status === "approved" && invoice.approvals.length > 0 ? (
-          <Alert variant="default">
-            <InformationCircleIcon />
-            <AlertDescription>
-              Approved by{" "}
-              {invoice.approvals
-                .map((approval) => `${approval.approver.name} on ${formatDate(approval.approvedAt, { time: true })}`)
-                .join(", ")}
-            </AlertDescription>
-          </Alert>
-        ) : invoice.status === "rejected" ? (
-          <Alert variant="destructive">
-            <ExclamationTriangleIcon />
-            <AlertDescription>
-              Rejected {invoice.rejector ? `by ${invoice.rejector.name}` : ""}{" "}
-              {invoice.rejectedAt ? `on ${formatDate(invoice.rejectedAt)}` : ""} {invoice.rejectionReason}
-            </AlertDescription>
-          </Alert>
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="w-110 p-3">
+        <DialogHeader>
+          <DialogTitle>{invoice.billFrom}</DialogTitle>
+        </DialogHeader>
+        <div className="mt-4 grid gap-8">
+          {invoice.status === "approved" && invoice.approvals.length > 0 ? (
+            <Alert variant="default">
+              <InformationCircleIcon />
+              <AlertDescription>
+                Approved by{" "}
+                {invoice.approvals
+                  .map((approval) => `${approval.approver.name} on ${formatDate(approval.approvedAt, { time: true })}`)
+                  .join(", ")}
+              </AlertDescription>
+            </Alert>
+          ) : invoice.status === "rejected" ? (
+            <Alert variant="destructive">
+              <ExclamationTriangleIcon />
+              <AlertDescription>
+                Rejected {invoice.rejector ? `by ${invoice.rejector.name}` : ""}{" "}
+                {invoice.rejectedAt ? `on ${formatDate(invoice.rejectedAt)}` : ""} {invoice.rejectionReason}
+              </AlertDescription>
+            </Alert>
+          ) : null}
+          <section>
+            <header className="flex items-center justify-between gap-4 text-gray-600">
+              <h3 className="text-md uppercase">Invoice details</h3>
+              <Button variant="link" asChild>
+                <Link href={`/invoices/${invoice.id}`}>View invoice</Link>
+              </Button>
+            </header>
+            <Card className="mt-3">
+              <CardContent>
+                <div className="flex justify-between gap-2">
+                  <div>Net amount in cash</div>
+                  <div>{formatMoneyFromCents(invoice.cashAmountInCents)}</div>
+                </div>
+                <Separator />
+                {invoice.equityAmountInCents ? (
+                  <>
+                    <div className="flex justify-between gap-2">
+                      <div>Swapped for equity ({invoice.equityPercentage}%)</div>
+                      <div>{formatMoneyFromCents(invoice.equityAmountInCents)}</div>
+                    </div>
+                    <Separator />
+                  </>
+                ) : null}
+                <div className="flex justify-between gap-2 font-bold">
+                  <div>Payout total</div>
+                  <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+        </div>
+        {isActionable(invoice) ? (
+          <DialogFooter>
+            <div className="grid grid-cols-2 gap-4">
+              <Button variant="outline" onClick={onReject}>
+                Reject
+              </Button>
+              <ApproveButton invoice={invoice} onApprove={onClose} />
+            </div>
+          </DialogFooter>
         ) : null}
-        <section>
-          <header className="flex items-center justify-between gap-4 text-gray-600">
-            <h3 className="text-md uppercase">Invoice details</h3>
-            <Button variant="link" asChild>
-              <Link href={`/invoices/${invoice.id}`}>View invoice</Link>
-            </Button>
-          </header>
-          <Card className="mt-3">
-            <CardContent>
-              <div className="flex justify-between gap-2">
-                <div>Net amount in cash</div>
-                <div>{formatMoneyFromCents(invoice.cashAmountInCents)}</div>
-              </div>
-              <Separator />
-              {invoice.equityAmountInCents ? (
-                <>
-                  <div className="flex justify-between gap-2">
-                    <div>Swapped for equity ({invoice.equityPercentage}%)</div>
-                    <div>{formatMoneyFromCents(invoice.equityAmountInCents)}</div>
-                  </div>
-                  <Separator />
-                </>
-              ) : null}
-              <div className="flex justify-between gap-2 font-bold">
-                <div>Payout total</div>
-                <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-      </div>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   );
 };

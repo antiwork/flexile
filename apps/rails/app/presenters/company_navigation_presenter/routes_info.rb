@@ -103,8 +103,6 @@ class CompanyNavigationPresenter::RoutesInfo
       name = \
         if company.cap_table_enabled?
           "company_cap_table"
-        elsif Pundit.policy!(current_context, FinancingRound).index?
-          "company_financing_rounds"
         elsif Pundit.policy!(current_context, Dividend).index?
           "company_dividends"
         elsif Pundit.policy!(current_context, EquityGrant).index?

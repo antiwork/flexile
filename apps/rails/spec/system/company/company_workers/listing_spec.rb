@@ -10,34 +10,22 @@ RSpec.describe "List Contractors" do
                                                 pay_rate_usd: 50,
                                                 user: create(:user, country_code: "IN")) end
   let!(:contractor3) { create(:company_worker, :project_based, company:, user: create(:user)) }
-  let!(:active_trialing_company_worker) do create(:company_worker, company:, hours_per_week: 10, on_trial: true, equity_percentage: 20,
-                                                                   pay_rate_usd: 40, created_at: 5.days.ago, started_at: 1.day.ago,
-                                                                   user: create(:user, country_code: "AU")) end
-  let!(:future_trialing_company_worker) do create(:company_worker, company:, hours_per_week: 10, on_trial: true,
-                                                                   pay_rate_usd: 40, created_at: 5.days.ago, started_at: 1.day.from_now,
-                                                                   user: create(:user, country_code: "AU")) end
+  let!(:future_contractor) do create(:company_worker, company:, hours_per_week: 10,
+                                                      pay_rate_usd: 40, created_at: 5.days.ago, started_at: 1.day.from_now,
+                                                      user: create(:user, country_code: "AU")) end
 
   def perform_common_assertions
     select_tab "Onboarding"
 
     expect(page).to have_table(with_rows: [
                                  {
-                                   "Contractor" => active_trialing_company_worker.user.display_name,
+                                   "Contractor" => future_contractor.user.display_name,
                                    "Country" => "Australia",
-                                   "Start Date" => active_trialing_company_worker.started_at.strftime("%b %-d, %Y"),
+                                   "Start Date" => future_contractor.started_at.strftime("%b %-d, %Y"),
                                    "Average hours" => "10",
                                    "Rate" => "$40",
                                    "Avg. Year" => "$17,600", # 10 * $40 * 44
-                                   "Status" => "On trial",
-                                 },
-                                 {
-                                   "Contractor" => future_trialing_company_worker.user.display_name,
-                                   "Country" => "Australia",
-                                   "Start Date" => future_trialing_company_worker.started_at.strftime("%b %-d, %Y"),
-                                   "Average hours" => "10",
-                                   "Rate" => "$40",
-                                   "Avg. Year" => "$17,600", # 10 * $40 * 44
-                                   "Status" => "Starts on #{future_trialing_company_worker.started_at.strftime("%b %-d, %Y")}",
+                                   "Status" => "Starts on #{future_contractor.started_at.strftime("%b %-d, %Y")}",
                                  }
                                ])
 
@@ -100,16 +88,8 @@ RSpec.describe "List Contractors" do
 
       visit spa_company_workers_path(company.external_id)
       select_tab "Onboarding"
-      find(:table_row, { "Contractor" => active_trialing_company_worker.user.display_name }).click
-      expect(page).to have_current_path(spa_company_worker_path(company.external_id, active_trialing_company_worker.external_id))
-      expect(page).to have_text("Equity split")
-      expect(page).to have_text("20% Equity ($8)", normalize_ws: true)
-      expect(page).to have_text("80% Cash ($32)", normalize_ws: true)
-
-      visit spa_company_workers_path(company.external_id)
-      select_tab "Onboarding"
-      find(:table_row, { "Contractor" => future_trialing_company_worker.user.display_name }).click
-      expect(page).to have_current_path(spa_company_worker_path(company.external_id, future_trialing_company_worker.external_id))
+      find(:table_row, { "Contractor" => future_contractor.user.display_name }).click
+      expect(page).to have_current_path(spa_company_worker_path(company.external_id, future_contractor.external_id))
       expect(page).to_not have_text("Equity split")
     end
   end

@@ -8,7 +8,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Figures from "@/components/Figures";
 import MainLayout from "@/components/layouts/Main";
-import Modal from "@/components/Modal";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import Select from "@/components/Select";
@@ -72,7 +72,7 @@ const HoldingsTable = ({ holdings, caption }: { holdings: Holding[]; caption: st
   </Table>
 );
 
-export default function TenderOfferView() {
+export default function BuybackView() {
   const { id } = useParams<{ id: string }>();
   const company = useCurrentCompany();
   const user = useCurrentUser();
@@ -196,7 +196,7 @@ export default function TenderOfferView() {
   const buttonTooltip = !signed ? "Please sign the letter of transmittal before submitting a bid" : null;
 
   return (
-    <MainLayout title='Tender offer details ("Sell Elections")'>
+    <MainLayout title='Buyback details ("Sell Elections")'>
       <Figures
         items={[
           { caption: "Start date", value: formatDate(data.startsAt) },
@@ -263,7 +263,7 @@ export default function TenderOfferView() {
                       </p>
                     </div>
                   </div>
-                  <h2 className="text-xl font-bold">Tender offer details</h2>
+                  <h2 className="text-xl font-bold">Buyback details</h2>
                   <div className="overflow-x-auto">
                     <Table>
                       <TableCaption>Company financials (unaudited)</TableCaption>
@@ -295,7 +295,7 @@ export default function TenderOfferView() {
                     <Button variant="outline" asChild>
                       <a href={data.attachment ?? ""}>
                         <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
-                        Download tender offer documents
+                        Download buyback documents
                       </a>
                     </Button>
                   </p>
@@ -379,12 +379,20 @@ export default function TenderOfferView() {
       {bids.length > 0 ? <DataTable table={bidsTable} /> : null}
 
       {cancelingBid ? (
-        <Modal
-          open
-          title="Cancel bid?"
-          onClose={() => setCancelingBid(null)}
-          footer={
-            <>
+        <Dialog open onOpenChange={() => setCancelingBid(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Cancel bid?</DialogTitle>
+            </DialogHeader>
+            <p>Are you sure you want to cancel this bid?</p>
+            <p>
+              Share class: {cancelingBid.shareClass}
+              <br />
+              Number of shares: {cancelingBid.numberOfShares.toLocaleString()}
+              <br />
+              Bid price: {formatMoneyFromCents(cancelingBid.sharePriceCents)}
+            </p>
+            <DialogFooter>
               <Button variant="outline" onClick={() => setCancelingBid(null)}>
                 No, keep bid
               </Button>
@@ -395,20 +403,9 @@ export default function TenderOfferView() {
               >
                 Yes, cancel bid
               </MutationButton>
-            </>
-          }
-        >
-          <>
-            <p>Are you sure you want to cancel this bid?</p>
-            <p>
-              Share class: {cancelingBid.shareClass}
-              <br />
-              Number of shares: {cancelingBid.numberOfShares.toLocaleString()}
-              <br />
-              Bid price: {formatMoneyFromCents(cancelingBid.sharePriceCents)}
-            </p>
-          </>
-        </Modal>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       ) : null}
     </MainLayout>
   );
