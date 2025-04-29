@@ -187,7 +187,7 @@ const Edit = () => {
       }
       if (notes.length) formData.append("invoice[notes]", notes);
 
-      if (equityPercentage !== data.equity_allocation?.percentage) {
+      if (equityPercentage !== data.equity_allocation?.percentage && !data.equity_allocation?.is_locked) {
         await equityPercentageMutation.mutateAsync({ companyId: company.id, equityPercentage });
       }
       await request({
