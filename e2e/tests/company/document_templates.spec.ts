@@ -10,11 +10,10 @@ test.describe("Document templates", () => {
     let expectedTemplateName = "Consulting agreement"; // Initial expected name
 
     next.onFetch(async (request) => {
-      // Load default template
       if (request.url === "https://docuseal.com/embed/templates/1") {
         return Response.json({ name: "Default consulting agreement", ...docusealData });
       }
-      // Create/Replace template API call
+
       if (request.url === "https://api.docuseal.com/templates/pdf") {
         const payload: unknown = await request.json();
         if (payload && typeof payload === "object" && "name" in payload) {
@@ -23,16 +22,15 @@ test.describe("Document templates", () => {
           throw new Error("Invalid payload received from /templates/pdf");
         }
         if (expectedTemplateName === "Consulting agreement") {
-          return Response.json({ id: 2 }); // ID for replaced template
+          return Response.json({ id: 2 });
         } else if (expectedTemplateName === "Equity grant contract") {
-          return Response.json({ id: 3 }); // ID for new template
+          return Response.json({ id: 3 });
         }
       }
-      // Load replaced template
+
       if (request.url === "https://docuseal.com/embed/templates/2") {
         return Response.json({ name: "Consulting agreement", ...docusealData });
       }
-      // Load new equity template
       if (request.url === "https://docuseal.com/embed/templates/3") {
         return Response.json({ name: "Equity grant contract", ...docusealData });
       }
@@ -61,11 +59,9 @@ test.describe("Document templates", () => {
     ).toBeVisible();
     await expect(page.getByText(/default consulting agreement/iu)).toBeVisible();
     await page.getByRole("button", { name: "Replace default template" }).click();
-    // Wait for the main page title to update after replacement
     await expect(page.locator("h1").getByText(/edit consulting agreement/iu)).toBeVisible();
     await page.getByRole("link", { name: "Back to documents" }).click();
 
-    // Update the expected name for the next template creation
     expectedTemplateName = "Equity grant contract";
 
     await page.getByRole("button", { name: "Edit templates" }).click();
@@ -82,7 +78,6 @@ test.describe("Document templates", () => {
       { page },
     );
 
-    // Check the main page title rendered by MainLayout
     await expect(page.locator("h1").getByText(/equity grant contract/iu)).toBeVisible();
     await page.getByRole("link", { name: "Back to documents" }).click();
 

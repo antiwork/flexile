@@ -179,7 +179,7 @@ class Invoice < ApplicationRecord
   end
 
   def equity_requirements_met?
-    !company.equity_compensation_enabled? || company_worker.equity_allocation_for(invoice_date.year)&.approved?
+    equity_amount_in_cents.zero? || !company.equity_compensation_enabled? || company_worker.equity_allocation_for(invoice_date.year)&.approved? == true
   end
 
   def payment_expected_by
