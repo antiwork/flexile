@@ -29,7 +29,6 @@ RSpec.describe Company do
     it { is_expected.to have_many(:equity_buyback_rounds) }
     it { is_expected.to have_many(:equity_grants).through(:company_investors) }
     it { is_expected.to have_many(:equity_grant_exercises) }
-    it { is_expected.to have_many(:financing_rounds) }
     it { is_expected.to have_many(:time_entries) }
     it { is_expected.to have_many(:invoices) }
     it { is_expected.to have_many(:expense_categories) }

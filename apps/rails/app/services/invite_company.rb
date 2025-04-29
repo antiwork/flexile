@@ -41,8 +41,8 @@ class InviteCompany
       administrator.invite!(worker) { |u| u.skip_invitation = true }
       company.save!
 
-      company_role = company.company_roles.new(company_role_params.merge(job_description: company_role_params[:name]))
-      company_role.build_rate(company_role_rate_params.merge(trial_pay_rate_in_subunits: company_role_rate_params[:pay_rate_in_subunits], pay_rate_currency: company.default_currency))
+      company_role = company.company_roles.new(company_role_params)
+      company_role.build_rate(company_role_rate_params.merge(pay_rate_currency: company.default_currency))
       company_role.save!
 
       company_worker = company.company_workers.create!(company_worker_params.merge(user: worker, company_role:))

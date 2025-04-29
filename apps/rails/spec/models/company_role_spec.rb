@@ -16,32 +16,6 @@ RSpec.describe CompanyRole do
   end
 
   describe "validations" do
-    context "when pay_rate_type is 'hourly'" do
-      let!(:company_role) { create(:company_role) }
-
-      before do
-        company_role.rate.update!(pay_rate_type: :hourly)
-      end
-
-      it "allows enabling trials" do
-        company_role.update(trial_enabled: true)
-        expect(company_role.valid?).to eq true
-      end
-    end
-
-    context "when pay_rate_type is 'project_based'" do
-      let!(:company_role) { create(:company_role) }
-
-      before do
-        company_role.rate.update!(pay_rate_type: :project_based)
-      end
-
-      it "does not allow enabling trials" do
-        company_role.update(trial_enabled: true)
-        expect(company_role.errors.full_messages).to eq ["Can only set trials with hourly contracts"]
-      end
-    end
-
     it "prevents deleting the role if it still has active contractors associated" do
       company_role = create(:company_role)
       contractor = create(:company_worker, company_role:)
@@ -57,7 +31,6 @@ RSpec.describe CompanyRole do
   describe "delegations" do
     it { is_expected.to delegate_method(:pay_rate_in_subunits).to(:rate) }
     it { is_expected.to delegate_method(:pay_rate_type).to(:rate) }
-    it { is_expected.to delegate_method(:trial_pay_rate_in_subunits).to(:rate) }
     it { is_expected.to delegate_method(:hourly?).to(:rate) }
     it { is_expected.to delegate_method(:project_based?).to(:rate) }
     it { is_expected.to delegate_method(:salary?).to(:rate) }

@@ -1,5 +1,6 @@
 import { CurrencyDollarIcon, ExclamationTriangleIcon, PencilIcon, PlusIcon } from "@heroicons/react/20/solid";
 import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
+import { getSortedRowModel } from "@tanstack/react-table";
 import { useMutation } from "@tanstack/react-query";
 import { formatISO } from "date-fns";
 import Link from "next/link";
@@ -85,7 +86,14 @@ export default function ViewList() {
     [data],
   );
 
-  const table = useTable({ columns, data });
+  const table = useTable({
+    columns,
+    data,
+    initialState: {
+      sorting: [{ id: "invoiceDate", desc: true }],
+    },
+    getSortedRowModel: getSortedRowModel(),
+  });
 
   return (
     <MainLayout
@@ -247,10 +255,7 @@ const QuickInvoiceSection = ({ disabled }: { disabled?: boolean }) => {
                 />
               </div>
             )}
-            {equityAllocation !== null &&
-            equityCalculation.selectedPercentage == null &&
-            !user.roles.worker.onTrial &&
-            !isProjectBased ? (
+            {equityAllocation !== null && equityCalculation.selectedPercentage == null && !isProjectBased ? (
               <Link href="/settings/equity" className={linkClasses}>
                 Swap some cash for equity
               </Link>

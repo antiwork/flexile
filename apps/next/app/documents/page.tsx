@@ -13,7 +13,7 @@ import DocusealForm from "@/app/documents/DocusealForm";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
-import Modal from "@/components/Modal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import Status, { type Variant as StatusVariant } from "@/components/Status";
@@ -111,89 +111,94 @@ const EditTemplates = () => {
         <PencilIcon className="size-4" />
         Edit templates
       </Button>
-      <Modal open={open} onClose={() => setOpen(false)} title="Edit templates">
-        <div className="grid gap-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTemplates.map((template) => (
-                <TableRow key={template.id}>
-                  <TableCell>
-                    <Link href={`/document_templates/${template.id}`} className="after:absolute after:inset-0">
-                      {template.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{templateTypeLabels[template.type]}</TableCell>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit templates</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Type</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <h3 className="text-lg font-medium">Create a new template</h3>
-          <Alert>
-            <InformationCircleIcon />
-            <AlertDescription>
-              By creating a custom document template, you acknowledge that Flexile shall not be liable for any claims,
-              liabilities, or damages arising from or related to such documents. See our{" "}
-              <Link href="/terms" className="text-blue-600 hover:underline">
-                Terms of Service
-              </Link>{" "}
-              for more details.
-            </AlertDescription>
-          </Alert>
-          <div className="grid grid-cols-3 gap-4">
-            <MutationButton
-              idleVariant="outline"
-              className="h-auto rounded-md p-6"
-              mutation={createTemplate}
-              param={{
-                companyId: company.id,
-                name: "Consulting agreement",
-                type: DocumentTemplateType.ConsultingContract,
-              }}
-            >
-              <div className="flex flex-col items-center">
-                <FileTextIcon className="size-6" />
-                <span className="mt-2">Consulting agreement</span>
-              </div>
-            </MutationButton>
-            <MutationButton
-              idleVariant="outline"
-              className="h-auto rounded-md p-6"
-              mutation={createTemplate}
-              param={{
-                companyId: company.id,
-                name: "Equity grant contract",
-                type: DocumentTemplateType.EquityPlanContract,
-              }}
-            >
-              <div className="flex flex-col items-center">
-                <PercentIcon className="size-6" />
-                <span className="mt-2">Equity grant contract</span>
-              </div>
-            </MutationButton>
-            <MutationButton
-              idleVariant="outline"
-              className="h-auto rounded-md p-6"
-              mutation={createTemplate}
-              param={{
-                companyId: company.id,
-                name: "Option grant board consent",
-                type: DocumentTemplateType.BoardConsent,
-              }}
-            >
-              <div className="flex flex-col items-center">
-                <GavelIcon className="size-6" />
-                <span className="mt-2 whitespace-normal">Option grant board consent</span>
-              </div>
-            </MutationButton>
+              </TableHeader>
+              <TableBody>
+                {filteredTemplates.map((template) => (
+                  <TableRow key={template.id}>
+                    <TableCell>
+                      <Link href={`/document_templates/${template.id}`} className="after:absolute after:inset-0">
+                        {template.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell>{templateTypeLabels[template.type]}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <h3 className="text-lg font-medium">Create a new template</h3>
+            <Alert>
+              <InformationCircleIcon />
+              <AlertDescription>
+                By creating a custom document template, you acknowledge that Flexile shall not be liable for any claims,
+                liabilities, or damages arising from or related to such documents. See our{" "}
+                <Link href="/terms" className="text-blue-600 hover:underline">
+                  Terms of Service
+                </Link>{" "}
+                for more details.
+              </AlertDescription>
+            </Alert>
+            <div className="grid grid-cols-3 gap-4">
+              <MutationButton
+                idleVariant="outline"
+                className="h-auto rounded-md p-6"
+                mutation={createTemplate}
+                param={{
+                  companyId: company.id,
+                  name: "Consulting agreement",
+                  type: DocumentTemplateType.ConsultingContract,
+                }}
+              >
+                <div className="flex flex-col items-center">
+                  <FileTextIcon className="size-6" />
+                  <span className="mt-2">Consulting agreement</span>
+                </div>
+              </MutationButton>
+              <MutationButton
+                idleVariant="outline"
+                className="h-auto rounded-md p-6"
+                mutation={createTemplate}
+                param={{
+                  companyId: company.id,
+                  name: "Equity grant contract",
+                  type: DocumentTemplateType.EquityPlanContract,
+                }}
+              >
+                <div className="flex flex-col items-center">
+                  <PercentIcon className="size-6" />
+                  <span className="mt-2">Equity grant contract</span>
+                </div>
+              </MutationButton>
+              <MutationButton
+                idleVariant="outline"
+                className="h-auto rounded-md p-6"
+                mutation={createTemplate}
+                param={{
+                  companyId: company.id,
+                  name: "Option grant board consent",
+                  type: DocumentTemplateType.BoardConsent,
+                }}
+              >
+                <div className="flex flex-col items-center">
+                  <GavelIcon className="size-6" />
+                  <span className="mt-2 whitespace-normal">Option grant board consent</span>
+                </div>
+              </MutationButton>
+            </div>
           </div>
-        </div>
-      </Modal>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
@@ -312,7 +317,7 @@ export default function DocumentsPage() {
               <>
                 {isSignable(document) ? (
                   <Button variant="outline" size="small" onClick={() => setSignDocumentId(document.id)}>
-                    Review & sign
+                    Review and sign
                   </Button>
                 ) : null}
                 {document.attachment ? (
@@ -389,28 +394,33 @@ export default function DocumentsPage() {
           <Placeholder icon={CheckCircleIcon}>No documents yet.</Placeholder>
         )}
       </div>
-      <Modal open={showInviteModal} onClose={() => setShowInviteModal(false)} title="Who's joining?">
-        <form>
-          <Input
-            value={lawyerEmail}
-            onChange={(e) => setLawyerEmail(e)}
-            label="Email"
-            placeholder="Lawyer's email"
-            type="email"
-            invalid={inviteLawyerMutation.isError}
-            help={inviteLawyerMutation.error?.message}
-          />
-          <MutationButton
-            mutation={inviteLawyerMutation}
-            className="mt-4 w-full"
-            disabled={!lawyerEmail}
-            loadingText="Inviting..."
-          >
-            <PaperAirplaneIcon className="size-5" />
-            Invite
-          </MutationButton>
-        </form>
-      </Modal>
+      <Dialog open={showInviteModal} onOpenChange={setShowInviteModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Who's joining?</DialogTitle>
+          </DialogHeader>
+          <form>
+            <Input
+              value={lawyerEmail}
+              onChange={(e) => setLawyerEmail(e)}
+              label="Email"
+              placeholder="Lawyer's email"
+              type="email"
+              invalid={inviteLawyerMutation.isError}
+              help={inviteLawyerMutation.error?.message}
+            />
+            <MutationButton
+              mutation={inviteLawyerMutation}
+              className="mt-4 w-full"
+              disabled={!lawyerEmail}
+              loadingText="Inviting..."
+            >
+              <PaperAirplaneIcon className="size-5" />
+              Invite
+            </MutationButton>
+          </form>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }
@@ -455,43 +465,47 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
   });
 
   return (
-    <Modal open onClose={onClose}>
-      {user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent && (
-        <header className="flex justify-end gap-4">
-          <MutationButton
-            mutation={documentLawyerApproval}
-            param={{ companyId: company.id, id: document.id }}
-            loadingText="Approving..."
-            successText="Approved!"
-            errorText="Failed to approve"
-          >
-            Approve
-          </MutationButton>
-        </header>
-      )}
-      <DocusealForm
-        src={`https://docuseal.com/s/${slug}`}
-        readonlyFields={readonlyFields}
-        preview={user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent}
-        onComplete={() => {
-          const userIsSigner = document.signatories.some(
-            (signatory) => signatory.id === user.id && signatory.title === "Signer",
-          );
-          const role = userIsSigner
-            ? "Signer"
-            : document.type === DocumentType.BoardConsent
-              ? assertDefined(
-                  document.signatories.find((signatory) => signatory.id === user.id)?.title,
-                  "User is not a board member",
-                )
-              : "Company Representative";
-          signDocument.mutate({
-            companyId: company.id,
-            id: document.id,
-            role,
-          });
-        }}
-      />
-    </Modal>
+    <Dialog open onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent>
+        {user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent && (
+          <DialogHeader>
+            <div className="flex justify-end gap-4">
+              <MutationButton
+                mutation={documentLawyerApproval}
+                param={{ companyId: company.id, id: document.id }}
+                loadingText="Approving..."
+                successText="Approved!"
+                errorText="Failed to approve"
+              >
+                Approve
+              </MutationButton>
+            </div>
+          </DialogHeader>
+        )}
+        <DocusealForm
+          src={`https://docuseal.com/s/${slug}`}
+          readonlyFields={readonlyFields}
+          preview={user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent}
+          onComplete={() => {
+            const userIsSigner = document.signatories.some(
+              (signatory) => signatory.id === user.id && signatory.title === "Signer",
+            );
+            const role = userIsSigner
+              ? "Signer"
+              : document.type === DocumentType.BoardConsent
+                ? assertDefined(
+                    document.signatories.find((signatory) => signatory.id === user.id)?.title,
+                    "User is not a board member",
+                  )
+                : "Company Representative";
+            signDocument.mutate({
+              companyId: company.id,
+              id: document.id,
+              role,
+            });
+          }}
+        />
+      </DialogContent>
+    </Dialog>
   );
 };

@@ -12,7 +12,6 @@ import {
   UsersIcon,
 } from "@heroicons/react/24/outline";
 import {
-  ArrowPathIcon,
   BriefcaseIcon as SolidBriefcaseIcon,
   ChartPieIcon as SolidChartPieIcon,
   Cog6ToothIcon as SolidCog6ToothIcon,
@@ -24,7 +23,6 @@ import {
   UsersIcon as SolidUsersIcon,
 } from "@heroicons/react/24/solid";
 import { useQueryClient } from "@tanstack/react-query";
-import { capitalize } from "lodash-es";
 import { ChevronsUpDown } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -58,8 +56,7 @@ import { type Company } from "@/models/user";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
-
-type CompanyAccessRole = "administrator" | "worker" | "investor" | "lawyer";
+import { Separator } from "@/components/ui/separator";
 
 export default function MainLayout({
   children,
@@ -130,7 +127,7 @@ export default function MainLayout({
               <CompanyName company={openCompany} />
             </div>
           ) : (
-            <Image src={logo} className="invert" alt="Flexile" />
+            <Image src={logo} alt="Flexile" />
           )}
         </SidebarHeader>
         <SidebarContent>
@@ -180,7 +177,7 @@ export default function MainLayout({
         <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
           <main className="flex flex-1 flex-col gap-6 pb-4 not-print:overflow-y-auto">
             <div>
-              <header className="border-b bg-gray-200 px-3 pt-8 pb-4 md:px-16">
+              <header className="px-3 py-6 md:px-16">
                 <div className="grid max-w-(--breakpoint-xl) gap-y-8">
                   <div className="grid items-center justify-between gap-3 md:flex">
                     <div>
@@ -194,7 +191,8 @@ export default function MainLayout({
                   </div>
                 </div>
               </header>
-              {subheader ? <div className="border-b bg-gray-200/50">{subheader}</div> : null}
+              <Separator className="my-0" />
+              {subheader ? <div className="bg-gray-200/50">{subheader}</div> : null}
             </div>
             <div className="mx-3 flex max-w-(--breakpoint-xl) flex-col gap-6 md:mx-16">{children}</div>
           </main>
@@ -214,20 +212,17 @@ const CompanyName = ({ company }: { company: Company }) => (
       <span className="line-clamp-1 font-bold" title={company.name ?? ""}>
         {company.name}
       </span>
-      {company.selected_access_role && company.other_access_roles.length > 0 ? (
-        <div className="text-xs">{capitalize(company.selected_access_role)}</div>
-      ) : null}
     </div>
   </>
 );
 
 const useSwitchCompanyOrRole = () => {
   const queryClient = useQueryClient();
-  return async (companyId: string, accessRole?: CompanyAccessRole) => {
+  return async (companyId: string) => {
     useUserStore.setState((state) => ({ ...state, pending: true }));
     await request({
       method: "POST",
-      url: company_switch_path(companyId, { access_role: accessRole }),
+      url: company_switch_path(companyId),
       accept: "json",
     });
     await queryClient.resetQueries({ queryKey: ["currentUser"] });
@@ -325,9 +320,6 @@ const NavLinks = ({ company }: { company: Company }) => {
           Settings
         </NavLink>
       )}
-      {company.other_access_roles.map((accessRole) => (
-        <SwitchRoleNavLink key={accessRole} accessRole={accessRole} companyId={company.id} />
-      ))}
     </SidebarMenu>
   );
 };
@@ -372,14 +364,8 @@ const NavLink = ({
 
 function InvoicesNavLink({ companyId, active, isAdmin }: { companyId: string; active: boolean; isAdmin: boolean }) {
   const { data, isLoading } = trpc.invoices.list.useQuery(
-    {
-      companyId,
-      invoiceFilter: "actionable",
-    },
-    {
-      refetchInterval: 30_000,
-      enabled: isAdmin,
-    },
+    { companyId, status: ["received", "approved", "failed"] },
+    { refetchInterval: 30_000, enabled: isAdmin },
   );
 
   return (
@@ -392,18 +378,5 @@ function InvoicesNavLink({ companyId, active, isAdmin }: { companyId: string; ac
     >
       Invoices
     </NavLink>
-  );
-}
-
-function SwitchRoleNavLink({ accessRole, companyId }: { accessRole: CompanyAccessRole; companyId: string }) {
-  const switchCompany = useSwitchCompanyOrRole();
-
-  return (
-    <SidebarMenuItem>
-      <SidebarMenuButton onClick={() => void switchCompany(companyId, accessRole)}>
-        <ArrowPathIcon />
-        <span>Use as {accessRole === "administrator" ? "admin" : accessRole}</span>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
   );
 }

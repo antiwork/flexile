@@ -53,7 +53,6 @@ class Company < ApplicationRecord
   has_many :equity_buyback_rounds
   has_many :equity_grants, through: :company_investors
   has_many :equity_grant_exercises
-  has_many :financing_rounds
   has_many :time_entries
   has_many :convertible_investments
   has_many :consolidated_invoices

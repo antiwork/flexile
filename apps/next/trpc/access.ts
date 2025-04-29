@@ -8,7 +8,6 @@ export const policies = {
     companyContractor &&
     !companyContractor.endedAt &&
     company.expenseCardsEnabled &&
-    !companyContractor.onTrial &&
     companyContractor.role.expenseCardEnabled,
 } satisfies Record<
   string,
@@ -17,7 +16,7 @@ export const policies = {
     company: Pick<Company, "expenseCardsEnabled">;
     companyAdministrator: unknown;
     companyContractor:
-      | (Pick<CompanyContractor, "endedAt" | "onTrial"> & { role: Pick<CompanyRole, "expenseCardEnabled"> })
+      | (Pick<CompanyContractor, "endedAt"> & { role: Pick<CompanyRole, "expenseCardEnabled"> })
       | undefined;
     companyInvestor: unknown;
     companyLawyer: unknown;

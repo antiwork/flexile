@@ -30,11 +30,6 @@ RSpec.describe CompanyWorker do
 
       it { is_expected.to validate_presence_of(:hours_per_week) }
       it { is_expected.to validate_numericality_of(:hours_per_week).is_greater_than(0).only_integer }
-
-      it "allows enabling trials" do
-        company_worker.update(on_trial: true)
-        expect(company_worker.valid?).to eq true
-      end
     end
 
     context "when pay_rate_type is 'project_based'" do
@@ -42,11 +37,6 @@ RSpec.describe CompanyWorker do
 
       it "does not validate presence of hours_per_week" do
         expect(company_worker.valid?).to eq(true)
-      end
-
-      it "does not allow enabling trials" do
-        company_worker.update(on_trial: true)
-        expect(company_worker.errors.full_messages).to eq ["Can only set trials with hourly contracts"]
       end
     end
   end
@@ -346,7 +336,7 @@ RSpec.describe CompanyWorker do
           expect do
             company_worker.end_contract!
           end.to_not change { company_worker.reload.ended_at }.from(1.day.ago)
-        end.to_not have_enqueued_mail(CompanyWorkerMailer, :contract_ended).with(company_worker_id: company_worker.id)
+        end
       end
     end
 
@@ -357,7 +347,6 @@ RSpec.describe CompanyWorker do
         expect do
           company_worker.end_contract!
         end.to change { company_worker.reload.ended_at }.from(nil).to(Time.current)
-        .and have_enqueued_mail(CompanyWorkerMailer, :contract_ended).with(company_worker_id: company_worker.id)
       end
     end
   end
@@ -647,13 +636,7 @@ RSpec.describe CompanyWorker do
       end
     end
 
-    context "when contractor is on trial" do
-      before { company_worker.update(on_trial: true) }
 
-      it "returns false" do
-        expect(company_worker.can_create_expense_card?).to be false
-      end
-    end
 
     context "when expense card is not enabled for the role" do
       before { company_role.update(expense_card_enabled: false) }

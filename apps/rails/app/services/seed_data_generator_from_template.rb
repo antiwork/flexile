@@ -70,7 +70,6 @@ class SeedDataGeneratorFromTemplate
         enable_feature_flags!(company, company_data.fetch("feature_flags"))
         create_convertible_investments!(company, company_data)
         create_dividend_rounds!(company, company_data)
-        create_financing_rounds!(company, company_data)
         create_tender_offer!(company, company_data.fetch("tender_offer"))
         create_equity_buyback_rounds!(company, company_data)
         create_company_monthly_financial_reports!(company, company_data.fetch("company_monthly_financial_reports"))
@@ -299,12 +298,6 @@ class SeedDataGeneratorFromTemplate
           )
         )
         created_at += 1.year
-      end
-    end
-
-    def create_financing_rounds!(company, company_data)
-      company_data.fetch("financing_rounds").each do |financing_round_data|
-        company.financing_rounds.create!(financing_round_data)
       end
     end
 

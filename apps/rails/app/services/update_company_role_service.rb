@@ -16,7 +16,6 @@ class UpdateCompanyRoleService
       contractors_to_update = contractors_to_update.where(pay_rate_in_subunits: role.pay_rate_in_subunits) unless update_all_rates
 
       role.rate.pay_rate_in_subunits = rate_params[:pay_rate_in_subunits]
-      role.rate.trial_pay_rate_in_subunits = rate_params[:trial_pay_rate_in_subunits]
       role.rate.pay_rate_currency = role.company.default_currency
       role.assign_attributes(params)
       expense_card_enabled_changed = role.expense_card_enabled_changed?
@@ -35,7 +34,7 @@ class UpdateCompanyRoleService
       end
 
       if expense_card_enabled_changed && role.expense_card_enabled
-        contractor_ids_granted = role.company_workers.active.not_on_trial.pluck(:id)
+        contractor_ids_granted = role.company_workers.active.pluck(:id)
         ExpenseCardGrantEmailJob.perform_bulk(contractor_ids_granted.zip)
       end
     end
