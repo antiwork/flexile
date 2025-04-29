@@ -1,6 +1,7 @@
 import { Slot } from "@radix-ui/react-slot";
 import * as React from "react";
 import { cn } from "@/utils";
+import { Separator } from "@/components/ui/separator";
 
 function Card({ className, asChild = false, ...props }: React.ComponentProps<"div"> & { asChild?: boolean }) {
   const Comp = asChild ? Slot : "div";
@@ -30,7 +31,12 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
-  return <div data-slot="card-footer" className={cn("flex items-center border-t p-4", className)} {...props} />;
+  return (
+    <>
+      <Separator className="m-0" />
+      <div data-slot="card-footer" className={cn("flex items-center p-4", className)} {...props} />
+    </>
+  );
 }
 
 export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle };
