@@ -26,7 +26,7 @@ const LegalCertificationModal = ({
   mutation: UseMutationResult<unknown, unknown, string>;
 }) => {
   const [signature, setSignature] = useState(legalName);
-  
+
   useEffect(() => {
     setSignature(legalName);
   }, [legalName]);
