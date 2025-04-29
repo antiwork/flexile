@@ -283,14 +283,14 @@ const ManageModal = ({
           <Card>
             <CardContent className="pt-6">
               <div className="mb-4 flex items-center gap-2">
-                <div className="flex-1 text-sm text-muted-foreground">Current rate</div>
+                <div className="text-muted-foreground flex-1 text-sm">Current rate</div>
                 <div className="font-medium">
                   {formatMoneyFromCents(contractorsToUpdate[0]?.payRateInSubunits ?? 0)}
                   {role.payRateType === PayRateType.Hourly ? "/hour" : ""}
                 </div>
               </div>
               <div className="mb-4 flex items-center gap-2">
-                <div className="flex-1 text-sm text-muted-foreground">New rate</div>
+                <div className="text-muted-foreground flex-1 text-sm">New rate</div>
                 <div className="font-medium">
                   {formatMoneyFromCents(role.payRateInSubunits)}
                   {role.payRateType === PayRateType.Hourly ? "/hour" : ""}
@@ -298,7 +298,7 @@ const ManageModal = ({
               </div>
               <Separator />
               <div className="mt-4 flex items-center gap-2">
-                <div className="flex-1 text-sm text-muted-foreground">Contractors affected</div>
+                <div className="text-muted-foreground flex-1 text-sm">Contractors affected</div>
                 <div className="font-medium">{contractorsToUpdate.length}</div>
               </div>
             </CardContent>
