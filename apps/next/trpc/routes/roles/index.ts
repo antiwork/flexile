@@ -76,7 +76,6 @@ export const rolesRouter = createRouter({
         .insert(companyRoles)
         .values({
           companyId: ctx.company.id,
-          jobDescription: "", // Empty string but required by schema
           ...pick(input, "name", "capitalizedExpense", "expenseAccountId", "trialEnabled"),
         })
         .returning(pick(companyRoles, "id", "externalId"));
@@ -99,7 +98,6 @@ export const rolesRouter = createRouter({
       const [role] = await tx
         .update(companyRoles)
         .set({
-          jobDescription: "", // Empty string but required by schema
           ...pick(input, "name", "capitalizedExpense", "expenseAccountId", "trialEnabled"),
         })
         .where(and(eq(companyRoles.externalId, input.id), eq(companyRoles.companyId, ctx.company.id)))
