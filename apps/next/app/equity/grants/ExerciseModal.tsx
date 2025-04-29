@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Decimal } from "decimal.js";
 import { Fragment, useState } from "react";
 import { z } from "zod";
-import DocusealForm from "@/app/documents/DocusealForm";
+import Form, { customCss } from "@/app/documents/DocusealForm";
 import Delta from "@/components/Delta";
 import RangeInput from "@/components/RangeInput";
 import { Button } from "@/components/ui/button";
@@ -99,9 +99,10 @@ const ExerciseModal = ({
           <DialogTitle>Exercise your options</DialogTitle>
         </DialogHeader>
         {signing ? (
-          <DocusealForm
+          <Form
             src={`https://docuseal.com/d/${env.NEXT_PUBLIC_EQUITY_EXERCISE_DOCUSEAL_ID}`}
             externalId={new Date().toISOString()}
+            customCss={customCss}
             onComplete={(data) =>
               submitMutation.mutate(z.object({ submission_id: z.number() }).parse(data).submission_id)
             }

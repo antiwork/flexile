@@ -7,14 +7,14 @@ import React, { useEffect, useMemo, useState } from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MutationButton from "@/components/MutationButton";
 import Status from "@/components/Status";
-import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { DocumentType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
 import { formatDate } from "@/utils/time";
-import DocusealForm from "./DocusealForm";
+import DocusealForm, { customCss } from "./DocusealForm";
 
 const typeLabels = {
   [DocumentType.ConsultingContract]: "Agreement",
@@ -216,26 +216,12 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent>
-        {user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent && (
-          <DialogHeader>
-            <div className="flex justify-end gap-4">
-              <MutationButton
-                mutation={documentLawyerApproval}
-                param={{ companyId: company.id, id: document.id }}
-                loadingText="Approving..."
-                successText="Approved!"
-                errorText="Failed to approve"
-              >
-                Approve
-              </MutationButton>
-            </div>
-          </DialogHeader>
-        )}
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-4xl">
         <DocusealForm
           src={`https://docuseal.com/s/${slug}`}
           readonlyFields={readonlyFields}
           preview={user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent}
+          customCss={customCss}
           onComplete={() => {
             const userIsSigner = document.signatories.some(
               (signatory) => signatory.id === user.id && signatory.title === "Signer",
@@ -255,6 +241,21 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
             });
           }}
         />
+        {user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent && (
+          <DialogFooter>
+            <div className="flex justify-end gap-4">
+              <MutationButton
+                mutation={documentLawyerApproval}
+                param={{ companyId: company.id, id: document.id }}
+                loadingText="Approving..."
+                successText="Approved!"
+                errorText="Failed to approve"
+              >
+                Approve
+              </MutationButton>
+            </div>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );
