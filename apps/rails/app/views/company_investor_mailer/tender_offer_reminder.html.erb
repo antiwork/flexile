@@ -6,7 +6,7 @@
 </p>
 
 <p>
-  To stay informed about our company's progress, you can catch up on our public board meetings <a href="https://youtu.be/EscH4kMT3gM">here</a>.
+  To stay informed about our company's progress, you can catch up on our public board meetings <a href="https://youtube.com/playlist?list=PL_DfN-mKCGNuswqERc6sIA8urYAKARc6s&si=BKRcURB-oR9a8cE3">here</a>.
 </p>
 
 <p>
@@ -15,9 +15,7 @@
 
 <dl>
   <dt>Offer end date</dt>
-  <dd>September 20, 2024</dd>
-  <dt>Number of shares available</dt>
-  <dd><%= number_with_delimiter(@tender_offer.number_of_shares || 0) %></dd>
+  <dd><%= @tender_offer.ends_at.to_fs(:long_date) %></dd>
   <dt>Starting (minimum) valuation</dt>
   <dd><%= money_format(@tender_offer.minimum_valuation) %></dd>
   <dt>Total offer amount (<b>"Total Gross Proceeds"</b>)</dt>
@@ -28,7 +26,7 @@
 
 <p>
   <strong>
-    This offer is time-sensitive and will close on September 20, 2024.
+    This offer is time-sensitive and will close on <%= @tender_offer.ends_at.to_fs(:long_date) %>.
     If you wish to participate, please make sure to review and submit your bid before the deadline.
   </strong>
 </p>
