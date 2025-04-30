@@ -1,9 +1,7 @@
 import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
-import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { equityAllocationsFactory } from "@test/factories/equityAllocations";
-import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
