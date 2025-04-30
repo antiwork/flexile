@@ -133,7 +133,7 @@ export const equityCalculationsRouter = createRouter({
         serviceAmountCents: input.servicesInCents,
         invoiceYear: input.invoiceYear,
         equityCompensationEnabled: ctx.company.equityCompensationEnabled,
-        providedEquityPercentage: input.selectedPercentage ?? 0,
+        ...(input.selectedPercentage ? { providedEquityPercentage: input.selectedPercentage } : {}),
       });
 
       if (!result) {
