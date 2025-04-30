@@ -32,7 +32,7 @@
 </p>
 
 <%= link_to "Learn more & participate",
-            spa_company_tender_offer_url(@tender_offer.company.external_id, @tender_offer.external_id),
+            "#{PROTOCOL}://#{DOMAIN}/equity/tender_offers/#{@tender_offer.external_id}",
             class: "button" %>
 
 <%= render "shared/email_signature" %>
