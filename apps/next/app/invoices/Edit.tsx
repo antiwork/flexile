@@ -7,7 +7,7 @@ import { formatISO } from "date-fns";
 import { List } from "immutable";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import DurationInput from "@/components/DurationInput";
@@ -120,7 +120,6 @@ const Edit = () => {
     },
   });
 
-  const [equityPercentage, setEquityPercent] = useState(data.equity_allocation?.percentage ?? 0);
   const [invoiceNumber, setInvoiceNumber] = useState(data.invoice.invoice_number);
   const [issueDate, setIssueDate] = useState(
     searchParams.get("date") || formatISO(data.invoice.invoice_date, { representation: "date" }),
@@ -146,6 +145,12 @@ const Edit = () => {
     ]);
   });
   const [expenses, setExpenses] = useState(List<InvoiceFormExpense>(data.invoice.expenses));
+
+  const [equityAllocation, { refetch: refetchEquityAllocation }] = trpc.equityAllocations.forYear.useSuspenseQuery({
+    companyId: company.id,
+    year: invoiceYear,
+  });
+  const [equityPercentage, setEquityPercent] = useState(equityAllocation?.equityPercentage ?? 0);
 
   const equityPercentageMutation = trpc.equitySettings.update.useMutation();
   const validate = () => {
@@ -188,7 +193,7 @@ const Edit = () => {
       if (notes.length) formData.append("invoice[notes]", notes);
 
       if (equityPercentage !== data.equity_allocation?.percentage && !data.equity_allocation?.is_locked) {
-        await equityPercentageMutation.mutateAsync({ companyId: company.id, equityPercentage });
+        await equityPercentageMutation.mutateAsync({ companyId: company.id, equityPercentage, year: invoiceYear });
       }
       await request({
         method: id ? "PATCH" : "POST",
@@ -234,17 +239,13 @@ const Edit = () => {
   const totalExpensesAmountInCents = expenses.reduce((acc, expense) => acc + expense.total_amount_in_cents, 0);
   const totalServicesAmountInCents = lineItems.reduce((acc, lineItem) => acc + lineItem.total_amount_cents, 0);
   const totalInvoiceAmountInCents = totalServicesAmountInCents + totalExpensesAmountInCents;
-  const [equityAllocation] = trpc.equityAllocations.forYear.useSuspenseQuery({
-    companyId: company.id,
-    year: invoiceYear,
-  });
+  const canManageExpenses = showExpenses || expenses.size > 0;
   const [equityCalculation] = trpc.equityCalculations.calculate.useSuspenseQuery({
     companyId: company.id,
     servicesInCents: totalServicesAmountInCents,
     invoiceYear,
     selectedPercentage: equityPercentage,
   });
-  const canManageExpenses = showExpenses || expenses.size > 0;
   const updateLineItem = (index: number, update: Partial<InvoiceFormLineItem>) =>
     setLineItems((lineItems) =>
       lineItems.update(index, (lineItem) => {
@@ -271,6 +272,10 @@ const Edit = () => {
         return updated;
       }),
     );
+
+  useEffect(() => {
+    setEquityPercent(equityAllocation?.equityPercentage ?? 0);
+  }, [equityAllocation]);
 
   return (
     <MainLayout
@@ -301,7 +306,7 @@ const Edit = () => {
                   onChange={setEquityPercent}
                   min={0}
                   max={MAX_EQUITY_PERCENTAGE}
-                  aria-label="Cash vs equity split"
+                  ariaLabel="Cash vs equity split"
                   unit="%"
                   label={
                     <div className="flex justify-between gap-2">
@@ -360,7 +365,10 @@ const Edit = () => {
               <Input
                 id="invoice-date"
                 value={issueDate}
-                onChange={(e) => setIssueDate(e.target.value)}
+                onChange={(e) => {
+                  setIssueDate(e.target.value);
+                  void refetchEquityAllocation();
+                }}
                 aria-invalid={errorField === "issueDate"}
                 type="date"
               />

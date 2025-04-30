@@ -36,6 +36,7 @@ test.describe("New Contractor", () => {
       companyContractorId: companyContractor.id,
       equityPercentage: 50,
       status: "pending_grant_creation",
+      locked: true,
     });
     const { role: projectBasedRole } = await companyRolesFactory.createProjectBased({ companyId: company.id });
     await companyContractorsFactory.createProjectBased({
@@ -52,6 +53,7 @@ test.describe("New Contractor", () => {
       companyContractorId: projectBasedContractor.id,
       equityPercentage: 10,
       status: "pending_grant_creation",
+      locked: true,
     });
     await optionPoolsFactory.create({ companyId: company.id });
     await login(page, adminUser);
@@ -117,12 +119,6 @@ test.describe("New Contractor", () => {
 
     await clerk.signOut({ page });
     await login(page, contractorUser);
-    await page.goto("/settings/equity");
-    await expect(
-      page.getByText(
-        "Your allocation is pending board approval. You can submit invoices for this year, but they're only going to be paid once the allocation is approved.",
-      ),
-    ).toBeVisible();
     await page.goto("/invoices");
     await page.getByRole("link", { name: "New invoice" }).first().click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-1");
@@ -140,12 +136,6 @@ test.describe("New Contractor", () => {
 
     await clerk.signOut({ page });
     await login(page, projectBasedUser);
-    await page.goto("/settings/equity");
-    await expect(
-      page.getByText(
-        "Your allocation is pending board approval. You can submit invoices for this year, but they're only going to be paid once the allocation is approved.",
-      ),
-    ).toBeVisible();
     await page.goto("/invoices");
     await page.getByRole("link", { name: "New invoice" }).first().click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-2");

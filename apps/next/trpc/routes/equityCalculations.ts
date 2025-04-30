@@ -102,23 +102,6 @@ export const calculateInvoiceEquity = async ({
     equityAmountInOptions = 0;
   }
 
-  if (equityPercentage !== 0 && unvestedGrant && unvestedGrant.unvestedShares < equityAmountInOptions) {
-    if (equityAllocation) {
-      await db
-        .update(equityAllocations)
-        .set({ status: "pending_grant_creation" })
-        .where(eq(equityAllocations.id, equityAllocation.id));
-    } else {
-      await db.insert(equityAllocations).values({
-        companyContractorId: companyContractor.id,
-        equityPercentage,
-        year: invoiceYear,
-        status: "pending_grant_creation",
-        locked: true,
-      });
-    }
-  }
-
   return {
     equityCents: equityAmountInCents,
     equityOptions: equityAmountInOptions,
