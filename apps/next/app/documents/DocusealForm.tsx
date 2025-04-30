@@ -91,6 +91,10 @@ export const customCss = `
     margin-right: auto !important;
   }
 
+  .scrollbox {
+    height: 100vh;
+  }
+
   div:has(> .submitted-form-resubmit-button) {
     text-align: center !important;
   }
