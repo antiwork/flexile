@@ -7,7 +7,7 @@ import Input from "@/components/Input";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
-import RadioButtons from "@/components/RadioButtons";
+import Select from "@/components/Select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { pluralize } from "@/utils/pluralize";
-import Select from "@/components/Select";
+import { RadioGroup } from "../../components/ui/radio-group";
 
 type Role = RouterOutput["roles"]["list"][number];
 
@@ -145,7 +145,7 @@ const ManageModal = ({
             label="Name"
             invalid={errors.includes("name")}
           />
-          <RadioButtons
+          <RadioGroup
             value={role.payRateType}
             onChange={(payRateType) => updateRole({ payRateType })}
             label="Type"

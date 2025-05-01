@@ -162,7 +162,7 @@ const EditTemplates = () => {
               >
                 <div className="flex flex-col items-center">
                   <FileTextIcon className="size-6" />
-                  <span className="mt-2">Consulting agreement</span>
+                  <span className="mt-2 whitespace-normal">Consulting agreement</span>
                 </div>
               </MutationButton>
               <MutationButton
@@ -177,7 +177,7 @@ const EditTemplates = () => {
               >
                 <div className="flex flex-col items-center">
                   <PercentIcon className="size-6" />
-                  <span className="mt-2">Equity grant contract</span>
+                  <span className="mt-2 whitespace-normal">Equity grant contract</span>
                 </div>
               </MutationButton>
               <MutationButton

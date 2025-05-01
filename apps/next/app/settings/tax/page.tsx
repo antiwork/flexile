@@ -11,7 +11,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import LegalCertificationModal from "@/app/onboarding/LegalCertificationModal";
-import RadioButtons from "@/components/RadioButtons";
 import Status from "@/components/Status";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -28,6 +27,7 @@ import { settings_tax_path } from "@/utils/routes";
 import SettingsLayout from "../Layout";
 import ComboBox from "@/components/ComboBox";
 import { MutationStatusButton } from "@/components/MutationButton";
+import { RadioGroup } from "../../../components/ui/radio-group";
 
 const dataSchema = z.object({
   birth_date: z.string().nullable(),
@@ -233,7 +233,7 @@ export default function TaxPage() {
                 <FormItem>
                   <FormLabel>Type of entity</FormLabel>
                   <FormControl>
-                    <RadioButtons
+                    <RadioGroup
                       value={field.value ? "business" : "individual"}
                       onChange={(value) => field.onChange(value === "business")}
                       options={[

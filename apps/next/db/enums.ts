@@ -38,6 +38,13 @@ export enum BoardConsentStatus {
   BoardApproved = "board_approved",
 }
 
+export enum EquityAllocationStatus {
+  PendingConfirmation = "pending_confirmation",
+  PendingGrantCreation = "pending_grant_creation",
+  PendingApproval = "pending_approval",
+  Approved = "approved",
+}
+
 export const invoiceStatuses = [
   "received",
   "approved",

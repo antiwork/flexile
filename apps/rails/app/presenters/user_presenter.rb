@@ -157,6 +157,7 @@ class UserPresenter
             country: ISO3166::Country[company.country_code].common_name,
           },
           flags:,
+          equityCompensationEnabled: company.equity_compensation_enabled,
           requiredInvoiceApprovals: company.required_invoice_approval_count,
           paymentProcessingDays: company.contractor_payment_processing_time_in_days,
           createdAt: company.created_at.iso8601,
