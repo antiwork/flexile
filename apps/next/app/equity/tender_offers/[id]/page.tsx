@@ -22,7 +22,7 @@ import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
-import { formatDate, formatMonth } from "@/utils/time";
+import { formatDate } from "@/utils/time";
 import { VESTED_SHARES_CLASS } from "../";
 import LetterOfTransmissal from "./LetterOfTransmissal";
 
@@ -158,11 +158,11 @@ export default function BuybackView() {
           </div>
           <div>
             <Label>Starting valuation</Label>
-            <p>{formatMoney(data.minimumValuation)}</p>
+            <p>{formatMoney(data.startingValuation)}</p>
           </div>
           <div>
             <Button asChild>
-              <a href={data.attachment ?? ""}>
+              <a href={data.documentPackage ?? ""}>
                 <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
                 Download buyback documents
               </a>
