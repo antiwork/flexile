@@ -118,7 +118,6 @@ export default function CreateCompanyInvitation() {
               help={errors["company_role.rate.pay_rate_type"]}
             />
 
-
             <div className="grid gap-2">
               <Label htmlFor="role-rate">Rate</Label>
               <NumberInput

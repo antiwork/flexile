@@ -29,7 +29,7 @@ function RadioGroup<T extends string | number>({ options, value, onChange, label
       {label ? <legend className="mb-2 font-medium">{label}</legend> : null}
       <BaseRadioGroup
         value={stringValue}
-        onValueChange={(v) => onChange(options.find((o) => String(o.value) === v)!.value)}
+        onValueChange={(v) => onChange(options.find((o) => String(o.value) === v)?.value ?? value)}
         data-slot="radio-group"
         className="grid auto-cols-fr gap-2 md:grid-flow-col"
         disabled={disabled}
