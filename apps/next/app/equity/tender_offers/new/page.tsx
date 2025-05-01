@@ -1,5 +1,4 @@
 "use client";
-import { parseDate } from "@internationalized/date";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -34,7 +33,7 @@ export default function NewBuyback() {
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      if (!valid || !startDate || !endDate) return;
+      if (!valid) return;
 
       const base64Checksum = await md5Checksum(attachment);
       const { directUploadUrl, key } = await createUploadUrl.mutateAsync({
