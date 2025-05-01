@@ -301,4 +301,12 @@ test.describe("invoice creation", () => {
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByRole("cell", { name: "Awaiting approval (0/2)" })).toBeVisible();
   });
+
+  test("does not show equity split if equity compensation is disabled", async ({ page }) => {
+    await db.update(companies).set({ equityCompensationEnabled: false }).where(eq(companies.id, company.id));
+
+    await login(page, contractorUser);
+    await page.goto("/invoices/new");
+    await expect(page.getByRole("textbox", { name: "Cash vs equity split" })).not.toBeVisible();
+  });
 });
