@@ -21,32 +21,32 @@ export default function NewBuyback() {
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [minimumValuation, setMinimumValuation] = useState(0);
-  const [attachment, setAttachment] = useState<File | undefined>(undefined);
+  const [startingValuation, setStartingValuation] = useState(0);
+  const [documentPackage, setDocumentPackage] = useState<File | undefined>(undefined);
 
   const createUploadUrl = trpc.files.createDirectUploadUrl.useMutation();
   const createTenderOffer = trpc.tenderOffers.create.useMutation();
 
-  const valid = startDate && endDate && attachment;
+  const valid = startDate && endDate && documentPackage;
 
   const createMutation = useMutation({
     mutationFn: async () => {
       if (!valid) return;
 
-      const base64Checksum = await md5Checksum(attachment);
+      const base64Checksum = await md5Checksum(documentPackage);
       const { directUploadUrl, key } = await createUploadUrl.mutateAsync({
         isPublic: false,
-        filename: attachment.name,
-        byteSize: attachment.size,
+        filename: documentPackage.name,
+        byteSize: documentPackage.size,
         checksum: base64Checksum,
-        contentType: attachment.type,
+        contentType: documentPackage.type,
       });
 
       await fetch(directUploadUrl, {
         method: "PUT",
-        body: attachment,
+        body: documentPackage,
         headers: {
-          "Content-Type": attachment.type,
+          "Content-Type": documentPackage.type,
           "Content-MD5": base64Checksum,
         },
       });
@@ -55,8 +55,8 @@ export default function NewBuyback() {
         companyId: company.id,
         startsAt: new Date(startDate),
         endsAt: new Date(endDate),
-        minimumValuation: BigInt(minimumValuation),
-        attachmentKey: key,
+        startingValuation: BigInt(startingValuation),
+        documentPackageKey: key,
       });
       router.push(`/equity/tender_offers`);
     },
@@ -77,21 +77,21 @@ export default function NewBuyback() {
             <Input value={startDate} onChange={setStartDate} type="date" label="Start date" />
             <Input value={endDate} onChange={setEndDate} type="date" label="End date" />
             <div className="grid gap-2">
-              <Label htmlFor="minimum-valuation">Minimum valuation</Label>
+              <Label htmlFor="starting-valuation">Starting valuation</Label>
               <NumberInput
-                id="minimum-valuation"
-                value={minimumValuation}
-                onChange={(value) => setMinimumValuation(value || 0)}
+                id="starting-valuation"
+                value={startingValuation}
+                onChange={(value) => setStartingValuation(value || 0)}
                 prefix="$"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="attachment">Attachment</Label>
+              <Label htmlFor="document-package">Document package</Label>
               <input
-                id="attachment"
+                id="document-package"
                 type="file"
                 accept="application/zip"
-                onChange={(e) => setAttachment(e.target.files?.[0])}
+                onChange={(e) => setDocumentPackage(e.target.files?.[0])}
               />
             </div>
           </div>
