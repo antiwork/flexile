@@ -28,18 +28,21 @@ test.describe("Buyback creation", () => {
     await page.getByRole("tab", { name: "Buybacks" }).click();
     await page.getByRole("link", { name: "New buyback" }).click();
 
-    await page.getByLabel("Minimum valuation").fill("100000000");
-    await page.getByLabel("Start date").fill("2022-08-08");
-    await page.getByLabel("End date").fill("2022-09-09");
-    await page.getByLabel("Attachment").setInputFiles("e2e/samples/sample.zip");
+    await page.getByLabel("Start date").locator("..").getByRole("button").click();
+    await page.getByRole("gridcell", { name: "10" }).first().click();
+
+    await page.getByLabel("End date").locator("..").getByRole("button").click();
+    await page.getByRole("gridcell", { name: "20" }).first().click();
+
+    await page.getByLabel("Starting valuation").fill("100000000");
+    await page.getByLabel("Document package").setInputFiles("e2e/samples/sample.zip");
 
     await page.getByRole("button", { name: "Create buyback" }).click();
-    await expect(page.getByText("There are no buybacks yet.")).toBeVisible();
-    await page.reload();
+    await expect(page).toHaveURL(/.*\/equity\/tender_offers$/u);
 
     await expect(
       page.getByRole("row", {
-        name: /Aug 8, 2022.*Sep 9, 2022.*\$100,000,000/u,
+        name: /.*10,.*20,.*\$100,000,000/u,
       }),
     ).toBeVisible();
   });

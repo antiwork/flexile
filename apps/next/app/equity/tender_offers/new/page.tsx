@@ -59,7 +59,7 @@ export default function NewBuyback() {
         startsAt: new Date(`${startDateString}T00:00:00Z`),
         endsAt: new Date(`${endDateString}T00:00:00Z`),
         startingValuation: BigInt(startingValuation),
-        attachmentKey: key,
+        documentPackageKey: key,
       });
       router.push(`/equity/tender_offers`);
     },
@@ -107,7 +107,7 @@ export default function NewBuyback() {
               />
             </div>
             <div className="*:not-first:mt-2">
-              <Label htmlFor="attachment">Attachment</Label>
+              <Label htmlFor="attachment">Document package</Label>
               <Input
                 id="attachment"
                 type="file"

@@ -13,7 +13,7 @@ const dataSchema = createInsertSchema(tenderOffers)
     endsAt: true,
     startingValuation: true,
   })
-  .extend({ attachmentKey: z.string() });
+  .extend({ documentPackageKey: z.string() });
 
 export const tenderOffersRouter = createRouter({
   create: companyProcedure.input(dataSchema.required()).mutation(async ({ ctx, input }) => {
@@ -23,7 +23,7 @@ export const tenderOffersRouter = createRouter({
 
     await db.transaction(async (tx) => {
       const blob = await tx.query.activeStorageBlobs.findFirst({
-        where: eq(activeStorageBlobs.key, input.attachmentKey),
+        where: eq(activeStorageBlobs.key, input.documentPackageKey),
       });
       if (!blob) throw new TRPCError({ code: "NOT_FOUND", message: "Attachment not found" });
       const [tenderOffer] = await tx
@@ -37,7 +37,7 @@ export const tenderOffersRouter = createRouter({
         .returning();
       if (!tenderOffer) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       await tx.insert(activeStorageAttachments).values({
-        name: "attachment",
+        name: "document_package",
         blobId: blob.id,
         recordType: "TenderOffer",
         recordId: tenderOffer.id,
@@ -88,7 +88,7 @@ export const tenderOffersRouter = createRouter({
       startsAt: tenderOffer.startsAt,
       endsAt: tenderOffer.endsAt,
       startingValuation: tenderOffer.startingValuation,
-      attachment: attachment ? await getS3Url(attachment.blob.key, attachment.blob.filename) : null,
+      documentPackage: attachment ? await getS3Url(attachment.blob.key, attachment.blob.filename) : null,
     };
   }),
   bids: tenderOffersBidsRouter,
