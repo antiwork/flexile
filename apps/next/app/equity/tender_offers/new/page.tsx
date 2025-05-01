@@ -22,19 +22,19 @@ export default function NewBuyback() {
   const company = useCurrentCompany();
   const router = useRouter();
 
-  const [startDateString, setStartDateString] = useState("");
-  const [endDateString, setEndDateString] = useState("");
+  const [startDate, setStartDate] = useState<DateValue | null>(null);
+  const [endDate, setEndDate] = useState<DateValue | null>(null);
   const [minimumValuation, setMinimumValuation] = useState(0);
   const [attachment, setAttachment] = useState<File | undefined>(undefined);
 
   const createUploadUrl = trpc.files.createDirectUploadUrl.useMutation();
   const createTenderOffer = trpc.tenderOffers.create.useMutation();
 
-  const valid = !!(startDateString && endDateString && attachment);
+  const valid = !!(startDate && endDate && attachment);
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      if (!valid) return;
+      if (!valid || !startDate || !endDate) return;
 
       const base64Checksum = await md5Checksum(attachment);
       const { directUploadUrl, key } = await createUploadUrl.mutateAsync({
@@ -54,24 +54,18 @@ export default function NewBuyback() {
         },
       });
 
+      const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
       await createTenderOffer.mutateAsync({
         companyId: company.id,
-        startsAt: new Date(`${startDateString}T00:00:00Z`),
-        endsAt: new Date(`${endDateString}T00:00:00Z`),
+        startsAt: startDate.toDate(localTimeZone),
+        endsAt: endDate.toDate(localTimeZone),
         minimumValuation: BigInt(minimumValuation),
         attachmentKey: key,
       });
       router.push(`/equity/tender_offers`);
     },
   });
-
-  const parseDateValue = (dateString: string): DateValue | null => {
-    try {
-      return dateString ? parseDate(dateString) : null;
-    } catch (_e) {
-      return null;
-    }
-  };
 
   return (
     <MainLayout
@@ -85,18 +79,8 @@ export default function NewBuyback() {
       <FormSection title="Details">
         <CardContent>
           <div className="grid gap-4">
-            <DatePicker
-              label="Start date"
-              value={parseDateValue(startDateString)}
-              onChange={(date) => setStartDateString(date ? date.toString() : "")}
-              granularity="day"
-            />
-            <DatePicker
-              label="End date"
-              value={parseDateValue(endDateString)}
-              onChange={(date) => setEndDateString(date ? date.toString() : "")}
-              granularity="day"
-            />
+            <DatePicker label="Start date" value={startDate} onChange={setStartDate} granularity="day" />
+            <DatePicker label="End date" value={endDate} onChange={setEndDate} granularity="day" />
             <div className="grid gap-2">
               <Label htmlFor="minimum-valuation">Starting valuation</Label>
               <NumberInput
