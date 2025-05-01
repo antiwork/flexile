@@ -70,11 +70,11 @@ RSpec.describe PayAllDividendsJob do
           .not_to change { InvestorDividendsPaymentJob.jobs.size }
       end
 
-      it "processes investors even if they haven't added a bank account" do
+      it "skips investors who don't have a bank account" do
         company1_investor.user.bank_accounts.destroy_all
 
         expect { described_class.new.perform }
-          .to change { InvestorDividendsPaymentJob.jobs.size }.by(2)
+          .not_to change { InvestorDividendsPaymentJob.jobs.size }
       end
     end
 

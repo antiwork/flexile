@@ -32,21 +32,21 @@ RSpec.describe OnboardingState::Company do
       expect(described_class.new(company.reload).redirect_path).to be_nil
     end
 
-    it "returns nil if the company has all required details" do
-      expect(described_class.new(company).redirect_path).to be_nil
+    it "returns the path to the bank account page if the company is missing bank account details" do
+      expect(described_class.new(company).redirect_path).to eq(spa_company_administrator_onboarding_bank_account_path(company.external_id))
     end
   end
 
   describe "#redirect_path_from_onboarding_details" do
-    it "returns the people path if company details are not set" do
+    it "returns nil if company details are not set" do
       company.city = nil
       company.save(validate: false)
 
-      expect(described_class.new(company).redirect_path_from_onboarding_details).to eq(Rails.application.routes.url_helpers.people_path)
+      expect(described_class.new(company).redirect_path_from_onboarding_details).to be_nil
     end
 
-    it "returns the people path if company details are set" do
-      expect(described_class.new(company).redirect_path_from_onboarding_details).to eq Rails.application.routes.url_helpers.people_path
+    it "returns the company bank account onboarding path if company details are set but bank account is not" do
+      expect(described_class.new(company).redirect_path_from_onboarding_details).to eq spa_company_administrator_onboarding_bank_account_path(company.external_id)
     end
 
     it "returns the people path if onboarding is complete" do
@@ -64,8 +64,8 @@ RSpec.describe OnboardingState::Company do
     end
 
     context "when payment details are not provided" do
-      it "returns the people path" do
-        expect(described_class.new(company).redirect_path_after_onboarding_details_success).to eq Rails.application.routes.url_helpers.people_path
+      it "returns the payment details path" do
+        expect(described_class.new(company).redirect_path_after_onboarding_details_success).to eq spa_company_administrator_onboarding_bank_account_path(company.external_id)
       end
     end
   end
@@ -78,8 +78,8 @@ RSpec.describe OnboardingState::Company do
       expect(described_class.new(company).redirect_path_from_onboarding_payment_details).to eq spa_company_administrator_onboarding_details_path(company.external_id)
     end
 
-    it "returns the people path if company details are set but bank account is not" do
-      expect(described_class.new(company).redirect_path_from_onboarding_payment_details).to eq Rails.application.routes.url_helpers.people_path
+    it "returns nil if company details are set but bank account is not" do
+      expect(described_class.new(company).redirect_path_from_onboarding_payment_details).to be_nil
     end
 
     it "returns the people path if onboarding is complete" do

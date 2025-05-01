@@ -103,19 +103,6 @@ RSpec.describe OnboardingState::Worker do
       expect(service.complete?).to eq(false)
     end
 
-    it "returns true even if the bank account is missing" do
-      user.bank_accounts.destroy_all
-
-      expect(service.complete?).to eq(true)
-    end
-
-    it "returns true if the bank account is missing but the user is from a sanctioned country" do
-      user.bank_accounts.destroy_all
-      user.update!(country_code: "CU")
-
-      expect(service.complete?).to eq(true)
-    end
-
     context "when the user is a business entity" do
       before { user.compliance_info.update!(business_entity: true) }
 
@@ -142,19 +129,6 @@ RSpec.describe OnboardingState::Worker do
       allow(service).to receive(:has_legal_details?).and_return(false)
 
       expect(service.redirect_path).to eq(spa_company_worker_onboarding_legal_path(company.external_id))
-    end
-
-    it "returns nil if the user is missing bank details" do
-      user.bank_accounts.destroy_all
-
-      expect(service.redirect_path).to be_nil
-    end
-
-    it "returns nil if the user is missing bank details, is from a sanctioned country and signed the contract" do
-      user.bank_accounts.destroy_all
-      user.update!(country_code: "CU")
-
-      expect(service.redirect_path).to be_nil
     end
 
     it "returns nil if all onboarding data is present" do

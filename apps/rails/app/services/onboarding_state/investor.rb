@@ -21,8 +21,4 @@ class OnboardingState::Investor < OnboardingState::BaseUser
     def has_tax_info?
       user.tax_id.present? && (user.requires_w9? || user.birth_date.present?)
     end
-
-    def has_payout_details?
-      super || (user.restricted_payout_country_resident? && user.wallet.present?)
-    end
 end

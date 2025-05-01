@@ -13,13 +13,15 @@ class OnboardingState::Company
   def redirect_path
     if !has_company_details?
       spa_company_administrator_onboarding_details_path(company.external_id)
+    elsif !bank_account_added?
+      spa_company_administrator_onboarding_bank_account_path(company.external_id)
     end
   end
 
   def redirect_path_from_onboarding_details
     return completed_redirect_path if complete?
 
-    completed_redirect_path
+    spa_company_administrator_onboarding_bank_account_path(company.external_id) if has_company_details?
   end
 
   def redirect_path_from_onboarding_payment_details
@@ -29,11 +31,11 @@ class OnboardingState::Company
   end
 
   def redirect_path_after_onboarding_details_success
-    completed_redirect_path
+    bank_account_added? ? completed_redirect_path : spa_company_administrator_onboarding_bank_account_path(company.external_id)
   end
 
   def complete?
-    has_company_details?
+    has_company_details? && bank_account_added?
   end
 
   private
