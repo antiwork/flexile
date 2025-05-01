@@ -123,7 +123,7 @@ importers:
         version: 7.2.0
       '@tanstack/react-query':
         specifier: ^5.59.15
-        version: 5.74.11(react@19.1.0)
+        version: 5.75.0(react@19.1.0)
       '@tanstack/react-table':
         specifier: ^8.20.5
         version: 8.21.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -153,7 +153,7 @@ importers:
         version: 11.1.2(@trpc/server@11.1.2(typescript@5.8.3))(typescript@5.8.3)
       '@trpc/react-query':
         specifier: ^11.0.0-rc.601
-        version: 11.1.2(@tanstack/react-query@5.74.11(react@19.1.0))(@trpc/client@11.1.2(@trpc/server@11.1.2(typescript@5.8.3))(typescript@5.8.3))(@trpc/server@11.1.2(typescript@5.8.3))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.8.3)
+        version: 11.1.2(@tanstack/react-query@5.75.0(react@19.1.0))(@trpc/client@11.1.2(@trpc/server@11.1.2(typescript@5.8.3))(typescript@5.8.3))(@trpc/server@11.1.2(typescript@5.8.3))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.8.3)
       '@trpc/server':
         specifier: ^11.0.0-rc.601
         version: 11.1.2(typescript@5.8.3)
@@ -168,7 +168,7 @@ importers:
         version: 2.0.0(@aws-sdk/credential-provider-web-identity@3.799.0)
       ai:
         specifier: ^4.1.60
-        version: 4.3.12(react@19.1.0)(zod@3.24.3)
+        version: 4.3.13(react@19.1.0)(zod@3.24.3)
       bcrypt:
         specifier: ^5.1.1
         version: 5.1.1
@@ -249,7 +249,7 @@ importers:
         version: 7.56.1(react@19.1.0)
       resend:
         specifier: ^4.0.1-alpha.0
-        version: 4.4.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 4.5.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       rsa-pem-from-mod-exp:
         specifier: ^0.8.6
         version: 0.8.6
@@ -286,7 +286,7 @@ importers:
         version: 1.30.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@eslint/compat':
         specifier: ^1.1.1
-        version: 1.2.8(eslint@9.25.1(jiti@2.4.2))
+        version: 1.2.9(eslint@9.25.1(jiti@2.4.2))
       '@eslint/js':
         specifier: ^9.0.0
         version: 9.25.1
@@ -310,7 +310,7 @@ importers:
         version: 0.5.16(tailwindcss@4.1.5)
       '@tanstack/react-query-devtools':
         specifier: ^5.66.7
-        version: 5.74.11(@tanstack/react-query@5.74.11(react@19.1.0))(react@19.1.0)
+        version: 5.75.0(@tanstack/react-query@5.75.0(react@19.1.0))(react@19.1.0)
       '@types/jsonwebtoken':
         specifier: ^9.0.7
         version: 9.0.9
@@ -393,8 +393,8 @@ packages:
     resolution: {integrity: sha512-qZMxYJ0qqX/RfnuIaab+zp8UAeJn/ygXXAffR5I4N0n1IrvA6qBsjc8hXLmBiMV2zoXlifkacF7sEFnYnjBcqg==}
     engines: {node: '>=18'}
 
-  '@ai-sdk/react@1.2.10':
-    resolution: {integrity: sha512-iUZfApc6aftVT7f41y9b1NPk0dZFt9vRR0/gkZsKdP56ShcKtuTu44BkjtWdrBs7fcTbN2BQZtDao1AY1GxzsQ==}
+  '@ai-sdk/react@1.2.11':
+    resolution: {integrity: sha512-+kPqLkJ3TWP6czaJPV+vzAKSUcKQ1598BUrcLHt56sH99+LhmIIW3ylZp0OfC3O6TR3eO1Lt0Yzw4R0mK6g9Gw==}
     engines: {node: '>=18'}
     peerDependencies:
       react: ^18 || ^19 || ^19.0.0-rc
@@ -403,8 +403,8 @@ packages:
       zod:
         optional: true
 
-  '@ai-sdk/ui-utils@1.2.9':
-    resolution: {integrity: sha512-cbiLzgXDv3+460f61UVSykn3XdKOS+SHs/EANw+pdOQKwn8JN7rZJL/ggPyMuZ7D9lO3oWOfOJ1QS+9uClfVug==}
+  '@ai-sdk/ui-utils@1.2.10':
+    resolution: {integrity: sha512-GUj+LBoAlRQF1dL/M49jtufGqtLOMApxTpCmVjoRpIPt/dFALVL9RfqfvxwztyIwbK+IxGzcYjSGRsrWrj+86g==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.23.8
@@ -960,8 +960,8 @@ packages:
     resolution: {integrity: sha512-CCZCDJuduB9OUkFkY2IgppNZMi2lBQgD2qzwXkEia16cge2pijY/aXi96CJMquDMn3nJdlPV1A5KrJEXwfLNzQ==}
     engines: {node: ^12.0.0 || ^14.0.0 || >=16.0.0}
 
-  '@eslint/compat@1.2.8':
-    resolution: {integrity: sha512-LqCYHdWL/QqKIJuZ/ucMAv8d4luKGs4oCPgpt8mWztQAtPrHfXKQ/XAUc8ljCHAfJCn6SvkpTcGt5Tsh8saowA==}
+  '@eslint/compat@1.2.9':
+    resolution: {integrity: sha512-gCdSY54n7k+driCadyMNv8JSPzYLeDVM/ikZRtvtROBpRdFSkS8W9A82MqsaY7lZuwL0wiapgD0NT1xT0hyJsA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: ^9.10.0
@@ -973,8 +973,8 @@ packages:
     resolution: {integrity: sha512-fxlS1kkIjx8+vy2SjuCB94q3htSNrufYTXubwiBFeaQHbH6Ipi43gFJq2zCMt6PHhImH3Xmr0NksKDvchWlpQQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@eslint/config-helpers@0.2.1':
-    resolution: {integrity: sha512-RI17tsD2frtDu/3dmI7QRrD4bedNKPM08ziRYaC5AhkGrzIAJelm9kJU1TznK+apx6V+cqRz8tfpEeG3oIyjxw==}
+  '@eslint/config-helpers@0.2.2':
+    resolution: {integrity: sha512-+GPzk8PlG0sPpzdU5ZvIRMPidzAnZDl/s9L+y13iodqvb8leL53bTannOrQ/Im7UkpsmFU5Ily5U60LWixnmLg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@eslint/core@0.13.0':
@@ -2903,20 +2903,20 @@ packages:
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders || >=4.0.0-alpha.20 || >=4.0.0-beta.1'
 
-  '@tanstack/query-core@5.74.9':
-    resolution: {integrity: sha512-qmjXpWyigDw4SfqdSBy24FzRvpBPXlaSbl92N77lcrL+yvVQLQkf0T6bQNbTxl9IEB/SvVFhhVZoIlQvFnNuuw==}
+  '@tanstack/query-core@5.75.0':
+    resolution: {integrity: sha512-rk8KQuCdhoRkzjRVF3QxLgAfFUyS0k7+GCQjlGEpEGco+qazJ0eMH6aO1DjDjibH7/ik383nnztua3BG+lOnwg==}
 
   '@tanstack/query-devtools@5.74.7':
     resolution: {integrity: sha512-nSNlfuGdnHf4yB0S+BoNYOE1o3oAH093weAYZolIHfS2stulyA/gWfSk/9H4ZFk5mAAHb5vNqAeJOmbdcGPEQw==}
 
-  '@tanstack/react-query-devtools@5.74.11':
-    resolution: {integrity: sha512-vx8MzH4WUUk4ZW8uHq7T45XNDgePF5ecRoa7haWJZxDMQyAHM80GGMhEW/yRz6TeyS9UlfTUz2OLPvgGRvvVOA==}
+  '@tanstack/react-query-devtools@5.75.0':
+    resolution: {integrity: sha512-ogTsCCONHPq8opyeU/NJZlus8+g36KnK+cybC1cs0Knr8iO/wAYgnciz+3DVNq38kRflBb0iJhHkUexp/7WfcQ==}
     peerDependencies:
-      '@tanstack/react-query': ^5.74.11
+      '@tanstack/react-query': ^5.75.0
       react: ^18 || ^19
 
-  '@tanstack/react-query@5.74.11':
-    resolution: {integrity: sha512-FFhn9ZiYRUOsxLAWZYxVfQTpVE7UWRaAeHJIWVDHKlmZZGc16rMHW9KrFZ8peC4hA71QUf/shJD8dPSMqDnRmA==}
+  '@tanstack/react-query@5.75.0':
+    resolution: {integrity: sha512-H+TNgxmTbzH8qQ5MT5xsZEhQ8BG1tUYduDSfeAOzroVZgd/AEjg1rRYSP/9Tl9/hPobZ7iZzV401n77kStrbKw==}
     peerDependencies:
       react: ^18 || ^19
 
@@ -3271,8 +3271,8 @@ packages:
     resolution: {integrity: sha512-kja8j7PjmncONqaTsB8fQ+wE2mSU2DJ9D4XKoJ5PFWIdRMa6SLSN1ff4mOr4jCbfRSsxR4keIiySJU0N9T5hIQ==}
     engines: {node: '>= 8.0.0'}
 
-  ai@4.3.12:
-    resolution: {integrity: sha512-DWjtPI8YJVyvcJx27KW1i6PrwkbjTewflfH+qPtIuoAP0YYs6bH17cAihTt4je+itgazLXK07ZCbV019YkdYjw==}
+  ai@4.3.13:
+    resolution: {integrity: sha512-cC5HXItuOwGykSMacCPzNp6+NMTxeuTjOenztVgSJhdC9Z4OrzBxwkyeDAf4h1QP938ZFi7IBdq3u4lxVoVmvw==}
     engines: {node: '>=18'}
     peerDependencies:
       react: ^18 || ^19 || ^19.0.0-rc
@@ -3382,8 +3382,8 @@ packages:
   bare-events@2.5.4:
     resolution: {integrity: sha512-+gFfDkR8pj4/TrWCGUGWmJIkBwuxPS5F+a5yWjOHQt2hHvNZd5YLzadjmDUtFmMM4y429bnKLa8bYBMHcYdnQA==}
 
-  bare-fs@4.1.3:
-    resolution: {integrity: sha512-OeEZYIg+2qepaWLyphaOXHAHKo3xkM8y3BeGAvHdMN8GNWvEAU1Yw6rYpGzu/wDDbKxgEjVeVDpgGhDzaeMpjg==}
+  bare-fs@4.1.4:
+    resolution: {integrity: sha512-r8+26Voz8dGX3AYpJdFb1ZPaUSM8XOLCZvy+YGpRTmwPHIxA7Z3Jov/oMPtV7hfRQbOnH8qGlLTzQAbgtdNN0Q==}
     engines: {bare: '>=1.16.0'}
     peerDependencies:
       bare-buffer: '*'
@@ -5474,8 +5474,8 @@ packages:
     resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}
     engines: {node: '>=0.10.0'}
 
-  resend@4.4.1:
-    resolution: {integrity: sha512-FR22bzMW3VfoyZSBc8ScGo8ShrMWHmWB0G3FrispzWCnYSEEK5M7pyRvZtInKmM/09lsJETKc2q66mX+dXPSmg==}
+  resend@4.5.0:
+    resolution: {integrity: sha512-gUmfRaYlqJUVO0W29yibZatAhqEUtpE7ZWa2AMRpbIZVOgK+ONFI1Qf8a4VB3ItAWJSyF90VVRu3p3Jc01x2Rg==}
     engines: {node: '>=18'}
 
   resolve-from@4.0.0:
@@ -6141,17 +6141,17 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@1.2.10(react@19.1.0)(zod@3.24.3)':
+  '@ai-sdk/react@1.2.11(react@19.1.0)(zod@3.24.3)':
     dependencies:
       '@ai-sdk/provider-utils': 2.2.7(zod@3.24.3)
-      '@ai-sdk/ui-utils': 1.2.9(zod@3.24.3)
+      '@ai-sdk/ui-utils': 1.2.10(zod@3.24.3)
       react: 19.1.0
       swr: 2.3.3(react@19.1.0)
       throttleit: 2.1.0
     optionalDependencies:
       zod: 3.24.3
 
-  '@ai-sdk/ui-utils@1.2.9(zod@3.24.3)':
+  '@ai-sdk/ui-utils@1.2.10(zod@3.24.3)':
     dependencies:
       '@ai-sdk/provider': 1.1.3
       '@ai-sdk/provider-utils': 2.2.7(zod@3.24.3)
@@ -6905,7 +6905,7 @@ snapshots:
 
   '@eslint-community/regexpp@4.12.1': {}
 
-  '@eslint/compat@1.2.8(eslint@9.25.1(jiti@2.4.2))':
+  '@eslint/compat@1.2.9(eslint@9.25.1(jiti@2.4.2))':
     optionalDependencies:
       eslint: 9.25.1(jiti@2.4.2)
 
@@ -6917,7 +6917,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@eslint/config-helpers@0.2.1': {}
+  '@eslint/config-helpers@0.2.2': {}
 
   '@eslint/core@0.13.0':
     dependencies:
@@ -9405,19 +9405,19 @@ snapshots:
       postcss-selector-parser: 6.0.10
       tailwindcss: 4.1.5
 
-  '@tanstack/query-core@5.74.9': {}
+  '@tanstack/query-core@5.75.0': {}
 
   '@tanstack/query-devtools@5.74.7': {}
 
-  '@tanstack/react-query-devtools@5.74.11(@tanstack/react-query@5.74.11(react@19.1.0))(react@19.1.0)':
+  '@tanstack/react-query-devtools@5.75.0(@tanstack/react-query@5.75.0(react@19.1.0))(react@19.1.0)':
     dependencies:
       '@tanstack/query-devtools': 5.74.7
-      '@tanstack/react-query': 5.74.11(react@19.1.0)
+      '@tanstack/react-query': 5.75.0(react@19.1.0)
       react: 19.1.0
 
-  '@tanstack/react-query@5.74.11(react@19.1.0)':
+  '@tanstack/react-query@5.75.0(react@19.1.0)':
     dependencies:
-      '@tanstack/query-core': 5.74.9
+      '@tanstack/query-core': 5.75.0
       react: 19.1.0
 
   '@tanstack/react-table@8.21.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
@@ -9605,9 +9605,9 @@ snapshots:
       '@trpc/server': 11.1.2(typescript@5.8.3)
       typescript: 5.8.3
 
-  '@trpc/react-query@11.1.2(@tanstack/react-query@5.74.11(react@19.1.0))(@trpc/client@11.1.2(@trpc/server@11.1.2(typescript@5.8.3))(typescript@5.8.3))(@trpc/server@11.1.2(typescript@5.8.3))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.8.3)':
+  '@trpc/react-query@11.1.2(@tanstack/react-query@5.75.0(react@19.1.0))(@trpc/client@11.1.2(@trpc/server@11.1.2(typescript@5.8.3))(typescript@5.8.3))(@trpc/server@11.1.2(typescript@5.8.3))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.8.3)':
     dependencies:
-      '@tanstack/react-query': 5.74.11(react@19.1.0)
+      '@tanstack/react-query': 5.75.0(react@19.1.0)
       '@trpc/client': 11.1.2(@trpc/server@11.1.2(typescript@5.8.3))(typescript@5.8.3)
       '@trpc/server': 11.1.2(typescript@5.8.3)
       react: 19.1.0
@@ -9807,12 +9807,12 @@ snapshots:
     dependencies:
       humanize-ms: 1.2.1
 
-  ai@4.3.12(react@19.1.0)(zod@3.24.3):
+  ai@4.3.13(react@19.1.0)(zod@3.24.3):
     dependencies:
       '@ai-sdk/provider': 1.1.3
       '@ai-sdk/provider-utils': 2.2.7(zod@3.24.3)
-      '@ai-sdk/react': 1.2.10(react@19.1.0)(zod@3.24.3)
-      '@ai-sdk/ui-utils': 1.2.9(zod@3.24.3)
+      '@ai-sdk/react': 1.2.11(react@19.1.0)(zod@3.24.3)
+      '@ai-sdk/ui-utils': 1.2.10(zod@3.24.3)
       '@opentelemetry/api': 1.9.0
       jsondiffpatch: 0.6.0
       zod: 3.24.3
@@ -9947,7 +9947,7 @@ snapshots:
   bare-events@2.5.4:
     optional: true
 
-  bare-fs@4.1.3:
+  bare-fs@4.1.4:
     dependencies:
       bare-events: 2.5.4
       bare-path: 3.0.0
@@ -10612,7 +10612,7 @@ snapshots:
       '@eslint-community/eslint-utils': 4.6.1(eslint@9.25.1(jiti@2.4.2))
       '@eslint-community/regexpp': 4.12.1
       '@eslint/config-array': 0.20.0
-      '@eslint/config-helpers': 0.2.1
+      '@eslint/config-helpers': 0.2.2
       '@eslint/core': 0.13.0
       '@eslint/eslintrc': 3.3.1
       '@eslint/js': 9.25.1
@@ -12211,7 +12211,7 @@ snapshots:
 
   require-directory@2.1.1: {}
 
-  resend@4.4.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  resend@4.5.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       '@react-email/render': 1.0.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
     transitivePeerDependencies:
@@ -12604,7 +12604,7 @@ snapshots:
       pump: 3.0.2
       tar-stream: 3.1.7
     optionalDependencies:
-      bare-fs: 4.1.3
+      bare-fs: 4.1.4
       bare-path: 3.0.0
     transitivePeerDependencies:
       - bare-buffer
