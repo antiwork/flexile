@@ -12,13 +12,13 @@ import ComboBox from "@/components/ComboBox";
 import OnboardingLayout from "@/components/layouts/Onboarding";
 import { linkClasses } from "@/components/Link";
 import { MutationStatusButton } from "@/components/MutationButton";
-import RadioButtons from "@/components/RadioButtons";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { getTinName } from "@/utils/legal";
 import { request } from "@/utils/request";
 import { legal_onboarding_path, save_legal_onboarding_path } from "@/utils/routes";
 import LegalCertificationModal from "./LegalCertificationModal";
+import { RadioGroup } from "@/components/ui/radio-group";
 
 const formSchema = z
   .object({
@@ -136,7 +136,7 @@ const LegalDetails = <T extends string>({
     <OnboardingLayout stepIndex={steps.indexOf("Billing info")} steps={steps} title={header} subtitle={subheading}>
       <Form {...form}>
         <form className="grid gap-4" onSubmit={(e) => void submit(e)}>
-          <RadioButtons
+          <RadioGroup
             value={isBusinessEntity.toString()}
             onChange={(value) => form.setValue("business_entity", value === "true")}
             label="Legal entity"
