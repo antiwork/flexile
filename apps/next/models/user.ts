@@ -22,6 +22,7 @@ const companySchema = z.object({
   selected_access_role: companyAccessRoleSchema.nullable(),
   other_access_roles: z.array(companyAccessRoleSchema),
   requiredInvoiceApprovals: z.number(),
+  equityCompensationEnabled: z.boolean(),
   completedPaymentMethodSetup: z.boolean(),
   paymentProcessingDays: z.number(),
   createdAt: z.string(),

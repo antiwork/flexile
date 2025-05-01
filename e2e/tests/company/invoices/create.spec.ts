@@ -11,14 +11,14 @@ import { expect, test } from "@test/index";
 import { subDays } from "date-fns";
 import { desc, eq } from "drizzle-orm";
 import { PayRateType } from "@/db/enums";
-import { companies, companyContractors, companyInvestors, invoices, users } from "@/db/schema";
+import { companies, companyContractors, equityAllocations, invoices, users } from "@/db/schema";
 
 test.describe("invoice creation", () => {
   let company: typeof companies.$inferSelect;
   let contractorUser: typeof users.$inferSelect;
-  let companyInvestor: typeof companyInvestors.$inferSelect;
   let companyContractor: typeof companyContractors.$inferSelect;
   let projectBasedUser: typeof users.$inferSelect;
+  let projectBasedContractor: typeof companyContractors.$inferSelect;
 
   test.beforeEach(async () => {
     // Create company with equity compensation enabled
@@ -35,18 +35,6 @@ test.describe("invoice creation", () => {
         streetAddress: "1st St.",
       })
     ).user;
-
-    // Set up equity investment
-    companyInvestor = (
-      await companyInvestorsFactory.create({
-        companyId: company.id,
-        userId: contractorUser.id,
-      })
-    ).companyInvestor;
-    await equityGrantsFactory.createActive(
-      { companyInvestorId: companyInvestor.id, sharePriceUsd: "1" },
-      { year: 2023 },
-    );
 
     // Create contractor with hourly rate and equity allocation
     companyContractor = (
@@ -71,26 +59,14 @@ test.describe("invoice creation", () => {
       })
     ).user;
 
-    const { companyInvestor: projectBasedInvestor } = await companyInvestorsFactory.create({
-      companyId: company.id,
-      userId: projectBasedUser.id,
-    });
-    await equityGrantsFactory.createActive(
-      { companyInvestorId: projectBasedInvestor.id, sharePriceUsd: "1.5" },
-      { year: 2023 },
-    );
-
-    const { companyContractor: projectBasedContractor } = await companyContractorsFactory.createProjectBased({
-      companyId: company.id,
-      userId: projectBasedUser.id,
-      companyRoleId: projectBasedRole.id,
-      payRateInSubunits: 1_000_00, // $1,000/project
-    });
-    await equityAllocationsFactory.create({
-      companyContractorId: projectBasedContractor.id,
-      equityPercentage: 50,
-      year: 2023,
-    });
+    projectBasedContractor = (
+      await companyContractorsFactory.createProjectBased({
+        companyId: company.id,
+        userId: projectBasedUser.id,
+        companyRoleId: projectBasedRole.id,
+        payRateInSubunits: 1_000_00, // $1,000/project
+      })
+    ).companyContractor;
   });
 
   test("creates an invoice with an equity component", async ({ page }) => {
@@ -100,6 +76,11 @@ test.describe("invoice creation", () => {
     await page.getByLabel("Hours").fill("3:25");
     await page.getByPlaceholder("Description").fill("I worked on invoices");
     await page.getByLabel("Date").fill("2023-08-08");
+
+    await expect(page.getByRole("textbox", { name: "Cash vs equity split" })).toHaveValue("20");
+    await expect(
+      page.getByText("By submitting this invoice, your current equity selection will be locked for all 2023."),
+    ).toBeVisible();
 
     const totalsLocator = page.locator("footer > div:last-child");
     await expect(totalsLocator).toMatchAriaSnapshot(`
@@ -115,18 +96,22 @@ test.describe("invoice creation", () => {
       - text: $164
     `);
 
+    await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("50");
+    await expect(totalsLocator).toMatchAriaSnapshot(`
+      - strong: Total services
+      - text: $205
+    `);
+    await expect(totalsLocator).toMatchAriaSnapshot(`
+      - strong: Swapped for equity (not paid in cash)
+      - text: $102.50
+    `);
+    await expect(totalsLocator).toMatchAriaSnapshot(`
+      - strong: Net amount in cash
+      - text: $102.50
+    `);
+
     await page.getByRole("button", { name: "Send invoice" }).click();
 
-    await expect(page.getByText("Lock 20% in equity for all 2023?")).toBeVisible();
-    await expect(
-      page.getByText("By submitting this invoice, your current equity selection of 20% will be locked for all 2023."),
-    ).toBeVisible();
-    await expect(
-      page.getByText("You won't be able to choose a different allocation until the next options grant for 2024"),
-    ).toBeVisible();
-    await expect(page.getByRole("link", { name: "Change selection" })).toHaveAttribute("href", `/settings/equity`);
-
-    await page.getByRole("button", { name: "Confirm 20% equity selection" }).click();
     await expect(page.locator("tbody")).toContainText(
       [
         "Invoice ID",
@@ -148,9 +133,19 @@ test.describe("invoice creation", () => {
     expect(invoice).toBeDefined();
     expect(invoice.totalMinutes).toBe(205);
     expect(invoice.totalAmountInUsdCents).toBe(20500n);
-    expect(invoice.cashAmountInCents).toBe(16400n);
-    expect(invoice.equityAmountInCents).toBe(4100n);
-    expect(invoice.equityPercentage).toBe(20);
+    expect(invoice.cashAmountInCents).toBe(10250n);
+    expect(invoice.equityAmountInCents).toBe(10250n);
+    expect(invoice.equityPercentage).toBe(50);
+
+    const equityAllocation = await db.query.equityAllocations
+      .findFirst({
+        where: eq(equityAllocations.companyContractorId, companyContractor.id),
+        orderBy: desc(equityAllocations.year),
+      })
+      .then(takeOrThrow);
+    expect(equityAllocation.equityPercentage).toBe(50);
+    expect(equityAllocation.locked).toBe(true);
+    expect(equityAllocation.status).toBe("pending_grant_creation");
   });
 
   test("creates an invoice with an equity component for a project-based contractor", async ({ page }) => {
@@ -161,7 +156,17 @@ test.describe("invoice creation", () => {
     await page.getByLabel("Amount").fill("1000");
     await page.getByLabel("Date").fill("2023-08-08");
 
+    await expect(page.getByRole("textbox", { name: "Cash vs equity split" })).toHaveValue("0");
+    await expect(
+      page.getByText("By submitting this invoice, your current equity selection will be locked for all 2023."),
+    ).toBeVisible();
+
     const projectTotalsLocator = page.locator("footer > div:last-child");
+    await expect(projectTotalsLocator).toMatchAriaSnapshot(`
+      - text: Total $1,000
+    `);
+
+    await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("50");
     await expect(projectTotalsLocator).toMatchAriaSnapshot(`
       - strong: Total services
       - text: $1,000
@@ -177,9 +182,6 @@ test.describe("invoice creation", () => {
 
     await page.getByRole("button", { name: "Send invoice" }).click();
 
-    await expect(page.getByText("Lock 50% in equity for all 2023?")).toBeVisible();
-    await page.getByRole("button", { name: "Confirm 50% equity selection" }).click();
-
     await expect(page.locator("tbody")).toContainText(
       ["Invoice ID", "1", "Sent on", "Aug 8, 2023", "Amount", "$1,000", "Status", "Awaiting approval (0/2)"].join(""),
     );
@@ -192,9 +194,21 @@ test.describe("invoice creation", () => {
     expect(invoice.cashAmountInCents).toBe(50000n);
     expect(invoice.equityAmountInCents).toBe(50000n);
     expect(invoice.equityPercentage).toBe(50);
+
+    const equityAllocation = await db.query.equityAllocations
+      .findFirst({
+        where: eq(equityAllocations.companyContractorId, projectBasedContractor.id),
+        orderBy: desc(equityAllocations.year),
+      })
+      .then(takeOrThrow);
+    expect(equityAllocation.equityPercentage).toBe(50);
+    expect(equityAllocation.locked).toBe(true);
+    expect(equityAllocation.status).toBe("pending_grant_creation");
   });
 
   test("considers the invoice year when calculating equity", async ({ page }) => {
+    const companyInvestor = (await companyInvestorsFactory.create({ userId: contractorUser.id, companyId: company.id }))
+      .companyInvestor;
     await equityGrantsFactory.createActive(
       {
         companyInvestorId: companyInvestor.id,
@@ -216,6 +230,10 @@ test.describe("invoice creation", () => {
     await page.getByLabel("Hours").fill("03:25");
     await page.getByPlaceholder("Description").fill("I worked on invoices");
     await page.getByLabel("Date").fill("2021-08-08");
+
+    await expect(
+      page.getByText("By submitting this invoice, your current equity selection will be locked for all 2021."),
+    ).not.toBeVisible();
 
     const yearTotalsLocator = page.locator("footer > div:last-child");
     await expect(yearTotalsLocator).toMatchAriaSnapshot(`

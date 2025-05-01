@@ -207,7 +207,7 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
           id: data.documentId,
         });
       }
-      await trpcUtils.documents.list.refetch();
+      await trpcUtils.documents.list.invalidate();
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- not ideal, but there's no good way to assert this right now
       if (redirectUrl) router.push(redirectUrl as Route);
       else onClose();

@@ -142,7 +142,7 @@ class CompanyInvestorMailer < ApplicationMailer
     company_investor = CompanyInvestor.find(company_investor_id)
     user = company_investor.user
     @tender_offer = TenderOffer.find(tender_offer_id)
-    mail(to: user.email, subject: "New tender offer available")
+    mail(to: user.email, subject: "New stock buyback available")
   end
 
   def tender_offer_closed(company_investor_id, tender_offer_id:)
@@ -155,14 +155,14 @@ class CompanyInvestorMailer < ApplicationMailer
     @accepted_price_cents = @tender_offer.accepted_price_cents
     @total_amount_received = @total_number_of_shares * @accepted_price_cents if @total_number_of_shares > 0
 
-    mail(to: user.email, subject: "Tender offer results")
+    mail(to: user.email, subject: "Stock buyback results")
   end
 
   def tender_offer_reminder(company_investor_id, tender_offer_id:)
     company_investor = CompanyInvestor.find(company_investor_id)
     user = company_investor.user
     @tender_offer = TenderOffer.find(tender_offer_id)
-    mail(to: user.email, subject: "Reminder: tender offer available")
+    mail(to: user.email, subject: "Reminder: stock buyback available")
   end
 
   def dividend_payment_failed_reenter_bank_details(dividend_payment_id:, amount:, currency:, net_amount_in_usd_cents:)

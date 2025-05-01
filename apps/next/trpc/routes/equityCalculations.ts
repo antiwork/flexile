@@ -37,6 +37,7 @@ export const calculateInvoiceEquity = async ({
   let isEquityAllocationLocked = null;
   let selectedPercentage = null;
   let equityPercentage = 0;
+  let equityAllocation = null;
 
   const serviceAmountCentsNumber =
     typeof serviceAmountCents === "bigint" ? Number(serviceAmountCents) : serviceAmountCents;
@@ -48,7 +49,7 @@ export const calculateInvoiceEquity = async ({
   }
   // Otherwise, get equity percentage from database
   else if (equityCompensationEnabled) {
-    const equityAllocation = await db.query.equityAllocations.findFirst({
+    equityAllocation = await db.query.equityAllocations.findFirst({
       where: and(
         eq(equityAllocations.companyContractorId, companyContractor.id),
         eq(equityAllocations.year, invoiceYear),
@@ -59,7 +60,15 @@ export const calculateInvoiceEquity = async ({
       selectedPercentage = equityAllocation.equityPercentage;
       equityPercentage = equityAllocation.equityPercentage;
     } else {
-      equityPercentage = 0;
+      const lastYearEquityAllocation = await db.query.equityAllocations.findFirst({
+        where: and(
+          eq(equityAllocations.companyContractorId, companyContractor.id),
+          eq(equityAllocations.year, invoiceYear - 1),
+        ),
+      });
+      isEquityAllocationLocked = lastYearEquityAllocation?.locked ?? null;
+      selectedPercentage = lastYearEquityAllocation?.equityPercentage ?? null;
+      equityPercentage = selectedPercentage ?? 0;
     }
   }
 
@@ -83,7 +92,7 @@ export const calculateInvoiceEquity = async ({
   let equityAmountInCents = Decimal.mul(serviceAmountCentsNumber, equityPercentage).div(100).round().toNumber();
   let equityAmountInOptions = 0;
 
-  if (equityPercentage !== 0 && unvestedGrant) {
+  if (equityPercentage !== 0 && sharePriceUsd !== 0) {
     equityAmountInOptions = Decimal.div(equityAmountInCents, Decimal.mul(sharePriceUsd, 100)).round().toNumber();
   }
 
@@ -111,6 +120,7 @@ export const equityCalculationsRouter = createRouter({
           .number()
           .optional()
           .default(() => new Date().getFullYear()),
+        selectedPercentage: z.number().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -123,6 +133,7 @@ export const equityCalculationsRouter = createRouter({
         serviceAmountCents: input.servicesInCents,
         invoiceYear: input.invoiceYear,
         equityCompensationEnabled: ctx.company.equityCompensationEnabled,
+        ...(input.selectedPercentage ? { providedEquityPercentage: input.selectedPercentage } : {}),
       });
 
       if (!result) {
