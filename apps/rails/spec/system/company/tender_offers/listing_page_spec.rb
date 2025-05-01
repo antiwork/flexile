@@ -7,10 +7,10 @@ RSpec.describe "Tender offer listing page" do
   let(:starts_at_2) { 1.year.ago.beginning_of_day }
   let(:ends_at_2) { starts_at_1 + 3.weeks }
   let!(:tender_offer_1) do
-    create(:tender_offer, starts_at: starts_at_1, ends_at: ends_at_1, company:, starting_valuation: 100_000_000)
+    create(:tender_offer, starts_at: starts_at_1, ends_at: ends_at_1, company:, minimum_valuation: 100_000_000)
   end
   let!(:tender_offer_2) do
-    create(:tender_offer, starts_at: starts_at_2, ends_at: ends_at_2, company:, starting_valuation: 200_000_000)
+    create(:tender_offer, starts_at: starts_at_2, ends_at: ends_at_2, company:, minimum_valuation: 200_000_000)
   end
 
   def common_assertions
@@ -18,12 +18,12 @@ RSpec.describe "Tender offer listing page" do
                                  {
                                    "Start date" => starts_at_1.strftime("%b %-d, %Y"),
                                    "End date" => ends_at_1.strftime("%b %-d, %Y"),
-                                   "Starting valuation" => "$100,000,000",
+                                   "Minimum valuation" => "$100,000,000",
                                  },
                                  {
                                    "Start date" => starts_at_2.strftime("%b %-d, %Y"),
                                    "End date" => ends_at_2.strftime("%b %-d, %Y"),
-                                   "Starting valuation" => "$200,000,000",
+                                   "Minimum valuation" => "$200,000,000",
                                  },
                                ])
 

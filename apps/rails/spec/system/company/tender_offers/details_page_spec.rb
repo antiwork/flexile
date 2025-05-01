@@ -7,7 +7,7 @@ RSpec.describe "Tender offer details page" do
   let(:company_investor_2) { create(:company_investor, company:) }
   let(:starts_at) { Time.current.beginning_of_day }
   let(:ends_at) { starts_at + 3.weeks }
-  let(:tender_offer) { create(:tender_offer, starts_at:, ends_at:, company:, starting_valuation: 100_000_000) }
+  let(:tender_offer) { create(:tender_offer, starts_at:, ends_at:, company:, minimum_valuation: 100_000_000) }
   let(:share_class) { create(:share_class, company:) }
 
   before do

@@ -77,26 +77,11 @@
       "equity_exercise_bank_account": {
         "model_attributes": {
           "details": [
-            [
-              "Beneficiary name",
-              "Gumroad"
-            ],
-            [
-              "Beneficiary address",
-              "548 Market Street, San Francisco, CA 94104"
-            ],
-            [
-              "Bank name",
-              "Wise Business"
-            ],
-            [
-              "Routing number",
-              "987654321"
-            ],
-            [
-              "SWIFT/BIC",
-              "WZYOPW1L"
-            ]
+            ["Beneficiary name", "Gumroad"],
+            ["Beneficiary address", "548 Market Street, San Francisco, CA 94104"],
+            ["Bank name", "Wise Business"],
+            ["Routing number", "987654321"],
+            ["SWIFT/BIC", "WZYOPW1L"]
           ],
           "account_number": "123456789"
         }
@@ -119,7 +104,7 @@
         }
       },
       "tender_offer": {
-        "starting_valuation": 99000000
+        "minimum_valuation": 99000000
       },
       "company_monthly_financial_reports": {
         "random_records_metadata": {

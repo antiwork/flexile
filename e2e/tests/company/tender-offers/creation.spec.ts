@@ -4,8 +4,8 @@ import { companyAdministratorsFactory } from "@test/factories/companyAdministrat
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { addDays, format, getDate, getMonth } from "date-fns";
-import { eq } from "drizzle-orm";
-import { users } from "@/db/schema";
+import { desc, eq } from "drizzle-orm";
+import { tenderOffers, users } from "@/db/schema";
 
 test.describe("Buyback creation", () => {
   test("allows creating a new buyback", async ({ page }) => {
@@ -59,6 +59,14 @@ test.describe("Buyback creation", () => {
 
     await page.getByRole("button", { name: "Create buyback" }).click();
     await expect(page).toHaveURL(/.*\/equity\/tender_offers$/u);
+
+    const tenderOffer = await db.query.tenderOffers
+      .findFirst({ where: eq(tenderOffers.companyId, company.id), orderBy: desc(tenderOffers.id) })
+      .then(takeOrThrow);
+    expect(tenderOffer).toBeDefined();
+    expect(tenderOffer.minimumValuation).toBe(100000000n);
+    expect(tenderOffer.startsAt).toEqual(new Date(`${format(today, "yyyy-MM-dd")}T00:00:00.000Z`));
+    expect(tenderOffer.endsAt).toEqual(new Date(`${format(endDate, "yyyy-MM-dd")}T00:00:00.000Z`));
 
     const row = page.locator("tr").filter({ hasText: "$100,000,000" });
 

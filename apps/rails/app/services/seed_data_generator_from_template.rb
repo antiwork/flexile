@@ -321,7 +321,7 @@ class SeedDataGeneratorFromTemplate
           attributes: tender_offer_data.reverse_merge(
             starts_at:,
             ends_at: 3.months.from_now,
-            document_package: create_temporary_zip_file
+            attachment: create_temporary_zip_file
           )
         ).perform
         if !result[:success]

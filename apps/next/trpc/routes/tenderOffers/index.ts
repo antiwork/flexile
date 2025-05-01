@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
+import { pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
 import { activeStorageAttachments, activeStorageBlobs, companies, tenderOffers } from "@/db/schema";
@@ -11,9 +12,9 @@ const dataSchema = createInsertSchema(tenderOffers)
   .pick({
     startsAt: true,
     endsAt: true,
-    startingValuation: true,
+    minimumValuation: true,
   })
-  .extend({ documentPackageKey: z.string() });
+  .extend({ attachmentKey: z.string() });
 
 export const tenderOffersRouter = createRouter({
   create: companyProcedure.input(dataSchema.required()).mutation(async ({ ctx, input }) => {
@@ -23,7 +24,7 @@ export const tenderOffersRouter = createRouter({
 
     await db.transaction(async (tx) => {
       const blob = await tx.query.activeStorageBlobs.findFirst({
-        where: eq(activeStorageBlobs.key, input.documentPackageKey),
+        where: eq(activeStorageBlobs.key, input.attachmentKey),
       });
       if (!blob) throw new TRPCError({ code: "NOT_FOUND", message: "Attachment not found" });
       const [tenderOffer] = await tx
@@ -32,12 +33,12 @@ export const tenderOffersRouter = createRouter({
           companyId: ctx.company.id,
           startsAt: input.startsAt,
           endsAt: input.endsAt,
-          startingValuation: input.startingValuation,
+          minimumValuation: input.minimumValuation,
         })
         .returning();
       if (!tenderOffer) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       await tx.insert(activeStorageAttachments).values({
-        name: "document_package",
+        name: "attachment",
         blobId: blob.id,
         recordType: "TenderOffer",
         recordId: tenderOffer.id,
@@ -49,18 +50,15 @@ export const tenderOffersRouter = createRouter({
     if (!ctx.company.tenderOffersEnabled || (!ctx.companyAdministrator && !ctx.companyInvestor))
       throw new TRPCError({ code: "FORBIDDEN" });
 
-    const results = await db
+    return await db
       .select({
-        startsAt: tenderOffers.startsAt,
-        endsAt: tenderOffers.endsAt,
-        startingValuation: tenderOffers.startingValuation,
+        ...pick(tenderOffers, "startsAt", "endsAt", "minimumValuation"),
         id: tenderOffers.externalId,
       })
       .from(tenderOffers)
       .innerJoin(companies, eq(tenderOffers.companyId, companies.id))
       .where(eq(companies.id, ctx.company.id))
       .orderBy(desc(tenderOffers.createdAt));
-    return results;
   }),
 
   get: companyProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
@@ -68,12 +66,7 @@ export const tenderOffersRouter = createRouter({
       throw new TRPCError({ code: "FORBIDDEN" });
 
     const tenderOffer = await db.query.tenderOffers.findFirst({
-      columns: {
-        id: true,
-        startsAt: true,
-        endsAt: true,
-        startingValuation: true,
-      },
+      columns: { id: true, startsAt: true, endsAt: true, minimumValuation: true },
       where: and(eq(tenderOffers.externalId, input.id), eq(tenderOffers.companyId, ctx.company.id)),
     });
 
@@ -85,10 +78,8 @@ export const tenderOffersRouter = createRouter({
     });
 
     return {
-      startsAt: tenderOffer.startsAt,
-      endsAt: tenderOffer.endsAt,
-      startingValuation: tenderOffer.startingValuation,
-      documentPackage: attachment ? await getS3Url(attachment.blob.key, attachment.blob.filename) : null,
+      ...pick(tenderOffer, ["startsAt", "endsAt", "minimumValuation"]),
+      attachment: attachment ? await getS3Url(attachment.blob.key, attachment.blob.filename) : null,
     };
   }),
   bids: tenderOffersBidsRouter,

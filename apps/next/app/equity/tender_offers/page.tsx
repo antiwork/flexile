@@ -27,7 +27,7 @@ export default function Buybacks() {
       cell: (info) => <Link href={`/equity/tender_offers/${info.row.original.id}`}>{formatDate(info.getValue())}</Link>,
     }),
     columnHelper.simple("endsAt", "End date", formatDate),
-    columnHelper.simple("startingValuation", "Starting valuation", formatMoney),
+    columnHelper.simple("minimumValuation", "Minimum valuation", formatMoney),
   ];
 
   const table = useTable({ columns, data });

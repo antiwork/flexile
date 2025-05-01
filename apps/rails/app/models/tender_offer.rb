@@ -8,18 +8,18 @@ class TenderOffer < ApplicationRecord
   belongs_to :company
   has_many :bids, class_name: "TenderOfferBid"
   has_many :equity_buyback_rounds
-  has_one_attached :document_package
+  has_one_attached :attachment
 
-  validates :document_package, presence: true
+  validates :attachment, presence: true
   validates :starts_at, presence: true
   validates :ends_at, presence: true
-  validates :starting_valuation, presence: true, numericality: { only_integer: true, greater_than: 0 }
+  validates :minimum_valuation, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :number_of_shares, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validates :number_of_shareholders, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :total_amount_in_cents, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :accepted_price_cents, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validate :ends_at_must_be_after_starts_at
-  validate :correct_document_package_mime_type
+  validate :correct_attachment_mime_type
 
   def open?
     Time.current.between?(starts_at, ends_at)
@@ -48,9 +48,9 @@ class TenderOffer < ApplicationRecord
       end
     end
 
-    def correct_document_package_mime_type
-      if document_package.attached? && !document_package.content_type.in?(%w(application/zip))
-        errors.add(:document_package, "must be a ZIP file")
+    def correct_attachment_mime_type
+      if attachment.attached? && !attachment.content_type.in?(%w(application/zip))
+        errors.add(:attachment, "must be a ZIP file")
       end
     end
 end

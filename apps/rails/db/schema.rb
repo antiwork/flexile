@@ -1060,7 +1060,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_27_193714) do
     t.string "external_id", null: false
     t.datetime "starts_at", null: false
     t.datetime "ends_at", null: false
-    t.bigint "starting_valuation", null: false
+    t.bigint "minimum_valuation", null: false
     t.bigint "number_of_shares"
     t.integer "number_of_shareholders"
     t.bigint "total_amount_in_cents"
