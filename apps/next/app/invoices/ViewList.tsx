@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { MAX_EQUITY_PERCENTAGE } from "@/models";
-import { trpc } from "@/trpc/client";
+import { EquityAllocationStatus, trpc } from "@/trpc/client";
 import { assert } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
@@ -92,12 +92,6 @@ export default function ViewList() {
   }, [isProjectBased, equityValueCents, duration, hourlyRate, invoiceEquityPercent]);
 
   const invoiceYear = useMemo(() => new Date(date).getFullYear() || new Date().getFullYear(), [date]);
-
-  const [equityCalculation] = trpc.equityCalculations.calculate.useSuspenseQuery({
-    companyId: company.id,
-    servicesInCents: totalAmountInCents,
-    invoiceYear,
-  });
 
   const displayEquityAmountCents = invoiceEquityAmountCents;
   const displayCashAmountCents = totalAmountInCents - displayEquityAmountCents;
