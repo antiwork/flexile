@@ -13,7 +13,7 @@ const dataSchema = createInsertSchema(tenderOffers)
     endsAt: true,
     minimumValuation: true,
   })
-  .extend({ 
+  .extend({
     documentPackageKey: z.string(),
     startingValuation: z.undefined().optional(),
   });
