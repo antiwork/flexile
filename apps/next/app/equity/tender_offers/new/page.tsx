@@ -58,7 +58,7 @@ export default function NewBuyback() {
         companyId: company.id,
         startsAt: new Date(`${startDateString}T00:00:00Z`),
         endsAt: new Date(`${endDateString}T00:00:00Z`),
-        startingValuation: BigInt(startingValuation),
+        minimumValuation: BigInt(startingValuation), // Use minimumValuation field for API but keep UI label as "Starting valuation"
         documentPackageKey: key,
       });
       router.push(`/equity/tender_offers`);

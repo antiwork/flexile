@@ -1,7 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
-import { pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
 import { activeStorageAttachments, activeStorageBlobs, companies, tenderOffers } from "@/db/schema";
@@ -12,9 +11,12 @@ const dataSchema = createInsertSchema(tenderOffers)
   .pick({
     startsAt: true,
     endsAt: true,
-    startingValuation: true,
+    minimumValuation: true,
   })
-  .extend({ documentPackageKey: z.string() });
+  .extend({ 
+    documentPackageKey: z.string(),
+    startingValuation: z.undefined().optional(),
+  });
 
 export const tenderOffersRouter = createRouter({
   create: companyProcedure.input(dataSchema.required()).mutation(async ({ ctx, input }) => {
@@ -33,7 +35,7 @@ export const tenderOffersRouter = createRouter({
           companyId: ctx.company.id,
           startsAt: input.startsAt,
           endsAt: input.endsAt,
-          startingValuation: input.startingValuation,
+          minimumValuation: input.minimumValuation,
         })
         .returning();
       if (!tenderOffer) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -52,7 +54,9 @@ export const tenderOffersRouter = createRouter({
 
     return await db
       .select({
-        ...pick(tenderOffers, "startsAt", "endsAt", "startingValuation"),
+        startsAt: tenderOffers.startsAt,
+        endsAt: tenderOffers.endsAt,
+        startingValuation: tenderOffers.minimumValuation, // Map minimumValuation to startingValuation
         id: tenderOffers.externalId,
       })
       .from(tenderOffers)
@@ -66,7 +70,7 @@ export const tenderOffersRouter = createRouter({
       throw new TRPCError({ code: "FORBIDDEN" });
 
     const tenderOffer = await db.query.tenderOffers.findFirst({
-      columns: { id: true, startsAt: true, endsAt: true, startingValuation: true },
+      columns: { id: true, startsAt: true, endsAt: true, minimumValuation: true },
       where: and(eq(tenderOffers.externalId, input.id), eq(tenderOffers.companyId, ctx.company.id)),
     });
 
@@ -78,7 +82,9 @@ export const tenderOffersRouter = createRouter({
     });
 
     return {
-      ...pick(tenderOffer, ["startsAt", "endsAt", "startingValuation"]),
+      startsAt: tenderOffer.startsAt,
+      endsAt: tenderOffer.endsAt,
+      startingValuation: tenderOffer.minimumValuation, // Map minimumValuation to startingValuation
       documentPackage: attachment ? await getS3Url(attachment.blob.key, attachment.blob.filename) : null,
     };
   }),
