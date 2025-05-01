@@ -28,12 +28,8 @@ test.describe("Buyback creation", () => {
     await page.getByRole("tab", { name: "Buybacks" }).click();
     await page.getByRole("link", { name: "New buyback" }).click();
 
-    await page.getByLabel("Start date").locator("..").getByRole("button").click();
-    await page.getByRole("gridcell", { name: "10" }).first().click();
-
-    await page.getByLabel("End date").locator("..").getByRole("button").click();
-    await page.getByRole("gridcell", { name: "20" }).first().click();
-
+    await page.getByLabel("Start date").fill("2022-08-08");
+    await page.getByLabel("End date").fill("2022-09-09");
     await page.getByLabel("Starting valuation").fill("100000000");
     await page.getByLabel("Document package").setInputFiles("e2e/samples/sample.zip");
 

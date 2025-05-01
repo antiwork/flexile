@@ -55,10 +55,6 @@ class CompanyWorkerMailerPreview < ActionMailer::Preview
     )
   end
 
-  def expense_card_grant
-    CompanyWorkerMailer.expense_card_grant(company_worker_id: CompanyWorker.last.id)
-  end
-
   def invite_company
     company_worker = CompanyWorker.last
     token = SecureRandom.hex(20)

@@ -14,9 +14,6 @@ class CompanyWorker < ApplicationRecord
   has_many :invoices, foreign_key: :company_contractor_id
   has_many :company_worker_updates, foreign_key: :company_contractor_id
   has_many :integration_records, as: :integratable
-  has_many :expense_cards, foreign_key: :company_contractor_id
-  has_many :expense_card_charges, through: :expense_cards
-  has_one :active_expense_card, -> { where(active: true) }, class_name: "ExpenseCard", foreign_key: :company_contractor_id
   has_many :company_worker_absences, foreign_key: :company_contractor_id
 
   DEFAULT_HOURS_PER_WEEK = 20
@@ -111,10 +108,6 @@ class CompanyWorker < ApplicationRecord
 
   def equity_percentage(year)
     equity_allocations.find_by(year:)&.equity_percentage
-  end
-
-  def can_create_expense_card?
-    active? && company_role&.expense_card_enabled?
   end
 
   def active? = ended_at.nil?

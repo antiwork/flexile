@@ -1,4 +1,3 @@
-import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { InformationCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { pick } from "lodash-es";
@@ -16,7 +15,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import { PayRateType } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -52,9 +50,6 @@ const ManageModal = ({
       payRateType: PayRateType.Hourly,
       capitalizedExpense: 50,
       expenseAccountId: null,
-      expenseCardEnabled: false,
-      expenseCardSpendingLimitCents: 0n,
-      expenseCardsCount: 0,
     };
     const lastRole = roles[0];
     return lastRole ? { ...defaults, ...pick(lastRole, "payRateInSubunits", "capitalizedExpense") } : defaults;
@@ -210,35 +205,6 @@ const ManageModal = ({
                 label="Update rate for all contractors with this role"
               />
             </>
-          ) : null}
-          {role.id ? (
-            <Switch
-              checked={role.expenseCardEnabled}
-              onCheckedChange={(expenseCardEnabled) => updateRole({ expenseCardEnabled })}
-              label="Role should get expense card"
-            />
-          ) : null}
-          {role.id && role.expenseCardEnabled ? (
-            <div className="grid gap-2">
-              <Label htmlFor="expense-limit">Limit</Label>
-              <NumberInput
-                id="expense-limit"
-                value={Number(role.expenseCardSpendingLimitCents) / 100}
-                onChange={(value) => updateRole({ expenseCardSpendingLimitCents: BigInt((value ?? 0) * 100) })}
-                invalid={errors.includes("expenseCardSpendingLimitCents")}
-                prefix="$"
-                suffix="/ month"
-              />
-              {errors.includes("expenseCardSpendingLimitCents") && (
-                <div className="text-destructive text-sm">Limit is required</div>
-              )}
-            </div>
-          ) : null}
-          {role.id && !role.expenseCardEnabled && role.expenseCardsCount > 0 ? (
-            <Alert variant="destructive">
-              <ExclamationTriangleIcon />
-              <AlertDescription>{role.expenseCardsCount} issued cards will no longer be usable.</AlertDescription>
-            </Alert>
           ) : null}
           {expenseAccounts.length > 0 ? (
             <Select

@@ -296,7 +296,8 @@ const Edit = () => {
         </>
       }
     >
-      {!equityAllocation || equityAllocation.status === EquityAllocationStatus.PendingConfirmation ? (
+      {company.equityCompensationEnabled &&
+      (!equityAllocation || equityAllocation.status === EquityAllocationStatus.PendingConfirmation) ? (
         <section className="mb-6">
           <Card>
             <CardContent>
