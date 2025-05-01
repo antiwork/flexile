@@ -27,6 +27,25 @@ Once the local services are up and running, the application will be available at
 
 Check [the seeds](apps/rails/config/data/seed_templates/gumroad.json) for default data created during setup.
 
+## Common Issues / Debugging
+
+### 1. Postgres User Creation
+**Issue:** When running `bin/dev` (after `bin/setup`) encountered `FATAL: role "username" does not exist`
+
+**Resolution:** Manually create the Postgres user with:
+```
+psql postgres -c "CREATE USER username WITH LOGIN CREATEDB SUPERUSER PASSWORD 'password';"
+```
+
+Likely caused by the `bin/setup` script failing silently due to lack of Postgres superuser permissions (common with Homebrew installations).
+
+### 2. Redis Connection & database seeding
+**Issue:** First attempt to run `bin/dev` failed with `Redis::CannotConnectError` on port 6389.
+
+**Resolution:** Re-running `bin/dev` resolved it but data wasn't seeded properly, so had to run `db:reset`
+
+Likely caused by rails attempting to connect before Redis had fully started.
+
 ## Testing
 
 ```shell
