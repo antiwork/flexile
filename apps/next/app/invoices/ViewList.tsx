@@ -283,15 +283,14 @@ export default function ViewList() {
                 </div>
               </div>
 
-              {/* Equity Slider */}
-              {!isProjectBased && equityAllocation !== null && (
+              {company.equityCompensationEnabled ? (
                 <div className="grid gap-2">
                   <RangeInput
                     value={invoiceEquityPercent}
                     onChange={setInvoiceEquityPercent}
                     min={0}
                     max={MAX_EQUITY_PERCENTAGE}
-                    aria-label="Cash vs equity split"
+                    ariaLabel="Cash vs equity split"
                     unit="%"
                     disabled={quickInvoiceDisabled}
                     label={
@@ -309,7 +308,7 @@ export default function ViewList() {
                     }
                   />
                 </div>
-              )}
+              ) : null}
             </div>
 
             {/* --- Horizontal Separator (mobile only) --- */}
@@ -373,7 +372,8 @@ export default function ViewList() {
                 >
                   {submit.isPending ? "Sending..." : "Send for approval"}{" "}
                 </Button>
-                {!isProjectBased && equityCalculation.selectedPercentage != null && (
+                {company.equityCompensationEnabled &&
+                (!equityAllocation || equityAllocation.status === EquityAllocationStatus.PendingConfirmation) ? (
                   <EquityPercentageLockModal
                     open={lockModalOpen}
                     onClose={() => setLockModalOpen(false)}
@@ -381,7 +381,7 @@ export default function ViewList() {
                     year={invoiceYear}
                     onComplete={submit.mutate}
                   />
-                )}
+                ) : null}
               </div>
             </div>
           </div>

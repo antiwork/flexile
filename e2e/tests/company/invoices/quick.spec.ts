@@ -87,6 +87,7 @@ test.describe("quick invoicing", () => {
 
       await page.getByLabel("Hours").fill("10:30");
       await page.getByLabel("Date").fill("2024-08-08");
+      await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("32%");
 
       await expect(page.getByText("Total invoice amount: $630")).toBeVisible();
       await expect(page.getByText("Swapped for equity (not paid in cash): $201.60")).toBeVisible();
@@ -128,6 +129,15 @@ test.describe("quick invoicing", () => {
       await expect(page.getByText("Total to invoice$630")).toBeVisible();
 
       await page.getByRole("button", { name: "Send for approval" }).click();
+
+      await expect(page.getByText("Lock 0% in equity for all 2024?")).toBeVisible();
+      await expect(
+        page.getByText("By submitting this invoice, your current equity selection of 0% will be locked for all 2024"),
+      ).toBeVisible();
+      await expect(
+        page.getByText("You won't be able to choose a different allocation until the next options grant for 2025"),
+      ).toBeVisible();
+      await page.getByRole("button", { name: "Confirm 0% equity selection" }).click();
 
       await expect(page.getByRole("cell", { name: "Aug 8, 2024" })).toBeVisible();
       await expect(page.getByRole("cell", { name: "$630" })).toBeVisible();
