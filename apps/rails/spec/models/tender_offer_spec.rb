@@ -12,7 +12,7 @@ RSpec.describe TenderOffer do
     it { is_expected.to validate_presence_of(:starts_at) }
     it { is_expected.to validate_presence_of(:ends_at) }
     it { is_expected.to validate_presence_of(:starting_valuation) }
-    it { is_expected.to validate_numericality_of(:starting_valuation).only_integer.is_greater_than_or_equal_to(0) }
+    it { is_expected.to validate_numericality_of(:starting_valuation).only_integer.is_greater_than(0) }
     it { is_expected.to validate_numericality_of(:number_of_shares).only_integer.is_greater_than_or_equal_to(0).allow_nil }
     it { is_expected.to validate_numericality_of(:number_of_shareholders).only_integer.is_greater_than(0).allow_nil }
     it { is_expected.to validate_numericality_of(:total_amount_in_cents).only_integer.is_greater_than(0).allow_nil }
