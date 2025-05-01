@@ -56,10 +56,6 @@ class Stripe::EventHandler
       process_payment_intent
     when "payout.paid"
       process_payout_paid!
-    when "issuing_transaction.created"
-      process_expense_card_transaction_created!
-    when "issuing_transaction.updated"
-      process_expense_card_transaction_updated!
     end
   end
 
@@ -83,24 +79,5 @@ class Stripe::EventHandler
 
       consolidated_payment = ConsolidatedPayment.find_by!(stripe_payout_id: stripe_event.data.object.id)
       ProcessPayoutForConsolidatedPaymentJob.perform_async(consolidated_payment.id)
-    end
-
-    def process_expense_card_transaction_created!
-      expense_card = ExpenseCard.processor_stripe.find_by!(processor_reference: stripe_event.data.object.card)
-      merchant_data = stripe_event.data.object.merchant_data
-      description = [merchant_data.name, merchant_data.city, merchant_data.country].compact.join(", ")
-
-      expense_card.expense_card_charges.create!(
-        description:,
-        company: expense_card.company,
-        total_amount_in_cents: -stripe_event.data.object.amount,
-        processor_transaction_reference: stripe_event.data.object.id,
-        processor_transaction_data: stripe_event.data.object,
-      )
-    end
-
-    def process_expense_card_transaction_updated!
-      expense_card_charge = ExpenseCardCharge.find_by!(processor_transaction_reference: stripe_event.data.object.id)
-      expense_card_charge.update!(processor_transaction_data: stripe_event.data.object)
     end
 end

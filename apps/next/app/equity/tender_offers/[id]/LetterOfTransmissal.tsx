@@ -6,31 +6,30 @@ const LetterOfTransmissal = () => (
     <div className="text-center">
       <h2>LETTER OF TRANSMITTAL</h2>
       <h1>To Accompany Offered Securities of Gumroad, Inc.</h1>
-      <h2>August 20, 2024 (the "Offer Date")</h2>
+      <h2>May 1, 2025 (the "Offer Date")</h2>
     </div>
     <p className="border p-2 text-center">
       <b>
         THE OFFER TO PURCHASE WILL EXPIRE AT
         <br />
-        5:00 P.M., PACIFIC TIME, ON SEPTEMBER 20, 2024, UNLESS THE OFFER TO PURCHASE IS EXTENDED BY THE COMPANY.
+        5:00 P.M., PACIFIC TIME, ON MAY 31, 2025, UNLESS THE OFFER TO PURCHASE IS EXTENDED BY THE COMPANY.
       </b>
     </p>
     <p>
       Gumroad, Inc., a Delaware corporation (the "<b>Company</b>"), is offering to, in the manner described in the Offer
       to Purchase, (i) purchase shares of Common Stock of the Company (the "<b>Common Stock</b>") that are issued,
-      outstanding and vested as of August 16, 2024 (the "<b>Record Date</b>") or that are issued upon exercise of
+      outstanding and vested as of April 25, 2025 (the "<b>Record Date</b>") or that are issued upon exercise of
       Expiring Vested Options (as defined below), (ii) purchase shares of the Company's Series Seed Preferred Stock,
       Series A Preferred Stock, Series C-1 Preferred Stock, Series C-2 Preferred Stock and Series C-3 Preferred Stock
-      (collectively, the "<b>Eligible</b> <b>Preferred Stock</b>") and (iii) make a cash payment in consideration for
-      the cancellation of options to purchase shares of Common Stock that are vested as of the Record Date (the "
+      (collectively, the "<b>Eligible Preferred Stock</b>") and (iii) make a cash payment in consideration for the
+      cancellation of options to purchase shares of Common Stock that are vested as of the Record Date (the "
       <b>Vested Options</b>" and, together with the shares of Eligible Preferred Stock and Common Stock that are issued
       outstanding and vested as of the Record Date or that are issued upon exercise of the Expiring Vested Options, the
       "<b>Eligible Securities</b>"), in each case that, as of the Record Date, are held by Eligible Securityholders, for
-      a cash purchase price no less than $11.38 per Eligible Security (the "<b>Offer Price</b>"), upon the terms and
+      a cash purchase price no less than $0.00 per Eligible Security (the "<b>Offer Price</b>"), upon the terms and
       subject to the conditions in the Offer to Purchase and in this Letter of Transmittal (which, together with the
       Offer to Purchase, each with all exhibits thereto and as may be amended or supplemented from time to time,
-      collectively constitute the "<b>Offer</b>"). The maximum aggregate number of Eligible Securities eligible to
-      participate in the Offer shall be 148,506. Capitalized terms that are used in this Letter of Transmittal but not
+      collectively constitute the "<b>Offer</b>"). Capitalized terms that are used in this Letter of Transmittal but not
       defined herein shall have the meanings assigned to them in the Offer to Purchase.
     </p>
     <p>
@@ -80,35 +79,36 @@ const LetterOfTransmissal = () => (
       Eligible Securities, the Company will not recognize the cancellation of your Vested Options, and your Vested
       Options will remain outstanding. For the avoidance of doubt, the Vested Options tendered for cancellation in
       connection with the Offer shall not be exercised, and no shares of Common Stock shall be issued with respect to
-      such Vested Options, and instead such Vested Options will be cancelled for the cash consideration as set forth in,
-      and subject to, the terms of this Letter of Transmittal (and the exhibits thereto) and the Offer to Purchase.
+      such Vested Options, and instead such Vested Options will be cancelled for the cash consideration as set forth in
+      this Letter of Transmittal, and subject to the terms of each of this Letter of Transmittal (and the exhibits
+      thereto) and the Offer to Purchase.
     </p>
     <p>
-      If any of your Vested Options expire on or prior to the Settlement Date (the "Expiring Vested Options"), and you
-      wish to tender such Expiring Vested Options, you must exercise such Expiring Vested Options through a cash
-      exercise prior to the earlier of (i) the Expiration Date and (ii) the expiration date of such Expiring Vested
-      Options. Such cash exercise cannot be contingent upon the closing of the Offer and the Company will not extend the
-      expiration date of any option. If you have questions about exercising through a cash exercise, please contact the
-      Company at
-      <a className={linkClasses} href="support@flexile.com">
+      If any of your Vested Options expire on or prior to the Settlement Date (the "<b>Expiring Vested Options</b>"),
+      and you wish to tender such Expiring Vested Options, you must exercise such Expiring Vested Options through a cash
+      exercise prior to the earlier to occur of (i) the Expiration Date and (ii) the expiration date of such Expiring
+      Vested Options. Such cash exercise cannot be contingent upon the closing of the Offer and the Company will not
+      extend the expiration date of any option. If you have questions about exercising through a cash exercise, please
+      contact the Company at{" "}
+      <a className={linkClasses} href="mailto:support@flexile.com">
         support@flexile.com
-      </a>
+      </a>{" "}
       for additional information. No other holders of Vested Options wishing to participate in the Offer shall be
       permitted to exercise such Vested Options from the Offer Date through the Expiration Date.
     </p>
     <p>
-      In addition, if your Vested Options are Incentive Stock Options ("ISOs"), if the Offer remains outstanding for
-      longer than 29 calendar days, your Vested Options may cease to be treated as ISOs. Therefore, if you hold ISOs and
-      do not affirmatively reject the Offer on or prior to the date that is 29 calendar days after the Offer commences,
-      your ISOs will be disqualified and thereafter treated as nonqualified stock options ("NSOs").
+      In addition, if your Vested Options are Incentive Stock Options ("<b>ISOs</b>"), if the Offer remains outstanding
+      for longer than 29 calendar days, your Vested Options may cease to be treated as ISOs. Therefore, if you hold ISOs
+      and do not affirmatively reject the Offer on or prior to the date that is 29 calendar days after the Offer
+      commences, your ISOs will be disqualified and thereafter treated as nonqualified stock options ("<b>NSOs</b>").
     </p>
     <p>
       You should consult with your legal, financial or tax advisor before participating in the Offer or exercising
       Expiring Vested Options.
     </p>
     <p>
-      Any operational or administrative questions or requests may be directed to the Company at
-      <a className={linkClasses} href="support@flexile.com">
+      Any operational or administrative questions or requests may be directed to the Company at{" "}
+      <a className={linkClasses} href="mailto:support@flexile.com">
         support@flexile.com
       </a>
       . For questions related to the tax implications of tendering Eligible Securities in the Offer, please contact your
@@ -122,25 +122,25 @@ const LetterOfTransmissal = () => (
       <b>OFFERED SECURITIES HELD BY YOU</b>
     </p>
     <p>
-      Please confirm that the "Order review" page on the Platform correctly reflects the Eligible Securities that you
-      wish to sell or tender to the Company in the Offer (the "<b>Offered Securities</b>"), including the allocation, if
-      any, between vested shares of Common Stock, Eligible Preferred Stock and, if applicable, Vested Options. The
-      Company reserves the right to increase the maximum aggregate purchase price up to $1,690,000 to purchase all
-      Eligible Securities in its sole and absolute discretion. If the aggregate number of Offered Securities tendered in
-      the Offer exceeds that number of shares at a price per share that would exceed $1,000,000, or, if the Company
-      elects to increase the maximum aggregate purchase price up to $1,690,000 (an "<b>Oversubscription</b>"), the
-      number of Eligible Securities that you will be permitted to tender will be reduced on a pro rata basis based upon
-      the number of Eligible Securities that you have offered for sale and/or cancellation (as applicable) and the
-      number of Eligible Securities that other holders of Eligible Securities have offered for sale and/or cancellation
-      (as applicable).
+      Please confirm that the "Tender Offer Details" page on the Platform correctly reflects the Eligible Securities
+      that you wish to sell or tender to the Company in the Offer (the "<b>Offered Securities</b>"), including the
+      allocation, if any, between vested shares of Common Stock, Eligible Preferred Stock and, if applicable, Vested
+      Options. The Company reserves the right to increase the maximum aggregate purchase price up to $1,760,000 to
+      purchase all Eligible Securities in its sole and absolute discretion. If the aggregate number of Offered
+      Securities tendered in the Offer exceeds that number of shares at a price per share that would exceed $1,000,000,
+      or, if the Company elects to increase the maximum aggregate purchase price up to $1,760,000 (an "
+      <b>Oversubscription</b>"), the number of Eligible Securities that you will be permitted to tender will be reduced
+      on a pro rata basis based upon the number of Eligible Securities that you have offered for sale and/or
+      cancellation (as applicable) and the number of Eligible Securities that other holders of Eligible Securities have
+      offered for sale and/or cancellation (as applicable).
     </p>
     <p>
       Each Eligible Securityholder who intends to sell or tender Eligible Securities in the Offer will need to complete
       and submit a separate Letter of Transmittal. This means that if Eligible Securities are held by family members,
       trusts or other persons or entities related to or affiliated with you, each such other person or entity must
       complete, submit and electronically sign a separate Letter of Transmittal. If you have any questions on
-      completing, submitting and electronically signing a separate Letter of Transmittal, please contact the Company at
-      <a className={linkClasses} href="support@flexile.com">
+      completing, submitting and electronically signing a separate Letter of Transmittal, please contact the Company at{" "}
+      <a className={linkClasses} href="mailto:support@flexile.com">
         support@flexile.com
       </a>
       .
@@ -165,25 +165,25 @@ const LetterOfTransmissal = () => (
     </p>
     <p>
       The Company is offering to purchase or cancel Eligible Securities from Eligible Securityholders, at an Offer Price
-      of no less than $11.38 per share, in cash, without interest, upon the terms and subject to the conditions in this
+      of no less than $0.00 per share, in cash, without interest, upon the terms and subject to the conditions in this
       Letter of Transmittal and in the accompanying Offer to Purchase. However, please note that your proceeds from the
       tender of your Eligible Securities will be the total Offer Price of the shares you tendered, less (i) all
       applicable withholding taxes and transfer taxes and (ii) in the case of Vested Options that are tendered for
       cancellation, the aggregate exercise price of the Vested Options.
     </p>
     <p>
-      Your ACH or wire instructions will be entered through the Platform at the "Order review" page, which will be used
-      to deliver the Offer Price (less (i) all applicable withholding taxes and transfer taxes and (ii) in the case of
-      Vested Options that are tendered for cancellation, the aggregate exercise price of the Vested Options). All
-      proceeds will be sent in U.S. Dollars. You are responsible for ensuring that the account indicated will accept a
-      wire transfer in U.S. Dollars, and you will be responsible for any fees imposed by your banking institution (or
-      any intermediate institution through which the funds are routed) in connection with the acceptance of the wire
-      transfer. No assurance can be given as to the exchange rate that will be applied or the date on which your bank
-      will credit your account for any wire transfer and you are responsible for all risks associated with any
-      fluctuations in the exchange rate between the U.S. Dollar and your local currency. Under no circumstances will the
-      Company pay interest on the Offer Price. The Company will not be responsible or liable for any erroneous
-      information that may be provided regarding accounts or account numbers for wire transfer, or for any other
-      technical difficulties in sending or receiving such wire transfers.
+      Your ACH or wire instructions entered through the Platform will be used to deliver the Offer Price (less (i) all
+      applicable withholding taxes and transfer taxes and (ii) in the case of Vested Options that are tendered for
+      cancellation, the aggregate exercise price of the Vested Options). All proceeds will be sent in U.S. Dollars. You
+      are responsible for ensuring that the account indicated will accept a wire transfer in U.S. Dollars, and you will
+      be responsible for any fees imposed by your banking institution (or any intermediate institution through which the
+      funds are routed) in connection with the acceptance of the wire transfer. No assurance can be given as to the
+      exchange rate that will be applied or the date on which your bank will credit your account for any wire transfer
+      and you are responsible for all risks associated with any fluctuations in the exchange rate between the U.S.
+      Dollar and your local currency. Under no circumstances will the Company pay interest on the Offer Price. The
+      Company will not be responsible or liable for any erroneous information that may be provided regarding accounts or
+      account numbers for wire transfer, or for any other technical difficulties in sending or receiving such wire
+      transfers.
     </p>
     <p>
       <b>STOCK CERTIFICATES</b>
@@ -208,7 +208,7 @@ const LetterOfTransmissal = () => (
     </p>
     <p>
       THE TAX CONSEQUENCES OF YOUR PARTICIPATION IN THE OFFER ARE SUBJECT TO INTERPRETATION BY THE INTERNAL REVENUE
-      SERVICE ("IRS") AND OTHER APPLICABLE TAX AUTHORITIES, WHICH CONSEQUENCES MAY NOT BE CONSISTENT WITH THE
+      SERVICE ("<b>IRS</b>") AND OTHER APPLICABLE TAX AUTHORITIES, WHICH CONSEQUENCES MAY NOT BE CONSISTENT WITH THE
       INFORMATION PROVIDED IN THIS LETTER OF TRANSMITTAL OR THE OFFER TO PURCHASE OR ANY OTHER DOCUMENT MADE AVAILABLE
       TO YOU AS PART OF THE OFFER. THE COMPANY DISCLAIMS ANY OBLIGATION TO ADVISE ON NON-U.S. JURISDICTION LAW. YOU ARE
       URGED TO CONSULT YOUR OWN TAX ADVISOR TO DETERMINE THE PARTICULAR TAX CONSEQUENCES TO YOU OF PARTICIPATING OR NOT
@@ -221,8 +221,10 @@ const LetterOfTransmissal = () => (
       information related to taxes and tax consequences of participating or not participating in the Offer as summarized
       in the Offer to Purchase, this Letter of Transmittal or any other document made available to you as part of the
       Offer. Additionally, you should be aware that tax laws may change, and such changes could affect the tax
-      consequences described in the Offer to Purchase, this Letter of Transmittal or any other document made available
-      to you as part of the Offer.
+      consequences described in the Offer (possibly on a retroactive basis). By participating in the Offer, you
+      acknowledge and agree that the treatment of your Offered Securities in the Offer may be different than what is
+      described in this Letter of Transmittal, the Offer to Purchase or any other document made available to you as part
+      of the Offer.
     </p>
     <p>
       By electronically signing this Letter of Transmittal, you acknowledge that: (i) the Company is not guaranteeing
@@ -250,8 +252,11 @@ const LetterOfTransmissal = () => (
       such Eligible Securityholder must submit a properly completed and appropriate IRS Form W-8, as well as any
       required supporting information. An IRS Form W-8BEN is included with this Letter of Transmittal and attached as
       <b>Exhibit D-2</b> and an IRS Form W-8BEN-E is included with this Letter of Transmittal and attached as
-      <b>Exhibit D-3</b>. Additional IRS Forms W-8, such as IRS Form W-8IMY and IRS Form W-8ECI, are available at
-      www.irs.gov.
+      <b>Exhibit D-3</b>. Additional IRS Forms W-8, such as IRS Form W-8IMY and IRS Form W-8ECI, are available at{" "}
+      <a className={linkClasses} href="http://www.irs.gov" target="_blank" rel="noopener noreferrer">
+        www.irs.gov
+      </a>
+      .
     </p>
     <p>
       An Eligible Securityholder who fails to provide a properly completed and signed IRS Form W-9 or a properly
@@ -303,15 +308,15 @@ const LetterOfTransmissal = () => (
       the exhibits thereto) and the Offer to Purchase.
     </p>
     <p>
-      If any of your Vested Options expire on or prior to the Settlement Date (the "Expiring Vested Options"), and you
-      wish to tender such Expiring Vested Options, you must exercise such Expiring Vested Options through a cash
+      If any of your Vested Options expire on or prior to the Settlement Date (the "<b>Expiring Vested Options</b>"),
+      and you wish to tender such Expiring Vested Options, you must exercise such Expiring Vested Options through a cash
       exercise prior to the earlier of (i) the Expiration Date and (ii) the expiration date of such Expiring Vested
       Options. Such cash exercise cannot be contingent upon the closing of the Offer and the Company will not extend the
       expiration date of any option. If you have questions about exercising through a cash exercise, please contact the
-      Company at
-      <a className={linkClasses} href="support@flexile.com">
+      Company at{" "}
+      <a className={linkClasses} href="mailto:support@flexile.com">
         support@flexile.com
-      </a>
+      </a>{" "}
       for additional information. No other holders of Vested Options wishing to participate in the Offer shall be
       permitted to exercise such Vested Options from the Offer Date through the Expiration Date.
     </p>
@@ -335,18 +340,18 @@ const LetterOfTransmissal = () => (
     <p>
       Effective as of the Settlement Date, you hereby deliver to the Company the shares of Common Stock (including
       Common Stock that is issued upon exercise of Expiring Vested Options), Eligible Preferred Stock and/or the Vested
-      Options tendered at the Offer Price of no less than $11.38 per share, less (i) all applicable withholding taxes
-      and transfer taxes and (ii) in the case of Vested Options that are tendered for cancellation, the aggregate
-      exercise price of the Vested Options. You hereby agree to the terms and conditions of the Offer described in this
-      Letter of Transmittal, the accompanying Offer to Purchase, and all exhibits referenced in each such document.
-      Subject to (and effective as of) acceptance of the Offer Price (less (i) all applicable withholding taxes and
+      Options tendered at the Offer Price of no less than $0.00 per share, less (i) all applicable withholding taxes and
       transfer taxes and (ii) in the case of Vested Options that are tendered for cancellation, the aggregate exercise
-      price of the Vested Options) for the Offered Securities, you hereby sell and/or tender for cancellation, assign,
-      transfer and convey to the Company all right, title and interest in and to all of the Offered Securities standing
-      in your name on the books of the Company that are accepted for purchase by the Company, and do hereby irrevocably
-      constitute and appoint the Company, as your attorney-in-fact with respect to such shares, with full power of
-      substitution, to cancel such shares on the Company's books. Such power of attorney is irrevocable and coupled with
-      an interest and shall be deemed a stock power separate from any stock certificate.
+      price of the Vested Options. You hereby agree to the terms and conditions of the Offer described in this Letter of
+      Transmittal, the accompanying Offer to Purchase, and all exhibits referenced in each such document. Subject to
+      (and effective as of) acceptance of the Offer Price (less (i) all applicable withholding taxes and transfer taxes
+      and (ii) in the case of Vested Options that are tendered for cancellation, the aggregate exercise price of the
+      Vested Options) for the Offered Securities, you hereby sell and/or tender for cancellation, assign, transfer and
+      convey to the Company all right, title and interest in and to all of the Offered Securities standing in your name
+      on the books of the Company that are accepted for purchase by the Company, and do hereby irrevocably constitute
+      and appoint the Company, as your attorney-in-fact with respect to such shares, with full power of substitution, to
+      cancel such shares on the Company's books. Such power of attorney is irrevocable and coupled with an interest and
+      shall be deemed a stock power separate from any stock certificate.
     </p>
     <p>
       <b>Representations and Warranties of Eligible Securityholders</b>
@@ -506,7 +511,8 @@ const LetterOfTransmissal = () => (
       <li>
         The undersigned is in compliance with all applicable legal requirements in connection with the undersigned's
         participation in the Offer, including federal, state, and/or foreign securities laws, as applicable, and that
-        the undersigned or the Company to not be in compliance with any applicable regulatory requirements in connection
+        the undersigned has not and shall not engage in any activities in connection with the Offer that could cause the
+        undersigned or the Company to not be in compliance with any applicable regulatory requirements in connection
         with the Offer.
       </li>
       <li>
@@ -568,7 +574,7 @@ const LetterOfTransmissal = () => (
       <li>
         The number of Offered Securities that may be tendered by each Eligible Securityholder shall be based on the
         limits provided in the Offer to Purchase under the heading "
-        <b>Overview -- Number of Eligible Securities Each Eligible Securityholder May Tender in the Offer</b>" and all
+        <b>Overview – Number of Eligible Securities Each Eligible Securityholder May Tender in the Offer</b>" and all
         questions as to the number of Offered Securities to be purchased by the Company will be determined by the
         Company in its sole and absolute discretion, and the Company's determination will be final and binding.
       </li>
@@ -671,8 +677,8 @@ const LetterOfTransmissal = () => (
       recipients of the Data may be located in the United States or elsewhere throughout the world, and that the
       recipient's country may have different data privacy laws and protections than his or her country. The undersigned
       understands that if he or she has the right to do so under applicable law, he or she may request a list with the
-      names and addresses of any potential recipients of the Data by emailing
-      <a className={linkClasses} href="support@flexile.com">
+      names and addresses of any potential recipients of the Data by emailing{" "}
+      <a className={linkClasses} href="mailto:support@flexile.com">
         support@flexile.com
       </a>
       . The undersigned authorizes the Data Recipients and any other possible recipients which may assist the Data
@@ -686,7 +692,7 @@ const LetterOfTransmissal = () => (
       he or she has the right under applicable law, view Data, request additional information about the storage and
       processing of Data, require any necessary amendments to Data or refuse or withdraw the consents herein, in any
       case without cost, by emailing{" "}
-      <a className={linkClasses} href="support@flexile.com">
+      <a className={linkClasses} href="mailto:support@flexile.com">
         support@flexile.com
       </a>
       . The undersigned understands, however, that refusing or withdrawing his or her consent may affect his or her
@@ -741,15 +747,18 @@ const LetterOfTransmissal = () => (
       This Letter of Transmittal must be electronically signed by the registered holder(s) of Offered Securities as the
       name of each registered holder is recorded on the Company stock ledger (or stock option agreement, if applicable).
       If your name has been legally changed since your shares were issued (or your stock option agreement was executed),
-      please contact Company at
-      <a className={linkClasses} href="support@flexile.com">
+      please contact the Company at{" "}
+      <a className={linkClasses} href="mailto:support@flexile.com">
         support@flexile.com
       </a>{" "}
-      for instructions instructions on how to submit proof of the legal name change. If this Letter of Transmittal is
-      being signed by a trustee, executor, administrator, guardian, attorney-in-fact, officer of a corporation or other
-      person acting in a fiduciary or representative capacity, that person will upload an Agent Authorization for in the
-      "Account" page of the Platform as proper evidence satisfactory to the Company of the authority of that person to
-      act in that capacity.
+      for instructions on how to submit proof of the legal name change. If this Letter of Transmittal is being signed by
+      a trustee, executor, administrator, guardian, attorney-in-fact, officer of a corporation or other person acting in
+      a fiduciary or representative capacity, that person will email proper evidence satisfactory to the Company of the
+      authority of that person to act in that capacity to{" "}
+      <a className={linkClasses} href="mailto:support@flexile.com">
+        support@flexile.com
+      </a>
+      .
     </p>
     <p>
       <b>ELIGIBLE SECURITYHOLDER TO ELECTRONICALLY SIGN ON THE PLATFORM</b>
@@ -878,7 +887,7 @@ const LetterOfTransmissal = () => (
     <p>
       By electronically signing and executing this Disclosure Notice Acknowledgement and Disclaimer, you acknowledge and
       agree that you have had access to, and have reviewed, the documents posted to the Platform under the "
-      <b>Transaction Documents</b>" page.
+      <b>Tender Offer Details</b>" page.
     </p>
     <p>
       NONE OF THE COMPANY OR ANY OF ITS AFFILIATES, MANAGERS, BOARD OF DIRECTORS, EQUITY HOLDERS, OFFICERS, EMPLOYEES,
@@ -920,7 +929,13 @@ const LetterOfTransmissal = () => (
     <p>
       <b>IRS Form W-8BEN</b>
     </p>
-    <p>(Downloadable via www.irs.gov)</p>
+    <p>
+      (Downloadable via{" "}
+      <a className={linkClasses} href="http://www.irs.gov" target="_blank" rel="noopener noreferrer">
+        www.irs.gov
+      </a>
+      )
+    </p>
     <p>
       <b>Exhibit D-3</b>
     </p>

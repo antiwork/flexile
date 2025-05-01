@@ -32,19 +32,6 @@
     <dt>Average hours</dt>
     <dd><b><%= "#{contractor.hours_per_week}/week" %></b></dd>
   <% end %>
-
-  <% if contractor.company_role.expense_card_enabled? %>
-    <dt>Expense limit</dt>
-    <dd>
-        <b>
-          <% if contractor.company_role.expense_card_has_limit? %>
-            <%= cents_format(contractor.company_role.expense_card_spending_limit_cents) %>
-          <% else %>
-            Unlimited
-          <% end %>
-        </b>
-    </dd>
-  <% end %>
 </dl>
 
 <%= link_to("Review and sign your contract", url || "#{PROTOCOL}://#{DOMAIN}/documents?sign=#{user.documents.unsigned.where(docuseal_submission_id: nil).first&.id}", class: "button") %>

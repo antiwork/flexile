@@ -170,8 +170,6 @@ class PurgeSeedData
       company_worker.contracts.each(&:destroy!)
       company_worker.equity_allocations.each(&:destroy!)
       company_worker.company_worker_updates.each(&:destroy!)
-      company_worker.expense_card_charges.each(&:destroy!)
-      company_worker.expense_cards.each(&:destroy!)
       company_worker.destroy!
     end
 

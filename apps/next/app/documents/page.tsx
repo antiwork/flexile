@@ -9,7 +9,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
-import DocusealForm from "@/app/documents/DocusealForm";
+import DocusealForm, { customCss } from "@/app/documents/DocusealForm";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
@@ -162,7 +162,7 @@ const EditTemplates = () => {
               >
                 <div className="flex flex-col items-center">
                   <FileTextIcon className="size-6" />
-                  <span className="mt-2">Consulting agreement</span>
+                  <span className="mt-2 whitespace-normal">Consulting agreement</span>
                 </div>
               </MutationButton>
               <MutationButton
@@ -177,7 +177,7 @@ const EditTemplates = () => {
               >
                 <div className="flex flex-col items-center">
                   <PercentIcon className="size-6" />
-                  <span className="mt-2">Equity grant contract</span>
+                  <span className="mt-2 whitespace-normal">Equity grant contract</span>
                 </div>
               </MutationButton>
               <MutationButton
@@ -466,7 +466,7 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
 
   return (
     <Dialog open onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent>
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-4xl">
         {user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent && (
           <DialogHeader>
             <div className="flex justify-end gap-4">
@@ -486,6 +486,7 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
           src={`https://docuseal.com/s/${slug}`}
           readonlyFields={readonlyFields}
           preview={user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent}
+          customCss={customCss}
           onComplete={() => {
             const userIsSigner = document.signatories.some(
               (signatory) => signatory.id === user.id && signatory.title === "Signer",

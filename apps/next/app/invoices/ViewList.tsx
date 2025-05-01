@@ -1,11 +1,9 @@
-"use client";
-
 import { ExclamationTriangleIcon, PencilIcon, PlusIcon } from "@heroicons/react/20/solid";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
+import { getSortedRowModel } from "@tanstack/react-table";
 import { useMutation } from "@tanstack/react-query";
 import { formatISO } from "date-fns";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
 import EquityPercentageLockModal from "@/app/invoices/EquityPercentageLockModal";
 import { StatusWithTooltip } from "@/app/invoices/Status";
@@ -37,7 +35,6 @@ export default function ViewList() {
     contractorId: user.roles.worker?.id,
     companyId: company.id,
   });
-  const router = useRouter();
   assert(!!user.roles.worker);
   const isProjectBased = user.roles.worker.payRateType === "project_based";
   const payRateInSubunits = user.roles.worker.payRateInSubunits;
@@ -191,7 +188,14 @@ export default function ViewList() {
     [data, isProjectBased],
   );
 
-  const table = useTable({ columns, data });
+  const table = useTable({
+    columns,
+    data,
+    initialState: {
+      sorting: [{ id: "invoiceDate", desc: true }],
+    },
+    getSortedRowModel: getSortedRowModel(),
+  });
   const quickInvoiceDisabled = !!unsignedContractId || submit.isPending;
 
   return (

@@ -27,7 +27,7 @@ export default function NewBuyback() {
   const createUploadUrl = trpc.files.createDirectUploadUrl.useMutation();
   const createTenderOffer = trpc.tenderOffers.create.useMutation();
 
-  const valid = startDate && endDate && minimumValuation && attachment;
+  const valid = startDate && endDate && attachment;
 
   const createMutation = useMutation({
     mutationFn: async () => {
