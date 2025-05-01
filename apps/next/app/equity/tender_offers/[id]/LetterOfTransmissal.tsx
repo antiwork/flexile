@@ -26,7 +26,7 @@ const LetterOfTransmissal = () => (
       <b>Vested Options</b>" and, together with the shares of Eligible Preferred Stock and Common Stock that are issued
       outstanding and vested as of the Record Date or that are issued upon exercise of the Expiring Vested Options, the
       "<b>Eligible Securities</b>"), in each case that, as of the Record Date, are held by Eligible Securityholders, for
-      a cash purchase price no less than $11.38 per Eligible Security (the "<b>Offer Price</b>"), upon the terms and
+      a cash purchase price no less than $0.00 per Eligible Security (the "<b>Offer Price</b>"), upon the terms and
       subject to the conditions in the Offer to Purchase and in this Letter of Transmittal (which, together with the
       Offer to Purchase, each with all exhibits thereto and as may be amended or supplemented from time to time,
       collectively constitute the "<b>Offer</b>"). Capitalized terms that are used in this Letter of Transmittal but not
@@ -165,7 +165,7 @@ const LetterOfTransmissal = () => (
     </p>
     <p>
       The Company is offering to purchase or cancel Eligible Securities from Eligible Securityholders, at an Offer Price
-      of no less than $11.38 per share, in cash, without interest, upon the terms and subject to the conditions in this
+      of no less than $0.00 per share, in cash, without interest, upon the terms and subject to the conditions in this
       Letter of Transmittal and in the accompanying Offer to Purchase. However, please note that your proceeds from the
       tender of your Eligible Securities will be the total Offer Price of the shares you tendered, less (i) all
       applicable withholding taxes and transfer taxes and (ii) in the case of Vested Options that are tendered for
