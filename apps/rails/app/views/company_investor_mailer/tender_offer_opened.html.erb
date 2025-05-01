@@ -15,7 +15,7 @@
   <dt>Offer end date</dt>
   <dd><%= @tender_offer.ends_at.to_fs(:long_date) %></dd>
   <dt>Starting (minimum) valuation</dt>
-  <dd><%= money_format(@tender_offer.minimum_valuation) %></dd>
+  <dd><%= money_format(@tender_offer.starting_valuation) %></dd>
   <dt>Total offer amount (<b>"Total Gross Proceeds"</b>)</dt>
   <dd><%= cents_format(@tender_offer.total_amount_in_cents) %></dd>
 </dl>

@@ -25,31 +25,31 @@ export default function NewBuyback() {
   const [startDateString, setStartDateString] = useState("");
   const [endDateString, setEndDateString] = useState("");
   const [startingValuation, setStartingValuation] = useState(0);
-  const [attachment, setAttachment] = useState<File | undefined>(undefined);
+  const [documentPackage, setDocumentPackage] = useState<File | undefined>(undefined);
 
   const createUploadUrl = trpc.files.createDirectUploadUrl.useMutation();
   const createTenderOffer = trpc.tenderOffers.create.useMutation();
 
-  const valid = !!(startDateString && endDateString && attachment);
+  const valid = !!(startDateString && endDateString && documentPackage);
 
   const createMutation = useMutation({
     mutationFn: async () => {
       if (!valid) return;
 
-      const base64Checksum = await md5Checksum(attachment);
+      const base64Checksum = await md5Checksum(documentPackage);
       const { directUploadUrl, key } = await createUploadUrl.mutateAsync({
         isPublic: false,
-        filename: attachment.name,
-        byteSize: attachment.size,
+        filename: documentPackage.name,
+        byteSize: documentPackage.size,
         checksum: base64Checksum,
-        contentType: attachment.type,
+        contentType: documentPackage.type,
       });
 
       await fetch(directUploadUrl, {
         method: "PUT",
-        body: attachment,
+        body: documentPackage,
         headers: {
-          "Content-Type": attachment.type,
+          "Content-Type": documentPackage.type,
           "Content-MD5": base64Checksum,
         },
       });
@@ -107,12 +107,12 @@ export default function NewBuyback() {
               />
             </div>
             <div className="*:not-first:mt-2">
-              <Label htmlFor="attachment">Document package</Label>
+              <Label htmlFor="document-package">Document package</Label>
               <Input
-                id="attachment"
+                id="document-package"
                 type="file"
                 accept="application/zip"
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAttachment(e.target.files?.[0])}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDocumentPackage(e.target.files?.[0])}
               />
             </div>
           </div>

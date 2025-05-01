@@ -6,8 +6,8 @@ RSpec.describe CreateTenderOffer do
     {
       starts_at: Date.new(2024, 12, 15).to_s,
       ends_at: Date.new(2024, 12, 30).to_s,
-      minimum_valuation: 1_000_000.to_s,
-      attachment: fixture_file_upload("sample.zip"),
+      starting_valuation: 1_000_000.to_s,
+      document_package: fixture_file_upload("sample.zip"),
     }
   end
 
@@ -23,8 +23,8 @@ RSpec.describe CreateTenderOffer do
         expect(tender_offer.company).to eq(company)
         expect(tender_offer.starts_at).to eq(attributes[:starts_at])
         expect(tender_offer.ends_at).to eq(attributes[:ends_at])
-        expect(tender_offer.minimum_valuation).to eq(attributes[:minimum_valuation].to_f)
-        expect(tender_offer.attachment).to be_present
+        expect(tender_offer.starting_valuation).to eq(attributes[:starting_valuation].to_f)
+        expect(tender_offer.document_package).to be_present
       end
 
       it "returns a success result" do

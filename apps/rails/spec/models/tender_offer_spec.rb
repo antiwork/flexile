@@ -8,11 +8,11 @@ RSpec.describe TenderOffer do
   end
 
   describe "validations" do
-    it { is_expected.to validate_presence_of(:attachment) }
+    it { is_expected.to validate_presence_of(:document_package) }
     it { is_expected.to validate_presence_of(:starts_at) }
     it { is_expected.to validate_presence_of(:ends_at) }
-    it { is_expected.to validate_presence_of(:minimum_valuation) }
-    it { is_expected.to validate_numericality_of(:minimum_valuation).only_integer.is_greater_than_or_equal_to(0) }
+    it { is_expected.to validate_presence_of(:starting_valuation) }
+    it { is_expected.to validate_numericality_of(:starting_valuation).only_integer.is_greater_than_or_equal_to(0) }
     it { is_expected.to validate_numericality_of(:number_of_shares).only_integer.is_greater_than_or_equal_to(0).allow_nil }
     it { is_expected.to validate_numericality_of(:number_of_shareholders).only_integer.is_greater_than(0).allow_nil }
     it { is_expected.to validate_numericality_of(:total_amount_in_cents).only_integer.is_greater_than(0).allow_nil }
@@ -34,11 +34,11 @@ RSpec.describe TenderOffer do
       end
     end
 
-    describe "attachment validation" do
+    describe "document_package validation" do
       it "allows ZIP file attachments" do
         tender_offer = build(:tender_offer)
         zip_file = fixture_file_upload("sample.zip", "application/zip")
-        tender_offer.attachment.attach(zip_file)
+        tender_offer.document_package.attach(zip_file)
 
         expect(tender_offer).to be_valid
       end
@@ -46,10 +46,10 @@ RSpec.describe TenderOffer do
       it "does not allow non-ZIP file attachments" do
         tender_offer = build(:tender_offer)
         pdf_file = fixture_file_upload("sample.pdf", "application/pdf")
-        tender_offer.attachment.attach(pdf_file)
+        tender_offer.document_package.attach(pdf_file)
 
         expect(tender_offer).not_to be_valid
-        expect(tender_offer.errors[:attachment]).to include("must be a ZIP file")
+        expect(tender_offer.errors[:document_package]).to include("must be a ZIP file")
       end
     end
   end

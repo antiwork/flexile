@@ -19,7 +19,7 @@ class TenderOffer < ApplicationRecord
   validates :total_amount_in_cents, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :accepted_price_cents, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validate :ends_at_must_be_after_starts_at
-  validate :correct_attachment_mime_type
+  validate :correct_document_package_mime_type
 
   def open?
     Time.current.between?(starts_at, ends_at)
@@ -48,7 +48,7 @@ class TenderOffer < ApplicationRecord
       end
     end
 
-    def correct_attachment_mime_type
+    def correct_document_package_mime_type
       if document_package.attached? && !document_package.content_type.in?(%w(application/zip))
         errors.add(:document_package, "must be a ZIP file")
       end
