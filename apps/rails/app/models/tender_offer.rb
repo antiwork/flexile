@@ -13,7 +13,7 @@ class TenderOffer < ApplicationRecord
   validates :attachment, presence: true
   validates :starts_at, presence: true
   validates :ends_at, presence: true
-  validates :minimum_valuation, presence: true, numericality: { only_integer: true, greater_than: 0 }
+  validates :starting_valuation, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :number_of_shares, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validates :number_of_shareholders, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :total_amount_in_cents, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true

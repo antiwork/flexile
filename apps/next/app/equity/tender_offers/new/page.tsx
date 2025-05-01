@@ -24,7 +24,7 @@ export default function NewBuyback() {
 
   const [startDateString, setStartDateString] = useState("");
   const [endDateString, setEndDateString] = useState("");
-  const [minimumValuation, setMinimumValuation] = useState(0);
+  const [startingValuation, setStartingValuation] = useState(0);
   const [attachment, setAttachment] = useState<File | undefined>(undefined);
 
   const createUploadUrl = trpc.files.createDirectUploadUrl.useMutation();
@@ -58,7 +58,7 @@ export default function NewBuyback() {
         companyId: company.id,
         startsAt: new Date(`${startDateString}T00:00:00Z`),
         endsAt: new Date(`${endDateString}T00:00:00Z`),
-        minimumValuation: BigInt(minimumValuation),
+        startingValuation: BigInt(startingValuation),
         attachmentKey: key,
       });
       router.push(`/equity/tender_offers`);
@@ -98,11 +98,11 @@ export default function NewBuyback() {
               granularity="day"
             />
             <div className="grid gap-2">
-              <Label htmlFor="minimum-valuation">Minimum valuation</Label>
+              <Label htmlFor="starting-valuation">Starting valuation</Label>
               <NumberInput
-                id="minimum-valuation"
-                value={minimumValuation}
-                onChange={(value) => setMinimumValuation(value || 0)}
+                id="starting-valuation"
+                value={startingValuation}
+                onChange={(value) => setStartingValuation(value || 0)}
                 prefix="$"
               />
             </div>

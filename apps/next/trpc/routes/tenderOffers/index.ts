@@ -1,7 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
-import { pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
 import { activeStorageAttachments, activeStorageBlobs, companies, tenderOffers } from "@/db/schema";
@@ -12,7 +11,7 @@ const dataSchema = createInsertSchema(tenderOffers)
   .pick({
     startsAt: true,
     endsAt: true,
-    minimumValuation: true,
+    startingValuation: true,
   })
   .extend({ attachmentKey: z.string() });
 
@@ -33,7 +32,7 @@ export const tenderOffersRouter = createRouter({
           companyId: ctx.company.id,
           startsAt: input.startsAt,
           endsAt: input.endsAt,
-          minimumValuation: input.minimumValuation,
+          startingValuation: input.startingValuation,
         })
         .returning();
       if (!tenderOffer) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -50,15 +49,18 @@ export const tenderOffersRouter = createRouter({
     if (!ctx.company.tenderOffersEnabled || (!ctx.companyAdministrator && !ctx.companyInvestor))
       throw new TRPCError({ code: "FORBIDDEN" });
 
-    return await db
+    const results = await db
       .select({
-        ...pick(tenderOffers, "startsAt", "endsAt", "minimumValuation"),
+        startsAt: tenderOffers.startsAt,
+        endsAt: tenderOffers.endsAt,
+        startingValuation: tenderOffers.startingValuation,
         id: tenderOffers.externalId,
       })
       .from(tenderOffers)
       .innerJoin(companies, eq(tenderOffers.companyId, companies.id))
       .where(eq(companies.id, ctx.company.id))
       .orderBy(desc(tenderOffers.createdAt));
+    return results;
   }),
 
   get: companyProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
@@ -66,7 +68,12 @@ export const tenderOffersRouter = createRouter({
       throw new TRPCError({ code: "FORBIDDEN" });
 
     const tenderOffer = await db.query.tenderOffers.findFirst({
-      columns: { id: true, startsAt: true, endsAt: true, minimumValuation: true },
+      columns: {
+        id: true,
+        startsAt: true,
+        endsAt: true,
+        startingValuation: true,
+      },
       where: and(eq(tenderOffers.externalId, input.id), eq(tenderOffers.companyId, ctx.company.id)),
     });
 
@@ -78,7 +85,9 @@ export const tenderOffersRouter = createRouter({
     });
 
     return {
-      ...pick(tenderOffer, ["startsAt", "endsAt", "minimumValuation"]),
+      startsAt: tenderOffer.startsAt,
+      endsAt: tenderOffer.endsAt,
+      startingValuation: tenderOffer.startingValuation,
       attachment: attachment ? await getS3Url(attachment.blob.key, attachment.blob.filename) : null,
     };
   }),

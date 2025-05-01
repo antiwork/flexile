@@ -6,6 +6,6 @@ FactoryBot.define do
     attachment { Rack::Test::UploadedFile.new(Rails.root.join("spec/fixtures/files/sample.zip")) }
     starts_at { 20.days.ago }
     ends_at { 10.days.from_now }
-    minimum_valuation { 100_000 }
+    starting_valuation { 100_000 }
   end
 end

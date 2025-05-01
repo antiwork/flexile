@@ -1476,7 +1476,7 @@ export const tenderOffers = pgTable(
     externalId: varchar("external_id").$default(nanoid).notNull(),
     startsAt: timestamp("starts_at", { precision: 6, mode: "date" }).notNull(),
     endsAt: timestamp("ends_at", { precision: 6, mode: "date" }).notNull(),
-    minimumValuation: bigint("minimum_valuation", { mode: "bigint" }).notNull(),
+    startingValuation: bigint("starting_valuation", { mode: "bigint" }).notNull(),
     numberOfShares: bigint("number_of_shares", { mode: "bigint" }),
     numberOfShareholders: integer("number_of_shareholders"),
     totalAmountInCents: bigint("total_amount_in_cents", { mode: "bigint" }),
