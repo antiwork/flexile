@@ -1,12 +1,12 @@
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
+import { pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
 import { activeStorageAttachments, activeStorageBlobs, companies, tenderOffers } from "@/db/schema";
 import { companyProcedure, createRouter, getS3Url } from "@/trpc";
 import { tenderOffersBidsRouter } from "./bids";
-import { pick } from "lodash-es";
 
 const dataSchema = createInsertSchema(tenderOffers)
   .pick({
@@ -52,9 +52,7 @@ export const tenderOffersRouter = createRouter({
 
     return await db
       .select({
-        startsAt: tenderOffers.startsAt,
-        endsAt: tenderOffers.endsAt,
-        minimumValuation: tenderOffers.minimumValuation,
+        ...pick(tenderOffers, "startsAt", "endsAt", "minimumValuation"),
         id: tenderOffers.externalId,
       })
       .from(tenderOffers)
