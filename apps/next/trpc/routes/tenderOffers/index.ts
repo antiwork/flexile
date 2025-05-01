@@ -14,8 +14,7 @@ const dataSchema = createInsertSchema(tenderOffers)
     minimumValuation: true,
   })
   .extend({
-    documentPackageKey: z.string(),
-    startingValuation: z.undefined().optional(),
+    attachmentKey: z.string(),
   });
 
 export const tenderOffersRouter = createRouter({
@@ -26,7 +25,7 @@ export const tenderOffersRouter = createRouter({
 
     await db.transaction(async (tx) => {
       const blob = await tx.query.activeStorageBlobs.findFirst({
-        where: eq(activeStorageBlobs.key, input.documentPackageKey),
+        where: eq(activeStorageBlobs.key, input.attachmentKey),
       });
       if (!blob) throw new TRPCError({ code: "NOT_FOUND", message: "Document package not found" });
       const [tenderOffer] = await tx
@@ -40,7 +39,7 @@ export const tenderOffersRouter = createRouter({
         .returning();
       if (!tenderOffer) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       await tx.insert(activeStorageAttachments).values({
-        name: "document_package",
+        name: "attachment",
         blobId: blob.id,
         recordType: "TenderOffer",
         recordId: tenderOffer.id,
@@ -56,7 +55,7 @@ export const tenderOffersRouter = createRouter({
       .select({
         startsAt: tenderOffers.startsAt,
         endsAt: tenderOffers.endsAt,
-        startingValuation: tenderOffers.minimumValuation, // Map minimumValuation to startingValuation
+        minimumValuation: tenderOffers.minimumValuation,
         id: tenderOffers.externalId,
       })
       .from(tenderOffers)
@@ -84,8 +83,8 @@ export const tenderOffersRouter = createRouter({
     return {
       startsAt: tenderOffer.startsAt,
       endsAt: tenderOffer.endsAt,
-      startingValuation: tenderOffer.minimumValuation, // Map minimumValuation to startingValuation
-      documentPackage: attachment ? await getS3Url(attachment.blob.key, attachment.blob.filename) : null,
+      minimumValuation: tenderOffer.minimumValuation,
+      attachment: attachment ? await getS3Url(attachment.blob.key, attachment.blob.filename) : null,
     };
   }),
   bids: tenderOffersBidsRouter,

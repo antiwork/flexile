@@ -158,11 +158,11 @@ export default function BuybackView() {
           </div>
           <div>
             <Label>Starting valuation</Label>
-            <p>{formatMoney(data.startingValuation)}</p>
+            <p>{formatMoney(data.minimumValuation)}</p>
           </div>
           <div>
             <Button asChild>
-              <a href={data.documentPackage ?? ""}>
+              <a href={data.attachment ?? ""}>
                 <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
                 Download buyback documents
               </a>
