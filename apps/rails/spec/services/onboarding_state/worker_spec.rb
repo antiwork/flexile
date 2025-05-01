@@ -67,20 +67,6 @@ RSpec.describe OnboardingState::Worker do
 
       expect(service.complete?).to eq(true)
     end
-
-    context "when the user is a business entity" do
-      before { user.compliance_info.update!(business_entity: true) }
-
-      it "returns false if there is no business name" do
-        expect(service.complete?).to eq(false)
-      end
-
-      it "returns true if there is a business name" do
-        user.compliance_info.update!(business_name: "Business Inc.")
-
-        expect(service.complete?).to eq(true)
-      end
-    end
   end
 
   describe "#redirect_path" do

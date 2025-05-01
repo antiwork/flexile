@@ -47,7 +47,7 @@ export const useCanSubmitInvoices = () => {
   });
   const unsignedContractId = documents[0]?.id;
   const hasLegalDetails = user.address.street_address;
-  return { unsignedContractId, hasLegalDetails, canSubmitInvoices: !unsignedContractId };
+  return { unsignedContractId, hasLegalDetails, canSubmitInvoices: !unsignedContractId && hasLegalDetails };
 };
 
 export default function ViewList() {
@@ -107,8 +107,8 @@ export default function ViewList() {
       title="Invoicing"
       headerActions={
         !unsignedContractId ? (
-          <Button asChild variant="outline" size="small">
-            <Link href="/invoices/new">
+          <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
+            <Link href="/invoices/new" inert={!canSubmitInvoices}>
               <PlusIcon className="size-4" />
               New invoice
             </Link>

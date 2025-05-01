@@ -103,6 +103,7 @@ test.describe("Company worker onboarding - personal details", () => {
     );
 
     await expect(page.getByRole("heading", { name: "Invoicing" })).toBeVisible();
+    await expect(page.getByText("Please provide your legal details before creating new invoices.")).toBeVisible();
 
     const updatedUser = await db.query.users.findFirst({
       where: eq(users.id, onboardingUser.id),
