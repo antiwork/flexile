@@ -30,8 +30,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid";
 import { linkClasses } from "@/components/Link";
 import { Label } from "@/components/ui/label";
-import { RadioGroup } from "../../../components/ui/radio-group";
-
+import { RadioGroup } from "@/components/ui/radio-group";
 const dataSchema = z.object({
   birth_date: z.string().nullable(),
   business_name: z.string().nullable(),

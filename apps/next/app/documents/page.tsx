@@ -209,6 +209,7 @@ export default function DocumentsPage() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const isCompanyRepresentative = user.activeRole === "administrator" || user.activeRole === "lawyer";
   const userId = isCompanyRepresentative ? null : user.id;
+  const hasLegalDetails = user.address.street_address;
 
   const currentYear = new Date().getFullYear();
   const [documents] = trpc.documents.list.useSuspenseQuery({ companyId: company.id, userId });
@@ -234,31 +235,19 @@ export default function DocumentsPage() {
   const [signDocumentParam] = useQueryState("sign");
   const [signDocumentId, setSignDocumentId] = useState<bigint | null>(null);
   const isSignable = (document: Document): document is SignableDocument => {
-    if (document.type === DocumentType.BoardConsent && !document.lawyerApproved) {
-      return false;
-    }
-
-    if (
-      document.type === DocumentType.BoardConsent &&
-      user.activeRole === "administrator" &&
-      !user.roles.administrator?.isBoardMember
-    ) {
-      return false;
+    if (document.type === DocumentType.BoardConsent) {
+      if (!document.lawyerApproved && user.activeRole !== "lawyer") return false;
+      if (user.activeRole === "administrator" && !user.roles.administrator?.isBoardMember) return false;
     }
 
     return !!document.docusealSubmissionId && document.signatories.some((signatory) => !signatory.signedAt);
   };
-  const isLawyerApprovable = (document: Document): document is SignableDocument =>
-    document.type === DocumentType.BoardConsent && !document.lawyerApproved;
   const signDocument = signDocumentId
-    ? documents.find(
-        (document): document is SignableDocument =>
-          document.id === signDocumentId && (isSignable(document) || isLawyerApprovable(document)),
-      )
+    ? documents.find((document): document is SignableDocument => document.id === signDocumentId && isSignable(document))
     : null;
   useEffect(() => {
     const document = signDocumentParam ? documents.find((document) => document.id === BigInt(signDocumentParam)) : null;
-    if (document && (isSignable(document) || isLawyerApprovable(document))) setSignDocumentId(document.id);
+    if (hasLegalDetails && document && isSignable(document)) setSignDocumentId(document.id);
   }, [documents, signDocumentParam]);
   useEffect(() => {
     if (downloadUrl) window.location.href = downloadUrl;
@@ -301,23 +290,16 @@ export default function DocumentsPage() {
           cell: (info) => {
             const document = info.row.original;
 
-            if (
-              document.type === DocumentType.BoardConsent &&
-              user.activeRole === "lawyer" &&
-              !document.lawyerApproved
-            ) {
-              return (
-                <Button variant="outline" size="small" onClick={() => setSignDocumentId(document.id)}>
-                  Approve
-                </Button>
-              );
-            }
-
             return (
               <>
                 {isSignable(document) ? (
-                  <Button variant="outline" size="small" onClick={() => setSignDocumentId(document.id)}>
-                    Review and sign
+                  <Button
+                    variant="outline"
+                    size="small"
+                    onClick={() => setSignDocumentId(document.id)}
+                    disabled={!hasLegalDetails}
+                  >
+                    {user.activeRole === "lawyer" ? "Approve" : "Review and sign"}
                   </Button>
                 ) : null}
                 {document.attachment ? (
@@ -368,6 +350,14 @@ export default function DocumentsPage() {
       }
     >
       <div className="grid gap-4">
+        {hasLegalDetails ? null : (
+          <Alert>
+            <InformationCircleIcon />
+            <AlertDescription>
+              Please <Link href="/settings/tax">provide your legal details</Link> before signing documents.
+            </AlertDescription>
+          </Alert>
+        )}
         {company.flags.includes("irs_tax_forms") &&
         user.activeRole === "administrator" &&
         new Date() <= filingDueDateFor1099DIV ? (
