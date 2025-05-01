@@ -6,7 +6,6 @@ import { addMonths, isFuture, isPast } from "date-fns";
 import { useParams } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import Figures from "@/components/Figures";
 import MainLayout from "@/components/layouts/Main";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton from "@/components/MutationButton";
@@ -24,7 +23,7 @@ import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
-import { formatDate, formatMonth } from "@/utils/time";
+import { formatMonth } from "@/utils/time";
 import { VESTED_SHARES_CLASS } from "../";
 import LetterOfTransmissal from "./LetterOfTransmissal";
 
@@ -197,13 +196,6 @@ export default function BuybackView() {
 
   return (
     <MainLayout title='Buyback details ("Sell Elections")'>
-      <Figures
-        items={[
-          { caption: "Start date", value: formatDate(data.startsAt) },
-          { caption: "End date", value: formatDate(data.endsAt) },
-          { caption: "Starting bid valuation", value: formatMoney(data.minimumValuation) },
-        ]}
-      />
       {user.activeRole === "contractorOrInvestor" && user.roles.investor?.investedInAngelListRuv ? (
         <Alert variant="destructive">
           <ExclamationTriangleIcon />
@@ -293,7 +285,7 @@ export default function BuybackView() {
                   </div>
                   <p className="mt-5">
                     <Button variant="outline" asChild>
-                      <a href={data.attachment ?? ""}>
+                      <a href={data.documentPackage ?? ""}>
                         <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
                         Download buyback documents
                       </a>
