@@ -1,11 +1,7 @@
 # frozen_string_literal: true
 
 class CompanyMailer < ApplicationMailer
-  helper :application
   default from: SUPPORT_EMAIL_WITH_NAME
-
-  DIGEST_EMAIL_RECORDS_PER_SECTION = 5
-  private_constant :DIGEST_EMAIL_RECORDS_PER_SECTION
 
   def complete_tax_info(admin_id:)
     administrator = CompanyAdministrator.find(admin_id)
