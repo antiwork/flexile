@@ -30,25 +30,17 @@ import { company_invoices_path } from "@/utils/routes";
 import { formatDate, formatDuration } from "@/utils/time";
 import { EDITABLE_INVOICE_STATES } from ".";
 
-const useData = () => {
-  const company = useCurrentCompany();
+export default function ViewList() {
   const user = useCurrentUser();
-  const queryResult = trpc.invoices.list.useSuspenseQuery({
+  const company = useCurrentCompany();
+  const [data, { refetch }] = trpc.invoices.list.useSuspenseQuery({
     contractorId: user.roles.worker?.id,
     companyId: company.id,
   });
-  return queryResult;
-};
-
-export default function ViewList() {
-  const [data, { refetch }] = useData();
   const router = useRouter();
-  const user = useCurrentUser();
-  const company = useCurrentCompany();
   assert(!!user.roles.worker);
-  const worker = user.roles.worker;
-  const isProjectBased = worker.payRateType === "project_based";
-  const payRateInSubunits = worker.payRateInSubunits;
+  const isProjectBased = user.roles.worker.payRateType === "project_based";
+  const payRateInSubunits = user.roles.worker.payRateInSubunits;
   const [documents] = trpc.documents.list.useSuspenseQuery({
     companyId: company.id,
     userId: user.id,
@@ -59,7 +51,7 @@ export default function ViewList() {
   const nextInvoiceDate = useMemo(() => new Date(), []);
   const initialInvoiceDate = useMemo(() => formatISO(nextInvoiceDate, { representation: "date" }), [nextInvoiceDate]);
   const [duration, setDuration] = useState<number | null>(null);
-  const [amountUsd, setAmountUsd] = useState<number | null>(payRateInSubunits ? payRateInSubunits / 100 : null);
+  const [amountUsd, setAmountUsd] = useState(payRateInSubunits ? payRateInSubunits / 100 : null);
   const [date, setDate] = useState(initialInvoiceDate);
   const [invoiceEquityPercent, setInvoiceEquityPercent] = useState(0);
   const [lockModalOpen, setLockModalOpen] = useState(false);
@@ -69,20 +61,12 @@ export default function ViewList() {
     year: nextInvoiceDate.getFullYear(),
   });
 
-  const getNoticeMessage = () => {
-    const status =
-      equityAllocation && typeof equityAllocation === "object" && "status" in equityAllocation
-        ? equityAllocation.status
-        : undefined;
-    if (status === "pending_grant_creation" || status === "pending_approval") {
-      return "Your allocation is pending board approval. You can submit invoices for this year, but they're only going to be paid once the allocation is approved.";
-    }
-    if (equityAllocation?.locked) {
-      return `You'll be able to select a new allocation for ${new Date().getFullYear() + 1} later this year.`;
-    }
-    return null;
-  };
-  const noticeMessage = getNoticeMessage();
+  const noticeMessage =
+    equityAllocation?.status === "pending_grant_creation" || equityAllocation?.status === "pending_approval"
+      ? "Your allocation is pending board approval. You can submit invoices for this year, but they're only going to be paid once the allocation is approved."
+      : equityAllocation?.locked
+        ? `You'll be able to select a new allocation for ${new Date().getFullYear() + 1} later this year.`
+        : null;
 
   const totalAmountInCents = useMemo(() => {
     if (isProjectBased) {
@@ -399,12 +383,7 @@ export default function ViewList() {
           </div>
         </CardContent>
       </Card>
-      {/* --- End Combined Card Layout --- */}
-
-      {/* --- Invoice List Table --- */}
-      <div>
-        {data.length > 0 && <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />}
-      </div>
+      {data.length > 0 && <DataTable table={table} />}
     </MainLayout>
   );
 }
