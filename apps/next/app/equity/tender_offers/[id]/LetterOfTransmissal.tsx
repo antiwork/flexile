@@ -165,7 +165,7 @@ const LetterOfTransmissal = () => (
     </p>
     <p>
       The Company is offering to purchase or cancel Eligible Securities from Eligible Securityholders, at an Offer Price
-      of no less than $0.00 per share, in cash, without interest, upon the terms and subject to the conditions in this
+      of no less than $11.38 per share, in cash, without interest, upon the terms and subject to the conditions in this
       Letter of Transmittal and in the accompanying Offer to Purchase. However, please note that your proceeds from the
       tender of your Eligible Securities will be the total Offer Price of the shares you tendered, less (i) all
       applicable withholding taxes and transfer taxes and (ii) in the case of Vested Options that are tendered for
@@ -373,7 +373,7 @@ const LetterOfTransmissal = () => (
         terms and subject to the conditions of the Offer to Purchase.
       </li>
       <li>
-        The undersigned has read, understands, and agrees to all of the terms of the Offer to Purchase, this Letter of
+        The undersigned has read, understood, and agrees to all of the terms of the Offer to Purchase, this Letter of
         Transmittal, and the exhibits to each, including, without limitation, the Stock Certificate Cancellation Form
         and Option Cancellation Notice, if applicable. Without limiting the generality of the foregoing, the undersigned
         understands that the number of Offered Securities that may be accepted by the Company for purchase may be
@@ -639,13 +639,13 @@ const LetterOfTransmissal = () => (
       <li>The Company's interpretation of the terms of the Offer will be final and binding on the undersigned.</li>
       <li>
         IF NOT TENDERED PURSUANT TO THE OFFER TO PURCHASE, THE VALUE OF YOUR OFFERED SECURITIES MAY SIGNIFICANTLY
-        APPRECIATE OR DEPRECIATE OVER TIME. THE PRICE AT WHICH THE Company is OFFERING TO PURCHASE YOUR OFFERED
+        APPRECIATE OR DEPRECIATE OVER TIME. THE PRICE AT WHICH THE COMPANY IS OFFERING TO PURCHASE YOUR OFFERED
         SECURITIES MAY NOT BE THE HIGHEST PRICE YOU COULD OBTAIN FOR YOUR OFFERED SECURITIES NOW OR IN THE FUTURE AFTER
         THE EXPIRATION OF THE OFFER. IF YOU CHOOSE TO TENDER OFFERED SECURITIES PURSUANT TO THE OFFER TO PURCHASE, YOU
         UNDERSTAND AND AGREE THAT YOU ARE GIVING UP THE POSSIBLE OPPORTUNITY TO SELL SUCH OFFERED SECURITIES AT A HIGHER
         PRICE NOW OR IN THE FUTURE AND TO RECEIVE THE BENEFIT OF ANY FUTURE APPRECIATION IN THE VALUE OF SUCH OFFERED
         SECURITIES. THERE CAN BE NO ASSURANCE, HOWEVER, THAT THE VALUE OF THE OFFERED SECURITIES WILL INCREASE OR TO
-        WHAT EXTENT. THE COMPANY, its AFFILIATES, OR OTHER THIRD PARTIES MAY, IN THE FUTURE, OFFER TO PURCHASE
+        WHAT EXTENT. THE COMPANY, ITS AFFILIATES, OR OTHER THIRD PARTIES MAY, IN THE FUTURE, OFFER TO PURCHASE
         ADDITIONAL SECURITIES FROM THE COMPANY'S STOCKHOLDERS AND/OR OPTION HOLDERS, INCLUDING CURRENT AND/OR FORMER
         EMPLOYEES, OFFICERS OR DIRECTORS, AND IT IS POSSIBLE THAT SUCH OFFER MAY BE AT A HIGHER OR LOWER PRICE.
       </li>
@@ -705,13 +705,13 @@ const LetterOfTransmissal = () => (
       FOR VALUE RECEIVED, AS OF THE DATE OF ACCEPTANCE OF THE PAYMENT FOR OFFERED SECURITIES TENDERED HEREUNDER, THE
       UNDERSIGNED HEREBY RELEASES (AND COVENANTS NOT TO SUE) THE COMPANY AND THE COMPANY'S AFFILIATES AND EACH OF THEIR
       RESPECTIVE CURRENT, FORMER AND FUTURE STOCKHOLDERS, DIRECTORS, OFFICERS, MEMBERS, MANAGERS, PARTNERS, AGENTS,
-      EMPLOYEES, ATTORNEYS, CONSULTANTS, representatives, SUBSIDIARIES AND PROFESSIONAL ADVISORS and their respective
-      successors and assigns (COLLECTIVELY, THE "<b>RELEASED PARTIES</b>") FROM ANY AND ALL COMMITMENTS, OBLIGATIONS,
+      EMPLOYEES, ATTORNEYS, CONSULTANTS, REPRESENTATIVES, SUBSIDIARIES AND PROFESSIONAL ADVISORS AND THEIR RESPECTIVE
+      SUCCESSORS AND ASSIGNS (COLLECTIVELY, THE "<b>RELEASED PARTIES</b>") FROM ANY AND ALL COMMITMENTS, OBLIGATIONS,
       DAMAGES, DEMANDS, ACTIONS, CHARGES, CAUSES OF ACTION, SUITS, COMPLAINTS, COUNTERCLAIMS, SET-OFFS, DEFENSES,
       PROMISES, AGREEMENTS, CONTROVERSIES, ACTS AND OMISSIONS, DEBTS, LIABILITIES, COSTS AND EXPENSES, AND OTHER CLAIMS
       ARISING OUT OF ANY MATTER, CIRCUMSTANCE OR EVENT OCCURRING AT OR PRIOR TO THE CONSUMMATION OF THE OFFER (OTHER
       THAN THE RIGHT TO RECEIVE THE OFFER PRICE (LESS, IF APPLICABLE, OPTION EXERCISE PRICES FOR VESTED OPTIONS TENDERED
-      FOR CANCELLATION, ANY APPLICABLE TAX WITHHOLDINGS AND TRANSFER TAXES) FROM THE Company UPON THE company's RECEIPT
+      FOR CANCELLATION, ANY APPLICABLE TAX WITHHOLDINGS AND TRANSFER TAXES) FROM THE COMPANY UPON THE COMPANY'S RECEIPT
       OF THE OFFERED SECURITIES AND CONSUMMATION OF THE OFFER), BOTH IN LAW AND IN EQUITY, KNOWN OR UNKNOWN, SUSPECTED
       OR UNSUSPECTED, PAST, PRESENT OR FUTURE, CONTINGENT OR OTHERWISE, WHICH THE UNDERSIGNED HAS OR EVER HAD AGAINST
       THE RELEASED PARTIES (COLLECTIVELY, THE "<b>RELEASES</b>"). THE PROVISIONS OF THESE RELEASES ARE SEVERABLE. IF ANY
@@ -816,8 +816,8 @@ const LetterOfTransmissal = () => (
       <li>
         <b>Cancellation of Option</b>. Effective as of 5:00 p.m., Pacific Time, on the Expiration Date, and contingent
         upon the closing of the Offer on the Settlement Date, Optionee hereby elects to cancel and terminate each of the
-        Vested Options (each, an "<b>Option</b>") set forth on the Platform under the "Tender Offer Details" page or
-        such lesser number of Vested Options the Company elects to repurchase from you pursuant to the Offer (the "
+        Vested Options (each, an "<b>Option</b>") set forth on the Platform under the "Sell Order" page or such lesser
+        number of Vested Options the Company elects to repurchase from you pursuant to the Offer (the "
         <b>Tendered Vested Option Shares</b>"), in consideration for a cash payment equal to the Offer Price multiplied
         by the number of Tendered Vested Option Shares less (i) all applicable withholding taxes and transfer taxes, and
         (ii) the aggregate exercise price of the underlying Options so tendered for cancellation and termination.
