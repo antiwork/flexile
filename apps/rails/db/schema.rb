@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_27_193714) do
+ActiveRecord::Schema[8.0].define(version: 2025_04_29_213053) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -22,7 +22,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_27_193714) do
   create_enum "equity_grants_issue_date_relationship", ["employee", "consultant", "investor", "founder", "officer", "executive", "board_member"]
   create_enum "equity_grants_option_grant_type", ["iso", "nso"]
   create_enum "equity_grants_vesting_trigger", ["scheduled", "invoice_paid"]
-  create_enum "expense_cards_processors", ["stripe"]
   create_enum "integration_status", ["initialized", "active", "out_of_sync", "deleted"]
   create_enum "invoices_invoice_type", ["services", "other"]
   create_enum "tax_documents_status", ["initialized", "submitted", "deleted"]
@@ -146,7 +145,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_27_193714) do
     t.string "default_currency", default: "usd", null: false
     t.boolean "cap_table_enabled", default: false, null: false
     t.boolean "tender_offers_enabled", default: false, null: false
-    t.boolean "expense_cards_enabled", default: false, null: false
     t.boolean "lawyers_enabled", default: false, null: false
     t.decimal "conversion_share_price_usd"
     t.boolean "equity_compensation_enabled", default: false, null: false
@@ -305,8 +303,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_27_193714) do
     t.datetime "deleted_at"
     t.string "expense_account_id"
     t.string "external_id", null: false
-    t.bigint "expense_card_spending_limit_cents", default: 0, null: false
-    t.boolean "expense_card_enabled", default: false, null: false
     t.index ["company_id"], name: "index_company_roles_on_company_id"
     t.index ["external_id"], name: "index_company_roles_on_external_id", unique: true
   end
@@ -766,40 +762,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_27_193714) do
     t.index ["external_id"], name: "index_equity_grants_on_external_id", unique: true
     t.index ["option_pool_id"], name: "index_equity_grants_on_option_pool_id"
     t.index ["vesting_schedule_id"], name: "index_equity_grants_on_vesting_schedule_id"
-  end
-
-  create_table "expense_card_charges", force: :cascade do |t|
-    t.bigint "expense_card_id", null: false
-    t.bigint "company_id", null: false
-    t.string "description", null: false
-    t.bigint "total_amount_in_cents", null: false
-    t.string "stripe_transaction_id"
-    t.jsonb "stripe_transaction_data"
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.string "processor_transaction_reference", null: false
-    t.jsonb "processor_transaction_data", null: false
-    t.index ["company_id"], name: "index_expense_card_charges_on_company_id"
-    t.index ["expense_card_id"], name: "index_expense_card_charges_on_expense_card_id"
-    t.index ["processor_transaction_reference"], name: "index_expense_card_charges_on_processor_transaction_reference", unique: true
-    t.index ["stripe_transaction_id"], name: "index_expense_card_charges_on_stripe_transaction_id", unique: true
-  end
-
-  create_table "expense_cards", force: :cascade do |t|
-    t.bigint "company_role_id", null: false
-    t.bigint "company_contractor_id", null: false
-    t.string "card_last4", null: false
-    t.string "card_exp_month", null: false
-    t.string "card_exp_year", null: false
-    t.string "card_brand", null: false
-    t.boolean "active", default: false, null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.string "processor_reference", null: false
-    t.enum "processor", null: false, enum_type: "expense_cards_processors"
-    t.index ["company_contractor_id"], name: "index_expense_cards_on_company_contractor_id"
-    t.index ["company_role_id"], name: "index_expense_cards_on_company_role_id"
-    t.index ["processor_reference", "processor"], name: "index_expense_cards_on_processor_reference_and_processor", unique: true
   end
 
   create_table "expense_categories", force: :cascade do |t|
