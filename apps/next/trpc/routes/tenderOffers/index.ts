@@ -6,6 +6,7 @@ import { db } from "@/db";
 import { activeStorageAttachments, activeStorageBlobs, companies, tenderOffers } from "@/db/schema";
 import { companyProcedure, createRouter, getS3Url } from "@/trpc";
 import { tenderOffersBidsRouter } from "./bids";
+import { pick } from "lodash-es";
 
 const dataSchema = createInsertSchema(tenderOffers)
   .pick({
@@ -13,9 +14,7 @@ const dataSchema = createInsertSchema(tenderOffers)
     endsAt: true,
     minimumValuation: true,
   })
-  .extend({
-    attachmentKey: z.string(),
-  });
+  .extend({ attachmentKey: z.string() });
 
 export const tenderOffersRouter = createRouter({
   create: companyProcedure.input(dataSchema.required()).mutation(async ({ ctx, input }) => {
@@ -27,7 +26,7 @@ export const tenderOffersRouter = createRouter({
       const blob = await tx.query.activeStorageBlobs.findFirst({
         where: eq(activeStorageBlobs.key, input.attachmentKey),
       });
-      if (!blob) throw new TRPCError({ code: "NOT_FOUND", message: "Document package not found" });
+      if (!blob) throw new TRPCError({ code: "NOT_FOUND", message: "Attachment not found" });
       const [tenderOffer] = await tx
         .insert(tenderOffers)
         .values({
@@ -81,9 +80,7 @@ export const tenderOffersRouter = createRouter({
     });
 
     return {
-      startsAt: tenderOffer.startsAt,
-      endsAt: tenderOffer.endsAt,
-      minimumValuation: tenderOffer.minimumValuation,
+      ...pick(tenderOffer, ["startsAt", "endsAt", "minimumValuation"]),
       attachment: attachment ? await getS3Url(attachment.blob.key, attachment.blob.filename) : null,
     };
   }),
