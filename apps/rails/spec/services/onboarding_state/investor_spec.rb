@@ -49,6 +49,12 @@ RSpec.describe OnboardingState::Investor do
       expect(service.complete?).to eq(false)
     end
 
+    it "returns false if citizenship_country_code is missing" do
+      user.update!(citizenship_country_code: nil)
+
+      expect(service.complete?).to eq(false)
+    end
+
     it "returns false if the bank account is missing" do
       user.bank_accounts.destroy_all
 
@@ -68,18 +74,6 @@ RSpec.describe OnboardingState::Investor do
       user.update!(country_code: "NG")
 
       expect(service.complete?).to eq(true)
-    end
-
-    it "returns false if tax ID number is missing" do
-      user.compliance_info.update!(tax_id: nil)
-
-      expect(service.complete?).to eq(false)
-    end
-
-    it "returns false if the investor is foreign and birth date is missing" do
-      user.update!(citizenship_country_code: "CA", country_code: "JP", birth_date: nil)
-
-      expect(service.complete?).to eq(false)
     end
   end
 

@@ -101,7 +101,7 @@ test.describe("Investor onboarding - personal details", () => {
       { page, title: "Important notice" },
     );
 
-    await expect(page.getByText("Set up a payout method")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Dividends" })).toBeVisible();
 
     const updatedUser = await db.query.users.findFirst({
       where: eq(users.id, onboardingUser.id),

@@ -55,24 +55,6 @@ RSpec.describe OnboardingState::Worker do
       expect(service.complete?).to eq(false)
     end
 
-    it "returns false if street_address is missing" do
-      user.update!(street_address: nil)
-
-      expect(service.complete?).to eq(false)
-    end
-
-    it "returns false if city is missing" do
-      user.update!(city: nil)
-
-      expect(service.complete?).to eq(false)
-    end
-
-    it "returns false if zip_code is missing" do
-      user.update!(zip_code: nil)
-
-      expect(service.complete?).to eq(false)
-    end
-
     it "returns false if the bank account is missing" do
       user.bank_accounts.destroy_all
 
