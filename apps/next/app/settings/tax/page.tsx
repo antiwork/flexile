@@ -364,9 +364,7 @@ export default function TaxPage() {
                           autoComplete="flexile-tax-id"
                           {...field}
                           value={formatUSTaxId(field.value)}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            field.onChange(normalizedTaxId(e.target.value))
-                          }
+                          onChange={(e) => field.onChange(normalizedTaxId(e.target.value))}
                           className="rounded-r-none"
                         />
                       </FormControl>

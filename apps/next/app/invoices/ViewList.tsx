@@ -120,7 +120,11 @@ export default function ViewList() {
         <Alert>
           <InformationCircleIcon />
           <AlertDescription>
-            Please <Link href="/settings/tax">provide your legal details</Link> before creating new invoices.
+            Please{" "}
+            <Link className={linkClasses} href="/settings/tax">
+              provide your legal details
+            </Link>{" "}
+            before creating new invoices.
           </AlertDescription>
         </Alert>
       ) : unsignedContractId ? (

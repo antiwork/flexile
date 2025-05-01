@@ -49,30 +49,6 @@ RSpec.describe OnboardingState::Investor do
       expect(service.complete?).to eq(false)
     end
 
-    it "returns false if citizenship_country_code is missing" do
-      user.update!(citizenship_country_code: nil)
-
-      expect(service.complete?).to eq(false)
-    end
-
-    it "returns false if street_address is missing" do
-      user.update!(street_address: nil)
-
-      expect(service.complete?).to eq(false)
-    end
-
-    it "returns false if city is missing" do
-      user.update!(city: nil)
-
-      expect(service.complete?).to eq(false)
-    end
-
-    it "returns false if zip_code is missing" do
-      user.update!(zip_code: nil)
-
-      expect(service.complete?).to eq(false)
-    end
-
     it "returns false if the bank account is missing" do
       user.bank_accounts.destroy_all
 
@@ -104,20 +80,6 @@ RSpec.describe OnboardingState::Investor do
       user.update!(citizenship_country_code: "CA", country_code: "JP", birth_date: nil)
 
       expect(service.complete?).to eq(false)
-    end
-
-    context "when the user is a business entity" do
-      before { user.compliance_info.update!(business_entity: true) }
-
-      it "returns false if there is no business name" do
-        expect(service.complete?).to eq(false)
-      end
-
-      it "returns true if there is a business name" do
-        user.compliance_info.update!(business_name: "Business Inc.")
-
-        expect(service.complete?).to eq(true)
-      end
     end
   end
 

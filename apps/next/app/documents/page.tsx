@@ -25,6 +25,7 @@ import type { RouterOutput } from "@/trpc";
 import { DocumentTemplateType, DocumentType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
 import { formatDate } from "@/utils/time";
+import { linkClasses } from "@/components/Link";
 
 type Document = RouterOutput["documents"]["list"][number];
 type SignableDocument = Document & { docusealSubmissionId: number };
@@ -209,7 +210,7 @@ export default function DocumentsPage() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const isCompanyRepresentative = user.activeRole === "administrator" || user.activeRole === "lawyer";
   const userId = isCompanyRepresentative ? null : user.id;
-  const hasLegalDetails = user.address.street_address;
+  const canSign = user.address.street_address || isCompanyRepresentative;
 
   const currentYear = new Date().getFullYear();
   const [documents] = trpc.documents.list.useSuspenseQuery({ companyId: company.id, userId });
@@ -247,7 +248,7 @@ export default function DocumentsPage() {
     : null;
   useEffect(() => {
     const document = signDocumentParam ? documents.find((document) => document.id === BigInt(signDocumentParam)) : null;
-    if (hasLegalDetails && document && isSignable(document)) setSignDocumentId(document.id);
+    if (canSign && document && isSignable(document)) setSignDocumentId(document.id);
   }, [documents, signDocumentParam]);
   useEffect(() => {
     if (downloadUrl) window.location.href = downloadUrl;
@@ -297,7 +298,7 @@ export default function DocumentsPage() {
                     variant="outline"
                     size="small"
                     onClick={() => setSignDocumentId(document.id)}
-                    disabled={!hasLegalDetails}
+                    disabled={!canSign}
                   >
                     {user.activeRole === "lawyer" ? "Approve" : "Review and sign"}
                   </Button>
@@ -350,11 +351,15 @@ export default function DocumentsPage() {
       }
     >
       <div className="grid gap-4">
-        {hasLegalDetails ? null : (
+        {canSign ? null : (
           <Alert>
             <InformationCircleIcon />
             <AlertDescription>
-              Please <Link href="/settings/tax">provide your legal details</Link> before signing documents.
+              Please{" "}
+              <Link className={linkClasses} href="/settings/tax">
+                provide your legal details
+              </Link>{" "}
+              before signing documents.
             </AlertDescription>
           </Alert>
         )}
