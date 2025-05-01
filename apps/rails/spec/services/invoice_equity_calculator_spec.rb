@@ -22,15 +22,81 @@ RSpec.describe InvoiceEquityCalculator do
     context "and company_worker has equity percentage" do
       let(:equity_percentage) { 60 }
 
-      it "calculates equity amount in cents and options correctly" do
+      before do
         company_worker.equity_allocation_for(invoice_year).update!(locked: true)
+      end
 
+      it "calculates equity amount in cents and options correctly" do
         result = calculator.calculate
         expect(result[:equity_cents]).to eq(432_22) # (60% of $720.37).round
         expect(result[:equity_options]).to eq(185) # ($432.22/ $2.34).round
         expect(result[:equity_percentage]).to eq(60)
         expect(result[:is_equity_allocation_locked]).to eq(true)
         expect(result[:selected_percentage]).to eq(60)
+      end
+
+      context "and equity grant has insufficient unvested shares" do
+        before do
+          equity_grant.update!(
+            number_of_shares: 1000,
+            unvested_shares: 100,
+            vested_shares: 700,
+            exercised_shares: 200,
+            forfeited_shares: 0
+          )
+        end
+
+        it "updates the existing equity allocation with pending grant creation status" do
+          expect do
+            result = calculator.calculate
+
+            expect(result[:equity_cents]).to eq(432_22) # (60% of $720.37).round
+            expect(result[:equity_options]).to eq(185) # ($432.22/ $2.34).round
+            expect(result[:equity_percentage]).to eq(60)
+            expect(result[:is_equity_allocation_locked]).to eq(true)
+            expect(result[:selected_percentage]).to eq(60)
+          end.to change(EquityAllocation, :count).by(0)
+
+          equity_allocation = company_worker.equity_allocations.last
+          expect(equity_allocation).to be_present
+          expect(equity_allocation.equity_percentage).to eq(60)
+          expect(equity_allocation.status).to eq("pending_grant_creation")
+          expect(equity_allocation.locked).to eq(true)
+        end
+
+        context "and equity allocation is not present for the year, but is present for the previous year" do
+          before do
+            company_worker.equity_allocations.destroy_all
+            create(:equity_allocation, company_worker:, equity_percentage: 50, year: invoice_year - 1)
+          end
+
+          it "creates a new equity allocation with pending grant creation status" do
+            expect do
+              calculator.calculate
+            end.to change(EquityAllocation, :count).by(1)
+
+            equity_allocation = company_worker.equity_allocations.last
+            expect(equity_allocation).to be_present
+            expect(equity_allocation.equity_percentage).to eq(50)
+            expect(equity_allocation.status).to eq("pending_grant_creation")
+            expect(equity_allocation.locked).to eq(true)
+          end
+        end
+
+        context "and equity allocation is not present for the year, and is not present for the previous year" do
+          before do
+            company_worker.equity_allocations.destroy_all
+          end
+
+          it "returns zero for all equity values" do
+            result = calculator.calculate
+            expect(result[:equity_cents]).to eq(0)
+            expect(result[:equity_options]).to eq(0)
+            expect(result[:equity_percentage]).to eq(0)
+            expect(result[:is_equity_allocation_locked]).to eq(nil)
+            expect(result[:selected_percentage]).to eq(nil)
+          end
+        end
       end
     end
 

@@ -13,6 +13,7 @@ export const equityAllocationsRouter = createRouter({
       columns: {
         equityPercentage: true,
         locked: true,
+        status: true,
       },
       where: and(
         eq(equityAllocations.year, input.year),

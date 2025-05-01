@@ -1300,30 +1300,6 @@ export const company_signee_search_path: ((
 
 /**
  * Generates rails route to
- * /internal/companies/:company_id/stripe_ephemeral_keys(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const company_stripe_ephemeral_keys_url: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/companies/:company_id/stripe_ephemeral_keys(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const company_stripe_ephemeral_keys_path: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /internal/companies/:company_id/switch(.:format)
  * @param {any} company_id
  * @param {object | undefined} options

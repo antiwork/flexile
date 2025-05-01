@@ -30,8 +30,11 @@
   },
   "include": [
     "next-env.d.ts",
-    "app/**/*.tsx",
-    "app/**/*.ts",
+    "app/**/page.tsx",
+    "app/**/error.tsx",
+    "app/**/not-found.tsx",
+    "app/**/layout.tsx",
+    "app/**/route.ts",
     "trpc/**/*.ts",
     ".next/types/**/*.ts",
     "types.d.ts",

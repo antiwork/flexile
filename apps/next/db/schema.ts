@@ -50,7 +50,6 @@ export const equityGrantsIssueDateRelationship = pgEnum(
 );
 export const equityGrantsOptionGrantType = pgEnum("equity_grants_option_grant_type", optionGrantTypes);
 export const equityGrantsVestingTrigger = pgEnum("equity_grants_vesting_trigger", optionGrantVestingTriggers);
-export const expenseCardsProcessors = pgEnum("expense_cards_processors", ["stripe"]);
 export const integrationStatus = pgEnum("integration_status", ["initialized", "active", "out_of_sync", "deleted"]);
 export const taxDocumentsStatus = pgEnum("tax_documents_status", ["initialized", "submitted", "deleted"]);
 export const invoicesInvoiceType = pgEnum("invoices_invoice_type", ["services", "other"]);
@@ -826,41 +825,6 @@ export const integrationRecords = pgTable(
   ],
 );
 
-export const expenseCards = pgTable(
-  "expense_cards",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    companyRoleId: bigint("company_role_id", { mode: "bigint" }).notNull(),
-    companyContractorId: bigint("company_contractor_id", { mode: "bigint" }).notNull(),
-    cardLast4: varchar("card_last4").notNull(),
-    cardExpMonth: varchar("card_exp_month").notNull(),
-    cardExpYear: varchar("card_exp_year").notNull(),
-    cardBrand: varchar("card_brand").notNull(),
-    active: boolean().default(false).notNull(),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-    processorReference: varchar("processor_reference").notNull(),
-    processor: expenseCardsProcessors().notNull(),
-  },
-  (table) => [
-    index("index_expense_cards_on_company_contractor_id").using(
-      "btree",
-      table.companyContractorId.asc().nullsLast().op("int8_ops"),
-    ),
-    index("index_expense_cards_on_company_role_id").using(
-      "btree",
-      table.companyRoleId.asc().nullsLast().op("int8_ops"),
-    ),
-    uniqueIndex("index_expense_cards_on_processor_reference_and_processor").using(
-      "btree",
-      table.processorReference.asc().nullsLast().op("text_ops"),
-      table.processor.asc().nullsLast().op("enum_ops"),
-    ),
-  ],
-);
-
 export const expenseCategories = pgTable(
   "expense_categories",
   {
@@ -1401,47 +1365,30 @@ export const tenderOfferBids = pgTable(
   ],
 );
 
-export const expenseCardCharges = pgTable(
-  "expense_card_charges",
+export const financingRounds = pgTable(
+  "financing_rounds",
   {
     id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    expenseCardId: bigint("expense_card_id", { mode: "bigint" }).notNull(),
+    externalId: varchar("external_id").$default(nanoid).notNull(),
     companyId: bigint("company_id", { mode: "bigint" }).notNull(),
-    description: varchar().notNull(),
-    totalAmountInCents: bigint("total_amount_in_cents", { mode: "bigint" }).notNull(),
-    stripeTransactionId: varchar("stripe_transaction_id"),
-    stripeTransactionData: jsonb("stripe_transaction_data"),
+    name: varchar().notNull(),
+    issuedAt: timestamp("issued_at", { precision: 6, mode: "date" }).notNull(),
+    sharesIssued: bigint("shares_issued", { mode: "bigint" }).notNull(),
+    pricePerShareCents: bigint("price_per_share_cents", { mode: "bigint" }).notNull(),
+    amountRaisedCents: bigint("amount_raised_cents", { mode: "bigint" }).notNull(),
+    postMoneyValuationCents: bigint("post_money_valuation_cents", { mode: "bigint" }).notNull(),
+    investors: jsonb().default([]).$type<{ name: string; amount_invested_cents: number }[]>().notNull(),
+    status: varchar().notNull(),
     createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
       .notNull()
       .$onUpdate(() => new Date()),
-    processorTransactionReference: varchar("processor_transaction_reference").notNull(),
-    processorTransactionData: jsonb("processor_transaction_data")
-      .$type<{
-        merchant_data: {
-          category_code: number;
-          name?: string;
-        };
-      }>()
-      .notNull(),
   },
   (table) => [
-    index("index_expense_card_charges_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
-    index("index_expense_card_charges_on_expense_card_id").using(
-      "btree",
-      table.expenseCardId.asc().nullsLast().op("int8_ops"),
-    ),
-    index("index_expense_card_charges_on_processor_transaction_reference").using(
-      "btree",
-      table.processorTransactionReference.asc().nullsLast().op("text_ops"),
-    ),
-    index("index_expense_card_charges_on_stripe_transaction_id").using(
-      "btree",
-      table.stripeTransactionId.asc().nullsLast().op("text_ops"),
-    ),
+    index("index_financing_rounds_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
+    index("index_financing_rounds_on_external_id").using("btree", table.externalId.asc().nullsLast().op("text_ops")),
   ],
 );
-
 export const equityBuybackRounds = pgTable(
   "equity_buyback_rounds",
   {
@@ -1971,11 +1918,6 @@ export const companyRoles = pgTable(
     deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
     expenseAccountId: varchar("expense_account_id"),
     externalId: varchar("external_id").$default(nanoid).notNull(),
-
-    expenseCardSpendingLimitCents: bigint("expense_card_spending_limit_cents", { mode: "bigint" })
-      .default(0n)
-      .notNull(),
-    expenseCardEnabled: boolean("expense_card_enabled").notNull().default(false),
   },
   (table) => [
     index("index_company_roles_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
@@ -2194,7 +2136,6 @@ export const companies = pgTable(
 
     tenderOffersEnabled: boolean("tender_offers_enabled").notNull().default(false),
     capTableEnabled: boolean("cap_table_enabled").default(false).notNull(),
-    expenseCardsEnabled: boolean("expense_cards_enabled").notNull().default(false),
     lawyersEnabled: boolean("lawyers_enabled").notNull().default(false),
     teamUpdatesEnabled: boolean("team_updates_enabled").notNull().default(false),
     conversionSharePriceUsd: numeric("conversion_share_price_usd"),
@@ -2920,26 +2861,7 @@ export const companyRolesRelations = relations(companyRoles, ({ one, many }) => 
     references: [companies.id],
   }),
   rates: many(companyRoleRates),
-  expenseCards: many(expenseCards),
   contractors: many(companyContractors),
-}));
-
-export const expenseCardsRelations = relations(expenseCards, ({ one }) => ({
-  companyRole: one(companyRoles, {
-    fields: [expenseCards.companyRoleId],
-    references: [companyRoles.id],
-  }),
-  companyContractor: one(companyContractors, {
-    fields: [expenseCards.companyContractorId],
-    references: [companyContractors.id],
-  }),
-}));
-
-export const expenseCardChargeRelations = relations(expenseCardCharges, ({ one }) => ({
-  expenseCard: one(expenseCards, {
-    fields: [expenseCardCharges.expenseCardId],
-    references: [expenseCards.id],
-  }),
 }));
 
 export const integrationRecordsRelations = relations(integrationRecords, ({ one }) => ({

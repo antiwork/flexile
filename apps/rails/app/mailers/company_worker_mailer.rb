@@ -83,16 +83,6 @@ class CompanyWorkerMailer < ApplicationMailer
     mail(to: user.email, reply_to: company_worker.company.email, subject:)
   end
 
-  def expense_card_grant(company_worker_id: nil, company_contractor_id: nil)
-    id = find_id!(company_worker_id:, company_contractor_id:)
-    company_worker = CompanyWorker.find(id)
-    user = company_worker.user
-    @company_role = company_worker.company_role
-    @company = company_worker.company
-
-    mail(to: user.email, reply_to: @company.email, subject: "💳 You just got an expense card!")
-  end
-
   def invite_company(company_worker_id: nil, company_contractor_id: nil, url:)
     id = find_id!(company_worker_id:, company_contractor_id:)
     @company_worker = CompanyWorker.find(id)
