@@ -94,7 +94,7 @@ const LetterOfTransmissal = () => (
         support@flexile.com
       </a>{" "}
       for additional information. No other holders of Vested Options wishing to participate in the Offer shall be
-      permitted to exercise such Vested Options between the Offer Date through the Expiration Date.
+      permitted to exercise such Vested Options from the Offer Date through the Expiration Date.
     </p>
     <p>
       In addition, if your Vested Options are Incentive Stock Options ("<b>ISOs</b>"), if the Offer remains outstanding
