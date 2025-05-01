@@ -146,8 +146,8 @@ const LetterOfTransmissal = () => (
       .
     </p>
     <p>
-      Notice of the Company's final acceptance of an Offer and the final Offer Price will occur after the Expiration
-      Date via email from the Company.
+      [Notice of the Company's final acceptance of an Offer and the final Offer Price will occur after the Expiration
+      Date on the "Order review" page of the Platform.]
     </p>
     <p>
       <b>Important</b>: Your proceeds from the tender of your Offered Securities will be listed on the Platform as the
@@ -158,7 +158,7 @@ const LetterOfTransmissal = () => (
     </p>
     <p>
       By electronically signing and executing this Letter of Transmittal, you acknowledge that amounts displayed on the
-      Platform in the "Tender Offer Details" page are prior to any tax withholdings and transfer taxes.
+      Platform in the "Order review" page are prior to any tax withholdings and transfer taxes.
     </p>
     <p>
       <b>OFFER PRICE AND ACH OR WIRE INSTRUCTIONS FOR PAYMENT OF OFFER PRICE</b>
