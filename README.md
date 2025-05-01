@@ -30,9 +30,11 @@ Check [the seeds](apps/rails/config/data/seed_templates/gumroad.json) for defaul
 ## Common Issues / Debugging
 
 ### 1. Postgres User Creation
+
 **Issue:** When running `bin/dev` (after `bin/setup`) encountered `FATAL: role "username" does not exist`
 
 **Resolution:** Manually create the Postgres user with:
+
 ```
 psql postgres -c "CREATE USER username WITH LOGIN CREATEDB SUPERUSER PASSWORD 'password';"
 ```
@@ -40,6 +42,7 @@ psql postgres -c "CREATE USER username WITH LOGIN CREATEDB SUPERUSER PASSWORD 'p
 Likely caused by the `bin/setup` script failing silently due to lack of Postgres superuser permissions (common with Homebrew installations).
 
 ### 2. Redis Connection & database seeding
+
 **Issue:** First attempt to run `bin/dev` failed with `Redis::CannotConnectError` on port 6389.
 
 **Resolution:** Re-running `bin/dev` resolved it but data wasn't seeded properly, so had to run `db:reset`
