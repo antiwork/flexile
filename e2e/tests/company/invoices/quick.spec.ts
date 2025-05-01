@@ -1,9 +1,7 @@
 import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
-import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { equityAllocationsFactory } from "@test/factories/equityAllocations";
-import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
@@ -78,16 +76,6 @@ test.describe("quick invoicing", () => {
   test.describe("equity compensation", () => {
     test.beforeEach(async () => {
       await db.update(companies).set({ equityCompensationEnabled: true }).where(eq(companies.id, company.id));
-      const companyInvestor = (
-        await companyInvestorsFactory.create({
-          companyId: company.id,
-          userId: contractorUser.id,
-        })
-      ).companyInvestor;
-      await equityGrantsFactory.createActive(
-        { companyInvestorId: companyInvestor.id, sharePriceUsd: "8.23" },
-        { year: 2024 },
-      );
     });
 
     test("handles equity compensation when allocation is set", async ({ page }) => {

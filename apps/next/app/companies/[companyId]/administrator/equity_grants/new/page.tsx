@@ -65,7 +65,7 @@ export default function NewEquityGrant() {
     defaultValues: {
       companyWorkerId: "",
       optionPoolId: data.optionPools[0]?.id ?? "",
-      numberOfShares: 0,
+      numberOfShares: 10_000,
       optionGrantType: "nso",
       vestingCommencementDate: today,
       vestingTrigger: "invoice_paid",

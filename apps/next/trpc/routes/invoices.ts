@@ -9,6 +9,7 @@ import {
   activeStorageAttachments,
   activeStorageBlobs,
   companyContractors,
+  equityAllocations,
   invoiceLineItems,
   invoices,
   users,
@@ -323,6 +324,10 @@ export const invoicesRouter = createRouter({
                   userComplianceInfos: { ...latestUserComplianceInfo, columns: { taxInformationConfirmedAt: true } },
                 },
               },
+              equityAllocations: {
+                columns: { status: true },
+                where: eq(equityAllocations.year, new Date().getFullYear()),
+              },
             },
           },
         },
@@ -359,6 +364,7 @@ export const invoicesRouter = createRouter({
           approvedAt: approval.approvedAt,
           approver: simpleUser(approval.approver),
         })),
+        equityAllocationStatus: invoice.contractor.equityAllocations[0]?.status,
         contractor: {
           ...pick(invoice.contractor, "role"),
           user: { complianceInfo: invoice.contractor.user.userComplianceInfos[0] },
@@ -391,6 +397,10 @@ export const invoicesRouter = createRouter({
                   columns: { taxInformationConfirmedAt: true, businessEntity: true, legalName: true },
                 },
               },
+            },
+            equityAllocations: {
+              columns: { status: true },
+              where: eq(equityAllocations.year, new Date().getFullYear()),
             },
           },
         },
@@ -455,6 +465,7 @@ export const invoicesRouter = createRouter({
       })),
       lineItems: invoice.lineItems,
       id: invoice.externalId,
+      equityAllocationStatus: invoice.contractor.equityAllocations[0]?.status,
       approvals: invoice.approvals.map((approval) => ({
         approvedAt: approval.approvedAt,
         approver: simpleUser(approval.approver),

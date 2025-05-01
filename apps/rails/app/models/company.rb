@@ -68,7 +68,6 @@ class Company < ApplicationRecord
   has_many :share_holdings, through: :company_investors
   has_many :option_pools
   has_many :tax_documents
-  has_many :expense_card_charges
   has_many :tender_offers
   has_many :company_worker_updates, through: :company_workers
   has_many :company_stripe_accounts
