@@ -1,7 +1,6 @@
 - Always use the latest version of TypeScript, React, and Next.js
 - Sentence case headers and buttons and stuff, not title case
 - Always write ALL of the code
-- Don't add ANY new comments to the code
 - Don't apologize for errors, fix them
 - Newlines at end of files, always
 
@@ -22,3 +21,5 @@
 
 - Tech debt:
   - Add a `TODO (techdebt)` comment to document refactors that should be made in the future
+
+- UNDER ANY CIRCUMSTANCES, DO NOT ADD COMMENTS TO THE CODE

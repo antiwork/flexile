@@ -313,7 +313,7 @@ const NavLinks = ({ company }: { company: Company }) => {
       {routes.has("Settings") && (
         <NavLink
           href={isRole("administrator") ? `/administrator/settings` : `/settings/equity`}
-          active={!!active && pathname.startsWith("/settings")}
+          active={!!active && (pathname.startsWith("/administrator/settings") || pathname.startsWith("/settings"))}
           icon={Cog6ToothIcon}
           filledIcon={SolidCog6ToothIcon}
         >
@@ -364,14 +364,8 @@ const NavLink = ({
 
 function InvoicesNavLink({ companyId, active, isAdmin }: { companyId: string; active: boolean; isAdmin: boolean }) {
   const { data, isLoading } = trpc.invoices.list.useQuery(
-    {
-      companyId,
-      invoiceFilter: "actionable",
-    },
-    {
-      refetchInterval: 30_000,
-      enabled: isAdmin,
-    },
+    { companyId, status: ["received", "approved", "failed"] },
+    { refetchInterval: 30_000, enabled: isAdmin },
   );
 
   return (

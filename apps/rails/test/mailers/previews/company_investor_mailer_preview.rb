@@ -115,7 +115,7 @@ class CompanyInvestorMailerPreview < ActionMailer::Preview
 
   def tender_offer_reminder
     company_investor = CompanyInvestor.last
-    tender_offer = TenderOffer.find(3)
+    tender_offer = TenderOffer.last
     CompanyInvestorMailer.tender_offer_reminder(company_investor.id, tender_offer_id: tender_offer.id)
   end
 end

@@ -1,7 +1,7 @@
-<h1>New tender offer available</h1>
+<h1>New stock buyback available</h1>
 
 <p>
-  We're excited to inform you that a new tender offer has opened for <%= @tender_offer.company.name %>.
+  We're excited to inform you that a new stock buyback has opened for <%= @tender_offer.company.name %>.
   This is an opportunity for you to potentially sell some or all of your shares.
 </p>
 
@@ -14,8 +14,6 @@
   <dd><%= @tender_offer.starts_at.to_fs(:long_date) %></dd>
   <dt>Offer end date</dt>
   <dd><%= @tender_offer.ends_at.to_fs(:long_date) %></dd>
-  <dt>Number of shares available</dt>
-  <dd><%= number_with_delimiter(@tender_offer.number_of_shares || 0) %></dd>
   <dt>Starting (minimum) valuation</dt>
   <dd><%= money_format(@tender_offer.minimum_valuation) %></dd>
   <dt>Total offer amount (<b>"Total Gross Proceeds"</b>)</dt>
@@ -32,7 +30,7 @@
 </p>
 
 <%= link_to "Learn more & participate",
-            spa_company_tender_offer_url(@tender_offer.company.external_id, @tender_offer.external_id),
+            "#{PROTOCOL}://#{DOMAIN}/equity/tender_offers/#{@tender_offer.external_id}",
             class: "button" %>
 
 <%= render "shared/email_signature" %>

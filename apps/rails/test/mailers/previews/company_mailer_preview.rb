@@ -5,9 +5,6 @@ class CompanyMailerPreview < ActionMailer::Preview
     CompanyMailer.complete_tax_info(admin_id: CompanyAdministrator.last.id)
   end
 
-  def digest
-    CompanyMailer.digest(admin_id: CompanyAdministrator.last.id)
-  end
 
   def consolidated_invoice_receipt
     consolidated_payment = ConsolidatedPayment.last

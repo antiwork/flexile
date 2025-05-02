@@ -12,8 +12,6 @@ scope path: :internal, module: :internal do
     resources :bank_accounts, only: [:index, :update]
   end
   resource :onboarding, controller: "onboarding", only: [:show, :update] do
-    get :legal
-    patch :save_legal
     get :bank_account
     patch :save_bank_account
   end
@@ -76,7 +74,6 @@ scope path: :internal, module: :internal do
       end
     end
     resources :roles, only: [:index, :create, :update, :destroy]
-    resources :stripe_ephemeral_keys, only: :create
   end
 
   resources :wise_account_requirements, only: :create

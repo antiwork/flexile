@@ -7,7 +7,7 @@ import { invoiceApprovalsFactory } from "@test/factories/invoiceApprovals";
 import { invoicesFactory } from "@test/factories/invoices";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
-import { findRequiredTableRow, findTableRow } from "@test/helpers/matchers";
+import { findRequiredTableRow } from "@test/helpers/matchers";
 import { expect, test, withinModal } from "@test/index";
 import { format } from "date-fns";
 import { and, eq, not } from "drizzle-orm";
@@ -132,7 +132,6 @@ test.describe("Invoices admin flow", () => {
       );
 
     let targetInvoiceRowSelector: Record<string, string>;
-    let anotherInvoiceRowSelector: Record<string, string>;
     testContext.describe("shared invoices tests", () => {
       testContext.beforeEach(async () => {
         ({ company, adminUser, companyContractor, totalMinutes, expectedHours } = await setup());
@@ -166,29 +165,18 @@ test.describe("Invoices admin flow", () => {
           });
           assert(anotherInvoiceUser !== undefined);
           assert(anotherInvoiceUser.legalName !== null);
-          anotherInvoiceRowSelector = {
-            Contractor: anotherInvoiceUser.legalName,
-            "Sent on": format(targetInvoice.invoiceDate, "MMM d, yyyy"),
-            Hours: "02:00",
-            Amount: "$75",
-          };
         });
 
         testContext("allows approving an invoice", async ({ page }) => {
           await login(page, adminUser);
           await page.getByRole("link", { name: "Invoices" }).click();
 
-          let targetInvoiceRow = await findRequiredTableRow(page, targetInvoiceRowSelector);
+          const targetInvoiceRow = await findRequiredTableRow(page, targetInvoiceRowSelector);
 
           await expect(targetInvoiceRow.getByText(companyContractor.companyRole.name)).toBeVisible();
           await targetInvoiceRow.getByRole("button", { name: "Approve" }).click();
-          await page.waitForLoadState("networkidle");
-          await page.waitForTimeout(300);
-          // await expect(targetInvoiceRow.getByText("Approved!")).toBeVisible(); // TODO (dani) fix
-          expect(await findTableRow(page, targetInvoiceRowSelector)).toBeNull();
-
-          const anotherInvoiceRow = await findRequiredTableRow(page, anotherInvoiceRowSelector);
-          await expect(anotherInvoiceRow.getByText("Approved!")).not.toBeVisible();
+          await expect(targetInvoiceRow.getByText("Approved!")).toBeVisible();
+          const approvalButton = targetInvoiceRow.getByText("Awaiting approval (1/2)");
 
           const updatedTargetInvoice = await db.query.invoices.findFirst({
             where: eq(invoices.id, targetInvoice.id),
@@ -199,12 +187,6 @@ test.describe("Invoices admin flow", () => {
           expect(updatedTargetInvoice?.status).toBe("approved");
           expect(updatedTargetInvoice?.approvals.length).toBe(1);
 
-          await page.getByRole("tab", { name: "History" }).click();
-          await page.waitForLoadState("networkidle");
-          await page.waitForTimeout(300);
-          targetInvoiceRow = await findRequiredTableRow(page, targetInvoiceRowSelector);
-          await expect(targetInvoiceRow.getByText(companyContractor.companyRole.name)).toBeVisible();
-          const approvalButton = targetInvoiceRow.getByText("Awaiting approval (1/2)");
           const approvedTime = updatedTargetInvoice?.approvals[0]?.approvedAt;
           assert(approvedTime !== undefined);
           await expect(approvalButton).toHaveTooltip(
@@ -221,12 +203,7 @@ test.describe("Invoices admin flow", () => {
 
           await page.locator("th").getByLabel("Select all").check();
           await page.getByRole("button", { name: "Approve selected" }).click();
-          await page.waitForLoadState("networkidle");
 
-          const consolidatedInvoiceCount = await db.$count(
-            db.select().from(consolidatedInvoices).where(eq(consolidatedInvoices.companyId, company.id)),
-          );
-          expect(consolidatedInvoiceCount).toBe(0);
           // TODO missing check - need to verify ChargeConsolidatedInvoiceJob not enqueued
 
           await withinModal(
@@ -238,10 +215,9 @@ test.describe("Invoices admin flow", () => {
             { page },
           );
 
-          await expect(page.getByText("No invoices to display.")).toBeVisible();
+          await expect(page.getByRole("dialog")).not.toBeVisible();
           expect(await countInvoiceApprovals()).toBe(2);
 
-          await expect(page.getByText("No invoices to display.")).toBeVisible();
           const pendingInvoices = await db.$count(
             invoices,
             and(eq(invoices.companyId, company.id), not(eq(invoices.status, "approved"))),
@@ -266,25 +242,18 @@ test.describe("Invoices admin flow", () => {
 
           const invoiceApprovalsCountBefore = await countInvoiceApprovals();
           await invoiceRow.getByRole("button", { name: "Approve" }).click();
-          assert(companyContractor.user.legalName !== null);
-          await expect(page.getByText(companyContractor.user.legalName)).not.toBeVisible();
 
-          // await expect(invoiceRow.getByText("Approved!")).toBeVisible(); // TODO (dani) fix
+          assert(companyContractor.user.legalName !== null);
+          await expect(invoiceRow.getByText("Approved!")).toBeVisible();
 
           expect(await countInvoiceApprovals()).toBe(invoiceApprovalsCountBefore + 1);
-
-          expect(await findTableRow(page, rowSelector)).toBeNull();
-
-          const anotherInvoiceRow = await findRequiredTableRow(page, anotherInvoiceRowSelector);
-          await expect(anotherInvoiceRow.getByText("Approved!")).not.toBeVisible();
 
           const updatedInvoice = await db.query.invoices.findFirst({
             where: eq(invoices.id, targetInvoice.id),
           });
           expect(updatedInvoice?.status).toBe("approved");
 
-          await page.getByRole("tab", { name: "History" }).click();
-
+          await page.waitForTimeout(1000);
           const approvedInvoiceSelector = {
             ...targetInvoiceRowSelector,
             Status: "Awaiting approval (2/3)",
@@ -333,7 +302,10 @@ test.describe("Invoices admin flow", () => {
               await page.getByRole("button", { name: "Approve selected" }).click();
 
               const invoiceApprovalsCountBefore = await countInvoiceApprovals();
-              const consolidatedInvoicesCountBefore = await db.$count(consolidatedInvoices);
+              const consolidatedInvoicesCountBefore = await db.$count(
+                consolidatedInvoices,
+                eq(consolidatedInvoices.companyId, company.id),
+              );
 
               await withinModal(
                 async (modal) => {
@@ -344,9 +316,12 @@ test.describe("Invoices admin flow", () => {
                 },
                 { page },
               );
+              await expect(page.getByRole("dialog")).not.toBeVisible();
 
-              await expect(page.getByText("No invoices to display.")).toBeVisible();
-              const consolidatedInvoicesCountAfter = await db.$count(consolidatedInvoices);
+              const consolidatedInvoicesCountAfter = await db.$count(
+                consolidatedInvoices,
+                eq(consolidatedInvoices.companyId, company.id),
+              );
               expect(await countInvoiceApprovals()).toBe(invoiceApprovalsCountBefore + 4);
               expect(consolidatedInvoicesCountAfter).toBe(consolidatedInvoicesCountBefore + 1);
 
@@ -377,20 +352,13 @@ test.describe("Invoices admin flow", () => {
           await page.getByRole("button", { name: "Reject selected" }).click();
 
           await page.getByRole("button", { name: "Yes, reject" }).click();
-
-          await expect(page.getByText("No invoices to display")).toBeVisible();
+          await expect(page.getByText("Rejected")).toHaveCount(2);
 
           const updatedInvoices = await getInvoices();
           expect(updatedInvoices.length).toBe(2);
-          expect(updatedInvoices.every((invoice) => invoice.status === "rejected")).toBe(true);
-
-          await page.getByRole("tab", { name: "History" }).click();
-          await Promise.all(
-            updatedInvoices.map(async (invoice, index) => {
-              expect(invoice.rejectionReason).toBeNull();
-              await expect(page.getByRole("row", { name: invoice.billFrom }).nth(index)).toBeVisible();
-            }),
-          );
+          expect(
+            updatedInvoices.every((invoice) => invoice.status === "rejected" && invoice.rejectionReason === null),
+          ).toBe(true);
         });
 
         testContext("allows rejecting invoices with a reason", async ({ page }) => {
@@ -405,20 +373,15 @@ test.describe("Invoices admin flow", () => {
             .getByLabel("Explain why the invoice was rejected and how to fix it (optional)")
             .fill("Invoice issue date mismatch");
           await page.getByRole("button", { name: "Yes, reject" }).click();
-
-          await expect(page.getByText("No invoices to display")).toBeVisible();
+          await expect(page.getByText("Rejected")).toHaveCount(2);
 
           const updatedInvoices = await getInvoices();
           expect(updatedInvoices.length).toBe(2);
-          expect(updatedInvoices.every((invoice) => invoice.status === "rejected")).toBe(true);
-
-          await page.getByRole("tab", { name: "History" }).click();
-          await Promise.all(
-            updatedInvoices.map(async (invoice, index) => {
-              expect(invoice.rejectionReason).toBe("Invoice issue date mismatch");
-              await expect(page.getByRole("row", { name: invoice.billFrom }).nth(index)).toBeVisible();
-            }),
-          );
+          expect(
+            updatedInvoices.every(
+              (invoice) => invoice.status === "rejected" && invoice.rejectionReason === "Invoice issue date mismatch",
+            ),
+          ).toBe(true);
         });
       });
     });

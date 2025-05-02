@@ -40,7 +40,6 @@ RSpec.describe Company do
     it { is_expected.to have_many(:share_holdings).through(:company_investors) }
     it { is_expected.to have_many(:option_pools) }
     it { is_expected.to have_many(:tax_documents) }
-    it { is_expected.to have_many(:expense_card_charges) }
     it { is_expected.to have_many(:tender_offers) }
     it { is_expected.to have_many(:company_worker_updates).through(:company_workers) }
     it { is_expected.to have_one(:quickbooks_integration).conditions(deleted_at: nil) }
