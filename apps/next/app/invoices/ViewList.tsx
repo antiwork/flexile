@@ -154,7 +154,11 @@ export default function ViewList() {
 
     const isAllocationLocked = equityAllocation?.locked ?? false;
 
-    if (!isAllocationLocked && invoiceEquityPercent > 0) {
+    if (
+      company.equityCompensationEnabled &&
+      equityAllocation?.equityPercentage !== invoiceEquityPercent &&
+      !isAllocationLocked
+    ) {
       setLockModalOpen(true);
     } else {
       submit.mutate();
@@ -206,6 +210,7 @@ export default function ViewList() {
     getSortedRowModel: getSortedRowModel(),
   });
   const quickInvoiceDisabled = !!unsignedContractId || submit.isPending;
+  const equityPercentageMutation = trpc.equitySettings.update.useMutation();
 
   useEffect(() => {
     setInvoiceEquityPercent(equityAllocation?.equityPercentage ?? 0);
@@ -405,7 +410,14 @@ export default function ViewList() {
                     onClose={() => setLockModalOpen(false)}
                     percentage={invoiceEquityPercent}
                     year={invoiceYear}
-                    onComplete={submit.mutate}
+                    onComplete={() => {
+                      equityPercentageMutation.mutate({
+                        companyId: company.id,
+                        equityPercentage: invoiceEquityPercent,
+                        year: invoiceYear,
+                      });
+                      submit.mutate();
+                    }}
                   />
                 ) : null}
               </div>
