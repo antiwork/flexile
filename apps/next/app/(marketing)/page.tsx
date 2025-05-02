@@ -9,6 +9,7 @@ import { cn } from "@/utils";
 import iconClock from "./icon-clock.svg";
 import iconDiamond from "./icon-diamond.svg";
 import iconGlobe from "./icon-globe.svg";
+import iconEye from "./icon-eye.svg";
 
 const buttonClasses = "flex justify-center items-center rounded-full transition-all duration-400 no-underline";
 
@@ -69,10 +70,6 @@ export default function HomePage() {
         </Section>
 
         <Section className="py-16">
-          <h2 className="text-5xl font-medium md:text-8xl">Simplify your operations</h2>
-          <div className="text-2xl md:text-3xl">
-            Onboard contractors in seconds, track status async, and streamline invoicing globally.
-          </div>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-16">
             <div className="flex items-center gap-8">
               <Image src={iconClock} alt="Automate Operations" className="w-12 shrink-0" />
@@ -94,21 +91,12 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-          </div>
-        </Section>
-
-        <Section className="py-16">
-          <h2 className="text-5xl font-medium md:text-8xl">Align your incentives</h2>
-          <div className="text-2xl md:text-3xl">
-            Retain talent and reward contributions with flexible equity and dividend options.
-          </div>
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-16">
             <div className="flex items-center gap-8">
-              <Image src={iconDiamond} alt="Offer Equity" className="w-12 shrink-0" />
+              <Image src={iconEye} alt="Offer Equity" className="w-12 shrink-0" />
               <div>
                 <h3 className="text-xl font-medium">Offer Equity</h3>
                 <div className="text-xl text-gray-600">
-                  Retain contract talent with a <br />
+                  Align your incentives with a <br />
                   mix of cash, equity, and/or dividends
                 </div>
               </div>
@@ -126,14 +114,14 @@ export default function HomePage() {
           </div>
         </Section>
 
-        <section className="flex bg-gray-50 py-16">
+        <Section className="flex bg-gray-50 py-16">
           <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 md:gap-12">
             <h2 className="text-5xl font-medium md:text-8xl">Clear, straight forward pricing</h2>
             <div className="text-2xl md:text-3xl">1.5% + $0.50, capped at $15/payment</div>
           </div>
-        </section>
+        </Section>
 
-        <section className="flex w-full bg-blue-600 py-16">
+        <Section className="flex w-full bg-blue-600 py-16">
           <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 md:gap-12">
             <h2 className="text-5xl font-medium md:text-8xl">Less stress, more flex</h2>
             <Link
@@ -143,9 +131,9 @@ export default function HomePage() {
               Get started
             </Link>
           </div>
-        </section>
+        </Section>
 
-        <section className="flex w-full bg-black py-16 text-white">
+        <Section className="bg-black py-16 text-white">
           <div className="mx-auto flex w-full max-w-5xl flex-col items-start justify-between px-4 md:flex-row md:items-end">
             <div className="flex flex-col items-start gap-8 md:gap-18">
               <a
@@ -165,7 +153,7 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
-        </section>
+        </Section>
       </main>
     </>
   );
