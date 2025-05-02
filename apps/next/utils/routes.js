@@ -1995,22 +1995,6 @@ export const lawyer_onboarding_invitation_path = /*#__PURE__*/ __jsr.r({"format"
 
 /**
  * Generates rails route to
- * /internal/onboarding/legal(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const legal_onboarding_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"legal"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
-
-/**
- * Generates rails route to
- * /internal/onboarding/legal(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const legal_onboarding_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"legal"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
-
-/**
- * Generates rails route to
  * /internal/companies/:company_id/administrator/quickbooks/list_accounts(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
@@ -2458,22 +2442,6 @@ export const save_bank_account_onboarding_url = /*#__PURE__*/ __jsr.r({"format":
  * @returns {string} route path
  */
 export const save_bank_account_onboarding_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"save_bank_account"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
-
-/**
- * Generates rails route to
- * /internal/onboarding/save_legal(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const save_legal_onboarding_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"save_legal"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
-
-/**
- * Generates rails route to
- * /internal/onboarding/save_legal(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const save_legal_onboarding_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"save_legal"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
 
 /**
  * Generates rails route to

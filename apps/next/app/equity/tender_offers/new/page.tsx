@@ -77,16 +77,16 @@ export default function NewBuyback() {
             <Input value={startDate} onChange={setStartDate} type="date" label="Start date" />
             <Input value={endDate} onChange={setEndDate} type="date" label="End date" />
             <div className="grid gap-2">
-              <Label htmlFor="minimum-valuation">Minimum valuation</Label>
+              <Label htmlFor="starting-valuation">Starting valuation</Label>
               <NumberInput
-                id="minimum-valuation"
+                id="starting-valuation"
                 value={minimumValuation}
                 onChange={(value) => setMinimumValuation(value || 0)}
                 prefix="$"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="attachment">Attachment</Label>
+              <Label htmlFor="attachment">Document package</Label>
               <input
                 id="attachment"
                 type="file"

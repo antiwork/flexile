@@ -1,4 +1,4 @@
-import { ExclamationTriangleIcon, PencilIcon, PlusIcon } from "@heroicons/react/20/solid";
+import { PencilIcon, PlusIcon } from "@heroicons/react/20/solid";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { getSortedRowModel } from "@tanstack/react-table";
 import { useMutation } from "@tanstack/react-query";
@@ -27,36 +27,46 @@ import { request } from "@/utils/request";
 import { company_invoices_path } from "@/utils/routes";
 import { formatDate, formatDuration } from "@/utils/time";
 import { EDITABLE_INVOICE_STATES } from ".";
+import { linkClasses } from "@/components/Link";
+import { useRouter } from "next/navigation";
 
-export default function ViewList() {
+export const useCanSubmitInvoices = () => {
   const user = useCurrentUser();
   const company = useCurrentCompany();
-  const [data, { refetch }] = trpc.invoices.list.useSuspenseQuery({
-    contractorId: user.roles.worker?.id,
-    companyId: company.id,
-  });
-  assert(!!user.roles.worker);
-  const isProjectBased = user.roles.worker.payRateType === "project_based";
-  const payRateInSubunits = user.roles.worker.payRateInSubunits;
   const [documents] = trpc.documents.list.useSuspenseQuery({
     companyId: company.id,
     userId: user.id,
     signable: true,
   });
   const unsignedContractId = documents[0]?.id;
+  const hasLegalDetails = user.address.street_address;
+  return { unsignedContractId, hasLegalDetails, canSubmitInvoices: !unsignedContractId && hasLegalDetails };
+};
 
+export default function ViewList() {
+  const user = useCurrentUser();
+  const company = useCurrentCompany();
+  const router = useRouter();
+  const [data, { refetch }] = trpc.invoices.list.useSuspenseQuery({
+    contractorId: user.roles.worker?.id,
+    companyId: company.id,
+  });
+  assert(!!user.roles.worker);
+  const { unsignedContractId, hasLegalDetails, canSubmitInvoices } = useCanSubmitInvoices();
+  const isProjectBased = user.roles.worker.payRateType === "project_based";
+  const payRateInSubunits = user.roles.worker.payRateInSubunits;
   const nextInvoiceDate = useMemo(() => new Date(), []);
   const initialInvoiceDate = useMemo(() => formatISO(nextInvoiceDate, { representation: "date" }), [nextInvoiceDate]);
   const [duration, setDuration] = useState<number | null>(null);
   const [amountUsd, setAmountUsd] = useState(payRateInSubunits ? payRateInSubunits / 100 : null);
   const [date, setDate] = useState(initialInvoiceDate);
-  const [invoiceEquityPercent, setInvoiceEquityPercent] = useState(0);
   const [lockModalOpen, setLockModalOpen] = useState(false);
 
-  const [equityAllocation] = trpc.equityAllocations.forYear.useSuspenseQuery({
+  const [equityAllocation, { refetch: refetchEquityAllocation }] = trpc.equityAllocations.forYear.useSuspenseQuery({
     companyId: company.id,
     year: nextInvoiceDate.getFullYear(),
   });
+  const [invoiceEquityPercent, setInvoiceEquityPercent] = useState(equityAllocation?.equityPercentage ?? 0);
 
   const noticeMessage =
     equityAllocation?.status === "pending_grant_creation" || equityAllocation?.status === "pending_approval"
@@ -72,29 +82,24 @@ export default function ViewList() {
     return Math.ceil(((duration ?? 0) / 60) * (payRateInSubunits ?? 0));
   }, [isProjectBased, amountUsd, duration, payRateInSubunits]);
 
-  const hourlyRate = useMemo(() => (payRateInSubunits ?? 0) / 100, [payRateInSubunits]);
-
-  const { equityValueCents, cashValueCents } = useMemo(() => {
-    const totalValue = isProjectBased ? (amountUsd ?? 0) : hourlyRate;
-    const equityValue = totalValue * (invoiceEquityPercent / 100);
-    const cashValue = totalValue - equityValue;
-    return {
-      equityValueCents: Math.round(equityValue * 100),
-      cashValueCents: Math.round(cashValue * 100),
-    };
-  }, [isProjectBased, amountUsd, hourlyRate, invoiceEquityPercent]);
-
-  const invoiceEquityAmountCents = useMemo(() => {
-    if (isProjectBased) {
-      return equityValueCents;
-    }
-    return Math.round(((duration ?? 0) / 60) * hourlyRate * (invoiceEquityPercent / 100) * 100);
-  }, [isProjectBased, equityValueCents, duration, hourlyRate, invoiceEquityPercent]);
-
   const invoiceYear = useMemo(() => new Date(date).getFullYear() || new Date().getFullYear(), [date]);
+  const { data: equityCalculation } = trpc.equityCalculations.calculate.useQuery(
+    {
+      companyId: company.id,
+      invoiceYear,
+      servicesInCents: totalAmountInCents,
+      selectedPercentage: invoiceEquityPercent,
+    },
+    { enabled: !!duration },
+  );
 
-  const displayEquityAmountCents = invoiceEquityAmountCents;
-  const displayCashAmountCents = totalAmountInCents - displayEquityAmountCents;
+  const { equityAmountCents, cashAmountCents } = useMemo(
+    () => ({
+      equityAmountCents: equityCalculation?.amountInCents ?? 0,
+      cashAmountCents: totalAmountInCents - (equityCalculation?.amountInCents ?? 0),
+    }),
+    [equityCalculation?.amountInCents, totalAmountInCents],
+  );
 
   const newSearchParams = useMemo(() => {
     const params = new URLSearchParams({ date });
@@ -197,8 +202,8 @@ export default function ViewList() {
       title="Invoicing"
       headerActions={
         !unsignedContractId ? (
-          <Button asChild variant="outline" size="small">
-            <Link href="/invoices/new">
+          <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
+            <Link href="/invoices/new" inert={!canSubmitInvoices}>
               <PlusIcon className="size-4" />
               New invoice
             </Link>
@@ -206,9 +211,20 @@ export default function ViewList() {
         ) : null
       }
     >
-      {unsignedContractId ? (
-        <Alert variant="destructive">
-          <ExclamationTriangleIcon />
+      {!hasLegalDetails ? (
+        <Alert>
+          <InformationCircleIcon />
+          <AlertDescription>
+            Please{" "}
+            <Link className={linkClasses} href="/settings/tax">
+              provide your legal details
+            </Link>{" "}
+            before creating new invoices.
+          </AlertDescription>
+        </Alert>
+      ) : unsignedContractId ? (
+        <Alert>
+          <InformationCircleIcon />
           <AlertDescription>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>You have an unsigned contract. Please sign it before creating new invoices.</div>
@@ -270,7 +286,10 @@ export default function ViewList() {
                   <Input
                     id="quick-invoice-date"
                     value={date}
-                    onChange={setDate}
+                    onChange={(value) => {
+                      setDate(value);
+                      void refetchEquityAllocation();
+                    }}
                     type="date"
                     disabled={quickInvoiceDisabled}
                   />
@@ -319,21 +338,21 @@ export default function ViewList() {
                   <div className="flex justify-between gap-2">
                     <span className="text-sm">Cash amount</span>
                     <span className="text-sm">
-                      {formatMoneyFromCents(cashValueCents)} <span className="text-gray-500">/ hourly</span>
+                      {formatMoneyFromCents(cashAmountCents)} <span className="text-gray-500">/ hourly</span>
                     </span>
                   </div>
                   <Separator className="m-0" />
                   <div className="flex justify-between gap-2">
                     <span className="text-sm">Equity value</span>
                     <span className="text-sm">
-                      {formatMoneyFromCents(equityValueCents)} <span className="text-gray-500">/ hourly</span>
+                      {formatMoneyFromCents(equityAmountCents)} <span className="text-gray-500">/ hourly</span>
                     </span>
                   </div>
                   <Separator className="m-0" />
                   <div className="flex justify-between gap-2">
                     <span className="text-sm">Total rate</span>
                     <span className="text-sm">
-                      {formatMoneyFromCents(cashValueCents + equityValueCents)}
+                      {formatMoneyFromCents(cashAmountCents + equityAmountCents)}
                       <span className="text-gray-500">/ hourly</span>
                     </span>
                   </div>
@@ -345,10 +364,9 @@ export default function ViewList() {
               <div className="mt-2 mb-2 pt-2 text-right lg:mt-16 lg:mb-3 lg:pt-0">
                 <span className="text-sm text-gray-500">Total amount</span>
                 <div className="text-3xl font-bold">{formatMoneyFromCents(totalAmountInCents)}</div>
-                {invoiceEquityAmountCents > 0 && (
+                {invoiceEquityPercent > 0 && (
                   <div className="mt-1 text-sm text-gray-500">
-                    ({formatMoneyFromCents(displayCashAmountCents)} cash +{" "}
-                    {formatMoneyFromCents(displayEquityAmountCents)} equity)
+                    ({formatMoneyFromCents(cashAmountCents)} cash + {formatMoneyFromCents(equityAmountCents)} equity)
                   </div>
                 )}
               </div>
@@ -381,7 +399,7 @@ export default function ViewList() {
           </div>
         </CardContent>
       </Card>
-      {data.length > 0 && <DataTable table={table} />}
+      {data.length > 0 ? <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} /> : null}
     </MainLayout>
   );
 }
