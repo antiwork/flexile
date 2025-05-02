@@ -4,11 +4,9 @@ import { type QueryClient } from "@tanstack/react-query";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
-import { parseISO } from "date-fns";
 import { useEffect, useState } from "react";
 import superjson from "superjson";
-import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
-import { policies } from "@/trpc/access";
+import { useUserStore } from "@/global";
 import { request } from "@/utils/request";
 import { internal_current_user_data_path } from "@/utils/routes";
 import { type AppRouter } from "./server";
@@ -38,26 +36,6 @@ const GetUserData = ({ children }: { children: React.ReactNode }) => {
   }, [isSignedIn, data]);
   if (isSignedIn == null || (isSignedIn && !user)) return null;
   return children;
-};
-
-// TODO improve this when we get the data from TRPC
-export const useCanAccess = () => {
-  const user = useCurrentUser();
-  const company = useCurrentCompany();
-  return (policy: keyof typeof policies) =>
-    policies[policy]({
-      company,
-      user,
-      companyAdministrator: !!user.roles.administrator,
-      companyContractor: user.roles.worker
-        ? {
-            ...user.roles.worker,
-            endedAt: user.roles.worker.endedAt ? parseISO(user.roles.worker.endedAt) : null,
-          }
-        : undefined,
-      companyInvestor: !!user.roles.investor,
-      companyLawyer: !!user.roles.lawyer,
-    });
 };
 
 let queryClient: QueryClient | undefined;

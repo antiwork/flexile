@@ -34,8 +34,7 @@ test.describe("End contract", () => {
 
     await page.getByRole("button", { name: "Yes, end contract" }).click();
 
-    await expect(page.getByText("Contractors will show up here.")).toBeVisible();
-    await page.getByRole("tab", { name: "Alumni" }).click();
+    await expect(page.getByRole("row").getByText(`Ended on ${format(new Date(), "MMM d, yyyy")}`)).toBeVisible();
     await page.getByRole("link", { name: contractor.preferredName }).click();
 
     await expect(page.getByText(`Contract ended on ${format(new Date(), "MMM d, yyyy")}`)).toBeVisible();
@@ -52,7 +51,8 @@ test.describe("End contract", () => {
     await mockForm(page);
     await page.getByLabel("Email").fill(contractor.email);
     await page.getByLabel("Average hours").fill("25");
-    await page.getByLabel("Start date").fill(formatISO(addYears(new Date(), 1), { representation: "date" }));
+    const startDate = addYears(new Date(), 1);
+    await page.getByLabel("Start date").fill(formatISO(startDate, { representation: "date" }));
     await page.getByRole("button", { name: "Send invite" }).click();
     await withinModal(
       async (modal) => {
@@ -65,7 +65,10 @@ test.describe("End contract", () => {
     );
 
     await expect(
-      page.getByRole("row").filter({ hasText: contractor.preferredName }).filter({ hasText: "In Progress" }),
+      page
+        .getByRole("row")
+        .filter({ hasText: contractor.preferredName })
+        .filter({ hasText: `Starts on ${format(startDate, "MMM d, yyyy")}` }),
     ).toBeVisible();
 
     await clerk.signOut({ page });

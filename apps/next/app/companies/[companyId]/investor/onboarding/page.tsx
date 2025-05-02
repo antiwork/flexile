@@ -11,7 +11,7 @@ export default async function Page({ params }: { params: Promise<{ companyId: st
       title="Let's get to know you"
       subtitle="We're eager to learn more about you, starting with your legal name and the place where you reside."
     >
-      <PersonalDetails nextLinkTo={`/companies/${companyId}/investor/onboarding/legal`} />
+      <PersonalDetails nextLinkTo={`/companies/${companyId}/investor/onboarding/bank_account`} />
     </OnboardingLayout>
   );
 }

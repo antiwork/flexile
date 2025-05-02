@@ -1,5 +1,6 @@
-import { CurrencyDollarIcon, ExclamationTriangleIcon, PencilIcon, PlusIcon } from "@heroicons/react/20/solid";
-import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
+import { CurrencyDollarIcon, PencilIcon, PlusIcon } from "@heroicons/react/20/solid";
+import { ChatBubbleLeftIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
+import { getSortedRowModel } from "@tanstack/react-table";
 import { useMutation } from "@tanstack/react-query";
 import { formatISO } from "date-fns";
 import Link from "next/link";
@@ -36,19 +37,26 @@ const useData = () => {
   });
 };
 
-export default function ViewList() {
-  const [data] = useData();
-  const router = useRouter();
+export const useCanSubmitInvoices = () => {
   const user = useCurrentUser();
   const company = useCurrentCompany();
-  assert(!!user.roles.worker);
-  const isProjectBased = user.roles.worker.payRateType === "project_based";
   const [documents] = trpc.documents.list.useSuspenseQuery({
     companyId: company.id,
     userId: user.id,
     signable: true,
   });
   const unsignedContractId = documents[0]?.id;
+  const hasLegalDetails = user.address.street_address;
+  return { unsignedContractId, hasLegalDetails, canSubmitInvoices: !unsignedContractId && hasLegalDetails };
+};
+
+export default function ViewList() {
+  const [data] = useData();
+  const router = useRouter();
+  const user = useCurrentUser();
+  assert(!!user.roles.worker);
+  const { unsignedContractId, hasLegalDetails, canSubmitInvoices } = useCanSubmitInvoices();
+  const isProjectBased = user.roles.worker.payRateType === "project_based";
   const columnHelper = createColumnHelper<(typeof data)[number]>();
   const columns = useMemo(
     () =>
@@ -85,15 +93,22 @@ export default function ViewList() {
     [data],
   );
 
-  const table = useTable({ columns, data });
+  const table = useTable({
+    columns,
+    data,
+    initialState: {
+      sorting: [{ id: "invoiceDate", desc: true }],
+    },
+    getSortedRowModel: getSortedRowModel(),
+  });
 
   return (
     <MainLayout
       title="Invoicing"
       headerActions={
         !unsignedContractId ? (
-          <Button asChild variant="outline" size="small">
-            <Link href="/invoices/new">
+          <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
+            <Link href="/invoices/new" inert={!canSubmitInvoices}>
               <PlusIcon className="size-4" />
               New invoice
             </Link>
@@ -101,13 +116,24 @@ export default function ViewList() {
         ) : null
       }
     >
-      {unsignedContractId ? (
-        <Alert variant="destructive">
-          <ExclamationTriangleIcon />
+      {!hasLegalDetails ? (
+        <Alert>
+          <InformationCircleIcon />
+          <AlertDescription>
+            Please{" "}
+            <Link className={linkClasses} href="/settings/tax">
+              provide your legal details
+            </Link>{" "}
+            before creating new invoices.
+          </AlertDescription>
+        </Alert>
+      ) : unsignedContractId ? (
+        <Alert>
+          <InformationCircleIcon />
           <AlertDescription>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>You have an unsigned contract. Please sign it before creating new invoices.</div>
-              <Button asChild variant="outline" size="small" disabled={!!unsignedContractId}>
+              <Button asChild variant="outline" size="small">
                 <Link
                   href={`/documents?${new URLSearchParams({ sign: unsignedContractId.toString(), next: "/invoices" })}`}
                 >
@@ -119,7 +145,7 @@ export default function ViewList() {
         </Alert>
       ) : null}
 
-      <QuickInvoiceSection disabled={!!unsignedContractId} />
+      <QuickInvoiceSection disabled={!canSubmitInvoices} />
 
       {data.length > 0 ? (
         <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
@@ -127,8 +153,8 @@ export default function ViewList() {
         <div>
           <Placeholder icon={CurrencyDollarIcon}>
             Create a new invoice to get started.
-            <Button asChild variant="outline" size="small" disabled={!!unsignedContractId}>
-              <Link inert={!!unsignedContractId} href="/invoices/new">
+            <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
+              <Link inert={!canSubmitInvoices} href="/invoices/new">
                 <PlusIcon className="size-4" />
                 New invoice
               </Link>

@@ -9,7 +9,7 @@ import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { mockDocuseal as mockDocusealHelper } from "@test/helpers/docuseal";
 import { expect, type Page, test, withinModal } from "@test/index";
-import { addMonths, format, formatISO } from "date-fns";
+import { addMonths, formatISO } from "date-fns";
 import { desc, eq } from "drizzle-orm";
 import type { NextFixture } from "next/experimental/testmode/playwright";
 import { companies, companyContractors, users } from "@/db/schema";
@@ -94,7 +94,7 @@ test.describe("New Contractor", () => {
       __maximumFee:
         'Maximum fee payable to Contractor on this Project Assignment, including all items in the first two paragraphs above is $152,460 (the "Maximum Fee").',
     });
-    const { email, date } = await fillForm(page);
+    const { email } = await fillForm(page);
     await selectComboboxOption(page, "Role", "Hourly Role 1");
     await page.getByLabel("Average hours").fill("25");
     await page.getByLabel("Rate").fill("99");
@@ -113,7 +113,6 @@ test.describe("New Contractor", () => {
 
     const row = page.getByRole("row").filter({ hasText: email });
     await expect(row).toContainText(email);
-    await expect(row).toContainText(format(date, "MMM d, yyyy"));
     await expect(row).toContainText("Hourly Role 1");
     await expect(row).toContainText("Invited");
     const [deletedUser] = await db.delete(users).where(eq(users.email, email)).returning();
@@ -137,7 +136,7 @@ test.describe("New Contractor", () => {
       __maximumFee: "",
     });
     await mockForm(page);
-    const { email, date } = await fillForm(page);
+    const { email } = await fillForm(page);
     await selectComboboxOption(page, "Role", "Project-based Role");
     await page.getByLabel("Rate").fill("1000");
 
@@ -154,7 +153,6 @@ test.describe("New Contractor", () => {
 
     const row = page.getByRole("row").filter({ hasText: email });
     await expect(row).toContainText(email);
-    await expect(row).toContainText(format(date, "MMM d, yyyy"));
     await expect(row).toContainText("Project-based Role");
     await expect(row).toContainText("Invited");
     const [deletedUser] = await db.delete(users).where(eq(users.email, email)).returning();
@@ -171,7 +169,7 @@ test.describe("New Contractor", () => {
   });
 
   test("allows inviting a salary-based contractor", async ({ page }) => {
-    const { email, date } = await fillForm(page);
+    const { email } = await fillForm(page);
     await selectComboboxOption(page, "Role", "Salaried Role");
     await page.getByLabel("Rate").fill("120000");
 
@@ -179,7 +177,6 @@ test.describe("New Contractor", () => {
 
     const row = page.getByRole("row").filter({ hasText: email });
     await expect(row).toContainText(email);
-    await expect(row).toContainText(format(date, "MMM d, yyyy"));
     await expect(row).toContainText("Role");
     await expect(row).toContainText("Invited");
   });

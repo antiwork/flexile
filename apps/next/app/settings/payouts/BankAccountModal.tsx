@@ -6,7 +6,6 @@ import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import Input from "@/components/Input";
 import MutationButton from "@/components/MutationButton";
-import RadioButtons from "@/components/RadioButtons";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -21,6 +20,7 @@ import {
 import { cn } from "@/utils";
 import { request } from "@/utils/request";
 import { save_bank_account_onboarding_path, wise_account_requirements_path } from "@/utils/routes";
+import { RadioGroup } from "@/components/ui/radio-group";
 
 const KEY_LEGAL_TYPE = "legalType";
 const KEY_CHECKING_ACCOUNT = "CHECKING";
@@ -80,9 +80,9 @@ type BillingDetails = {
   country: string;
   country_code: string;
   state: string | null;
-  city: string;
-  zip_code: string;
-  street_address: string;
+  city: string | null;
+  zip_code: string | null;
+  street_address: string | null;
   email: string;
   billing_entity_name: string;
   legal_type: "BUSINESS" | "PRIVATE";
@@ -355,7 +355,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
     if (!allFields) return;
 
     const fields = new Map(allFields.map((field) => [field.key, field]));
-    const setIfEmpty = (key: string, value: string) => {
+    const setIfEmpty = (key: string, value: string | null) => {
       const field = fields.get(key);
       if (field && !details.get(key)) {
         setDetails((prev) => prev.set(key, value));
@@ -462,7 +462,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
             }
 
             return (
-              <RadioButtons
+              <RadioGroup
                 key={field.key}
                 value={details.get(field.key) ?? ""}
                 onChange={(value) => {

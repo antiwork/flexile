@@ -22,6 +22,7 @@ const companySchema = z.object({
   selected_access_role: companyAccessRoleSchema.nullable(),
   other_access_roles: z.array(companyAccessRoleSchema),
   requiredInvoiceApprovals: z.number(),
+  equityCompensationEnabled: z.boolean(),
   completedPaymentMethodSetup: z.boolean(),
   paymentProcessingDays: z.number(),
   createdAt: z.string(),
@@ -34,7 +35,6 @@ const companySchema = z.object({
   investorCount: z.number().nullable(),
   primaryAdminName: z.string().nullable(),
   isTrusted: z.boolean(),
-  expenseCardsEnabled: z.boolean(),
 });
 
 export const currentUserSchema = z.object({
@@ -68,7 +68,7 @@ export const currentUserSchema = z.object({
         endedAt: z.string().nullable(),
         payRateType: z.enum(["hourly", "project_based", "salary"]),
         inviting_company: z.boolean(),
-        role: z.object({ name: z.string(), expenseCardEnabled: z.boolean() }),
+        role: z.object({ name: z.string() }),
         hoursPerWeek: z.number().nullable(),
         payRateInSubunits: z.number().nullable(),
       })
