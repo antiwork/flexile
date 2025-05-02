@@ -4,7 +4,7 @@ import { getSortedRowModel } from "@tanstack/react-table";
 import { useMutation } from "@tanstack/react-query";
 import { formatISO } from "date-fns";
 import Link from "next/link";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import EquityPercentageLockModal from "@/app/invoices/EquityPercentageLockModal";
 import { StatusWithTooltip } from "@/app/invoices/Status";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
@@ -82,6 +82,15 @@ export default function ViewList() {
     return Math.ceil(((duration ?? 0) / 60) * (payRateInSubunits ?? 0));
   }, [isProjectBased, amountUsd, duration, payRateInSubunits]);
 
+  const hourlyEquityRateCents = useMemo(
+    () => (totalAmountInCents > 0 ? Math.ceil((payRateInSubunits ?? 0) * (invoiceEquityPercent / 100)) : 0),
+    [totalAmountInCents, payRateInSubunits, invoiceEquityPercent],
+  );
+  const hourlyRateCashCents = useMemo(
+    () => (totalAmountInCents > 0 ? Math.ceil((payRateInSubunits ?? 0) * (1 - invoiceEquityPercent / 100)) : 0),
+    [totalAmountInCents, payRateInSubunits, invoiceEquityPercent],
+  );
+
   const invoiceYear = useMemo(() => new Date(date).getFullYear() || new Date().getFullYear(), [date]);
   const { data: equityCalculation } = trpc.equityCalculations.calculate.useQuery(
     {
@@ -103,10 +112,11 @@ export default function ViewList() {
 
   const newSearchParams = useMemo(() => {
     const params = new URLSearchParams({ date });
+    params.set("split", String(invoiceEquityPercent));
     if (isProjectBased) params.set("amount", String(amountUsd ?? ""));
     else params.set("duration", String(duration ?? ""));
     return params;
-  }, [date, isProjectBased, amountUsd, duration]);
+  }, [date, isProjectBased, amountUsd, duration, invoiceEquityPercent]);
 
   const newCompanyInvoiceRoute = useMemo(() => `/invoices/new?${newSearchParams.toString()}`, [newSearchParams]);
 
@@ -196,6 +206,10 @@ export default function ViewList() {
     getSortedRowModel: getSortedRowModel(),
   });
   const quickInvoiceDisabled = !!unsignedContractId || submit.isPending;
+
+  useEffect(() => {
+    setInvoiceEquityPercent(equityAllocation?.equityPercentage ?? 0);
+  }, [equityAllocation]);
 
   return (
     <MainLayout
@@ -333,42 +347,42 @@ export default function ViewList() {
             {/* --- Section 2: Summary --- */}
             <div className="grid gap-2">
               {/* Rate Breakdown */}
-              {!isProjectBased && (
+              {company.equityCompensationEnabled && !isProjectBased ? (
                 <>
                   <div className="flex justify-between gap-2">
                     <span className="text-sm">Cash amount</span>
                     <span className="text-sm">
-                      {formatMoneyFromCents(cashAmountCents)} <span className="text-gray-500">/ hourly</span>
+                      {formatMoneyFromCents(hourlyRateCashCents)} <span className="text-gray-500">/ hourly</span>
                     </span>
                   </div>
                   <Separator className="m-0" />
                   <div className="flex justify-between gap-2">
                     <span className="text-sm">Equity value</span>
                     <span className="text-sm">
-                      {formatMoneyFromCents(equityAmountCents)} <span className="text-gray-500">/ hourly</span>
+                      {formatMoneyFromCents(hourlyEquityRateCents)} <span className="text-gray-500">/ hourly</span>
                     </span>
                   </div>
                   <Separator className="m-0" />
                   <div className="flex justify-between gap-2">
                     <span className="text-sm">Total rate</span>
                     <span className="text-sm">
-                      {formatMoneyFromCents(cashAmountCents + equityAmountCents)}
+                      {formatMoneyFromCents(hourlyRateCashCents + hourlyEquityRateCents)}{" "}
                       <span className="text-gray-500">/ hourly</span>
                     </span>
                   </div>
                   <Separator className="m-0" />
                 </>
-              )}
+              ) : null}
 
               {/* Invoice Total */}
               <div className="mt-2 mb-2 pt-2 text-right lg:mt-16 lg:mb-3 lg:pt-0">
                 <span className="text-sm text-gray-500">Total amount</span>
                 <div className="text-3xl font-bold">{formatMoneyFromCents(totalAmountInCents)}</div>
-                {invoiceEquityPercent > 0 && (
+                {company.equityCompensationEnabled ? (
                   <div className="mt-1 text-sm text-gray-500">
                     ({formatMoneyFromCents(cashAmountCents)} cash + {formatMoneyFromCents(equityAmountCents)} equity)
                   </div>
-                )}
+                ) : null}
               </div>
               {/* Right side: Buttons */}
               <div className="flex flex-wrap items-center justify-end gap-3">

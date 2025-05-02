@@ -14,7 +14,7 @@ test.describe("quick invoicing", () => {
   let contractorUser: typeof users.$inferSelect;
   let companyContractor: typeof companyContractors.$inferSelect;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async () => {
     company = (await companiesFactory.createCompletedOnboarding()).company;
     contractorUser = (
       await usersFactory.createWithBusinessEntity({
@@ -30,12 +30,11 @@ test.describe("quick invoicing", () => {
         payRateType: PayRateType.Hourly,
       })
     ).companyContractor;
-
-    await login(page, contractorUser);
   });
 
   test.describe("when equity compensation is disabled", () => {
     test("allows filling out the form and previewing the invoice for hourly rate", async ({ page }) => {
+      await login(page, contractorUser);
       await page.getByLabel("Hours").fill("10:30");
       await page.getByLabel("Date").fill("2024-08-08");
       await expect(page.getByText("Total to invoice$630")).toBeVisible();
@@ -57,7 +56,7 @@ test.describe("quick invoicing", () => {
         .set({ payRateType: PayRateType.ProjectBased })
         .where(eq(companyContractors.id, companyContractor.id));
 
-      await page.reload();
+      await login(page, contractorUser);
 
       await page.getByLabel("Amount").fill("630");
       await page.getByLabel("Date").fill("2024-08-08");
@@ -81,28 +80,31 @@ test.describe("quick invoicing", () => {
     test("handles equity compensation when allocation is set", async ({ page }) => {
       await equityAllocationsFactory.create({
         companyContractorId: companyContractor.id,
-        equityPercentage: 32,
+        equityPercentage: 20,
         year: 2024,
       });
 
-      await page.getByLabel("Hours").fill("10:30");
-      await page.getByLabel("Date").fill("2024-08-08");
-      await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("32%");
+      await login(page, contractorUser);
+      await page.getByLabel("Hours worked").fill("10:30");
+      await page.getByLabel("Invoice date").fill("2024-08-08");
+      await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("20");
 
-      await expect(page.getByText("Total invoice amount: $630")).toBeVisible();
-      await expect(page.getByText("Swapped for equity (not paid in cash): $201.60")).toBeVisible();
-      await expect(page.getByText("Net amount in cash$428.40")).toBeVisible();
+      await expect(page.getByText("Cash amount$48 / hourly")).toBeVisible();
+      await expect(page.getByText("Equity value$12 / hourly")).toBeVisible();
+      await expect(page.getByText("Total rate$60 / hourly")).toBeVisible();
+      await expect(page.getByText("($504 cash + $126 equity)")).toBeVisible();
+      await expect(page.getByText("$630", { exact: true })).toBeVisible();
 
       await page.getByRole("button", { name: "Send for approval" }).click();
 
-      await expect(page.getByText("Lock 32% in equity for all 2024?")).toBeVisible();
+      await expect(page.getByText("Lock 20% in equity for all 2024?")).toBeVisible();
       await expect(
-        page.getByText("By submitting this invoice, your current equity selection of 32% will be locked for all 2024"),
+        page.getByText("By submitting this invoice, your current equity selection of 20% will be locked for all 2024"),
       ).toBeVisible();
       await expect(
         page.getByText("You won't be able to choose a different allocation until the next options grant for 2025"),
       ).toBeVisible();
-      await page.getByRole("button", { name: "Confirm 32% equity selection" }).click();
+      await page.getByRole("button", { name: "Confirm 20% equity selection" }).click();
 
       await expect(page.getByRole("cell", { name: "Aug 8, 2024" })).toBeVisible();
       await expect(page.getByRole("cell", { name: "$630" })).toBeVisible();
@@ -114,19 +116,23 @@ test.describe("quick invoicing", () => {
         .then(takeOrThrow);
       expect(invoice.totalMinutes).toBe(630);
       expect(invoice.totalAmountInUsdCents).toBe(63000n);
-      expect(invoice.cashAmountInCents).toBe(42840n);
-      expect(invoice.equityAmountInCents).toBe(20160n);
-      expect(invoice.equityPercentage).toBe(32);
+      expect(invoice.cashAmountInCents).toBe(50400n);
+      expect(invoice.equityAmountInCents).toBe(12600n);
+      expect(invoice.equityPercentage).toBe(20);
     });
 
     test("handles equity compensation when no allocation is set", async ({ page }) => {
+      await login(page, contractorUser);
       await page.getByLabel("Hours").fill("10:30");
       await page.getByLabel("Date").fill("2024-08-08");
 
-      await expect(page.getByText("Total invoice amount")).not.toBeVisible();
-      await expect(page.getByText("Net amount in cash")).not.toBeVisible();
-      await expect(page.getByText("Swapped for equity")).not.toBeVisible();
-      await expect(page.getByText("Total to invoice$630")).toBeVisible();
+      await expect(page.getByRole("textbox", { name: "Cash vs equity split" })).toHaveValue("0");
+
+      await expect(page.getByText("Cash amount$60 / hourly")).toBeVisible();
+      await expect(page.getByText("Equity value$0 / hourly")).toBeVisible();
+      await expect(page.getByText("Total rate$60 / hourly")).toBeVisible();
+      await expect(page.getByText("($630 cash + $0 equity)")).toBeVisible();
+      await expect(page.getByText("$630", { exact: true })).toBeVisible();
 
       await page.getByRole("button", { name: "Send for approval" }).click();
 

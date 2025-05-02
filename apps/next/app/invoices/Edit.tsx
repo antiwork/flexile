@@ -153,7 +153,9 @@ const Edit = () => {
     companyId: company.id,
     year: invoiceYear,
   });
-  const [equityPercentage, setEquityPercent] = useState(equityAllocation?.equityPercentage ?? 0);
+  const [equityPercentage, setEquityPercent] = useState(
+    parseInt(searchParams.get("split") ?? "", 10) || equityAllocation?.equityPercentage || 0,
+  );
 
   const equityPercentageMutation = trpc.equitySettings.update.useMutation();
   const validate = () => {
