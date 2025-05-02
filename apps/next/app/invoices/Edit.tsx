@@ -34,7 +34,7 @@ import { LegacyAddress as Address } from ".";
 import { Card, CardContent } from "@/components/ui/card";
 import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import RangeInput from "@/components/RangeInput";
-import { linkClasses } from "@/components/Link";
+
 import { EquityAllocationStatus } from "@/db/enums";
 import { useCanSubmitInvoices } from "@/app/invoices/ViewList";
 
@@ -314,19 +314,7 @@ const Edit = () => {
                   max={MAX_EQUITY_PERCENTAGE}
                   ariaLabel="Cash vs equity split"
                   unit="%"
-                  label={
-                    <div className="flex justify-between gap-2">
-                      Confirm your equity split for {invoiceYear}
-                      <a
-                        className={linkClasses}
-                        href="https://sahillavingia.com/dividends"
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Learn more
-                      </a>
-                    </div>
-                  }
+                  label={<div className="flex justify-between gap-2">Confirm your equity split for {invoiceYear}</div>}
                 />
               </div>
               <p className="mt-4">
