@@ -80,7 +80,17 @@ export default function MainLayout({
   const openCompany = user.companies.find((company) => company.id === openCompanyId);
   const pathname = usePathname();
 
-  const switchCompany = useSwitchCompanyOrRole();
+  const queryClient = useQueryClient();
+  const switchCompany = async (companyId: string) => {
+    useUserStore.setState((state) => ({ ...state, pending: true }));
+    await request({
+      method: "POST",
+      url: company_switch_path(companyId),
+      accept: "json",
+    });
+    await queryClient.resetQueries({ queryKey: ["currentUser"] });
+    useUserStore.setState((state) => ({ ...state, pending: false }));
+  };
 
   return (
     <SidebarProvider>
@@ -216,20 +226,6 @@ const CompanyName = ({ company }: { company: Company }) => (
   </>
 );
 
-const useSwitchCompanyOrRole = () => {
-  const queryClient = useQueryClient();
-  return async (companyId: string) => {
-    useUserStore.setState((state) => ({ ...state, pending: true }));
-    await request({
-      method: "POST",
-      url: company_switch_path(companyId),
-      accept: "json",
-    });
-    await queryClient.resetQueries({ queryKey: ["currentUser"] });
-    useUserStore.setState((state) => ({ ...state, pending: false }));
-  };
-};
-
 const NavLinks = ({ company }: { company: Company }) => {
   const user = useCurrentUser();
   const pathname = usePathname();
@@ -238,7 +234,6 @@ const NavLinks = ({ company }: { company: Company }) => {
     company.routes.flatMap((route) => [route.label, ...(route.subLinks?.map((subLink) => subLink.label) || [])]),
   );
   const updatesPath = company.routes.find((route) => route.label === "Updates")?.name;
-  const isRole = (...roles: (typeof user.activeRole)[]) => roles.includes(user.activeRole);
   const equityNavLink = equityNavLinks(user, company)[0];
 
   return (
@@ -254,11 +249,7 @@ const NavLinks = ({ company }: { company: Company }) => {
         </NavLink>
       ) : null}
       {routes.has("Invoices") && (
-        <InvoicesNavLink
-          companyId={company.id}
-          active={!!active && pathname.startsWith("/invoices")}
-          isAdmin={isRole("administrator")}
-        />
+        <InvoicesNavLink companyId={company.id} active={!!active && pathname.startsWith("/invoices")} />
       )}
       {routes.has("Expenses") && (
         <NavLink
@@ -312,7 +303,7 @@ const NavLinks = ({ company }: { company: Company }) => {
       ) : null}
       {routes.has("Settings") && (
         <NavLink
-          href={isRole("administrator") ? `/administrator/settings` : `/settings`}
+          href={user.roles.administrator ? `/administrator/settings` : `/settings`}
           active={!!active && (pathname.startsWith("/administrator/settings") || pathname.startsWith("/settings"))}
           icon={Cog6ToothIcon}
           filledIcon={SolidCog6ToothIcon}
@@ -362,10 +353,11 @@ const NavLink = ({
   );
 };
 
-function InvoicesNavLink({ companyId, active, isAdmin }: { companyId: string; active: boolean; isAdmin: boolean }) {
-  const { data, isLoading } = trpc.invoices.list.useQuery(
+function InvoicesNavLink({ companyId, active }: { companyId: string; active: boolean }) {
+  const user = useCurrentUser();
+  const { data } = trpc.invoices.list.useQuery(
     { companyId, status: ["received", "approved", "failed"] },
-    { refetchInterval: 30_000, enabled: isAdmin },
+    { refetchInterval: 30_000, enabled: !!user.roles.administrator },
   );
 
   return (
@@ -374,7 +366,7 @@ function InvoicesNavLink({ companyId, active, isAdmin }: { companyId: string; ac
       icon={DocumentTextIcon}
       filledIcon={SolidDocumentTextIcon}
       active={active}
-      badge={isAdmin && !isLoading ? data?.length : undefined}
+      badge={data?.length}
     >
       Invoices
     </NavLink>

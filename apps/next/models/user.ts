@@ -74,7 +74,6 @@ export const currentUserSchema = z.object({
       })
       .optional(),
   }),
-  activeRole: z.enum(["administrator", "lawyer", "contractorOrInvestor"]),
 });
 
 export type Company = z.infer<typeof companySchema>;

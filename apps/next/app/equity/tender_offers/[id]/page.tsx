@@ -39,11 +39,11 @@ export default function BuybackView() {
   const user = useCurrentUser();
   const [data] = trpc.tenderOffers.get.useSuspenseQuery({ companyId: company.id, id });
   const isOpen = isPast(data.startsAt) && isFuture(data.endsAt);
-  const investorId = user.roles.administrator ? undefined : user.roles.investor?.id;
+  const investorId = user.roles.investor?.id;
   const [bids, { refetch: refetchBids }] = trpc.tenderOffers.bids.list.useSuspenseQuery({
     companyId: company.id,
     tenderOfferId: id,
-    investorId,
+    investorId: user.roles.administrator ? undefined : investorId,
   });
   const { data: ownShareHoldings } = trpc.shareHoldings.sumByShareClass.useQuery(
     { companyId: company.id, investorId },
@@ -110,24 +110,26 @@ export default function BuybackView() {
   const columns = useMemo(
     () =>
       [
-        columnHelper.simple("companyInvestor.user.email", "Investor", (value) =>
-          user.activeRole !== "administrator" ? "You!" : value,
-        ),
+        columnHelper.accessor("companyInvestor.user.email", {
+          header: "Investor",
+          cell: (info) => (info.row.original.companyInvestor.user.id === user.id ? "You!" : info.getValue()),
+        }),
         columnHelper.simple("shareClass", "Share class"),
         columnHelper.simple("numberOfShares", "Number of shares", (value) => value.toLocaleString()),
         columnHelper.simple("sharePriceCents", "Bid price", formatMoneyFromCents),
-        isOpen && !user.roles.administrator
+        isOpen
           ? columnHelper.display({
               id: "actions",
-              cell: (info) => (
-                <Button onClick={() => setCancelingBid(info.row.original)}>
-                  <TrashIcon className="size-4" />
-                </Button>
-              ),
+              cell: (info) =>
+                info.row.original.companyInvestor.user.id === user.id ? (
+                  <Button onClick={() => setCancelingBid(info.row.original)}>
+                    <TrashIcon className="size-4" />
+                  </Button>
+                ) : null,
             })
           : null,
       ].filter((column) => !!column),
-    [user.activeRole],
+    [],
   );
 
   const bidsTable = useTable({ data: bids, columns });
@@ -136,7 +138,7 @@ export default function BuybackView() {
 
   return (
     <MainLayout title='Buyback details ("Sell Elections")'>
-      {(!!user.roles.worker || !!user.roles.investor) && user.roles.investor?.investedInAngelListRuv ? (
+      {user.roles.investor?.investedInAngelListRuv ? (
         <Alert variant="destructive">
           <ExclamationTriangleIcon />
           <AlertDescription>

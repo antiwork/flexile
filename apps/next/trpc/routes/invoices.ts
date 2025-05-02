@@ -319,7 +319,7 @@ export const invoicesRouter = createRouter({
             with: {
               role: { columns: { name: true } },
               user: {
-                columns: {},
+                columns: { externalId: true },
                 with: {
                   userComplianceInfos: { ...latestUserComplianceInfo, columns: { taxInformationConfirmedAt: true } },
                 },
@@ -367,7 +367,10 @@ export const invoicesRouter = createRouter({
         equityAllocationStatus: invoice.contractor.equityAllocations[0]?.status,
         contractor: {
           ...pick(invoice.contractor, "role"),
-          user: { complianceInfo: invoice.contractor.user.userComplianceInfos[0] },
+          user: {
+            id: invoice.contractor.user.externalId,
+            complianceInfo: invoice.contractor.user.userComplianceInfos[0],
+          },
         },
         rejector: invoice.rejector && simpleUser(invoice.rejector),
       }));

@@ -8,48 +8,30 @@ class CurrentContext
     new(
       user: current.user,
       company: current.company,
-      role: current.role,
     )
   end
 
-  attr_reader :user, :company, :role
+  attr_reader :user, :company
 
-  def initialize(user:, company:, role:)
+  def initialize(user:, company:)
     @user = user
     @company = company
-    @role = role
   end
 
   def company_administrator
-    @_company_administrator ||= if role.blank? || role == Company::ACCESS_ROLE_ADMINISTRATOR
-      user&.company_administrator_for(company)
-    else
-      nil
-    end
+    @_company_administrator ||= user&.company_administrator_for(company)
   end
 
   def company_worker
-    @_company_worker ||= if role.blank? || role.in?([Company::ACCESS_ROLE_WORKER, Company::ACCESS_ROLE_INVESTOR, Company::ACCESS_ROLE_ADMINISTRATOR])
-      user&.company_worker_for(company)
-    else
-      nil
-    end
+    @_company_worker ||= user&.company_worker_for(company)
   end
 
   def company_investor
-    @_company_investor ||= if role.blank? || role.in?([Company::ACCESS_ROLE_INVESTOR, Company::ACCESS_ROLE_WORKER, Company::ACCESS_ROLE_ADMINISTRATOR])
-      user&.company_investor_for(company)
-    else
-      nil
-    end
+    @_company_investor ||= user&.company_investor_for(company)
   end
 
   def company_lawyer
-    @_company_lawyer ||= if role.blank? || role == Company::ACCESS_ROLE_LAWYER
-      user&.company_lawyer_for(company)
-    else
-      nil
-    end
+    @_company_lawyer ||= user&.company_lawyer_for(company)
   end
 
   def company_administrator?
@@ -69,6 +51,6 @@ class CurrentContext
   end
 
   def inspect
-    "#<CurrentContext user_email=#{user&.email} company_name=#{company&.name} role=#{role}>"
+    "#<CurrentContext user_email=#{user&.email} company_name=#{company&.name}>"
   end
 end

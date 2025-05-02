@@ -22,6 +22,18 @@ export const useAreTaxRequirementsMet = () => {
     !company.flags.includes("irs_tax_forms") || !!invoice.contractor.user.complianceInfo?.taxInformationConfirmedAt;
 };
 
+export const useCanSubmitInvoices = () => {
+  const user = useCurrentUser();
+  const company = useCurrentCompany();
+  const { data: documents } = trpc.documents.list.useQuery(
+    { companyId: company.id, userId: user.id, signable: true },
+    { enabled: !!user.roles.worker },
+  );
+  const unsignedContractId = documents?.[0]?.id;
+  const hasLegalDetails = user.address.street_address;
+  return { unsignedContractId, hasLegalDetails, canSubmitInvoices: !unsignedContractId && hasLegalDetails };
+};
+
 export const Address = ({
   address,
 }: {
