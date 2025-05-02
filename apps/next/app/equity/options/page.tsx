@@ -1,3 +1,5 @@
+"use client";
+
 import { pluralize } from "@/utils/pluralize";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
