@@ -3,7 +3,6 @@
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import React, { useState } from "react";
 import SettingsLayout from "@/app/settings/Layout";
-import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
 import RangeInput from "@/components/RangeInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -69,14 +68,6 @@ export default function Equity() {
                 label={
                   <div className="flex justify-between gap-2">
                     How much of your rate would you like to swap for equity?
-                    <a
-                      className={linkClasses}
-                      href="https://sahillavingia.com/dividends"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Learn more
-                    </a>
                   </div>
                 }
               />
