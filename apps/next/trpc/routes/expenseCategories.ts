@@ -18,7 +18,7 @@ export const expenseCategoriesRouter = createRouter({
   update: companyProcedure
     .input(z.object({ id: z.bigint(), expenseAccountId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
+      if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
       const [row] = await db
         .update(expenseCategories)

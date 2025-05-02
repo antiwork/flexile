@@ -43,7 +43,7 @@ const canCreateUpload = async (companyId: bigint, userId: bigint) => {
 
 export const capTableUploadsRouter = createRouter({
   canCreate: companyProcedure.query(async ({ ctx }) => {
-    if (!(ctx.companyAdministrator || ctx.companyLawyer)) {
+    if (!ctx.companyAdministrator) {
       throw new TRPCError({ code: "FORBIDDEN" });
     }
 

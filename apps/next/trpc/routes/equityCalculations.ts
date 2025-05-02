@@ -124,7 +124,7 @@ export const equityCalculationsRouter = createRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.companyContractor && !ctx.companyAdministrator && !ctx.companyLawyer) {
+      if (!ctx.companyContractor) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 

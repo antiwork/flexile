@@ -30,7 +30,7 @@ const companyIntegration = async (companyId: bigint) => {
 
 export const quickbooksRouter = createRouter({
   get: companyProcedure.query(async ({ ctx }) => {
-    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
     const integration = await companyIntegration(ctx.company.id);
     if (!integration) return null;
@@ -60,7 +60,7 @@ export const quickbooksRouter = createRouter({
 
   // TODO (try to) move this to the page itself once in Clerk
   getAuthUrl: companyProcedure.query(({ ctx }) => {
-    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
     return getQuickbooksAuthUrl(oauthState(ctx));
   }),
@@ -68,7 +68,7 @@ export const quickbooksRouter = createRouter({
   connect: companyProcedure
     .input(z.object({ code: z.string(), state: z.string(), realmId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
+      if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
       if (input.state !== oauthState(ctx)) throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid OAuth state" });
 
@@ -146,7 +146,7 @@ export const quickbooksRouter = createRouter({
     }),
 
   disconnect: companyProcedure.mutation(async ({ ctx }) => {
-    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
     const integration = await companyIntegration(ctx.company.id);
     if (!integration) throw new TRPCError({ code: "NOT_FOUND" });
@@ -170,7 +170,7 @@ export const quickbooksRouter = createRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
+      if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
       const integration = await companyIntegration(ctx.company.id);
       if (!integration) throw new TRPCError({ code: "NOT_FOUND" });

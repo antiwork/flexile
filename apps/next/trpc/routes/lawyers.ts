@@ -5,7 +5,7 @@ import { company_lawyers_url } from "@/utils/routes";
 
 export const lawyersRouter = createRouter({
   invite: companyProcedure.input(z.object({ email: z.string() })).mutation(async ({ ctx, input }) => {
-    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
     const response = await fetch(company_lawyers_url(ctx.company.id, { host: ctx.host }), {
       method: "POST",

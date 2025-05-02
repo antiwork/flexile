@@ -174,7 +174,7 @@ export const equityGrantsRouter = createRouter({
         }),
     )
     .mutation(async ({ input, ctx }) => {
-      if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
+      if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
       const worker = await db.query.companyContractors.findFirst({
         where: and(
@@ -274,7 +274,7 @@ export const equityGrantsRouter = createRouter({
       );
     }),
   new: companyProcedure.query(async ({ ctx }) => {
-    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
     const pools = await db.query.optionPools.findMany({
       columns: {

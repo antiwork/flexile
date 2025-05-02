@@ -16,7 +16,7 @@ export const consolidatedInvoicesRouter = createRouter({
   }),
 
   list: companyProcedure.query(async ({ ctx }) => {
-    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
     const data = await db
       .select({
