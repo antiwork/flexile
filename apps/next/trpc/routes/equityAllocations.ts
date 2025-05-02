@@ -10,11 +10,7 @@ export const equityAllocationsRouter = createRouter({
     if (!ctx.companyContractor) throw new TRPCError({ code: "FORBIDDEN" });
 
     const result = await db.query.equityAllocations.findFirst({
-      columns: {
-        equityPercentage: true,
-        locked: true,
-        status: true,
-      },
+      columns: { equityPercentage: true, locked: true, status: true },
       where: and(
         eq(equityAllocations.year, input.year),
         eq(equityAllocations.companyContractorId, ctx.companyContractor.id),

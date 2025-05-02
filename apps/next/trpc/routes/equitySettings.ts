@@ -20,6 +20,7 @@ export const equitySettingsRouter = createRouter({
 
       const year = input.year ?? new Date().getFullYear();
       const equityAllocation = await getEquityAllocation(ctx.companyContractor.id, year);
+      if (!ctx.company.equityCompensationEnabled) return;
       if (equityAllocation && equityAllocation.status !== "pending_confirmation" && equityAllocation.locked) return;
 
       if (!equityAllocation) {

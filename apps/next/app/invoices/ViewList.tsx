@@ -1,41 +1,34 @@
-import { CurrencyDollarIcon, PencilIcon, PlusIcon } from "@heroicons/react/20/solid";
-import { ChatBubbleLeftIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
+import { PencilIcon, PlusIcon } from "@heroicons/react/20/solid";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { getSortedRowModel } from "@tanstack/react-table";
 import { useMutation } from "@tanstack/react-query";
 import { formatISO } from "date-fns";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import EquityPercentageLockModal from "@/app/invoices/EquityPercentageLockModal";
 import { StatusWithTooltip } from "@/app/invoices/Status";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import DurationInput from "@/components/DurationInput";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
-import { linkClasses } from "@/components/Link";
 import NumberInput from "@/components/NumberInput";
-import Placeholder from "@/components/Placeholder";
+import RangeInput from "@/components/RangeInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
-import { trpc } from "@/trpc/client";
+import { MAX_EQUITY_PERCENTAGE } from "@/models";
+import { EquityAllocationStatus, trpc } from "@/trpc/client";
 import { assert } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_invoices_path } from "@/utils/routes";
 import { formatDate, formatDuration } from "@/utils/time";
 import { EDITABLE_INVOICE_STATES } from ".";
-
-const useData = () => {
-  const company = useCurrentCompany();
-  const user = useCurrentUser();
-  return trpc.invoices.list.useSuspenseQuery({
-    contractorId: user.roles.worker?.id,
-    companyId: company.id,
-  });
-};
+import { linkClasses } from "@/components/Link";
+import { useRouter } from "next/navigation";
 
 export const useCanSubmitInvoices = () => {
   const user = useCurrentUser();
@@ -51,12 +44,127 @@ export const useCanSubmitInvoices = () => {
 };
 
 export default function ViewList() {
-  const [data] = useData();
-  const router = useRouter();
   const user = useCurrentUser();
+  const company = useCurrentCompany();
+  const router = useRouter();
+  const [data, { refetch }] = trpc.invoices.list.useSuspenseQuery({
+    contractorId: user.roles.worker?.id,
+    companyId: company.id,
+  });
   assert(!!user.roles.worker);
   const { unsignedContractId, hasLegalDetails, canSubmitInvoices } = useCanSubmitInvoices();
   const isProjectBased = user.roles.worker.payRateType === "project_based";
+  const payRateInSubunits = user.roles.worker.payRateInSubunits;
+  const nextInvoiceDate = useMemo(() => new Date(), []);
+  const initialInvoiceDate = useMemo(() => formatISO(nextInvoiceDate, { representation: "date" }), [nextInvoiceDate]);
+  const [duration, setDuration] = useState<number | null>(null);
+  const [amountUsd, setAmountUsd] = useState(payRateInSubunits ? payRateInSubunits / 100 : null);
+  const [date, setDate] = useState(initialInvoiceDate);
+  const [lockModalOpen, setLockModalOpen] = useState(false);
+
+  const [equityAllocation, { refetch: refetchEquityAllocation }] = trpc.equityAllocations.forYear.useSuspenseQuery({
+    companyId: company.id,
+    year: nextInvoiceDate.getFullYear(),
+  });
+  const [invoiceEquityPercent, setInvoiceEquityPercent] = useState(equityAllocation?.equityPercentage ?? 0);
+
+  const noticeMessage =
+    equityAllocation?.status === "pending_grant_creation" || equityAllocation?.status === "pending_approval"
+      ? "Your allocation is pending board approval. You can submit invoices for this year, but they're only going to be paid once the allocation is approved."
+      : equityAllocation?.locked
+        ? `You'll be able to select a new allocation for ${new Date().getFullYear() + 1} later this year.`
+        : null;
+
+  const totalAmountInCents = useMemo(() => {
+    if (isProjectBased) {
+      return (amountUsd ?? 0) * 100;
+    }
+    return Math.ceil(((duration ?? 0) / 60) * (payRateInSubunits ?? 0));
+  }, [isProjectBased, amountUsd, duration, payRateInSubunits]);
+
+  const hourlyEquityRateCents = useMemo(
+    () => (totalAmountInCents > 0 ? Math.ceil((payRateInSubunits ?? 0) * (invoiceEquityPercent / 100)) : 0),
+    [totalAmountInCents, payRateInSubunits, invoiceEquityPercent],
+  );
+  const hourlyRateCashCents = useMemo(
+    () => (totalAmountInCents > 0 ? Math.ceil((payRateInSubunits ?? 0) * (1 - invoiceEquityPercent / 100)) : 0),
+    [totalAmountInCents, payRateInSubunits, invoiceEquityPercent],
+  );
+
+  const invoiceYear = useMemo(() => new Date(date).getFullYear() || new Date().getFullYear(), [date]);
+  const { data: equityCalculation } = trpc.equityCalculations.calculate.useQuery(
+    {
+      companyId: company.id,
+      invoiceYear,
+      servicesInCents: totalAmountInCents,
+      selectedPercentage: invoiceEquityPercent,
+    },
+    { enabled: !!duration },
+  );
+
+  const { equityAmountCents, cashAmountCents } = useMemo(
+    () => ({
+      equityAmountCents: equityCalculation?.amountInCents ?? 0,
+      cashAmountCents: totalAmountInCents - (equityCalculation?.amountInCents ?? 0),
+    }),
+    [equityCalculation?.amountInCents, totalAmountInCents],
+  );
+
+  const newSearchParams = useMemo(() => {
+    const params = new URLSearchParams({ date });
+    params.set("split", String(invoiceEquityPercent));
+    if (isProjectBased) params.set("amount", String(amountUsd ?? ""));
+    else params.set("duration", String(duration ?? ""));
+    return params;
+  }, [date, isProjectBased, amountUsd, duration, invoiceEquityPercent]);
+
+  const newCompanyInvoiceRoute = useMemo(() => `/invoices/new?${newSearchParams.toString()}`, [newSearchParams]);
+
+  const submit = useMutation({
+    mutationFn: async () => {
+      setLockModalOpen(false);
+
+      const response = await request({
+        method: "POST",
+        url: company_invoices_path(company.id),
+        accept: "json",
+        jsonData: {
+          invoice: { invoice_date: date },
+          invoice_line_items: [
+            isProjectBased
+              ? { description: "Project work", total_amount_cents: totalAmountInCents }
+              : { description: "Hours worked", minutes: duration },
+          ],
+        },
+      });
+
+      if (response.ok) {
+        setDuration(null);
+        setAmountUsd(payRateInSubunits ? payRateInSubunits / 100 : null);
+        setDate(initialInvoiceDate);
+        setInvoiceEquityPercent(0);
+
+        await refetch();
+      }
+    },
+  });
+
+  const showLockModal = () => {
+    if (totalAmountInCents === 0) return;
+
+    const isAllocationLocked = equityAllocation?.locked ?? false;
+
+    if (
+      company.equityCompensationEnabled &&
+      equityAllocation?.equityPercentage !== invoiceEquityPercent &&
+      !isAllocationLocked
+    ) {
+      setLockModalOpen(true);
+    } else {
+      submit.mutate();
+    }
+  };
+
   const columnHelper = createColumnHelper<(typeof data)[number]>();
   const columns = useMemo(
     () =>
@@ -90,7 +198,7 @@ export default function ViewList() {
           },
         }),
       ].filter((column) => !!column),
-    [data],
+    [data, isProjectBased],
   );
 
   const table = useTable({
@@ -101,6 +209,12 @@ export default function ViewList() {
     },
     getSortedRowModel: getSortedRowModel(),
   });
+  const quickInvoiceDisabled = !!unsignedContractId || submit.isPending;
+  const equityPercentageMutation = trpc.equitySettings.update.useMutation();
+
+  useEffect(() => {
+    setInvoiceEquityPercent(equityAllocation?.equityPercentage ?? 0);
+  }, [equityAllocation]);
 
   return (
     <MainLayout
@@ -145,190 +259,173 @@ export default function ViewList() {
         </Alert>
       ) : null}
 
-      <QuickInvoiceSection disabled={!canSubmitInvoices} />
+      {noticeMessage && !unsignedContractId ? (
+        <Alert>
+          <InformationCircleIcon className="size-5" />
+          <AlertDescription>{noticeMessage}</AlertDescription>
+        </Alert>
+      ) : null}
 
-      {data.length > 0 ? (
-        <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} />
-      ) : (
-        <div>
-          <Placeholder icon={CurrencyDollarIcon}>
-            Create a new invoice to get started.
-            <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
-              <Link inert={!canSubmitInvoices} href="/invoices/new">
-                <PlusIcon className="size-4" />
-                New invoice
-              </Link>
-            </Button>
-          </Placeholder>
-        </div>
-      )}
+      {/* --- Combined Card Layout --- */}
+      <Card className={quickInvoiceDisabled ? "pointer-events-none opacity-50" : ""}>
+        {/* Main content area with inputs and summary side-by-side on large screens */}
+        <CardContent className="p-8">
+          <div className="grid grid-cols-1 items-start gap-x-8 gap-y-6 lg:grid-cols-[1fr_auto_1fr]">
+            {/* --- Section 1: Inputs --- */}
+            <div className="grid gap-6">
+              <div className="grid grid-cols-1 gap-6">
+                {isProjectBased ? (
+                  <div className="grid gap-2">
+                    <Label htmlFor="amount-to-bill">Amount to bill</Label>
+                    <NumberInput
+                      id="amount-to-bill"
+                      value={amountUsd}
+                      onChange={setAmountUsd}
+                      min={0.01}
+                      step={0.01}
+                      placeholder={payRateInSubunits ? String(payRateInSubunits / 100) : undefined}
+                      prefix="$"
+                      disabled={quickInvoiceDisabled}
+                    />
+                  </div>
+                ) : (
+                  <div className="grid gap-2">
+                    <Label htmlFor="quick-invoice-hours">Hours worked</Label>
+                    <DurationInput
+                      id="quick-invoice-hours"
+                      value={duration}
+                      onChange={setDuration}
+                      disabled={quickInvoiceDisabled}
+                      placeholder="HH:MM"
+                    />
+                  </div>
+                )}
+                <div className="grid gap-2">
+                  <Label htmlFor="quick-invoice-date">Invoice date</Label>
+                  <Input
+                    id="quick-invoice-date"
+                    value={date}
+                    onChange={(value) => {
+                      setDate(value);
+                      void refetchEquityAllocation();
+                    }}
+                    type="date"
+                    disabled={quickInvoiceDisabled}
+                  />
+                </div>
+              </div>
+
+              {company.equityCompensationEnabled ? (
+                <div className="grid gap-2">
+                  <RangeInput
+                    value={invoiceEquityPercent}
+                    onChange={setInvoiceEquityPercent}
+                    min={0}
+                    max={MAX_EQUITY_PERCENTAGE}
+                    ariaLabel="Cash vs equity split"
+                    unit="%"
+                    disabled={quickInvoiceDisabled}
+                    label={
+                      <div className="flex justify-between gap-2">
+                        <span>How much of your rate would you like to swap for equity?</span>
+                        <a
+                          className="text-gray-400 underline hover:text-gray-600"
+                          href="https://sahillavingia.com/dividends"
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Learn more
+                        </a>
+                      </div>
+                    }
+                  />
+                </div>
+              ) : null}
+            </div>
+
+            {/* --- Horizontal Separator (mobile only) --- */}
+            <Separator orientation="horizontal" className="block w-full lg:hidden" />
+
+            {/* --- Vertical Separator (lg screens only) --- */}
+            <Separator orientation="vertical" className="hidden lg:block" />
+
+            {/* --- Section 2: Summary --- */}
+            <div className="grid gap-2">
+              {/* Rate Breakdown */}
+              {company.equityCompensationEnabled && !isProjectBased ? (
+                <>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-sm">Cash amount</span>
+                    <span className="text-sm">
+                      {formatMoneyFromCents(hourlyRateCashCents)} <span className="text-gray-500">/ hourly</span>
+                    </span>
+                  </div>
+                  <Separator className="m-0" />
+                  <div className="flex justify-between gap-2">
+                    <span className="text-sm">Equity value</span>
+                    <span className="text-sm">
+                      {formatMoneyFromCents(hourlyEquityRateCents)} <span className="text-gray-500">/ hourly</span>
+                    </span>
+                  </div>
+                  <Separator className="m-0" />
+                  <div className="flex justify-between gap-2">
+                    <span className="text-sm">Total rate</span>
+                    <span className="text-sm">
+                      {formatMoneyFromCents(hourlyRateCashCents + hourlyEquityRateCents)}{" "}
+                      <span className="text-gray-500">/ hourly</span>
+                    </span>
+                  </div>
+                  <Separator className="m-0" />
+                </>
+              ) : null}
+
+              {/* Invoice Total */}
+              <div className="mt-2 mb-2 pt-2 text-right lg:mt-16 lg:mb-3 lg:pt-0">
+                <span className="text-sm text-gray-500">Total amount</span>
+                <div className="text-3xl font-bold">{formatMoneyFromCents(totalAmountInCents)}</div>
+                {company.equityCompensationEnabled ? (
+                  <div className="mt-1 text-sm text-gray-500">
+                    ({formatMoneyFromCents(cashAmountCents)} cash + {formatMoneyFromCents(equityAmountCents)} equity)
+                  </div>
+                ) : null}
+              </div>
+              {/* Right side: Buttons */}
+              <div className="flex flex-wrap items-center justify-end gap-3">
+                <Button variant="outline" className="grow sm:grow-0" asChild>
+                  <a inert={quickInvoiceDisabled} href={`${newCompanyInvoiceRoute}&expenses=true`}>
+                    Add more info
+                  </a>
+                </Button>
+                <Button
+                  disabled={quickInvoiceDisabled || totalAmountInCents <= 0}
+                  className="grow sm:grow-0"
+                  onClick={showLockModal}
+                >
+                  {submit.isPending ? "Sending..." : "Send for approval"}{" "}
+                </Button>
+                {company.equityCompensationEnabled &&
+                (!equityAllocation || equityAllocation.status === EquityAllocationStatus.PendingConfirmation) ? (
+                  <EquityPercentageLockModal
+                    open={lockModalOpen}
+                    onClose={() => setLockModalOpen(false)}
+                    percentage={invoiceEquityPercent}
+                    year={invoiceYear}
+                    onComplete={() => {
+                      equityPercentageMutation.mutate({
+                        companyId: company.id,
+                        equityPercentage: invoiceEquityPercent,
+                        year: invoiceYear,
+                      });
+                      submit.mutate();
+                    }}
+                  />
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      {data.length > 0 ? <DataTable table={table} onRowClicked={(row) => router.push(`/invoices/${row.id}`)} /> : null}
     </MainLayout>
   );
 }
-
-const QuickInvoiceSection = ({ disabled }: { disabled?: boolean }) => {
-  const [_, { refetch }] = useData();
-  const company = useCurrentCompany();
-  const user = useCurrentUser();
-  assert(!!user.roles.worker);
-  const nextInvoiceDate = new Date();
-  const isProjectBased = user.roles.worker.payRateType === "project_based";
-
-  const [equityAllocation] = trpc.equityAllocations.forYear.useSuspenseQuery({
-    companyId: company.id,
-    year: nextInvoiceDate.getFullYear(),
-  });
-  assert(!!user.roles.worker);
-  const payRateInSubunits = user.roles.worker.payRateInSubunits;
-  const initialInvoiceDate = formatISO(nextInvoiceDate, { representation: "date" });
-
-  const [duration, setDuration] = useState<number | null>(null);
-  const [amountUsd, setAmountUsd] = useState<number | null>(payRateInSubunits ? payRateInSubunits / 100 : null);
-  const [date, setDate] = useState(initialInvoiceDate);
-  const [lockModalOpen, setLockModalOpen] = useState(false);
-
-  const totalAmountInCents = isProjectBased
-    ? (amountUsd ?? 0) * 100
-    : Math.ceil(((duration ?? 0) / 60) * (payRateInSubunits ?? 0));
-
-  const invoiceYear = new Date(date).getFullYear() || new Date().getFullYear();
-
-  const newSearchParams = new URLSearchParams({ date });
-  if (isProjectBased) newSearchParams.set("amount", String(amountUsd));
-  else newSearchParams.set("duration", String(duration));
-  const newCompanyInvoiceRoute = `/invoices/new?${newSearchParams.toString()}`;
-
-  const showLockModal = () => {
-    if (totalAmountInCents === 0) return;
-
-    if (equityCalculation.isEquityAllocationLocked === false && equityCalculation.selectedPercentage != null) {
-      setLockModalOpen(true);
-    } else {
-      submit.mutate();
-    }
-  };
-
-  const submit = useMutation({
-    mutationFn: async () => {
-      setLockModalOpen(false);
-
-      const response = await request({
-        method: "POST",
-        url: company_invoices_path(company.id),
-        accept: "json",
-        jsonData: {
-          invoice: { invoice_date: date },
-          invoice_line_items: [
-            isProjectBased
-              ? { description: "Project work", total_amount_cents: totalAmountInCents }
-              : { description: "Hours worked", minutes: duration },
-          ],
-        },
-      });
-
-      if (response.ok) {
-        setDuration(null);
-        setAmountUsd(null);
-        setDate(initialInvoiceDate);
-
-        await refetch();
-      }
-    },
-  });
-
-  const [equityCalculation] = trpc.equityCalculations.calculate.useSuspenseQuery({
-    companyId: company.id,
-    servicesInCents: totalAmountInCents,
-    invoiceYear,
-  });
-
-  return (
-    <Card className={disabled ? "pointer-events-none opacity-50" : ""}>
-      <CardContent className="grid gap-4">
-        <h4 className="text-sm uppercase">Quick invoice</h4>
-        <div className="grid gap-3 md:grid-cols-3">
-          <div className="grid gap-2">
-            {isProjectBased ? (
-              <div className="grid gap-2">
-                <Label htmlFor="amount-to-bill">Amount to bill</Label>
-                <NumberInput
-                  id="amount-to-bill"
-                  value={amountUsd}
-                  onChange={setAmountUsd}
-                  min={1}
-                  step={0.01}
-                  placeholder={payRateInSubunits ? String(payRateInSubunits / 100) : undefined}
-                  prefix="$"
-                  disabled={submit.isPending}
-                />
-              </div>
-            ) : (
-              <div className="grid gap-2">
-                <Label htmlFor="quick-invoice-hours">Hours worked</Label>
-                <DurationInput
-                  id="quick-invoice-hours"
-                  value={duration}
-                  onChange={setDuration}
-                  disabled={submit.isPending}
-                />
-              </div>
-            )}
-            {equityAllocation !== null && equityCalculation.selectedPercentage == null && !isProjectBased ? (
-              <Link href="/settings/equity" className={linkClasses}>
-                Swap some cash for equity
-              </Link>
-            ) : equityCalculation.amountInCents > 0 ? (
-              <div className="text-xs">Total invoice amount: {formatMoneyFromCents(totalAmountInCents)}</div>
-            ) : null}
-          </div>
-          <div>
-            <Input value={date} onChange={setDate} label="Invoice date" type="date" disabled={submit.isPending} />
-          </div>
-          <div className="text-right">
-            <span>{equityCalculation.amountInCents > 0 ? "Net amount in cash" : "Total to invoice"}</span>
-            <div className="text-3xl font-bold">
-              {formatMoneyFromCents(totalAmountInCents - equityCalculation.amountInCents)}
-            </div>
-            {equityCalculation.amountInCents > 0 ? (
-              <div className="text-xs">
-                Swapped for equity (not paid in cash): {formatMoneyFromCents(equityCalculation.amountInCents)}
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </CardContent>
-
-      <CardFooter className="flex-wrap justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-4">
-          {company.flags.includes("expenses") ? (
-            <a href={`${newCompanyInvoiceRoute}&expenses=true`} inert={submit.isPending} className={linkClasses}>
-              <CurrencyDollarIcon className="inline size-4" /> Add expenses
-            </a>
-          ) : null}
-          <a href={newCompanyInvoiceRoute} inert={submit.isPending} className={linkClasses}>
-            <ChatBubbleLeftIcon className="inline size-4" /> Add notes
-          </a>
-        </div>
-        <div className="flex flex-wrap items-center gap-4">
-          <Button variant="outline" className="grow" asChild>
-            <a inert={submit.isPending} href={newCompanyInvoiceRoute} className={linkClasses}>
-              Preview
-            </a>
-          </Button>
-          <Button disabled={submit.isPending} className="grow" onClick={showLockModal}>
-            Send for approval
-          </Button>
-          {equityCalculation.selectedPercentage != null ? (
-            <EquityPercentageLockModal
-              open={lockModalOpen}
-              onClose={() => setLockModalOpen(false)}
-              percentage={equityCalculation.selectedPercentage}
-              year={invoiceYear}
-              onComplete={submit.mutate}
-            />
-          ) : null}
-        </div>
-      </CardFooter>
-    </Card>
-  );
-};
