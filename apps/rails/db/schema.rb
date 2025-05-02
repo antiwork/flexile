@@ -150,6 +150,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_29_213053) do
     t.boolean "equity_compensation_enabled", default: false, null: false
     t.boolean "team_updates_enabled", default: false, null: false
     t.jsonb "json_data", default: {"flags" => []}, null: false
+    t.string "slack_bot_user_id"
+    t.string "slack_team_id"
+    t.string "slack_bot_token"
     t.index ["external_id"], name: "index_companies_on_external_id", unique: true
   end
 
@@ -216,6 +219,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_29_213053) do
     t.boolean "sent_equity_percent_selection_email", default: false, null: false
     t.integer "pay_rate_in_subunits", null: false
     t.string "pay_rate_currency", default: "usd", null: false
+    t.string "slack_user_id"
     t.index ["company_id"], name: "index_company_contractors_on_company_id"
     t.index ["company_role_id"], name: "index_company_contractors_on_company_role_id"
     t.index ["external_id"], name: "index_company_contractors_on_external_id", unique: true
