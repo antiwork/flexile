@@ -8,7 +8,7 @@ class UserPresenter
            :requires_w9?, :tax_information_confirmed_at, :minimum_dividend_payment_in_cents, :wallet, :bank_accounts,
            :tax_id_status, private: true, to: :user, allow_nil: true
 
-  def initialize(current_context:, selected_access_roles_by_company: {})
+  def initialize(current_context:)
     @current_context = current_context
     @user = current_context.user
     @company = current_context.company
@@ -16,7 +16,6 @@ class UserPresenter
     @company_worker = current_context.company_worker
     @company_investor = current_context.company_investor
     @company_lawyer = current_context.company_lawyer
-    @selected_access_roles_by_company = selected_access_roles_by_company
   end
 
   def zip_code_label
@@ -53,18 +52,6 @@ class UserPresenter
     else
       user.all_companies
     end
-    any_type = \
-      if user.company_administrator_for?(company)
-        Company::ACCESS_ROLE_ADMINISTRATOR
-      elsif user.company_lawyer_for?(company)
-        Company::ACCESS_ROLE_LAWYER
-      elsif user.company_investor_for?(company) && !user.company_worker_for?(company)
-        Company::ACCESS_ROLE_INVESTOR
-      else
-        Company::ACCESS_ROLE_WORKER
-      end
-
-    type = current_context.role || any_type
 
     roles = {}
     has_documents = documents.joins(:signatures).not_consulting_contract.or(documents.unsigned).exists?
@@ -126,7 +113,6 @@ class UserPresenter
         {
           **company_navigation_props(
             company:,
-            selected_access_role: selected_access_roles_by_company[company.external_id]
           ),
           address: {
             street_address: company.street_address,
@@ -159,7 +145,6 @@ class UserPresenter
       legalName: legal_name,
       preferredName: preferred_name,
       billingEntityName: billing_entity_name,
-      activeRole: [Company::ACCESS_ROLE_ADMINISTRATOR, Company::ACCESS_ROLE_LAWYER].include?(type) ? type : "contractorOrInvestor",
       roles:,
       address: {
         street_address: user.street_address,
@@ -175,7 +160,7 @@ class UserPresenter
   end
 
   private
-    attr_reader :current_context, :user, :company, :company_administrator, :company_worker, :company_investor, :company_lawyer, :selected_access_roles_by_company
+    attr_reader :current_context, :user, :company, :company_administrator, :company_worker, :company_investor, :company_lawyer
 
     def user_props
       is_inviting_company = user.inviting_company?
@@ -248,16 +233,13 @@ class UserPresenter
         companies: companies.compact.map do
           company_navigation_props(
             company: _1,
-            selected_access_role: selected_access_roles_by_company[_1.external_id]
           )
         end,
         legal_name:,
       }
     end
 
-    def company_navigation_props(company:, selected_access_role:)
-      current_company_access_role = current_context.company == company ? current_context.role : nil
-      selected_access_role ||= current_company_access_role
-      CompanyNavigationPresenter.new(user: current_context.user, company:, selected_access_role:).props
+    def company_navigation_props(company:)
+      CompanyNavigationPresenter.new(user: current_context.user, company:).props
     end
 end
