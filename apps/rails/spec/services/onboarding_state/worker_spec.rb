@@ -32,36 +32,6 @@ RSpec.describe OnboardingState::Worker do
     end
   end
 
-  describe "#has_legal_details?" do
-    it "returns true when all required data is present" do
-      expect(service.has_legal_details?).to eq(true)
-    end
-
-    it "returns false if street_address is missing" do
-      user.update!(street_address: nil)
-
-      expect(service.has_legal_details?).to eq(false)
-    end
-
-    it "returns false if city is missing" do
-      user.update!(city: nil)
-
-      expect(service.has_legal_details?).to eq(false)
-    end
-
-    it "returns false if zip_code is missing" do
-      user.update!(zip_code: nil)
-
-      expect(service.has_legal_details?).to eq(false)
-    end
-
-    it "returns false if the user is a business entity and business_name is missing" do
-      user.compliance_info.update!(business_entity: true, business_name: nil)
-
-      expect(service.has_legal_details?).to eq(false)
-    end
-  end
-
   describe "#complete?" do
     it "returns true when all required onboarding data is set" do
       expect(service.complete?).to eq(true)
@@ -114,20 +84,6 @@ RSpec.describe OnboardingState::Worker do
       user.update!(country_code: "CU")
 
       expect(service.complete?).to eq(true)
-    end
-
-    context "when the user is a business entity" do
-      before { user.compliance_info.update!(business_entity: true) }
-
-      it "returns false if there is no business name" do
-        expect(service.complete?).to eq(false)
-      end
-
-      it "returns true if there is a business name" do
-        user.compliance_info.update!(business_name: "Business Inc.")
-
-        expect(service.complete?).to eq(true)
-      end
     end
   end
 

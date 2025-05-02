@@ -22,7 +22,6 @@ RSpec.describe OnboardingState::WorkerWithoutCompany do
 
     it "returns nil if the user is missing bank details" do
       allow(service).to receive(:has_personal_details?).and_return(true)
-      allow(service).to receive(:has_legal_details?).and_return(true)
       allow(service).to receive(:has_bank_details?).and_return(false)
       allow(user).to receive(:sanctioned_country_resident?).and_return(false)
 
@@ -31,7 +30,6 @@ RSpec.describe OnboardingState::WorkerWithoutCompany do
 
     it "returns nil if all onboarding data is present" do
       allow(service).to receive(:has_personal_details?).and_return(true)
-      allow(service).to receive(:has_legal_details?).and_return(true)
       allow(service).to receive(:has_bank_details?).and_return(true)
 
       expect(service.redirect_path).to be_nil
@@ -39,7 +37,6 @@ RSpec.describe OnboardingState::WorkerWithoutCompany do
 
     it "returns nil if the user is from a sanctioned country and has all other details" do
       allow(service).to receive(:has_personal_details?).and_return(true)
-      allow(service).to receive(:has_legal_details?).and_return(true)
       allow(service).to receive(:has_bank_details?).and_return(false)
       allow(user).to receive(:sanctioned_country_resident?).and_return(true)
 
