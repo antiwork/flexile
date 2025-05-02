@@ -136,7 +136,7 @@ export default function DataTable<T extends RowData>({
       {filterable || actions ? (
         <div className="flex justify-between">
           <div className="flex gap-2">
-            {table.options.enableGlobalFilter !== false || searchColumn ? (
+            {table.options.enableGlobalFilter !== false ? (
               <div className="relative">
                 <SearchIcon className="text-muted-foreground absolute top-2.5 left-2.5 size-4" />
                 <Input

@@ -154,6 +154,7 @@ export default function InvoicesPage() {
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     enableRowSelection: true,
+    enableGlobalFilter: !!user.roles.administrator,
   });
 
   const selectedRows = table.getSelectedRowModel().rows;
@@ -208,125 +209,125 @@ export default function InvoicesPage() {
         </>
       }
     >
-      <StripeMicrodepositVerification />
+      <div className="grid gap-4">
+        {workerNotice ? (
+          <Alert>
+            <InformationCircleIcon className="size-5" />
+            <AlertDescription>{workerNotice}</AlertDescription>
+          </Alert>
+        ) : null}
 
-      {data.length > 0 && (
-        <div className="grid gap-4">
-          {user.roles.administrator ? (
-            <>
-              {!company.completedPaymentMethodSetup && (
-                <Alert variant="destructive">
-                  <ExclamationTriangleIcon />
-                  <AlertTitle>Bank account setup incomplete.</AlertTitle>
-                  <AlertDescription>
-                    We're waiting for your bank details to be confirmed. Once done, you'll be able to start approving
-                    invoices and paying contractors.
-                  </AlertDescription>
-                </Alert>
-              )}
+        <QuickInvoicesSection />
+        {data.length > 0 ? (
+          <>
+            {user.roles.administrator ? (
+              <>
+                <StripeMicrodepositVerification />
+                {!company.completedPaymentMethodSetup && (
+                  <Alert variant="destructive">
+                    <ExclamationTriangleIcon />
+                    <AlertTitle>Bank account setup incomplete.</AlertTitle>
+                    <AlertDescription>
+                      We're waiting for your bank details to be confirmed. Once done, you'll be able to start approving
+                      invoices and paying contractors.
+                    </AlertDescription>
+                  </Alert>
+                )}
 
-              {company.completedPaymentMethodSetup && !company.isTrusted ? (
-                <Alert variant="destructive">
-                  <ExclamationTriangleIcon />
-                  <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
-                  <AlertDescription>
-                    Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete
-                    additional verification steps.
-                  </AlertDescription>
-                </Alert>
-              ) : null}
+                {company.completedPaymentMethodSetup && !company.isTrusted ? (
+                  <Alert variant="destructive">
+                    <ExclamationTriangleIcon />
+                    <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
+                    <AlertDescription>
+                      Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete
+                      additional verification steps.
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
 
-              {data.some((invoice) => !areTaxRequirementsMet(invoice)) && (
-                <Alert variant="destructive">
-                  <ExclamationTriangleIcon />
-                  <AlertTitle>Missing tax information.</AlertTitle>
-                  <AlertDescription>
-                    Some invoices are not payable until contractors provide tax information.
-                  </AlertDescription>
-                </Alert>
-              )}
+                {data.some((invoice) => !areTaxRequirementsMet(invoice)) && (
+                  <Alert variant="destructive">
+                    <ExclamationTriangleIcon />
+                    <AlertTitle>Missing tax information.</AlertTitle>
+                    <AlertDescription>
+                      Some invoices are not payable until contractors provide tax information.
+                    </AlertDescription>
+                  </Alert>
+                )}
 
-              {data.some(
-                (invoice) => invoice.equityAllocationStatus === EquityAllocationStatus.PendingGrantCreation,
-              ) && (
-                <Alert variant="destructive">
-                  <ExclamationTriangleIcon />
-                  <AlertTitle>Equity grants are pending.</AlertTitle>
-                  <AlertDescription>
-                    <div className="flex items-center justify-between">
-                      {(() => {
-                        const pendingContractors = [
-                          ...new Set(
-                            data
-                              .filter(
-                                (invoice) =>
-                                  invoice.equityAllocationStatus === EquityAllocationStatus.PendingGrantCreation,
-                              )
-                              .map((invoice) => invoice.billFrom),
-                          ),
-                        ];
-                        return (
-                          <>
-                            Some invoices are not payable until equity{" "}
-                            {pendingContractors.length === 1 ? "grant is" : "grants are"} created for{" "}
-                            {pendingContractors.join(", ")}.
-                          </>
-                        );
-                      })()}
-                      <Button variant="outline" size="small" asChild>
-                        <Link href={`/companies/${company.id}/administrator/equity_grants/new`}>
-                          Create equity grants
-                        </Link>
+                {data.some(
+                  (invoice) => invoice.equityAllocationStatus === EquityAllocationStatus.PendingGrantCreation,
+                ) && (
+                  <Alert variant="destructive">
+                    <ExclamationTriangleIcon />
+                    <AlertTitle>Equity grants are pending.</AlertTitle>
+                    <AlertDescription>
+                      <div className="flex items-center justify-between">
+                        {(() => {
+                          const pendingContractors = [
+                            ...new Set(
+                              data
+                                .filter(
+                                  (invoice) =>
+                                    invoice.equityAllocationStatus === EquityAllocationStatus.PendingGrantCreation,
+                                )
+                                .map((invoice) => invoice.billFrom),
+                            ),
+                          ];
+                          return (
+                            <>
+                              Some invoices are not payable until equity{" "}
+                              {pendingContractors.length === 1 ? "grant is" : "grants are"} created for{" "}
+                              {pendingContractors.join(", ")}.
+                            </>
+                          );
+                        })()}
+                        <Button variant="outline" size="small" asChild>
+                          <Link href={`/companies/${company.id}/administrator/equity_grants/new`}>
+                            Create equity grants
+                          </Link>
+                        </Button>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {selectedApprovableInvoices.length > 0 && (
+                  <Alert className="fixed right-0 bottom-0 left-0 z-50 flex items-center justify-between rounded-none border-r-0 border-b-0 border-l-0">
+                    <div className="flex items-center gap-2">
+                      <InformationCircleIcon className="size-4" />
+                      <AlertTitle>{selectedRows.length} selected</AlertTitle>
+                    </div>
+                    <div className="flex flex-row flex-wrap gap-3">
+                      <Button variant="outline" onClick={() => setOpenModal("reject")}>
+                        Reject selected
+                      </Button>
+                      <Button disabled={!company.completedPaymentMethodSetup} onClick={() => setOpenModal("approve")}>
+                        Approve selected
                       </Button>
                     </div>
-                  </AlertDescription>
-                </Alert>
-              )}
+                  </Alert>
+                )}
+              </>
+            ) : null}
 
-              {selectedApprovableInvoices.length > 0 && (
-                <Alert className="fixed right-0 bottom-0 left-0 z-50 flex items-center justify-between rounded-none border-r-0 border-b-0 border-l-0">
-                  <div className="flex items-center gap-2">
-                    <InformationCircleIcon className="size-4" />
-                    <AlertTitle>{selectedRows.length} selected</AlertTitle>
-                  </div>
-                  <div className="flex flex-row flex-wrap gap-3">
-                    <Button variant="outline" onClick={() => setOpenModal("reject")}>
-                      Reject selected
-                    </Button>
-                    <Button disabled={!company.completedPaymentMethodSetup} onClick={() => setOpenModal("approve")}>
-                      Approve selected
-                    </Button>
-                  </div>
-                </Alert>
-              )}
-            </>
-          ) : null}
+            <div className="flex justify-between md:hidden">
+              <h2 className="text-xl font-bold">
+                {data.length} {pluralize("invoice", data.length)}
+              </h2>
+              <Checkbox
+                checked={table.getIsAllRowsSelected()}
+                label="Select all"
+                onCheckedChange={(checked) => table.toggleAllRowsSelected(checked === true)}
+              />
+            </div>
 
-          {workerNotice ? (
-            <Alert>
-              <InformationCircleIcon className="size-5" />
-              <AlertDescription>{workerNotice}</AlertDescription>
-            </Alert>
-          ) : null}
-
-          <QuickInvoicesSection />
-
-          <div className="flex justify-between md:hidden">
-            <h2 className="text-xl font-bold">
-              {data.length} {pluralize("invoice", data.length)}
-            </h2>
-            <Checkbox
-              checked={table.getIsAllRowsSelected()}
-              label="Select all"
-              onCheckedChange={(checked) => table.toggleAllRowsSelected(checked === true)}
-            />
-          </div>
-
-          <DataTable table={table} onRowClicked={setDetailInvoice} searchColumn="billFrom" />
-        </div>
-      )}
-
-      {data.length === 0 && <Placeholder icon={CheckCircleIcon}>No invoices to display.</Placeholder>}
+            <DataTable table={table} onRowClicked={setDetailInvoice} searchColumn="billFrom" />
+          </>
+        ) : (
+          <Placeholder icon={CheckCircleIcon}>No invoices to display.</Placeholder>
+        )}
+      </div>
 
       <Dialog open={openModal === "approve"} onOpenChange={() => setOpenModal(null)}>
         <DialogContent>
