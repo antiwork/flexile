@@ -136,12 +136,6 @@ export default function HomePage() {
         <Section className="bg-black py-16 text-white">
           <div className="mx-auto flex w-full max-w-5xl flex-col items-start justify-between px-4 md:flex-row md:items-end">
             <div className="flex flex-col items-start gap-8 md:gap-18">
-              <a
-                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                className="cursor-pointer text-base text-white no-underline hover:underline"
-              >
-                Back to top ↑
-              </a>
               <Image src={logo} alt="Flexile" className="block h-16 w-auto invert" />
             </div>
             <div className="mt-8 flex flex-col items-start gap-4 text-left md:mt-0 md:items-end md:text-right">
