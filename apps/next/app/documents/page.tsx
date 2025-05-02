@@ -238,7 +238,7 @@ export default function DocumentsPage() {
   const isSignable = (document: Document): document is SignableDocument => {
     if (document.type === DocumentType.BoardConsent) {
       if (!document.lawyerApproved && !user.roles.lawyer) return false;
-      if (!!user.roles.administrator && !user.roles.administrator?.isBoardMember) return false;
+      if (!!user.roles.administrator && !user.roles.administrator.isBoardMember) return false;
     }
 
     return !!document.docusealSubmissionId && document.signatories.some((signatory) => !signatory.signedAt);
@@ -299,7 +299,7 @@ export default function DocumentsPage() {
                     onClick={() => setSignDocumentId(document.id)}
                     disabled={!canSign}
                   >
-                    {!!user.roles.lawyer ? "Approve" : "Review and sign"}
+                    {user.roles.lawyer ? "Approve" : "Review and sign"}
                   </Button>
                 ) : null}
                 {document.attachment ? (
