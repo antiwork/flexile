@@ -81,15 +81,15 @@ export default function NewBuyback() {
             <DatePicker label="Start date" value={startDate} onChange={setStartDate} granularity="day" />
             <DatePicker label="End date" value={endDate} onChange={setEndDate} granularity="day" />
             <div className="grid gap-2">
-              <Label htmlFor="minimum-valuation">Starting valuation</Label>
+              <Label htmlFor="starting-valuation">Starting valuation</Label>
               <NumberInput
-                id="minimum-valuation"
+                id="starting-valuation"
                 value={minimumValuation}
                 onChange={(value) => setMinimumValuation(value || 0)}
                 prefix="$"
               />
             </div>
-            <div className="*:not-first:mt-2">
+            <div className="grid gap-2">
               <Label htmlFor="attachment">Document package</Label>
               <Input
                 id="attachment"

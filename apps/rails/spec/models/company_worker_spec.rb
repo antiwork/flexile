@@ -10,8 +10,6 @@ RSpec.describe CompanyWorker do
     it { is_expected.to have_many(:equity_allocations) }
     it { is_expected.to have_many(:integration_records) }
     it { is_expected.to have_many(:invoices) }
-    it { is_expected.to have_many(:expense_cards) }
-    it { is_expected.to have_one(:active_expense_card) }
     it { is_expected.to have_one(:quickbooks_integration_record) }
     it { is_expected.to have_many(:company_worker_absences) }
   end
@@ -613,36 +611,6 @@ RSpec.describe CompanyWorker do
     context "when the equity allocation does not exist" do
       it "returns nil" do
         expect(contractor.equity_allocation_for(year + 1)).to be_nil
-      end
-    end
-  end
-
-  describe "#can_create_expense_card?" do
-    let(:company) { create(:company) }
-    let(:company_role) { create(:company_role, company:, expense_card_enabled: true) }
-    let(:company_worker) { create(:company_worker, company:, company_role:) }
-
-    context "when all conditions are met" do
-      it "returns true" do
-        expect(company_worker.can_create_expense_card?).to be true
-      end
-    end
-
-    context "when contractor is not active" do
-      before { company_worker.update(ended_at: Time.current) }
-
-      it "returns false" do
-        expect(company_worker.can_create_expense_card?).to be false
-      end
-    end
-
-
-
-    context "when expense card is not enabled for the role" do
-      before { company_role.update(expense_card_enabled: false) }
-
-      it "returns false" do
-        expect(company_worker.can_create_expense_card?).to be false
       end
     end
   end

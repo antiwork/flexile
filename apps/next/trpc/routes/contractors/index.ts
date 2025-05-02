@@ -13,7 +13,6 @@ import {
   documentSignatures,
   documentTemplates,
   equityAllocations,
-  userComplianceInfos,
   users,
 } from "@/db/schema";
 import env from "@/env";
@@ -315,22 +314,10 @@ export const contractorsRouter = createRouter({
     }),
 });
 
-type UserComplianceInfo = typeof userComplianceInfos.$inferSelect;
-const isOnboardingCompleted = (
-  user: User & { userComplianceInfos: UserComplianceInfo[]; wiseRecipients: unknown[] },
-) => {
-  const complianceInfo = user.userComplianceInfos[0];
-  return (
-    user.legalName &&
-    user.preferredName &&
-    user.citizenshipCountryCode &&
-    user.streetAddress &&
-    user.city &&
-    user.zipCode &&
-    (!complianceInfo || complianceInfo.businessEntity || complianceInfo.businessName) &&
-    (user.wiseRecipients.length > 0 || (user.countryCode && sanctionedCountries.has(user.countryCode)))
-  );
-};
+const isOnboardingCompleted = (user: User & { wiseRecipients: unknown[] }) =>
+  user.legalName &&
+  user.preferredName &&
+  (user.wiseRecipients.length > 0 || (user.countryCode && sanctionedCountries.has(user.countryCode)));
 
 export const isActive = (contractor: CompanyContractor | undefined): contractor is CompanyContractor =>
   !!contractor && (!contractor.endedAt || isFuture(contractor.endedAt));

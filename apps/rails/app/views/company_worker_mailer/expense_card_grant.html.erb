@@ -1,8 +1,0 @@
-<h1>💳 You just got an expense card!</h1>
-<p>
-  <% content = "#{@company.display_name} has granted you access to a new debit card" %>
-  <% content += " with a monthly limit of #{cents_format(@company_role.expense_card_spending_limit_cents)}" if @company_role.expense_card_has_limit? %>
-  <%= content %>! Your card number for future expenses can be found in your new <%= link_to "Expenses", spa_company_expenses_url(@company.external_id) %> tab in Flexile.
-</p>
-
-<%= render "shared/email_signature" %>

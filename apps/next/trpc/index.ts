@@ -22,7 +22,6 @@ import env from "@/env";
 import { assertDefined } from "@/utils/assert";
 import { richTextExtensions } from "@/utils/richText";
 import { internal_userid_url } from "@/utils/routes";
-import { policies } from "./access";
 import { latestUserComplianceInfo, withRoles } from "./routes/users/helpers";
 import { type AppRouter } from "./server";
 
@@ -141,7 +140,6 @@ export const companyProcedure = protectedProcedure.input(z.object({ companyId: z
 
 export type ProtectedContext = inferProcedureBuilderResolverOptions<typeof protectedProcedure>["ctx"];
 export type CompanyContext = inferProcedureBuilderResolverOptions<typeof companyProcedure>["ctx"];
-export const canAccess = (policy: keyof typeof policies, ctx: CompanyContext) => policies[policy](ctx);
 
 export type RouterInput = inferRouterInputs<AppRouter>;
 export type RouterOutput = inferRouterOutputs<AppRouter>;

@@ -80,9 +80,9 @@ type BillingDetails = {
   country: string;
   country_code: string;
   state: string | null;
-  city: string;
-  zip_code: string;
-  street_address: string;
+  city: string | null;
+  zip_code: string | null;
+  street_address: string | null;
   email: string;
   billing_entity_name: string;
   legal_type: "BUSINESS" | "PRIVATE";
@@ -355,7 +355,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
     if (!allFields) return;
 
     const fields = new Map(allFields.map((field) => [field.key, field]));
-    const setIfEmpty = (key: string, value: string) => {
+    const setIfEmpty = (key: string, value: string | null) => {
       const field = fields.get(key);
       if (field && !details.get(key)) {
         setDetails((prev) => prev.set(key, value));

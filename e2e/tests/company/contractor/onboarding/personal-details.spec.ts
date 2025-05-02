@@ -61,7 +61,7 @@ test.describe("Company worker onboarding - personal details", () => {
 
     await page.getByRole("button", { name: "Continue" }).click();
 
-    await expect(page.getByText("How will you be billing?")).toBeVisible();
+    await expect(page.getByText("Get paid fast")).toBeVisible();
 
     const updatedUser = await db.query.users.findFirst({
       where: eq(users.id, onboardingUser.id),
@@ -102,7 +102,8 @@ test.describe("Company worker onboarding - personal details", () => {
       { page, title: "Important notice" },
     );
 
-    await expect(page.getByText("How will you be billing?")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Invoicing" })).toBeVisible();
+    await expect(page.getByText("Please provide your legal details before creating new invoices.")).toBeVisible();
 
     const updatedUser = await db.query.users.findFirst({
       where: eq(users.id, onboardingUser.id),
