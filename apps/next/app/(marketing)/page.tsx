@@ -10,8 +10,6 @@ import { cn } from "@/utils";
 import equityAllocation from "./equity-allocation.png";
 import equityCapTable from "./equity-cap-table.png";
 import equityEmail from "./equity-email.png";
-import featuresInvoice from "./features-invoice.gif";
-import featuresOnboarding from "./features-onboarding.gif";
 import iconClock from "./icon-clock.svg";
 import iconDiamond from "./icon-diamond.svg";
 import iconEye from "./icon-eye.svg";
@@ -115,32 +113,12 @@ export default function HomePage() {
           </div>
         </Section>
 
-        <section className="flex bg-black">
-          <video autoPlay loop muted playsInline className="block w-full">
-            <source src="/home-flex-os.mp4" type="video/mp4" />
-          </video>
-        </section>
-
         <Section className="py-16">
-          <h2 className="text-5xl font-medium md:text-8xl">
-            The tools and talent <br />
-            to run lean
-          </h2>
+          <h2 className="text-5xl font-medium md:text-8xl">Simplify your operations</h2>
           <div className="text-2xl md:text-3xl">
-            Flexile helps you onboard and pay qualified remote contractors to help you grow your business
-            cost-effectively.
+            Onboard contractors in seconds, track status async, and streamline invoicing globally.
           </div>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-16">
-            <div className="flex items-center gap-8">
-              <Image src={iconEye} alt="Find Flex Workers" className="w-12 shrink-0" />
-              <div>
-                <h3 className="text-xl font-medium">Find Flex Workers</h3>
-                <div className="text-xl text-gray-600">
-                  Work with top talent screened for <br />
-                  expertise + part-time availability
-                </div>
-              </div>
-            </div>
             <div className="flex items-center gap-8">
               <Image src={iconClock} alt="Automate Operations" className="w-12 shrink-0" />
               <div>
@@ -161,6 +139,15 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
+          </div>
+        </Section>
+
+        <Section className="py-16">
+          <h2 className="text-5xl font-medium md:text-8xl">Align your incentives</h2>
+          <div className="text-2xl md:text-3xl">
+            Retain talent and reward contributions with flexible equity and dividend options.
+          </div>
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-16">
             <div className="flex items-center gap-8">
               <Image src={iconDiamond} alt="Offer Equity" className="w-12 shrink-0" />
               <div>
@@ -171,48 +158,14 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-          </div>
-        </Section>
-
-        <Section className="bg-black py-16 text-white">
-          <div className="flex flex-col gap-16">
-            <div className="flex flex-col gap-12 md:flex-row md:gap-16">
-              <div className="w-full overflow-hidden rounded-lg md:w-1/2">
-                <Image src={featuresOnboarding} alt="Onboarding demo" className="block w-full object-cover" />
-              </div>
-              <div className="w-full md:w-1/2">
-                <div className="flex flex-col gap-4 md:gap-8">
-                  <h3 className="text-3xl font-medium md:text-4xl">Find and onboard flex teams compliantly.</h3>
-                  <div className="flex flex-col gap-4">
-                    <BulletPoint>
-                      Build an end-to-end team by the hour. Roles span design, engineering, internal ops, customer
-                      support, and more.
-                    </BulletPoint>
-                    <BulletPoint>
-                      Access our freelance talent network, vetted for quality product chops and experience serving
-                      millions of users
-                    </BulletPoint>
-                    <BulletPoint>Automate and store freelancer banking details and payment preferences</BulletPoint>
-                    <BulletPoint>Sign and archive contracts inline</BulletPoint>
-                    <BulletPoint>Amend and send automated ICAs tailored to regulations in 190+ countries</BulletPoint>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col gap-12 md:flex-row md:gap-16">
-              <div className="w-full overflow-hidden rounded-lg md:w-1/2">
-                <Image src={featuresInvoice} alt="Invoice demo" className="block w-full object-cover" />
-              </div>
-              <div className="w-full md:w-1/2">
-                <div className="flex flex-col gap-4 md:gap-8">
-                  <h3 className="text-3xl font-medium md:text-4xl">Oversee timesheets and invoicing.</h3>
-                  <div className="flex flex-col gap-4">
-                    <BulletPoint>Capture, cap, and track weekly work with built-in timesheets</BulletPoint>
-                    <BulletPoint>
-                      No more PDF invoices — get teams to instantly generate them within Flexile
-                    </BulletPoint>
-                    <BulletPoint>Review, reject, or approve invoices in 1-click</BulletPoint>
-                  </div>
+            <div className="flex items-center gap-8">
+              {/* TODO (techdebt): Replace iconDiamond with a more relevant icon */}
+              <Image src={iconDiamond} alt="Dividends & Buybacks" className="w-12 shrink-0" />
+              <div>
+                <h3 className="text-xl font-medium">Dividends & Buybacks</h3>
+                <div className="text-xl text-gray-600">
+                  Distribute profits or repurchase <br />
+                  equity easily and transparently
                 </div>
               </div>
             </div>
