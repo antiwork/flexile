@@ -4,8 +4,8 @@ import { steps as adminSteps } from "@/app/companies/[companyId]/administrator/o
 import { CompanyDetails } from "@/app/companies/[companyId]/administrator/onboarding/details";
 import PersonalDetails from "@/app/onboarding/PersonalDetails";
 import OnboardingLayout from "@/components/layouts/Onboarding";
+import RadioButtons from "@/components/RadioButtons";
 import { steps } from "..";
-import { RadioGroup } from "../../../components/ui/radio-group";
 
 export default function SignUp() {
   const [accessRole, setAccessRole] = useState<"administrator" | "contractor">("administrator");
@@ -17,14 +17,14 @@ export default function SignUp() {
       title="Let's get to know you"
       subtitle="We'll use this information for contracts and payments."
     >
-      <RadioGroup
+      <RadioButtons
+        value={accessRole}
+        onChange={setAccessRole}
+        label="I'm a..."
         options={[
           { value: "administrator", label: "Company", description: "I want to pay my team and manage ownership" },
           { value: "contractor", label: "Freelancer", description: "I want to bill and invoice clients" },
         ]}
-        value={accessRole}
-        onChange={setAccessRole}
-        label="I'm a..."
       />
       <Suspense>
         {accessRole === "administrator" ? (
