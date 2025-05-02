@@ -10,7 +10,6 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import LegalCertificationModal from "@/app/onboarding/LegalCertificationModal";
 import RadioButtons from "@/components/RadioButtons";
 import Status from "@/components/Status";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
