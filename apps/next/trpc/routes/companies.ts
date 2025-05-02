@@ -123,15 +123,7 @@ export const companiesRouter = createRouter({
     if (!company) throw new TRPCError({ code: "NOT_FOUND" });
 
     const response = {
-      ...pick(
-        company,
-        "website",
-        "description",
-        "equityGrantsEnabled",
-        "expenseCardsEnabled",
-        "sharePriceInUsd",
-        "fmvPerShareInUsd",
-      ),
+      ...pick(company, "website", "description", "equityGrantsEnabled", "sharePriceInUsd", "fmvPerShareInUsd"),
       name: companyName(company),
       additionalSupportedCountries: company.isGumroad ? ["BR"] : [],
       logoUrl: await companyLogoUrl(company.id),

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
-import { trpc } from "@/trpc/client";
+import { EquityAllocationStatus, trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { approve_company_invoices_path, reject_company_invoices_path } from "@/utils/routes";
 
@@ -68,6 +68,14 @@ const useIsApprovedByCurrentUser = () => {
   return (invoice: Invoice) => invoice.approvals.some((approval) => approval.approver.id === user.id);
 };
 
+const useIsEquityRequirementMet = () => {
+  const company = useCurrentCompany();
+  return (invoice: Invoice) =>
+    invoice.equityAmountInCents === 0n ||
+    !company.equityCompensationEnabled ||
+    invoice.equityAllocationStatus === EquityAllocationStatus.Approved;
+};
+
 export function useIsActionable() {
   const isPayable = useIsPayable();
   const isApprovedByCurrentUser = useIsApprovedByCurrentUser();
@@ -79,11 +87,13 @@ export function useIsActionable() {
 export function useIsPayable() {
   const company = useCurrentCompany();
   const isApprovedByCurrentUser = useIsApprovedByCurrentUser();
+  const isEquityRequirementMet = useIsEquityRequirementMet();
 
   return (invoice: Invoice) =>
     invoice.status === "failed" ||
     (["received", "approved"].includes(invoice.status) &&
       !invoice.requiresAcceptanceByPayee &&
+      isEquityRequirementMet(invoice) &&
       company.requiredInvoiceApprovals - invoice.approvals.length <= (isApprovedByCurrentUser(invoice) ? 0 : 1));
 }
 

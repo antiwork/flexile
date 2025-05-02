@@ -1,22 +1,16 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
 import { PayRateType } from "@/db/enums";
-import { companyRoleRates, companyRoles, expenseCards } from "@/db/schema";
+import { companyRoleRates, companyRoles } from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 import { assertDefined } from "@/utils/assert";
 
 const inputSchema = createInsertSchema(companyRoles)
-  .pick({
-    name: true,
-    capitalizedExpense: true,
-    expenseAccountId: true,
-    expenseCardEnabled: true,
-    expenseCardSpendingLimitCents: true,
-  })
+  .pick({ name: true, capitalizedExpense: true, expenseAccountId: true })
   .merge(
     createInsertSchema(companyRoleRates, { payRateType: z.nativeEnum(PayRateType) }).pick({
       payRateInSubunits: true,
@@ -33,11 +27,6 @@ export const rolesRouter = createRouter({
       with: {
         rates: { orderBy: [desc(companyRoleRates.createdAt)], limit: 1 },
       },
-      extras: {
-        expenseCardsCount: db
-          .$count(expenseCards, and(eq(sql`active`, true), eq(sql`company_role_id`, companyRoles.id)))
-          .as("expense_cards"),
-      },
       orderBy: [desc(companyRoles.createdAt)],
     });
 
@@ -45,15 +34,7 @@ export const rolesRouter = createRouter({
       const rate = assertDefined(role.rates[0]);
       return {
         id: role.externalId,
-        ...pick(
-          role,
-          "name",
-          "capitalizedExpense",
-          "expenseAccountId",
-          "expenseCardEnabled",
-          "expenseCardSpendingLimitCents",
-          "expenseCardsCount",
-        ),
+        ...pick(role, "name", "capitalizedExpense", "expenseAccountId"),
         ...pick(rate, "payRateType", "payRateInSubunits"),
       };
     });
@@ -86,14 +67,7 @@ export const rolesRouter = createRouter({
         .insert(companyRoles)
         .values({
           companyId: ctx.company.id,
-          ...pick(
-            input,
-            "name",
-            "capitalizedExpense",
-            "expenseAccountId",
-            "expenseCardEnabled",
-            "expenseCardSpendingLimitCents",
-          ),
+          ...pick(input, "name", "capitalizedExpense", "expenseAccountId"),
         })
         .returning(pick(companyRoles, "id", "externalId"));
 
@@ -115,14 +89,7 @@ export const rolesRouter = createRouter({
       const [role] = await tx
         .update(companyRoles)
         .set({
-          ...pick(
-            input,
-            "name",
-            "capitalizedExpense",
-            "expenseAccountId",
-            "expenseCardEnabled",
-            "expenseCardSpendingLimitCents",
-          ),
+          ...pick(input, "name", "capitalizedExpense", "expenseAccountId"),
         })
         .where(and(eq(companyRoles.externalId, input.id), eq(companyRoles.companyId, ctx.company.id)))
         .returning({ id: companyRoles.id, externalId: companyRoles.externalId });

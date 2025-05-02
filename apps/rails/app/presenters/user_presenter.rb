@@ -47,26 +47,6 @@ class UserPresenter
     }
   end
 
-  def legal_details_props
-    {
-      user: {
-        collect_tax_info: current_context.company_investor? || (current_context.company_worker? && current_context.company.irs_tax_forms?),
-        legal_name:,
-        street_address:,
-        city:,
-        state:,
-        zip_code:,
-        zip_code_label:,
-        business_entity: business_entity?,
-        business_name:,
-        is_foreign: !requires_w9?,
-        tax_id:,
-        birth_date: birth_date&.to_s,
-      },
-      states: ISO3166::Country[country_code].subdivision_names_with_codes.sort,
-    }
-  end
-
   def logged_in_user
     companies = if user.inviting_company?
       []
@@ -121,7 +101,7 @@ class UserPresenter
         endedAt: worker.ended_at,
         payRateType: worker.pay_rate_type,
         inviting_company: user.inviting_company,
-        role: role ? { name: role.name, expenseCardEnabled: role.expense_card_enabled? } : nil,
+        role: role ? { name: role.name } : nil,
         payRateInSubunits: worker.pay_rate_in_subunits,
         hoursPerWeek: worker.hours_per_week,
       }
@@ -129,7 +109,7 @@ class UserPresenter
 
     {
       companies: companies.compact.map do |company|
-        flags = %w[upcoming_dividend irs_tax_forms expense_cards company_updates salary_roles].filter { Flipper.enabled?(_1, company) }
+        flags = %w[upcoming_dividend irs_tax_forms company_updates salary_roles].filter { Flipper.enabled?(_1, company) }
         flags.push("team_updates") if company.team_updates_enabled?
         flags.push("equity_compensation") if company.equity_compensation_enabled?
         flags.push("equity_grants") if company.equity_grants_enabled?
@@ -157,7 +137,7 @@ class UserPresenter
             country: ISO3166::Country[company.country_code].common_name,
           },
           flags:,
-          expenseCardsEnabled: company.expense_cards_enabled,
+          equityCompensationEnabled: company.equity_compensation_enabled,
           requiredInvoiceApprovals: company.required_invoice_approval_count,
           paymentProcessingDays: company.contractor_payment_processing_time_in_days,
           createdAt: company.created_at.iso8601,
@@ -213,7 +193,6 @@ class UserPresenter
           result[:flags][:equity] = true if company_worker.hourly?
           result[:flags][:cap_table] = true if company.is_gumroad? && company.cap_table_enabled?
           result[:flags][:upcoming_dividend] = Flipper.enabled?(:upcoming_dividend, company)
-          result[:flags][:expense_cards] = company.expense_cards_enabled?
         end
       end
       if company_investor.present?
@@ -249,7 +228,6 @@ class UserPresenter
           irs_tax_forms: company.irs_tax_forms?,
           company_updates: company.company_updates_enabled?,
           salary_roles: Flipper.enabled?(:salary_roles, company),
-          expense_cards: company.expense_cards_enabled?,
         },
       }
     end
