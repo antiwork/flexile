@@ -103,7 +103,7 @@ export default function InvoicesPage() {
         columnHelper.accessor("invoiceNumber", {
           header: "Invoice ID",
           cell: (info) => (
-            <Link href={`/invoices/${info.row.original.id}`} className="no-underline">
+            <Link href={`/invoices/${info.row.original.id}`} className="no-underline after:absolute after:inset-0">
               {info.getValue()}
             </Link>
           ),
@@ -522,7 +522,7 @@ const QuickInvoicesSection = () => {
     params.set("split", String(invoiceEquityPercent));
     if (isProjectBased) params.set("amount", String(amountUsd));
     else params.set("duration", String(duration));
-    return `/invoices/new?${params.toString()}`;
+    return `/invoices/new?${params.toString()}` as const;
   };
 
   const [equityAllocation] = trpc.equityAllocations.forYear.useSuspenseQuery({
@@ -637,7 +637,7 @@ const QuickInvoicesSection = () => {
                   name="invoiceEquityPercent"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Equity percentage</FormLabel>
+                      <FormLabel>How much of your rate would you like to swap for equity?</FormLabel>
                       <FormControl>
                         <RangeInput
                           {...field}
@@ -645,7 +645,6 @@ const QuickInvoicesSection = () => {
                           max={MAX_EQUITY_PERCENTAGE}
                           unit="%"
                           disabled={!canSubmitInvoices}
-                          label="How much of your rate would you like to swap for equity?"
                         />
                       </FormControl>
                     </FormItem>
@@ -696,9 +695,9 @@ const QuickInvoicesSection = () => {
               </div>
               <div className="flex flex-wrap items-center justify-end gap-3">
                 <Button variant="outline" className="grow sm:grow-0" asChild>
-                  <a inert={!canSubmitInvoices} href={`${newCompanyInvoiceRoute()}&expenses=true`}>
+                  <Link inert={!canSubmitInvoices} href={`${newCompanyInvoiceRoute()}&expenses=true`}>
                     Add more info
-                  </a>
+                  </Link>
                 </Button>
                 <MutationStatusButton
                   disabled={!canSubmitInvoices || totalAmountInCents <= 0}

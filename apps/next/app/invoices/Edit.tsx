@@ -312,7 +312,7 @@ const Edit = () => {
                   max={MAX_EQUITY_PERCENTAGE}
                   ariaLabel="Cash vs equity split"
                   unit="%"
-                  label={<div className="flex justify-between gap-2">Confirm your equity split for {invoiceYear}</div>}
+                  label={`Confirm your equity split for ${invoiceYear}`}
                 />
               </div>
               <p className="mt-4">

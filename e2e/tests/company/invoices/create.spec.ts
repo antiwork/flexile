@@ -183,7 +183,18 @@ test.describe("invoice creation", () => {
     await page.getByRole("button", { name: "Send invoice" }).click();
 
     await expect(page.locator("tbody")).toContainText(
-      ["Invoice ID", "1", "Sent on", "Aug 8, 2023", "Amount", "$1,000", "Status", "Awaiting approval (0/2)"].join(""),
+      [
+        "Invoice ID",
+        "1",
+        "Sent on",
+        "Aug 8, 2023",
+        "Hours",
+        "N/A",
+        "Amount",
+        "$1,000",
+        "Status",
+        "Awaiting approval (0/2)",
+      ].join(""),
     );
 
     const invoice = await db.query.invoices

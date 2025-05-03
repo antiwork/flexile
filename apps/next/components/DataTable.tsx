@@ -291,7 +291,7 @@ export default function DataTable<T extends RowData>({
                 {row.getVisibleCells().map((cell) => (
                   <TableCell
                     key={cell.id}
-                    className={`${cellClasses(cell.column)} ${cell.column.id === "actions" ? "md:text-right print:hidden" : ""}`}
+                    className={`${cellClasses(cell.column)} ${cell.column.id === "actions" ? "relative z-1 md:text-right print:hidden" : ""}`}
                     onClick={(e) => cell.column.id === "actions" && e.stopPropagation()}
                   >
                     {typeof cell.column.columnDef.header === "string" && (

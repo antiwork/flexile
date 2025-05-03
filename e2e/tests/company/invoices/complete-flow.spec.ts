@@ -180,6 +180,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).toBeVisible();
 
     await rejectedInvoiceRow.getByLabel("Edit").click();
+    await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
     await page.getByPlaceholder("HH:MM").fill("02:30");
     await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
     await page.waitForTimeout(200); // TODO (dani) avoid this

@@ -87,7 +87,7 @@ test.describe("quick invoicing", () => {
       await login(page, contractorUser);
       await page.getByLabel("Hours worked").fill("10:30");
       await page.getByLabel("Invoice date").fill("2024-08-08");
-      await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("20");
+      await page.getByRole("textbox", { name: "How much of your rate would you like to swap for equity?" }).fill("20");
 
       await expect(page.getByText("Cash amount$48 / hourly")).toBeVisible();
       await expect(page.getByText("Equity value$12 / hourly")).toBeVisible();
@@ -126,7 +126,9 @@ test.describe("quick invoicing", () => {
       await page.getByLabel("Hours").fill("10:30");
       await page.getByLabel("Date").fill("2024-08-08");
 
-      await expect(page.getByRole("textbox", { name: "Cash vs equity split" })).toHaveValue("0");
+      await expect(
+        page.getByRole("textbox", { name: "How much of your rate would you like to swap for equity?" }),
+      ).toHaveValue("0");
 
       await expect(page.getByText("Cash amount$60 / hourly")).toBeVisible();
       await expect(page.getByText("Equity value$0 / hourly")).toBeVisible();
