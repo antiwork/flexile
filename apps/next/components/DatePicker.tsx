@@ -21,7 +21,7 @@ interface DatePickerProps extends Omit<RacDatePickerProps<DateValue>, "children"
 export default function DatePicker({ label, className, ...props }: DatePickerProps) {
   return (
     <RacDatePicker {...props} className={className ? `${className} *:not-first:mt-2` : "*:not-first:mt-2"}>
-      <RacLabel className="text-foreground text-sm font-medium">{label}</RacLabel>
+      <RacLabel className="text-foreground text-base">{label}</RacLabel>
       <div className="flex">
         <Group className="w-full">
           <DateInput className="pe-9" />
