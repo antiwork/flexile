@@ -118,7 +118,11 @@ export default function InvoicesPage() {
         ),
         columnHelper.accessor((row) => statusNames[row.status], {
           header: "Status",
-          cell: (info) => <StatusWithTooltip invoice={info.row.original} />,
+          cell: (info) => (
+            <div className="relative z-1">
+              <StatusWithTooltip invoice={info.row.original} />
+            </div>
+          ),
           meta: {
             filterOptions: [...new Set(data.map((invoice) => statusNames[invoice.status]))],
           },
@@ -700,6 +704,7 @@ const QuickInvoicesSection = () => {
                   disabled={!canSubmitInvoices || totalAmountInCents <= 0}
                   className="grow sm:grow-0"
                   mutation={submit}
+                  type="submit"
                   loadingText="Sending..."
                 >
                   Send for approval
