@@ -181,6 +181,14 @@ export default function InvoicesPage() {
         </Link>
       </Button>
     </div>
+  ) : !user.hasPayoutMethod ? (
+    <>
+      Please{" "}
+      <Link className={linkClasses} href="/settings/payouts">
+        provide a payout method
+      </Link>{" "}
+      for your invoices.
+    </>
   ) : equityAllocation?.status === "pending_grant_creation" || equityAllocation?.status === "pending_approval" ? (
     "Your allocation is pending board approval. You can submit invoices for this year, but they're only going to be paid once the allocation is approved."
   ) : equityAllocation?.locked ? (

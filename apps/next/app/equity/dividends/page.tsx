@@ -53,16 +53,18 @@ export default function Dividends() {
 
   return (
     <EquityLayout>
-      <Alert>
-        <InformationCircleIcon />
-        <AlertDescription>
-          Please{" "}
-          <Link className={linkClasses} href="/settings/payouts">
-            provide a payout method
-          </Link>{" "}
-          for your dividends.
-        </AlertDescription>
-      </Alert>
+      {user.hasPayoutMethod ? null : (
+        <Alert>
+          <InformationCircleIcon />
+          <AlertDescription>
+            Please{" "}
+            <Link className={linkClasses} href="/settings/payouts">
+              provide a payout method
+            </Link>{" "}
+            for your dividends.
+          </AlertDescription>
+        </Alert>
+      )}
       {data.length > 0 ? (
         <DataTable table={table} />
       ) : (
