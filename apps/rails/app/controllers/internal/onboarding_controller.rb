@@ -7,7 +7,6 @@ class Internal::OnboardingController < Internal::BaseController
 
   before_action :redirect_if_onboarding_complete, only: [:bank_account]
   before_action :enforce_all_values_for_update, only: :update
-  before_action :enforce_all_values_for_save_legal, only: :save_legal
   before_action :ensure_required_data_present, only: :bank_account
   before_action :skip_step, if: -> { Current.user.sanctioned_country_resident? }, only: [:bank_account, :save_bank_account]
 
@@ -32,26 +31,6 @@ class Internal::OnboardingController < Internal::BaseController
     end
   end
 
-  def legal
-    authorize :onboarding
-
-    render json: UserPresenter.new(current_context: pundit_user, selected_access_roles_by_company:).legal_details_props
-  end
-
-  def save_legal
-    authorize :onboarding
-
-    error_message = UpdateUser.new(
-      user: Current.user,
-      update_params: params_for_save_legal,
-      confirm_tax_info: params_for_save_legal[:tax_id].present?,
-    ).process
-
-    return render json: { success: true } unless error_message.present?
-
-    render json: { success: false, error_message: }
-  end
-
   def bank_account
     authorize :onboarding
 
@@ -73,7 +52,7 @@ class Internal::OnboardingController < Internal::BaseController
 
   private
     def ensure_required_data_present
-      return if onboarding_service.has_personal_details? && onboarding_service.has_legal_details?
+      return if onboarding_service.has_personal_details?
 
       json_redirect(onboarding_service.redirect_path)
     end
@@ -82,27 +61,12 @@ class Internal::OnboardingController < Internal::BaseController
       params.require(:user).permit(:legal_name, :preferred_name, :country_code, :citizenship_country_code)
     end
 
-    def params_for_save_legal
-      params.require(:user).permit(
-        :street_address, :city, :state, :zip_code, :business_entity, :business_name, :tax_id, :birth_date, :signature
-      )
-    end
-
     def params_for_save_bank_account
       params.require(:recipient).permit(:currency, :type, details: {})
     end
 
     def enforce_all_values_for_update
       all_values_present = params_for_update.to_h.values.all?(&:present?)
-      unless all_values_present
-        render json: { success: false, error_message: "Please input all values" }
-      end
-    end
-
-    def enforce_all_values_for_save_legal
-      save_params = params_for_save_legal.to_h
-      all_values_present = [:street_address, :city, :zip_code].all? { |key| save_params[key].present? } &&
-        (!save_params[:business_entity] || save_params[:business_name].present?)
       unless all_values_present
         render json: { success: false, error_message: "Please input all values" }
       end

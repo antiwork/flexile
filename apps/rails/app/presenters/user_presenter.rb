@@ -47,26 +47,6 @@ class UserPresenter
     }
   end
 
-  def legal_details_props
-    {
-      user: {
-        collect_tax_info: current_context.company_investor? || (current_context.company_worker? && current_context.company.irs_tax_forms?),
-        legal_name:,
-        street_address:,
-        city:,
-        state:,
-        zip_code:,
-        zip_code_label:,
-        business_entity: business_entity?,
-        business_name:,
-        is_foreign: !requires_w9?,
-        tax_id:,
-        birth_date: birth_date&.to_s,
-      },
-      states: ISO3166::Country[country_code].subdivision_names_with_codes.sort,
-    }
-  end
-
   def logged_in_user
     companies = if user.inviting_company?
       []

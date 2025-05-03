@@ -6,7 +6,7 @@ import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { formatISO } from "date-fns";
 import { List } from "immutable";
 import Link from "next/link";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
@@ -36,6 +36,7 @@ import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import RangeInput from "@/components/RangeInput";
 import { linkClasses } from "@/components/Link";
 import { EquityAllocationStatus } from "@/db/enums";
+import { useCanSubmitInvoices } from "@/app/invoices/ViewList";
 
 const addressSchema = z.object({
   street_address: z.string(),
@@ -99,6 +100,8 @@ type InvoiceFormExpense = Data["invoice"]["expenses"][number] & { errors?: strin
 
 const Edit = () => {
   const company = useCurrentCompany();
+  const { canSubmitInvoices } = useCanSubmitInvoices();
+  if (!canSubmitInvoices) throw redirect("/invoices");
   const { id } = useParams<{ id: string }>();
   const searchParams = useSearchParams();
   const [showExpenses, setShowExpenses] = useState(!!searchParams.get("expenses"));
@@ -357,7 +360,7 @@ const Edit = () => {
               <Input
                 id="invoice-id"
                 value={invoiceNumber}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInvoiceNumber(e.target.value)}
+                onChange={(e) => setInvoiceNumber(e.target.value)}
                 aria-invalid={errorField === "invoiceNumber"}
               />
             </div>
