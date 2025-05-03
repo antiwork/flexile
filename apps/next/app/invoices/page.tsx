@@ -99,15 +99,14 @@ export default function InvoicesPage() {
                 </>
               ),
             })
-          : null,
-        columnHelper.accessor("invoiceNumber", {
-          header: "Invoice ID",
-          cell: (info) => (
-            <Link href={`/invoices/${info.row.original.id}`} className="no-underline after:absolute after:inset-0">
-              {info.getValue()}
-            </Link>
-          ),
-        }),
+          : columnHelper.accessor("invoiceNumber", {
+              header: "Invoice ID",
+              cell: (info) => (
+                <Link href={`/invoices/${info.row.original.id}`} className="no-underline after:absolute after:inset-0">
+                  {info.getValue()}
+                </Link>
+              ),
+            }),
         columnHelper.simple("invoiceDate", "Sent on", (value) => (value ? formatDate(value) : "N/A")),
         columnHelper.simple("totalMinutes", "Hours", (value) => (value ? formatDuration(value) : "N/A"), "numeric"),
         columnHelper.simple(

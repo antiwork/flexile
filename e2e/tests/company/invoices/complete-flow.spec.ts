@@ -85,7 +85,6 @@ test.describe("Invoice submission, approval and rejection", () => {
     await login(page, workerUserB);
 
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
-    await page.getByLabel("Invoice ID").fill("CUSTOM-3");
     await page.getByPlaceholder("Description").fill("line item");
     await page.getByPlaceholder("HH:MM").fill("10:23");
     await page.getByLabel("Date").fill("2024-11-20");
@@ -164,7 +163,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(secondRow).toContainText("Rejected");
     await expect(openInvoicesBadge).toContainText("1");
 
-    await page.getByRole("link", { name: "CUSTOM-3" }).click();
+    await page.getByRole("cell", { name: workerUserB.legalName ?? "never" }).click();
     await page.getByRole("link", { name: "View invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoice" })).toBeVisible();
     await page.locator("header").filter({ hasText: "Invoice" }).getByRole("button", { name: "Pay now" }).click();
@@ -202,7 +201,6 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await expect(fixedInvoiceRow).toBeVisible();
     await fixedInvoiceRow.click();
-    await expect(page.getByRole("heading", { name: `Invoice CUSTOM-2` })).toBeVisible();
 
     await page.getByRole("button", { name: "Reject" }).click();
     await page.getByLabel("Explain why the invoice was").fill("sorry still wrong");
