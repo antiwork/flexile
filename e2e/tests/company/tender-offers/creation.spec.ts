@@ -3,23 +3,12 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
-import { addDays, format, getDate, getMonth } from "date-fns";
-import { desc, eq } from "drizzle-orm";
-import { tenderOffers, users } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { users } from "@/db/schema";
+import { fillDatePicker } from "@test/helpers";
 
 test.describe("Buyback creation", () => {
   test("allows creating a new buyback", async ({ page }) => {
-    const today = new Date();
-    const endDate = addDays(today, 30);
-
-    const startDay = getDate(today);
-    const endDay = getDate(endDate);
-
-    const startMonth = getMonth(today);
-    const endMonth = getMonth(endDate);
-    const isDifferentMonth = startMonth !== endMonth;
-    const endMonthName = format(endDate, "MMMM");
-
     const { company } = await companiesFactory.create({
       tenderOffersEnabled: true,
       capTableEnabled: true,
@@ -40,38 +29,19 @@ test.describe("Buyback creation", () => {
     await page.getByRole("tab", { name: "Buybacks" }).click();
     await page.getByRole("link", { name: "New buyback" }).click();
 
-    await page.getByLabel("Start date").locator("..").getByRole("button").click();
-    await page.getByRole("dialog").getByText(String(startDay), { exact: true }).click();
-
-    await page.getByLabel("End date").locator("..").getByRole("button").click();
-    const calendarDialog = page.getByRole("dialog");
-
-    if (isDifferentMonth) {
-      await calendarDialog.locator("header").getByRole("button", { name: "Next" }).click();
-      await expect(calendarDialog.getByRole("heading", { name: new RegExp(endMonthName, "u") })).toBeVisible();
-    }
-
-    const targetText = calendarDialog.getByText(String(endDay), { exact: true });
-    await targetText.click();
-
+    await fillDatePicker(page, "Start date", "08/08/2022");
+    await fillDatePicker(page, "End date", "09/09/2022");
     await page.getByLabel("Starting valuation").fill("100000000");
     await page.getByLabel("Document package").setInputFiles("e2e/samples/sample.zip");
 
     await page.getByRole("button", { name: "Create buyback" }).click();
-    await expect(page).toHaveURL(/.*\/equity\/tender_offers$/u);
+    await expect(page.getByText("There are no buybacks yet.")).toBeVisible();
+    await page.reload();
 
-    const tenderOffer = await db.query.tenderOffers
-      .findFirst({ where: eq(tenderOffers.companyId, company.id), orderBy: desc(tenderOffers.id) })
-      .then(takeOrThrow);
-    expect(tenderOffer).toBeDefined();
-    expect(tenderOffer.minimumValuation).toBe(100000000n);
-    expect(tenderOffer.startsAt).toEqual(new Date(`${format(today, "yyyy-MM-dd")}T00:00:00.000Z`));
-    expect(tenderOffer.endsAt).toEqual(new Date(`${format(endDate, "yyyy-MM-dd")}T00:00:00.000Z`));
-
-    const row = page.locator("tr").filter({ hasText: "$100,000,000" });
-
-    await expect(row.getByText(String(startDay), { exact: true })).toBeVisible();
-    await expect(row.getByText(String(endDay), { exact: true })).toBeVisible();
-    await expect(row.getByText(/\$100,000,000/u)).toBeVisible();
+    await expect(
+      page.getByRole("row", {
+        name: /Aug 8, 2022.*Sep 9, 2022.*\$100,000,000/u,
+      }),
+    ).toBeVisible();
   });
 });

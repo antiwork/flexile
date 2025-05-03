@@ -95,7 +95,7 @@ export default function NewBuyback() {
                 id="attachment"
                 type="file"
                 accept="application/zip"
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAttachment(e.target.files?.[0])}
+                onChange={(e) => setAttachment(e.target.files?.[0])}
               />
             </div>
           </div>
