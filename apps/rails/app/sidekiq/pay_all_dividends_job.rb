@@ -23,7 +23,7 @@ class PayAllDividendsJob
                 user.restricted_payout_country_resident? ||
                 user.sanctioned_country_resident? ||
                 user.tax_information_confirmed_at.nil? ||
-                !investor.completed_onboarding?
+                !(user.wallet.present? || user.bank_accounts.present?)
 
         InvestorDividendsPaymentJob.perform_in((delay * 2).seconds, investor.id)
         delay += 1
