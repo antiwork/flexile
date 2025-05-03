@@ -133,7 +133,7 @@ export default function HomePage() {
           </div>
         </Section>
 
-        <Section className="bg-black py-8 md:py-16 text-white">
+        <Section className="bg-black py-8 text-white md:py-16">
           <div className="mx-auto flex w-full max-w-5xl flex-col items-start justify-between px-4 md:flex-row md:items-end">
             <div className="flex flex-col items-start gap-8 md:gap-18">
               <Image src={logo} alt="Flexile" className="block h-16 w-auto invert" />
