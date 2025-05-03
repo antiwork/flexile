@@ -87,63 +87,62 @@ export default function InvoicesPage() {
 
   const columnHelper = createColumnHelper<(typeof data)[number]>();
   const columns = useMemo(
-    () =>
-      [
-        user.roles.administrator
-          ? columnHelper.accessor("billFrom", {
-              header: "Contractor",
-              cell: (info) => (
-                <>
-                  <b className="truncate">{info.getValue()}</b>
-                  <div className="text-xs text-gray-500">{info.row.original.contractor.role.name}</div>
-                </>
-              ),
-            })
-          : columnHelper.accessor("invoiceNumber", {
-              header: "Invoice ID",
-              cell: (info) => (
-                <Link href={`/invoices/${info.row.original.id}`} className="no-underline after:absolute after:inset-0">
-                  {info.getValue()}
-                </Link>
-              ),
-            }),
-        columnHelper.simple("invoiceDate", "Sent on", (value) => (value ? formatDate(value) : "N/A")),
-        columnHelper.simple("totalMinutes", "Hours", (value) => (value ? formatDuration(value) : "N/A"), "numeric"),
-        columnHelper.simple(
-          "totalAmountInUsdCents",
-          "Amount",
-          (value) => (value ? formatMoneyFromCents(value) : "N/A"),
-          "numeric",
-        ),
-        columnHelper.accessor((row) => statusNames[row.status], {
-          header: "Status",
-          cell: (info) => (
-            <div className="relative z-1">
-              <StatusWithTooltip invoice={info.row.original} />
-            </div>
-          ),
-          meta: {
-            filterOptions: [...new Set(data.map((invoice) => statusNames[invoice.status]))],
-          },
-        }),
-        columnHelper.accessor(isActionable, {
-          id: "actions",
-          header: "Actions",
-          cell: (info) => {
-            const invoice = info.row.original;
-            return (
+    () => [
+      user.roles.administrator
+        ? columnHelper.accessor("billFrom", {
+            header: "Contractor",
+            cell: (info) => (
               <>
-                {invoice.contractor.user.id === user.id && EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
-                  <Link href={`/invoices/${invoice.id}/edit`} aria-label="Edit">
-                    <PencilIcon className="size-4" />
-                  </Link>
-                ) : null}
-                {user.roles.administrator && isActionable(invoice) ? <ApproveButton invoice={invoice} /> : null}
+                <b className="truncate">{info.getValue()}</b>
+                <div className="text-xs text-gray-500">{info.row.original.contractor.role.name}</div>
               </>
-            );
-          },
-        }),
-      ].filter((column) => !!column),
+            ),
+          })
+        : columnHelper.accessor("invoiceNumber", {
+            header: "Invoice ID",
+            cell: (info) => (
+              <Link href={`/invoices/${info.row.original.id}`} className="no-underline after:absolute after:inset-0">
+                {info.getValue()}
+              </Link>
+            ),
+          }),
+      columnHelper.simple("invoiceDate", "Sent on", (value) => (value ? formatDate(value) : "N/A")),
+      columnHelper.simple("totalMinutes", "Hours", (value) => (value ? formatDuration(value) : "N/A"), "numeric"),
+      columnHelper.simple(
+        "totalAmountInUsdCents",
+        "Amount",
+        (value) => (value ? formatMoneyFromCents(value) : "N/A"),
+        "numeric",
+      ),
+      columnHelper.accessor((row) => statusNames[row.status], {
+        header: "Status",
+        cell: (info) => (
+          <div className="relative z-1">
+            <StatusWithTooltip invoice={info.row.original} />
+          </div>
+        ),
+        meta: {
+          filterOptions: [...new Set(data.map((invoice) => statusNames[invoice.status]))],
+        },
+      }),
+      columnHelper.accessor(isActionable, {
+        id: "actions",
+        header: "Actions",
+        cell: (info) => {
+          const invoice = info.row.original;
+          return (
+            <>
+              {invoice.contractor.user.id === user.id && EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
+                <Link href={`/invoices/${invoice.id}/edit`} aria-label="Edit">
+                  <PencilIcon className="size-4" />
+                </Link>
+              ) : null}
+              {user.roles.administrator && isActionable(invoice) ? <ApproveButton invoice={invoice} /> : null}
+            </>
+          );
+        },
+      }),
+    ],
     [],
   );
 
