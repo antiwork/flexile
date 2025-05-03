@@ -13,13 +13,6 @@ RSpec.describe OnboardingState::WorkerWithoutCompany do
       expect(service.redirect_path).to eq(spa_onboarding_path)
     end
 
-    it "returns the path to the legal details page if the user is missing legal details" do
-      allow(service).to receive(:has_personal_details?).and_return(true)
-      allow(service).to receive(:has_legal_details?).and_return(false)
-
-      expect(service.redirect_path).to eq(spa_onboarding_legal_path)
-    end
-
     it "returns nil if all onboarding data is present" do
       allow(service).to receive(:has_personal_details?).and_return(true)
 

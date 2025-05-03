@@ -8,8 +8,6 @@ class OnboardingState::Worker < OnboardingState::BaseUser
   def redirect_path
     if !has_personal_details?
       spa_company_worker_onboarding_path(company.external_id)
-    elsif !has_legal_details?
-      spa_company_worker_onboarding_legal_path(company.external_id)
     end
   end
 

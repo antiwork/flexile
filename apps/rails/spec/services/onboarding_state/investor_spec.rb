@@ -54,24 +54,6 @@ RSpec.describe OnboardingState::Investor do
 
       expect(service.complete?).to eq(false)
     end
-
-    it "returns false if street_address is missing" do
-      user.update!(street_address: nil)
-
-      expect(service.complete?).to eq(false)
-    end
-
-    it "returns false if city is missing" do
-      user.update!(city: nil)
-
-      expect(service.complete?).to eq(false)
-    end
-
-    it "returns false if zip_code is missing" do
-      user.update!(zip_code: nil)
-
-      expect(service.complete?).to eq(false)
-    end
   end
 
   describe "#redirect_path" do
@@ -79,18 +61,6 @@ RSpec.describe OnboardingState::Investor do
       allow(service).to receive(:has_personal_details?).and_return(false)
 
       expect(service.redirect_path).to eq(spa_company_investor_onboarding_path(company.external_id))
-    end
-
-    it "returns the path to the legal details page if the user is missing legal details" do
-      allow(service).to receive(:has_legal_details?).and_return(false)
-
-      expect(service.redirect_path).to eq(spa_company_investor_onboarding_legal_path(company.external_id))
-    end
-
-    it "returns the path to the legal details page if the user is missing tax info" do
-      allow(service).to receive(:has_tax_info?).and_return(false)
-
-      expect(service.redirect_path).to eq(spa_company_investor_onboarding_legal_path(company.external_id))
     end
 
     it "returns nil if all onboarding data is present" do

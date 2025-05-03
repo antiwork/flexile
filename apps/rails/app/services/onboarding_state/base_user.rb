@@ -20,16 +20,8 @@ class OnboardingState::BaseUser
       user.citizenship_country_code.present?
   end
 
-  def has_legal_details?
-    return @_has_legal_details if defined?(@_has_legal_details)
-
-    @_has_legal_details = user.street_address.present? && user.city.present? &&
-      user.zip_code.present? &&
-      (!user.business_entity? || user.business_name.present?)
-  end
-
   def complete?
-    has_personal_details? && has_legal_details?
+    has_personal_details?
   end
 
   def redirect_path

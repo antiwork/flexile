@@ -4,8 +4,6 @@ class OnboardingState::WorkerWithoutCompany < OnboardingState::BaseUser
   def redirect_path
     if !has_personal_details?
       spa_onboarding_path
-    elsif !has_legal_details?
-      spa_onboarding_legal_path
     end
   end
 
