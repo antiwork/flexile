@@ -76,8 +76,7 @@ export default function HomePage() {
               <div>
                 <h3 className="text-xl font-medium">Automate Operations</h3>
                 <div className="text-xl text-gray-600">
-                  Onboard in seconds, track status <br />
-                  async, and streamline invoicing
+                  Onboard in seconds, track status async, and streamline invoicing
                 </div>
               </div>
             </div>
@@ -106,8 +105,7 @@ export default function HomePage() {
               <div>
                 <h3 className="text-xl font-medium">Dividends & Buybacks</h3>
                 <div className="text-xl text-gray-600">
-                  Distribute profits or repurchase <br />
-                  equity easily and transparently
+                  Distribute profits or repurchase equity easily and transparently
                 </div>
               </div>
             </div>
