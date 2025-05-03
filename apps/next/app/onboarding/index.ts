@@ -1,1 +1,1 @@
-export const steps = ["Signup", "Personal details", "Billing info"];
+export const steps = ["Signup", "Personal details"];
