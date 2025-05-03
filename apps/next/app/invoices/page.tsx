@@ -567,11 +567,7 @@ const QuickInvoicesSection = () => {
   });
 
   const handleSubmit = form.handleSubmit(() => {
-    if (
-      company.equityCompensationEnabled &&
-      equityAllocation?.equityPercentage !== invoiceEquityPercent &&
-      !equityAllocation?.locked
-    ) {
+    if (company.equityCompensationEnabled && !equityAllocation?.locked) {
       setLockModalOpen(true);
     } else {
       submit.mutate();
