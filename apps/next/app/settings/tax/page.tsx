@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import RadioButtons from "@/components/RadioButtons";
 import Status from "@/components/Status";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid";
 import { linkClasses } from "@/components/Link";
 import { Label } from "@/components/ui/label";
-import { RadioGroup } from "@/components/ui/radio-group";
+
 const dataSchema = z.object({
   birth_date: z.string().nullable(),
   business_name: z.string().nullable(),
@@ -235,7 +236,7 @@ export default function TaxPage() {
                 <FormItem>
                   <FormLabel>Type of entity</FormLabel>
                   <FormControl>
-                    <RadioGroup
+                    <RadioButtons
                       value={field.value ? "business" : "individual"}
                       onChange={(value) => field.onChange(value === "business")}
                       options={[

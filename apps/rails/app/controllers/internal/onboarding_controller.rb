@@ -15,7 +15,7 @@ class Internal::OnboardingController < Internal::BaseController
   def show
     authorize :onboarding
 
-    render json: UserPresenter.new(current_context: pundit_user, selected_access_roles_by_company:).personal_details_props
+    render json: UserPresenter.new(current_context: pundit_user).personal_details_props
   end
 
   def update
@@ -36,7 +36,7 @@ class Internal::OnboardingController < Internal::BaseController
 
     return json_redirect("/dashboard") if Current.user.bank_account.present?
 
-    render json: UserPresenter.new(current_context: pundit_user, selected_access_roles_by_company:).billing_details_props
+    render json: UserPresenter.new(current_context: pundit_user).billing_details_props
   end
 
   def save_bank_account

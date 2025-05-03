@@ -56,8 +56,14 @@ export const expect = baseExpect.extend({
     // `force: true` allows hovering over disabled elements.
     await locator.hover({ force: true });
 
-    const tooltipElement = locator.page().getByRole("tooltip", { name: expectedText, exact });
-    const pass = await tooltipElement.isVisible();
+    let pass = true;
+    try {
+      await expect(locator.page().getByRole("tooltip", { name: expectedText, exact })).toBeVisible({
+        visible: !this.isNot,
+      });
+    } catch {
+      pass = !pass;
+    }
 
     return {
       message: () => `expected element to ${this.isNot ? "not " : ""}have tooltip with text "${expectedText}"`,

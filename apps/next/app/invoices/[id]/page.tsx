@@ -44,6 +44,10 @@ export default function InvoicePage() {
   const complianceInfo = invoice.contractor.user.complianceInfo;
   const [expenseCategories] = trpc.expenseCategories.list.useSuspenseQuery({ companyId: company.id });
 
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const router = useRouter();
+  const isActionable = useIsActionable();
+
   const searchParams = useSearchParams();
   const [acceptPaymentModalOpen, setAcceptPaymentModalOpen] = useState(
     invoice.requiresAcceptanceByPayee && searchParams.get("accept") === "true",
@@ -111,15 +115,34 @@ export default function InvoicePage() {
           ) : null}
           <InvoiceStatus aria-label="Status" invoice={invoice} />
 
-          {user.activeRole === "administrator" ? (
-            <CompanyHeader invoice={invoice} />
-          ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
-            <Button variant="outline" asChild>
-              <Link href={`/invoices/${invoice.id}/edit`}>
-                {invoice.status !== "rejected" && <PencilIcon className="h-4 w-4" />}
-                {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
-              </Link>
-            </Button>
+          {user.roles.administrator && isActionable(invoice) ? (
+            <>
+              <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
+                <XMarkIcon className="size-4" />
+                Reject
+              </Button>
+
+              <RejectModal
+                open={rejectModalOpen}
+                onClose={() => setRejectModalOpen(false)}
+                onReject={() => router.push(`/invoices`)}
+                ids={[invoice.id]}
+              />
+
+              <ApproveButton invoice={invoice} onApprove={() => router.push(`/invoices`)} />
+            </>
+          ) : null}
+          {EDITABLE_INVOICE_STATES.includes(invoice.status) && user.id === invoice.userId ? (
+            invoice.requiresAcceptanceByPayee ? (
+              <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
+            ) : (
+              <Button variant="outline" asChild>
+                <Link href={`/invoices/${invoice.id}/edit`}>
+                  {invoice.status !== "rejected" && <PencilIcon className="h-4 w-4" />}
+                  {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
+                </Link>
+              </Button>
+            )
           ) : null}
         </div>
       }
@@ -338,30 +361,3 @@ export default function InvoicePage() {
     </MainLayout>
   );
 }
-
-const CompanyHeader = ({ invoice }: { invoice: Invoice }) => {
-  const [rejectModalOpen, setRejectModalOpen] = useState(false);
-  const router = useRouter();
-  const navigateToInvoices = () => router.push(`/invoices`);
-  const isActionable = useIsActionable();
-
-  if (!isActionable(invoice)) return null;
-
-  return (
-    <>
-      <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
-        <XMarkIcon className="size-4" />
-        Reject
-      </Button>
-
-      <RejectModal
-        open={rejectModalOpen}
-        onClose={() => setRejectModalOpen(false)}
-        onReject={navigateToInvoices}
-        ids={[invoice.id]}
-      />
-
-      <ApproveButton invoice={invoice} onApprove={navigateToInvoices} />
-    </>
-  );
-};

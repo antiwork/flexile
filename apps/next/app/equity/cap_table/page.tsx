@@ -29,7 +29,7 @@ export default function CapTable() {
   const newSchema = searchParams.get("new_schema") !== null;
   const [data] = trpc.capTable.show.useSuspenseQuery({ companyId: company.id, newSchema });
   const user = useCurrentUser();
-  const canViewInvestor = user.activeRole === "administrator" || user.activeRole === "lawyer";
+  const canViewInvestor = !!user.roles.administrator || !!user.roles.lawyer;
 
   type InvestorItem = Data["investors"][number];
   const investorColumnHelper = createColumnHelper<InvestorItem>();

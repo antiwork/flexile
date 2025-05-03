@@ -3,8 +3,8 @@ import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
+import DatePicker from "@/components/DatePicker";
 import FormSection from "@/components/FormSection";
-import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
@@ -14,20 +14,22 @@ import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { md5Checksum } from "@/utils";
+import type { DateValue } from "react-aria-components";
+import { Input } from "@/components/ui/input";
 
 export default function NewBuyback() {
   const company = useCurrentCompany();
   const router = useRouter();
 
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState<DateValue | null>(null);
+  const [endDate, setEndDate] = useState<DateValue | null>(null);
   const [minimumValuation, setMinimumValuation] = useState(0);
   const [attachment, setAttachment] = useState<File | undefined>(undefined);
 
   const createUploadUrl = trpc.files.createDirectUploadUrl.useMutation();
   const createTenderOffer = trpc.tenderOffers.create.useMutation();
 
-  const valid = startDate && endDate && attachment;
+  const valid = !!(startDate && endDate && attachment);
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -51,10 +53,12 @@ export default function NewBuyback() {
         },
       });
 
+      const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
       await createTenderOffer.mutateAsync({
         companyId: company.id,
-        startsAt: new Date(startDate),
-        endsAt: new Date(endDate),
+        startsAt: startDate.toDate(localTimeZone),
+        endsAt: endDate.toDate(localTimeZone),
         minimumValuation: BigInt(minimumValuation),
         attachmentKey: key,
       });
@@ -74,8 +78,8 @@ export default function NewBuyback() {
       <FormSection title="Details">
         <CardContent>
           <div className="grid gap-4">
-            <Input value={startDate} onChange={setStartDate} type="date" label="Start date" />
-            <Input value={endDate} onChange={setEndDate} type="date" label="End date" />
+            <DatePicker label="Start date" value={startDate} onChange={setStartDate} granularity="day" />
+            <DatePicker label="End date" value={endDate} onChange={setEndDate} granularity="day" />
             <div className="grid gap-2">
               <Label htmlFor="starting-valuation">Starting valuation</Label>
               <NumberInput
@@ -87,7 +91,7 @@ export default function NewBuyback() {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="attachment">Document package</Label>
-              <input
+              <Input
                 id="attachment"
                 type="file"
                 accept="application/zip"

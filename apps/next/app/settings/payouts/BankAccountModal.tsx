@@ -6,6 +6,7 @@ import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import Input from "@/components/Input";
 import MutationButton from "@/components/MutationButton";
+import RadioButtons from "@/components/RadioButtons";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -20,7 +21,6 @@ import {
 import { cn } from "@/utils";
 import { request } from "@/utils/request";
 import { save_bank_account_onboarding_path, wise_account_requirements_path } from "@/utils/routes";
-import { RadioGroup } from "@/components/ui/radio-group";
 
 const KEY_LEGAL_TYPE = "legalType";
 const KEY_CHECKING_ACCOUNT = "CHECKING";
@@ -462,7 +462,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
             }
 
             return (
-              <RadioGroup
+              <RadioButtons
                 key={field.key}
                 value={details.get(field.key) ?? ""}
                 onChange={(value) => {

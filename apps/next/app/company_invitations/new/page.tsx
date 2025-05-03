@@ -10,12 +10,12 @@ import FormSection from "@/components/FormSection";
 import MainLayout from "@/components/layouts/Main";
 import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
+import RadioButtons from "@/components/RadioButtons";
 import { CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DocumentTemplateType, PayRateType } from "@/db/enums";
 import { trpc } from "@/trpc/client";
-import { RadioGroup } from "@/components/ui/radio-group";
 
 export default function CreateCompanyInvitation() {
   const router = useRouter();
@@ -106,13 +106,13 @@ export default function CreateCompanyInvitation() {
               ) : null}
             </div>
 
-            <RadioGroup
+            <RadioButtons
+              value={rolePayRateType}
+              onChange={setRolePayRateType}
               options={[
                 { label: "Hourly", value: "hourly" },
                 { label: "Project-based", value: "project_based" },
               ]}
-              value={rolePayRateType}
-              onChange={setRolePayRateType}
               label="Contract type"
               invalid={!!errors["company_role.rate.pay_rate_type"]}
               help={errors["company_role.rate.pay_rate_type"]}

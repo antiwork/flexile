@@ -136,7 +136,7 @@ export default function DataTable<T extends RowData>({
       {filterable || actions ? (
         <div className="flex justify-between">
           <div className="flex gap-2">
-            {table.options.enableGlobalFilter !== false || searchColumn ? (
+            {table.options.enableGlobalFilter !== false ? (
               <div className="relative">
                 <SearchIcon className="text-muted-foreground absolute top-2.5 left-2.5 size-4" />
                 <Input
@@ -285,13 +285,14 @@ export default function DataTable<T extends RowData>({
                       aria-label="Select row"
                       disabled={!row.getCanSelect()}
                       onCheckedChange={row.getToggleSelectedHandler()}
+                      className="relative z-1"
                     />
                   </TableCell>
                 ) : null}
                 {row.getVisibleCells().map((cell) => (
                   <TableCell
                     key={cell.id}
-                    className={`${cellClasses(cell.column)} ${cell.column.id === "actions" ? "md:text-right print:hidden" : ""}`}
+                    className={`${cellClasses(cell.column)} ${cell.column.id === "actions" ? "relative z-1 md:text-right print:hidden" : ""}`}
                     onClick={(e) => cell.column.id === "actions" && e.stopPropagation()}
                   >
                     {typeof cell.column.columnDef.header === "string" && (

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Current < ActiveSupport::CurrentAttributes
-  attribute :company, :company_administrator, :company_worker, :company_investor, :company_lawyer, :role, :user, :whodunnit
+  attribute :company, :company_administrator, :company_worker, :company_investor, :company_lawyer, :user, :whodunnit
 
   def user=(user)
     super

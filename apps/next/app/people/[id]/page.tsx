@@ -47,7 +47,7 @@ export default function ContractorPage() {
   const [user] = trpc.users.get.useSuspenseQuery({ companyId: company.id, id });
   const { data: contractor, refetch } = trpc.contractors.get.useQuery(
     { companyId: company.id, userId: id },
-    { enabled: currentUser.activeRole === "administrator" },
+    { enabled: !!currentUser.roles.administrator },
   );
   const { data: investor } = trpc.investors.get.useQuery({ companyId: company.id, userId: id });
   const { data: equityGrants } = trpc.equityGrants.list.useQuery(

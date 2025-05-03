@@ -18,7 +18,7 @@ class ApplicationController < ActionController::Base
 
   def current_user_data
     return e401_json if Current.user.nil?
-    render json: UserPresenter.new(current_context:, selected_access_roles_by_company:).logged_in_user
+    render json: UserPresenter.new(current_context:).logged_in_user
   end
 
   private

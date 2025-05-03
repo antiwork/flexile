@@ -5,6 +5,7 @@ import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
+import { fillDatePicker } from "@test/helpers";
 
 test.describe("Buyback creation", () => {
   test("allows creating a new buyback", async ({ page }) => {
@@ -28,8 +29,8 @@ test.describe("Buyback creation", () => {
     await page.getByRole("tab", { name: "Buybacks" }).click();
     await page.getByRole("link", { name: "New buyback" }).click();
 
-    await page.getByLabel("Start date").fill("2022-08-08");
-    await page.getByLabel("End date").fill("2022-09-09");
+    await fillDatePicker(page, "Start date", "08/08/2022");
+    await fillDatePicker(page, "End date", "09/09/2022");
     await page.getByLabel("Starting valuation").fill("100000000");
     await page.getByLabel("Document package").setInputFiles("e2e/samples/sample.zip");
 

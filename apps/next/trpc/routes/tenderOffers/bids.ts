@@ -42,7 +42,7 @@ export const tenderOffersBidsRouter = createRouter({
       return bidsQuery.map((bid) => ({
         ...pick(bid, ["sharePriceCents", "shareClass", "numberOfShares"]),
         id: bid.externalId,
-        companyInvestor: { user: { email: bid.companyInvestor.user.email } },
+        companyInvestor: { user: simpleUser(bid.companyInvestor.user) },
       }));
     }),
   create: companyProcedure

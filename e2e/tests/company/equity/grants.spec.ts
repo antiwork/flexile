@@ -58,7 +58,7 @@ test.describe("New Contractor", () => {
     await optionPoolsFactory.create({ companyId: company.id });
     await login(page, adminUser);
     await page.getByRole("link", { name: "Equity" }).click();
-    await page.getByRole("tab", { name: "Options" }).click();
+    await page.getByRole("tab", { name: "Equity grants" }).click();
     await expect(page.getByRole("link", { name: "New option grant" })).not.toBeVisible();
     await expect(page.getByText("Create equity plan contract and board consent templates")).toBeVisible();
 

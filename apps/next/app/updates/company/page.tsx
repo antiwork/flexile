@@ -29,7 +29,7 @@ export default function CompanyUpdates() {
     <MainLayout
       title="Updates"
       headerActions={
-        user.activeRole === "administrator" ? (
+        user.roles.administrator ? (
           <Button asChild>
             <Link href="/updates/company/new">New update</Link>
           </Button>
@@ -37,7 +37,7 @@ export default function CompanyUpdates() {
       }
     >
       {updates.length ? (
-        user.activeRole === "administrator" ? (
+        user.roles.administrator ? (
           <AdminList />
         ) : (
           <ViewList />

@@ -82,7 +82,7 @@ export const equityGrantsRouter = createRouter({
   list: companyProcedure
     .input(
       z.object({
-        investorId: z.string().optional(),
+        investorId: z.string().nullish(),
         accepted: z.boolean().optional(),
         eventuallyExercisable: z.boolean().optional(),
         orderBy: z.enum(["issuedAt", "periodEndedAt"]).default("issuedAt"),

@@ -44,7 +44,7 @@ test.describe("Cap table upload", () => {
     ]);
 
     await expect(page.getByText("cap_table.xlsx")).toBeVisible();
-    await page.getByRole("button", { name: "Upload files" }).click();
+    await page.getByRole("button", { name: "Upload files", exact: true }).click();
     await expect(page.getByText("We are currently processing your equity documents")).toBeVisible();
     await expect(page.getByText("Upload files")).not.toBeVisible();
     await expect

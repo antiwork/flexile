@@ -208,7 +208,7 @@ export default function DocumentsPage() {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const isCompanyRepresentative = user.activeRole === "administrator" || user.activeRole === "lawyer";
+  const isCompanyRepresentative = !!user.roles.administrator || !!user.roles.lawyer;
   const userId = isCompanyRepresentative ? null : user.id;
   const canSign = user.address.street_address || isCompanyRepresentative;
 
@@ -236,12 +236,16 @@ export default function DocumentsPage() {
   const [signDocumentParam] = useQueryState("sign");
   const [signDocumentId, setSignDocumentId] = useState<bigint | null>(null);
   const isSignable = (document: Document): document is SignableDocument => {
-    if (document.type === DocumentType.BoardConsent) {
-      if (!document.lawyerApproved && user.activeRole !== "lawyer") return false;
-      if (user.activeRole === "administrator" && !user.roles.administrator?.isBoardMember) return false;
-    }
+    if (document.type === DocumentType.BoardConsent && !document.lawyerApproved && !user.roles.lawyer) return false;
 
-    return !!document.docusealSubmissionId && document.signatories.some((signatory) => !signatory.signedAt);
+    return (
+      !!document.docusealSubmissionId &&
+      document.signatories.some(
+        (signatory) =>
+          !signatory.signedAt &&
+          (signatory.id === user.id || (signatory.title === "Company Representative" && isCompanyRepresentative)),
+      )
+    );
   };
   const signDocument = signDocumentId
     ? documents.find((document): document is SignableDocument => document.id === signDocumentId && isSignable(document))
@@ -257,13 +261,13 @@ export default function DocumentsPage() {
   const columns = useMemo(
     () =>
       [
-        userId && user.activeRole === "contractorOrInvestor"
-          ? null
-          : columnHelper.accessor(
+        isCompanyRepresentative
+          ? columnHelper.accessor(
               (row) =>
                 assertDefined(row.signatories.find((signatory) => signatory.title !== "Company Representative")).name,
               { header: "Signer" },
-            ),
+            )
+          : null,
         columnHelper.simple("name", "Document"),
         columnHelper.accessor((row) => typeLabels[row.type], {
           header: "Type",
@@ -290,7 +294,6 @@ export default function DocumentsPage() {
           id: "actions",
           cell: (info) => {
             const document = info.row.original;
-
             return (
               <>
                 {isSignable(document) ? (
@@ -300,7 +303,9 @@ export default function DocumentsPage() {
                     onClick={() => setSignDocumentId(document.id)}
                     disabled={!canSign}
                   >
-                    {user.activeRole === "lawyer" ? "Approve" : "Review and sign"}
+                    {document.type === DocumentType.BoardConsent && !document.lawyerApproved
+                      ? "Approve"
+                      : "Review and sign"}
                   </Button>
                 ) : null}
                 {document.attachment ? (
@@ -341,7 +346,7 @@ export default function DocumentsPage() {
       headerActions={
         <>
           {isCompanyRepresentative && documents.length === 0 ? <EditTemplates /> : null}
-          {user.activeRole === "administrator" && company.flags.includes("lawyers") ? (
+          {user.roles.administrator && company.flags.includes("lawyers") ? (
             <Button onClick={() => setShowInviteModal(true)}>
               <BriefcaseIcon className="size-4" />
               Invite lawyer
@@ -364,7 +369,7 @@ export default function DocumentsPage() {
           </Alert>
         )}
         {company.flags.includes("irs_tax_forms") &&
-        user.activeRole === "administrator" &&
+        user.roles.administrator &&
         new Date() <= filingDueDateFor1099DIV ? (
           <Alert className="mb-4">
             <AlertTitle>Upcoming filing dates for 1099-NEC, 1099-DIV, and 1042-S</AlertTitle>
@@ -379,7 +384,7 @@ export default function DocumentsPage() {
             <DataTable
               table={table}
               actions={isCompanyRepresentative ? <EditTemplates /> : undefined}
-              {...(!(userId && user.activeRole === "contractorOrInvestor") && { searchColumn: "Signer" })}
+              {...(isCompanyRepresentative && { searchColumn: "Signer" })}
             />
             {signDocument ? (
               <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} />
@@ -462,7 +467,7 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
   return (
     <Dialog open onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-4xl">
-        {user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent && (
+        {document.type === DocumentType.BoardConsent && !document.lawyerApproved && (
           <DialogHeader>
             <div className="flex justify-end gap-4">
               <MutationButton
@@ -480,7 +485,7 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
         <DocusealForm
           src={`https://docuseal.com/s/${slug}`}
           readonlyFields={readonlyFields}
-          preview={user.activeRole === "lawyer" && document.type === DocumentType.BoardConsent}
+          preview={document.type === DocumentType.BoardConsent && !document.lawyerApproved}
           customCss={customCss}
           onComplete={() => {
             const userIsSigner = document.signatories.some(

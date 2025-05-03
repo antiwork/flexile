@@ -22,10 +22,10 @@ export async function GET(req: Request) {
   if (!user.currentCompanyId) {
     return redirect("/settings");
   }
-  if (user.activeRole === "administrator") {
+  if (user.roles.administrator) {
     return redirect("/invoices");
   }
-  if (user.activeRole === "lawyer") {
+  if (user.roles.lawyer) {
     return redirect("/documents");
   }
   if (user.roles.worker) {

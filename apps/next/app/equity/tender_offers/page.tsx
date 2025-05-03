@@ -35,7 +35,7 @@ export default function Buybacks() {
   return (
     <EquityLayout
       headerActions={
-        user.activeRole === "administrator" ? (
+        user.roles.administrator ? (
           <Button asChild>
             <Link href="/equity/tender_offers/new">
               <PencilIcon className="size-4" />
