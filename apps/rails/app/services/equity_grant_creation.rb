@@ -42,26 +42,11 @@ class EquityGrantCreation
           investor_entity.investment_amount_cents = 0
         end
 
-      current_grant = company_investor.equity_grants.vesting_trigger_invoice_paid
+      current_grant = company_investor.equity_grant
         .where("EXTRACT(year FROM period_ended_at) = ? AND unvested_shares > 0", period_ended_at.year)
         .order(id: :desc)
         .first
-      if current_grant.present?
-        forfeited_shares = current_grant.unvested_shares
-        total_forfeited_shares = forfeited_shares + current_grant.forfeited_shares
-
-        current_grant.equity_grant_transactions.create!(
-          transaction_type: EquityGrantTransaction.transaction_types[:cancellation],
-          forfeited_shares:,
-          total_number_of_shares: current_grant.number_of_shares,
-          total_vested_shares: current_grant.vested_shares,
-          total_unvested_shares: 0,
-          total_exercised_shares: current_grant.exercised_shares,
-          total_forfeited_shares:,
-        )
-        current_grant.update!(forfeited_shares: total_forfeited_shares, unvested_shares: 0)
-        current_grant.option_pool.decrement!(:issued_shares, forfeited_shares)
-      end
+      CancelEquityGrant.new(equity_grant: current_grant, reason: VestingEvent::CANCELLATION_REASONS[:new_grant_created]).process if current_grant.present?
 
       grant = company_investor.equity_grants.build(
         company_investor_entity:,
