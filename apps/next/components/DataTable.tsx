@@ -285,6 +285,7 @@ export default function DataTable<T extends RowData>({
                       aria-label="Select row"
                       disabled={!row.getCanSelect()}
                       onCheckedChange={row.getToggleSelectedHandler()}
+                      className="relative z-1"
                     />
                   </TableCell>
                 ) : null}

@@ -539,8 +539,8 @@ const QuickInvoicesSection = () => {
     },
     { enabled: !!duration },
   );
-  const equityAmountCents = totalAmountInCents - (equityCalculation?.amountInCents ?? 0);
-  const cashAmountCents = totalAmountInCents - (equityCalculation?.amountInCents ?? 0);
+  const equityAmountCents = equityCalculation?.amountInCents ?? 0;
+  const cashAmountCents = totalAmountInCents - equityAmountCents;
 
   const submit = useMutation({
     mutationFn: async () => {
@@ -645,6 +645,7 @@ const QuickInvoicesSection = () => {
                           max={MAX_EQUITY_PERCENTAGE}
                           unit="%"
                           disabled={!canSubmitInvoices}
+                          ariaLabel="Cash vs equity split"
                         />
                       </FormControl>
                     </FormItem>
