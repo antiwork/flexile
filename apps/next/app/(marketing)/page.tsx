@@ -53,7 +53,7 @@ export default function HomePage() {
       </nav>
 
       <main className="min-h-screen bg-white pt-20">
-        <Section className="bg-blue-600 py-16">
+        <Section className="bg-blue-600 py-8 md:py-16">
           <h1 className="text-[84px] leading-[0.9] font-medium tracking-tight sm:text-8xl md:text-[12rem]">
             Equity for
             <br />
@@ -69,7 +69,7 @@ export default function HomePage() {
           </div>
         </Section>
 
-        <Section className="py-16">
+        <Section className="py-8 md:py-16">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-16">
             <div className="flex items-center gap-8">
               <Image src={iconClock} alt="Automate Operations" className="w-12 shrink-0" />
@@ -114,14 +114,14 @@ export default function HomePage() {
           </div>
         </Section>
 
-        <Section className="flex bg-gray-50 py-16">
+        <Section className="flex bg-gray-50 py-8 md:py-16">
           <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 md:gap-12">
             <h2 className="text-4xl font-medium md:text-6xl">Clear, straight forward pricing</h2>
             <div className="text-2xl md:text-3xl">1.5% + $0.50, capped at $15/payment</div>
           </div>
         </Section>
 
-        <Section className="flex w-full bg-blue-600 py-16">
+        <Section className="flex w-full bg-blue-600 py-8 md:py-16">
           <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 md:gap-12">
             <h2 className="text-4xl font-medium md:text-6xl">Less stress, more flex</h2>
             <Link
@@ -133,7 +133,7 @@ export default function HomePage() {
           </div>
         </Section>
 
-        <Section className="bg-black py-16 text-white">
+        <Section className="bg-black py-8 md:py-16 text-white">
           <div className="mx-auto flex w-full max-w-5xl flex-col items-start justify-between px-4 md:flex-row md:items-end">
             <div className="flex flex-col items-start gap-8 md:gap-18">
               <Image src={logo} alt="Flexile" className="block h-16 w-auto invert" />
