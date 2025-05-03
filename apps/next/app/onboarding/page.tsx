@@ -10,7 +10,7 @@ export default function OnboardingPage() {
       title="Let's get to know you"
       subtitle="We're eager to learn more about you, starting with your legal name and the place where you reside."
     >
-      <PersonalDetails nextLinkTo="/onboarding/bank_account" />
+      <PersonalDetails nextLinkTo="/dashboard" />
     </OnboardingLayout>
   );
 }

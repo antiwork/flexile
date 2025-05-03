@@ -61,7 +61,7 @@ test.describe("Company worker onboarding - personal details", () => {
 
     await page.getByRole("button", { name: "Continue" }).click();
 
-    await expect(page.getByText("Get paid fast")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Invoicing" })).toBeVisible();
 
     const updatedUser = await db.query.users.findFirst({
       where: eq(users.id, onboardingUser.id),
