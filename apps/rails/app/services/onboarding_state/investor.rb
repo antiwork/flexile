@@ -10,8 +10,4 @@ class OnboardingState::Investor < OnboardingState::BaseUser
   def after_complete_onboarding_path
     "/settings/payouts"
   end
-
-  def complete?
-    super && has_tax_info?
-  end
 end

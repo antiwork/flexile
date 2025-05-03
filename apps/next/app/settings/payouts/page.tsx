@@ -209,16 +209,6 @@ const BankAccountsSection = () => {
           </div>
         ) : (
           <>
-            {bankAccounts.length === 0 && !showWalletPayoutMethod ? (
-              <div className="mb-4">
-                <Alert>
-                  <AlertTitle>Add a bank account to receive payments</AlertTitle>
-                  <AlertDescription>
-                    Once you start submitting invoices, your payments will automatically be sent to your bank account.
-                  </AlertDescription>
-                </Alert>
-              </div>
-            ) : null}
             {showWalletPayoutMethod ? (
               <>
                 <div className="flex justify-between">

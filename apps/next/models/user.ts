@@ -48,6 +48,7 @@ export const currentUserSchema = z.object({
   preferredName: z.string().nullable(),
   legalName: z.string().nullable(),
   billingEntityName: z.string().nullable(),
+  hasBankAccount: z.boolean(),
   roles: z.object({
     administrator: z.object({ id: z.string(), isInvited: z.boolean(), isBoardMember: z.boolean() }).optional(),
     lawyer: z.object({ id: z.string() }).optional(),

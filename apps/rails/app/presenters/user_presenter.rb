@@ -161,6 +161,7 @@ class UserPresenter
       billingEntityName: billing_entity_name,
       activeRole: [Company::ACCESS_ROLE_ADMINISTRATOR, Company::ACCESS_ROLE_LAWYER].include?(type) ? type : "contractorOrInvestor",
       roles:,
+      hasBankAccount: user.bank_account.present? || user.wallet.present?,
       address: {
         street_address: user.street_address,
         city: user.city,

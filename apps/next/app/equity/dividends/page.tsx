@@ -1,5 +1,5 @@
 "use client";
-import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import { CheckCircleIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
 import React from "react";
 import DividendStatusIndicator from "@/app/equity/DividendStatusIndicator";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
@@ -11,6 +11,9 @@ import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 import EquityLayout from "../Layout";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import Link from "next/link";
+import { linkClasses } from "@/components/Link";
 
 type Dividend = RouterOutput["dividends"]["list"][number];
 const columnHelper = createColumnHelper<Dividend>();
@@ -50,6 +53,16 @@ export default function Dividends() {
 
   return (
     <EquityLayout>
+      <Alert>
+        <InformationCircleIcon />
+        <AlertDescription>
+          Please{" "}
+          <Link className={linkClasses} href="/settings/payouts">
+            provide a payout method
+          </Link>{" "}
+          for your dividends.
+        </AlertDescription>
+      </Alert>
       {data.length > 0 ? (
         <DataTable table={table} />
       ) : (
