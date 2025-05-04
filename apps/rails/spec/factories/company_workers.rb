@@ -5,6 +5,7 @@ FactoryBot.define do
     company
     user
 
+    role { "Role" }
     started_at { Date.today }
     hours_per_week { 40 }
     pay_rate_in_subunits { 60_00 }

@@ -1201,11 +1201,6 @@ RSpec.describe Invoice do
               Description: "Inv ##{invoice.invoice_number} - #{invoice_line_item.description}",
               DetailType: "AccountBasedExpenseLineDetail",
               Amount: 60.0,
-              AccountBasedExpenseLineDetail: {
-                AccountRef: {
-                  value: integration.consulting_services_expense_account_id,
-                },
-              },
               LineNum: 1,
             }
           ],

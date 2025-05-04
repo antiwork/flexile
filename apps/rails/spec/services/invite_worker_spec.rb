@@ -133,7 +133,7 @@ RSpec.describe InviteWorker do
       expect(company_worker.ended_at).to eq(nil)
       expect(company_worker.hours_per_week).to eq(10)
       expect(company_worker.pay_rate_in_subunits).to eq(50_00)
-      expect(contractor.role).to eq("Role")
+      expect(company_worker.role).to eq("Role")
     end
   end
 
