@@ -111,7 +111,6 @@ export const protectedProcedure = baseProcedure
         await db.query.users.findFirst({
           with: {
             ...withRoles(company.id),
-            companyContractors: { ...withRoles(company.id).companyContractors, with: { role: true } },
             userComplianceInfos: latestUserComplianceInfo,
           },
           where: eq(users.id, BigInt(userId)),

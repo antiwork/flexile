@@ -20,7 +20,6 @@ Rails.application.routes.draw do
     resources :company_workers
     resources :company_administrators
     resources :companies
-    resources :company_roles
     resources :time_entries
     resources :users
     resources :user_leads

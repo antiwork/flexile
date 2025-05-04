@@ -42,7 +42,6 @@ class PurgeSeedData
 
       user_ids_to_be_purged = purge_company_users!(company)
 
-      purge_company_roles!(company)
       purge_equity!(company)
       purge_other_company_data!(company)
 
@@ -171,13 +170,6 @@ class PurgeSeedData
       company_worker.equity_allocations.each(&:destroy!)
       company_worker.company_worker_updates.each(&:destroy!)
       company_worker.destroy!
-    end
-
-    def purge_company_roles!(company)
-      company.company_roles.find_each do |company_role|
-        company_role.company_role_rates.each(&:destroy!)
-        company_role.destroy!
-      end
     end
 
     def purge_equity!(company)

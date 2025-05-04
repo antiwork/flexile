@@ -94,7 +94,7 @@ export default function InvoicesPage() {
             cell: (info) => (
               <>
                 <b className="truncate">{info.getValue()}</b>
-                <div className="text-xs text-gray-500">{info.row.original.contractor.role.name}</div>
+                <div className="text-xs text-gray-500">{info.row.original.contractor.role}</div>
               </>
             ),
           })

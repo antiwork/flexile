@@ -3,7 +3,6 @@ import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
-import { companyRolesFactory } from "@test/factories/companyRoles";
 import { usersFactory } from "@test/factories/users";
 import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
@@ -24,7 +23,6 @@ test.describe("Contractor for multiple companies", () => {
     await companyContractorsFactory.create({ userId: contractorUser.id });
 
     const { company: secondCompany } = await companiesFactory.create({ name: "Second Company" });
-    await companyRolesFactory.create({ companyId: secondCompany.id });
     const { user: adminUser } = await usersFactory.create({ email: "admin@example.com" });
     await companyAdministratorsFactory.create({ companyId: secondCompany.id, userId: adminUser.id });
     const { mockForm } = mockDocuseal(next, {

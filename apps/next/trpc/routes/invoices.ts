@@ -128,7 +128,6 @@ export const invoicesRouter = createRouter({
       with: {
         user: true,
         company: true,
-        role: true,
       },
     });
     if (!companyWorker) throw new TRPCError({ code: "NOT_FOUND" });
@@ -317,7 +316,6 @@ export const invoicesRouter = createRouter({
           approvals: { with: { approver: { columns: simpleUser.columns } } },
           contractor: {
             with: {
-              role: { columns: { name: true } },
               user: {
                 columns: { externalId: true },
                 with: {
@@ -366,7 +364,7 @@ export const invoicesRouter = createRouter({
         })),
         equityAllocationStatus: invoice.contractor.equityAllocations[0]?.status,
         contractor: {
-          ...pick(invoice.contractor, "role"),
+          role: invoice.contractor.role,
           user: {
             id: invoice.contractor.user.externalId,
             complianceInfo: invoice.contractor.user.userComplianceInfos[0],

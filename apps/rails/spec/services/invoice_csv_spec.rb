@@ -14,10 +14,10 @@ RSpec.describe InvoiceCsv do
 
     expected_csv = <<~CSV
       Contractor name,Role,Invoice date,Invoice ID,Paid at,Amount in USD,Status
-      #{company_worker1.user.legal_name},#{company_worker1.company_role.name},1/1/2022,invoice-1,,17.29,paid
-      #{company_worker1.user.legal_name},#{company_worker1.company_role.name},1/31/2022,invoice-2,,1.41,approved
-      #{company_worker2.user.legal_name},#{company_worker2.company_role.name},1/24/2022,invoice-3,,2.72,open
-      #{company_worker2.user.legal_name},#{company_worker2.company_role.name},2/1/2022,invoice-4,,3.14,rejected
+      #{company_worker1.user.legal_name},#{company_worker1.role},1/1/2022,invoice-1,,17.29,paid
+      #{company_worker1.user.legal_name},#{company_worker1.role},1/31/2022,invoice-2,,1.41,approved
+      #{company_worker2.user.legal_name},#{company_worker2.role},1/24/2022,invoice-3,,2.72,open
+      #{company_worker2.user.legal_name},#{company_worker2.role},2/1/2022,invoice-4,,3.14,rejected
     CSV
 
     expect(described_class.new(invoices).generate).to eq(expected_csv)

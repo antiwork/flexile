@@ -26,7 +26,7 @@ class InvoiceCsv
         paid_at = invoice.paid_at ? invoice.paid_at.to_fs(:us_date) : nil
         row << [
           invoice.user.legal_name,
-          invoice.user.company_workers.first.company_role.name,
+          invoice.user.company_workers.first.role,
           invoice_date,
           invoice.invoice_number,
           paid_at,

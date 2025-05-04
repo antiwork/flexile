@@ -7,13 +7,12 @@ RSpec.describe InviteWorker do
     create(:company, name: "Gumroad", street_address: "548 Market Street", city: "San Francisco",
                      state: "CA", zip_code: "94104-5401", country_code: "US")
   end
-  let(:role) { create(:company_role, company:) }
   let(:worker_params) do
     {
       email:,
       started_at: yesterday,
       hours_per_week: 10,
-      role_id: role.external_id,
+      role: "Role",
       pay_rate_in_subunits: 50_00,
     }
   end
@@ -42,7 +41,7 @@ RSpec.describe InviteWorker do
     expect(contractor.started_at).to eq(yesterday)
     expect(contractor.hours_per_week).to eq(10)
     expect(contractor.pay_rate_in_subunits).to eq(50_00)
-    expect(contractor.company_role).to eq(role)
+    expect(contractor.role).to eq("Role")
 
     contract = user.documents.consulting_contract.first
     expect(contract.company).to eq(company)
@@ -107,7 +106,7 @@ RSpec.describe InviteWorker do
         expect(contractor.started_at).to eq(yesterday)
         expect(contractor.hours_per_week).to eq(10)
         expect(contractor.pay_rate_in_subunits).to eq(50_00)
-        expect(contractor.company_role).to eq(role)
+        expect(contractor.role).to eq("Role")
       end
     end
 
@@ -134,7 +133,7 @@ RSpec.describe InviteWorker do
       expect(company_worker.ended_at).to eq(nil)
       expect(company_worker.hours_per_week).to eq(10)
       expect(company_worker.pay_rate_in_subunits).to eq(50_00)
-      expect(company_worker.company_role).to eq(role)
+      expect(contractor.role).to eq("Role")
     end
   end
 
@@ -145,7 +144,7 @@ RSpec.describe InviteWorker do
         started_at: yesterday,
         hours_per_week: -10,
         pay_rate_in_subunits: -50_00,
-        role_id: role.external_id,
+        role: "",
       }
     end
 
@@ -156,17 +155,5 @@ RSpec.describe InviteWorker do
          .and change { CompanyWorker.count }.by(0)
          .and change { Document.count }.by(0)
     end
-  end
-
-  it "ensures the role belongs to the company" do
-    role = create(:company_role)
-    result = described_class.new(current_user:, company:, company_administrator:,
-                                 worker_params: worker_params.merge({ role_id: role.id })).perform
-    expect(result).to eq({ success: false, error_message: "Role not found" })
-  end
-
-  it "ensures the role exists" do
-    worker_params.delete(:role_id)
-    expect(invite_contractor).to eq({ success: false, error_message: "Role not found" })
   end
 end

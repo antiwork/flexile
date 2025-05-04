@@ -263,27 +263,6 @@ export const companyMonthlyFinancialReports = pgTable(
   ],
 );
 
-export const companyRoleRates = pgTable(
-  "company_role_rates",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    payRateType: integer("pay_rate_type").$type<PayRateType>().default(PayRateType.Hourly).notNull(),
-    companyRoleId: bigint("company_role_id", { mode: "bigint" }).notNull(),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-    payRateInSubunits: integer("pay_rate_in_subunits").notNull(),
-    payRateCurrency: varchar("pay_rate_currency").default("usd").notNull(),
-  },
-  (table) => [
-    index("index_company_role_rates_on_company_role_id").using(
-      "btree",
-      table.companyRoleId.asc().nullsLast().op("int8_ops"),
-    ),
-  ],
-);
-
 export const companyStripeAccounts = pgTable(
   "company_stripe_accounts",
   {
@@ -1903,28 +1882,6 @@ export const equityGrantTransactions = pgTable(
   ],
 );
 
-export const companyRoles = pgTable(
-  "company_roles",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    companyId: bigint("company_id", { mode: "bigint" }).notNull(),
-    name: varchar().notNull(),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-    capitalizedExpense: integer("capitalized_expense"),
-    slug: varchar(),
-    deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
-    expenseAccountId: varchar("expense_account_id"),
-    externalId: varchar("external_id").$default(nanoid).notNull(),
-  },
-  (table) => [
-    index("index_company_roles_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
-    index("index_company_roles_on_external_id").using("btree", table.externalId.asc().nullsLast().op("text_ops")),
-  ],
-);
-
 export const companyUpdates = pgTable(
   "company_updates",
   {
@@ -1964,7 +1921,7 @@ export const companyContractors = pgTable(
       .notNull()
       .$onUpdate(() => new Date()),
     endedAt: timestamp("ended_at", { precision: 6, mode: "date" }),
-    companyRoleId: bigint("company_role_id", { mode: "bigint" }).notNull(),
+    role: varchar("role").notNull(),
 
     externalId: varchar("external_id").$default(nanoid).notNull(),
     payRateType: integer("pay_rate_type").$type<PayRateType>().default(PayRateType.Hourly).notNull(),
@@ -1974,10 +1931,6 @@ export const companyContractors = pgTable(
   },
   (table) => [
     index("index_company_contractors_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
-    index("index_company_contractors_on_company_role_id").using(
-      "btree",
-      table.companyRoleId.asc().nullsLast().op("int8_ops"),
-    ),
     index("index_company_contractors_on_external_id").using("btree", table.externalId.asc().nullsLast().op("text_ops")),
     index("index_company_contractors_on_user_id").using("btree", table.userId.asc().nullsLast().op("int8_ops")),
     index("index_company_contractors_on_user_id_and_company_id").using(
@@ -2258,7 +2211,6 @@ export const companiesRelations = relations(companies, ({ many }) => ({
   contractors: many(companyContractors),
   investors: many(companyInvestors),
   lawyers: many(companyLawyers),
-  roles: many(companyRoles),
   shareClasses: many(shareClasses),
   updates: many(companyUpdates),
   contracts: many(contracts),
@@ -2276,10 +2228,6 @@ export const companyContractorsRelations = relations(companyContractors, ({ one,
   user: one(users, {
     fields: [companyContractors.userId],
     references: [users.id],
-  }),
-  role: one(companyRoles, {
-    fields: [companyContractors.companyRoleId],
-    references: [companyRoles.id],
   }),
   contracts: many(contracts),
   documents: many(documents),
@@ -2846,22 +2794,6 @@ export const equityGrantExerciseRequestsRelations = relations(equityGrantExercis
     fields: [equityGrantExerciseRequests.shareHoldingId],
     references: [shareHoldings.id],
   }),
-}));
-
-export const companyRoleRatesRelations = relations(companyRoleRates, ({ one }) => ({
-  companyRole: one(companyRoles, {
-    fields: [companyRoleRates.companyRoleId],
-    references: [companyRoles.id],
-  }),
-}));
-
-export const companyRolesRelations = relations(companyRoles, ({ one, many }) => ({
-  company: one(companies, {
-    fields: [companyRoles.companyId],
-    references: [companies.id],
-  }),
-  rates: many(companyRoleRates),
-  contractors: many(companyContractors),
 }));
 
 export const integrationRecordsRelations = relations(integrationRecords, ({ one }) => ({

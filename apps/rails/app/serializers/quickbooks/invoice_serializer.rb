@@ -46,11 +46,6 @@ class Quickbooks::InvoiceSerializer < BaseSerializer
         Description: "Inv ##{invoice_number} - #{line_item.description}",
         DetailType: "AccountBasedExpenseLineDetail",
         Amount: line_item.cash_amount_in_usd,
-        AccountBasedExpenseLineDetail: {
-          AccountRef: {
-            value: Quickbooks::ExpenseAccountSelector.new(integration:, company_worker:, line_item:).get_expense_account_id,
-          },
-        },
         LineNum: position + 1,
       }
       result[:Id] = line_item.integration_external_id if line_item.integration_external_id.present?

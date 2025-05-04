@@ -81,14 +81,13 @@ class UserPresenter
     end
     if user.company_worker_for?(company)
       worker = user.company_worker_for(company)
-      role = worker.company_role
       roles[Company::ACCESS_ROLE_WORKER] = {
         id: worker.external_id,
         hasDocuments: has_documents,
         endedAt: worker.ended_at,
         payRateType: worker.pay_rate_type,
         inviting_company: user.inviting_company,
-        role: role ? { name: role.name } : nil,
+        role: worker.role,
         payRateInSubunits: worker.pay_rate_in_subunits,
         hoursPerWeek: worker.hours_per_week,
       }

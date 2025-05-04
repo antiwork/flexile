@@ -79,9 +79,9 @@ class SeedDataGeneratorFromTemplate
         create_company_investor_and_data!(company, company.primary_admin.user, company_data.fetch("primary_administrator"))
         create_investors!(company, company_data.fetch("investors"))
         create_company_updates!(company, company_data.fetch("company_updates"))
-        create_company_roles_and_contractors!(
+        create_company_contractors!(
           company,
-          company_data.fetch("company_roles_and_contractors"),
+          company_data.fetch("company_contractors"),
           company_data.fetch("company_worker_updates")
         )
         create_consolidated_invoices!(company)
@@ -566,11 +566,10 @@ class SeedDataGeneratorFromTemplate
       print_message("Created expense categories: #{categories.map { |c| c["name"] }.join(", ")}")
     end
 
-    def create_company_roles_and_contractors!(company, company_roles_and_contractors_data, company_worker_updates_data)
+    def create_company_contractors!(company, company_contractors_data, company_worker_updates_data)
       company_administrator = company.primary_admin
-      company_roles_and_contractors_data.each do |company_role_and_contractor_data|
-        company_role = create_company_role!(company, company_role_and_contractor_data.fetch("company_role"))
-        company_role_and_contractor_data.fetch("company_workers", []).each do |company_worker_data|
+      company_contractors_data.each do |company_contractor_data|
+        company_contractor_data.fetch("company_workers", []).each do |company_worker_data|
           company_worker_attributes = company_worker_data.fetch("company_worker").fetch("model_attributes")
           ended_at = company_worker_attributes.delete("ended_at")
           company_worker = nil
@@ -583,8 +582,8 @@ class SeedDataGeneratorFromTemplate
                 email: generate_user_email(user_attributes),
                 started_at:,
                 pay_rate_in_subunits: company_worker_attributes.fetch("pay_rate_in_subunits"),
-                pay_rate_type: company_role.pay_rate_type,
-                role_id: company_role.external_id,
+                pay_rate_type: company_worker_attributes.fetch("pay_rate_type"),
+                role: company_worker_attributes.fetch("role"),
                 hours_per_week: company_worker_attributes.fetch("hours_per_week", nil),
               }
               result = InviteWorker.new(
@@ -782,14 +781,6 @@ class SeedDataGeneratorFromTemplate
         end
       end
       print_message("Created consolidated invoices.")
-    end
-
-    def create_company_role!(company, data)
-      company_role = company.company_roles.build(data.fetch("model_attributes"))
-      company_role.build_rate(data.fetch("company_role_rate").fetch("model_attributes"))
-      company_role.save!
-      print_message("Created #{company_role.pay_rate_type} #{company_role.name} role.")
-      company_role
     end
 
     def create_company_worker_equity_grant!(company_worker, equity_grant_data)

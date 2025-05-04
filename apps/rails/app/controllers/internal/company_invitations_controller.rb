@@ -12,8 +12,6 @@ class Internal::CompanyInvitationsController < Internal::BaseController
       worker: Current.user,
       company_administrator_params:,
       company_params:,
-      company_role_params:,
-      company_role_rate_params:,
       company_worker_params:,
     ).perform
 
@@ -31,14 +29,6 @@ class Internal::CompanyInvitationsController < Internal::BaseController
 
     def company_params
       params.require(:company).permit(:name)
-    end
-
-    def company_role_params
-      params.require(:company_role).permit(:name)
-    end
-
-    def company_role_rate_params
-      params.require(:company_role_rate).permit(:pay_rate_in_subunits, :pay_rate_type)
     end
 
     def company_worker_params

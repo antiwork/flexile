@@ -5,15 +5,11 @@ class InviteCompany
     worker:,
     company_administrator_params:,
     company_params:,
-    company_role_params:,
-    company_role_rate_params:,
     company_worker_params:
   )
     @worker = worker
     @company_administrator_params = company_administrator_params
     @company_params = company_params
-    @company_role_params = company_role_params
-    @company_role_rate_params = company_role_rate_params
     @company_worker_params = company_worker_params
   end
 
@@ -41,11 +37,7 @@ class InviteCompany
       administrator.invite!(worker) { |u| u.skip_invitation = true }
       company.save!
 
-      company_role = company.company_roles.new(company_role_params)
-      company_role.build_rate(company_role_rate_params.merge(pay_rate_currency: company.default_currency))
-      company_role.save!
-
-      company_worker = company.company_workers.create!(company_worker_params.merge(user: worker, company_role:))
+      company_worker = company.company_workers.create!(company_worker_params.merge(user: worker))
       company_administrator = company.company_administrators.find_by(user: administrator)
 
       document = CreateConsultingContract.new(company_worker:, company_administrator:, current_user: company_worker.user).perform!
@@ -62,8 +54,6 @@ class InviteCompany
     attr_reader \
       :company_administrator_params,
       :company_params,
-      :company_role_params,
-      :company_role_rate_params,
       :company_worker_params,
       :docuseal_submission_id,
       :worker

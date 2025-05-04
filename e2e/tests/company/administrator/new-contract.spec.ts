@@ -3,7 +3,6 @@ import { faker } from "@faker-js/faker";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
-import { companyRolesFactory } from "@test/factories/companyRoles";
 import { usersFactory } from "@test/factories/users";
 import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
@@ -37,15 +36,6 @@ test.describe("New Contractor", () => {
       companyId: company.id,
       userId: user.id,
     });
-
-    // Create roles
-    await companyRolesFactory.create({ companyId: company.id, name: "Hourly Role 1" });
-    await companyRolesFactory.createProjectBased({ companyId: company.id, name: "Project-based Role" });
-    await companyRolesFactory.createSalaried({ companyId: company.id, name: "Salaried Role" });
-    await Promise.all([
-      companyRolesFactory.create({ companyId: company.id, name: "Hourly Role 2" }),
-      companyRolesFactory.create({ companyId: company.id, name: "Hourly Role 3" }),
-    ]);
   });
 
   const fillForm = async (page: Page) => {

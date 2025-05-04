@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_29_213053) do
+ActiveRecord::Schema[8.0].define(version: 2025_05_04_212254) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -150,9 +150,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_29_213053) do
     t.boolean "equity_compensation_enabled", default: false, null: false
     t.boolean "team_updates_enabled", default: false, null: false
     t.jsonb "json_data", default: {"flags" => []}, null: false
-    t.string "slack_bot_user_id"
-    t.string "slack_team_id"
-    t.string "slack_bot_token"
     t.index ["external_id"], name: "index_companies_on_external_id", unique: true
   end
 
@@ -219,7 +216,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_29_213053) do
     t.boolean "sent_equity_percent_selection_email", default: false, null: false
     t.integer "pay_rate_in_subunits", null: false
     t.string "pay_rate_currency", default: "usd", null: false
-    t.string "slack_user_id"
+    t.string "role", null: false
     t.index ["company_id"], name: "index_company_contractors_on_company_id"
     t.index ["company_role_id"], name: "index_company_contractors_on_company_role_id"
     t.index ["external_id"], name: "index_company_contractors_on_external_id", unique: true
@@ -285,30 +282,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_29_213053) do
     t.datetime "updated_at", null: false
     t.index ["company_id", "year", "month"], name: "index_company_monthly_financials_on_company_year_month", unique: true
     t.index ["company_id"], name: "index_company_monthly_financial_reports_on_company_id"
-  end
-
-  create_table "company_role_rates", force: :cascade do |t|
-    t.integer "pay_rate_type", default: 0, null: false
-    t.bigint "company_role_id", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.integer "pay_rate_in_subunits", null: false
-    t.string "pay_rate_currency", default: "usd", null: false
-    t.index ["company_role_id"], name: "index_company_role_rates_on_company_role_id"
-  end
-
-  create_table "company_roles", force: :cascade do |t|
-    t.bigint "company_id", null: false
-    t.string "name", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.integer "capitalized_expense"
-    t.string "slug"
-    t.datetime "deleted_at"
-    t.string "expense_account_id"
-    t.string "external_id", null: false
-    t.index ["company_id"], name: "index_company_roles_on_company_id"
-    t.index ["external_id"], name: "index_company_roles_on_external_id", unique: true
   end
 
   create_table "company_stripe_accounts", force: :cascade do |t|

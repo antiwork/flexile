@@ -1,6 +1,5 @@
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
-import { companyRolesFactory } from "@test/factories/companyRoles";
 import { documentsFactory } from "@test/factories/documents";
 import { usersFactory } from "@test/factories/users";
 import { subDays } from "date-fns";
@@ -17,19 +16,18 @@ type CreateOptions = {
 export const companyContractorsFactory = {
   create: async (overrides: Partial<typeof companyContractors.$inferInsert> = {}, options: CreateOptions = {}) => {
     const companyId = overrides.companyId || (await companiesFactory.createCompletedOnboarding()).company.id;
-    const companyRoleId = overrides.companyRoleId || (await companyRolesFactory.create({ companyId })).role.id;
     const userId = overrides.userId || (await usersFactory.create()).user.id;
 
     const [createdContractor] = await db
       .insert(companyContractors)
       .values({
         companyId,
-        companyRoleId,
         userId,
         startedAt: new Date(),
         hoursPerWeek: 40,
         payRateInSubunits: 6000,
         payRateType: PayRateType.Hourly,
+        role: "Role",
         ...overrides,
       })
       .returning();
@@ -86,17 +84,14 @@ export const companyContractorsFactory = {
   createProjectBased: async (
     overrides: Partial<typeof companyContractors.$inferInsert> = {},
     options: CreateOptions = {},
-  ) => {
-    const { role } = await companyRolesFactory.createProjectBased();
-    return companyContractorsFactory.create(
+  ) =>
+    companyContractorsFactory.create(
       {
-        companyRoleId: role.id,
         hoursPerWeek: null,
         payRateInSubunits: 100000,
         payRateType: PayRateType.ProjectBased,
         ...overrides,
       },
       options,
-    );
-  },
+    ),
 };

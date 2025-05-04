@@ -8,7 +8,6 @@ import { byExternalId, db } from "@/db";
 import { DocumentTemplateType, DocumentType, PayRateType } from "@/db/enums";
 import {
   companyContractors,
-  companyRoles,
   documents,
   documentSignatures,
   documentTemplates,
@@ -29,13 +28,12 @@ type CompanyContractor = typeof companyContractors.$inferSelect;
 
 export const contractorsRouter = createRouter({
   list: companyProcedure
-    .input(z.object({ roleId: z.string().optional(), excludeAlumni: z.boolean().optional() }))
+    .input(z.object({ excludeAlumni: z.boolean().optional(), limit: z.number().optional() }))
     .query(async ({ ctx, input }) => {
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
       const where = and(
         eq(companyContractors.companyId, ctx.company.id),
         input.excludeAlumni ? isNull(companyContractors.endedAt) : undefined,
-        input.roleId ? eq(companyContractors.companyRoleId, byExternalId(companyRoles, input.roleId)) : undefined,
       );
       const rows = await db.query.companyContractors.findMany({
         where,
@@ -46,19 +44,18 @@ export const contractorsRouter = createRouter({
               wiseRecipients: { columns: { id: true }, limit: 1 },
             },
           },
-          role: true,
         },
         orderBy: desc(companyContractors.id),
+        limit: input.limit,
       });
       const workers = rows.map((worker) => ({
-        ...pick(worker, ["startedAt", "payRateInSubunits", "hoursPerWeek", "endedAt"]),
+        ...pick(worker, ["startedAt", "payRateInSubunits", "hoursPerWeek", "endedAt", "role"]),
         id: worker.externalId,
         user: {
           ...simpleUser(worker.user),
           ...pick(worker.user, "countryCode", "invitationAcceptedAt"),
           onboardingCompleted: isOnboardingCompleted(worker.user),
         } as const,
-        role: { id: worker.role.externalId, name: worker.role.name },
       }));
       return { workers };
     }),
@@ -87,14 +84,12 @@ export const contractorsRouter = createRouter({
       ),
       with: {
         equityAllocations: { where: eq(equityAllocations.year, new Date().getFullYear()) },
-        role: { columns: { externalId: true } },
       },
     });
     if (!contractor) throw new TRPCError({ code: "NOT_FOUND" });
     return {
-      ...pick(contractor, ["payRateInSubunits", "hoursPerWeek", "endedAt"]),
+      ...pick(contractor, ["payRateInSubunits", "hoursPerWeek", "endedAt", "role"]),
       id: contractor.externalId,
-      role: contractor.role.externalId,
       payRateType: contractor.payRateType,
       equityPercentage: contractor.equityAllocations[0]?.equityPercentage ?? 0,
     };
@@ -106,8 +101,8 @@ export const contractorsRouter = createRouter({
         startedAt: z.string(),
         payRateInSubunits: z.number(),
         payRateType: z.nativeEnum(PayRateType),
-        hoursPerWeek: z.number(),
-        roleId: z.string().nullable(),
+        hoursPerWeek: z.number().nullable(),
+        role: z.string(),
         documentTemplateId: z.string(),
       }),
     )
@@ -137,7 +132,7 @@ export const contractorsRouter = createRouter({
                 : input.payRateType === PayRateType.ProjectBased
                   ? "project_based"
                   : "salary",
-            role_id: input.roleId,
+            role: input.role,
             ...(input.payRateType === PayRateType.Hourly && { hours_per_week: input.hoursPerWeek }),
           },
         }),
@@ -164,7 +159,7 @@ export const contractorsRouter = createRouter({
       createInsertSchema(companyContractors)
         .pick({ payRateInSubunits: true, payRateType: true, hoursPerWeek: true })
         .partial()
-        .extend({ id: z.string(), roleId: z.string().optional(), payRateType: z.nativeEnum(PayRateType).optional() }),
+        .extend({ id: z.string(), payRateType: z.nativeEnum(PayRateType).optional() }),
     )
     .mutation(async ({ ctx, input }) =>
       db.transaction(async (tx) => {
@@ -174,20 +169,9 @@ export const contractorsRouter = createRouter({
           with: { user: true },
         });
         if (!contractor) throw new TRPCError({ code: "NOT_FOUND" });
-        let roleId: bigint | undefined;
-        if (input.roleId) {
-          const role = await tx.query.companyRoles.findFirst({
-            where: and(eq(companyRoles.companyId, ctx.company.id), eq(companyRoles.externalId, input.roleId)),
-          });
-          if (!role) throw new TRPCError({ code: "NOT_FOUND" });
-          roleId = role.id;
-        }
         await tx
           .update(companyContractors)
-          .set({
-            ...pick(input, ["payRateInSubunits", "payRateType", "hoursPerWeek"]),
-            companyRoleId: roleId,
-          })
+          .set(pick(input, ["payRateInSubunits", "payRateType", "hoursPerWeek"]))
           .where(eq(companyContractors.id, contractor.id));
         let documentId: bigint | null = null;
         if (input.payRateInSubunits != null && input.payRateInSubunits !== contractor.payRateInSubunits) {

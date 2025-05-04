@@ -83,83 +83,8 @@ class InvoicePresenter
     props
   end
 
-  def table_view_props(current_user)
-    {
-      **for_status_props(current_user),
-      id: external_id,
-      created_at: created_at.iso8601,
-      invoice_number:,
-      invoice_date:,
-      user_id:,
-      total_amount_in_usd:,
-      total_minutes:,
-      tax_requirements_met: tax_requirements_met?,
-      attachment: attachment ? {
-        name: attachment.filename,
-        url: Rails.application.routes.url_helpers.rails_blob_path(attachment, disposition: "attachment"),
-      } : nil,
-    }
-  end
-
-  def props(current_user:, is_worker:)
-    invoice_props = table_view_props(current_user).merge!(
-      {
-        description:,
-        bill_address: AddressPresenter.new(invoice).props,
-        bill_from:,
-        bill_to:,
-        cash_amount_in_cents:,
-        equity_amount_in_cents:,
-        contractor_role: user.company_workers.first.company_role.name,
-        notes: notes.present? ? simple_format(notes) : nil,
-        line_items:,
-        expenses:,
-        tax_requirements_met: tax_requirements_met?,
-      }
-    )
-
-    unless is_worker
-      invoice_props[:approved_by_current_user] = invoice_approvals.any? { |ia| ia.approver_id == current_user.id }
-      invoice_props[:payable] = payable?
-    end
-
-    invoice_props
-  end
-
-  def search_result_props(current_user)
-    {
-      **for_status_props(current_user),
-      invoice_number:,
-      invoice_date:,
-      title: "#{invoice_number} from #{user.display_name}",
-      url: "/invoices/#{external_id}",
-    }
-  end
-
   private
     attr_reader :invoice
-
-    def for_status_props(current_user)
-      {
-        status:,
-        paid_at:,
-        rejected_at:,
-        rejected_by: rejector_name(current_user),
-        rejection_reason:,
-        payment_expected_by: payment_expected_by&.iso8601,
-        required_approvals_count: company.required_invoice_approval_count,
-        invoice_approvals: invoice_approvals_props(current_user),
-      }
-    end
-
-    def invoice_approvals_props(current_user)
-      invoice_approvals.map do |approval|
-        {
-          approver: approval.approver == current_user ? "you" : approval.approver.display_name,
-          approved_at: approval.approved_at.iso8601,
-        }
-      end
-    end
 
     def user_props(contractor:)
       {

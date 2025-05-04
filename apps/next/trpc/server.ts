@@ -26,7 +26,6 @@ import { invoicesRouter } from "./routes/invoices";
 import { lawyersRouter } from "./routes/lawyers";
 import { optionPoolsRouter } from "./routes/optionPools";
 import { quickbooksRouter } from "./routes/quickbooks";
-import { rolesRouter } from "./routes/roles";
 import { shareHoldingsRouter } from "./routes/shareHoldings";
 import { tenderOffersRouter } from "./routes/tenderOffers";
 import { usersRouter } from "./routes/users";
@@ -39,7 +38,6 @@ export const appRouter = createRouter({
   users: usersRouter,
   wallets: walletsRouter,
   contractors: contractorsRouter,
-  roles: rolesRouter,
   quickbooks: quickbooksRouter,
   github: githubRouter,
   invoices: invoicesRouter,

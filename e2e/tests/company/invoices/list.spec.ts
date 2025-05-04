@@ -11,14 +11,13 @@ import { findRequiredTableRow } from "@test/helpers/matchers";
 import { expect, test, withinModal } from "@test/index";
 import { format } from "date-fns";
 import { and, eq, not } from "drizzle-orm";
-import { companies, companyRoles, consolidatedInvoices, invoiceApprovals, invoices, users } from "@/db/schema";
+import { companies, consolidatedInvoices, invoiceApprovals, invoices, users } from "@/db/schema";
 import { assert } from "@/utils/assert";
 
 type Company = Awaited<ReturnType<typeof companiesFactory.create>>["company"];
 type User = Awaited<ReturnType<typeof usersFactory.create>>["user"];
 type CompanyContractor = Awaited<ReturnType<typeof companyContractorsFactory.create>>["companyContractor"];
-type CompanyContractorWithRoleAndUser = CompanyContractor & {
-  companyRole: typeof companyRoles.$inferSelect;
+type CompanyContractorWithUser = CompanyContractor & {
   user: User;
 };
 type Invoice = Awaited<ReturnType<typeof invoicesFactory.create>>["invoice"];
@@ -110,14 +109,14 @@ test.describe("Invoices admin flow", () => {
     setup: () => Promise<{
       company: Company;
       adminUser: User;
-      companyContractor: CompanyContractorWithRoleAndUser;
+      companyContractor: CompanyContractorWithUser;
       totalMinutes: number | null;
       expectedHours: string;
     }>,
   ) => {
     let company: Company;
     let adminUser: User;
-    let companyContractor: CompanyContractorWithRoleAndUser;
+    let companyContractor: CompanyContractorWithUser;
     let totalMinutes: number | null;
     let expectedHours: string;
     let targetInvoice: Invoice;
@@ -175,7 +174,7 @@ test.describe("Invoices admin flow", () => {
 
           const targetInvoiceRow = await findRequiredTableRow(page, targetInvoiceRowSelector);
 
-          await expect(targetInvoiceRow.getByText(companyContractor.companyRole.name)).toBeVisible();
+          await expect(targetInvoiceRow.getByText(companyContractor.role)).toBeVisible();
           await targetInvoiceRow.getByRole("button", { name: "Approve" }).click();
           await expect(targetInvoiceRow.getByText("Approved!")).toBeVisible();
           const approvalButton = targetInvoiceRow.getByText("Awaiting approval (1/2)");
@@ -240,7 +239,7 @@ test.describe("Invoices admin flow", () => {
             Status: "Awaiting approval (1/3)",
           };
           const invoiceRow = await findRequiredTableRow(page, rowSelector);
-          await expect(invoiceRow.getByText(companyContractor.companyRole.name)).toBeVisible();
+          await expect(invoiceRow.getByText(companyContractor.role)).toBeVisible();
 
           const invoiceApprovalsCountBefore = await countInvoiceApprovals();
           await invoiceRow.getByRole("button", { name: "Approve" }).click();
@@ -262,7 +261,7 @@ test.describe("Invoices admin flow", () => {
           };
           await expect(page.getByText(companyContractor.user.legalName)).toBeVisible();
           const approvedInvoiceRow = await findRequiredTableRow(page, approvedInvoiceSelector);
-          await expect(approvedInvoiceRow.getByText(companyContractor.companyRole.name)).toBeVisible();
+          await expect(approvedInvoiceRow.getByText(companyContractor.role)).toBeVisible();
         });
 
         testContext.describe("with sufficient Flexile account balance", () => {
@@ -399,19 +398,10 @@ test.describe("Invoices admin flow", () => {
       });
       assert(contractorUser !== undefined);
 
-      const companyRole = await db.query.companyRoles.findFirst({
-        where: eq(companyRoles.id, companyContractor.companyRoleId),
-      });
-      assert(companyRole !== undefined);
-
       return {
         company,
         adminUser,
-        companyContractor: {
-          ...companyContractor,
-          companyRole,
-          user: contractorUser,
-        },
+        companyContractor: { ...companyContractor, user: contractorUser },
         totalMinutes: 60,
         expectedHours: "01:00",
       };
@@ -430,17 +420,11 @@ test.describe("Invoices admin flow", () => {
       });
       assert(contractorUser !== undefined);
 
-      const companyRole = await db.query.companyRoles.findFirst({
-        where: eq(companyRoles.id, companyContractor.companyRoleId),
-      });
-      assert(companyRole !== undefined);
-
       return {
         company,
         adminUser,
         companyContractor: {
           ...companyContractor,
-          companyRole,
           user: contractorUser,
         },
         totalMinutes: null,

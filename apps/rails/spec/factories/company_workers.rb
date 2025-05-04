@@ -4,7 +4,6 @@ FactoryBot.define do
   factory :company_worker do
     company
     user
-    company_role { association :company_role, company: instance.company }
 
     started_at { Date.today }
     hours_per_week { 40 }
@@ -22,7 +21,6 @@ FactoryBot.define do
     end
 
     trait :project_based do
-      association :company_role, factory: :project_based_company_role
       hours_per_week { nil }
       pay_rate_in_subunits { 1_000_00 }
       pay_rate_type { CompanyWorker.pay_rate_types[:project_based] }

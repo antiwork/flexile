@@ -34,10 +34,10 @@ export default function PeoplePage() {
           );
         },
       }),
-      columnHelper.accessor("role.name", {
+      columnHelper.accessor("role", {
         header: "Role",
         cell: (info) => info.getValue() || "N/A",
-        meta: { filterOptions: [...new Set(workers.map((worker) => worker.role.name))] },
+        meta: { filterOptions: [...new Set(workers.map((worker) => worker.role))] },
       }),
       columnHelper.simple("user.countryCode", "Country", (v) => v && countries.get(v)),
       columnHelper.accessor((row) => (row.endedAt ? "Alumni" : row.startedAt > new Date() ? "Onboarding" : "Active"), {
