@@ -19,12 +19,8 @@ test.describe("Edit contractor", () => {
       userId: admin.id,
     });
 
-    const { companyContractor } = await companyContractorsFactory.create({
-      companyId: company.id,
-    });
-    const contractor = await db.query.users.findFirst({
-      where: eq(users.id, companyContractor.userId),
-    });
+    const { companyContractor } = await companyContractorsFactory.create({ companyId: company.id });
+    const contractor = await db.query.users.findFirst({ where: eq(users.id, companyContractor.userId) });
     assert(contractor != null, "Contractor is required");
     assert(contractor.preferredName != null, "Contractor preferred name is required");
     assert(contractor.legalName != null, "Contractor legal name is required");

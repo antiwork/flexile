@@ -27,6 +27,7 @@ class CompanyWorker < ApplicationRecord
   }, validate: true
 
   validates :user_id, uniqueness: { scope: :company_id }
+  validates :role, presence: true
   validates :started_at, presence: true
   validates :hours_per_week, presence: true,
                              numericality: { only_integer: true, greater_than: 0 },

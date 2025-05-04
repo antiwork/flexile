@@ -16,6 +16,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import FormFields from "../FormFields";
+import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
 const schema = z.object({
   email: z.string().email(),
   payRateType: z.nativeEnum(PayRateType),
@@ -34,9 +35,8 @@ function Create() {
 
   const form = useForm({
     defaultValues: {
-      email: "",
       ...(lastContractor ? { rateUsd: lastContractor.payRateInSubunits / 100, role: lastContractor.role } : {}),
-      hoursPerWeek: lastContractor?.hoursPerWeek ?? null,
+      hoursPerWeek: lastContractor?.hoursPerWeek ?? DEFAULT_WORKING_HOURS_PER_WEEK,
       startDate: formatISO(new Date(), { representation: "date" }),
     },
     resolver: zodResolver(schema),

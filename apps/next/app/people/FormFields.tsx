@@ -5,7 +5,6 @@ import { useFormContext } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import RadioButtons from "@/components/RadioButtons";
 import NumberInput from "@/components/NumberInput";
-import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
 import { useCurrentCompany } from "@/global";
 
 export default function FormFields() {
@@ -86,7 +85,7 @@ export default function FormFields() {
               <FormItem>
                 <FormLabel>Average hours</FormLabel>
                 <FormControl>
-                  <NumberInput {...field} placeholder={DEFAULT_WORKING_HOURS_PER_WEEK.toString()} suffix="/ week" />
+                  <NumberInput {...field} suffix="/ week" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
