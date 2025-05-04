@@ -34,7 +34,7 @@ test.describe("Edit contractor", () => {
     await page.getByRole("link", { name: contractor.preferredName }).click();
 
     await page.getByRole("heading", { name: contractor.preferredName }).click();
-    await expect(page.getByLabel("Role")).toContainText(companyContractor.role);
+    await expect(page.getByLabel("Role")).toHaveValue(companyContractor.role);
     await expect(page.getByLabel("Legal name")).toHaveValue(contractor.legalName);
     await expect(page.getByLabel("Legal name")).toBeDisabled();
 
@@ -89,7 +89,7 @@ test.describe("Edit contractor", () => {
     await page.getByRole("link", { name: projectBasedUser.preferredName }).click();
 
     await page.getByRole("heading", { name: projectBasedUser.preferredName }).click();
-    await expect(page.getByLabel("Role")).toContainText(projectBasedContractor.role);
+    await expect(page.getByLabel("Role")).toHaveValue(projectBasedContractor.role);
 
     await page.getByLabel("Role").fill("Stuff-doer");
     await page.getByLabel("Rate").fill("2000");

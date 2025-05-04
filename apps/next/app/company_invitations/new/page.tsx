@@ -20,8 +20,8 @@ const schema = z.object({
   email: z.string().email(),
   companyName: z.string().min(1, "This field is required"),
   role: z.string().min(1, "This field is required"),
-  rateType: z.nativeEnum(PayRateType),
-  rate: z.number().min(1),
+  payRateType: z.nativeEnum(PayRateType),
+  payRateInSubunits: z.number().min(1),
   hoursPerWeek: z.number().min(1),
   startDate: z.string().min(1, "This field is required"),
 });
@@ -31,7 +31,7 @@ export default function CreateCompanyInvitation() {
   const queryClient = useQueryClient();
 
   const form = useForm({
-    defaultValues: { rateType: PayRateType.Hourly, hoursPerWeek: DEFAULT_WORKING_HOURS_PER_WEEK },
+    defaultValues: { payRateType: PayRateType.Hourly, hoursPerWeek: DEFAULT_WORKING_HOURS_PER_WEEK },
     resolver: zodResolver(schema),
   });
   const [templateId, setTemplateId] = useState<string | null>(null);
@@ -51,7 +51,14 @@ export default function CreateCompanyInvitation() {
     },
   });
 
-  const submit = form.handleSubmit((values) => inviteCompany.mutate({ templateId: templateId ?? "", ...values }));
+  const submit = form.handleSubmit((values) =>
+    inviteCompany.mutate({
+      templateId: templateId ?? "",
+      ...values,
+      rate: values.payRateInSubunits,
+      rateType: values.payRateType,
+    }),
+  );
 
   return (
     <MainLayout title="Who are you billing?">

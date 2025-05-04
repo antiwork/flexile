@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { isFuture } from "date-fns";
 import { and, desc, eq, exists, gte, isNotNull, isNull, or, sql } from "drizzle-orm";
-import { createInsertSchema } from "drizzle-zod";
+import { createUpdateSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
@@ -156,9 +156,8 @@ export const contractorsRouter = createRouter({
     }),
   update: companyProcedure
     .input(
-      createInsertSchema(companyContractors)
-        .pick({ payRateInSubunits: true, payRateType: true, hoursPerWeek: true })
-        .partial()
+      createUpdateSchema(companyContractors)
+        .pick({ payRateInSubunits: true, payRateType: true, hoursPerWeek: true, role: true })
         .extend({ id: z.string(), payRateType: z.nativeEnum(PayRateType).optional() }),
     )
     .mutation(async ({ ctx, input }) =>
@@ -171,7 +170,7 @@ export const contractorsRouter = createRouter({
         if (!contractor) throw new TRPCError({ code: "NOT_FOUND" });
         await tx
           .update(companyContractors)
-          .set(pick(input, ["payRateInSubunits", "payRateType", "hoursPerWeek"]))
+          .set(pick(input, ["payRateInSubunits", "payRateType", "hoursPerWeek", "role"]))
           .where(eq(companyContractors.id, contractor.id));
         let documentId: bigint | null = null;
         if (input.payRateInSubunits != null && input.payRateInSubunits !== contractor.payRateInSubunits) {

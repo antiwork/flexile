@@ -93,12 +93,12 @@ function Create() {
 
           <FormField
             control={form.control}
-            name="email"
+            name="startDate"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Start date</FormLabel>
                 <FormControl>
-                  <Input {...field} type="date" label="Start date" />
+                  <Input {...field} type="date" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

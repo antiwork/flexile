@@ -60,7 +60,8 @@ export default function FormFields() {
               <FormLabel>Rate</FormLabel>
               <FormControl>
                 <NumberInput
-                  {...field}
+                  value={field.value / 100}
+                  onChange={(value) => field.onChange(value == null ? null : value * 100)}
                   placeholder="0"
                   prefix="$"
                   suffix={
