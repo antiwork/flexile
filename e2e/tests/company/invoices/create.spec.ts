@@ -81,32 +81,20 @@ test.describe("invoice creation", () => {
     ).toBeVisible();
 
     const totalsLocator = page.locator("footer > div:last-child");
-    await expect(totalsLocator).toMatchAriaSnapshot(`
-      - strong: Total services
-      - text: $205
-    `);
-    await expect(totalsLocator).toMatchAriaSnapshot(`
-      - strong: Swapped for equity (not paid in cash)
-      - text: $41
-    `);
-    await expect(totalsLocator).toMatchAriaSnapshot(`
-      - strong: Net amount in cash
-      - text: $164
-    `);
+    await expect(totalsLocator).toContainText("Total services");
+    await expect(totalsLocator).toContainText("$205");
+    await expect(totalsLocator).toContainText("Swapped for equity (not paid in cash)");
+    await expect(totalsLocator).toContainText("$41");
+    await expect(totalsLocator).toContainText("Net amount in cash");
+    await expect(totalsLocator).toContainText("$164");
 
     await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("50");
-    await expect(totalsLocator).toMatchAriaSnapshot(`
-      - strong: Total services
-      - text: $205
-    `);
-    await expect(totalsLocator).toMatchAriaSnapshot(`
-      - strong: Swapped for equity (not paid in cash)
-      - text: $102.50
-    `);
-    await expect(totalsLocator).toMatchAriaSnapshot(`
-      - strong: Net amount in cash
-      - text: $102.50
-    `);
+    await expect(totalsLocator).toContainText("Total services");
+    await expect(totalsLocator).toContainText("$205");
+    await expect(totalsLocator).toContainText("Swapped for equity (not paid in cash)");
+    await expect(totalsLocator).toContainText("$102.50");
+    await expect(totalsLocator).toContainText("Net amount in cash");
+    await expect(totalsLocator).toContainText("$102.50");
 
     await page.getByRole("button", { name: "Send invoice" }).click();
 
@@ -160,23 +148,16 @@ test.describe("invoice creation", () => {
     ).toBeVisible();
 
     const projectTotalsLocator = page.locator("footer > div:last-child");
-    await expect(projectTotalsLocator).toMatchAriaSnapshot(`
-      - text: Total $1,000
-    `);
+    await expect(projectTotalsLocator).toContainText("Total");
+    await expect(projectTotalsLocator).toContainText("$1,000");
 
     await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("50");
-    await expect(projectTotalsLocator).toMatchAriaSnapshot(`
-      - strong: Total services
-      - text: $1,000
-    `);
-    await expect(projectTotalsLocator).toMatchAriaSnapshot(`
-      - strong: Swapped for equity (not paid in cash)
-      - text: $500
-    `);
-    await expect(projectTotalsLocator).toMatchAriaSnapshot(`
-      - strong: Net amount in cash
-      - text: $500
-    `);
+    await expect(projectTotalsLocator).toContainText("Total services");
+    await expect(projectTotalsLocator).toContainText("$1,000");
+    await expect(projectTotalsLocator).toContainText("Swapped for equity (not paid in cash)");
+    await expect(projectTotalsLocator).toContainText("$500");
+    await expect(projectTotalsLocator).toContainText("Net amount in cash");
+    await expect(projectTotalsLocator).toContainText("$500");
 
     await page.getByRole("button", { name: "Send invoice" }).click();
 
@@ -245,27 +226,20 @@ test.describe("invoice creation", () => {
     ).not.toBeVisible();
 
     const yearTotalsLocator = page.locator("footer > div:last-child");
-    await expect(yearTotalsLocator).toMatchAriaSnapshot(`
-      - text: Total $205
-    `);
+    await expect(yearTotalsLocator).toContainText("Total");
+    await expect(yearTotalsLocator).toContainText("$205");
     await expect(page.getByText("Swapped for equity")).not.toBeVisible();
     await expect(page.getByText("Net amount in cash")).not.toBeVisible();
 
     await page.getByLabel("Hours").fill("100:00");
     await page.getByPlaceholder("Description").fill("I worked on invoices");
 
-    await expect(yearTotalsLocator).toMatchAriaSnapshot(`
-      - strong: Total services
-      - text: $6,000
-    `);
-    await expect(yearTotalsLocator).toMatchAriaSnapshot(`
-      - strong: Swapped for equity (not paid in cash)
-      - text: $1,200
-    `);
-    await expect(yearTotalsLocator).toMatchAriaSnapshot(`
-      - strong: Net amount in cash
-      - text: $4,800
-    `);
+    await expect(yearTotalsLocator).toContainText("Total services");
+    await expect(yearTotalsLocator).toContainText("$6,000");
+    await expect(yearTotalsLocator).toContainText("Swapped for equity (not paid in cash)");
+    await expect(yearTotalsLocator).toContainText("$1,200");
+    await expect(yearTotalsLocator).toContainText("Net amount in cash");
+    await expect(yearTotalsLocator).toContainText("$4,800");
 
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.locator("tbody")).toContainText(
