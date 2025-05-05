@@ -296,7 +296,7 @@ const BankAccountsSection = () => {
 
             {user.roles.investor ? (
               <>
-                <Separator />
+                {bankAccounts.length > 0 ? <Separator /> : null}
                 <div>
                   {addingBankAccount ? (
                     <BankAccountModal
