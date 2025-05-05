@@ -219,18 +219,15 @@ export default function QuickbooksRow() {
                   </FormItem>
                 )}
               />
-              <div className="mt-6 flex justify-between">
-                <div className="ml-auto flex gap-2">
-                  <MutationStatusButton
-                    mutation={saveMutation}
-                    type="submit"
-                    loadingText="Saving..."
-                    successText="Saved!"
-                  >
-                    Save
-                  </MutationStatusButton>
-                </div>
-              </div>
+              <MutationStatusButton
+                mutation={saveMutation}
+                className="justify-self-end"
+                type="submit"
+                loadingText="Saving..."
+                successText="Saved!"
+              >
+                Save
+              </MutationStatusButton>
             </form>
           </Form>
         </DialogContent>

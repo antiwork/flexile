@@ -55,7 +55,7 @@ class SeedDataGeneratorFromTemplate
 
     print_message("Using email #{@config.fetch("email")}.")
     WiseCredential.create!(profile_id: WISE_PROFILE_ID, api_key: WISE_API_KEY)
-    ActiveRecord::Base.connection.exec_query("INSERT INTO document_templates(name, external_id, created_at, updated_at, document_type, docuseal_id, signable) VALUES('Consulting agreement', 'ex1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, 592723, true), ('Equity grant contract', 'ex2', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1, 613787, true)")
+    ActiveRecord::Base.connection.exec_query("INSERT INTO document_templates(name, external_id, created_at, updated_at, document_type, docuseal_id, signable) VALUES('Consulting agreement', 'ex1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, 592723, true), ('Equity grant contract', 'ex2', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1, 613787, true), ('Board consent', 'ex3', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 2, 613787, true)")
     Wise::AccountBalance.create_usd_balance_if_needed
     top_up_wise_account_if_needed
 
@@ -568,82 +568,80 @@ class SeedDataGeneratorFromTemplate
 
     def create_company_contractors!(company, company_contractors_data, company_worker_updates_data)
       company_administrator = company.primary_admin
-      company_contractors_data.each do |company_contractor_data|
-        company_contractor_data.fetch("company_workers", []).each do |company_worker_data|
-          company_worker_attributes = company_worker_data.fetch("company_worker").fetch("model_attributes")
-          ended_at = company_worker_attributes.delete("ended_at")
-          company_worker = nil
-          started_at = fast_mode ? (current_time - rand(1..2).month) : company_worker_attributes.fetch("started_at")
-          Timecop.travel(started_at) do
-            Timecop.scale(3600) do # 1 second = 1 hour
-              # Invite contractor
-              user_attributes = company_worker_data.fetch("user_attributes")
-              worker_params = {
-                email: generate_user_email(user_attributes),
-                started_at:,
-                pay_rate_in_subunits: company_worker_attributes.fetch("pay_rate_in_subunits"),
-                pay_rate_type: company_worker_attributes.fetch("pay_rate_type"),
-                role: company_worker_attributes.fetch("role"),
-                hours_per_week: company_worker_attributes.fetch("hours_per_week", nil),
-              }
-              result = InviteWorker.new(
-                current_user: company_administrator.user,
-                company:,
-                company_administrator:,
-                worker_params:
-              ).perform
-              company_worker = result[:company_worker]
-              # Contractor onboarding
-              contractor = company_worker.user
-              contractor.update!(password: DEFAULT_PASSWORD)
-              contractor.accept_invitation!
-              contractor.tos_agreements.create!(ip_address: "127.0.0.1")
+      company_contractors_data.each do |company_worker_data|
+        company_worker_attributes = company_worker_data.fetch("company_worker").fetch("model_attributes")
+        ended_at = company_worker_attributes.delete("ended_at")
+        company_worker = nil
+        started_at = fast_mode ? (current_time - rand(1..2).month) : company_worker_attributes.fetch("started_at")
+        Timecop.travel(started_at) do
+          Timecop.scale(3600) do # 1 second = 1 hour
+            # Invite contractor
+            user_attributes = company_worker_data.fetch("user_attributes")
+            worker_params = {
+              email: generate_user_email(user_attributes),
+              started_at:,
+              pay_rate_in_subunits: company_worker_attributes.fetch("pay_rate_in_subunits"),
+              pay_rate_type: company_worker_attributes.fetch("pay_rate_type"),
+              role: company_worker_attributes.fetch("role"),
+              hours_per_week: company_worker_attributes.fetch("hours_per_week", nil),
+            }
+            result = InviteWorker.new(
+              current_user: company_administrator.user,
+              company:,
+              company_administrator:,
+              worker_params:
+            ).perform
+            company_worker = result[:company_worker]
+            # Contractor onboarding
+            contractor = company_worker.user
+            contractor.update!(password: DEFAULT_PASSWORD)
+            contractor.accept_invitation!
+            contractor.tos_agreements.create!(ip_address: "127.0.0.1")
 
-              error_message = UpdateUser.new(
+            error_message = UpdateUser.new(
+              user: contractor,
+              update_params: user_attributes.slice("legal_name", "preferred_name", "country_code", "citizenship_country_code")
+            ).process
+            raise Error, error_message if error_message.present?
+
+            document = contractor.documents.unsigned_contracts.reload.first
+            document.signatures.where(user: contractor).update!(signed_at: Time.current)
+            user_legal_params = user_attributes.slice("street_address", "city", "state", "zip_code")
+            error_message = UpdateUser.new(
+              user: contractor,
+              update_params: user_legal_params,
+              confirm_tax_info: false,
+            ).process
+            raise Error, error_message if error_message.present?
+            if company_worker_data.key?("wise_recipient_attributes")
+              create_user_bank_account!(contractor, company_worker_data.fetch("wise_recipient_attributes"))
+            end
+            print_message("Created #{contractor.email} (#{contractor.bank_accounts.alive.any? ? "onboarded" : "not onboarded"})")
+
+            if OnboardingState::Worker.new(user: contractor.reload, company:).complete?
+              create_company_worker_invoices!(company_worker, ended_at:)
+              if company_worker_data.key?("equity_allocation_attributes")
+                company_worker.equity_allocations.create!(**company_worker_data.fetch("equity_allocation_attributes"), year: Date.current.year)
+              end
+              updates_random_records_count = company_worker_updates_data.fetch("random_records_metadata").fetch("count")
+              create_company_worker_updates!(company_worker, updates_random_records_count)
+
+              create_company_worker_absences!(company_worker)
+            end
+
+            if company_worker_data.key?("equity_grants")
+              company_investor = company.company_investors.create!(
                 user: contractor,
-                update_params: user_attributes.slice("legal_name", "preferred_name", "country_code", "citizenship_country_code")
-              ).process
-              raise Error, error_message if error_message.present?
-
-              document = contractor.documents.unsigned_contracts.reload.first
-              document.signatures.where(user: contractor).update!(signed_at: Time.current)
-              user_legal_params = user_attributes.slice("street_address", "city", "state", "zip_code")
-              error_message = UpdateUser.new(
-                user: contractor,
-                update_params: user_legal_params,
-                confirm_tax_info: false,
-              ).process
-              raise Error, error_message if error_message.present?
-              if company_worker_data.key?("wise_recipient_attributes")
-                create_user_bank_account!(contractor, company_worker_data.fetch("wise_recipient_attributes"))
-              end
-              print_message("Created #{contractor.email} (#{contractor.bank_accounts.alive.any? ? "onboarded" : "not onboarded"})")
-
-              if OnboardingState::Worker.new(user: contractor.reload, company:).complete?
-                create_company_worker_invoices!(company_worker, ended_at:)
-                if company_worker_data.key?("equity_allocation_attributes")
-                  company_worker.equity_allocations.create!(**company_worker_data.fetch("equity_allocation_attributes"), year: Date.current.year)
-                end
-                updates_random_records_count = company_worker_updates_data.fetch("random_records_metadata").fetch("count")
-                create_company_worker_updates!(company_worker, updates_random_records_count)
-
-                create_company_worker_absences!(company_worker)
-              end
-
-              if company_worker_data.key?("equity_grants")
-                company_investor = company.company_investors.create!(
-                  user: contractor,
-                  **company_worker_data.fetch("company_investor_attributes")
-                )
-                create_equity_grants!(company, company_worker_data, company_investor, company_worker)
-                print_message("Created #{company_worker_data.fetch("equity_grants").count} option grants for #{contractor.email}")
-              end
+                **company_worker_data.fetch("company_investor_attributes")
+              )
+              create_equity_grants!(company, company_worker_data, company_investor, company_worker)
+              print_message("Created #{company_worker_data.fetch("equity_grants").count} option grants for #{contractor.email}")
             end
           end
-          if ended_at
-            Timecop.travel(ended_at) do
-              company_worker.end_contract!
-            end
+        end
+        if ended_at
+          Timecop.travel(ended_at) do
+            company_worker.end_contract!
           end
         end
       end

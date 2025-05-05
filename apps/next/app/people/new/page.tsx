@@ -113,7 +113,7 @@ function Create() {
             companyId={company.id}
             type={DocumentTemplateType.ConsultingContract}
           />
-          <MutationStatusButton mutation={saveMutation} type="submit">
+          <MutationStatusButton mutation={saveMutation} type="submit" className="justify-self-end">
             <PaperAirplaneIcon className="h-5 w-5" />
             Send invite
           </MutationStatusButton>

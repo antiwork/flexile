@@ -5,25 +5,25 @@ import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Check } from "lucide-react";
 import React, { Fragment, useEffect, useRef, useState } from "react";
 import { z } from "zod";
-import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import MutationButton from "@/components/MutationButton";
+import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { CardContent, CardFooter } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { currencyCodes, sanctionedCountries, supportedCountries } from "@/models/constants";
 import { trpc } from "@/trpc/client";
-import { e } from "@/utils";
 import { isEthereumAddress } from "@/utils/isEthereumAddress";
 import { request } from "@/utils/request";
 import { settings_bank_account_path, settings_bank_accounts_path, settings_dividend_path } from "@/utils/routes";
 import SettingsLayout from "../Layout";
 import BankAccountModal, { type BankAccount, bankAccountSchema } from "./BankAccountModal";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormLabel, FormMessage, FormControl, FormItem, FormField } from "@/components/ui/form";
+import { Card, CardTitle, CardContent, CardHeader } from "@/components/ui/card";
 
 export default function PayoutsPage() {
   const user = useCurrentUser();
@@ -31,10 +31,15 @@ export default function PayoutsPage() {
   return (
     <SettingsLayout>
       {user.roles.investor ? <DividendSection /> : null}
+      <Separator />
       <BankAccountsSection />
     </SettingsLayout>
   );
 }
+
+const dividendsFormSchema = z.object({
+  minimumDividendPaymentAmount: z.number(),
+});
 
 const DividendSection = () => {
   const { data } = useSuspenseQuery({
@@ -56,19 +61,22 @@ const DividendSection = () => {
     },
   });
 
-  const [minimumDividendPaymentAmount, setMinimumDividendPaymentAmount] = useState<number | null>(
-    data.minimum_dividend_payment_in_cents / 100,
-  );
+  const form = useForm({
+    defaultValues: {
+      minimumDividendPaymentAmount: data.minimum_dividend_payment_in_cents / 100,
+    },
+    resolver: zodResolver(dividendsFormSchema),
+  });
 
   const saveMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (values: z.infer<typeof dividendsFormSchema>) => {
       await request({
         method: "PATCH",
         accept: "json",
         url: settings_dividend_path(),
         jsonData: {
           user: {
-            minimum_dividend_payment_in_cents: (minimumDividendPaymentAmount ?? 0) * 100,
+            minimum_dividend_payment_in_cents: values.minimumDividendPaymentAmount * 100,
           },
         },
         assertOk: true,
@@ -77,31 +85,46 @@ const DividendSection = () => {
     onSuccess: () => setTimeout(() => saveMutation.reset(), 2000),
   });
 
+  const submit = form.handleSubmit((values) => saveMutation.mutate(values));
+
   return (
-    <FormSection title="Dividends" onSubmit={e(() => saveMutation.mutate(), "prevent")}>
-      <CardContent className="grid gap-4">
-        <div className="grid gap-2">
-          <Label htmlFor="minimum-dividend-payment">Minimum dividend payout amount</Label>
-          <NumberInput
-            id="minimum-dividend-payment"
-            value={minimumDividendPaymentAmount}
-            onChange={setMinimumDividendPaymentAmount}
-            max={data.max_minimum_dividend_payment_in_cents / 100}
-            min={data.min_minimum_dividend_payment_in_cents / 100}
-            step={0.01}
-            placeholder="10"
-            prefix="$"
-          />
-          <p className="text-muted-foreground text-sm">Payments below this threshold will be retained.</p>
-        </div>
-      </CardContent>
-      <CardFooter className="flex-wrap gap-4">
-        <MutationButton type="submit" mutation={saveMutation} loadingText="Saving...">
+    <Form {...form}>
+      <form title="Dividends" onSubmit={(e) => void submit(e)} className="grid gap-4">
+        <h2 className="text-xl font-medium">Dividends</h2>
+        <FormField
+          control={form.control}
+          name="minimumDividendPaymentAmount"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Minimum dividend payout amount</FormLabel>
+              <FormControl>
+                <NumberInput
+                  {...field}
+                  max={data.max_minimum_dividend_payment_in_cents / 100}
+                  min={data.min_minimum_dividend_payment_in_cents / 100}
+                  step={0.01}
+                  placeholder="10"
+                  prefix="$"
+                />
+              </FormControl>
+              <FormMessage>
+                Payments below this threshold will be retained. This change will affect all companies you invested in
+                through Flexile.
+              </FormMessage>
+            </FormItem>
+          )}
+        />
+        <MutationStatusButton
+          type="submit"
+          mutation={saveMutation}
+          loadingText="Saving..."
+          successText="Saved!"
+          className="justify-self-end"
+        >
           Save changes
-        </MutationButton>
-        <div>This change will affect all companies you invested in through Flexile.</div>
-      </CardFooter>
-    </FormSection>
+        </MutationStatusButton>
+      </form>
+    </Form>
   );
 };
 
@@ -192,7 +215,10 @@ const BankAccountsSection = () => {
   };
 
   return (
-    <FormSection title="Payout method">
+    <Card>
+      <CardHeader>
+        <CardTitle>Payout method</CardTitle>
+      </CardHeader>
       <CardContent>
         {isFromSanctionedCountry ? (
           <div>
@@ -316,7 +342,7 @@ const BankAccountsSection = () => {
           </>
         )}
       </CardContent>
-    </FormSection>
+    </Card>
   );
 };
 

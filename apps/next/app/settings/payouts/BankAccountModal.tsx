@@ -6,7 +6,6 @@ import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import Input from "@/components/Input";
 import MutationButton from "@/components/MutationButton";
-import RadioButtons from "@/components/RadioButtons";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -435,45 +434,28 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
             const errorMessage = errors.get(field.key);
             const selectOptions = (field.valuesAllowed ?? []).map(({ key, name }) => ({ value: key, label: name }));
 
-            if (!field.valuesAllowed || field.valuesAllowed.length > 5) {
-              return (
-                <div key={field.key} className="grid gap-2">
-                  <Label
-                    className="leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    htmlFor={field.key}
-                  >
-                    {field.name}
-                  </Label>
-                  <ComboBox
-                    id={field.key}
-                    value={details.get(field.key) ?? ""}
-                    onChange={(value) => {
-                      setDetails((prev) => prev.set(field.key, value));
-                      setTimeout(() => fieldUpdated(field), 0);
-                    }}
-                    modal
-                    options={selectOptions}
-                    disabled={isPending}
-                    className={cn(errors.has(field.key) && "border-red-500 focus-visible:ring-red-500")}
-                  />
-                  {errorMessage ? <div className="text-sm text-red-500">{errorMessage}</div> : null}
-                </div>
-              );
-            }
-
             return (
-              <RadioButtons
-                key={field.key}
-                value={details.get(field.key) ?? ""}
-                onChange={(value) => {
-                  setDetails((prev) => prev.set(field.key, value));
-                  setTimeout(() => fieldUpdated(field), 0);
-                }}
-                label={field.name}
-                options={selectOptions}
-                invalid={errors.has(field.key)}
-                help={errorMessage}
-              />
+              <div key={field.key} className="grid gap-2">
+                <Label
+                  className="leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  htmlFor={field.key}
+                >
+                  {field.name}
+                </Label>
+                <ComboBox
+                  id={field.key}
+                  value={details.get(field.key) ?? ""}
+                  onChange={(value) => {
+                    setDetails((prev) => prev.set(field.key, value));
+                    setTimeout(() => fieldUpdated(field), 0);
+                  }}
+                  modal
+                  options={selectOptions}
+                  disabled={isPending}
+                  className={cn(errors.has(field.key) && "border-red-500 focus-visible:ring-red-500")}
+                />
+                {errorMessage ? <div className="text-sm text-red-500">{errorMessage}</div> : null}
+              </div>
             );
           }
 

@@ -482,11 +482,14 @@ const DetailsTab = ({
           </div>
         )}
         {!contractor.endedAt && (
-          <div className="flex justify-end">
-            <MutationStatusButton type="submit" mutation={updateContractor} loadingText="Saving...">
-              Save changes
-            </MutationStatusButton>
-          </div>
+          <MutationStatusButton
+            type="submit"
+            mutation={updateContractor}
+            loadingText="Saving..."
+            className="justify-self-end"
+          >
+            Save changes
+          </MutationStatusButton>
         )}
         <h2 className="text-xl font-bold">Personal info</h2>
         <Input

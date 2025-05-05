@@ -141,11 +141,9 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
             />
           </div>
 
-          <footer className="grid items-center gap-2">
-            <MutationStatusButton type="submit" mutation={save} loadingText="Saving...">
-              Continue
-            </MutationStatusButton>
-          </footer>
+          <MutationStatusButton type="submit" mutation={save} loadingText="Saving..." className="justify-self-end">
+            Continue
+          </MutationStatusButton>
         </form>
       </Form>
 

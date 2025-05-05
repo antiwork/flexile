@@ -119,7 +119,7 @@ export default function CreateCompanyInvitation() {
 
           <FormFields />
 
-          <MutationStatusButton type="submit" mutation={inviteCompany}>
+          <MutationStatusButton type="submit" mutation={inviteCompany} className="justify-self-end">
             Send invite
           </MutationStatusButton>
 
