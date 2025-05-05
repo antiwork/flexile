@@ -24,6 +24,8 @@ import { request } from "@/utils/request";
 import { settings_bank_account_path, settings_bank_accounts_path, settings_dividend_path } from "@/utils/routes";
 import SettingsLayout from "../Layout";
 import BankAccountModal, { type BankAccount, bankAccountSchema } from "./BankAccountModal";
+import Placeholder from "@/components/Placeholder";
+import { PlusIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 
 export default function PayoutsPage() {
   const user = useCurrentUser();
@@ -193,129 +195,144 @@ const BankAccountsSection = () => {
 
   return (
     <FormSection title="Payout method">
-      <CardContent>
-        {isFromSanctionedCountry ? (
-          <div>
-            <Alert variant="destructive">
-              <ExclamationTriangleIcon />
-              <AlertTitle>Payouts are disabled</AlertTitle>
-              <AlertDescription>
-                Unfortunately, due to regulatory restrictions and compliance with international sanctions, individuals
-                from sanctioned countries are unable to receive payments through our platform.
-              </AlertDescription>
-            </Alert>
-          </div>
-        ) : (
-          <>
-            {showWalletPayoutMethod ? (
-              <>
-                <div className="flex justify-between">
-                  <div>
-                    <h2 className="text-xl font-bold">ETH wallet</h2>
-                    <div className="text-xs">{walletAddress}</div>
-                  </div>
-                  <Button variant="outline" onClick={() => setEditingWalletPayoutMethod(true)}>
-                    Edit
-                  </Button>
-                  <WalletAddressModal
-                    open={editingWalletPayoutMethod}
-                    value={walletAddress}
-                    onClose={() => setEditingWalletPayoutMethod(false)}
-                    onComplete={setWalletAddress}
-                  />
-                </div>
-                <Separator />
-              </>
-            ) : null}
-
-            {bankAccounts.map((bankAccount, index) => (
-              <Fragment key={bankAccount.id}>
-                <div className="flex justify-between">
-                  <div>
-                    <h2 className="text-xl font-bold">{bankAccount.currency} bank account</h2>
-                    <div className="text-xs">Ending in {bankAccount.last_four_digits}</div>
-                    {bankAccounts.length > 1 && bankAccountUsage(bankAccount)}
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    {bankAccounts.length > 1 ? (
-                      <>
-                        {bankAccount.id !== bankAccountForInvoices && (
-                          <MutationButton
-                            idleVariant="outline"
-                            mutation={useBankAccountMutation}
-                            param={{ bankAccountId: bankAccount.id, useFor: "invoices" as const }}
-                            loadingText={
-                              useBankAccountMutation.variables?.bankAccountId === bankAccount.id
-                                ? "Updating..."
-                                : undefined
-                            }
-                          >
-                            Use for invoices
-                          </MutationButton>
-                        )}
-
-                        {bankAccount.id !== bankAccountForDividends && user.roles.investor ? (
-                          <MutationButton
-                            idleVariant="outline"
-                            mutation={useBankAccountMutation}
-                            param={{ bankAccountId: bankAccount.id, useFor: "dividends" as const }}
-                            loadingText={
-                              useBankAccountMutation.variables?.bankAccountId === bankAccount.id
-                                ? "Updating..."
-                                : undefined
-                            }
-                          >
-                            Use for dividends
-                          </MutationButton>
-                        ) : null}
-                      </>
-                    ) : (
-                      <>
-                        <Button variant="outline" onClick={() => setEditingBankAccount(bankAccount)}>
-                          Edit
-                        </Button>
-                        {editingBankAccount ? (
-                          <BankAccountModal
-                            open={!!editingBankAccount}
-                            billingDetails={data}
-                            bankAccount={editingBankAccount}
-                            onClose={() => setEditingBankAccount(null)}
-                            onComplete={(result) => {
-                              Object.assign(editingBankAccount, result);
-                              setEditingBankAccount(null);
-                            }}
-                          />
-                        ) : null}
-                      </>
-                    )}
-                  </div>
-                </div>
-                {index !== bankAccounts.length - 1 && <Separator />}
-              </Fragment>
-            ))}
-
-            {user.roles.investor ? (
-              <>
-                {bankAccounts.length > 0 ? <Separator /> : null}
-                <div>
-                  {addingBankAccount ? (
-                    <BankAccountModal
-                      open={addingBankAccount}
-                      billingDetails={data}
-                      onClose={() => setAddingBankAccount(false)}
-                      onComplete={(result) => {
-                        setBankAccounts((prev) => [...prev, result]);
-                        setAddingBankAccount(false);
-                      }}
+      {bankAccounts.length === 0 && user.roles.investor ? (
+        <div className="p-4">
+          <Placeholder icon={CurrencyDollarIcon}>
+            <p>Set up your bank account to receive payouts.</p>
+            <Button onClick={() => setAddingBankAccount(true)} variant="outline">
+              <PlusIcon className="size-4" />
+              Add bank account
+            </Button>
+          </Placeholder>
+        </div>
+      ) : (
+        <CardContent>
+          {isFromSanctionedCountry ? (
+            <div>
+              <Alert variant="destructive">
+                <ExclamationTriangleIcon />
+                <AlertTitle>Payouts are disabled</AlertTitle>
+                <AlertDescription>
+                  Unfortunately, due to regulatory restrictions and compliance with international sanctions, individuals
+                  from sanctioned countries are unable to receive payments through our platform.
+                </AlertDescription>
+              </Alert>
+            </div>
+          ) : (
+            <>
+              {showWalletPayoutMethod ? (
+                <>
+                  <div className="flex justify-between">
+                    <div>
+                      <h2 className="text-xl font-bold">ETH wallet</h2>
+                      <div className="text-xs">{walletAddress}</div>
+                    </div>
+                    <Button variant="outline" onClick={() => setEditingWalletPayoutMethod(true)}>
+                      Edit
+                    </Button>
+                    <WalletAddressModal
+                      open={editingWalletPayoutMethod}
+                      value={walletAddress}
+                      onClose={() => setEditingWalletPayoutMethod(false)}
+                      onComplete={setWalletAddress}
                     />
-                  ) : null}
-                  <Button onClick={() => setAddingBankAccount(true)}>Add bank account</Button>
-                </div>
-              </>
-            ) : null}
-          </>
-        )}
-      </CardContent>
+                  </div>
+                  <Separator />
+                </>
+              ) : null}
+
+              {bankAccounts.map((bankAccount, index) => (
+                <Fragment key={bankAccount.id}>
+                  <div className="flex justify-between">
+                    <div>
+                      <h2 className="text-xl font-bold">{bankAccount.currency} bank account</h2>
+                      <div className="text-xs">Ending in {bankAccount.last_four_digits}</div>
+                      {bankAccounts.length > 1 && bankAccountUsage(bankAccount)}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      {bankAccounts.length > 1 ? (
+                        <>
+                          {bankAccount.id !== bankAccountForInvoices && (
+                            <MutationButton
+                              idleVariant="outline"
+                              mutation={useBankAccountMutation}
+                              param={{ bankAccountId: bankAccount.id, useFor: "invoices" as const }}
+                              loadingText={
+                                useBankAccountMutation.variables?.bankAccountId === bankAccount.id
+                                  ? "Updating..."
+                                  : undefined
+                              }
+                            >
+                              Use for invoices
+                            </MutationButton>
+                          )}
+
+                          {bankAccount.id !== bankAccountForDividends && user.roles.investor ? (
+                            <MutationButton
+                              idleVariant="outline"
+                              mutation={useBankAccountMutation}
+                              param={{ bankAccountId: bankAccount.id, useFor: "dividends" as const }}
+                              loadingText={
+                                useBankAccountMutation.variables?.bankAccountId === bankAccount.id
+                                  ? "Updating..."
+                                  : undefined
+                              }
+                            >
+                              Use for dividends
+                            </MutationButton>
+                          ) : null}
+                        </>
+                      ) : (
+                        <>
+                          <Button variant="outline" onClick={() => setEditingBankAccount(bankAccount)}>
+                            Edit
+                          </Button>
+                          {editingBankAccount ? (
+                            <BankAccountModal
+                              open={!!editingBankAccount}
+                              billingDetails={data}
+                              bankAccount={editingBankAccount}
+                              onClose={() => setEditingBankAccount(null)}
+                              onComplete={(result) => {
+                                Object.assign(editingBankAccount, result);
+                                setEditingBankAccount(null);
+                              }}
+                            />
+                          ) : null}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  {index !== bankAccounts.length - 1 && <Separator />}
+                </Fragment>
+              ))}
+
+              {bankAccounts.length > 0 && user.roles.investor ? (
+                <>
+                  {bankAccounts.length > 0 ? <Separator /> : null}
+                  <div>
+                    {addingBankAccount ? (
+                      <BankAccountModal
+                        open={addingBankAccount}
+                        billingDetails={data}
+                        onClose={() => setAddingBankAccount(false)}
+                        onComplete={(result) => {
+                          setBankAccounts((prev) => [...prev, result]);
+                          setAddingBankAccount(false);
+                        }}
+                      />
+                    ) : null}
+                    <Button onClick={() => setAddingBankAccount(true)} variant="outline">
+                      <PlusIcon className="size-4" />
+                      Add bank account
+                    </Button>
+                  </div>
+                </>
+              ) : null}
+            </>
+          )}
+        </CardContent>
+      )}
     </FormSection>
   );
 };
