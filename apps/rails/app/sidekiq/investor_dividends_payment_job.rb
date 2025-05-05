@@ -10,7 +10,7 @@ class InvestorDividendsPaymentJob
   def perform(company_investor_id)
     @company_investor = CompanyInvestor.find(company_investor_id)
 
-    return if !user.has_verified_tax_id? || tax_information_confirmed_at.nil?
+    return if !user.has_verified_tax_id? || tax_information_confirmed_at.nil? || user.bank_account_for_dividends.nil?
 
     update_dividend_tax_info
 
