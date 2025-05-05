@@ -191,7 +191,7 @@ const BankAccountsSection = () => {
     );
   };
 
-  if (!isFromSanctionedCountry && !showWalletPayoutMethod && !data.bank_account_currency) return null;
+  if (!isFromSanctionedCountry && !showWalletPayoutMethod) return null;
 
   return (
     <FormSection title="Payout method">
