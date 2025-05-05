@@ -191,8 +191,6 @@ const BankAccountsSection = () => {
     );
   };
 
-  if (!isFromSanctionedCountry && !showWalletPayoutMethod) return null;
-
   return (
     <FormSection title="Payout method">
       <CardContent>
