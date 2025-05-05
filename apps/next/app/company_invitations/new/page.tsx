@@ -15,6 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import FormFields from "@/app/people/FormFields";
 import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
+import { formatISO } from "date-fns";
 
 const schema = z.object({
   email: z.string().email(),
@@ -31,7 +32,11 @@ export default function CreateCompanyInvitation() {
   const queryClient = useQueryClient();
 
   const form = useForm({
-    defaultValues: { payRateType: PayRateType.Hourly, hoursPerWeek: DEFAULT_WORKING_HOURS_PER_WEEK },
+    defaultValues: {
+      payRateType: PayRateType.Hourly,
+      hoursPerWeek: DEFAULT_WORKING_HOURS_PER_WEEK,
+      startDate: formatISO(new Date(), { representation: "date" }),
+    },
     resolver: zodResolver(schema),
   });
   const [templateId, setTemplateId] = useState<string | null>(null);

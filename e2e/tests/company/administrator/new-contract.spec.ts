@@ -127,6 +127,7 @@ test.describe("New Contractor", () => {
     await mockForm(page);
     const { email } = await fillForm(page);
     await page.getByLabel("Role").fill("Project-based Role");
+    await page.getByLabel("Project-based").check({ force: true });
     await page.getByLabel("Rate").fill("1000");
 
     await page.getByRole("button", { name: "Send invite" }).click();
@@ -160,6 +161,7 @@ test.describe("New Contractor", () => {
   test("allows inviting a salary-based contractor", async ({ page }) => {
     const { email } = await fillForm(page);
     await page.getByLabel("Role").fill("Salaried Role");
+    await page.getByLabel("Salary").check({ force: true });
     await page.getByLabel("Rate").fill("120000");
 
     await page.getByRole("button", { name: "Send invite" }).click();

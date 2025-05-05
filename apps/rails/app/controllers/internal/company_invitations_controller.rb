@@ -37,6 +37,7 @@ class Internal::CompanyInvitationsController < Internal::BaseController
         :pay_rate_in_subunits,
         :pay_rate_type,
         :hours_per_week,
+        :role,
       )
     end
 end

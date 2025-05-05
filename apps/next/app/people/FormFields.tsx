@@ -5,10 +5,8 @@ import { useFormContext } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import RadioButtons from "@/components/RadioButtons";
 import NumberInput from "@/components/NumberInput";
-import { useCurrentCompany } from "@/global";
 
 export default function FormFields() {
-  const company = useCurrentCompany();
   const form = useFormContext();
   const payRateType: unknown = form.watch("payRateType");
 
@@ -40,10 +38,8 @@ export default function FormFields() {
                 options={[
                   { label: "Hourly", value: PayRateType.Hourly } as const,
                   { label: "Project-based", value: PayRateType.ProjectBased } as const,
-                  company.flags.includes("salary_roles")
-                    ? ({ label: "Salary", value: PayRateType.Salary } as const)
-                    : null,
-                ].filter((option) => !!option)}
+                  { label: "Salary", value: PayRateType.Salary } as const,
+                ]}
               />
             </FormControl>
             <FormMessage />

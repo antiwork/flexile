@@ -20,7 +20,7 @@ import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
 const schema = z.object({
   email: z.string().email(),
   payRateType: z.nativeEnum(PayRateType),
-  rateUsd: z.number(),
+  payRateInSubunits: z.number(),
   hoursPerWeek: z.number().nullable(),
   role: z.string(),
   startDate: z.string(),
@@ -63,7 +63,6 @@ function Create() {
       // parsed as midnight in the local timezone rather than UTC.
       startedAt: formatISO(new Date(`${values.startDate}T00:00:00`)),
       documentTemplateId: templateId ?? "",
-      payRateInSubunits: values.rateUsd * 100,
     });
   });
 
