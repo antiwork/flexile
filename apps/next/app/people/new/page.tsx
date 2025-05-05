@@ -35,7 +35,7 @@ function Create() {
 
   const form = useForm({
     defaultValues: {
-      ...(lastContractor ? { rateUsd: lastContractor.payRateInSubunits / 100, role: lastContractor.role } : {}),
+      ...(lastContractor ? { payRateInSubunits: lastContractor.payRateInSubunits, role: lastContractor.role } : {}),
       payRateType: lastContractor?.payRateType ?? PayRateType.Hourly,
       hoursPerWeek: lastContractor?.hoursPerWeek ?? DEFAULT_WORKING_HOURS_PER_WEEK,
       startDate: formatISO(new Date(), { representation: "date" }),
