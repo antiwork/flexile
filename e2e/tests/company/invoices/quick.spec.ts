@@ -41,7 +41,11 @@ test.describe("quick invoicing", () => {
       await expect(page.getByText("Total amount$630")).toBeVisible();
       await page.getByRole("link", { name: "Add more info" }).click();
 
-      await expect(page.getByLabel("Date")).toHaveValue("2024-08-08");
+      const datePickerGroup = page.getByRole("group", { name: "Invoice date" });
+      await expect(datePickerGroup.getByRole("spinbutton", { name: /month/u })).toHaveText("8");
+      await expect(datePickerGroup.getByRole("spinbutton", { name: /day/u })).toHaveText("8");
+      await expect(datePickerGroup.getByRole("spinbutton", { name: /year/u })).toHaveText("2024");
+
       await expect(page.getByRole("row")).toHaveCount(5); // Line items header + 1 row + footer + Expenses header + footer
       const row = page.getByRole("row").nth(1);
       await expect(row.getByPlaceholder("Description")).toHaveValue("");
@@ -64,7 +68,11 @@ test.describe("quick invoicing", () => {
       await expect(page.getByText("Total amount$630")).toBeVisible();
       await page.getByRole("link", { name: "Add more info" }).click();
 
-      await expect(page.getByLabel("Date")).toHaveValue("2024-08-08");
+      const projectDatePickerGroup = page.getByRole("group", { name: "Invoice date" });
+      await expect(projectDatePickerGroup.getByRole("spinbutton", { name: /month/u })).toHaveText("8");
+      await expect(projectDatePickerGroup.getByRole("spinbutton", { name: /day/u })).toHaveText("8");
+      await expect(projectDatePickerGroup.getByRole("spinbutton", { name: /year/u })).toHaveText("2024");
+
       await expect(page.getByRole("row")).toHaveCount(5); // Line items header + 1 row + footer + Expenses header + footer
       const row = page.getByRole("row").nth(1);
       await expect(row.getByPlaceholder("Description")).toHaveValue("");

@@ -383,7 +383,7 @@ const Edit = () => {
                   }
                 }}
                 aria-invalid={errorField === "issueDate"}
-                label="Date"
+                label="Invoice date"
                 granularity="day"
               />
             </div>

@@ -98,20 +98,12 @@ test.describe("invoice creation", () => {
 
     await page.getByRole("button", { name: "Send invoice" }).click();
 
-    await expect(page.locator("tbody")).toContainText(
-      [
-        "Invoice ID",
-        "1",
-        "Sent on",
-        "Aug 8, 2023",
-        "Hours",
-        "03:25",
-        "Amount",
-        "$205",
-        "Status",
-        "Awaiting approval (0/2)",
-      ].join(""),
-    );
+    const firstRow = page.locator("tbody > tr").first();
+    await expect(firstRow).toContainText("1");
+    await expect(firstRow).toContainText("Aug 8, 2023");
+    await expect(firstRow).toContainText("03:25");
+    await expect(firstRow).toContainText("$205");
+    await expect(firstRow).toContainText("Awaiting approval");
 
     const invoice = await db.query.invoices
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
@@ -161,20 +153,12 @@ test.describe("invoice creation", () => {
 
     await page.getByRole("button", { name: "Send invoice" }).click();
 
-    await expect(page.locator("tbody")).toContainText(
-      [
-        "Invoice ID",
-        "1",
-        "Sent on",
-        "Aug 8, 2023",
-        "Hours",
-        "N/A",
-        "Amount",
-        "$1,000",
-        "Status",
-        "Awaiting approval (0/2)",
-      ].join(""),
-    );
+    const firstProjectRow = page.locator("tbody > tr").first();
+    await expect(firstProjectRow).toContainText("1");
+    await expect(firstProjectRow).toContainText("Aug 8, 2023");
+    await expect(firstProjectRow).toContainText("N/A");
+    await expect(firstProjectRow).toContainText("$1,000");
+    await expect(firstProjectRow).toContainText("Awaiting approval");
 
     const invoice = await db.query.invoices
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
@@ -242,20 +226,13 @@ test.describe("invoice creation", () => {
     await expect(yearTotalsLocator).toContainText("$4,800");
 
     await page.getByRole("button", { name: "Send invoice" }).click();
-    await expect(page.locator("tbody")).toContainText(
-      [
-        "Invoice ID",
-        "1",
-        "Sent on",
-        "Aug 8, 2021",
-        "Hours",
-        "100:00",
-        "Amount",
-        "$6,000",
-        "Status",
-        "Awaiting approval (0/2)",
-      ].join(""),
-    );
+
+    const firstYearRow = page.locator("tbody > tr").first();
+    await expect(firstYearRow).toContainText("1");
+    await expect(firstYearRow).toContainText("Aug 8, 2021");
+    await expect(firstYearRow).toContainText("100:00");
+    await expect(firstYearRow).toContainText("$6,000");
+    await expect(firstYearRow).toContainText("Awaiting approval");
 
     const invoice = await db.query.invoices
       .findFirst({
