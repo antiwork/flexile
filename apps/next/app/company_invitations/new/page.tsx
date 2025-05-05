@@ -1,45 +1,45 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { formatISO } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { z } from "zod";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
-import FormSection from "@/components/FormSection";
 import MainLayout from "@/components/layouts/Main";
-import MutationButton from "@/components/MutationButton";
-import NumberInput from "@/components/NumberInput";
-import RadioButtons from "@/components/RadioButtons";
-import { CardContent } from "@/components/ui/card";
+import { MutationStatusButton } from "@/components/MutationButton";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { DocumentTemplateType, PayRateType } from "@/db/enums";
 import { trpc } from "@/trpc/client";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import FormFields from "@/app/people/FormFields";
+import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
+import { formatISO } from "date-fns";
 
+const schema = z.object({
+  email: z.string().email(),
+  companyName: z.string().min(1, "This field is required"),
+  role: z.string().min(1, "This field is required"),
+  payRateType: z.nativeEnum(PayRateType),
+  payRateInSubunits: z.number().min(1),
+  hoursPerWeek: z.number().min(1),
+  startDate: z.string().min(1, "This field is required"),
+});
 export default function CreateCompanyInvitation() {
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
   const queryClient = useQueryClient();
 
-  const [companyAdministratorEmail, setCompanyAdministratorEmail] = useState("");
-  const [companyName, setCompanyName] = useState("");
-  const [roleName, setRoleName] = useState("");
-  const [rolePayRateType, setRolePayRateType] = useState<"hourly" | "project_based">("hourly");
-  const [roleRate, setRoleRate] = useState<number | null>(null);
-  const [roleHours, setRoleHours] = useState<number | null>(null);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const startDate = formatISO(new Date(), { representation: "date" });
+  const form = useForm({
+    defaultValues: {
+      payRateType: PayRateType.Hourly,
+      hoursPerWeek: DEFAULT_WORKING_HOURS_PER_WEEK,
+      startDate: formatISO(new Date(), { representation: "date" }),
+    },
+    resolver: zodResolver(schema),
+  });
   const [templateId, setTemplateId] = useState<string | null>(null);
-
-  const isValid =
-    companyName.length > 0 &&
-    companyAdministratorEmail.length > 0 &&
-    roleName.length > 0 &&
-    roleRate &&
-    roleRate > 0 &&
-    roleHours &&
-    roleHours > 0;
 
   const inviteCompany = trpc.companies.invite.useMutation({
     onSuccess: async (data) => {
@@ -50,130 +50,86 @@ export default function CreateCompanyInvitation() {
         `/documents?${new URLSearchParams({ sign: data.documentId.toString(), next: "/company_invitations" })}`,
       );
     },
-    onError: (error) =>
-      setErrors(z.object({ errors: z.record(z.string(), z.string()) }).parse(JSON.parse(error.message)).errors),
+    onError: (error) => {
+      const errors = z.object({ errors: z.record(z.string(), z.string()) }).parse(JSON.parse(error.message)).errors;
+      form.setError("root", { message: Object.values(errors)[0] ?? "" });
+    },
   });
+
+  const submit = form.handleSubmit((values) =>
+    inviteCompany.mutate({
+      templateId: templateId ?? "",
+      ...values,
+      rate: values.payRateInSubunits,
+      rateType: values.payRateType,
+    }),
+  );
 
   return (
     <MainLayout title="Who are you billing?">
-      <div className="space-y-6">
-        <FormSection title="Company details">
-          <CardContent className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="admin-email">Email</Label>
-              <Input
-                id="admin-email"
-                type="email"
-                value={companyAdministratorEmail}
-                onChange={(e) => setCompanyAdministratorEmail(e.target.value)}
-                placeholder="CEO's email"
-                aria-invalid={!!errors["user.email"]}
-              />
-              {errors["user.email"] ? <span className="text-destructive text-sm">{errors["user.email"]}</span> : null}
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="company-name">Company name</Label>
-              <Input
-                id="company-name"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="Company's legal name"
-              />
-            </div>
-
-            <TemplateSelector
-              selected={templateId}
-              setSelected={setTemplateId}
-              companyId={null}
-              type={DocumentTemplateType.ConsultingContract}
-            />
-          </CardContent>
-        </FormSection>
-
-        <FormSection title="Role details">
-          <CardContent className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="role-name">Role name</Label>
-              <Input
-                id="role-name"
-                value={roleName}
-                onChange={(e) => setRoleName(e.target.value)}
-                aria-invalid={!!errors["company_role.name"]}
-              />
-              {errors["company_role.name"] ? (
-                <span className="text-destructive text-sm">{errors["company_role.name"]}</span>
-              ) : null}
-            </div>
-
-            <RadioButtons
-              value={rolePayRateType}
-              onChange={setRolePayRateType}
-              options={[
-                { label: "Hourly", value: "hourly" },
-                { label: "Project-based", value: "project_based" },
-              ]}
-              label="Contract type"
-              invalid={!!errors["company_role.rate.pay_rate_type"]}
-              help={errors["company_role.rate.pay_rate_type"]}
-            />
-
-            <div className="grid gap-2">
-              <Label htmlFor="role-rate">Rate</Label>
-              <NumberInput
-                id="role-rate"
-                value={roleRate}
-                onChange={(value) => setRoleRate(value ?? null)}
-                prefix="$"
-                suffix={rolePayRateType === "hourly" ? "/ hour" : "/ project"}
-                invalid={!!errors["company_role.rate.pay_rate_in_subunits"]}
-                decimal
-              />
-              {errors["company_role.rate.pay_rate_in_subunits"] ? (
-                <span className="text-destructive text-sm">{errors["company_role.rate.pay_rate_in_subunits"]}</span>
-              ) : null}
-            </div>
-
-            {rolePayRateType === "hourly" && (
-              <div className="grid gap-2">
-                <Label htmlFor="role-hours">Average hours</Label>
-                <NumberInput
-                  id="role-hours"
-                  value={roleHours}
-                  onChange={(value) => setRoleHours(value ?? null)}
-                  suffix="/ week"
-                  invalid={!!errors["company_worker.hours_per_week"]}
-                />
-                {errors["company_worker.hours_per_week"] ? (
-                  <span className="text-destructive text-sm">{errors["company_worker.hours_per_week"]}</span>
-                ) : null}
-              </div>
+      <Form {...form}>
+        <form className="space-y-6" onSubmit={(e) => void submit(e)}>
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input {...field} type="email" placeholder="CEO's email" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </CardContent>
-        </FormSection>
+          />
+          <FormField
+            control={form.control}
+            name="startDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Start date</FormLabel>
+                <FormControl>
+                  <Input {...field} type="date" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <div className="grid gap-x-5 gap-y-3 md:grid-cols-[25%_1fr]">
-          <div />
-          <div>
-            <MutationButton
-              mutation={inviteCompany}
-              disabled={!isValid}
-              param={{
-                templateId: templateId ?? "",
-                email: companyAdministratorEmail,
-                companyName,
-                roleName,
-                rate: (roleRate ?? 0) * 100,
-                rateType: rolePayRateType === "hourly" ? PayRateType.Hourly : PayRateType.ProjectBased,
-                hoursPerWeek: roleHours,
-                startDate,
-              }}
-            >
-              Send invite
-            </MutationButton>
-          </div>
-        </div>
-      </div>
+          <FormField
+            control={form.control}
+            name="companyName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Company name</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Company's legal name" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <TemplateSelector
+            selected={templateId}
+            setSelected={setTemplateId}
+            companyId={null}
+            type={DocumentTemplateType.ConsultingContract}
+          />
+
+          <FormFields />
+
+          <MutationStatusButton type="submit" mutation={inviteCompany}>
+            Send invite
+          </MutationStatusButton>
+
+          {form.formState.errors.root ? (
+            <div className="text-red text-center text-xs">
+              {form.formState.errors.root.message ?? "An error occurred"}
+            </div>
+          ) : null}
+        </form>
+      </Form>
     </MainLayout>
   );
 }

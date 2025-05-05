@@ -44,8 +44,6 @@ scope path: :internal, module: :internal do
       resources :equity_grants, only: [:create]
     end
 
-    resource :search, only: :show, controller: "search"
-    resource :signee_search, only: :show, controller: "signee_search"
     resource :switch, only: :create, controller: "switch"
 
     resources :company_updates do

@@ -30,11 +30,8 @@ class InviteWorker
       end
     end
 
-    role = company.company_roles.find_by(external_id: params.delete(:role_id))
-    return { success: false, error_message: "Role not found" } unless role.present?
     company_worker = user.company_workers.find_or_initialize_by(company:)
     user.inviting_company = false
-    company_worker.company_role = role if role
     company_worker.assign_attributes(**params, ended_at: nil)
 
     if is_existing_user

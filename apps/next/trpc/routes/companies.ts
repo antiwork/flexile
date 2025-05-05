@@ -227,7 +227,7 @@ export const companiesRouter = createRouter({
       z.object({
         email: z.string().email(),
         companyName: z.string(),
-        roleName: z.string(),
+        role: z.string(),
         rate: z.number(),
         rateType: z.nativeEnum(PayRateType),
         hoursPerWeek: z.number().nullish(),
@@ -251,16 +251,12 @@ export const companiesRouter = createRouter({
         body: JSON.stringify({
           company_administrator: { email: input.email },
           company: { name: input.companyName },
-          company_role: { name: input.roleName },
-          company_role_rate: {
-            pay_rate_in_subunits: input.rate,
-            pay_rate_type: input.rateType,
-          },
           company_worker: {
             pay_rate_in_subunits: input.rate,
             started_at: input.startDate,
             pay_rate_type: input.rateType,
             hours_per_week: input.rateType === PayRateType.Hourly ? input.hoursPerWeek : null,
+            role: input.role,
           },
         }),
       });

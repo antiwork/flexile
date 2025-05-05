@@ -4,14 +4,13 @@ RSpec.describe InviteCompany do
   let!(:worker) { create(:user, inviting_company: true) }
   let(:company_administrator_params) { { email: "test@example.com" } }
   let(:company_params) { { name: "Test Company" } }
-  let(:company_role_params) { { name: "Developer" } }
-  let(:company_role_rate_params) { { pay_rate_in_subunits: 100_00, pay_rate_type: "hourly" } }
   let(:company_worker_params) do
     {
       started_at: Date.today,
       pay_rate_in_subunits: 100_00,
       pay_rate_type: "hourly",
       hours_per_week: 40,
+      role: "Developer",
     }
   end
 
@@ -21,15 +20,11 @@ RSpec.describe InviteCompany do
       result = described_class.new(
         company_administrator_params:,
         company_params:,
-        company_role_params:,
-        company_role_rate_params:,
         company_worker_params:,
         worker:
       ).perform
     end.to change { Company.count }.by(1)
       .and change { User.count }.by(1)
-      .and change { CompanyRole.count }.by(1)
-      .and change { CompanyRoleRate.count }.by(1)
       .and change { CompanyWorker.count }.by(1)
       .and change { CompanyAdministrator.count }.by(1)
       .and change { Document.count }.by(1)
@@ -49,15 +44,10 @@ RSpec.describe InviteCompany do
     company_administrator = new_company.company_administrators.find_by(user: administrator)
     expect(company_administrator).to be_present
 
-    company_role = CompanyRole.last
-    expect(company_role.name).to eq("Developer")
-    expect(company_role.rate.pay_rate_in_subunits).to eq(100_00)
-    expect(company_role.rate.pay_rate_type).to eq("hourly")
-
     company_worker = CompanyWorker.last
     expect(company_worker.user).to eq(worker)
     expect(company_worker.company).to eq(new_company)
-    expect(company_worker.company_role).to eq(company_role)
+    expect(company_worker.role).to eq("Developer")
     expect(company_worker.started_at).to eq(Date.today)
     expect(company_worker.pay_rate_in_subunits).to eq(100_00)
     expect(company_worker.pay_rate_type).to eq("hourly")
@@ -76,16 +66,12 @@ RSpec.describe InviteCompany do
         result = described_class.new(
           company_administrator_params:,
           company_params:,
-          company_role_params:,
-          company_role_rate_params:,
           company_worker_params:,
           worker:,
         ).perform
         puts result
       end.to not_change { Company.count }
         .and not_change { User.count }
-        .and not_change { CompanyRole.count }
-        .and not_change { CompanyRoleRate.count }
         .and not_change { CompanyWorker.count }
         .and not_change { Document.count }
 
@@ -102,15 +88,11 @@ RSpec.describe InviteCompany do
         result = described_class.new(
           company_administrator_params:,
           company_params:,
-          company_role_params:,
-          company_role_rate_params:,
           company_worker_params:,
           worker:,
         ).perform
       end.to not_change { Company.count }
         .and not_change { User.count }
-        .and not_change { CompanyRole.count }
-        .and not_change { CompanyRoleRate.count }
         .and not_change { CompanyWorker.count }
         .and not_change { Document.count }
 

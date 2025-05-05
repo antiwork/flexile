@@ -18,7 +18,6 @@ class CompanyNavigationPresenter::RoutesInfo
         company_invoices_route_props,
         company_documents_route_props,
         company_workers_route_props,
-        company_roles_route_props,
         company_equity_route_props,
         company_settings_route_props,
       ].compact
@@ -77,15 +76,6 @@ class CompanyNavigationPresenter::RoutesInfo
       {
         label: "People",
         name: "company_workers",
-      }
-    end
-
-    def company_roles_route_props
-      return unless Pundit.policy!(current_context, CompanyRole).index?
-
-      {
-        label: "Roles",
-        name: "company_roles",
       }
     end
 

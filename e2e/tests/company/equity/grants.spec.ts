@@ -3,7 +3,6 @@ import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
-import { companyRolesFactory } from "@test/factories/companyRoles";
 import { documentTemplatesFactory } from "@test/factories/documentTemplates";
 import { equityAllocationsFactory } from "@test/factories/equityAllocations";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
@@ -38,15 +37,10 @@ test.describe("New Contractor", () => {
       status: "pending_grant_creation",
       locked: true,
     });
-    const { role: projectBasedRole } = await companyRolesFactory.createProjectBased({ companyId: company.id });
-    await companyContractorsFactory.createProjectBased({
-      companyId: company.id,
-      companyRoleId: projectBasedRole.id,
-    });
+    await companyContractorsFactory.createProjectBased({ companyId: company.id });
     const { user: projectBasedUser } = await usersFactory.create();
     const { companyContractor: projectBasedContractor } = await companyContractorsFactory.createProjectBased({
       companyId: company.id,
-      companyRoleId: projectBasedRole.id,
       userId: projectBasedUser.id,
     });
     await equityAllocationsFactory.create({

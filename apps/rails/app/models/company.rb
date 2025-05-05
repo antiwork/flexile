@@ -43,7 +43,6 @@ class Company < ApplicationRecord
   has_many :company_investors
   has_many :company_monthly_financial_reports
   has_many :investors, through: :company_investors, source: :user
-  has_many :company_roles, -> { alive }
   has_many :company_updates
   has_many :documents
   has_many :dividends

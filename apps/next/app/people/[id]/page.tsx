@@ -7,29 +7,26 @@ import { formatISO, isFuture } from "date-fns";
 import { Decimal } from "decimal.js";
 import { useParams, useRouter } from "next/navigation";
 import { parseAsString, useQueryState } from "nuqs";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import DividendStatusIndicator from "@/app/equity/DividendStatusIndicator";
 import EquityGrantExerciseStatusIndicator from "@/app/equity/EquityGrantExerciseStatusIndicator";
 import DetailsModal from "@/app/equity/grants/DetailsModal";
-import RoleSelector from "@/app/roles/Selector";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import MutationButton from "@/components/MutationButton";
+import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
 import Tabs from "@/components/Tabs";
-import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from "@/components/Tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { CardContent, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
-import { DEFAULT_WORKING_HOURS_PER_WEEK, MAXIMUM_EQUITY_PERCENTAGE, MINIMUM_EQUITY_PERCENTAGE } from "@/models";
+import { MAXIMUM_EQUITY_PERCENTAGE, MINIMUM_EQUITY_PERCENTAGE } from "@/models";
 import type { RouterOutput } from "@/trpc";
 import { PayRateType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
@@ -37,6 +34,11 @@ import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { approve_company_invoices_path, company_equity_exercise_payment_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Form } from "@/components/ui/form";
+import FormFields from "../FormFields";
 
 export default function ContractorPage() {
   const currentUser = useCurrentUser();
@@ -71,8 +73,6 @@ export default function ContractorPage() {
     { enabled: !!investor },
   );
 
-  const [selectedRoleId, setSelectedRoleId] = useState(contractor?.role ?? "");
-  useEffect(() => setSelectedRoleId(contractor?.role ?? ""), [contractor]);
   const [endModalOpen, setEndModalOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [endDate, setEndDate] = useState(formatISO(new Date(), { representation: "date" }));
@@ -372,7 +372,7 @@ export default function ContractorPage() {
         </DialogContent>
       </Dialog>
 
-      <Tabs links={tabs.map((tab) => ({ label: tab.label, route: `?tab=${tab.tab}` }))} />
+      {tabs.length > 1 ? <Tabs links={tabs.map((tab) => ({ label: tab.label, route: `?tab=${tab.tab}` }))} /> : null}
 
       {(() => {
         switch (selectedTab) {
@@ -387,46 +387,37 @@ export default function ContractorPage() {
           case "dividends":
             return investor ? <DividendsTab investorId={investor.id} /> : null;
           case "details":
-            return (
-              <DetailsTab
-                userId={id}
-                selectedRoleId={selectedRoleId}
-                setSelectedRoleId={setSelectedRoleId}
-                setCancelModalOpen={setCancelModalOpen}
-              />
-            );
+            return <DetailsTab userId={id} setCancelModalOpen={setCancelModalOpen} />;
         }
       })()}
     </MainLayout>
   );
 }
 
+const detailsFormSchema = z.object({
+  payRateInSubunits: z.number(),
+  hoursPerWeek: z.number().nullable(),
+  payRateType: z.nativeEnum(PayRateType),
+  role: z.string(),
+});
+
 const DetailsTab = ({
   userId,
-  selectedRoleId,
-  setSelectedRoleId,
   setCancelModalOpen,
 }: {
   userId: string;
-  selectedRoleId: string;
-  setSelectedRoleId: (id: string) => void;
   setCancelModalOpen: (open: boolean) => void;
 }) => {
   const company = useCurrentCompany();
   const router = useRouter();
   const [user] = trpc.users.get.useSuspenseQuery({ companyId: company.id, id: userId });
   const [contractor] = trpc.contractors.get.useSuspenseQuery({ companyId: company.id, userId });
-  const [roles] = trpc.roles.list.useSuspenseQuery({ companyId: company.id });
-  const [payRateInSubunits, setPayRateInSubunits] = useState(contractor.payRateInSubunits);
-  const [hoursPerWeek, setHoursPerWeek] = useState(contractor.hoursPerWeek);
-  const selectedRole = roles.find((role) => role.id === selectedRoleId);
-  useEffect(() => {
-    if (selectedRole && selectedRoleId !== contractor.role) setPayRateInSubunits(selectedRole.payRateInSubunits);
-  }, [selectedRole]);
-  useEffect(() => {
-    setPayRateInSubunits(contractor.payRateInSubunits);
-    setHoursPerWeek(contractor.hoursPerWeek);
-  }, [contractor]);
+  const form = useForm({
+    resolver: zodResolver(detailsFormSchema),
+    defaultValues: contractor,
+    disabled: !!contractor.endedAt,
+  });
+  const payRateInSubunits = form.watch("payRateInSubunits");
   const trpcUtils = trpc.useUtils();
   const updateContractor = trpc.contractors.update.useMutation({
     onSuccess: async (data) => {
@@ -436,157 +427,95 @@ const DetailsTab = ({
       return router.push(data.documentId ? `/documents?sign=${data.documentId}` : "/people");
     },
   });
+  const submit = form.handleSubmit((values) =>
+    updateContractor.mutate({ companyId: company.id, id: contractor.id, ...values }),
+  );
 
   return (
-    <>
-      <FormSection title="Contract">
-        <CardContent>
-          <div className="grid gap-4">
-            {contractor.endedAt ? (
-              <Alert variant="destructive">
-                <ExclamationTriangleIcon />
-                <AlertDescription>
-                  <div className="flex items-center justify-between">
-                    Contract {isFuture(contractor.endedAt) ? "ends" : "ended"} on {formatDate(contractor.endedAt)}.
-                    {isFuture(contractor.endedAt) && (
-                      <Button variant="outline" onClick={() => setCancelModalOpen(true)}>
-                        Cancel contract end
-                      </Button>
-                    )}
-                  </div>
-                </AlertDescription>
-              </Alert>
-            ) : null}
-            <RoleSelector value={selectedRoleId} onChange={setSelectedRoleId} />
-            <div className="grid items-start gap-4 md:grid-cols-2">
-              <div className="grid gap-2">
-                <Label htmlFor="pay-rate">Rate</Label>
-                <NumberInput
-                  id="pay-rate"
-                  value={payRateInSubunits / 100}
-                  onChange={(value) => setPayRateInSubunits((value ?? 0) * 100)}
-                  placeholder="0"
-                  disabled={!!contractor.endedAt}
-                  prefix="$"
-                  suffix={
-                    contractor.payRateType === PayRateType.ProjectBased
-                      ? "/ project"
-                      : hoursPerWeek === null
-                        ? "/ year"
-                        : "/ hour"
-                  }
-                  decimal
-                />
+    <Form {...form}>
+      <form onSubmit={(e) => void submit(e)} className="grid gap-4">
+        <h2 className="text-xl font-bold">Contract</h2>
+        {contractor.endedAt ? (
+          <Alert variant="destructive">
+            <ExclamationTriangleIcon />
+            <AlertDescription>
+              <div className="flex items-center justify-between">
+                Contract {isFuture(contractor.endedAt) ? "ends" : "ended"} on {formatDate(contractor.endedAt)}.
+                {isFuture(contractor.endedAt) && (
+                  <Button variant="outline" onClick={() => setCancelModalOpen(true)}>
+                    Cancel contract end
+                  </Button>
+                )}
               </div>
-              {contractor.payRateType !== PayRateType.ProjectBased && hoursPerWeek !== null && (
-                <div className="grid gap-2">
-                  <Label htmlFor="hours-per-week">Average hours</Label>
-                  <NumberInput
-                    id="hours-per-week"
-                    value={hoursPerWeek}
-                    onChange={(value) => setHoursPerWeek(value ?? 0)}
-                    placeholder={DEFAULT_WORKING_HOURS_PER_WEEK.toString()}
-                    disabled={!!contractor.endedAt}
-                    suffix="/ week"
-                  />
-                </div>
-              )}
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
+        <FormFields />
+        {contractor.payRateType !== PayRateType.ProjectBased && company.flags.includes("equity_compensation") && (
+          <div>
+            <span>Equity split</span>
+            <div className="my-2 flex h-2 overflow-hidden rounded-xs bg-gray-200">
+              <div
+                style={{ width: `${contractor.equityPercentage}%` }}
+                className="flex flex-col justify-center bg-blue-600 whitespace-nowrap"
+              ></div>
+              <div
+                style={{ width: `${100 - contractor.equityPercentage}%` }}
+                className="flex flex-col justify-center"
+              ></div>
             </div>
-            {contractor.payRateType !== PayRateType.ProjectBased && company.flags.includes("equity_compensation") && (
-              <div>
-                <span>Equity split</span>
-                <div className="my-2 flex h-2 overflow-hidden rounded-xs bg-gray-200">
-                  <div
-                    style={{ width: `${contractor.equityPercentage}%` }}
-                    className="flex flex-col justify-center bg-blue-600 whitespace-nowrap"
-                  ></div>
-                  <div
-                    style={{ width: `${100 - contractor.equityPercentage}%` }}
-                    className="flex flex-col justify-center"
-                  ></div>
-                </div>
-                <div className="flex justify-between">
-                  <span>
-                    {(contractor.equityPercentage / 100).toLocaleString(undefined, { style: "percent" })} Equity{" "}
-                    <span className="text-gray-600">
-                      ({formatMoneyFromCents((contractor.equityPercentage * payRateInSubunits) / 100)})
-                    </span>
-                  </span>
-                  <span>
-                    {((100 - contractor.equityPercentage) / 100).toLocaleString(undefined, { style: "percent" })} Cash{" "}
-                    <span className="text-gray-600">
-                      ({formatMoneyFromCents(((100 - contractor.equityPercentage) * payRateInSubunits) / 100)})
-                    </span>
-                  </span>
-                </div>
-              </div>
-            )}
+            <div className="flex justify-between">
+              <span>
+                {(contractor.equityPercentage / 100).toLocaleString(undefined, { style: "percent" })} Equity{" "}
+                <span className="text-gray-600">
+                  ({formatMoneyFromCents((contractor.equityPercentage * payRateInSubunits) / 100)})
+                </span>
+              </span>
+              <span>
+                {((100 - contractor.equityPercentage) / 100).toLocaleString(undefined, { style: "percent" })} Cash{" "}
+                <span className="text-gray-600">
+                  ({formatMoneyFromCents(((100 - contractor.equityPercentage) * payRateInSubunits) / 100)})
+                </span>
+              </span>
+            </div>
           </div>
-        </CardContent>
-        {!contractor.endedAt && (
-          <CardFooter>
-            <MutationButton
-              size="small"
-              mutation={updateContractor}
-              param={{
-                companyId: company.id,
-                id: contractor.id,
-                payRateType: selectedRole?.payRateType ?? contractor.payRateType,
-                hoursPerWeek,
-                payRateInSubunits,
-                roleId: selectedRole?.id,
-              }}
-              disabled={
-                contractor.payRateType === PayRateType.ProjectBased
-                  ? !payRateInSubunits
-                  : !(hoursPerWeek && payRateInSubunits)
-              }
-              loadingText="Saving..."
-            >
-              Save changes
-            </MutationButton>
-          </CardFooter>
         )}
-      </FormSection>
-      <FormSection title="Personal info">
-        <CardContent>
-          <div className="grid gap-4">
-            <Input
-              value={user.email}
-              label="Email"
-              disabled
-              suffix={
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="link"
-                      aria-label="Copy Email"
-                      onClick={() => void navigator.clipboard.writeText(user.email)}
-                    >
-                      <DocumentDuplicateIcon className="size-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipPortal>
-                    <TooltipContent>Copy to clipboard</TooltipContent>
-                  </TooltipPortal>
-                </Tooltip>
-              }
-            />
-            <Input value={user.legalName} label="Legal name" disabled />
-            <div className="grid gap-3 md:grid-cols-2">
-              <Input value={user.preferredName} label="Preferred name" disabled />
-              <Input value={user.businessName ?? ""} label="Billing entity name" disabled />
-            </div>
-            <Input value={user.address.streetAddress} label="Residential address (street name, number, apt)" disabled />
-            <div className="grid gap-3 md:grid-cols-2">
-              <Input value={user.address.city} label="City or town, state or province" disabled />
-              <Input value={user.address.zipCode} label="Postal code" disabled />
-            </div>
-            <Input value={user.address.countryCode} label="Country of residence" disabled />
+        {!contractor.endedAt && (
+          <div className="flex justify-end">
+            <MutationStatusButton type="submit" mutation={updateContractor} loadingText="Saving...">
+              Save changes
+            </MutationStatusButton>
           </div>
-        </CardContent>
-      </FormSection>
-    </>
+        )}
+        <h2 className="text-xl font-bold">Personal info</h2>
+        <Input
+          value={user.email}
+          label="Email"
+          disabled
+          suffix={
+            <Button
+              variant="link"
+              aria-label="Copy Email"
+              onClick={() => void navigator.clipboard.writeText(user.email)}
+            >
+              <DocumentDuplicateIcon className="size-4" />
+            </Button>
+          }
+        />
+        <Input value={user.legalName} label="Legal name" disabled />
+        <div className="grid gap-3 md:grid-cols-2">
+          <Input value={user.preferredName} label="Preferred name" disabled />
+          <Input value={user.businessName ?? ""} label="Billing entity name" disabled />
+        </div>
+        <Input value={user.address.streetAddress} label="Residential address (street name, number, apt)" disabled />
+        <div className="grid gap-3 md:grid-cols-2">
+          <Input value={user.address.city} label="City or town, state or province" disabled />
+          <Input value={user.address.zipCode} label="Postal code" disabled />
+        </div>
+        <Input value={user.address.countryCode} label="Country of residence" disabled />
+      </form>
+    </Form>
   );
 };
 

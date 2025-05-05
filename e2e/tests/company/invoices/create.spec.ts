@@ -2,7 +2,6 @@ import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
-import { companyRolesFactory } from "@test/factories/companyRoles";
 import { equityAllocationsFactory } from "@test/factories/equityAllocations";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { usersFactory } from "@test/factories/users";
@@ -52,7 +51,6 @@ test.describe("invoice creation", () => {
       year: 2023,
     });
 
-    const { role: projectBasedRole } = await companyRolesFactory.createProjectBased({ companyId: company.id });
     projectBasedUser = (
       await usersFactory.createWithBusinessEntity({
         zipCode: "33333",
@@ -64,7 +62,6 @@ test.describe("invoice creation", () => {
       await companyContractorsFactory.createProjectBased({
         companyId: company.id,
         userId: projectBasedUser.id,
-        companyRoleId: projectBasedRole.id,
         payRateInSubunits: 1_000_00, // $1,000/project
       })
     ).companyContractor;

@@ -146,7 +146,6 @@ export const templatesRouter = createRouter({
               with: {
                 companyContractors: {
                   with: {
-                    role: true,
                     equityAllocations: { where: eq(equityAllocations.year, new Date().getFullYear()) },
                   },
                   where: eq(companyContractors.companyId, ctx.company.id),
@@ -200,7 +199,7 @@ export const templatesRouter = createRouter({
       const equityPercentage = contractor.equityAllocations[0]?.equityPercentage;
       const startDate = max([contractor.startedAt, contractor.updatedAt]);
       Object.assign(values, {
-        __role: contractor.role.name,
+        __role: contractor.role,
         __startDate: startDate.toLocaleString(),
         __electionYear: startDate.getFullYear().toString(),
         __payRate: `${(contractor.payRateInSubunits / 100).toLocaleString()} ${

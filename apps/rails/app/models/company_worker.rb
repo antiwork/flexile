@@ -7,7 +7,6 @@ class CompanyWorker < ApplicationRecord
 
   belongs_to :company
   belongs_to :user
-  belongs_to :company_role
 
   has_many :contracts, foreign_key: :company_contractor_id
   has_many :equity_allocations, foreign_key: :company_contractor_id
@@ -28,6 +27,7 @@ class CompanyWorker < ApplicationRecord
   }, validate: true
 
   validates :user_id, uniqueness: { scope: :company_id }
+  validates :role, presence: true
   validates :started_at, presence: true
   validates :hours_per_week, presence: true,
                              numericality: { only_integer: true, greater_than: 0 },

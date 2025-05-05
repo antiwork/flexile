@@ -3,49 +3,45 @@ import { PaperAirplaneIcon } from "@heroicons/react/16/solid";
 import { formatISO } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
-import RoleSelector from "@/app/roles/Selector";
-import FormSection from "@/components/FormSection";
 import Input from "@/components/Input";
 import MainLayout from "@/components/layouts/Main";
-import MutationButton from "@/components/MutationButton";
-import NumberInput from "@/components/NumberInput";
+import { MutationStatusButton } from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
-import { CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
-import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
 import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
-import { useOnChange } from "@/utils/useOnChange";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import FormFields from "../FormFields";
+import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
+const schema = z.object({
+  email: z.string().email(),
+  payRateType: z.nativeEnum(PayRateType),
+  payRateInSubunits: z.number(),
+  hoursPerWeek: z.number().nullable(),
+  role: z.string(),
+  startDate: z.string(),
+});
 
 function Create() {
   const company = useCurrentCompany();
   const router = useRouter();
-  const [roles] = trpc.roles.list.useSuspenseQuery({ companyId: company.id });
+  const [{ workers }] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id, limit: 1 });
+  const lastContractor = workers[0];
   const [templateId, setTemplateId] = useState<string | null>(null);
 
-  const [email, setEmail] = useState("");
-  const [roleId, setRoleId] = useState(roles[0]?.id);
-  const role = roles.find((r) => r.id === roleId);
-  useEffect(() => {
-    if (!role) setRoleId(roles[0]?.id);
-  }, [roles, roleId]);
-  const [rateUsd, setRateUsd] = useState(50);
-  const [hours, setHours] = useState(0);
-  const [startDate, setStartDate] = useState(formatISO(new Date(), { representation: "date" }));
-
-  useOnChange(() => {
-    if (role) setRateUsd(role.payRateInSubunits / 100);
-  }, [role]);
-
-  const valid =
-    templateId &&
-    email &&
-    ((role?.payRateType === PayRateType.Hourly && hours) ||
-      role?.payRateType === PayRateType.ProjectBased ||
-      role?.payRateType === PayRateType.Salary) &&
-    startDate.length > 0;
+  const form = useForm({
+    defaultValues: {
+      ...(lastContractor ? { payRateInSubunits: lastContractor.payRateInSubunits, role: lastContractor.role } : {}),
+      payRateType: lastContractor?.payRateType ?? PayRateType.Hourly,
+      hoursPerWeek: lastContractor?.hoursPerWeek ?? DEFAULT_WORKING_HOURS_PER_WEEK,
+      startDate: formatISO(new Date(), { representation: "date" }),
+    },
+    resolver: zodResolver(schema),
+  });
 
   const trpcUtils = trpc.useUtils();
   const saveMutation = trpc.contractors.create.useMutation({
@@ -59,6 +55,16 @@ function Create() {
       );
     },
   });
+  const submit = form.handleSubmit((values) => {
+    saveMutation.mutate({
+      companyId: company.id,
+      ...values,
+      // startDate only contains the date without a timezone. Appending T00:00:00 ensures the date is
+      // parsed as midnight in the local timezone rather than UTC.
+      startedAt: formatISO(new Date(`${values.startDate}T00:00:00`)),
+      documentTemplateId: templateId ?? "",
+    });
+  });
 
   return (
     <MainLayout
@@ -69,42 +75,37 @@ function Create() {
         </Button>
       }
     >
-      <FormSection title="Details">
-        <CardContent>
-          <div className="grid gap-4">
-            <Input value={email} onChange={setEmail} type="email" label="Email" placeholder="Contractor's email" />
-            <Input value={startDate} onChange={setStartDate} type="date" label="Start date" />
-            <RoleSelector value={roleId ?? null} onChange={setRoleId} />
-            <div className="grid gap-2">
-              <Label htmlFor="rate">Rate</Label>
-              <NumberInput
-                id="rate"
-                value={rateUsd}
-                onChange={(value) => setRateUsd(value ?? 0)}
-                prefix="$"
-                suffix={
-                  role?.payRateType === PayRateType.ProjectBased
-                    ? "/ project"
-                    : role?.payRateType === PayRateType.Salary
-                      ? "/ year"
-                      : "/ hour"
-                }
-                decimal
-              />
-            </div>
-            {role?.payRateType === PayRateType.Hourly && (
-              <div className="grid gap-2">
-                <Label htmlFor="hours">Average hours</Label>
-                <NumberInput
-                  id="hours"
-                  value={hours}
-                  onChange={(value) => setHours(value ?? 0)}
-                  placeholder={DEFAULT_WORKING_HOURS_PER_WEEK.toString()}
-                  suffix="/ week"
-                />
-              </div>
+      <Form {...form}>
+        <form onSubmit={(e) => void submit(e)} className="grid gap-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input {...field} type="email" placeholder="Contractor's email" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </div>
+          />
+
+          <FormField
+            control={form.control}
+            name="startDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Start date</FormLabel>
+                <FormControl>
+                  <Input {...field} type="date" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormFields />
 
           <TemplateSelector
             selected={templateId}
@@ -112,33 +113,13 @@ function Create() {
             companyId={company.id}
             type={DocumentTemplateType.ConsultingContract}
           />
-        </CardContent>
-      </FormSection>
-      <div className="grid gap-x-5 gap-y-3 md:grid-cols-[25%_1fr]">
-        <div />
-        <div>
-          <MutationButton
-            mutation={saveMutation}
-            disabled={!valid}
-            param={{
-              companyId: company.id,
-              email,
-              // startDate only contains the date without a timezone. Appending T00:00:00 ensures the date is
-              // parsed as midnight in the local timezone rather than UTC.
-              startedAt: formatISO(new Date(`${startDate}T00:00:00`)),
-              payRateInSubunits: rateUsd * 100,
-              payRateType: role?.payRateType ?? PayRateType.Hourly,
-              roleId: role?.id ? String(role.id) : null,
-              hoursPerWeek: hours,
-              documentTemplateId: templateId ?? "",
-            }}
-          >
+          <MutationStatusButton mutation={saveMutation} type="submit">
             <PaperAirplaneIcon className="h-5 w-5" />
             Send invite
-          </MutationButton>
-        </div>
-        <div>{saveMutation.isError ? <div className="text-red mb-4">{saveMutation.error.message}</div> : null}</div>
-      </div>
+          </MutationStatusButton>
+          <div>{saveMutation.isError ? <div className="text-red mb-4">{saveMutation.error.message}</div> : null}</div>
+        </form>
+      </Form>
     </MainLayout>
   );
 }
