@@ -37,10 +37,8 @@ import { EquityAllocationStatus } from "@/db/enums";
 import NumberInput from "@/components/NumberInput";
 import DurationInput from "@/components/DurationInput";
 import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import RangeInput from "@/components/RangeInput";
 import { formatISO } from "date-fns";
@@ -49,6 +47,8 @@ import { request } from "@/utils/request";
 import EquityPercentageLockModal from "./EquityPercentageLockModal";
 import { useCanSubmitInvoices } from ".";
 import { linkClasses } from "@/components/Link";
+import DatePicker from "@/components/DatePicker";
+import type { DateValue } from "react-aria-components";
 
 const statusNames = {
   received: "Awaiting approval",
@@ -492,9 +492,16 @@ const TasksModal = ({
 const quickInvoiceSchema = z.object({
   amountUsd: z.number().min(0.01),
   duration: z.number().min(0),
-  date: z.string().min(1),
+  date: z.custom<DateValue>(
+    (val): val is DateValue => typeof val === "object" && val !== null && "calendar" in val,
+    "Date is required",
+  ),
   invoiceEquityPercent: z.number().min(0).max(100),
 });
+
+type QuickInvoiceFormValues = Omit<z.infer<typeof quickInvoiceSchema>, "date"> & {
+  date: DateValue | null;
+};
 
 const QuickInvoicesSection = () => {
   const user = useCurrentUser();
@@ -505,20 +512,19 @@ const QuickInvoicesSection = () => {
   const payRateInSubunits = user.roles.worker.payRateInSubunits;
 
   const { canSubmitInvoices } = useCanSubmitInvoices();
-  const form = useForm({
-    resolver: zodResolver(quickInvoiceSchema),
+  const form = useForm<QuickInvoiceFormValues>({
     defaultValues: {
       amountUsd: payRateInSubunits ? payRateInSubunits / 100 : 0,
       duration: 0,
-      date: formatISO(new Date(), { representation: "date" }),
+      date: null,
       invoiceEquityPercent: 0,
     },
     disabled: !canSubmitInvoices,
   });
 
   const [lockModalOpen, setLockModalOpen] = useState(false);
-  const invoiceYear = new Date(form.watch("date")).getFullYear();
-  const date = form.watch("date");
+  const dateValue = form.watch("date");
+  const invoiceYear = dateValue ? dateValue.year : new Date().getFullYear();
   const duration = form.watch("duration");
   const amountUsd = form.watch("amountUsd");
   const totalAmountInCents = isProjectBased ? amountUsd * 100 : Math.ceil((duration / 60) * (payRateInSubunits ?? 0));
@@ -528,7 +534,11 @@ const QuickInvoicesSection = () => {
   const hourlyRateCashCents =
     totalAmountInCents > 0 ? Math.ceil((payRateInSubunits ?? 0) * (1 - invoiceEquityPercent / 100)) : 0;
   const newCompanyInvoiceRoute = () => {
-    const params = new URLSearchParams({ date });
+    const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const dateString = dateValue ? formatISO(dateValue.toDate(localTimeZone), { representation: "date" }) : null;
+    if (!dateString) return "/invoices/new" as const;
+
+    const params = new URLSearchParams({ date: dateString });
     params.set("split", String(invoiceEquityPercent));
     if (isProjectBased) params.set("amount", String(amountUsd));
     else params.set("duration", String(duration));
@@ -556,13 +566,17 @@ const QuickInvoicesSection = () => {
     mutationFn: async () => {
       setLockModalOpen(false);
 
+      const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const dateString = dateValue ? formatISO(dateValue.toDate(localTimeZone), { representation: "date" }) : null;
+      if (!dateString) throw new Error("Date is required");
+
       await request({
         method: "POST",
         url: company_invoices_path(company.id),
         assertOk: true,
         accept: "json",
         jsonData: {
-          invoice: { invoice_date: date },
+          invoice: { invoice_date: dateString },
           invoice_line_items: [
             isProjectBased
               ? { description: "Project work", total_amount_cents: totalAmountInCents }
@@ -576,13 +590,28 @@ const QuickInvoicesSection = () => {
     },
   });
 
-  const handleSubmit = form.handleSubmit(() => {
+  const handleSubmit = () => {
+    const formData = form.getValues();
+
+    const validationResult = quickInvoiceSchema.safeParse(formData);
+    if (!validationResult.success) {
+      Object.entries(validationResult.error.flatten().fieldErrors).forEach(([name, messages]) => {
+        if (name === "amountUsd" || name === "duration" || name === "date" || name === "invoiceEquityPercent") {
+          const message = messages[0];
+          if (message) {
+            form.setError(name, { type: "manual", message });
+          }
+        }
+      });
+      return;
+    }
+
     if (company.equityCompensationEnabled && !equityAllocation?.locked) {
       setLockModalOpen(true);
     } else {
       submit.mutate();
     }
-  });
+  };
 
   return (
     <Card className={canSubmitInvoices ? "" : "opacity-50"}>
@@ -590,7 +619,10 @@ const QuickInvoicesSection = () => {
         <Form {...form}>
           <form
             className="grid grid-cols-1 items-start gap-x-8 gap-y-6 lg:grid-cols-[1fr_auto_1fr]"
-            onSubmit={(e) => void handleSubmit(e)}
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit();
+            }}
           >
             <div className="grid gap-6">
               <div className="grid grid-cols-1 gap-6">
@@ -628,9 +660,8 @@ const QuickInvoicesSection = () => {
                   name="date"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Invoice date</FormLabel>
                       <FormControl>
-                        <Input {...field} type="date" />
+                        <DatePicker {...field} label="Invoice date" granularity="day" />
                       </FormControl>
                     </FormItem>
                   )}
@@ -701,8 +732,13 @@ const QuickInvoicesSection = () => {
                 ) : null}
               </div>
               <div className="flex flex-wrap items-center justify-end gap-3">
-                <Button variant="outline" className="grow sm:grow-0" asChild>
-                  <Link inert={!canSubmitInvoices} href={`${newCompanyInvoiceRoute()}&expenses=true`}>
+                <Button
+                  variant="outline"
+                  className="grow sm:grow-0"
+                  asChild
+                  disabled={!canSubmitInvoices || !dateValue}
+                >
+                  <Link inert={!canSubmitInvoices || !dateValue} href={`${newCompanyInvoiceRoute()}&expenses=true`}>
                     Add more info
                   </Link>
                 </Button>
