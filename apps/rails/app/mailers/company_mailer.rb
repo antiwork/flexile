@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class CompanyMailer < ApplicationMailer
+  helper :application
   default from: SUPPORT_EMAIL_WITH_NAME
 
   def complete_tax_info(admin_id:)
