@@ -35,6 +35,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import RangeInput from "@/components/RangeInput";
 import { EquityAllocationStatus } from "@/db/enums";
+import { toast } from "sonner";
+import DatePicker from "@/components/DatePicker";
+import type { DateValue } from "react-aria-components";
+import { today, getLocalTimeZone } from "@internationalized/date";
 
 const addressSchema = z.object({
   street_address: z.string(),
@@ -122,10 +126,20 @@ const Edit = () => {
   });
 
   const [invoiceNumber, setInvoiceNumber] = useState(data.invoice.invoice_number);
-  const [issueDate, setIssueDate] = useState(
-    searchParams.get("date") || formatISO(data.invoice.invoice_date, { representation: "date" }),
-  );
-  const invoiceYear = new Date(issueDate).getFullYear() || new Date().getFullYear();
+  const [issueDate, setIssueDate] = useState<DateValue | null>(() => {
+    const dateParam = searchParams.get("date");
+    const initialDate = dateParam || data.invoice.invoice_date;
+    if (initialDate) {
+      const parts = initialDate.split("-").map(Number);
+      if (parts.length === 3 && parts.every((p) => !isNaN(p))) {
+        const [year, month, day] = parts;
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        return today(getLocalTimeZone()).set({ year: year!, month: month!, day: day! });
+      }
+    }
+    return null;
+  });
+  const invoiceYear = issueDate ? issueDate.year : new Date().getFullYear();
   const [notes, setNotes] = useState(data.invoice.notes ?? "");
   const [lineItems, setLineItems] = useState<List<InvoiceFormLineItem>>(() => {
     if (data.invoice.line_items.length) return List(data.invoice.line_items);
@@ -170,7 +184,11 @@ const Edit = () => {
     mutationFn: async () => {
       const formData = new FormData();
       formData.append("invoice[invoice_number]", invoiceNumber);
-      formData.append("invoice[invoice_date]", issueDate);
+      if (!issueDate) throw new Error("Invoice date is required");
+      formData.append(
+        "invoice[invoice_date]",
+        formatISO(issueDate.toDate(getLocalTimeZone()), { representation: "date" }),
+      );
       for (const lineItem of lineItems) {
         if (lineItem.id) {
           formData.append("invoice_line_items[][id]", lineItem.id.toString());
@@ -207,6 +225,9 @@ const Edit = () => {
       });
       await trpcUtils.invoices.list.invalidate({ companyId: company.id });
       await trpcUtils.documents.list.invalidate();
+      if (!id) {
+        toast.success("Invoice created successfully");
+      }
       router.push("/invoices");
     },
   });
@@ -353,16 +374,17 @@ const Edit = () => {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="invoice-date">Date</Label>
-              <Input
-                id="invoice-date"
+              <DatePicker
                 value={issueDate}
-                onChange={(e) => {
-                  setIssueDate(e.target.value);
-                  void refetchEquityAllocation();
+                onChange={(date) => {
+                  setIssueDate(date);
+                  if (date) {
+                    void refetchEquityAllocation();
+                  }
                 }}
                 aria-invalid={errorField === "issueDate"}
-                type="date"
+                label="Date"
+                granularity="day"
               />
             </div>
           </div>
@@ -560,29 +582,29 @@ const Edit = () => {
               placeholder="Enter notes about your invoice (optional)"
               className="w-full lg:w-96"
             />
-            <div className="flex flex-col gap-2 md:self-start">
+            <div className="flex flex-col gap-2 md:self-start lg:items-end">
               {canManageExpenses || equityCalculation.amountInCents > 0 ? (
-                <div className="flex flex-col">
-                  <strong>Total services</strong>
-                  <span>{formatMoneyFromCents(totalServicesAmountInCents)}</span>
+                <div className="flex flex-col items-end">
+                  <span>Total services</span>
+                  <span className="numeric text-xl">{formatMoneyFromCents(totalServicesAmountInCents)}</span>
                 </div>
               ) : null}
               {canManageExpenses ? (
-                <div className="flex flex-col">
-                  <strong>Total expenses</strong>
-                  <span>{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
+                <div className="flex flex-col items-end">
+                  <span>Total expenses</span>
+                  <span className="numeric text-xl">{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
                 </div>
               ) : null}
               {equityCalculation.amountInCents > 0 ? (
                 <>
-                  <div className="flex flex-col">
-                    <strong>Swapped for equity (not paid in cash)</strong>
-                    <span>{formatMoneyFromCents(equityCalculation.amountInCents)}</span>
+                  <div className="flex flex-col items-end">
+                    <span>Swapped for equity (not paid in cash)</span>
+                    <span className="numeric text-xl">{formatMoneyFromCents(equityCalculation.amountInCents)}</span>
                   </div>
                   <Separator />
-                  <div className="flex flex-col">
-                    <strong>Net amount in cash</strong>
-                    <span className="numeric">
+                  <div className="flex flex-col items-end">
+                    <span>Net amount in cash</span>
+                    <span className="numeric text-3xl">
                       {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.amountInCents)}
                     </span>
                   </div>

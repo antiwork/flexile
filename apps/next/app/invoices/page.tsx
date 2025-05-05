@@ -49,6 +49,7 @@ import { useCanSubmitInvoices } from ".";
 import { linkClasses } from "@/components/Link";
 import DatePicker from "@/components/DatePicker";
 import type { DateValue } from "react-aria-components";
+import { toast } from "sonner";
 
 const statusNames = {
   received: "Awaiting approval",
@@ -587,6 +588,7 @@ const QuickInvoicesSection = () => {
 
       form.reset();
       await trpcUtils.invoices.list.invalidate();
+      toast.success("Invoice submitted successfully!");
     },
   });
 

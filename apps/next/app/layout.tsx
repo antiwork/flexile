@@ -5,6 +5,7 @@ import "./globals.css";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { TooltipProvider } from "@/components/Tooltip";
 import { TRPCProvider } from "@/trpc/client";
+import { Toaster } from "@/components/ui/sonner";
 
 const abcWhyte = localFont({
   src: [
@@ -72,6 +73,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <TRPCProvider>
             <NuqsAdapter>
               <TooltipProvider delayDuration={0}>{children}</TooltipProvider>
+              <Toaster />
             </NuqsAdapter>
           </TRPCProvider>
         </ClerkProvider>

@@ -134,3 +134,7 @@
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
 }
+
+[data-sonner-toast][data-type="success"] [data-icon] svg {
+  color: var(--color-green);
+}

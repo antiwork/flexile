@@ -12,6 +12,7 @@ import { subDays } from "date-fns";
 import { desc, eq } from "drizzle-orm";
 import { PayRateType } from "@/db/enums";
 import { companies, companyContractors, equityAllocations, invoices, users } from "@/db/schema";
+import { fillDatePicker } from "@test/helpers";
 
 test.describe("invoice creation", () => {
   let company: typeof companies.$inferSelect;
@@ -75,7 +76,7 @@ test.describe("invoice creation", () => {
 
     await page.getByLabel("Hours").fill("3:25");
     await page.getByPlaceholder("Description").fill("I worked on invoices");
-    await page.getByLabel("Date").fill("2023-08-08");
+    await fillDatePicker(page, "Date", "08/08/2023");
 
     await expect(page.getByRole("textbox", { name: "Cash vs equity split" })).toHaveValue("20");
     await expect(
@@ -154,7 +155,7 @@ test.describe("invoice creation", () => {
 
     await page.getByPlaceholder("Description").fill("Website redesign project");
     await page.getByLabel("Amount").fill("1000");
-    await page.getByLabel("Date").fill("2023-08-08");
+    await fillDatePicker(page, "Date", "08/08/2023");
 
     await expect(page.getByRole("textbox", { name: "Cash vs equity split" })).toHaveValue("0");
     await expect(
@@ -240,7 +241,7 @@ test.describe("invoice creation", () => {
 
     await page.getByLabel("Hours").fill("03:25");
     await page.getByPlaceholder("Description").fill("I worked on invoices");
-    await page.getByLabel("Date").fill("2021-08-08");
+    await fillDatePicker(page, "Date", "08/08/2021");
 
     await expect(
       page.getByText("By submitting this invoice, your current equity selection will be locked for all 2021."),
