@@ -35,7 +35,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import RangeInput from "@/components/RangeInput";
 import { EquityAllocationStatus } from "@/db/enums";
-import { toast } from "sonner";
 import DatePicker from "@/components/DatePicker";
 import type { DateValue } from "react-aria-components";
 import { today, getLocalTimeZone } from "@internationalized/date";
@@ -225,9 +224,6 @@ const Edit = () => {
       });
       await trpcUtils.invoices.list.invalidate({ companyId: company.id });
       await trpcUtils.documents.list.invalidate();
-      if (!id) {
-        toast.success("Invoice created successfully");
-      }
       router.push("/invoices");
     },
   });
