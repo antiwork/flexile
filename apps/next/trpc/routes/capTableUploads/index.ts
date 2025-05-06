@@ -2,16 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { and, desc, eq, inArray, notInArray } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import {
-  activeStorageAttachments,
-  activeStorageBlobs,
-  capTableUploads,
-  companies,
-  companyInvestors,
-  optionPools,
-  shareClasses,
-  users,
-} from "@/db/schema";
+import { activeStorageAttachments, activeStorageBlobs, capTableUploads, companies, users } from "@/db/schema";
 import env from "@/env";
 import { MAX_FILES_PER_CAP_TABLE_UPLOAD } from "@/models";
 import { companyProcedure, createRouter, getS3Url, protectedProcedure } from "@/trpc";
@@ -19,37 +10,7 @@ import { assert } from "@/utils/assert";
 
 const COMPLETED_STATUSES = ["completed", "canceled"] as const;
 
-const canCreateUpload = async (companyId: bigint, userId: bigint) => {
-  const existingUpload = await db.query.capTableUploads.findFirst({
-    where: and(
-      eq(capTableUploads.userId, userId),
-      eq(capTableUploads.companyId, companyId),
-      notInArray(capTableUploads.status, [...COMPLETED_STATUSES]),
-    ),
-  });
-
-  if (existingUpload) {
-    return false;
-  }
-
-  const hasExistingRecords = await Promise.all([
-    db.query.optionPools.findFirst({ where: eq(optionPools.companyId, companyId) }),
-    db.query.shareClasses.findFirst({ where: eq(shareClasses.companyId, companyId) }),
-    db.query.companyInvestors.findFirst({ where: eq(companyInvestors.companyId, companyId) }),
-  ]);
-
-  return !hasExistingRecords.some(Boolean);
-};
-
 export const capTableUploadsRouter = createRouter({
-  canCreate: companyProcedure.query(async ({ ctx }) => {
-    if (!ctx.companyAdministrator) {
-      throw new TRPCError({ code: "FORBIDDEN" });
-    }
-
-    return await canCreateUpload(ctx.company.id, ctx.user.id);
-  }),
-
   create: companyProcedure
     .input(
       z.object({
@@ -57,13 +18,14 @@ export const capTableUploadsRouter = createRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.companyAdministrator) {
+      const existingUpload = await db.query.capTableUploads.findFirst({
+        where: and(
+          eq(capTableUploads.companyId, ctx.company.id),
+          notInArray(capTableUploads.status, [...COMPLETED_STATUSES]),
+        ),
+      });
+      if (!ctx.companyAdministrator || existingUpload) {
         throw new TRPCError({ code: "FORBIDDEN" });
-      }
-
-      const allowedToCreate = await canCreateUpload(ctx.company.id, ctx.user.id);
-      if (!allowedToCreate) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Cannot create new cap table upload." });
       }
 
       return await db.transaction(async (tx) => {

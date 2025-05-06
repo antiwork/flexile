@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { CalendarDate } from "@internationalized/date";
 
 const formSchema = z.object({
@@ -31,10 +31,6 @@ export default function NewBuyback() {
 
   const form = useForm({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      startDate: new Date(),
-      endDate: new Date(),
-    },
   });
 
   const createUploadUrl = trpc.files.createDirectUploadUrl.useMutation();
@@ -86,69 +82,69 @@ export default function NewBuyback() {
         </Button>
       }
     >
-      <form onSubmit={(e) => void submit(e)} className="grid gap-4">
-        <FormField
-          control={form.control}
-          name="startDate"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Start date</FormLabel>
-              <FormControl>
-                <DatePicker {...field} granularity="day" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="endDate"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>End date</FormLabel>
-              <FormControl>
-                <DatePicker {...field} granularity="day" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="minimumValuation"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Starting valuation</FormLabel>
-              <FormControl>
-                <NumberInput {...field} prefix="$" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <Form {...form}>
+        <form onSubmit={(e) => void submit(e)} className="grid gap-4">
+          <FormField
+            control={form.control}
+            name="startDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <DatePicker {...field} label="Start date" granularity="day" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="endDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <DatePicker label="End date" {...field} granularity="day" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="minimumValuation"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Starting valuation</FormLabel>
+                <FormControl>
+                  <NumberInput {...field} prefix="$" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="minimumValuation"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Starting valuation</FormLabel>
-              <FormControl>
-                <Input {...field} type="file" accept="application/zip" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <MutationStatusButton
-          className="justify-self-end"
-          type="submit"
-          mutation={createMutation}
-          loadingText="Creating..."
-        >
-          Create buyback
-        </MutationStatusButton>
-      </form>
+          <FormField
+            control={form.control}
+            name="attachment"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Document package</FormLabel>
+                <FormControl>
+                  <Input type="file" accept="application/zip" onChange={(e) => field.onChange(e.target.files?.[0])} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <MutationStatusButton
+            className="justify-self-end"
+            type="submit"
+            mutation={createMutation}
+            loadingText="Creating..."
+          >
+            Create buyback
+          </MutationStatusButton>
+        </form>
+      </Form>
     </MainLayout>
   );
 }

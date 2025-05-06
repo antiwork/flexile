@@ -5,6 +5,7 @@ import {
   Button as RacButton,
   Dialog as RacDialog,
   Group,
+  Label as RacLabel,
   Popover as RacPopover,
 } from "react-aria-components";
 import type { DatePickerProps as RacDatePickerProps, DateValue } from "react-aria-components";
@@ -14,12 +15,14 @@ import { DateInput } from "@/components/ui/datefield";
 import { cn } from "@/utils";
 
 interface DatePickerProps extends Omit<RacDatePickerProps<DateValue>, "children"> {
+  label: string;
   className?: string;
 }
 
-export default function DatePicker({ className, ...props }: DatePickerProps) {
+export default function DatePicker({ label, className, ...props }: DatePickerProps) {
   return (
     <RacDatePicker {...props} className={cn(className, "*:not-first:mt-2")}>
+      <RacLabel className="text-foreground text-base">{label}</RacLabel>
       <div className="flex">
         <Group className="w-full">
           <DateInput className="pe-9" />
