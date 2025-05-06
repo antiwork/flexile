@@ -38,7 +38,7 @@ const dataSchema = z.object({
   business_type: z.number().nullable(),
   tax_classification: z.number().nullable(),
   citizenship_country_code: z.string(),
-  city: z.string(),
+  city: z.string().nullable(),
   country_code: z.string(),
   display_name: z.string(),
   business_entity: z.boolean(),
@@ -46,11 +46,11 @@ const dataSchema = z.object({
   is_tax_information_confirmed: z.boolean(),
   legal_name: z.string(),
   signature: z.string(),
-  state: z.string(),
-  street_address: z.string(),
+  state: z.string().nullable(),
+  street_address: z.string().nullable(),
   tax_id: z.string().nullable(),
   tax_id_status: z.enum(["verified", "invalid"]).nullable(),
-  zip_code: z.string(),
+  zip_code: z.string().nullable(),
   contractor_for_companies: z.array(z.string()),
 });
 
