@@ -269,7 +269,7 @@ export default function ContractorPage() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>What is this for?</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="Enter payment description" />
                     </FormControl>

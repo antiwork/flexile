@@ -14,7 +14,6 @@ FactoryBot.define do
     stripe_customer_id { "cus_M2QFeoOFttyzTx" }
     brand_color { Faker::Color.hex_color }
     website { "https://www.example.com" }
-    description { Faker::Company.catch_phrase }
     required_invoice_approval_count { 2 }
     fully_diluted_shares { 1_000_000 }
     valuation_in_dollars { 2_000_000 }

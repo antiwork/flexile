@@ -98,7 +98,7 @@ const RangeInput = ({
         min={min}
         max={max}
         step={1}
-        aria-label={ariaLabel ?? "Range slider"}
+        aria-hidden
         className="grow"
         disabled={disabled ?? false}
       />
@@ -114,7 +114,7 @@ const RangeInput = ({
             }
           }}
           aria-invalid={invalid}
-          aria-label={ariaLabel ? `${ariaLabel} value` : "Range value input"}
+          aria-label={ariaLabel}
           inputMode="numeric"
           className={cn("h-full w-16 rounded-md px-2 py-1 text-right", unit ? "pr-6" : "")}
           disabled={disabled}

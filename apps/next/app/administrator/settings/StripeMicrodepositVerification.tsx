@@ -16,6 +16,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 
+const formSchema = z.object({ verificationCode: z.string().length(6, "Please enter a 6-digit code.") }).or(
+  z.object({
+    firstAmount: z.number().min(1, "Please enter an amount."),
+    secondAmount: z.number().min(1, "Please enter an amount."),
+  }),
+);
+
 const StripeMicrodepositVerification = () => {
   const company = useCurrentCompany();
   const searchParams = useSearchParams();
@@ -32,14 +39,7 @@ const StripeMicrodepositVerification = () => {
   const isDescriptorCode = microdepositVerificationDetails?.microdeposit_type === "descriptor_code";
   const form = useForm({
     defaultValues: isDescriptorCode ? { verificationCode: "" } : { firstAmount: 0, secondAmount: 0 },
-    resolver: zodResolver(
-      z.object({ verificationCode: z.string().length(6, "Please enter a 6-digit code.") }).or(
-        z.object({
-          firstAmount: z.number().min(1, "Please enter an amount."),
-          secondAmount: z.number().min(1, "Please enter an amount."),
-        }),
-      ),
-    ),
+    resolver: zodResolver(formSchema),
   });
 
   const arrivalDate =
