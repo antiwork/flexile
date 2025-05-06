@@ -92,7 +92,7 @@ export const customCss = `
   }
 
   .scrollbox {
-    height: 100vh;
+    min-height: 500px;
   }
 
   div:has(> .submitted-form-resubmit-button) {
