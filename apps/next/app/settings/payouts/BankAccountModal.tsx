@@ -4,7 +4,7 @@ import { set } from "lodash-es";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
-import Input from "@/components/Input";
+import { Input } from "@/components/ui/input";
 import MutationButton from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -499,9 +499,14 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
 const BankAccountField = ({
   onChange,
   field,
+  invalid,
+  help,
   ...inputProps
-}: { field: InputField } & React.ComponentProps<typeof Input>) => {
-  const inputRef = useRef<HTMLInputElement>(null);
+}: { field: InputField; onChange: (value: string) => void; invalid?: boolean; help?: string | undefined } & Omit<
+  React.ComponentProps<typeof Input>,
+  "onChange"
+>) => {
+  const id = useId();
 
   const applyDisplayFormat = (inputValue: string, cursorPosition = 0) => {
     // This masking is very simple and assumes formats are alphanumeric with single punctuation characters
@@ -523,26 +528,24 @@ const BankAccountField = ({
     return { value: formatted.slice(0, field.maxLength ?? undefined), cursorPosition };
   };
 
-  const handleInput = () => {
-    const input = inputRef.current;
-    if (!input) return;
-
-    const { value, cursorPosition } = applyDisplayFormat(input.value, input.selectionEnd ?? 0);
-    onChange?.(value);
-
-    requestAnimationFrame(() => input.setSelectionRange(cursorPosition, cursorPosition));
-  };
-
   return (
-    <Input
-      ref={inputRef}
-      label={field.name}
-      type={field.type}
-      placeholder={applyDisplayFormat(field.example).value}
-      maxLength={field.maxLength ?? undefined}
-      onChange={handleInput}
-      {...inputProps}
-    />
+    <div className="grid gap-2">
+      <Label htmlFor={id}>{field.name}</Label>
+      <Input
+        id={id}
+        type={field.type}
+        placeholder={applyDisplayFormat(field.example).value}
+        maxLength={field.maxLength ?? undefined}
+        onChange={(e) => {
+          const { value, cursorPosition } = applyDisplayFormat(e.target.value, e.target.selectionEnd ?? 0);
+          onChange(value);
+
+          requestAnimationFrame(() => e.target.setSelectionRange(cursorPosition, cursorPosition));
+        }}
+        {...inputProps}
+      />
+      {help ? <div className={cn("text-sm", invalid && "text-red")}>{help}</div> : null}
+    </div>
   );
 };
 

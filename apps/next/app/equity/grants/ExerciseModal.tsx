@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { Decimal } from "decimal.js";
-import { Fragment, useState } from "react";
+import { Fragment, useId, useState } from "react";
 import { z } from "zod";
 import Form, { customCss } from "@/app/documents/DocusealForm";
 import Delta from "@/components/Delta";
@@ -18,6 +18,7 @@ import { assertDefined } from "@/utils/assert";
 import { formatMoney } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_equity_grant_exercises_path } from "@/utils/routes";
+import { Label } from "@/components/ui/label";
 
 type EquityGrant = RouterOutput["equityGrants"]["list"][number];
 
@@ -34,6 +35,7 @@ const ExerciseModal = ({
 }) => {
   const user = useCurrentUser();
   const company = useCurrentCompany();
+  const uid = useId();
   const [optionsToExercise, setOptionsToExercise] = useState(0);
   const [selectedGrantIds, setSelectedGrantIds] = useState<string[]>(() =>
     equityGrants.length === 1 && equityGrants[0]?.id ? [equityGrants[0].id] : [],
@@ -117,14 +119,17 @@ const ExerciseModal = ({
           />
         ) : (
           <>
-            <RangeInput
-              value={optionsToExercise}
-              onChange={setOptionsToExercise}
-              invalid={submitMutation.isError}
-              min={selectedGrantIds.length > 0 ? 1 : 0}
-              max={maxExercisableOptions}
-              label="Options to exercise"
-            />
+            <div className="grid gap-2">
+              <Label htmlFor={`${uid}-options-to-exercise`}>Options to exercise</Label>
+              <RangeInput
+                id={`${uid}-options-to-exercise`}
+                value={optionsToExercise}
+                onChange={setOptionsToExercise}
+                aria-invalid={submitMutation.isError}
+                min={selectedGrantIds.length > 0 ? 1 : 0}
+                max={maxExercisableOptions}
+              />
+            </div>
 
             <Card className="mt-4">
               <CardContent>

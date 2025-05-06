@@ -7,7 +7,7 @@ import { formatISO } from "date-fns";
 import { List } from "immutable";
 import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import DurationInput from "@/components/DurationInput";
@@ -99,6 +99,7 @@ type InvoiceFormExpense = Data["invoice"]["expenses"][number] & { errors?: strin
 const Edit = () => {
   const company = useCurrentCompany();
   const { canSubmitInvoices } = useCanSubmitInvoices();
+  const uid = useId();
   if (!canSubmitInvoices) throw redirect("/invoices");
   const { id } = useParams<{ id: string }>();
   const searchParams = useSearchParams();
@@ -304,15 +305,16 @@ const Edit = () => {
         <section className="mb-6">
           <Card>
             <CardContent>
-              <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor={`${uid}-equity-split`}>Confirm your equity split for {invoiceYear}</Label>
                 <RangeInput
+                  id={`${uid}-equity-split`}
                   value={equityPercentage}
                   onChange={setEquityPercent}
                   min={0}
                   max={MAX_EQUITY_PERCENTAGE}
-                  ariaLabel="Cash vs equity split"
+                  aria-label="Cash vs equity split"
                   unit="%"
-                  label={`Confirm your equity split for ${invoiceYear}`}
                 />
               </div>
               <p className="mt-4">
@@ -523,7 +525,7 @@ const Edit = () => {
                           updateExpense(rowIndex, { total_amount_in_cents: (value ?? 0) * 100 })
                         }
                         aria-label="Amount"
-                        invalid={expense.errors?.includes("amount") ?? false}
+                        aria-invalid={expense.errors?.includes("amount") ?? false}
                         prefix="$"
                         decimal
                       />

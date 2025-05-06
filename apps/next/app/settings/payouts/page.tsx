@@ -3,9 +3,9 @@
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Check } from "lucide-react";
-import React, { Fragment, useEffect, useRef, useState } from "react";
+import React, { Fragment, useState } from "react";
 import { z } from "zod";
-import Input from "@/components/Input";
+import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
@@ -346,6 +346,10 @@ const BankAccountsSection = () => {
   );
 };
 
+const walletAddressSchema = z.object({
+  walletAddress: z.string().refine(isEthereumAddress, "The entered address is not a valid Ethereum address."),
+});
+
 const WalletAddressModal = ({
   open,
   onClose,
@@ -357,26 +361,19 @@ const WalletAddressModal = ({
   value: string;
   onComplete: (address: string) => void;
 }) => {
-  const [walletAddress, setWalletAddress] = useState(value);
-  const [hasFormatError, setHasFormatError] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const form = useForm({
+    defaultValues: { walletAddress: value },
+    resolver: zodResolver(walletAddressSchema),
+  });
   const company = useCurrentCompany();
 
-  useEffect(() => setHasFormatError(false), [walletAddress]);
-
-  const walletUpdateMutation = trpc.wallets.update.useMutation();
-  const saveMutation = useMutation({
-    mutationFn: async () => {
-      if (!isEthereumAddress(walletAddress)) {
-        setHasFormatError(true);
-        inputRef.current?.focus();
-        return;
-      }
-      await walletUpdateMutation.mutateAsync({ companyId: company.id, walletAddress });
+  const walletUpdateMutation = trpc.wallets.update.useMutation({
+    onSuccess: () => {
       onClose();
-      onComplete(walletAddress);
+      onComplete(form.getValues("walletAddress"));
     },
   });
+  const submit = form.handleSubmit((values) => walletUpdateMutation.mutateAsync({ companyId: company.id, ...values }));
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -396,26 +393,29 @@ const WalletAddressModal = ({
           </AlertDescription>
         </Alert>
 
-        <Input
-          ref={inputRef}
-          value={walletAddress}
-          onChange={setWalletAddress}
-          label="Ethereum wallet address (ERC20 Network)"
-          aria-label="Wallet address"
-          placeholder="Paste or type your ETH address"
-          invalid={hasFormatError}
-          help={
-            hasFormatError
-              ? "The entered address is not a valid Ethereum address."
-              : "An Ethereum address is alphanumeric and always starts with 0x."
-          }
-        />
+        <Form {...form}>
+          <form onSubmit={(e) => void submit(e)}>
+            <FormField
+              control={form.control}
+              name="walletAddress"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Ethereum wallet address (ERC20 Network)</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Paste or type your ETH address" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <div className="mt-6 flex justify-end">
-          <MutationButton mutation={saveMutation} disabled={!walletAddress}>
-            Save
-          </MutationButton>
-        </div>
+            <div className="mt-6 flex justify-end">
+              <MutationStatusButton mutation={walletUpdateMutation} disabled={!form.formState.isValid}>
+                Save
+              </MutationStatusButton>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
