@@ -320,7 +320,7 @@ const BankAccountsSection = () => {
               </Fragment>
             ))}
 
-            {user.roles.investor ? (
+            {user.roles.investor || user.roles.worker ? (
               <>
                 {bankAccounts.length > 0 ? <Separator /> : null}
                 <div>
