@@ -104,7 +104,14 @@ export default function TaxPage() {
 
   const form = useForm({
     resolver: zodResolver(formSchema),
-    defaultValues: { ...data, tax_id: data.tax_id ?? "" },
+    defaultValues: {
+      ...data,
+      tax_id: data.tax_id ?? "",
+      city: data.city ?? "",
+      state: data.state ?? "",
+      zip_code: data.zip_code ?? "",
+      street_address: data.street_address ?? "",
+    },
   });
 
   const formValues = form.watch();
