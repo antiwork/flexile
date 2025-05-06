@@ -185,7 +185,7 @@ export default function MainLayout({
       </Sidebar>
       <SidebarInset>
         <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
-          <main className="flex flex-1 flex-col gap-6 pb-4 not-print:overflow-y-auto">
+          <main className="flex flex-1 flex-col gap-6 pb-24 not-print:overflow-y-auto">
             <div>
               <header className="px-3 py-6 md:px-16">
                 <div className="grid max-w-(--breakpoint-xl) gap-y-8">

@@ -15,7 +15,7 @@ import Select from "@/components/Select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -25,6 +25,8 @@ import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 import { VESTED_SHARES_CLASS } from "../";
 import LetterOfTransmissal from "./LetterOfTransmissal";
+import RangeInput from "@/components/RangeInput";
+import Figures from "@/components/Figures";
 
 type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
 type NewBidState = {
@@ -63,8 +65,91 @@ export default function BuybackView() {
         : [],
     [ownShareHoldings, ownTotalVestedShares],
   );
-  const defaultBid: NewBidState = { shareClass: holdings[0]?.className ?? "", numberOfShares: 0, pricePerShare: 0 };
 
+  const maxBudget = useMemo(
+    () => bids.reduce((sum, bid) => sum + Number(bid.numberOfShares) * bid.sharePriceCents, 0) / 100,
+    [bids],
+  );
+  const [selectedBudget, setSelectedBudget] = useState(maxBudget);
+
+  const figures = useMemo(() => {
+    const sortedBids = [...bids].sort((a, b) => a.sharePriceCents - b.sharePriceCents);
+    let sharesPurchased = 0;
+    let amountSpent = 0;
+
+    for (const bid of sortedBids) {
+      const bidValue = (Number(bid.numberOfShares) * bid.sharePriceCents) / 100;
+      if (amountSpent + bidValue <= selectedBudget) {
+        amountSpent += bidValue;
+        sharesPurchased += Number(bid.numberOfShares);
+      } else {
+        break;
+      }
+    }
+
+    const effectivePrice = sharesPurchased > 0 ? amountSpent / sharesPurchased : 0;
+    const impliedValuation = company.fullyDilutedShares ? effectivePrice * company.fullyDilutedShares : 0;
+
+    return [
+      { caption: "Total Shares Purchased", value: sharesPurchased.toLocaleString() },
+      { caption: "Total Amount Spent", value: formatMoney(amountSpent) },
+      { caption: "Effective Price Per Share", value: formatMoney(effectivePrice) },
+      {
+        caption: "Implied Valuation",
+        value: formatMoney(impliedValuation),
+        alt: company.fullyDilutedShares
+          ? `Based on ${company.fullyDilutedShares.toLocaleString()} fully diluted shares`
+          : undefined,
+      },
+    ];
+  }, [bids, selectedBudget, company.fullyDilutedShares]);
+
+  const columnHelper = createColumnHelper<Bid>();
+  const columns = useMemo(
+    () =>
+      [
+        columnHelper.accessor("companyInvestor.user.email", {
+          header: "Investor",
+          cell: (info) => (user.roles.administrator ? info.getValue() : "You!"),
+        }),
+        columnHelper.accessor("shareClass", { header: "Share class" }),
+        columnHelper.accessor("numberOfShares", {
+          header: "Shares",
+          cell: (info) => Number(info.getValue()).toLocaleString(),
+        }),
+        columnHelper.accessor("sharePriceCents", {
+          header: "Price Per Share",
+          cell: (info) => formatMoneyFromCents(info.getValue()),
+        }),
+        columnHelper.accessor((row) => (Number(row.numberOfShares) * row.sharePriceCents) / 100, {
+          id: "totalBid",
+          header: "Total Bid",
+          cell: (info) => formatMoney(info.getValue()),
+        }),
+        company.fullyDilutedShares
+          ? columnHelper.accessor((row) => (row.sharePriceCents / 100) * (company.fullyDilutedShares ?? 0), {
+              id: "impliedValuation",
+              header: "Implied Valuation",
+              cell: (info) => formatMoney(info.getValue()),
+            })
+          : null,
+        isOpen && !user.roles.administrator
+          ? columnHelper.display({
+              id: "actions",
+              cell: (info) => (
+                <Button onClick={() => setCancelingBid(info.row.original)}>
+                  <TrashIcon className="size-4" />
+                </Button>
+              ),
+            })
+          : null,
+      ].filter((column) => !!column),
+    [user.roles.administrator, company.fullyDilutedShares, isOpen],
+  );
+
+  const bidsTable = useTable({ data: bids, columns });
+
+  const defaultBid: NewBidState = { shareClass: holdings[0]?.className ?? "", numberOfShares: 0, pricePerShare: 0 };
   const [newBid, setNewBid] = useState<NewBidState>(defaultBid);
   useEffect(() => setNewBid(defaultBid), [holdings]);
   const [signed, setSigned] = useState(false);
@@ -84,7 +169,6 @@ export default function BuybackView() {
       await refetchBids();
     },
   });
-
   const submitMutation = useMutation({
     mutationFn: async () => {
       if (
@@ -106,38 +190,65 @@ export default function BuybackView() {
     },
   });
 
-  const columnHelper = createColumnHelper<Bid>();
-  const columns = useMemo(
-    () =>
-      [
-        columnHelper.accessor("companyInvestor.user.email", {
-          header: "Investor",
-          cell: (info) => (info.row.original.companyInvestor.user.id === user.id ? "You!" : info.getValue()),
-        }),
-        columnHelper.simple("shareClass", "Share class"),
-        columnHelper.simple("numberOfShares", "Number of shares", (value) => value.toLocaleString()),
-        columnHelper.simple("sharePriceCents", "Bid price", formatMoneyFromCents),
-        isOpen
-          ? columnHelper.display({
-              id: "actions",
-              cell: (info) =>
-                info.row.original.companyInvestor.user.id === user.id ? (
-                  <Button onClick={() => setCancelingBid(info.row.original)}>
-                    <TrashIcon className="size-4" />
-                  </Button>
-                ) : null,
-            })
-          : null,
-      ].filter((column) => !!column),
-    [],
-  );
-
-  const bidsTable = useTable({ data: bids, columns });
-
   const buttonTooltip = !signed ? "Please sign the letter of transmittal before submitting a bid" : null;
 
   return (
     <MainLayout title='Buyback details ("Sell Elections")'>
+      <Card className="mb-2">
+        <CardHeader>
+          <div className="flex flex-row items-center justify-between">
+            <CardTitle>Tender Offer Dashboard</CardTitle>
+            <Button variant="outline" asChild>
+              <a href={data.attachment ?? ""}>
+                <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
+                Download buyback documents
+              </a>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6 pt-0">
+          {/* TODO: Need to handle pulling in the max budget */}
+          {user.roles.administrator && maxBudget >= 0 ? (
+            <>
+              <RangeInput
+                label="Total Budget"
+                ariaLabel="Total Budget Slider and Input"
+                min={0}
+                max={maxBudget}
+                value={selectedBudget}
+                onChange={setSelectedBudget}
+                unit="USD"
+              />
+              <Figures items={figures} />
+            </>
+          ) : null}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-6 pt-2 md:grid-cols-4">
+            <div>
+              <Label>Start date</Label>
+              <p>{formatDate(data.startsAt)}</p>
+            </div>
+            <div>
+              <Label>End date</Label>
+              <p>{formatDate(data.endsAt)}</p>
+            </div>
+            <div>
+              <Label>Starting valuation</Label>
+              <p>{formatMoney(data.minimumValuation)}</p>
+            </div>
+          </div>
+        </CardContent>
+        {/* TODO: Add Close Tender Offer button conditionally */}
+      </Card>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Bids Table</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {bids.length > 0 ? <DataTable table={bidsTable} /> : <p>No bids yet.</p>}
+        </CardContent>
+      </Card>
+
       {user.roles.investor?.investedInAngelListRuv ? (
         <Alert variant="destructive">
           <ExclamationTriangleIcon />
@@ -147,31 +258,6 @@ export default function BuybackView() {
           </AlertDescription>
         </Alert>
       ) : null}
-
-      <FormSection title="Details">
-        <CardContent className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>Start date</Label>
-            <p>{formatDate(data.startsAt)}</p>
-          </div>
-          <div>
-            <Label>End date</Label>
-            <p>{formatDate(data.endsAt)}</p>
-          </div>
-          <div>
-            <Label>Starting valuation</Label>
-            <p>{formatMoney(data.minimumValuation)}</p>
-          </div>
-          <div>
-            <Button asChild>
-              <a href={data.attachment ?? ""}>
-                <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
-                Download buyback documents
-              </a>
-            </Button>
-          </div>
-        </CardContent>
-      </FormSection>
 
       {isOpen && holdings.length ? (
         <>
@@ -218,7 +304,9 @@ export default function BuybackView() {
               <div className="flex flex-col gap-4">
                 <Select
                   value={newBid.shareClass}
-                  onChange={(value) => setNewBid({ ...newBid, shareClass: value })}
+                  onChange={(value) => {
+                    setNewBid({ ...newBid, shareClass: value });
+                  }}
                   label="Share class"
                   invalid={!newBid.shareClass && submitMutation.isError}
                   help={!newBid.shareClass && submitMutation.isError ? "Please select a share class" : ""}
@@ -232,7 +320,9 @@ export default function BuybackView() {
                   <NumberInput
                     id="number-of-shares"
                     value={newBid.numberOfShares}
-                    onChange={(value) => setNewBid({ ...newBid, numberOfShares: value ?? 0 })}
+                    onChange={(value) => {
+                      setNewBid({ ...newBid, numberOfShares: value ?? 0 });
+                    }}
                     invalid={
                       (newBid.numberOfShares <= 0 || newBid.numberOfShares > maxShares) && submitMutation.isError
                     }
@@ -248,7 +338,9 @@ export default function BuybackView() {
                   <NumberInput
                     id="price-per-share"
                     value={newBid.pricePerShare}
-                    onChange={(value) => setNewBid({ ...newBid, pricePerShare: value ?? 0 })}
+                    onChange={(value) => {
+                      setNewBid({ ...newBid, pricePerShare: value ?? 0 });
+                    }}
                     invalid={newBid.pricePerShare <= 0 && submitMutation.isError}
                     className={newBid.pricePerShare <= 0 && submitMutation.isError ? "error" : ""}
                     prefix="$"
@@ -284,8 +376,6 @@ export default function BuybackView() {
           </FormSection>
         </>
       ) : null}
-
-      {bids.length > 0 ? <DataTable table={bidsTable} /> : null}
 
       {cancelingBid ? (
         <Dialog open onOpenChange={() => setCancelingBid(null)}>

@@ -115,7 +115,7 @@ const RangeInput = ({
           className="grow"
           disabled={disabled ?? false}
         />
-        <div className="relative flex h-8 items-center">
+        <div className="border-input bg-background ring-offset-background focus-within:ring-ring flex h-8 items-center rounded-md border focus-within:ring-2 focus-within:ring-offset-2 focus-within:outline-none">
           <Input
             id={componentId}
             value={inputValue}
@@ -129,11 +129,14 @@ const RangeInput = ({
             aria-invalid={invalid}
             aria-label={ariaLabel ?? (typeof label === "string" ? `${label} value` : "Range value input")}
             inputMode="numeric"
-            className={cn("h-full w-16 rounded-md px-2 py-1 text-right", unit ? "pr-6" : "")}
+            className={cn(
+              "h-full w-16 border-0 bg-transparent px-2 py-1 text-right shadow-none focus-visible:ring-0",
+              unit ? "rounded-r-none" : "",
+            )}
             disabled={disabled}
           />
           {unit ? (
-            <span className="pointer-events-none absolute right-1.5 ml-1 text-xs text-gray-500">{unit}</span>
+            <span className="text-muted-foreground pointer-events-none shrink-0 py-1 pr-2 text-xs">{unit}</span>
           ) : null}
         </div>
       </div>

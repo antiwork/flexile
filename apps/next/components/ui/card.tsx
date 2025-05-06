@@ -15,11 +15,16 @@ function Card({ className, asChild = false, ...props }: React.ComponentProps<"di
 }
 
 function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
-  return <div data-slot="card-header" className={cn("flex flex-col space-y-1.5 border-b p-4", className)} {...props} />;
+  return (
+    <div data-slot="card-header" className={cn("flex flex-col space-y-1.5 p-4", className)} {...props}>
+      {props.children}
+      <Separator className="mt-2 mb-0" />
+    </div>
+  );
 }
 
 function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
-  return <div data-slot="card-title" className={cn("font-bold tracking-tight", className)} {...props} />;
+  return <div data-slot="card-title" className={cn("text-xl font-medium tracking-tight", className)} {...props} />;
 }
 
 function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
