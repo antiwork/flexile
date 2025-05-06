@@ -243,7 +243,9 @@ export default function DocumentsPage() {
       document.signatories.some(
         (signatory) =>
           !signatory.signedAt &&
-          (signatory.id === user.id || (signatory.title === "Company Representative" && isCompanyRepresentative)),
+          (signatory.id === user.id ||
+            ((signatory.title === "Company Representative" || signatory.title === "Board member") &&
+              isCompanyRepresentative)),
       )
     );
   };
