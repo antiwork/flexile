@@ -39,6 +39,7 @@ import FormFields from "../FormFields";
 import RadioButtons from "@/components/RadioButtons";
 import { Label } from "@/components/ui/label";
 import CopyButton from "@/components/CopyButton";
+import { Decimal } from "decimal.js";
 
 const issuePaymentSchema = z.intersection(
   z.object({
@@ -96,7 +97,7 @@ export default function ContractorPage() {
   const [endDate, setEndDate] = useState(formatISO(new Date(), { representation: "date" }));
   const [issuePaymentModalOpen, setIssuePaymentModalOpen] = useState(false);
   const issuePaymentForm = useForm({
-    defaultValues: { equityType: "fixed" },
+    defaultValues: { equityType: "fixed", equityPercentage: 0 },
     resolver: zodResolver(issuePaymentSchema),
   });
 
@@ -255,7 +256,9 @@ export default function ContractorPage() {
                       <NumberInput
                         {...field}
                         value={field.value ? field.value / 100 : null}
-                        onChange={(value) => field.onChange(value == null ? null : value * 100)}
+                        onChange={(value) =>
+                          field.onChange(value == null ? null : new Decimal(value).mul(100).toNumber())
+                        }
                         prefix="$"
                         decimal
                       />
