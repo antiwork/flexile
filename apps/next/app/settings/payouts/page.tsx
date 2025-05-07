@@ -24,7 +24,6 @@ import { request } from "@/utils/request";
 import { settings_bank_account_path, settings_bank_accounts_path, settings_dividend_path } from "@/utils/routes";
 import SettingsLayout from "../Layout";
 import BankAccountModal, { type BankAccount, bankAccountSchema } from "./BankAccountModal";
-import Placeholder from "@/components/Placeholder";
 import { PlusIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 
 export default function PayoutsPage() {
@@ -195,15 +194,16 @@ const BankAccountsSection = () => {
 
   return (
     <FormSection title="Payout method">
-      {bankAccounts.length === 0 && user.roles.investor ? (
+      {bankAccounts.length === 1 && user.roles.investor ? (
         <div className="p-4">
-          <Placeholder icon={CurrencyDollarIcon}>
+          <div className="grid justify-items-center gap-4 p-6 text-center text-gray-700">
+            <CurrencyDollarIcon className="-mb-2 size-10" />
             <p>Set up your bank account to receive payouts.</p>
             <Button onClick={() => setAddingBankAccount(true)} variant="outline">
               <PlusIcon className="size-4" />
               Add bank account
             </Button>
-          </Placeholder>
+          </div>
         </div>
       ) : (
         <CardContent>
