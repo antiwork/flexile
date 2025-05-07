@@ -42,7 +42,7 @@ class EquityGrantCreation
           investor_entity.investment_amount_cents = 0
         end
 
-      current_grant = company_investor.equity_grant
+      current_grant = company_investor.equity_grants
         .where("EXTRACT(year FROM period_ended_at) = ? AND unvested_shares > 0", period_ended_at.year)
         .order(id: :desc)
         .first
