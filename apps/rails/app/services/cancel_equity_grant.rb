@@ -26,7 +26,7 @@ class CancelEquityGrant
           vesting_event.mark_cancelled!(reason:)
         end
       end
-      equity_grant.update!(forfeited_shares: total_forfeited_shares, unvested_shares: 0)
+      equity_grant.update!(forfeited_shares: total_forfeited_shares, unvested_shares: 0, cancelled_at: Time.current)
       equity_grant.option_pool.decrement!(:issued_shares, forfeited_shares)
     end
   end
