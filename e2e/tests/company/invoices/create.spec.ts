@@ -208,7 +208,6 @@ test.describe("invoice creation", () => {
     await page.getByLabel("Hours").fill("03:25");
     await page.getByPlaceholder("Description").fill("I worked on invoices");
     await fillDatePicker(page, "Date", "08/08/2021");
-    await page.waitForTimeout(500); // TODO (dani) avoid this
 
     await expect(
       page.getByText("By submitting this invoice, your current equity selection will be locked for all 2021."),

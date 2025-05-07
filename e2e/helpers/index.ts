@@ -6,7 +6,5 @@ export const selectComboboxOption = async (page: Page, name: string, option: str
 };
 
 export const fillDatePicker = async (page: Page, name: string, value: string) => {
-  await page.waitForTimeout(200);
-  await page.getByRole("spinbutton", { name }).first().pressSequentially(value);
-  await page.waitForTimeout(200);
+  await page.getByRole("spinbutton", { name }).first().pressSequentially(value, { delay: 50 });
 };
