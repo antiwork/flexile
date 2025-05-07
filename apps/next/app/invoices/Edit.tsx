@@ -36,8 +36,7 @@ import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import RangeInput from "@/components/RangeInput";
 import { EquityAllocationStatus } from "@/db/enums";
 import DatePicker from "@/components/DatePicker";
-import type { DateValue } from "react-aria-components";
-import { today, getLocalTimeZone } from "@internationalized/date";
+import { parseDate } from "@internationalized/date";
 
 const addressSchema = z.object({
   street_address: z.string(),
@@ -125,20 +124,8 @@ const Edit = () => {
   });
 
   const [invoiceNumber, setInvoiceNumber] = useState(data.invoice.invoice_number);
-  const [issueDate, setIssueDate] = useState<DateValue | null>(() => {
-    const dateParam = searchParams.get("date");
-    const initialDate = dateParam || data.invoice.invoice_date;
-    if (initialDate) {
-      const parts = initialDate.split("-").map(Number);
-      if (parts.length === 3 && parts.every((p) => !isNaN(p))) {
-        const [year, month, day] = parts;
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        return today(getLocalTimeZone()).set({ year: year!, month: month!, day: day! });
-      }
-    }
-    return null;
-  });
-  const invoiceYear = issueDate ? issueDate.year : new Date().getFullYear();
+  const [issueDate, setIssueDate] = useState(() => parseDate(searchParams.get("date") || data.invoice.invoice_date));
+  const invoiceYear = issueDate.year;
   const [notes, setNotes] = useState(data.invoice.notes ?? "");
   const [lineItems, setLineItems] = useState<List<InvoiceFormLineItem>>(() => {
     if (data.invoice.line_items.length) return List(data.invoice.line_items);
@@ -183,11 +170,7 @@ const Edit = () => {
     mutationFn: async () => {
       const formData = new FormData();
       formData.append("invoice[invoice_number]", invoiceNumber);
-      if (!issueDate) throw new Error("Invoice date is required");
-      formData.append(
-        "invoice[invoice_date]",
-        formatISO(issueDate.toDate(getLocalTimeZone()), { representation: "date" }),
-      );
+      formData.append("invoice[invoice_date]", formatISO(issueDate.toString()));
       for (const lineItem of lineItems) {
         if (lineItem.id) {
           formData.append("invoice_line_items[][id]", lineItem.id.toString());
@@ -373,10 +356,8 @@ const Edit = () => {
               <DatePicker
                 value={issueDate}
                 onChange={(date) => {
-                  setIssueDate(date);
-                  if (date) {
-                    void refetchEquityAllocation();
-                  }
+                  if (date) setIssueDate(date);
+                  void refetchEquityAllocation();
                 }}
                 aria-invalid={errorField === "issueDate"}
                 label="Invoice date"
