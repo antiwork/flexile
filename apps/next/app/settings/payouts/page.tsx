@@ -306,33 +306,31 @@ const BankAccountsSection = () => {
                   {index !== bankAccounts.length - 1 && <Separator />}
                 </Fragment>
               ))}
-
-              {bankAccounts.length > 0 && user.roles.investor ? (
-                <>
-                  {bankAccounts.length > 0 ? <Separator /> : null}
-                  <div>
-                    {addingBankAccount ? (
-                      <BankAccountModal
-                        open={addingBankAccount}
-                        billingDetails={data}
-                        onClose={() => setAddingBankAccount(false)}
-                        onComplete={(result) => {
-                          setBankAccounts((prev) => [...prev, result]);
-                          setAddingBankAccount(false);
-                        }}
-                      />
-                    ) : null}
-                    <Button onClick={() => setAddingBankAccount(true)} variant="outline">
-                      <PlusIcon className="size-4" />
-                      Add bank account
-                    </Button>
-                  </div>
-                </>
-              ) : null}
-            </>
-          )}
-        </CardContent>
-      )}
+            {user.roles.investor || user.roles.worker ? (
+              <>
+                {bankAccounts.length > 0 ? <Separator /> : null}
+                <div>
+                  {addingBankAccount ? (
+                    <BankAccountModal
+                      open={addingBankAccount}
+                      billingDetails={data}
+                      onClose={() => setAddingBankAccount(false)}
+                      onComplete={(result) => {
+                        setBankAccounts((prev) => [...prev, result]);
+                        setAddingBankAccount(false);
+                      }}
+                    />
+                  ) : null}
+                  <Button onClick={() => setAddingBankAccount(true)} variant="outline">
+                    <PlusIcon className="size-4" />
+                    Add bank account
+                  </Button>
+                </div>
+              </>
+            ) : null}
+          </>
+        )}
+      </CardContent>
     </FormSection>
   );
 };
