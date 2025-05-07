@@ -30,14 +30,13 @@ RSpec.describe CancelEquityGrant do
     context "when equity vests as per schedule" do
       let(:equity_grant) do
         create(:equity_grant, :vests_as_per_schedule,
-          board_approval_date: Date.current.beginning_of_month - 1.month,
-          number_of_shares: 1000,
-          vested_shares: 100,
-          unvested_shares: 700,
-          exercised_shares: 200,
-          forfeited_shares: 0,
-          vesting_schedule: create(:vesting_schedule, vesting_frequency_months: 1, total_vesting_duration_months: 12, cliff_duration_months: 0)
-        )
+               board_approval_date: Date.current.beginning_of_month - 1.month,
+               number_of_shares: 1000,
+               vested_shares: 100,
+               unvested_shares: 700,
+               exercised_shares: 200,
+               forfeited_shares: 0,
+               vesting_schedule: create(:vesting_schedule, vesting_frequency_months: 1, total_vesting_duration_months: 12, cliff_duration_months: 0))
       end
 
       context "when reason is invalid" do
