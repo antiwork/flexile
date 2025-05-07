@@ -41,22 +41,13 @@ import { Label } from "@/components/ui/label";
 import CopyButton from "@/components/CopyButton";
 import { Decimal } from "decimal.js";
 
-const issuePaymentSchema = z.intersection(
-  z.object({
-    amountInCents: z.number().min(0),
-    description: z.string().min(1, "This field is required"),
-  }),
-  z.union([
-    z.object({
-      equityType: z.literal("fixed"),
-      equityPercentage: z.number().min(MINIMUM_EQUITY_PERCENTAGE).max(MAXIMUM_EQUITY_PERCENTAGE),
-    }),
-    z.object({
-      equityType: z.literal("range"),
-      equityRange: z.tuple([z.number().min(MINIMUM_EQUITY_PERCENTAGE), z.number().max(MAXIMUM_EQUITY_PERCENTAGE)]),
-    }),
-  ]),
-);
+const issuePaymentSchema = z.object({
+  amountInCents: z.number().min(0),
+  description: z.string().min(1, "This field is required"),
+  equityType: z.enum(["fixed", "range"]),
+  equityPercentage: z.number().min(MINIMUM_EQUITY_PERCENTAGE).max(MAXIMUM_EQUITY_PERCENTAGE),
+  equityRange: z.tuple([z.number().min(MINIMUM_EQUITY_PERCENTAGE), z.number().max(MAXIMUM_EQUITY_PERCENTAGE)]),
+});
 
 export default function ContractorPage() {
   const currentUser = useCurrentUser();
@@ -97,7 +88,11 @@ export default function ContractorPage() {
   const [endDate, setEndDate] = useState(formatISO(new Date(), { representation: "date" }));
   const [issuePaymentModalOpen, setIssuePaymentModalOpen] = useState(false);
   const issuePaymentForm = useForm({
-    defaultValues: { equityType: "fixed", equityPercentage: 0 },
+    defaultValues: {
+      equityType: "fixed",
+      equityPercentage: 0,
+      equityRange: [MINIMUM_EQUITY_PERCENTAGE, MAXIMUM_EQUITY_PERCENTAGE],
+    },
     resolver: zodResolver(issuePaymentSchema),
   });
 
@@ -301,39 +296,36 @@ export default function ContractorPage() {
                     )}
                   />
 
-                  {issuePaymentValues.equityType === "fixed" ? (
-                    <FormField
-                      control={issuePaymentForm.control}
-                      name="equityPercentage"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Equity percentage</FormLabel>
-                          <FormControl>
-                            <NumberInput {...field} suffix="%" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  ) : (
-                    <FormField
-                      control={issuePaymentForm.control}
-                      name="equityRange"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <Slider {...field} minStepsBetweenThumbs={1} onValueChange={field.onChange} />
-                          </FormControl>
-                          <FormMessage>
-                            <div className="flex justify-between">
-                              <span>{(field.value[0] / 100).toLocaleString(undefined, { style: "percent" })}</span>
-                              <span>{(field.value[1] / 100).toLocaleString(undefined, { style: "percent" })}</span>
-                            </div>
-                          </FormMessage>
-                        </FormItem>
-                      )}
-                    />
-                  )}
+                  <FormField
+                    control={issuePaymentForm.control}
+                    name="equityPercentage"
+                    render={({ field }) => (
+                      <FormItem hidden={issuePaymentValues.equityType === "range"}>
+                        <FormLabel>Equity percentage</FormLabel>
+                        <FormControl>
+                          <NumberInput {...field} suffix="%" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={issuePaymentForm.control}
+                    name="equityRange"
+                    render={({ field }) => (
+                      <FormItem hidden={issuePaymentValues.equityType === "fixed"}>
+                        <FormControl>
+                          <Slider value={field.value} minStepsBetweenThumbs={1} onValueChange={field.onChange} />
+                        </FormControl>
+                        <FormMessage>
+                          <div className="flex justify-between">
+                            <span>{(field.value[0] / 100).toLocaleString(undefined, { style: "percent" })}</span>
+                            <span>{(field.value[1] / 100).toLocaleString(undefined, { style: "percent" })}</span>
+                          </div>
+                        </FormMessage>
+                      </FormItem>
+                    )}
+                  />
                 </div>
               ) : null}
 

@@ -26,7 +26,7 @@ function Slider({
       )}
       {...props}
       {...(value !== undefined ? { value } : {})}
-      {...(defaultValue !== undefined ? { defaultValue } : {})}
+      defaultValue={defaultValue ?? values}
     >
       <SliderPrimitive.Track
         data-slot="slider-track"
