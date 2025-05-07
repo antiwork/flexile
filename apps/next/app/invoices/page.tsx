@@ -4,7 +4,7 @@ import { ArrowDownTrayIcon, ExclamationTriangleIcon } from "@heroicons/react/20/
 import { CheckCircleIcon, InformationCircleIcon, PencilIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import Link from "next/link";
-import React, { Fragment, useMemo, useState } from "react";
+import React, { Fragment, useEffect, useMemo, useState } from "react";
 import StripeMicrodepositVerification from "@/app/administrator/settings/StripeMicrodepositVerification";
 import {
   ApproveButton,
@@ -266,7 +266,8 @@ export default function InvoicesPage() {
                 )}
 
                 {data.some(
-                  (invoice) => invoice.equityAllocationStatus === EquityAllocationStatus.PendingGrantCreation,
+                  (invoice) =>
+                    invoice.equityAllocationStatus === EquityAllocationStatus.PendingGrantCreation && !invoice.paidAt,
                 ) && (
                   <Alert variant="destructive">
                     <ExclamationTriangleIcon />
@@ -279,7 +280,8 @@ export default function InvoicesPage() {
                               data
                                 .filter(
                                   (invoice) =>
-                                    invoice.equityAllocationStatus === EquityAllocationStatus.PendingGrantCreation,
+                                    invoice.equityAllocationStatus === EquityAllocationStatus.PendingGrantCreation &&
+                                    !invoice.paidAt,
                                 )
                                 .map((invoice) => invoice.billFrom),
                             ),
@@ -613,6 +615,12 @@ const QuickInvoicesSection = () => {
     }
   };
 
+  useEffect(() => {
+    if (equityAllocation?.equityPercentage) {
+      form.setValue("invoiceEquityPercent", equityAllocation.equityPercentage);
+    }
+  }, [equityAllocation, form]);
+
   return (
     <Card className={canSubmitInvoices ? "" : "opacity-50"}>
       <CardContent className="p-8">
@@ -681,7 +689,7 @@ const QuickInvoicesSection = () => {
                           min={0}
                           max={MAX_EQUITY_PERCENTAGE}
                           unit="%"
-                          disabled={!canSubmitInvoices}
+                          disabled={!canSubmitInvoices || !!equityAllocation?.locked}
                           ariaLabel="Cash vs equity split"
                         />
                       </FormControl>

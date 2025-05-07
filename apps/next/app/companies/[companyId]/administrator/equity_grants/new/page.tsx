@@ -44,7 +44,7 @@ const formSchema = z.object({
   retirementExerciseMonths: z.number().min(0),
 });
 const refinedSchema = formSchema.refine(
-  (data) => data.optionGrantType !== "iso" || !["employee", "founder"].includes(data.issueDateRelationship),
+  (data) => data.optionGrantType !== "iso" || ["employee", "founder"].includes(data.issueDateRelationship),
   {
     message: "ISOs can only be issued to employees or founders.",
     path: ["optionGrantType"],

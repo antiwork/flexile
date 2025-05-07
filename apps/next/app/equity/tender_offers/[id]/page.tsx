@@ -22,7 +22,7 @@ import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
-import { formatDate } from "@/utils/time";
+import { formatServerDate } from "@/utils/time";
 import { VESTED_SHARES_CLASS } from "../";
 import LetterOfTransmissal from "./LetterOfTransmissal";
 
@@ -152,11 +152,11 @@ export default function BuybackView() {
         <CardContent className="grid grid-cols-2 gap-4">
           <div>
             <Label>Start date</Label>
-            <p>{formatDate(data.startsAt)}</p>
+            <p>{formatServerDate(data.startsAt)}</p>
           </div>
           <div>
             <Label>End date</Label>
-            <p>{formatDate(data.endsAt)}</p>
+            <p>{formatServerDate(data.endsAt)}</p>
           </div>
           <div>
             <Label>Starting valuation</Label>
