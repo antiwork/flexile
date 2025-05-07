@@ -243,7 +243,6 @@ RSpec.describe Company do
 
     it "enqueues `UpdateUpcomingDividendValuesJob` when `upcoming_dividend_cents` is updated" do
       company = create(:company)
-      company.update!(description: ":D")
       expect(UpdateUpcomingDividendValuesJob.jobs.size).to eq(0)
 
       company.update!(upcoming_dividend_cents: 1_000_000)
