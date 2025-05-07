@@ -8,6 +8,7 @@ import { expect, test } from "@test/index";
 import { desc, eq } from "drizzle-orm";
 import { PayRateType } from "@/db/enums";
 import { companies, companyContractors, invoices, users } from "@/db/schema";
+import { fillDatePicker } from "@test/helpers";
 
 test.describe("quick invoicing", () => {
   let company: typeof companies.$inferSelect;
@@ -36,11 +37,11 @@ test.describe("quick invoicing", () => {
     test("allows filling out the form and previewing the invoice for hourly rate", async ({ page }) => {
       await login(page, contractorUser);
       await page.getByLabel("Hours worked").fill("10:30");
-      await page.getByLabel("Invoice date").fill("2024-08-08");
+      await fillDatePicker(page, "Date", "08/08/2024");
       await expect(page.getByText("Total amount$630")).toBeVisible();
       await page.getByRole("link", { name: "Add more info" }).click();
 
-      await expect(page.getByLabel("Date")).toHaveValue("2024-08-08");
+      await expect(page.getByRole("group", { name: "Date" })).toHaveText("8/8/2024");
       await expect(page.getByRole("row")).toHaveCount(5); // Line items header + 1 row + footer + Expenses header + footer
       const row = page.getByRole("row").nth(1);
       await expect(row.getByPlaceholder("Description")).toHaveValue("");
@@ -59,11 +60,11 @@ test.describe("quick invoicing", () => {
       await login(page, contractorUser);
 
       await page.getByLabel("Amount").fill("630");
-      await page.getByLabel("Invoice date").fill("2024-08-08");
+      await fillDatePicker(page, "Date", "08/08/2024");
       await expect(page.getByText("Total amount$630")).toBeVisible();
       await page.getByRole("link", { name: "Add more info" }).click();
 
-      await expect(page.getByLabel("Date")).toHaveValue("2024-08-08");
+      await expect(page.getByRole("group", { name: "Date" })).toHaveText("8/8/2024");
       await expect(page.getByRole("row")).toHaveCount(5); // Line items header + 1 row + footer + Expenses header + footer
       const row = page.getByRole("row").nth(1);
       await expect(row.getByPlaceholder("Description")).toHaveValue("");
@@ -86,7 +87,7 @@ test.describe("quick invoicing", () => {
 
       await login(page, contractorUser);
       await page.getByLabel("Hours worked").fill("10:30");
-      await page.getByLabel("Invoice date").fill("2024-08-08");
+      await fillDatePicker(page, "Date", "08/08/2024");
       await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("20");
 
       await expect(page.getByText("Cash amount$48 / hourly")).toBeVisible();
@@ -124,7 +125,7 @@ test.describe("quick invoicing", () => {
     test("handles equity compensation when no allocation is set", async ({ page }) => {
       await login(page, contractorUser);
       await page.getByLabel("Hours").fill("10:30");
-      await page.getByLabel("Date").fill("2024-08-08");
+      await fillDatePicker(page, "Date", "08/08/2024");
 
       await expect(page.getByRole("textbox", { name: "Cash vs equity split" })).toHaveValue("0");
 

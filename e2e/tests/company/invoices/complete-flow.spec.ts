@@ -60,6 +60,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByPlaceholder("Description").fill("woops too little time");
     await page.getByPlaceholder("HH:MM").fill("0:23");
     await page.getByLabel("Invoice ID").fill("CUSTOM-2");
+    await page.waitForTimeout(300); // TODO (dani) avoid this
     await fillDatePicker(page, "Date", "12/01/2024");
     await page.waitForTimeout(300); // TODO (dani) avoid this
     await page.getByRole("button", { name: "Send invoice" }).click();
