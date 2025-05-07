@@ -18,14 +18,16 @@ import { createInsertSchema } from "drizzle-zod";
 import { omit, pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
-import { optionGrantTypes, optionGrantVestingTriggers, PayRateType } from "@/db/enums";
+import { optionGrantTypes, optionGrantVestingTriggers, PayRateType, EquityGrantTransactionType } from "@/db/enums";
 import {
   companyContractors,
   companyInvestors,
   equityGrantExercises,
   equityGrants,
+  equityGrantTransactions,
   optionPools,
   users,
+  vestingEvents,
   vestingSchedules,
 } from "@/db/schema";
 import { inngest } from "@/inngest/client";
@@ -363,6 +365,71 @@ export const equityGrantsRouter = createRouter({
       }),
       defaultVestingSchedules,
     };
+  }),
+  cancel: companyProcedure.input(z.object({ id: z.string(), reason: z.string() })).mutation(async ({ input, ctx }) => {
+    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+
+    const equityGrant = await db.query.equityGrants.findFirst({
+      where: eq(equityGrants.externalId, input.id),
+      with: {
+        vestingEvents: {
+          where: and(
+            isNull(vestingEvents.processedAt),
+            isNull(vestingEvents.cancelledAt),
+            gt(sql`DATE(${vestingEvents.vestingDate})`, new Date()),
+          ),
+        },
+        optionPool: true,
+      },
+    });
+
+    if (!equityGrant) throw new TRPCError({ code: "NOT_FOUND" });
+
+    const forfeitedShares = equityGrant.unvestedShares;
+    const totalForfeitedShares = forfeitedShares + equityGrant.forfeitedShares;
+
+    await db.transaction(async (tx) => {
+      await tx.insert(equityGrantTransactions).values([
+        {
+          transactionType: EquityGrantTransactionType.Cancellation,
+          equityGrantId: equityGrant.id,
+          forfeitedShares: BigInt(forfeitedShares),
+          totalNumberOfShares: BigInt(equityGrant.numberOfShares),
+          totalVestedShares: BigInt(equityGrant.vestedShares),
+          totalUnvestedShares: 0n,
+          totalExercisedShares: BigInt(equityGrant.exercisedShares),
+          totalForfeitedShares: BigInt(totalForfeitedShares),
+        },
+      ]);
+
+      for (const vestingEvent of equityGrant.vestingEvents) {
+        await tx
+          .update(vestingEvents)
+          .set({
+            cancelledAt: new Date(),
+            cancellationReason: input.reason,
+          })
+          .where(eq(vestingEvents.id, vestingEvent.id));
+      }
+
+      await tx
+        .update(equityGrants)
+        .set({
+          forfeitedShares: totalForfeitedShares,
+          unvestedShares: 0,
+          cancelledAt: new Date(),
+        })
+        .where(eq(equityGrants.id, equityGrant.id));
+
+      await tx
+        .update(optionPools)
+        .set({
+          issuedShares: sql`${optionPools.issuedShares} - ${forfeitedShares}`,
+        })
+        .where(eq(optionPools.id, equityGrant.optionPoolId));
+    });
+
+    return { success: true };
   }),
 });
 
