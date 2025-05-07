@@ -36,7 +36,7 @@ import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import RangeInput from "@/components/RangeInput";
 import { EquityAllocationStatus } from "@/db/enums";
 import DatePicker from "@/components/DatePicker";
-import { parseDate } from "@internationalized/date";
+import { type DateValue, parseDate } from "@internationalized/date";
 
 const addressSchema = z.object({
   street_address: z.string(),
@@ -124,7 +124,9 @@ const Edit = () => {
   });
 
   const [invoiceNumber, setInvoiceNumber] = useState(data.invoice.invoice_number);
-  const [issueDate, setIssueDate] = useState(() => parseDate(searchParams.get("date") || data.invoice.invoice_date));
+  const [issueDate, setIssueDate] = useState<DateValue>(() =>
+    parseDate(searchParams.get("date") || data.invoice.invoice_date),
+  );
   const invoiceYear = issueDate.year;
   const [notes, setNotes] = useState(data.invoice.notes ?? "");
   const [lineItems, setLineItems] = useState<List<InvoiceFormLineItem>>(() => {
