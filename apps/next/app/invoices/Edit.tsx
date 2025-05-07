@@ -3,7 +3,6 @@
 import { ArrowUpTrayIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { PaperAirplaneIcon, PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import { formatISO } from "date-fns";
 import { List } from "immutable";
 import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
@@ -172,7 +171,7 @@ const Edit = () => {
     mutationFn: async () => {
       const formData = new FormData();
       formData.append("invoice[invoice_number]", invoiceNumber);
-      formData.append("invoice[invoice_date]", formatISO(issueDate.toString()));
+      formData.append("invoice[invoice_date]", issueDate.toString());
       for (const lineItem of lineItems) {
         if (lineItem.id) {
           formData.append("invoice_line_items[][id]", lineItem.id.toString());
