@@ -4,8 +4,6 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
-import { eq } from "drizzle-orm";
-import { users } from "@/db/schema";
 
 test.describe("Nullable tax fields after contractor onboarding", () => {
   test("allows contractor to submit tax info with null city, state, street_address, and zip_code fields", async ({ page }) => {
