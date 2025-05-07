@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_05_04_212254) do
+ActiveRecord::Schema[8.0].define(version: 2025_05_07_191755) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -732,6 +732,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_04_212254) do
     t.string "external_id", null: false
     t.bigint "vesting_schedule_id"
     t.enum "vesting_trigger", null: false, enum_type: "equity_grants_vesting_trigger"
+    t.datetime "cancelled_at"
     t.index ["company_investor_entity_id"], name: "index_equity_grants_on_company_investor_entity_id"
     t.index ["company_investor_id"], name: "index_equity_grants_on_company_investor_id"
     t.index ["external_id"], name: "index_equity_grants_on_external_id", unique: true
