@@ -194,7 +194,7 @@ const BankAccountsSection = () => {
 
   return (
     <FormSection title="Payout method">
-      {bankAccounts.length === 1 && user.roles.investor ? (
+      {bankAccounts.length === 0 && user.roles.investor ? (
         <div className="p-4">
           <div className="grid justify-items-center gap-4 p-6 text-center text-gray-700">
             <CurrencyDollarIcon className="-mb-2 size-10" />
@@ -306,31 +306,32 @@ const BankAccountsSection = () => {
                   {index !== bankAccounts.length - 1 && <Separator />}
                 </Fragment>
               ))}
-            {user.roles.investor || user.roles.worker ? (
-              <>
-                {bankAccounts.length > 0 ? <Separator /> : null}
-                <div>
-                  {addingBankAccount ? (
-                    <BankAccountModal
-                      open={addingBankAccount}
-                      billingDetails={data}
-                      onClose={() => setAddingBankAccount(false)}
-                      onComplete={(result) => {
-                        setBankAccounts((prev) => [...prev, result]);
-                        setAddingBankAccount(false);
-                      }}
-                    />
-                  ) : null}
-                  <Button onClick={() => setAddingBankAccount(true)} variant="outline">
-                    <PlusIcon className="size-4" />
-                    Add bank account
-                  </Button>
-                </div>
-              </>
-            ) : null}
-          </>
-        )}
-      </CardContent>
+              {user.roles.investor || user.roles.worker ? (
+                <>
+                  {bankAccounts.length > 0 ? <Separator /> : null}
+                  <div>
+                    {addingBankAccount ? (
+                      <BankAccountModal
+                        open={addingBankAccount}
+                        billingDetails={data}
+                        onClose={() => setAddingBankAccount(false)}
+                        onComplete={(result) => {
+                          setBankAccounts((prev) => [...prev, result]);
+                          setAddingBankAccount(false);
+                        }}
+                      />
+                    ) : null}
+                    <Button onClick={() => setAddingBankAccount(true)} variant="outline">
+                      <PlusIcon className="size-4" />
+                      Add bank account
+                    </Button>
+                  </div>
+                </>
+              ) : null}
+            </>
+          )}
+        </CardContent>
+      )}
     </FormSection>
   );
 };
