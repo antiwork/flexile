@@ -3,7 +3,6 @@
 import { ArrowUpTrayIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { PaperAirplaneIcon, PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import { formatISO } from "date-fns";
 import { List } from "immutable";
 import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
@@ -35,6 +34,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import RangeInput from "@/components/RangeInput";
 import { EquityAllocationStatus } from "@/db/enums";
+import DatePicker from "@/components/DatePicker";
+import { type DateValue, parseDate } from "@internationalized/date";
 
 const addressSchema = z.object({
   street_address: z.string(),
@@ -123,10 +124,10 @@ const Edit = () => {
   });
 
   const [invoiceNumber, setInvoiceNumber] = useState(data.invoice.invoice_number);
-  const [issueDate, setIssueDate] = useState(
-    searchParams.get("date") || formatISO(data.invoice.invoice_date, { representation: "date" }),
+  const [issueDate, setIssueDate] = useState<DateValue>(() =>
+    parseDate(searchParams.get("date") || data.invoice.invoice_date),
   );
-  const invoiceYear = new Date(issueDate).getFullYear() || new Date().getFullYear();
+  const invoiceYear = issueDate.year;
   const [notes, setNotes] = useState(data.invoice.notes ?? "");
   const [lineItems, setLineItems] = useState<List<InvoiceFormLineItem>>(() => {
     if (data.invoice.line_items.length) return List(data.invoice.line_items);
@@ -171,7 +172,7 @@ const Edit = () => {
     mutationFn: async () => {
       const formData = new FormData();
       formData.append("invoice[invoice_number]", invoiceNumber);
-      formData.append("invoice[invoice_date]", issueDate);
+      formData.append("invoice[invoice_date]", issueDate.toString());
       for (const lineItem of lineItems) {
         if (lineItem.id) {
           formData.append("invoice_line_items[][id]", lineItem.id.toString());
@@ -355,16 +356,15 @@ const Edit = () => {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="invoice-date">Date</Label>
-              <Input
-                id="invoice-date"
+              <DatePicker
                 value={issueDate}
-                onChange={(e) => {
-                  setIssueDate(e.target.value);
+                onChange={(date) => {
+                  if (date) setIssueDate(date);
                   void refetchEquityAllocation();
                 }}
                 aria-invalid={errorField === "issueDate"}
-                type="date"
+                label="Invoice date"
+                granularity="day"
               />
             </div>
           </div>
@@ -562,29 +562,29 @@ const Edit = () => {
               placeholder="Enter notes about your invoice (optional)"
               className="w-full lg:w-96"
             />
-            <div className="flex flex-col gap-2 md:self-start">
+            <div className="flex flex-col gap-2 md:self-start lg:items-end">
               {canManageExpenses || equityCalculation.amountInCents > 0 ? (
-                <div className="flex flex-col">
-                  <strong>Total services</strong>
-                  <span>{formatMoneyFromCents(totalServicesAmountInCents)}</span>
+                <div className="flex flex-col items-end">
+                  <span>Total services</span>
+                  <span className="numeric text-xl">{formatMoneyFromCents(totalServicesAmountInCents)}</span>
                 </div>
               ) : null}
               {canManageExpenses ? (
-                <div className="flex flex-col">
-                  <strong>Total expenses</strong>
-                  <span>{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
+                <div className="flex flex-col items-end">
+                  <span>Total expenses</span>
+                  <span className="numeric text-xl">{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
                 </div>
               ) : null}
               {equityCalculation.amountInCents > 0 ? (
                 <>
-                  <div className="flex flex-col">
-                    <strong>Swapped for equity (not paid in cash)</strong>
-                    <span>{formatMoneyFromCents(equityCalculation.amountInCents)}</span>
+                  <div className="flex flex-col items-end">
+                    <span>Swapped for equity (not paid in cash)</span>
+                    <span className="numeric text-xl">{formatMoneyFromCents(equityCalculation.amountInCents)}</span>
                   </div>
                   <Separator />
-                  <div className="flex flex-col">
-                    <strong>Net amount in cash</strong>
-                    <span className="numeric">
+                  <div className="flex flex-col items-end">
+                    <span>Net amount in cash</span>
+                    <span className="numeric text-3xl">
                       {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.amountInCents)}
                     </span>
                   </div>
