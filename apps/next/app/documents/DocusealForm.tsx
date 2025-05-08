@@ -111,6 +111,7 @@ export default function Form(props: Omit<React.ComponentProps<typeof DocusealFor
       sendCopyEmail={false}
       withTitle={false}
       withSendCopyButton={false}
+      rememberSignature
       {...props}
     />
   );
