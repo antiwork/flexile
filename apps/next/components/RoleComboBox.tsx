@@ -11,20 +11,22 @@ interface RoleComboBoxProps {
 
 const RoleComboBox = ({ value, onChange, className }: RoleComboBoxProps) => {
   const company = useCurrentCompany();
-  const [{ workers }] = trpc.contractors.list.useSuspenseQuery({ 
+  const [{ workers }] = trpc.contractors.list.useSuspenseQuery({
     companyId: company.id,
-    excludeAlumni: true 
+    excludeAlumni: true,
   });
-  
-  const uniqueRoles = Array.from(new Set(
-    workers
-      .filter(worker => worker.role) // Filter out any undefined/null roles
-      .map(worker => worker.role)
-  )).sort();
-  
-  const roleOptions = uniqueRoles.map(role => ({
+
+  const uniqueRoles = Array.from(
+    new Set(
+      workers
+        .filter((worker) => worker.role) // Filter out any undefined/null roles
+        .map((worker) => worker.role),
+    ),
+  ).sort();
+
+  const roleOptions = uniqueRoles.map((role) => ({
     label: role,
-    value: role
+    value: role,
   }));
 
   return (
