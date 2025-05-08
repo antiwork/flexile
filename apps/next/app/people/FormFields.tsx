@@ -1,14 +1,33 @@
 import React from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { PayRateType } from "@/trpc/client";
+import { PayRateType, trpc } from "@/trpc/client";
 import { useFormContext } from "react-hook-form";
 import RadioButtons from "@/components/RadioButtons";
 import NumberInput from "@/components/NumberInput";
-import RoleComboBox from "@/components/RoleComboBox";
+import ComboBox from "@/components/ComboBox";
+import { useCurrentCompany } from "@/global";
 
 export default function FormFields() {
   const form = useFormContext();
   const payRateType: unknown = form.watch("payRateType");
+  const company = useCurrentCompany();
+  const [{ workers }] = trpc.contractors.list.useSuspenseQuery({
+    companyId: company.id,
+    excludeAlumni: true,
+  });
+
+  const uniqueRoles = Array.from(
+    new Set(
+      workers
+        .filter((worker) => worker.role) // Filter out any undefined/null roles
+        .map((worker) => worker.role),
+    ),
+  ).sort();
+
+  const roleOptions = uniqueRoles.map((role) => ({
+    label: role,
+    value: role,
+  }));
 
   return (
     <>
@@ -19,7 +38,12 @@ export default function FormFields() {
           <FormItem>
             <FormLabel>Role</FormLabel>
             <FormControl>
-              <RoleComboBox {...field} />
+              <ComboBox
+                value={field.value}
+                onChange={field.onChange}
+                options={roleOptions}
+                placeholder="Select or type a role..."
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
