@@ -42,7 +42,7 @@ const ComboBox = ({
       </PopoverTrigger>
       <PopoverContent className="p-0" style={{ width: "var(--radix-popover-trigger-width)" }}>
         <Command>
-          <CommandInput placeholder="Search options..." />
+          <CommandInput placeholder="Search..." />
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup>
