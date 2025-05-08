@@ -154,7 +154,7 @@ export default function DataTable<T extends RowData>({
                       : table.setGlobalFilter(e.target.value)
                   }
                   className="w-60 pl-8"
-                  placeholder="Search ..."
+                  placeholder={searchColumn ? `Search by ${searchColumn.replace(/_/g, ' ')}...` : "Search..."}
                 />
               </div>
             ) : null}
