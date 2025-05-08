@@ -43,7 +43,7 @@ test.describe("Invoices admin flow", () => {
     await login(page, adminUser);
     await page.getByRole("link", { name: "Invoices" }).click();
 
-    const searchInput = page.getByPlaceholder("Search by billFrom...");
+    const searchInput = page.getByPlaceholder("Search by Contractor...");
     await expect(searchInput).toBeVisible();
 
     await searchInput.fill(contractorUser.legalName || "");
