@@ -1,7 +1,7 @@
 import React from "react";
-import ComboBox from "@/components/ComboBox";
-import { trpc } from "@/trpc/client";
-import { useCurrentCompany } from "@/global";
+import ComboBox from "../apps/next/components/ComboBox";
+import { trpc } from "../apps/next/trpc/client";
+import { useCurrentCompany } from "../apps/next/global";
 
 interface RoleComboBoxProps {
   value: string;
@@ -23,8 +23,8 @@ const RoleComboBox = ({ value, onChange, className }: RoleComboBoxProps) => {
   )).sort();
   
   const roleOptions = uniqueRoles.map(role => ({
-    label: role,
-    value: role
+    label: role as string,
+    value: role as string
   }));
 
   return (
