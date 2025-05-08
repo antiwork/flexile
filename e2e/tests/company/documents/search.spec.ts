@@ -43,7 +43,7 @@ test.describe("Documents search functionality", () => {
       },
       {
         signatures: [{ userId: contractor1User.id, title: "Signer" }],
-      }
+      },
     );
 
     const { document: document2 } = await documentsFactory.create(
@@ -53,7 +53,7 @@ test.describe("Documents search functionality", () => {
       },
       {
         signatures: [{ userId: contractor2User.id, title: "Signer" }],
-      }
+      },
     );
 
     await login(page, admin);
