@@ -12,15 +12,15 @@ test.describe("Documents search functionality", () => {
       companyId: company.id,
       userId: admin.id,
     });
-    
+
     await login(page, admin);
-    
+
     await page.goto("/documents");
     await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
-    
+
     const searchInput = page.getByPlaceholder("Search by Signer...");
     await expect(searchInput).toBeVisible();
-    
+
     await searchInput.fill("Test");
   });
 });
