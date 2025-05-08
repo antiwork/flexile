@@ -36,7 +36,6 @@ test.describe("Documents search functionality", () => {
       where: eq(users.id, contractor2.userId),
     });
     assert(contractor2User !== undefined);
-
     const { document: document1 } = await documentsFactory.create(
       {
         companyId: company.id,
@@ -44,7 +43,7 @@ test.describe("Documents search functionality", () => {
       },
       {
         signatures: [{ userId: contractor1User.id, title: "Signer" }],
-      },
+      }
     );
 
     const { document: document2 } = await documentsFactory.create(
@@ -54,7 +53,7 @@ test.describe("Documents search functionality", () => {
       },
       {
         signatures: [{ userId: contractor2User.id, title: "Signer" }],
-      },
+      }
     );
 
     await login(page, admin);
