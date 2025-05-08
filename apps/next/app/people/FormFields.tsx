@@ -25,8 +25,8 @@ export default function FormFields() {
   ).sort();
 
   const roleOptions = uniqueRoles.map((role) => ({
-    label: role,
-    value: role,
+    label: role as string,
+    value: role as string,
   }));
 
   return (
