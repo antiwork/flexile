@@ -26,9 +26,10 @@
     - Add or update system tests in `apps/rails/spec/system/` for UI flow changes
     - Run tests with `bundle exec rspec <path_to_spec>` to verify
   - For TypeScript/Next.js changes:
+    - Add or update unit tests for front-end business logic
     - Add or update e2e tests in `e2e/tests/` that cover the changed functionality
     - Follow the existing test patterns in similar files
-    - Run tests with `pnpm playwright test <path_to_spec>` to verify
+    - Run tests with `pnpm playwright test <path_to_spec>` to verify e2e tests
   - Tests should cover:
     - Happy path (expected behavior)
     - Edge cases and error handling
