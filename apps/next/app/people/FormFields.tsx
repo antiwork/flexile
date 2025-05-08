@@ -2,9 +2,9 @@ import React from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { PayRateType } from "@/trpc/client";
 import { useFormContext } from "react-hook-form";
-import { Input } from "@/components/ui/input";
 import RadioButtons from "@/components/RadioButtons";
 import NumberInput from "@/components/NumberInput";
+import RoleComboBox from "@/components/RoleComboBox";
 
 export default function FormFields() {
   const form = useFormContext();
@@ -19,7 +19,7 @@ export default function FormFields() {
           <FormItem>
             <FormLabel>Role</FormLabel>
             <FormControl>
-              <Input {...field} />
+              <RoleComboBox {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
