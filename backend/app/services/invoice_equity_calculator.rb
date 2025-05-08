@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class InvoiceEquityCalculator
-  # If you make changes here, update the tRPC route equityCalculations in apps/next/trpc/routes/equityCalculations.ts
+  # If you make changes here, update the tRPC route equityCalculations in frontend/trpc/routes/equityCalculations.ts
   def initialize(company_worker:, company:, service_amount_cents:, invoice_year:)
     @company_worker = company_worker
     @company = company

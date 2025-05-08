@@ -6,7 +6,7 @@
   "env": {
     "APP_BASE": {
       "required": true,
-      "value": "apps/rails/"
+      "value": "backend/"
     },
     "AWS_ACCESS_KEY_ID": {
       "required": true

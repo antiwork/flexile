@@ -57,14 +57,14 @@ This document outlines the steps to implement one-off cash/equity bonuses in Fle
 
 **2.1. New Pages/Components:**
 
-- **`apps/next/app/companies/[companyId]/administrator/bonuses/new/page.tsx`:** Form for creating a new bonus.
+- **`frontend/app/companies/[companyId]/administrator/bonuses/new/page.tsx`:** Form for creating a new bonus.
   - Input fields for:
     - Recipient (dropdown of existing workers)
     - Bonus amount
     - Equity type (fixed or range)
     - Percentage(s) (depending on equity type)
   - "Create Bonus" button, which triggers the `BonusesController#create` action. Upon success, redirect to a confirmation page or the worker list.
-- **`apps/next/app/companies/[companyId]/bonuses/[id]/page.tsx`:** Page for the worker to accept the bonus.
+- **`frontend/app/companies/[companyId]/bonuses/[id]/page.tsx`:** Page for the worker to accept the bonus.
   - Display bonus details (amount, equity options).
   - If equity is enabled and the bonus has a range equity type, provide a selection mechanism for the worker to choose their desired equity percentage.
   - "Accept Bonus" button, which triggers the `BonusesController#accept` action. Redirect to a success page or the dashboard after successful acceptance.

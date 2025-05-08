@@ -2,12 +2,12 @@
 
 set -e
 
-pnpm next lint apps/next --fix --max-warnings 0
+pnpm next lint frontend --fix --max-warnings 0
 pnpm tsc -p e2e/tsconfig.json
 pnpm eslint --fix --max-warnings 0
 pnpm prettier --write '**/*.{css,md,json}' --check '!docker'
-pnpm svgo --multipass apps/rails/app/assets/**/*.svg
-pnpm svgo --multipass apps/next/**/*.svg
-cd apps/rails
+pnpm svgo --multipass backend/app/assets/**/*.svg
+pnpm svgo --multipass frontend/**/*.svg
+cd backend
 bundle exec rubocop -a
 bundle exec erb_lint --lint-all --format compact -a

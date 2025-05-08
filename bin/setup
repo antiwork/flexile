@@ -48,7 +48,7 @@ if [ ! -f ".env" ]; then
     fi
 fi
 
-ln -sf $PWD/.env ./apps/next/.env
+ln -sf $PWD/.env ./frontend/.env
 
 gem install foreman
 

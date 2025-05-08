@@ -9,13 +9,13 @@ import reactPlugin from "eslint-plugin-react";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
-const nextIgnores = includeIgnoreFile(fileURLToPath(import.meta.resolve("./apps/next/.gitignore")));
-nextIgnores.ignores = nextIgnores.ignores.map((file) => `apps/next/${file}`);
+const nextIgnores = includeIgnoreFile(fileURLToPath(import.meta.resolve("./frontend/.gitignore")));
+nextIgnores.ignores = nextIgnores.ignores.map((file) => `frontend/${file}`);
 
 export default [
   includeIgnoreFile(fileURLToPath(import.meta.resolve("./.gitignore"))),
   nextIgnores,
-  { ignores: ["apps/next/utils/routes.*", "apps/rails"] },
+  { ignores: ["frontend/utils/routes.*", "backend"] },
   prettierRecommended,
   js.configs.recommended,
   {
@@ -58,7 +58,7 @@ export default [
       "import/no-duplicates": "error",
     },
     settings: {
-      next: { rootDir: "apps/next" },
+      next: { rootDir: "frontend" },
     },
   },
   nextPlugin.flatConfig.recommended,
@@ -123,8 +123,8 @@ export default [
     files: [
       ".puppeteerrc.cjs",
       "eslint.config.js",
-      "apps/next/next.config.ts",
-      "apps/next/drizzle.config.js",
+      "frontend/next.config.ts",
+      "frontend/drizzle.config.js",
       "playwright.config.ts",
       "docker/createCertificate.js",
     ],
