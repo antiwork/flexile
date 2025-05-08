@@ -39,7 +39,7 @@ export default function FormFields() {
             <FormLabel>Role</FormLabel>
             <FormControl>
               <ComboBox
-                value={field.value}
+                value={field.value as string}
                 onChange={field.onChange}
                 options={roleOptions}
                 placeholder="Select or type a role..."
