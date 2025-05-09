@@ -91,9 +91,7 @@ export default function Settings() {
           <CardHeader>
             <CardTitle>Integrations</CardTitle>
           </CardHeader>
-          <CardContent>
-            {company.flags.includes("quickbooks") ? <QuickbooksIntegration /> : null}
-          </CardContent>
+          <CardContent>{company.flags.includes("quickbooks") ? <QuickbooksIntegration /> : null}</CardContent>
         </Card>
       ) : null}
       <Form {...form}>
