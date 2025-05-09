@@ -1,11 +1,11 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
 import { activeStorageAttachments, activeStorageBlobs, companies, tenderOffers } from "@/db/schema";
-import { companyProcedure, createRouter, getS3Url } from "@/trpc";
+import { companyProcedure, createRouter } from "@/trpc";
 import { tenderOffersBidsRouter } from "./bids";
 
 const dataSchema = createInsertSchema(tenderOffers)
@@ -73,13 +73,16 @@ export const tenderOffersRouter = createRouter({
     if (!tenderOffer) throw new TRPCError({ code: "NOT_FOUND" });
 
     const attachment = await db.query.activeStorageAttachments.findFirst({
-      where: sql`record_type = 'TenderOffer' AND record_id = ${tenderOffer.id}`,
-      with: { blob: true },
+      where: and(
+        eq(activeStorageAttachments.recordType, "TenderOffer"),
+        eq(activeStorageAttachments.recordId, tenderOffer.id),
+      ),
+      with: { blob: { columns: { key: true, filename: true } } },
     });
 
     return {
       ...pick(tenderOffer, ["startsAt", "endsAt", "minimumValuation"]),
-      attachment: attachment ? await getS3Url(attachment.blob.key, attachment.blob.filename) : null,
+      attachment: attachment?.blob,
     };
   }),
   bids: tenderOffersBidsRouter,

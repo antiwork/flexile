@@ -5,6 +5,7 @@ import DataTable, { createColumnHelper, useTable } from "@/components/DataTable"
 import MainLayout from "@/components/layouts/Main";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
+import Link from "next/link";
 
 export default function CapTableUploadsPage() {
   const [data] = trpc.capTableUploads.list.useSuspenseQuery();
@@ -40,15 +41,15 @@ export default function CapTableUploadsPage() {
       cell: (info) => (
         <div className="flex flex-col gap-2">
           {info.getValue().map((attachment) => (
-            <a
-              key={attachment.url}
-              href={attachment.url}
+            <Link
+              key={attachment.key}
+              href={`/download/${attachment.key}/${attachment.filename}`}
               download={attachment.filename}
               className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800"
             >
               <ArrowDownTrayIcon className="h-4 w-4" />
               {attachment.filename}
-            </a>
+            </Link>
           ))}
         </div>
       ),

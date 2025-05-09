@@ -24,7 +24,8 @@ import ComboBox from "@/components/ComboBox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { FormField, FormItem, FormControl, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormControl, FormLabel, FormMessage } from "@/components/ui/form";
+import Link from "next/link";
 type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
 
 const formSchema = z.object({
@@ -65,7 +66,7 @@ export default function BuybackView() {
   );
 
   const form = useForm({
-    defaultValues: { shareClass: holdings[0]?.className ?? "" },
+    defaultValues: { shareClass: holdings[0]?.className ?? "", pricePerShare: 0, numberOfShares: 0 },
     resolver: zodResolver(formSchema),
   });
   const pricePerShare = form.watch("pricePerShare");
@@ -155,12 +156,14 @@ export default function BuybackView() {
           <p>{formatMoney(data.minimumValuation)}</p>
         </div>
         <div>
-          <Button asChild>
-            <a href={data.attachment ?? ""}>
-              <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
-              Download buyback documents
-            </a>
-          </Button>
+          {data.attachment ? (
+            <Button asChild>
+              <Link href={`/download/${data.attachment.key}/${data.attachment.filename}`}>
+                <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
+                Download buyback documents
+              </Link>
+            </Button>
+          ) : null}
         </div>
       </div>
 
@@ -206,65 +209,67 @@ export default function BuybackView() {
 
           <Separator />
           <h2 className="text-xl font-medium">Submit a bid ("Sell Order")</h2>
-          <form onSubmit={(e) => void submit(e)} className="grid gap-4">
-            <FormField
-              control={form.control}
-              name="shareClass"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Share class</FormLabel>
-                  <FormControl>
-                    <ComboBox
-                      {...field}
-                      options={holdings.map((holding) => ({
-                        value: holding.className,
-                        label: `${holding.className} (${holding.count.toLocaleString()} shares)`,
-                      }))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="numberOfShares"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Number of shares</FormLabel>
-                  <FormControl>
-                    <NumberInput {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <Form {...form}>
+            <form onSubmit={(e) => void submit(e)} className="grid gap-4">
+              <FormField
+                control={form.control}
+                name="shareClass"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Share class</FormLabel>
+                    <FormControl>
+                      <ComboBox
+                        {...field}
+                        options={holdings.map((holding) => ({
+                          value: holding.className,
+                          label: `${holding.className} (${holding.count.toLocaleString()} shares)`,
+                        }))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="numberOfShares"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Number of shares</FormLabel>
+                    <FormControl>
+                      <NumberInput {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="pricePerShare"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Price per share</FormLabel>
-                  <FormControl>
-                    <NumberInput {...field} decimal prefix="$" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {company.fullyDilutedShares ? (
+              <FormField
+                control={form.control}
+                name="pricePerShare"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Price per share</FormLabel>
+                    <FormControl>
+                      <NumberInput {...field} decimal prefix="$" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {company.fullyDilutedShares ? (
+                <div>
+                  <strong>Implied company valuation:</strong> {formatMoney(company.fullyDilutedShares * pricePerShare)}
+                </div>
+              ) : null}
               <div>
-                <strong>Implied company valuation:</strong> {formatMoney(company.fullyDilutedShares * pricePerShare)}
+                <strong>Total amount:</strong> {formatMoney(form.getValues("numberOfShares") * pricePerShare)}
               </div>
-            ) : null}
-            <div>
-              <strong>Total amount:</strong> {formatMoney(form.getValues("numberOfShares") * pricePerShare)}
-            </div>
-            <MutationStatusButton type="submit" mutation={createMutation} className="justify-self-end">
-              Submit bid
-            </MutationStatusButton>
-          </form>
+              <MutationStatusButton type="submit" mutation={createMutation} className="justify-self-end">
+                Submit bid
+              </MutationStatusButton>
+            </form>
+          </Form>
         </>
       ) : null}
 

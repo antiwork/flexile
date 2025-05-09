@@ -334,7 +334,11 @@ export default function InvoicesPage() {
               />
             </div>
 
-            <DataTable table={table} onRowClicked={setDetailInvoice} searchColumn="billFrom" />
+            <DataTable
+              table={table}
+              onRowClicked={setDetailInvoice}
+              searchColumn={user.roles.administrator ? "billFrom" : undefined}
+            />
           </>
         ) : (
           <Placeholder icon={CheckCircleIcon}>No invoices to display.</Placeholder>

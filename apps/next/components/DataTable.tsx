@@ -83,7 +83,7 @@ interface TableProps<T> {
   caption?: string;
   onRowClicked?: ((row: T) => void) | undefined;
   actions?: React.ReactNode;
-  searchColumn?: string;
+  searchColumn?: string | undefined;
 }
 
 export default function DataTable<T extends RowData>({
