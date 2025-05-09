@@ -7,7 +7,7 @@ import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { db } from "@test/db";
 import { eq } from "drizzle-orm";
-import { users } from "@/db/schema";
+import { activeStorageAttachments, activeStorageBlobs, users } from "@/db/schema";
 import { assert } from "@/utils/assert";
 
 test.describe("Documents search functionality", () => {
@@ -45,6 +45,22 @@ test.describe("Documents search functionality", () => {
         signatures: [{ userId: contractor1User.id, title: "Signer" }],
       },
     );
+    const [blob] = await db
+      .insert(activeStorageBlobs)
+      .values({
+        key: "blobkey",
+        filename: "test.pdf",
+        serviceName: "test",
+        byteSize: 100n,
+      })
+      .returning();
+    assert(blob !== undefined);
+    await db.insert(activeStorageAttachments).values({
+      recordId: document1.id,
+      recordType: "Document",
+      blobId: blob.id,
+      name: "test.pdf",
+    });
 
     const { document: document2 } = await documentsFactory.create(
       {
@@ -63,6 +79,7 @@ test.describe("Documents search functionality", () => {
 
     await expect(page.getByRole("row").filter({ hasText: document1.name })).toBeVisible();
     await expect(page.getByRole("row").filter({ hasText: document2.name })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Download" })).toHaveAttribute("href", "/download/blobkey/test.pdf");
 
     const searchInput = page.getByPlaceholder("Search by Signer...");
     await expect(searchInput).toBeVisible();
