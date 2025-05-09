@@ -12,12 +12,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany } from "@/global";
 import defaultLogo from "@/images/default-company-logo.svg";
 import { trpc } from "@/trpc/client";
 import { md5Checksum } from "@/utils";
-import GithubIntegration from "./GithubIntegration";
 import QuickbooksIntegration from "./QuickbooksIntegration";
 import StripeMicrodepositVerification from "./StripeMicrodepositVerification";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,7 +25,7 @@ const formSchema = z.object({
   brandColor: z.string().nullable(),
   publicName: z.string(),
 });
-export default function Settings({ githubOauthUrl }: { githubOauthUrl: string }) {
+export default function Settings() {
   const company = useCurrentCompany();
   const [settings, { refetch }] = trpc.companies.settings.useSuspenseQuery({ companyId: company.id });
   const queryClient = useQueryClient();
@@ -95,8 +93,6 @@ export default function Settings({ githubOauthUrl }: { githubOauthUrl: string })
           </CardHeader>
           <CardContent>
             {company.flags.includes("quickbooks") ? <QuickbooksIntegration /> : null}
-            <Separator className="first:hidden last:hidden" />
-            {company.flags.includes("team_updates") ? <GithubIntegration oauthUrl={githubOauthUrl} /> : null}
           </CardContent>
         </Card>
       ) : null}

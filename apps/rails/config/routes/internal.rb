@@ -39,7 +39,6 @@ scope path: :internal, module: :internal do
           get :list_accounts
         end
       end
-      resource :github, only: [:create, :destroy]
       resources :stripe_microdeposit_verifications, only: :create
       resources :equity_grants, only: [:create]
     end
