@@ -53,8 +53,5 @@ module CompanyWorkerUpdateHelpers
     end.join(", ")
   end
 
-  def displays_update_item_with_github_link(task)
-    github_integration_record = task.github_integration_record
-    expect(page).to have_link(github_integration_record.description, href: github_integration_record.url)
-  end
+  # GitHub integration helper removed as part of GitHub integration removal
 end
