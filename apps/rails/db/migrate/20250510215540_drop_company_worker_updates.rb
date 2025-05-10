@@ -28,6 +28,6 @@ class DropCompanyWorkerUpdates < ActiveRecord::Migration[8.0]
       t.datetime :created_at, default: -> { "CURRENT_TIMESTAMP" }, null: false
       t.datetime :updated_at, null: false
     end
-    remove_column :companies, :team_updates_enabled
+    remove_column :companies, :team_updates_enabled, :boolean, default: false, null: false
   end
 end
