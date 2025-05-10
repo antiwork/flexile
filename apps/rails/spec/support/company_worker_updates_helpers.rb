@@ -52,6 +52,4 @@ module CompanyWorkerUpdateHelpers
       "#{start_weekday}#{end_weekday}"
     end.join(", ")
   end
-
-  # GitHub integration helper removed as part of GitHub integration removal
 end

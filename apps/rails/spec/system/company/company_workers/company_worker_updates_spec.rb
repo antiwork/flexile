@@ -63,7 +63,5 @@ RSpec.describe "Company contractor updates page" do
 
       expect(page).to have_text("Posted on", count: 3)
     end
-
-    # GitHub integration tests removed as part of GitHub integration removal
   end
 end

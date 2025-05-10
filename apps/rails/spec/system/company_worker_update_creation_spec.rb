@@ -17,15 +17,11 @@ RSpec.describe "Creating a company worker update" do
     input.native.send_keys(:return)
   end
 
-  # GitHub integration removed
-
   def toggle_task_completion(task_description)
     within(find_field("Describe your task", with: task_description).find(:xpath, "./ancestor::div[contains(@class, 'task-input')]")) do
       find("input[type='checkbox']").check
     end
   end
-
-  # GitHub integration removed
 
   def remove_task(task_description)
     within(find_field("Describe your task", with: task_description).find(:xpath, "./ancestor::div[contains(@class, 'task-input')]")) do

@@ -398,8 +398,6 @@ RSpec.describe "Company Settings" do
     end
   end
 
-  # GitHub integration tests removed as part of GitHub integration removal
-
   describe "microdeposit verification" do
     let(:arrival_date) { "May 13, 2024" } # see VCR cassette for date
 
