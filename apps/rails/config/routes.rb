@@ -60,7 +60,6 @@ Rails.application.routes.draw do
 
     resources :stripe, controller: :stripe, only: [:create]
     resources :quickbooks, controller: :quickbooks, only: [:create]
-    resource :github, controller: :github, only: [:create]
   end
 
   scope module: :api, as: :api do

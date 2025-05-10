@@ -62,7 +62,6 @@ class Company < ApplicationRecord
   has_one :balance
   has_one :equity_exercise_bank_account, -> { order(id: :desc) }
   has_one :quickbooks_integration, -> { alive }
-  has_one :github_integration, -> { alive }
   has_many :share_classes
   has_many :share_holdings, through: :company_investors
   has_many :option_pools
