@@ -67,10 +67,8 @@ class Company < ApplicationRecord
   has_many :option_pools
   has_many :tax_documents
   has_many :tender_offers
-  has_many :company_worker_updates, through: :company_workers
   has_many :company_stripe_accounts
   has_one :bank_account, -> { alive.order(created_at: :desc) }, class_name: "CompanyStripeAccount"
-  has_many :company_worker_absences, through: :company_workers
   has_one_attached :logo, service: (Rails.env.test? ? :test_public : :amazon_public)
   has_one_attached :full_logo
 

@@ -96,7 +96,6 @@ class UserPresenter
     {
       companies: companies.compact.map do |company|
         flags = %w[upcoming_dividend irs_tax_forms company_updates].filter { Flipper.enabled?(_1, company) }
-        flags.push("team_updates") if company.team_updates_enabled?
         flags.push("equity_compensation") if company.equity_compensation_enabled?
         flags.push("equity_grants") if company.equity_grants_enabled?
         flags.push("dividends") if company.dividends_allowed?

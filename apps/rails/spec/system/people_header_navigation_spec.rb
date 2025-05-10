@@ -51,10 +51,6 @@ RSpec.describe "People header navigation" do
       expect(page).to have_link("Dividends", href: spa_company_investor_path(company.external_id, company_investor.external_id))
       expect(page).to have_link("Documents", href: spa_company_worker_path(company.external_id, company_worker.external_id, selectedTab: "documents"))
       expect(page).not_to have_link("Updates", href: spa_company_worker_path(company.external_id, company_worker.external_id, selectedTab: "updates"))
-
-      company.update!(team_updates_enabled: true)
-      visit spa_company_investor_path(company.external_id, company_investor.external_id, selectedTab: "options")
-      expect(page).to have_link("Updates", href: spa_company_worker_path(company.external_id, company_worker.external_id, selectedTab: "updates"))
     end
   end
 end

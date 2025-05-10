@@ -11,9 +11,7 @@ class CompanyWorker < ApplicationRecord
   has_many :contracts, foreign_key: :company_contractor_id
   has_many :equity_allocations, foreign_key: :company_contractor_id
   has_many :invoices, foreign_key: :company_contractor_id
-  has_many :company_worker_updates, foreign_key: :company_contractor_id
   has_many :integration_records, as: :integratable
-  has_many :company_worker_absences, foreign_key: :company_contractor_id
 
   DEFAULT_HOURS_PER_WEEK = 20
   WORKING_WEEKS_PER_YEAR = 44
@@ -84,20 +82,6 @@ class CompanyWorker < ApplicationRecord
       .joins(user: :compliance_info).merge(User.where(country_code: "US"))
       .where(id: invoices_subquery)
       .where.not(pay_rate_type: :salary)
-  end
-  scope :with_updates_for_period, -> (period) do
-    joins(:company_worker_updates)
-      .where(CompanyWorkerUpdate.arel_table.name => {
-        period_starts_on: period.starts_on,
-        period_ends_on: period.ends_on,
-        published_at: ..Time.current,
-      })
-      .distinct
-  end
-  scope :with_absences_for_period, -> (period) do
-    joins(:company_worker_absences)
-      .merge(CompanyWorkerAbsence.for_period(starts_on: period.starts_on, ends_on: period.ends_on))
-      .distinct
   end
 
   after_commit :notify_rate_updated, on: :update, if: -> { saved_change_to_pay_rate_in_subunits? && hourly? }

@@ -81,8 +81,7 @@ class SeedDataGeneratorFromTemplate
         create_company_updates!(company, company_data.fetch("company_updates"))
         create_company_contractors!(
           company,
-          company_data.fetch("company_contractors"),
-          company_data.fetch("company_worker_updates")
+          company_data.fetch("company_contractors")
         )
         create_consolidated_invoices!(company)
       end
@@ -566,7 +565,7 @@ class SeedDataGeneratorFromTemplate
       print_message("Created expense categories: #{categories.map { |c| c["name"] }.join(", ")}")
     end
 
-    def create_company_contractors!(company, company_contractors_data, company_worker_updates_data)
+    def create_company_contractors!(company, company_contractors_data)
       company_administrator = company.primary_admin
       company_contractors_data.each do |company_worker_data|
         company_worker_attributes = company_worker_data.fetch("company_worker").fetch("model_attributes")
@@ -623,10 +622,6 @@ class SeedDataGeneratorFromTemplate
               if company_worker_data.key?("equity_allocation_attributes")
                 company_worker.equity_allocations.create!(**company_worker_data.fetch("equity_allocation_attributes"), year: Date.current.year)
               end
-              updates_random_records_count = company_worker_updates_data.fetch("random_records_metadata").fetch("count")
-              create_company_worker_updates!(company_worker, updates_random_records_count)
-
-              create_company_worker_absences!(company_worker)
             end
 
             if company_worker_data.key?("equity_grants")
@@ -697,38 +692,6 @@ class SeedDataGeneratorFromTemplate
         invoice_count += 1
       end
       print_message("Created #{invoice_count} #{'invoice'.pluralize(invoice_count)} for #{user.email}.")
-    end
-
-    def create_company_worker_updates!(company_worker, count)
-      count.times do |i|
-        period = CompanyWorkerUpdatePeriod.new(date: (current_time - (i + 1).weeks))
-        Timecop.travel(period.ends_on) do
-          update = company_worker.company_worker_updates.create!(
-            period_starts_on: period.starts_on,
-            period_ends_on: period.ends_on,
-            published_at: Time.current,
-          )
-          (1..rand(1..4)).map do |position|
-            update.company_worker_update_tasks.create!(
-              name: "#{Faker::Company.bs.capitalize} #{Faker::Company.buzzword.downcase}",
-              completed_at: [nil, Time.current].sample,
-              position:
-            )
-          end
-        end
-      end
-      print_message("Created #{count} updates for #{company_worker.user.email}.")
-    end
-
-    def create_company_worker_absences!(company_worker)
-      starts_on = current_time - rand(2..6).weeks
-      ends_on = starts_on + rand(0..14).days
-      rand(0..3).times do
-        notes = [nil, "Mostly AFK", "On vacation with limited WiFi", "Paternity leave"].sample
-        company_worker.company_worker_absences.create!(starts_on:, ends_on:, notes:)
-        starts_on = ends_on + rand(7..21).days
-        ends_on = starts_on + rand(0..14).days
-      end
     end
 
     def create_consolidated_invoices!(company)

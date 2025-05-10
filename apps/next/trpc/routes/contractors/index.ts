@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { isFuture } from "date-fns";
-import { and, desc, eq, exists, gte, isNotNull, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, exists, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { createUpdateSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
@@ -59,22 +59,6 @@ export const contractorsRouter = createRouter({
       }));
       return { workers };
     }),
-  listForTeamUpdates: companyProcedure.query(async ({ ctx }) => {
-    if (!ctx.companyAdministrator && !isActive(ctx.companyContractor)) throw new TRPCError({ code: "FORBIDDEN" });
-    const contractors = await db.query.companyContractors.findMany({
-      columns: { id: true },
-      with: { user: { columns: simpleUser.columns } },
-      where: and(
-        eq(companyContractors.companyId, ctx.company.id),
-        or(isNull(companyContractors.endedAt), gte(companyContractors.endedAt, new Date())),
-      ),
-      orderBy: [desc(eq(companyContractors.externalId, ctx.companyContractor?.externalId ?? ""))],
-    });
-    return contractors.map((contractor) => ({
-      ...contractor,
-      user: simpleUser(contractor.user),
-    }));
-  }),
   get: companyProcedure.input(z.object({ userId: z.string() })).query(async ({ ctx, input }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
     const contractor = await db.query.companyContractors.findFirst({

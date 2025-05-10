@@ -86,7 +86,7 @@ export default function SettingsPage() {
   return (
     <>
       <StripeMicrodepositVerification />
-      {company.flags.includes("quickbooks") || company.flags.includes("team_updates") ? (
+      {company.flags.includes("quickbooks") ? (
         <Card>
           <CardHeader>
             <CardTitle>Integrations</CardTitle>

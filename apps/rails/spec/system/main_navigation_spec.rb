@@ -41,12 +41,6 @@ RSpec.describe "Main navigation" do
       expect(page).to have_link("Analytics")
       Flipper.disable(:company_updates, company)
 
-      company.update!(team_updates_enabled: true)
-      visit root_path
-      click_on "Updates"
-      expect(page).to have_current_path(spa_company_updates_team_index_path(company.external_id))
-      company.update!(team_updates_enabled: false)
-
       company_worker.update_column(:pay_rate_type, "project_based")
       visit root_path
       expect(page).to_not have_link("Tracking")
@@ -115,46 +109,6 @@ RSpec.describe "Main navigation" do
         expect(page).to have_current_path(spa_company_updates_company_index_path(company.external_id))
       end
     end
-
-    describe "nested updates links" do
-      context "when both company and team updates are enabled" do
-        let(:company_worker) { create(:company_worker, company:) }
-
-        before do
-          Flipper.enable(:company_updates, company)
-          company.update!(team_updates_enabled: true)
-          sign_in company_worker.user
-        end
-
-        it "has a nested link to the company and team updates" do
-          visit root_path
-          expect(page).to have_link("Updates")
-          expect(page).to have_link("Company")
-          expect(page).to have_link("Team")
-
-          click_on "Updates"
-          expect(page).to have_current_path(spa_company_updates_company_index_path(company.external_id))
-
-          visit root_path
-          click_on "Company"
-          expect(page).to have_current_path(spa_company_updates_company_index_path(company.external_id))
-
-          visit root_path
-          click_on "Team"
-          expect(page).to have_current_path(spa_company_updates_team_index_path(company.external_id))
-        end
-
-        context "when a nested link is active" do
-          it "the root link is disabled" do
-            visit root_path
-            click_on "Team"
-            expect(page).to have_current_path(spa_company_updates_team_index_path(company.external_id))
-
-            expect(page).not_to have_link("Updates")
-          end
-        end
-      end
-    end
   end
 
   context "when the user is a company administrator" do
@@ -183,12 +137,6 @@ RSpec.describe "Main navigation" do
       click_on "Updates"
       expect(page).to have_current_path(spa_company_updates_company_index_path(company.external_id))
       Flipper.disable(:company_updates, company)
-
-      company.update!(team_updates_enabled: true)
-      visit root_path
-      click_on "Updates"
-      expect(page).to have_current_path(spa_company_updates_team_index_path(company.external_id))
-      company.update!(team_updates_enabled: false)
 
       company.update!(irs_tax_forms: true)
       visit root_path

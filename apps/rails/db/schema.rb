@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_05_06_190655) do
+ActiveRecord::Schema[8.0].define(version: 2025_05_10_215540) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -146,7 +146,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_06_190655) do
     t.boolean "lawyers_enabled", default: false, null: false
     t.decimal "conversion_share_price_usd"
     t.boolean "equity_compensation_enabled", default: false, null: false
-    t.boolean "team_updates_enabled", default: false, null: false
     t.jsonb "json_data", default: {"flags" => []}, null: false
     t.index ["external_id"], name: "index_companies_on_external_id", unique: true
   end
@@ -162,42 +161,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_06_190655) do
     t.index ["external_id"], name: "index_company_administrators_on_external_id", unique: true
     t.index ["user_id", "company_id"], name: "index_company_administrators_on_user_id_and_company_id", unique: true
     t.index ["user_id"], name: "index_company_administrators_on_user_id"
-  end
-
-  create_table "company_contractor_absences", force: :cascade do |t|
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.bigint "company_contractor_id", null: false
-    t.date "starts_on", null: false
-    t.date "ends_on", null: false
-    t.text "notes"
-    t.bigint "company_id", null: false
-    t.index ["company_contractor_id"], name: "index_company_contractor_absences_on_company_contractor_id"
-    t.index ["company_id"], name: "index_company_contractor_absences_on_company_id"
-  end
-
-  create_table "company_contractor_update_tasks", force: :cascade do |t|
-    t.bigint "company_contractor_update_id", null: false
-    t.integer "position", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.text "name", null: false
-    t.datetime "completed_at"
-    t.index ["company_contractor_update_id"], name: "idx_on_company_contractor_update_id_4f9350e98d"
-  end
-
-  create_table "company_contractor_updates", force: :cascade do |t|
-    t.bigint "company_contractor_id", null: false
-    t.date "period_starts_on", null: false
-    t.date "period_ends_on", null: false
-    t.datetime "published_at"
-    t.datetime "deleted_at"
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.bigint "company_id", null: false
-    t.index ["company_contractor_id", "period_starts_on"], name: "index_company_contractor_updates_on_contractor_and_period", unique: true
-    t.index ["company_contractor_id"], name: "index_company_contractor_updates_on_company_contractor_id"
-    t.index ["company_id"], name: "index_company_contractor_updates_on_company_id"
   end
 
   create_table "company_contractors", force: :cascade do |t|

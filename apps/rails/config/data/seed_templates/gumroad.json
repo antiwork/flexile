@@ -34,7 +34,6 @@
         "cap_table_enabled": true,
         "equity_compensation_enabled": true,
         "company_updates_enabled": true,
-        "team_updates_enabled": true
       },
       "feature_flags": {
         "company_updates": true,
@@ -118,11 +117,6 @@
         }
       ],
       "company_updates": {
-        "random_records_metadata": {
-          "count": 6
-        }
-      },
-      "company_worker_updates": {
         "random_records_metadata": {
           "count": 6
         }

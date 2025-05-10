@@ -27,31 +27,12 @@ class CompanyNavigationPresenter::RoutesInfo
     attr_reader :current_context, :user, :company, :company_administrator, :company_worker, :company_investor, :company_lawyer
 
     def company_updates_route_props
-      company_updates_allowed = Pundit.policy!(current_context, CompanyUpdate).index?
-      team_updates_allowed = Pundit.policy!(current_context, CompanyWorkerUpdatesForPeriod).index?
-      return if !company_updates_allowed && !team_updates_allowed
+      return unless Pundit.policy!(current_context, CompanyUpdate).index?
 
-      updates_props = {
+      {
         label: "Updates",
         name: "company_updates_company_index",
       }
-
-      if company_updates_allowed && team_updates_allowed
-        updates_props[:subLinks] = [
-          {
-            label: "Company",
-            name: "company_updates_company_index",
-          },
-          {
-            label: "Team",
-            name: "company_updates_team_index",
-          }
-        ]
-      else
-        updates_props[:name] = "company_updates_team_index" if team_updates_allowed
-      end
-
-      updates_props
     end
 
     def company_invoices_route_props

@@ -5,12 +5,10 @@ RSpec.describe CompanyWorker do
     it { is_expected.to belong_to(:company) }
     it { is_expected.to belong_to(:user) }
     it { is_expected.to have_many(:contracts) }
-    it { is_expected.to have_many(:company_worker_updates) }
     it { is_expected.to have_many(:equity_allocations) }
     it { is_expected.to have_many(:integration_records) }
     it { is_expected.to have_many(:invoices) }
     it { is_expected.to have_one(:quickbooks_integration_record) }
-    it { is_expected.to have_many(:company_worker_absences) }
   end
 
   describe "validations" do
@@ -174,47 +172,6 @@ RSpec.describe CompanyWorker do
             [company_worker_1, company_worker_2]
           )
         end
-      end
-    end
-
-    describe ".with_updates_for_period" do
-      it "returns the list of company_workers who have updates for the given period" do
-        company_worker_1 = create(:company_worker)
-        company_worker_2 = create(:company_worker)
-        company_worker_3 = create(:company_worker)
-        company_worker_4 = create(:company_worker)
-        create(:company_worker)
-
-        period = CompanyWorkerUpdatePeriod.new(date: Date.parse("2024-02-01"))
-        create(:company_worker_update, company_worker: company_worker_1, period: period)
-        create(:company_worker_update, company_worker: company_worker_2, period: period)
-        create(:company_worker_update, company_worker: company_worker_2, period: period.prev_period)
-        create(:company_worker_update, company_worker: company_worker_3, period: period.prev_period)
-        create(:company_worker_update, company_worker: company_worker_4, period: period, published_at: nil)
-
-        expect(described_class.with_updates_for_period(period)).to match_array(
-          [company_worker_1, company_worker_2]
-        )
-      end
-    end
-
-    describe ".with_absences_for_period" do
-      it "returns the list of company_workers who have absences for the given period" do
-        period = CompanyWorkerUpdatePeriod.new
-
-        # with overlapping absences
-        contractors = create_list(:company_worker, 2)
-        create(:company_worker_absence, company_worker: contractors.first, starts_on: period.starts_on - 1.day, ends_on: period.starts_on + 1.day)
-        create(:company_worker_absence, company_worker: contractors.first, starts_on: period.ends_on - 1.day, ends_on: period.ends_on + 1.day)
-        create(:company_worker_absence, company_worker: contractors.second, starts_on: period.starts_on - 1.day, ends_on: period.ends_on + 1.day)
-
-        # with no absences
-        create(:company_worker)
-
-        # with non-overlapping absence
-        create(:company_worker_absence, starts_on: period.starts_on - 2.months, ends_on: period.starts_on - 1.month)
-
-        expect(described_class.with_absences_for_period(period)).to match_array(contractors)
       end
     end
   end

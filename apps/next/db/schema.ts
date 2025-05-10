@@ -1536,59 +1536,6 @@ export const equityBuybacks = pgTable(
   ],
 );
 
-export const companyContractorUpdates = pgTable(
-  "company_contractor_updates",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    companyContractorId: bigint("company_contractor_id", { mode: "bigint" }).notNull(),
-    companyId: bigint("company_id", { mode: "bigint" }).notNull(),
-    periodStartsOn: date("period_starts_on", { mode: "string" }).notNull(),
-    periodEndsOn: date("period_ends_on", { mode: "string" }).notNull(),
-    publishedAt: timestamp("published_at", { precision: 6, mode: "date" }),
-    deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-  },
-  (table) => [
-    index("index_company_contractor_updates_on_company_contractor_id").using(
-      "btree",
-      table.companyContractorId.asc().nullsLast().op("int8_ops"),
-    ),
-    index("index_company_contractor_updates_on_company_id").using(
-      "btree",
-      table.companyId.asc().nullsLast().op("int8_ops"),
-    ),
-    index("index_company_contractor_updates_on_contractor_and_period").using(
-      "btree",
-      table.companyContractorId.asc().nullsLast().op("date_ops"),
-      table.periodStartsOn.asc().nullsLast().op("date_ops"),
-    ),
-  ],
-);
-
-export const companyContractorUpdateTasks = pgTable(
-  "company_contractor_update_tasks",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    companyContractorUpdateId: bigint("company_contractor_update_id", { mode: "bigint" }).notNull(),
-    position: integer().notNull(),
-    name: text().notNull(),
-    completedAt: timestamp("completed_at", { precision: 6, mode: "date" }),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-  },
-  (table) => [
-    index("idx_on_company_contractor_update_id_4f9350e98d").using(
-      "btree",
-      table.companyContractorUpdateId.asc().nullsLast().op("int8_ops"),
-    ),
-  ],
-);
-
 export const equityGrantExerciseRequests = pgTable(
   "equity_grant_exercise_requests",
   {
@@ -1685,32 +1632,6 @@ export const companyInvestorEntities = pgTable(
     index("index_company_investor_entities_on_external_id").using(
       "btree",
       table.externalId.asc().nullsLast().op("text_ops"),
-    ),
-  ],
-);
-
-export const companyContractorAbsences = pgTable(
-  "company_contractor_absences",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-    companyContractorId: bigint("company_contractor_id", { mode: "bigint" }).notNull(),
-    companyId: bigint("company_id", { mode: "bigint" }).notNull(),
-    startsOn: date("starts_on", { mode: "string" }).notNull(),
-    endsOn: date("ends_on", { mode: "string" }).notNull(),
-    notes: text(),
-  },
-  (table) => [
-    index("index_company_contractor_absences_on_company_contractor_id").using(
-      "btree",
-      table.companyContractorId.asc().nullsLast().op("int8_ops"),
-    ),
-    index("index_company_contractor_absences_on_company_id").using(
-      "btree",
-      table.companyId.asc().nullsLast().op("int8_ops"),
     ),
   ],
 );
@@ -2089,7 +2010,6 @@ export const companies = pgTable(
     tenderOffersEnabled: boolean("tender_offers_enabled").notNull().default(false),
     capTableEnabled: boolean("cap_table_enabled").default(false).notNull(),
     lawyersEnabled: boolean("lawyers_enabled").notNull().default(false),
-    teamUpdatesEnabled: boolean("team_updates_enabled").notNull().default(false),
     conversionSharePriceUsd: numeric("conversion_share_price_usd"),
     equityCompensationEnabled: boolean("equity_compensation_enabled").notNull().default(false),
     jsonData: jsonb("json_data").notNull().$type<{ flags: string[] }>().default({ flags: [] }),
@@ -2232,8 +2152,6 @@ export const companyContractorsRelations = relations(companyContractors, ({ one,
   documents: many(documents),
   invoices: many(invoices),
   equityAllocations: many(equityAllocations),
-  updates: many(companyContractorUpdates),
-  absences: many(companyContractorAbsences),
 }));
 
 export const equityAllocationsRelations = relations(equityAllocations, ({ one }) => ({
@@ -2241,14 +2159,6 @@ export const equityAllocationsRelations = relations(equityAllocations, ({ one })
     fields: [equityAllocations.companyContractorId],
     references: [companyContractors.id],
   }),
-}));
-
-export const companyContractorUpdatesRelations = relations(companyContractorUpdates, ({ one, many }) => ({
-  contractor: one(companyContractors, {
-    fields: [companyContractorUpdates.companyContractorId],
-    references: [companyContractors.id],
-  }),
-  tasks: many(companyContractorUpdateTasks),
 }));
 
 export const documentsRelations = relations(documents, ({ one, many }) => ({
@@ -2585,13 +2495,6 @@ export const shareHoldingsRelations = relations(shareHoldings, ({ one, many }) =
   equityGrantExerciseRequests: many(equityGrantExerciseRequests),
 }));
 
-export const companyContractorUpdateTasksRelations = relations(companyContractorUpdateTasks, ({ one }) => ({
-  update: one(companyContractorUpdates, {
-    fields: [companyContractorUpdateTasks.companyContractorUpdateId],
-    references: [companyContractorUpdates.id],
-  }),
-}));
-
 export const taxDocumentsRelations = relations(taxDocuments, ({ one }) => ({
   company: one(companies, {
     fields: [taxDocuments.companyId],
@@ -2807,13 +2710,6 @@ export const integrationsRelations = relations(integrations, ({ one, many }) => 
   company: one(companies, {
     fields: [integrations.companyId],
     references: [companies.id],
-  }),
-}));
-
-export const companyContractorAbsencesRelations = relations(companyContractorAbsences, ({ one }) => ({
-  companyContractor: one(companyContractors, {
-    fields: [companyContractorAbsences.companyContractorId],
-    references: [companyContractors.id],
   }),
 }));
 
