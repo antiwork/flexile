@@ -1,8 +1,15 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { activeStorageAttachments, consolidatedInvoices, consolidatedInvoicesInvoices, invoices } from "@/db/schema";
-import { companyProcedure, createRouter, getS3Url } from "@/trpc";
+import {
+  activeStorageAttachments,
+  activeStorageBlobs,
+  consolidatedInvoices,
+  consolidatedInvoicesInvoices,
+  invoices,
+} from "@/db/schema";
+import { companyProcedure, createRouter } from "@/trpc";
+import { pick } from "lodash-es";
 
 export const consolidatedInvoicesRouter = createRouter({
   last: companyProcedure.query(async ({ ctx }) => {
@@ -18,13 +25,14 @@ export const consolidatedInvoicesRouter = createRouter({
   list: companyProcedure.query(async ({ ctx }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-    const data = await db
+    return db
       .select({
         id: consolidatedInvoices.id,
         invoiceDate: consolidatedInvoices.invoiceDate,
         totalCents: consolidatedInvoices.totalCents,
         status: consolidatedInvoices.status,
         totalContractors: sql<number>`count(distinct invoices.user_id)`,
+        attachment: pick(activeStorageBlobs, "key", "filename"),
       })
       .from(consolidatedInvoices)
       .leftJoin(
@@ -32,30 +40,16 @@ export const consolidatedInvoicesRouter = createRouter({
         eq(consolidatedInvoices.id, consolidatedInvoicesInvoices.consolidatedInvoiceId),
       )
       .leftJoin(invoices, eq(consolidatedInvoicesInvoices.invoiceId, invoices.id))
-      .where(eq(consolidatedInvoices.companyId, ctx.company.id))
-      .groupBy(consolidatedInvoices.id)
-      .orderBy(desc(consolidatedInvoices.invoiceDate));
-
-    const receipts = await db.query.activeStorageAttachments.findMany({
-      where: and(
-        eq(activeStorageAttachments.recordType, "ConsolidatedInvoice"),
-        inArray(
-          activeStorageAttachments.recordId,
-          data.map((invoice) => invoice.id),
+      .leftJoin(
+        activeStorageAttachments,
+        and(
+          eq(activeStorageAttachments.recordType, "ConsolidatedInvoice"),
+          eq(consolidatedInvoices.id, activeStorageAttachments.recordId),
         ),
-        eq(activeStorageAttachments.name, "receipt"),
-      ),
-      with: { blob: true },
-    });
-
-    return await Promise.all(
-      data.map(async (invoice) => {
-        const receipt = receipts.find(({ recordId }) => recordId === invoice.id);
-        return {
-          ...invoice,
-          receiptUrl: receipt ? await getS3Url(receipt.blob.key, receipt.blob.filename) : null,
-        };
-      }),
-    );
+      )
+      .leftJoin(activeStorageBlobs, eq(activeStorageAttachments.blobId, activeStorageBlobs.id))
+      .where(eq(consolidatedInvoices.companyId, ctx.company.id))
+      .groupBy(consolidatedInvoices.id, activeStorageBlobs.key, activeStorageBlobs.filename)
+      .orderBy(desc(consolidatedInvoices.invoiceDate));
   }),
 });

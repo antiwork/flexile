@@ -318,10 +318,10 @@ export default function DocumentsPage() {
                 ) : null}
                 {document.attachment ? (
                   <Button variant="outline" size="small" asChild>
-                    <a href={document.attachment} download>
+                    <Link href={`/download/${document.attachment.key}/${document.attachment.filename}`} download>
                       <ArrowDownTrayIcon className="size-4" />
                       Download
-                    </a>
+                    </Link>
                   </Button>
                 ) : document.docusealSubmissionId && document.signatories.every((signatory) => signatory.signedAt) ? (
                   <Button variant="outline" size="small" onClick={() => setDownloadDocument(document.id)}>

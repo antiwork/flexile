@@ -295,11 +295,15 @@ export default function InvoicePage() {
                     <Fragment key={i}>
                       <Separator />
                       <div className="flex justify-between gap-2">
-                        <a href={expense.attachment} download className={linkClasses}>
+                        <Link
+                          href={`/download/${expense.attachment?.key}/${expense.attachment?.filename}`}
+                          download
+                          className={linkClasses}
+                        >
                           <PaperClipIcon className="inline size-4" />
                           {expenseCategories.find((category) => category.id === expense.expenseCategoryId)?.name} –{" "}
                           {expense.description}
-                        </a>
+                        </Link>
                         <span>{formatMoneyFromCents(expense.totalAmountInCents)}</span>
                       </div>
                     </Fragment>

@@ -7,7 +7,6 @@ import { z } from "zod";
 import { byExternalId, db } from "@/db";
 import {
   activeStorageAttachments,
-  activeStorageBlobs,
   companyContractors,
   equityAllocations,
   invoiceLineItems,
@@ -17,7 +16,7 @@ import {
 } from "@/db/schema";
 import env from "@/env";
 import { MAXIMUM_EQUITY_PERCENTAGE, MINIMUM_EQUITY_PERCENTAGE } from "@/models";
-import { companyProcedure, createRouter, getS3Url } from "@/trpc";
+import { companyProcedure, createRouter } from "@/trpc";
 import { sendEmail } from "@/trpc/email";
 import { calculateInvoiceEquity } from "@/trpc/routes/equityCalculations";
 import OneOffInvoiceCreated from "@/trpc/routes/OneOffInvoiceCreated";
@@ -423,13 +422,9 @@ export const invoicesRouter = createRouter({
       ),
       with: { blob: { columns: { key: true, filename: true } } },
     });
-    const getUrl = (blob: Pick<typeof activeStorageBlobs.$inferSelect, "key" | "filename">) =>
-      getS3Url(blob.key, blob.filename);
 
     const attachments = new Map(
-      await Promise.all(
-        attachmentRows.map(async (attachment) => [attachment.recordId, await getUrl(attachment.blob)] as const),
-      ),
+      await Promise.all(attachmentRows.map((attachment) => [attachment.recordId, attachment] as const)),
     );
 
     return {
@@ -460,10 +455,10 @@ export const invoicesRouter = createRouter({
       ),
       userId: invoice.contractor.user.externalId,
       requiresAcceptanceByPayee: requiresAcceptanceByPayee(invoice),
-      expenses: invoice.expenses.map((expense) => ({
-        ...expense,
-        attachment: attachments.get(expense.id),
-      })),
+      expenses: invoice.expenses.map((expense) => {
+        const attachment = attachments.get(expense.id);
+        return { ...expense, attachment: attachment?.blob };
+      }),
       lineItems: invoice.lineItems,
       id: invoice.externalId,
       equityAllocationStatus: invoice.contractor.equityAllocations[0]?.status,

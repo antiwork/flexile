@@ -1,6 +1,5 @@
 import "server-only";
-import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { S3Client } from "@aws-sdk/client-s3";
 import { getSchema } from "@tiptap/core";
 import { generateHTML, generateJSON } from "@tiptap/html";
 import { Node } from "@tiptap/pm/model";
@@ -63,15 +62,6 @@ export const s3Client = new S3Client({
   region: env.AWS_REGION,
   credentials: { accessKeyId: env.AWS_ACCESS_KEY_ID, secretAccessKey: env.AWS_SECRET_ACCESS_KEY },
 });
-
-export const getS3Url = (key: string, downloadFilename?: string) => {
-  const command = new GetObjectCommand({
-    Key: key,
-    Bucket: env.S3_PRIVATE_BUCKET,
-    ...(downloadFilename ? { ResponseContentDisposition: `attachment; filename=${downloadFilename}` } : {}),
-  });
-  return getSignedUrl(s3Client, command, { expiresIn: 86400 * 7 });
-};
 
 // TODO switch all stored HTML to use JSON - we should only have to call generateHTML here
 export const renderTiptap = (html: string) => generateHTML(generateJSON(html, richTextExtensions), richTextExtensions);

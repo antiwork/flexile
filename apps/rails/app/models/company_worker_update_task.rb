@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class CompanyWorkerUpdateTask < ApplicationRecord
-  include TimestampStateFields, GithubIntegratable
+  include TimestampStateFields
   self.table_name = "company_contractor_update_tasks"
   timestamp_state_fields :completed, default_state: :incomplete
 

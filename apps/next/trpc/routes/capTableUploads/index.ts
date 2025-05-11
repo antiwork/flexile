@@ -5,7 +5,7 @@ import { db } from "@/db";
 import { activeStorageAttachments, activeStorageBlobs, capTableUploads, companies, users } from "@/db/schema";
 import env from "@/env";
 import { MAX_FILES_PER_CAP_TABLE_UPLOAD } from "@/models";
-import { companyProcedure, createRouter, getS3Url, protectedProcedure } from "@/trpc";
+import { companyProcedure, createRouter, protectedProcedure } from "@/trpc";
 import { assert } from "@/utils/assert";
 
 const COMPLETED_STATUSES = ["completed", "canceled"] as const;
@@ -121,24 +121,12 @@ export const capTableUploadsRouter = createRouter({
       with: { blob: { columns: { key: true, filename: true } } },
     });
 
-    const attachmentsByRecordId = new Map<bigint, { url: string; filename: string }[]>();
-    await Promise.all(
-      attachmentRows.map(async (attachment) => {
-        const url = await getS3Url(attachment.blob.key, attachment.blob.filename);
-        const attachmentData = {
-          url,
-          filename: attachment.blob.filename,
-        };
-
-        const existing = attachmentsByRecordId.get(attachment.recordId) || [];
-        attachmentsByRecordId.set(attachment.recordId, [...existing, attachmentData]);
-      }),
-    );
+    const attachments = Map.groupBy(attachmentRows, (attachment) => attachment.recordId);
 
     return {
       uploads: uploads.map((upload) => ({
         ...upload,
-        attachments: attachmentsByRecordId.get(upload.id) || [],
+        attachments: attachments.get(upload.id)?.map((attachment) => attachment.blob) || [],
       })),
     };
   }),
