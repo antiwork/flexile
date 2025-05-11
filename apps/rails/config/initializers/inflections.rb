@@ -21,5 +21,4 @@ ActiveSupport::Inflector.inflections do |inflection|
   inflection.irregular "is", "are"
   inflection.irregular "has", "have"
   inflection.irregular "requires", "require"
-  inflection.irregular "github", "github"
 end

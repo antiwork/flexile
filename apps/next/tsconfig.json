@@ -2,8 +2,8 @@
   "compilerOptions": {
     "noEmit": true,
     "moduleResolution": "bundler",
-    "target": "es2023",
-    "lib": ["dom", "dom.iterable", "es2023"],
+    "target": "es2024",
+    "lib": ["dom", "dom.iterable", "es2024"],
     "module": "esnext",
     "strict": true,
     "allowUnreachableCode": false,

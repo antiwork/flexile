@@ -20,7 +20,6 @@ import { equityGrantsRouter } from "./routes/equityGrants";
 import { equitySettingsRouter } from "./routes/equitySettings";
 import { expenseCategoriesRouter } from "./routes/expenseCategories";
 import { financialReportsRouter } from "./routes/financialReports";
-import { githubRouter } from "./routes/github";
 import { investorsRouter } from "./routes/investors";
 import { invoicesRouter } from "./routes/invoices";
 import { lawyersRouter } from "./routes/lawyers";
@@ -39,7 +38,6 @@ export const appRouter = createRouter({
   wallets: walletsRouter,
   contractors: contractorsRouter,
   quickbooks: quickbooksRouter,
-  github: githubRouter,
   invoices: invoicesRouter,
   consolidatedInvoices: consolidatedInvoicesRouter,
   documents: documentsRouter,

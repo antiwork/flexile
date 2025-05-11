@@ -83,7 +83,7 @@ interface TableProps<T> {
   caption?: string;
   onRowClicked?: ((row: T) => void) | undefined;
   actions?: React.ReactNode;
-  searchColumn?: string;
+  searchColumn?: string | undefined;
 }
 
 export default function DataTable<T extends RowData>({
@@ -91,7 +91,7 @@ export default function DataTable<T extends RowData>({
   caption,
   onRowClicked,
   actions,
-  searchColumn,
+  searchColumn: searchColumnName,
 }: TableProps<T>) {
   const data = useMemo(
     () => ({
@@ -130,6 +130,9 @@ export default function DataTable<T extends RowData>({
       !numeric && "print:text-wrap",
     );
   };
+  const searchColumn = searchColumnName ? table.getColumn(searchColumnName) : null;
+  const getColumnName = (column: Column<T>) =>
+    typeof column.columnDef.header === "string" ? column.columnDef.header : "";
 
   return (
     <div className="grid gap-4">
@@ -144,17 +147,13 @@ export default function DataTable<T extends RowData>({
                     z
                       .string()
                       .nullish()
-                      .parse(
-                        searchColumn ? table.getColumn(searchColumn)?.getFilterValue() : table.getState().globalFilter,
-                      ) ?? ""
+                      .parse(searchColumn ? searchColumn.getFilterValue() : table.getState().globalFilter) ?? ""
                   }
                   onChange={(e) =>
-                    searchColumn
-                      ? table.getColumn(searchColumn)?.setFilterValue(e.target.value)
-                      : table.setGlobalFilter(e.target.value)
+                    searchColumn ? searchColumn.setFilterValue(e.target.value) : table.setGlobalFilter(e.target.value)
                   }
                   className="w-60 pl-8"
-                  placeholder="Search ..."
+                  placeholder={searchColumn ? `Search by ${getColumnName(searchColumn)}...` : "Search..."}
                 />
               </div>
             ) : null}
@@ -180,7 +179,7 @@ export default function DataTable<T extends RowData>({
                       <DropdownMenuSub key={column.id}>
                         <DropdownMenuSubTrigger>
                           <div className="flex items-center gap-1">
-                            <span>{typeof column.columnDef.header === "string" ? column.columnDef.header : ""}</span>
+                            <span>{getColumnName(column)}</span>
                             {Array.isArray(filterValue) && filterValue.length > 0 && (
                               <Badge variant="secondary" className="rounded-sm px-1 font-normal">
                                 {filterValue.length}
