@@ -282,7 +282,6 @@ export default function DocumentsPage() {
         columnHelper.accessor((row) => typeLabels[row.type], {
           header: "Type",
           meta: { filterOptions: [...new Set(documents.map((document) => typeLabels[document.type]))] },
-          filterFn: "arrIncludesSome",
         }),
         columnHelper.accessor("createdAt", {
           header: "Date",

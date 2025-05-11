@@ -134,6 +134,9 @@ test.describe("Contractor for multiple companies", () => {
     await page.getByRole("link", { name: "Type" }).click();
     await page.getByPlaceholder("Type signature here...").fill("Admin Admin");
     await page.getByRole("button", { name: "Complete" }).click();
+    await page.getByRole("button", { name: "Filter" }).click();
+    await page.getByRole("menuitem", { name: "Status" }).click();
+    await page.getByRole("menuitem", { name: "All" }).click();
 
     await expect(page.getByRole("cell", { name: "Signed" })).toBeVisible();
   });
