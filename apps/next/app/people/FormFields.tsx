@@ -4,8 +4,11 @@ import { PayRateType, trpc } from "@/trpc/client";
 import { useFormContext } from "react-hook-form";
 import RadioButtons from "@/components/RadioButtons";
 import NumberInput from "@/components/NumberInput";
-import ComboBox from "@/components/ComboBox";
 import { useCurrentCompany } from "@/global";
+import { Popover, PopoverContent } from "@/components/ui/popover";
+import { PopoverTrigger } from "@radix-ui/react-popover";
+import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { Input } from "@/components/ui/input";
 
 export default function FormFields() {
   const form = useFormContext();
@@ -16,38 +19,48 @@ export default function FormFields() {
     excludeAlumni: true,
   });
 
-  const uniqueRoles = Array.from(
-    new Set(
-      workers
-        .filter((worker) => worker.role) // Filter out any undefined/null roles
-        .map((worker) => worker.role),
-    ),
-  ).sort();
-
-  const roleOptions = uniqueRoles.map((role) => ({
-    label: role as string,
-    value: role as string,
-  }));
+  const uniqueRoles = [...new Set(workers.map((worker) => worker.role))].sort();
 
   return (
     <>
       <FormField
         control={form.control}
         name="role"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Role</FormLabel>
-            <FormControl>
-              <ComboBox
-                value={field.value as string}
-                onChange={field.onChange}
-                options={roleOptions}
-                placeholder="Select or type a role..."
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
+        render={({ field }) => {
+          const filter = new RegExp(`${field.value}`, "iu");
+          return (
+            <FormItem>
+              <FormLabel>Role</FormLabel>
+              <Command shouldFilter={false}>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Input {...field} type="text" />
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    onOpenAutoFocus={(e) => e.preventDefault()}
+                    className="p-0"
+                    style={{ width: "var(--radix-popover-trigger-width)" }}
+                  >
+                    <CommandList>
+                      <CommandGroup>
+                        {uniqueRoles
+                          .filter((role) => filter.test(role))
+                          .map((option) => (
+                            <CommandItem key={option} value={option} onSelect={(e) => field.onChange(e)}>
+                              {option}
+                            </CommandItem>
+                          ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </PopoverContent>
+                </Popover>
+              </Command>
+              <FormMessage />
+            </FormItem>
+          );
+        }}
       />
 
       <FormField
