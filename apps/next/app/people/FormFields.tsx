@@ -4,22 +4,20 @@ import { PayRateType, trpc } from "@/trpc/client";
 import { useFormContext } from "react-hook-form";
 import RadioButtons from "@/components/RadioButtons";
 import NumberInput from "@/components/NumberInput";
-import { useCurrentCompany } from "@/global";
+import { useUserStore } from "@/global";
 import { Popover, PopoverContent } from "@/components/ui/popover";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
+import { skipToken } from "@tanstack/react-query";
 
 export default function FormFields() {
   const form = useFormContext();
   const payRateType: unknown = form.watch("payRateType");
-  const company = useCurrentCompany();
-  const [{ workers }] = trpc.contractors.list.useSuspenseQuery({
-    companyId: company.id,
-    excludeAlumni: true,
-  });
+  const companyId = useUserStore((state) => state.user?.currentCompanyId);
+  const { data: workers } = trpc.contractors.list.useQuery(companyId ? { companyId, excludeAlumni: true } : skipToken);
 
-  const uniqueRoles = [...new Set(workers.map((worker) => worker.role))].sort();
+  const uniqueRoles = workers ? [...new Set(workers.map((worker) => worker.role))].sort() : [];
 
   return (
     <>
