@@ -9,7 +9,7 @@ import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test } from "@test/index";
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { BusinessType, DocumentType, TaxClassification } from "@/db/enums";
-import { companies, documents, userComplianceInfos, users } from "@/db/schema";
+import { companies, documents, users } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 import { selectComboboxOption } from "@test/helpers";
 
@@ -17,7 +17,6 @@ test.describe("Tax settings", () => {
   let company: typeof companies.$inferSelect;
   let adminUser: typeof users.$inferSelect;
   let user: typeof users.$inferSelect;
-  let userComplianceInfo: typeof userComplianceInfos.$inferSelect;
 
   test.beforeEach(async ({ page, next }) => {
     ({ company, adminUser } = await companiesFactory.createCompletedOnboarding({ irsTaxForms: true }));
@@ -29,12 +28,6 @@ test.describe("Tax settings", () => {
         birthDate: "1980-06-27",
       })
     ).user;
-    userComplianceInfo = (
-      await userComplianceInfosFactory.create({
-        userId: user.id,
-        taxId: "123-45-6789",
-      })
-    ).userComplianceInfo;
     await login(page, user);
     const { mockForm } = mockDocuseal(next, {
       submitters: () => ({ "Company Representative": adminUser, Signer: user }),
@@ -129,16 +122,14 @@ test.describe("Tax settings", () => {
           },
         })
         .then(takeOrThrow);
-      expect(updatedUser.userComplianceInfos).toHaveLength(2);
+      expect(updatedUser.userComplianceInfos).toHaveLength(1);
 
-      expect(updatedUser.userComplianceInfos[0]?.deletedAt).not.toBeNull();
-
-      expect(updatedUser.userComplianceInfos[1]?.taxInformationConfirmedAt).not.toBeNull();
-      expect(updatedUser.userComplianceInfos[1]?.taxId).toBe("555666789");
-      expect(updatedUser.userComplianceInfos[1]?.citizenshipCountryCode).toBe("MX");
-      expect(updatedUser.userComplianceInfos[1]?.businessType).toBe(BusinessType.LLC);
-      expect(updatedUser.userComplianceInfos[1]?.taxClassification).toBe(TaxClassification.Partnership);
-      expect(updatedUser.userComplianceInfos[1]?.deletedAt).toBeNull();
+      expect(updatedUser.userComplianceInfos[0]?.taxInformationConfirmedAt).not.toBeNull();
+      expect(updatedUser.userComplianceInfos[0]?.taxId).toBe("555666789");
+      expect(updatedUser.userComplianceInfos[0]?.citizenshipCountryCode).toBe("MX");
+      expect(updatedUser.userComplianceInfos[0]?.businessType).toBe(BusinessType.LLC);
+      expect(updatedUser.userComplianceInfos[0]?.taxClassification).toBe(TaxClassification.Partnership);
+      expect(updatedUser.userComplianceInfos[0]?.deletedAt).toBeNull();
 
       const document = await db.query.documents.findFirst({
         where: and(eq(documents.companyId, company.id), eq(documents.type, DocumentType.ConsultingContract)),
@@ -155,6 +146,7 @@ test.describe("Tax settings", () => {
     });
 
     test("allows confirming tax information", async ({ page }) => {
+      await userComplianceInfosFactory.create({ userId: user.id });
       await page.goto("/settings/tax");
 
       await expect(page.getByText("Confirm your tax information")).toBeVisible();
@@ -190,6 +182,7 @@ test.describe("Tax settings", () => {
     test.describe("tax ID validity", () => {
       test.describe("for US residents", () => {
         test("shows pending status", async ({ page }) => {
+          await userComplianceInfosFactory.create({ userId: user.id });
           await page.goto("/settings/tax");
 
           await expect(page.getByText("VERIFYING")).toBeVisible();
@@ -197,10 +190,7 @@ test.describe("Tax settings", () => {
         });
 
         test("shows verified status", async ({ page }) => {
-          await db
-            .update(userComplianceInfos)
-            .set({ taxIdStatus: "verified" })
-            .where(eq(userComplianceInfos.id, userComplianceInfo.id));
+          await userComplianceInfosFactory.create({ userId: user.id, taxIdStatus: "verified" });
 
           await page.goto("/settings/tax");
 
@@ -209,10 +199,7 @@ test.describe("Tax settings", () => {
         });
 
         test("shows invalid status", async ({ page }) => {
-          await db
-            .update(userComplianceInfos)
-            .set({ taxIdStatus: "invalid" })
-            .where(eq(userComplianceInfos.id, userComplianceInfo.id));
+          await userComplianceInfosFactory.create({ userId: user.id, taxIdStatus: "invalid" });
 
           await page.goto("/settings/tax");
 
@@ -221,10 +208,7 @@ test.describe("Tax settings", () => {
         });
 
         test("hides status when tax ID input changes", async ({ page }) => {
-          await db
-            .update(userComplianceInfos)
-            .set({ taxIdStatus: "verified" })
-            .where(eq(userComplianceInfos.id, userComplianceInfo.id));
+          await userComplianceInfosFactory.create({ userId: user.id, taxIdStatus: "verified" });
 
           await page.goto("/settings/tax");
 
@@ -274,13 +258,11 @@ test.describe("Tax settings", () => {
             },
           })
           .then(takeOrThrow);
-        expect(updatedUser.userComplianceInfos).toHaveLength(2);
+        expect(updatedUser.userComplianceInfos).toHaveLength(1);
 
-        expect(updatedUser.userComplianceInfos[0]?.deletedAt).not.toBeNull();
-
-        expect(updatedUser.userComplianceInfos[1]?.taxInformationConfirmedAt).not.toBeNull();
-        expect(updatedUser.userComplianceInfos[1]?.deletedAt).toBeNull();
-        expect(updatedUser.userComplianceInfos[1]?.zipCode).toBe("1234");
+        expect(updatedUser.userComplianceInfos[0]?.taxInformationConfirmedAt).not.toBeNull();
+        expect(updatedUser.userComplianceInfos[0]?.deletedAt).toBeNull();
+        expect(updatedUser.userComplianceInfos[0]?.zipCode).toBe("1234");
 
         const document = await db.query.documents.findFirst({
           where: and(
@@ -302,11 +284,6 @@ test.describe("Tax settings", () => {
     });
 
     test("does not show the TIN verification status with none set", async ({ page }) => {
-      await db
-        .update(userComplianceInfos)
-        .set({ taxId: null })
-        .where(eq(userComplianceInfos.id, userComplianceInfo.id));
-
       await page.goto("/settings/tax");
 
       await expect(page.getByLabel("Tax ID (SSN or ITIN)")).toHaveValue("");
@@ -345,13 +322,11 @@ test.describe("Tax settings", () => {
           },
         })
         .then(takeOrThrow);
-      expect(updatedUser.userComplianceInfos).toHaveLength(2);
+      expect(updatedUser.userComplianceInfos).toHaveLength(1);
 
-      expect(updatedUser.userComplianceInfos[0]?.deletedAt).not.toBeNull();
-
-      expect(updatedUser.userComplianceInfos[1]?.taxInformationConfirmedAt).not.toBeNull();
-      expect(updatedUser.userComplianceInfos[1]?.deletedAt).toBeNull();
-      expect(updatedUser.userComplianceInfos[1]?.taxId).toBe("DE123456789");
+      expect(updatedUser.userComplianceInfos[0]?.taxInformationConfirmedAt).not.toBeNull();
+      expect(updatedUser.userComplianceInfos[0]?.deletedAt).toBeNull();
+      expect(updatedUser.userComplianceInfos[0]?.taxId).toBe("DE123456789");
       expect(sentEmails.length).toBe(1);
     });
 
