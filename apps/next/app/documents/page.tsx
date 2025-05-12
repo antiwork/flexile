@@ -2,7 +2,7 @@
 import { ArrowDownTrayIcon, InformationCircleIcon } from "@heroicons/react/16/solid";
 import { BriefcaseIcon, CheckCircleIcon, PaperAirplaneIcon, PencilIcon } from "@heroicons/react/24/outline";
 import { skipToken } from "@tanstack/react-query";
-import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
+import { getFilteredRowModel, getSortedRowModel, type ColumnFiltersState } from "@tanstack/react-table";
 import { FileTextIcon, GavelIcon, PercentIcon } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
 import DocusealForm, { customCss } from "@/app/documents/DocusealForm";
-import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
+import DataTable, { createColumnHelper, filterValueSchema, useTable } from "@/components/DataTable";
 import { Input } from "@/components/ui/input";
 import MainLayout from "@/components/layouts/Main";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -48,6 +48,8 @@ const templateTypeLabels = {
   [DocumentTemplateType.EquityPlanContract]: "Equity plan",
   [DocumentTemplateType.BoardConsent]: "Board consent",
 };
+
+const columnFiltersSchema = z.array(z.object({ id: z.string(), value: filterValueSchema }));
 
 const getCompletedAt = (document: Document) =>
   document.signatories.every((signatory) => signatory.signedAt)
@@ -336,14 +338,25 @@ export default function DocumentsPage() {
       ].filter((column) => !!column),
     [userId],
   );
+  const storedColumnFilters = columnFiltersSchema.safeParse(
+    JSON.parse(localStorage.getItem("documentsColumnFilters") ?? "{}"),
+  );
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
+    storedColumnFilters.data ?? [{ id: "Status", value: ["Signature required"] }],
+  );
   const table = useTable({
     columns,
     data: documents,
-    initialState: {
-      sorting: [{ id: "createdAt", desc: true }],
-    },
+    initialState: { sorting: [{ id: "createdAt", desc: true }] },
+    state: { columnFilters },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    onColumnFiltersChange: (columnFilters) =>
+      setColumnFilters((old) => {
+        const value = typeof columnFilters === "function" ? columnFilters(old) : columnFilters;
+        localStorage.setItem("documentsColumnFilters", JSON.stringify(value));
+        return value;
+      }),
   });
 
   const filingDueDateFor1099DIV = new Date(currentYear, 2, 31);

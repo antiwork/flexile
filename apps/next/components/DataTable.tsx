@@ -50,6 +50,8 @@ declare module "@tanstack/react-table" {
   }
 }
 
+export const filterValueSchema = z.array(z.string()).nullable();
+
 export const createColumnHelper = <T extends RowData>() => {
   const helper = originalCreateColumnHelper<T>();
   return {
@@ -174,7 +176,7 @@ export default function DataTable<T extends RowData>({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   {filterableColumns.map((column) => {
-                    const filterValue = z.array(z.string()).nullish().parse(column.getFilterValue());
+                    const filterValue = filterValueSchema.optional().parse(column.getFilterValue());
                     return (
                       <DropdownMenuSub key={column.id}>
                         <DropdownMenuSubTrigger>

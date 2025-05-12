@@ -29,7 +29,7 @@ const schema = z.object({
 function Create() {
   const company = useCurrentCompany();
   const router = useRouter();
-  const [{ workers }] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id, limit: 1 });
+  const [workers] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id, limit: 1 });
   const lastContractor = workers[0];
   const [templateId, setTemplateId] = useState<string | null>(null);
 

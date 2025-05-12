@@ -1,29 +1,64 @@
 import React from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { PayRateType } from "@/trpc/client";
+import { PayRateType, trpc } from "@/trpc/client";
 import { useFormContext } from "react-hook-form";
-import { Input } from "@/components/ui/input";
 import RadioButtons from "@/components/RadioButtons";
 import NumberInput from "@/components/NumberInput";
+import { useUserStore } from "@/global";
+import { Popover, PopoverContent } from "@/components/ui/popover";
+import { PopoverTrigger } from "@radix-ui/react-popover";
+import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { Input } from "@/components/ui/input";
+import { skipToken } from "@tanstack/react-query";
 
 export default function FormFields() {
   const form = useFormContext();
   const payRateType: unknown = form.watch("payRateType");
+  const companyId = useUserStore((state) => state.user?.currentCompanyId);
+  const { data: workers } = trpc.contractors.list.useQuery(companyId ? { companyId, excludeAlumni: true } : skipToken);
+
+  const uniqueRoles = workers ? [...new Set(workers.map((worker) => worker.role))].sort() : [];
 
   return (
     <>
       <FormField
         control={form.control}
         name="role"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Role</FormLabel>
-            <FormControl>
-              <Input {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
+        render={({ field }) => {
+          const filter = new RegExp(`${field.value}`, "iu");
+          return (
+            <FormItem>
+              <FormLabel>Role</FormLabel>
+              <Command shouldFilter={false}>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Input {...field} type="text" />
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    onOpenAutoFocus={(e) => e.preventDefault()}
+                    className="p-0"
+                    style={{ width: "var(--radix-popover-trigger-width)" }}
+                  >
+                    <CommandList>
+                      <CommandGroup>
+                        {uniqueRoles
+                          .filter((role) => filter.test(role))
+                          .map((option) => (
+                            <CommandItem key={option} value={option} onSelect={(e) => field.onChange(e)}>
+                              {option}
+                            </CommandItem>
+                          ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </PopoverContent>
+                </Popover>
+              </Command>
+              <FormMessage />
+            </FormItem>
+          );
+        }}
       />
 
       <FormField
