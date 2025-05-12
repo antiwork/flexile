@@ -29,13 +29,11 @@ const RichText = ({ content }: { content: Content }) => {
 };
 
 export const Editor = ({
-  label,
   value,
   invalid,
   onChange,
   className,
 }: {
-  label?: string;
   value: string | null;
   invalid?: boolean;
   onChange: (value: string) => void;
@@ -56,7 +54,6 @@ export const Editor = ({
           "outline-red": invalid,
         }),
         "aria-invalid": String(invalid),
-        "aria-label": label ?? "",
       },
     },
     immediatelyRender: false,
@@ -96,31 +93,22 @@ export const Editor = ({
   };
 
   return (
-    <div className="group grid gap-2">
-      {label ? (
-        <Label htmlFor={id} className="cursor-pointer">
-          {label}
-        </Label>
-      ) : null}
-      <div
-        className={cn("border-input rounded-md border bg-transparent shadow-xs", invalid ? "border-destructive" : "")}
-      >
-        <div className={cn("flex border-b", invalid ? "border-destructive" : "border-input")}>
-          {toolbarItems.map((item) => (
-            <button
-              type="button"
-              className={cn(linkClasses, "p-3 text-sm")}
-              key={item.label}
-              aria-label={item.label}
-              aria-pressed={editor?.isActive(item.name, item.attributes)}
-              onClick={() => onToolbarClick(item)}
-            >
-              <item.icon className="size-5" />
-            </button>
-          ))}
-        </div>
-        {editor ? <EditorContent editor={editor} /> : null}
+    <div className={cn("border-input rounded-md border bg-transparent shadow-xs", invalid ? "border-destructive" : "")}>
+      <div className={cn("flex border-b", invalid ? "border-destructive" : "border-input")}>
+        {toolbarItems.map((item) => (
+          <button
+            type="button"
+            className={cn(linkClasses, "p-3 text-sm")}
+            key={item.label}
+            aria-label={item.label}
+            aria-pressed={editor?.isActive(item.name, item.attributes)}
+            onClick={() => onToolbarClick(item)}
+          >
+            <item.icon className="size-5" />
+          </button>
+        ))}
       </div>
+      {editor ? <EditorContent editor={editor} /> : null}
       <Dialog open={!!addingLink} onOpenChange={() => setAddingLink(null)}>
         <DialogContent>
           <DialogHeader>

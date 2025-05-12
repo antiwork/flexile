@@ -11,6 +11,43 @@ import { users } from "@/db/schema";
 import { assert } from "@/utils/assert";
 
 test.describe("Edit contractor", () => {
+  test("allows searching for contractors by name", async ({ page }) => {
+    const { company } = await companiesFactory.create();
+    const { user: admin } = await usersFactory.create();
+    await companyAdministratorsFactory.create({
+      companyId: company.id,
+      userId: admin.id,
+    });
+
+    const { companyContractor: contractor1 } = await companyContractorsFactory.create({
+      companyId: company.id,
+      role: "SearchTest Role 1",
+    });
+    const contractor1User = await db.query.users.findFirst({
+      where: eq(users.id, contractor1.userId),
+    });
+    assert(contractor1User != null, "Contractor is required");
+
+    const { companyContractor: contractor2 } = await companyContractorsFactory.create({
+      companyId: company.id,
+      role: "SearchTest Role 2",
+    });
+    const contractor2User = await db.query.users.findFirst({
+      where: eq(users.id, contractor2.userId),
+    });
+    assert(contractor2User != null, "Contractor is required");
+
+    await login(page, admin);
+    await page.getByRole("link", { name: "People" }).click();
+
+    const searchInput = page.getByPlaceholder("Search by name...");
+    await expect(searchInput).toBeVisible();
+
+    await searchInput.fill(contractor1User.preferredName || "");
+
+    await expect(page.getByRole("row").filter({ hasText: contractor1User.preferredName || "" })).toBeVisible();
+    await expect(page.getByRole("row").filter({ hasText: contractor2User.preferredName || "" })).not.toBeVisible();
+  });
   test("allows editing details of contractors", async ({ page, sentEmails, next }) => {
     const { company } = await companiesFactory.create();
     const { user: admin } = await usersFactory.create();

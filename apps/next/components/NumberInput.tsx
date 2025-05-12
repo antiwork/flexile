@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/utils";
 
 const MAXIMUM_FRACTION_DIGITS_ALLOWED_BY_SPEC = 100;
 
@@ -11,9 +10,6 @@ const NumberInput = ({
   onChange,
   onBlur,
   onFocus,
-  prefix,
-  suffix,
-  invalid,
   decimal = false,
   maximumFractionDigits = MAXIMUM_FRACTION_DIGITS_ALLOWED_BY_SPEC,
   minimumFractionDigits,
@@ -23,19 +19,11 @@ const NumberInput = ({
 }: {
   value: number | null | undefined;
   onChange: (value: number | null) => void;
-  onBlur?: React.FocusEventHandler<HTMLInputElement>;
-  onFocus?: React.FocusEventHandler<HTMLInputElement>;
-  prefix?: string;
-  suffix?: string;
-  invalid?: boolean;
   decimal?: boolean;
   maximumFractionDigits?: number;
   minimumFractionDigits?: number;
   id?: string;
-} & Omit<
-  React.ComponentProps<typeof Input>,
-  "value" | "onChange" | "onFocus" | "onBlur" | "inputMode" | "prefix" | "aria-invalid"
->) => {
+} & Omit<React.ComponentProps<typeof Input>, "value" | "onChange" | "inputMode">) => {
   const [isFocused, setIsFocused] = useState(false);
   const [inputValue, setInputValue] = useState<string>("");
 
@@ -106,34 +94,16 @@ const NumberInput = ({
     e.target.select();
   };
 
-  const inputClasses = cn(className, prefix && "pl-7", suffix && "pr-10");
-
   return (
-    <div className="relative">
-      <Input
-        id={id}
-        value={inputValue}
-        onChange={handleChange}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        inputMode={decimal ? "decimal" : "numeric"}
-        className={inputClasses}
-        aria-invalid={invalid}
-        {...props}
-      />
-
-      {prefix ? (
-        <span className="text-muted-foreground pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm peer-disabled:opacity-50">
-          {prefix}
-        </span>
-      ) : null}
-
-      {suffix ? (
-        <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm peer-disabled:opacity-50">
-          {suffix}
-        </span>
-      ) : null}
-    </div>
+    <Input
+      id={id}
+      value={inputValue}
+      onChange={handleChange}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+      inputMode={decimal ? "decimal" : "numeric"}
+      {...props}
+    />
   );
 };
 

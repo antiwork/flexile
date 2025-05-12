@@ -30,7 +30,6 @@ Here's a breakdown of the architecture and key components:
 - **Stripe:** Handles payment processing.
 - **QuickBooks:** Integrates with QuickBooks for accounting.
 - **Wise:** Used for international money transfers.
-- **GitHub:** Integrates with GitHub for team updates and task management.
 - **Clerk:** Handles user authentication (in progress).
 
 **Testing:**

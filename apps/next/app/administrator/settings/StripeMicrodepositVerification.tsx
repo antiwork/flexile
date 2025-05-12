@@ -1,20 +1,27 @@
-import { useMutation } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
 import { fromUnixTime } from "date-fns";
-import { Map } from "immutable";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import Input from "@/components/Input";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { MutationStatusButton } from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
-import { assert } from "@/utils/assert";
 import { formatDate } from "@/utils/time";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+
+const formSchema = z.object({ verificationCode: z.string().length(6, "Please enter a 6-digit code.") }).or(
+  z.object({
+    firstAmount: z.number().min(1, "Please enter an amount."),
+    secondAmount: z.number().min(1, "Please enter an amount."),
+  }),
+);
 
 const StripeMicrodepositVerification = () => {
   const company = useCurrentCompany();
@@ -23,63 +30,49 @@ const StripeMicrodepositVerification = () => {
   const [{ microdepositVerificationDetails }] = trpc.companies.microdepositVerificationDetails.useSuspenseQuery({
     companyId: company.id,
   });
-  const microdepositVerification = trpc.companies.microdepositVerification.useMutation();
+  const microdepositVerification = trpc.companies.microdepositVerification.useMutation({
+    onSuccess: () => setShowVerificationModal(false),
+  });
   const [showVerificationModal, setShowVerificationModal] = useState(
     searchParams.get("open-modal") === "microdeposits",
   );
-  const [verificationCode, setVerificationCode] = useState("");
-  const [firstAmount, setFirstAmount] = useState<number | null>(null);
-  const [secondAmount, setSecondAmount] = useState<number | null>(null);
-  const [errors, setErrors] = useState(Map<string, string>());
-  const data = { verificationCode, firstAmount, secondAmount };
-  Object.entries(data).forEach(([key, value]) => useEffect(() => setErrors(errors.delete(key)), [value]));
+  const isDescriptorCode = microdepositVerificationDetails?.microdeposit_type === "descriptor_code";
+  const form = useForm({
+    defaultValues: isDescriptorCode ? { verificationCode: "" } : { firstAmount: 0, secondAmount: 0 },
+    resolver: zodResolver(formSchema),
+  });
 
   const arrivalDate =
     microdepositVerificationDetails && formatDate(fromUnixTime(microdepositVerificationDetails.arrival_timestamp));
 
-  const verifyMicrodeposit = useMutation({
-    mutationFn: async () => {
-      assert(microdepositVerificationDetails != null);
-      const newErrors = errors.clear().withMutations((errors) => {
-        if (microdepositVerificationDetails.microdeposit_type === "descriptor_code") {
-          if (verificationCode.length !== 6) errors.set("verificationCode", "Please enter a 6-digit code.");
-        } else {
-          if (!firstAmount) errors.set("firstAmount", "Please enter an amount.");
-          if (!secondAmount) errors.set("secondAmount", "Please enter an amount.");
-        }
+  const submit = form.handleSubmit(async (values) => {
+    try {
+      await microdepositVerification.mutateAsync({
+        companyId: company.id,
+        ...(values.verificationCode
+          ? { code: values.verificationCode }
+          : { amounts: [(values.firstAmount || 0) * 100, (values.secondAmount || 0) * 100] }),
       });
-      setErrors(newErrors);
-      if (newErrors.size > 0) throw new Error("Invalid input");
-
-      try {
-        await microdepositVerification.mutateAsync({
-          companyId: company.id,
-          ...(microdepositVerificationDetails.microdeposit_type === "descriptor_code"
-            ? { code: verificationCode }
-            : { amounts: [(firstAmount || 0) * 100, (secondAmount || 0) * 100] }),
-        });
-      } catch (error) {
-        if (error instanceof TRPCClientError) {
-          if (microdepositVerificationDetails.microdeposit_type === "descriptor_code") {
-            errors.set(
-              "verificationCode",
+    } catch (error) {
+      if (error instanceof TRPCClientError) {
+        if (isDescriptorCode) {
+          form.setError("verificationCode", {
+            message:
               error.message ||
-                `Invalid code. Please ensure you're entering the correct 6-digit code from the $0.01 Stripe deposit on ${arrivalDate}`,
-            );
-          } else {
-            errors.set(
-              "secondAmount",
+              `Invalid code. Please ensure you're entering the correct 6-digit code from the $0.01 Stripe deposit on ${arrivalDate}`,
+          });
+        } else {
+          form.setError("secondAmount", {
+            message:
               error.message ||
-                `Incorrect deposit amounts. Please ensure you're entering the amounts from the Stripe deposits on ${arrivalDate}`,
-            );
-          }
-        } else throw error;
-      }
-    },
-    onSuccess: () => setShowVerificationModal(false),
+              `Incorrect deposit amounts. Please ensure you're entering the amounts from the Stripe deposits on ${arrivalDate}`,
+          });
+        }
+      } else throw error;
+    }
   });
 
-  return !microdepositVerificationDetails || verifyMicrodeposit.isSuccess ? null : (
+  return !microdepositVerificationDetails || microdepositVerification.isSuccess ? null : (
     <>
       <Alert>
         <AlertTitle>Verify your bank account to enable contractor payments</AlertTitle>
@@ -108,60 +101,62 @@ const StripeMicrodepositVerification = () => {
             </p>
           )}
 
-          <p>
-            If {microdepositVerificationDetails.microdeposit_type === "descriptor_code" ? "it's" : "they're"} not
-            visible yet, please check in 1-2 days.
-          </p>
+          <p>If {isDescriptorCode ? "it's" : "they're"} not visible yet, please check in 1-2 days.</p>
 
-          {microdepositVerificationDetails.microdeposit_type === "descriptor_code" ? (
-            <Input
-              value={verificationCode}
-              onChange={setVerificationCode}
-              label="6-digit code"
-              invalid={errors.has("verificationCode")}
-              help={errors.get("verificationCode")}
-            />
-          ) : (
-            <div className="grid gap-4">
-              <div>
-                <Label htmlFor="amount-1">Amount 1</Label>
-                <NumberInput
-                  id="amount-1"
-                  value={firstAmount}
-                  onChange={(value) => setFirstAmount(value)}
-                  invalid={errors.has("firstAmount")}
-                  prefix="$"
-                  decimal
-                  {...(errors.has("firstAmount") && { "aria-invalid": true })}
+          <Form {...form}>
+            <form onSubmit={(e) => void submit(e)}>
+              {isDescriptorCode ? (
+                <FormField
+                  control={form.control}
+                  name="verificationCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>6-digit code</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                {errors.get("firstAmount") && (
-                  <span className="text-destructive text-sm">{errors.get("firstAmount")}</span>
-                )}
-              </div>
+              ) : (
+                <div className="grid gap-4">
+                  <FormField
+                    control={form.control}
+                    name="firstAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Amount 1</FormLabel>
+                        <FormControl>
+                          <NumberInput {...field} prefix="$" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="secondAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Amount 2</FormLabel>
+                        <FormControl>
+                          <NumberInput {...field} prefix="$" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
 
-              <div>
-                <Label htmlFor="amount-2">Amount 2</Label>
-                <NumberInput
-                  id="amount-2"
-                  value={secondAmount}
-                  onChange={(value) => setSecondAmount(value)}
-                  invalid={errors.has("secondAmount")}
-                  prefix="$"
-                  decimal
-                  {...(errors.has("secondAmount") && { "aria-invalid": true })}
-                />
-                {errors.get("secondAmount") && (
-                  <span className="text-destructive text-sm">{errors.get("secondAmount")}</span>
-                )}
-              </div>
-            </div>
-          )}
-
-          <DialogFooter>
-            <MutationButton loadingText="Submitting..." mutation={verifyMicrodeposit}>
-              Submit
-            </MutationButton>
-          </DialogFooter>
+              <DialogFooter>
+                <MutationStatusButton type="submit" loadingText="Submitting..." mutation={microdepositVerification}>
+                  Submit
+                </MutationStatusButton>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </>

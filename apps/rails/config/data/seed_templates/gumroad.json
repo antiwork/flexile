@@ -22,7 +22,6 @@
         "state": "CA",
         "registration_state": "CA",
         "zip_code": "91505",
-        "description": "Gumroad is a platform that enables creators to sell products directly to consumers.",
         "valuation_in_dollars": 149000000,
         "share_price_in_usd": 7.84,
         "fmv_per_share_in_usd": 7.84,
@@ -282,236 +281,236 @@
         }
       ],
       "company_contractors": [
+        {
+          "user_attributes": {
+            "preferred_name": "Sharang",
+            "legal_name": "Engineer Example",
+            "country_code": "US",
+            "citizenship_country_code": "IN",
+            "street_address": "123 Main St",
+            "city": "Los Angeles",
+            "zip_code": "90001",
+            "state": "CA"
+          },
+          "wise_recipient_attributes": {
+            "currency": "USD",
+            "type": "aba",
+            "details": {
+              "legalType": "PRIVATE",
+              "abartn": "064000020",
+              "accountType": "CHECKING"
+            }
+          },
+          "company_worker": {
+            "model_attributes": {
+              "started_at": "2024-03-01",
+              "hours_per_week": 35,
+              "pay_rate_in_subunits": 19900,
+              "role": "Software engineer",
+              "pay_rate_type": "hourly"
+            }
+          },
+          "contractor_profile_attributes": {
+            "available_hours_per_week": 5,
+            "available_for_hire": true
+          },
+          "company_investor_attributes": {
+            "investment_amount_in_cents": 0
+          },
+          "equity_allocation_attributes": {
+            "equity_percentage": 25,
+            "status": "approved",
+            "locked": true
+          },
+          "equity_grants": [
             {
-              "user_attributes": {
-                "preferred_name": "Sharang",
-                "legal_name": "Engineer Example",
-                "country_code": "US",
-                "citizenship_country_code": "IN",
-                "street_address": "123 Main St",
-                "city": "Los Angeles",
-                "zip_code": "90001",
-                "state": "CA"
+              "option_pool": {
+                "year": 2020
               },
-              "wise_recipient_attributes": {
-                "currency": "USD",
-                "type": "aba",
-                "details": {
-                  "legalType": "PRIVATE",
-                  "abartn": "064000020",
-                  "accountType": "CHECKING"
-                }
+              "year": 2020,
+              "option_pool_year": 2020,
+              "share_price_usd": 7.84,
+              "exercise_price_usd": 2.71,
+              "number_of_shares": 5647,
+              "vested_shares": 5647,
+              "issue_date_relationship": "employee",
+              "option_grant_type": "iso",
+              "voluntary_termination_exercise_months": 3,
+              "involuntary_termination_exercise_months": 3,
+              "termination_with_cause_exercise_months": 0,
+              "death_exercise_months": 18,
+              "disability_exercise_months": 12,
+              "retirement_exercise_months": 3,
+              "model_attributes": {
+                "accepted_at": "2020-01-02",
+                "board_approval_date": "2020-01-01"
               },
-              "company_worker": {
+              "equity_grant_exercise": {
                 "model_attributes": {
-                  "started_at": "2024-03-01",
-                  "hours_per_week": 35,
-                  "pay_rate_in_subunits": 19900,
-                  "role": "Software engineer",
-                  "pay_rate_type": "hourly"
-                }
-              },
-              "contractor_profile_attributes": {
-                "available_hours_per_week": 5,
-                "available_for_hire": true
-              },
-              "company_investor_attributes": {
-                "investment_amount_in_cents": 0
-              },
-              "equity_allocation_attributes": {
-                "equity_percentage": 25,
-                "status": "approved",
-                "locked": true
-              },
-              "equity_grants": [
-                {
-                  "option_pool": {
-                    "year": 2020
-                  },
-                  "year": 2020,
-                  "option_pool_year": 2020,
-                  "share_price_usd": 7.84,
-                  "exercise_price_usd": 2.71,
-                  "number_of_shares": 5647,
-                  "vested_shares": 5647,
-                  "issue_date_relationship": "employee",
-                  "option_grant_type": "iso",
-                  "voluntary_termination_exercise_months": 3,
-                  "involuntary_termination_exercise_months": 3,
-                  "termination_with_cause_exercise_months": 0,
-                  "death_exercise_months": 18,
-                  "disability_exercise_months": 12,
-                  "retirement_exercise_months": 3,
-                  "model_attributes": {
-                    "accepted_at": "2020-01-02",
-                    "board_approval_date": "2020-01-01"
-                  },
-                  "equity_grant_exercise": {
-                    "model_attributes": {
-                      "number_of_options": 500
-                    }
-                  }
-                },
-                {
-                  "option_pool": {
-                    "year": 2020
-                  },
-                  "year": 2021,
-                  "share_price_usd": 7.84,
-                  "exercise_price_usd": 4.71,
-                  "number_of_shares": 4932,
-                  "vested_shares": 2136,
-                  "issue_date_relationship": "consultant",
-                  "board_approval_date": "2021-01-01",
-                  "option_grant_type": "nso",
-                  "model_attributes": {
-                    "accepted_at": "2021-01-02"
-                  }
-                }
-              ]
-            },
-            {
-              "user_attributes": {
-                "preferred_name": "Onboarder",
-                "legal_name": "Onboarding Example",
-                "country_code": "US"
-              },
-              "company_worker": {
-                "model_attributes": {
-                  "started_at": "2024-08-01",
-                  "hours_per_week": 10,
-                  "pay_rate_in_subunits": 10000,
-                  "role": "Software engineer",
-                  "pay_rate_type": "hourly"
+                  "number_of_options": 500
                 }
               }
             },
             {
-              "user_attributes": {
-                "preferred_name": "Dustin",
-                "legal_name": "Dustin Layoff",
-                "country_code": "US",
-                "citizenship_country_code": "US",
-                "street_address": "456 Oak Avenue",
-                "city": "San Francisco",
-                "zip_code": "94122",
-                "state": "CA"
+              "option_pool": {
+                "year": 2020
               },
-              "wise_recipient_attributes": {
-                "currency": "USD",
-                "type": "aba",
-                "details": {
-                  "legalType": "PRIVATE",
-                  "abartn": "064000020",
-                  "accountType": "CHECKING"
-                }
-              },
-              "company_worker": {
-                "model_attributes": {
-                  "started_at": "2023-07-01",
-                  "ended_at": "2024-01-20",
-                  "hours_per_week": 10,
-                  "pay_rate_in_subunits": 9900,
-                  "role": "Software engineer",
-                  "pay_rate_type": "hourly"
-                }
-              },
-              "contractor_profile_attributes": {
-                "available_hours_per_week": 5,
-                "available_for_hire": true
-              }
-            },
-            {
-              "user_attributes": {
-                "preferred_name": "Caro",
-                "legal_name": "Designer Example",
-                "country_code": "PT",
-                "citizenship_country_code": "PT",
-                "street_address": "Rua da Boa Nova, 114",
-                "city": "Lisbon",
-                "zip_code": "1000-001",
-                "state": "Lisbon"
-              },
-              "wise_recipient_attributes": {
-                "currency": "EUR",
-                "type": "iban",
-                "details": {
-                  "legalType": "PRIVATE"
-                }
-              },
-              "company_worker": {
-                "model_attributes": {
-                  "started_at": "2023-05-01",
-                  "hours_per_week": 15,
-                  "pay_rate_in_subunits": 19800,
-                  "role": "Product designer",
-                  "pay_rate_type": "hourly"
-                }
-              },
-              "contractor_profile_attributes": {
-                "available_hours_per_week": 10,
-                "available_for_hire": true
-              }
-            },
-            {
-              "user_attributes": {
-                "preferred_name": "Vinny",
-                "legal_name": "Vendor Example",
-                "country_code": "US",
-                "citizenship_country_code": "US",
-                "street_address": "123 Broadway",
-                "city": "New York",
-                "zip_code": "10007",
-                "state": "NY"
-              },
-              "wise_recipient_attributes": {
-                "currency": "USD",
-                "type": "aba",
-                "details": {
-                  "legalType": "PRIVATE",
-                  "abartn": "064000020",
-                  "accountType": "CHECKING"
-                }
-              },
-              "company_worker": {
-                "model_attributes": {
-                  "started_at": "2024-06-01",
-                  "pay_rate_in_subunits": 50000,
-                  "role": "Project-based engineer",
-                  "pay_rate_type": "project_based"
-                }
-              }
-            },
-            {
-              "user_attributes": {
-                "preferred_name": "Sarah",
-                "legal_name": "Sarah Helpman",
-                "country_code": "US",
-                "citizenship_country_code": "US",
-                "street_address": "742 Evergreen Terrace",
-                "city": "Springfield",
-                "zip_code": "62701",
-                "state": "IL"
-              },
-              "wise_recipient_attributes": {
-                "currency": "USD",
-                "type": "aba",
-                "details": {
-                  "legalType": "PRIVATE",
-                  "abartn": "064000020",
-                  "accountType": "CHECKING"
-                }
-              },
-              "company_worker": {
-                "model_attributes": {
-                  "started_at": "2024-05-01",
-                  "hours_per_week": 15,
-                  "pay_rate_in_subunits": 12400,
-                  "role": "Customer supporter",
-                  "pay_rate_type": "hourly"
-                }
+              "year": 2021,
+              "share_price_usd": 7.84,
+              "exercise_price_usd": 4.71,
+              "number_of_shares": 4932,
+              "vested_shares": 2136,
+              "issue_date_relationship": "consultant",
+              "board_approval_date": "2021-01-01",
+              "option_grant_type": "nso",
+              "model_attributes": {
+                "accepted_at": "2021-01-02"
               }
             }
+          ]
+        },
+        {
+          "user_attributes": {
+            "preferred_name": "Onboarder",
+            "legal_name": "Onboarding Example",
+            "country_code": "US"
+          },
+          "company_worker": {
+            "model_attributes": {
+              "started_at": "2024-08-01",
+              "hours_per_week": 10,
+              "pay_rate_in_subunits": 10000,
+              "role": "Software engineer",
+              "pay_rate_type": "hourly"
+            }
+          }
+        },
+        {
+          "user_attributes": {
+            "preferred_name": "Dustin",
+            "legal_name": "Dustin Layoff",
+            "country_code": "US",
+            "citizenship_country_code": "US",
+            "street_address": "456 Oak Avenue",
+            "city": "San Francisco",
+            "zip_code": "94122",
+            "state": "CA"
+          },
+          "wise_recipient_attributes": {
+            "currency": "USD",
+            "type": "aba",
+            "details": {
+              "legalType": "PRIVATE",
+              "abartn": "064000020",
+              "accountType": "CHECKING"
+            }
+          },
+          "company_worker": {
+            "model_attributes": {
+              "started_at": "2023-07-01",
+              "ended_at": "2024-01-20",
+              "hours_per_week": 10,
+              "pay_rate_in_subunits": 9900,
+              "role": "Software engineer",
+              "pay_rate_type": "hourly"
+            }
+          },
+          "contractor_profile_attributes": {
+            "available_hours_per_week": 5,
+            "available_for_hire": true
+          }
+        },
+        {
+          "user_attributes": {
+            "preferred_name": "Caro",
+            "legal_name": "Designer Example",
+            "country_code": "PT",
+            "citizenship_country_code": "PT",
+            "street_address": "Rua da Boa Nova, 114",
+            "city": "Lisbon",
+            "zip_code": "1000-001",
+            "state": "Lisbon"
+          },
+          "wise_recipient_attributes": {
+            "currency": "EUR",
+            "type": "iban",
+            "details": {
+              "legalType": "PRIVATE"
+            }
+          },
+          "company_worker": {
+            "model_attributes": {
+              "started_at": "2023-05-01",
+              "hours_per_week": 15,
+              "pay_rate_in_subunits": 19800,
+              "role": "Product designer",
+              "pay_rate_type": "hourly"
+            }
+          },
+          "contractor_profile_attributes": {
+            "available_hours_per_week": 10,
+            "available_for_hire": true
+          }
+        },
+        {
+          "user_attributes": {
+            "preferred_name": "Vinny",
+            "legal_name": "Vendor Example",
+            "country_code": "US",
+            "citizenship_country_code": "US",
+            "street_address": "123 Broadway",
+            "city": "New York",
+            "zip_code": "10007",
+            "state": "NY"
+          },
+          "wise_recipient_attributes": {
+            "currency": "USD",
+            "type": "aba",
+            "details": {
+              "legalType": "PRIVATE",
+              "abartn": "064000020",
+              "accountType": "CHECKING"
+            }
+          },
+          "company_worker": {
+            "model_attributes": {
+              "started_at": "2024-06-01",
+              "pay_rate_in_subunits": 50000,
+              "role": "Project-based engineer",
+              "pay_rate_type": "project_based"
+            }
+          }
+        },
+        {
+          "user_attributes": {
+            "preferred_name": "Sarah",
+            "legal_name": "Sarah Helpman",
+            "country_code": "US",
+            "citizenship_country_code": "US",
+            "street_address": "742 Evergreen Terrace",
+            "city": "Springfield",
+            "zip_code": "62701",
+            "state": "IL"
+          },
+          "wise_recipient_attributes": {
+            "currency": "USD",
+            "type": "aba",
+            "details": {
+              "legalType": "PRIVATE",
+              "abartn": "064000020",
+              "accountType": "CHECKING"
+            }
+          },
+          "company_worker": {
+            "model_attributes": {
+              "started_at": "2024-05-01",
+              "hours_per_week": 15,
+              "pay_rate_in_subunits": 12400,
+              "role": "Customer supporter",
+              "pay_rate_type": "hourly"
+            }
+          }
+        }
       ]
     }
   }

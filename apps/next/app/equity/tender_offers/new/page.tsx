@@ -2,38 +2,43 @@
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React from "react";
 import DatePicker from "@/components/DatePicker";
-import FormSection from "@/components/FormSection";
 import MainLayout from "@/components/layouts/Main";
-import MutationButton from "@/components/MutationButton";
+import { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import { Button } from "@/components/ui/button";
-import { CardContent, CardFooter } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { md5Checksum } from "@/utils";
-import type { DateValue } from "react-aria-components";
 import { Input } from "@/components/ui/input";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { CalendarDate } from "@internationalized/date";
+
+const formSchema = z.object({
+  startDate: z.instanceof(CalendarDate),
+  endDate: z.instanceof(CalendarDate),
+  minimumValuation: z.number(),
+  attachment: z.instanceof(File),
+});
 
 export default function NewBuyback() {
   const company = useCurrentCompany();
   const router = useRouter();
 
-  const [startDate, setStartDate] = useState<DateValue | null>(null);
-  const [endDate, setEndDate] = useState<DateValue | null>(null);
-  const [minimumValuation, setMinimumValuation] = useState(0);
-  const [attachment, setAttachment] = useState<File | undefined>(undefined);
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+  });
 
   const createUploadUrl = trpc.files.createDirectUploadUrl.useMutation();
   const createTenderOffer = trpc.tenderOffers.create.useMutation();
 
-  const valid = !!(startDate && endDate && attachment);
-
   const createMutation = useMutation({
-    mutationFn: async () => {
-      if (!valid) return;
+    mutationFn: async (values: z.infer<typeof formSchema>) => {
+      const { startDate, endDate, minimumValuation, attachment } = values;
 
       const base64Checksum = await md5Checksum(attachment);
       const { directUploadUrl, key } = await createUploadUrl.mutateAsync({
@@ -66,6 +71,8 @@ export default function NewBuyback() {
     },
   });
 
+  const submit = form.handleSubmit((data) => createMutation.mutate(data));
+
   return (
     <MainLayout
       title="Start new buyback"
@@ -75,37 +82,69 @@ export default function NewBuyback() {
         </Button>
       }
     >
-      <FormSection title="Details">
-        <CardContent>
-          <div className="grid gap-4">
-            <DatePicker label="Start date" value={startDate} onChange={setStartDate} granularity="day" />
-            <DatePicker label="End date" value={endDate} onChange={setEndDate} granularity="day" />
-            <div className="grid gap-2">
-              <Label htmlFor="starting-valuation">Starting valuation</Label>
-              <NumberInput
-                id="starting-valuation"
-                value={minimumValuation}
-                onChange={(value) => setMinimumValuation(value || 0)}
-                prefix="$"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="attachment">Document package</Label>
-              <Input
-                id="attachment"
-                type="file"
-                accept="application/zip"
-                onChange={(e) => setAttachment(e.target.files?.[0])}
-              />
-            </div>
-          </div>
-        </CardContent>
-        <CardFooter>
-          <MutationButton mutation={createMutation} disabled={!valid} loadingText="Creating...">
+      <Form {...form}>
+        <form onSubmit={(e) => void submit(e)} className="grid gap-4">
+          <FormField
+            control={form.control}
+            name="startDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <DatePicker {...field} label="Start date" granularity="day" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="endDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <DatePicker label="End date" {...field} granularity="day" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="minimumValuation"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Starting valuation</FormLabel>
+                <FormControl>
+                  <NumberInput {...field} prefix="$" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="attachment"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Document package</FormLabel>
+                <FormControl>
+                  <Input type="file" accept="application/zip" onChange={(e) => field.onChange(e.target.files?.[0])} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <MutationStatusButton
+            className="justify-self-end"
+            type="submit"
+            mutation={createMutation}
+            loadingText="Creating..."
+          >
             Create buyback
-          </MutationButton>
-        </CardFooter>
-      </FormSection>
+          </MutationStatusButton>
+        </form>
+      </Form>
     </MainLayout>
   );
 }

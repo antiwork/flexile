@@ -36,20 +36,23 @@ export const test = baseTest.extend<{
 
 export const expect = baseExpect.extend({
   async toBeValid(locator: Locator) {
-    let pass = !this.isNot;
+    let error: unknown;
     try {
-      await expect
-        .poll(
-          async () =>
-            (await locator.evaluate((el: HTMLInputElement) => el.validity.valid)) &&
+      await expect(async () =>
+        expect(
+          (await locator.evaluate((el: HTMLInputElement) => el.validity.valid)) &&
             (await locator.getAttribute("aria-invalid")) !== "true",
-        )
-        .toBe(pass);
-    } catch {
-      pass = !pass;
+        ).toBe(!this.isNot),
+      ).toPass();
+    } catch (e) {
+      error = e;
     }
 
-    return { pass, message: () => `expected element to be ${this.isNot ? "invalid" : "valid"}` };
+    return {
+      pass: !error !== this.isNot,
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      message: () => `expected element to be ${this.isNot ? "invalid" : "valid"}: ${error}`,
+    };
   },
 
   async toHaveTooltip(locator: Locator, expectedText: string, { exact = false }: { exact?: boolean } = {}) {

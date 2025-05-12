@@ -15,7 +15,7 @@ import {
 } from "@/db/schema";
 import env from "@/env";
 import { inngest } from "@/inngest/client";
-import { companyProcedure, createRouter, getS3Url } from "@/trpc";
+import { companyProcedure, createRouter } from "@/trpc";
 import { simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
 import { templatesRouter } from "./templates";
@@ -43,17 +43,22 @@ export const documentsRouter = createRouter({
         input.signable != null ? (input.signable ? signable : not(signable)) : undefined,
       );
       const rows = await db
-        .select({
+        .selectDistinctOn([documents.id], {
           ...pick(documents, "id", "name", "createdAt", "docusealSubmissionId", "type"),
           lawyerApproved: sql<boolean>`${boardConsents.lawyerApprovedAt} IS NOT NULL`,
+          attachment: pick(activeStorageBlobs, "key", "filename"),
         })
         .from(documents)
         .innerJoin(documentSignatures, eq(documents.id, documentSignatures.documentId))
         .innerJoin(users, eq(documentSignatures.userId, users.id))
         .leftJoin(boardConsents, eq(documents.id, boardConsents.documentId))
+        .leftJoin(
+          activeStorageAttachments,
+          and(eq(activeStorageAttachments.recordType, "Document"), eq(documents.id, activeStorageAttachments.recordId)),
+        )
+        .leftJoin(activeStorageBlobs, eq(activeStorageAttachments.blobId, activeStorageBlobs.id))
         .where(where)
-        .orderBy(desc(documents.createdAt))
-        .groupBy(documents.id, boardConsents.lawyerApprovedAt);
+        .orderBy(desc(documents.id));
 
       const signatories = await db.query.documentSignatures.findMany({
         columns: { documentId: true, title: true, signedAt: true },
@@ -66,28 +71,9 @@ export const documentsRouter = createRouter({
         with: { user: { columns: simpleUser.columns } },
         orderBy: desc(documentSignatures.signedAt),
       });
-      const attachmentRows = await db.query.activeStorageAttachments.findMany({
-        columns: { recordId: true },
-        with: { blob: { columns: { key: true, filename: true } } },
-        where: and(
-          eq(activeStorageAttachments.recordType, "Document"),
-          inArray(
-            activeStorageAttachments.recordId,
-            rows.map((document) => document.id),
-          ),
-        ),
-      });
-      const getUrl = (blob: Pick<typeof activeStorageBlobs.$inferSelect, "key" | "filename">) =>
-        getS3Url(blob.key, blob.filename);
-      const attachments = new Map(
-        await Promise.all(
-          attachmentRows.map(async (attachment) => [attachment.recordId, await getUrl(attachment.blob)] as const),
-        ),
-      );
 
       return rows.map((document) => ({
-        ...pick(document, "id", "name", "createdAt", "docusealSubmissionId", "type", "lawyerApproved"),
-        attachment: attachments.get(document.id),
+        ...document,
         signatories: signatories
           .filter((signature) => signature.documentId === document.id)
           .map((signature) => ({

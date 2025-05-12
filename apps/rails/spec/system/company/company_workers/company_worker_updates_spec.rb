@@ -63,31 +63,5 @@ RSpec.describe "Company contractor updates page" do
 
       expect(page).to have_text("Posted on", count: 3)
     end
-
-    context "when GitHub integration exists" do
-      let!(:github_integration) { create(:github_integration, company:) }
-      let(:task) { update5.tasks.first }
-
-      before do
-        create(:github_integration_record,
-               integratable: task,
-               integration: github_integration,
-               json_data: {
-                 external_id: "12345678",
-                 description: "Team Updates - GitHub integration",
-                 resource_id: "3186",
-                 resource_name: "pulls",
-                 status: "closed",
-                 url: "https://github.com/antiwork/flexile/pull/3186",
-               })
-        task.update!(name: "#3186")
-      end
-
-      it "displays an unfurled GitHub link when the task has a GitHub integration record" do
-        visit spa_company_worker_path(company.external_id, contractor.external_id, selectedTab: "updates")
-
-        displays_update_item_with_github_link(task)
-      end
-    end
   end
 end

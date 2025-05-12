@@ -10,9 +10,3 @@ export type QuickbooksIntegrationConfiguration = {
   default_bank_account_id: string | null;
   equity_compensation_expense_account_id: string | null;
 };
-
-export type GitHubIntegrationConfiguration = {
-  organizations: string[];
-  access_token: string;
-  webhooks: { id: string; organization: string }[];
-};

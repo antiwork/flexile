@@ -30,7 +30,6 @@ export const companiesFactory = {
         stripeCustomerId: "cus_M2QFeoOFttyzTx",
         brandColor: faker.color.rgb({ prefix: "#" }),
         website: "https://www.example.com",
-        description: faker.company.catchPhrase(),
         requiredInvoiceApprovalCount: 2,
         fullyDilutedShares: 1000000n,
         valuationInDollars: 2000000n,

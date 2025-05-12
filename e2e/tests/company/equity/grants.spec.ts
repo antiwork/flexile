@@ -8,7 +8,7 @@ import { equityAllocationsFactory } from "@test/factories/equityAllocations";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { optionPoolsFactory } from "@test/factories/optionPools";
 import { usersFactory } from "@test/factories/users";
-import { selectComboboxOption } from "@test/helpers";
+import { selectComboboxOption, fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
@@ -116,7 +116,7 @@ test.describe("New Contractor", () => {
     await page.goto("/invoices");
     await page.getByRole("link", { name: "New invoice" }).first().click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-1");
-    await page.getByLabel("Date").fill("2024-10-15");
+    await fillDatePicker(page, "Date", "10/15/2024");
     await page.getByPlaceholder("HH:MM").first().fill("05:30");
     await page.waitForTimeout(500); // TODO (techdebt): avoid this
     await page.getByPlaceholder("Description").fill("Software development work");
@@ -133,7 +133,7 @@ test.describe("New Contractor", () => {
     await page.goto("/invoices");
     await page.getByRole("link", { name: "New invoice" }).first().click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-2");
-    await page.getByLabel("Date").fill("2024-11-01");
+    await fillDatePicker(page, "Date", "11/01/2024");
     await page.getByLabel("Amount").fill("1000");
     await page.waitForTimeout(500); // TODO (techdebt): avoid this
     await page.getByPlaceholder("Description").fill("Promotional video production work");
@@ -166,7 +166,7 @@ test.describe("New Contractor", () => {
     await page.getByRole("button", { name: "Exercise Options" }).click();
     await withinModal(
       async (modal) => {
-        await modal.getByLabel("Options to exercise value").fill("10");
+        await modal.getByLabel("Options to exercise").fill("10");
         await expect(modal.getByText("Exercise cost$50")).toBeVisible();
         await expect(modal.getByText("Options valueBased on 2M valuation$1,000")).toBeVisible();
         await modal.getByRole("button", { name: "Proceed" }).click();

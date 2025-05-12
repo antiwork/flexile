@@ -11,6 +11,7 @@ import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
+import Link from "next/link";
 
 const columnHelper = createColumnHelper<RouterOutput["consolidatedInvoices"]["list"][number]>();
 const columns = [
@@ -43,16 +44,16 @@ const columns = [
         );
     }
   }),
-  columnHelper.accessor("receiptUrl", {
+  columnHelper.accessor("attachment", {
     id: "actions",
     header: "",
     cell: (info) => {
-      const receiptUrl = info.getValue();
-      return receiptUrl ? (
+      const attachment = info.getValue();
+      return attachment ? (
         <Button asChild variant="outline" size="small">
-          <a href={receiptUrl} download>
+          <Link href={`/download/${attachment.key}/${attachment.filename}`} download>
             <ArrowDownTrayIcon className="size-4" /> Download
-          </a>
+          </Link>
         </Button>
       ) : null;
     },

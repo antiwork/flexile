@@ -19,6 +19,22 @@
 - For writing front-end code:
   - Do not use `React.FC`. Use the following syntax: `const Component = ({ prop1, prop2 }: { prop1: string; prop2: number }) => { ... }`
 
+- After any functional code change:
+  - For Ruby/Rails changes:
+    - Add or update unit tests in `apps/rails/spec/models/` for model changes
+    - Add or update controller tests in `apps/rails/spec/controllers/` for controller changes
+    - Add or update system tests in `apps/rails/spec/system/` for UI flow changes
+    - Run tests with `bundle exec rspec <path_to_spec>` to verify
+  - For TypeScript/Next.js changes:
+    - Add or update unit tests for front-end business logic
+    - Add or update e2e tests in `e2e/tests/` that cover the changed functionality
+    - Follow the existing test patterns in similar files
+    - Run tests with `pnpm playwright test <path_to_spec>` to verify e2e tests
+  - Tests should cover:
+    - Happy path (expected behavior)
+    - Edge cases and error handling
+    - Any regressions that might be introduced
+
 - Tech debt:
   - Add a `TODO (techdebt)` comment to document refactors that should be made in the future
 

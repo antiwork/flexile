@@ -12,6 +12,7 @@ import type { DatePickerProps as RacDatePickerProps, DateValue } from "react-ari
 
 import { Calendar } from "@/components/ui/calendar";
 import { DateInput } from "@/components/ui/datefield";
+import { cn } from "@/utils";
 
 interface DatePickerProps extends Omit<RacDatePickerProps<DateValue>, "children"> {
   label: string;
@@ -20,7 +21,7 @@ interface DatePickerProps extends Omit<RacDatePickerProps<DateValue>, "children"
 
 export default function DatePicker({ label, className, ...props }: DatePickerProps) {
   return (
-    <RacDatePicker {...props} className={className ? `${className} *:not-first:mt-2` : "*:not-first:mt-2"}>
+    <RacDatePicker {...props} className={cn(className, "*:not-first:mt-2")}>
       <RacLabel className="text-foreground text-base">{label}</RacLabel>
       <div className="flex">
         <Group className="w-full">

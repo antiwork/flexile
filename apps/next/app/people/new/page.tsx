@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
-import Input from "@/components/Input";
+import { Input } from "@/components/ui/input";
 import MainLayout from "@/components/layouts/Main";
 import { MutationStatusButton } from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,7 @@ const schema = z.object({
 function Create() {
   const company = useCurrentCompany();
   const router = useRouter();
-  const [{ workers }] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id, limit: 1 });
+  const [workers] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id, limit: 1 });
   const lastContractor = workers[0];
   const [templateId, setTemplateId] = useState<string | null>(null);
 
@@ -113,7 +113,7 @@ function Create() {
             companyId={company.id}
             type={DocumentTemplateType.ConsultingContract}
           />
-          <MutationStatusButton mutation={saveMutation} type="submit">
+          <MutationStatusButton mutation={saveMutation} type="submit" className="justify-self-end">
             <PaperAirplaneIcon className="h-5 w-5" />
             Send invite
           </MutationStatusButton>

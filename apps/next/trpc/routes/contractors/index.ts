@@ -57,7 +57,7 @@ export const contractorsRouter = createRouter({
           onboardingCompleted: isOnboardingCompleted(worker.user),
         } as const,
       }));
-      return { workers };
+      return workers;
     }),
   listForTeamUpdates: companyProcedure.query(async ({ ctx }) => {
     if (!ctx.companyAdministrator && !isActive(ctx.companyContractor)) throw new TRPCError({ code: "FORBIDDEN" });

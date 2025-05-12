@@ -1,8 +1,8 @@
 "use client";
 import { ArrowDownTrayIcon, InformationCircleIcon } from "@heroicons/react/16/solid";
 import { BriefcaseIcon, CheckCircleIcon, PaperAirplaneIcon, PencilIcon } from "@heroicons/react/24/outline";
-import { skipToken, useMutation } from "@tanstack/react-query";
-import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
+import { skipToken } from "@tanstack/react-query";
+import { getFilteredRowModel, getSortedRowModel, type ColumnFiltersState } from "@tanstack/react-table";
 import { FileTextIcon, GavelIcon, PercentIcon } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
@@ -10,11 +10,11 @@ import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
 import DocusealForm, { customCss } from "@/app/documents/DocusealForm";
-import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import Input from "@/components/Input";
+import DataTable, { createColumnHelper, filterValueSchema, useTable } from "@/components/DataTable";
+import { Input } from "@/components/ui/input";
 import MainLayout from "@/components/layouts/Main";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import MutationButton from "@/components/MutationButton";
+import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import Status, { type Variant as StatusVariant } from "@/components/Status";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -26,6 +26,10 @@ import { DocumentTemplateType, DocumentType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
 import { formatDate } from "@/utils/time";
 import { linkClasses } from "@/components/Link";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 type Document = RouterOutput["documents"]["list"][number];
 type SignableDocument = Document & { docusealSubmissionId: number };
@@ -44,6 +48,8 @@ const templateTypeLabels = {
   [DocumentTemplateType.EquityPlanContract]: "Equity plan",
   [DocumentTemplateType.BoardConsent]: "Board consent",
 };
+
+const columnFiltersSchema = z.array(z.object({ id: z.string(), value: filterValueSchema }));
 
 const getCompletedAt = (document: Document) =>
   document.signatories.every((signatory) => signatory.signedAt)
@@ -204,6 +210,10 @@ const EditTemplates = () => {
   );
 };
 
+const inviteLawyerSchema = z.object({
+  email: z.string().email(),
+});
+
 export default function DocumentsPage() {
   const user = useCurrentUser();
   const company = useCurrentCompany();
@@ -215,18 +225,16 @@ export default function DocumentsPage() {
   const currentYear = new Date().getFullYear();
   const [documents] = trpc.documents.list.useSuspenseQuery({ companyId: company.id, userId });
 
-  const [lawyerEmail, setLawyerEmail] = useState("");
-  const inviteLawyer = trpc.lawyers.invite.useMutation();
-  const inviteLawyerMutation = useMutation({
-    mutationFn: async () => {
-      if (!lawyerEmail.trim()) throw new Error("Email is required");
-      await inviteLawyer.mutateAsync({ companyId: company.id, email: lawyerEmail });
-    },
+  const inviteLawyerForm = useForm({ resolver: zodResolver(inviteLawyerSchema) });
+  const inviteLawyer = trpc.lawyers.invite.useMutation({
     onSuccess: () => {
       setShowInviteModal(false);
-      setLawyerEmail("");
+      inviteLawyerForm.reset();
     },
   });
+  const submitInviteLawyer = inviteLawyerForm.handleSubmit(async ({ email }) =>
+    inviteLawyer.mutateAsync({ companyId: company.id, email }),
+  );
 
   const columnHelper = createColumnHelper<Document>();
   const [downloadDocument, setDownloadDocument] = useState<bigint | null>(null);
@@ -312,10 +320,10 @@ export default function DocumentsPage() {
                 ) : null}
                 {document.attachment ? (
                   <Button variant="outline" size="small" asChild>
-                    <a href={document.attachment} download>
+                    <Link href={`/download/${document.attachment.key}/${document.attachment.filename}`} download>
                       <ArrowDownTrayIcon className="size-4" />
                       Download
-                    </a>
+                    </Link>
                   </Button>
                 ) : document.docusealSubmissionId && document.signatories.every((signatory) => signatory.signedAt) ? (
                   <Button variant="outline" size="small" onClick={() => setDownloadDocument(document.id)}>
@@ -330,14 +338,25 @@ export default function DocumentsPage() {
       ].filter((column) => !!column),
     [userId],
   );
+  const storedColumnFilters = columnFiltersSchema.safeParse(
+    JSON.parse(localStorage.getItem("documentsColumnFilters") ?? "{}"),
+  );
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
+    storedColumnFilters.data ?? [{ id: "Status", value: ["Signature required"] }],
+  );
   const table = useTable({
     columns,
     data: documents,
-    initialState: {
-      sorting: [{ id: "createdAt", desc: true }],
-    },
+    initialState: { sorting: [{ id: "createdAt", desc: true }] },
+    state: { columnFilters },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    onColumnFiltersChange: (columnFilters) =>
+      setColumnFilters((old) => {
+        const value = typeof columnFilters === "function" ? columnFilters(old) : columnFilters;
+        localStorage.setItem("documentsColumnFilters", JSON.stringify(value));
+        return value;
+      }),
   });
 
   const filingDueDateFor1099DIV = new Date(currentYear, 2, 31);
@@ -401,26 +420,32 @@ export default function DocumentsPage() {
           <DialogHeader>
             <DialogTitle>Who's joining?</DialogTitle>
           </DialogHeader>
-          <form>
-            <Input
-              value={lawyerEmail}
-              onChange={(e) => setLawyerEmail(e)}
-              label="Email"
-              placeholder="Lawyer's email"
-              type="email"
-              invalid={inviteLawyerMutation.isError}
-              help={inviteLawyerMutation.error?.message}
-            />
-            <MutationButton
-              mutation={inviteLawyerMutation}
-              className="mt-4 w-full"
-              disabled={!lawyerEmail}
-              loadingText="Inviting..."
-            >
-              <PaperAirplaneIcon className="size-5" />
-              Invite
-            </MutationButton>
-          </form>
+          <Form {...inviteLawyerForm}>
+            <form onSubmit={(e) => void submitInviteLawyer(e)}>
+              <FormField
+                control={inviteLawyerForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <MutationStatusButton
+                type="submit"
+                mutation={inviteLawyer}
+                className="mt-4 w-full"
+                loadingText="Inviting..."
+              >
+                <PaperAirplaneIcon className="size-5" />
+                Invite
+              </MutationStatusButton>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </MainLayout>

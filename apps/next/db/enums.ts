@@ -66,3 +66,5 @@ export const optionGrantIssueDateRelationships = [
   "executive",
   "board_member",
 ] as const;
+
+export const companyUpdatePeriods = ["month", "quarter", "year"] as const;

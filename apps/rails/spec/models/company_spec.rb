@@ -42,7 +42,6 @@ RSpec.describe Company do
     it { is_expected.to have_many(:tender_offers) }
     it { is_expected.to have_many(:company_worker_updates).through(:company_workers) }
     it { is_expected.to have_one(:quickbooks_integration).conditions(deleted_at: nil) }
-    it { is_expected.to have_one(:github_integration).conditions(deleted_at: nil) }
     it { is_expected.to have_many(:company_worker_absences).through(:company_workers) }
     it { is_expected.to have_one_attached(:logo) }
     it { is_expected.to have_one_attached(:full_logo) }
@@ -243,7 +242,6 @@ RSpec.describe Company do
 
     it "enqueues `UpdateUpcomingDividendValuesJob` when `upcoming_dividend_cents` is updated" do
       company = create(:company)
-      company.update!(description: ":D")
       expect(UpdateUpcomingDividendValuesJob.jobs.size).to eq(0)
 
       company.update!(upcoming_dividend_cents: 1_000_000)

@@ -1,6 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { subYears } from "date-fns";
-import { and, eq, gt, gte, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { createUpdateSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
@@ -11,13 +10,11 @@ import {
   activeStorageBlobs,
   companies,
   companyAdministrators,
-  companyContractors,
   documents,
   documentTemplates,
-  invoices,
   users,
 } from "@/db/schema";
-import { baseProcedure, companyProcedure, createRouter, protectedProcedure } from "@/trpc";
+import { companyProcedure, createRouter, protectedProcedure } from "@/trpc";
 import { createSubmission } from "@/trpc/routes/documents/templates";
 import { assertDefined } from "@/utils/assert";
 import {
@@ -58,15 +55,7 @@ export const companiesRouter = createRouter({
   settings: companyProcedure.query(({ ctx }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-    return pick(ctx.company, [
-      "taxId",
-      "brandColor",
-      "website",
-      "description",
-      "showStatsInJobDescriptions",
-      "name",
-      "phoneNumber",
-    ]);
+    return pick(ctx.company, ["taxId", "brandColor", "website", "name", "phoneNumber"]);
   }),
   update: companyProcedure
     .input(
@@ -86,9 +75,7 @@ export const companiesRouter = createRouter({
           zipCode: true,
           publicName: true,
           website: true,
-          description: true,
           brandColor: true,
-          showStatsInJobDescriptions: true,
           sharePriceInUsd: true,
           fmvPerShareInUsd: true,
           conversionSharePriceUsd: true,
@@ -116,73 +103,6 @@ export const companiesRouter = createRouter({
         }
       });
     }),
-  publicInfo: baseProcedure.input(z.object({ companyId: z.string() })).query(async ({ input }) => {
-    const company = await db.query.companies.findFirst({
-      where: eq(companies.externalId, input.companyId),
-    });
-    if (!company) throw new TRPCError({ code: "NOT_FOUND" });
-
-    const response = {
-      ...pick(company, "website", "description", "equityGrantsEnabled", "sharePriceInUsd", "fmvPerShareInUsd"),
-      name: companyName(company),
-      additionalSupportedCountries: company.isGumroad ? ["BR"] : [],
-      logoUrl: await companyLogoUrl(company.id),
-    };
-
-    if (!company.showStatsInJobDescriptions) return response;
-
-    const [avgTenure] = await db
-      .select({
-        avg: sql`
-            AVG(EXTRACT(DAY FROM (COALESCE(${companyContractors.endedAt}, NOW()) - ${companyContractors.startedAt}))) / 365
-          `.mapWith(Number),
-      })
-      .from(companyContractors)
-      .where(
-        and(
-          eq(companyContractors.companyId, company.id),
-          gt(
-            db.$count(
-              invoices,
-              and(eq(invoices.companyContractorId, companyContractors.id), eq(invoices.status, "paid")),
-            ),
-            2,
-          ),
-        ),
-      );
-
-    const result = await db
-      .select({
-        totalHours: sql<number>`
-            SUM(${invoices.totalMinutes} / 60.0)
-          `.mapWith(Number),
-        hoursPerWeek: companyContractors.hoursPerWeek,
-      })
-      .from(invoices)
-      .innerJoin(companyContractors, eq(companyContractors.id, invoices.companyContractorId))
-      .where(
-        and(
-          eq(companyContractors.companyId, company.id),
-          isNull(companyContractors.endedAt),
-          eq(companyContractors.payRateType, PayRateType.Hourly),
-          gte(invoices.createdAt, subYears(new Date(), 1)),
-          isNotNull(companyContractors.hoursPerWeek),
-        ),
-      )
-      .groupBy(companyContractors.id)
-      .having(sql`COUNT(${invoices.id}) > 2`);
-
-    return {
-      ...response,
-      stats: {
-        freelancers: result.length,
-        avgWeeksPerYear: result.reduce((sum, row) => sum + row.totalHours / (row.hoursPerWeek ?? 1), 0) / result.length,
-        avgHoursPerWeek: result.reduce((sum, row) => sum + (row.hoursPerWeek ?? 0), 0) / result.length,
-        avgTenure: assertDefined(avgTenure).avg,
-        attritionRate: 1,
-      },
-    };
-  }),
   microdepositVerificationDetails: companyProcedure.query(async ({ ctx }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 

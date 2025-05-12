@@ -11,6 +11,7 @@ import { subDays } from "date-fns";
 import { desc, eq } from "drizzle-orm";
 import { PayRateType } from "@/db/enums";
 import { companies, companyContractors, equityAllocations, invoices, users } from "@/db/schema";
+import { fillDatePicker } from "@test/helpers";
 
 test.describe("invoice creation", () => {
   let company: typeof companies.$inferSelect;
@@ -72,40 +73,21 @@ test.describe("invoice creation", () => {
 
     await page.getByLabel("Hours").fill("3:25");
     await page.getByPlaceholder("Description").fill("I worked on invoices");
-    await page.getByLabel("Date").fill("2023-08-08");
+    await fillDatePicker(page, "Date", "08/08/2023");
 
     await expect(page.getByRole("textbox", { name: "Cash vs equity split" })).toHaveValue("20");
     await expect(
       page.getByText("By submitting this invoice, your current equity selection will be locked for all 2023."),
     ).toBeVisible();
 
-    const totalsLocator = page.locator("footer > div:last-child");
-    await expect(totalsLocator).toMatchAriaSnapshot(`
-      - strong: Total services
-      - text: $205
-    `);
-    await expect(totalsLocator).toMatchAriaSnapshot(`
-      - strong: Swapped for equity (not paid in cash)
-      - text: $41
-    `);
-    await expect(totalsLocator).toMatchAriaSnapshot(`
-      - strong: Net amount in cash
-      - text: $164
-    `);
+    await expect(page.getByText("Total services$205")).toBeVisible();
+    await expect(page.getByText("Swapped for equity (not paid in cash)$41")).toBeVisible();
+    await expect(page.getByText("Net amount in cash$164")).toBeVisible();
 
     await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("50");
-    await expect(totalsLocator).toMatchAriaSnapshot(`
-      - strong: Total services
-      - text: $205
-    `);
-    await expect(totalsLocator).toMatchAriaSnapshot(`
-      - strong: Swapped for equity (not paid in cash)
-      - text: $102.50
-    `);
-    await expect(totalsLocator).toMatchAriaSnapshot(`
-      - strong: Net amount in cash
-      - text: $102.50
-    `);
+    await expect(page.getByText("Total services$205")).toBeVisible();
+    await expect(page.getByText("Swapped for equity (not paid in cash)$102.50")).toBeVisible();
+    await expect(page.getByText("Net amount in cash$102.50")).toBeVisible();
 
     await page.getByRole("button", { name: "Send invoice" }).click();
 
@@ -151,31 +133,19 @@ test.describe("invoice creation", () => {
 
     await page.getByPlaceholder("Description").fill("Website redesign project");
     await page.getByLabel("Amount").fill("1000");
-    await page.getByLabel("Date").fill("2023-08-08");
+    await fillDatePicker(page, "Date", "08/08/2023");
 
     await expect(page.getByRole("textbox", { name: "Cash vs equity split" })).toHaveValue("0");
     await expect(
       page.getByText("By submitting this invoice, your current equity selection will be locked for all 2023."),
     ).toBeVisible();
 
-    const projectTotalsLocator = page.locator("footer > div:last-child");
-    await expect(projectTotalsLocator).toMatchAriaSnapshot(`
-      - text: Total $1,000
-    `);
+    await expect(page.getByText("Total$1,000")).toBeVisible();
 
     await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("50");
-    await expect(projectTotalsLocator).toMatchAriaSnapshot(`
-      - strong: Total services
-      - text: $1,000
-    `);
-    await expect(projectTotalsLocator).toMatchAriaSnapshot(`
-      - strong: Swapped for equity (not paid in cash)
-      - text: $500
-    `);
-    await expect(projectTotalsLocator).toMatchAriaSnapshot(`
-      - strong: Net amount in cash
-      - text: $500
-    `);
+    await expect(page.getByText("Total services$1,000")).toBeVisible();
+    await expect(page.getByText("Swapped for equity (not paid in cash)$500")).toBeVisible();
+    await expect(page.getByText("Net amount in cash$500")).toBeVisible();
 
     await page.getByRole("button", { name: "Send invoice" }).click();
 
@@ -237,34 +207,22 @@ test.describe("invoice creation", () => {
 
     await page.getByLabel("Hours").fill("03:25");
     await page.getByPlaceholder("Description").fill("I worked on invoices");
-    await page.getByLabel("Date").fill("2021-08-08");
+    await fillDatePicker(page, "Date", "08/08/2021");
 
     await expect(
       page.getByText("By submitting this invoice, your current equity selection will be locked for all 2021."),
     ).not.toBeVisible();
 
-    const yearTotalsLocator = page.locator("footer > div:last-child");
-    await expect(yearTotalsLocator).toMatchAriaSnapshot(`
-      - text: Total $205
-    `);
+    await expect(page.getByText("Total$205")).toBeVisible();
     await expect(page.getByText("Swapped for equity")).not.toBeVisible();
     await expect(page.getByText("Net amount in cash")).not.toBeVisible();
 
     await page.getByLabel("Hours").fill("100:00");
     await page.getByPlaceholder("Description").fill("I worked on invoices");
 
-    await expect(yearTotalsLocator).toMatchAriaSnapshot(`
-      - strong: Total services
-      - text: $6,000
-    `);
-    await expect(yearTotalsLocator).toMatchAriaSnapshot(`
-      - strong: Swapped for equity (not paid in cash)
-      - text: $1,200
-    `);
-    await expect(yearTotalsLocator).toMatchAriaSnapshot(`
-      - strong: Net amount in cash
-      - text: $4,800
-    `);
+    await expect(page.getByText("Total services$6,000")).toBeVisible();
+    await expect(page.getByText("Swapped for equity (not paid in cash)$1,200")).toBeVisible();
+    await expect(page.getByText("Net amount in cash$4,800")).toBeVisible();
 
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.locator("tbody")).toContainText(

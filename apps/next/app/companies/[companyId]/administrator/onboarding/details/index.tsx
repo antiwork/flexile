@@ -189,7 +189,13 @@ export const CompanyDetails = () => {
 
         <div className="text-xs">Flexile is only available for companies based in the United States.</div>
 
-        <MutationStatusButton mutation={submit} idleVariant="primary" type="submit" loadingText="Saving...">
+        <MutationStatusButton
+          mutation={submit}
+          idleVariant="primary"
+          type="submit"
+          loadingText="Saving..."
+          className="justify-self-end"
+        >
           Continue
         </MutationStatusButton>
       </form>

@@ -6,4 +6,4 @@ export const selectComboboxOption = async (page: Page, name: string, option: str
 };
 
 export const fillDatePicker = async (page: Page, name: string, value: string) =>
-  page.getByRole("spinbutton", { name }).first().pressSequentially(value);
+  page.getByRole("spinbutton", { name }).first().pressSequentially(value, { delay: 50 });

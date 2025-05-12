@@ -52,9 +52,4 @@ module CompanyWorkerUpdateHelpers
       "#{start_weekday}#{end_weekday}"
     end.join(", ")
   end
-
-  def displays_update_item_with_github_link(task)
-    github_integration_record = task.github_integration_record
-    expect(page).to have_link(github_integration_record.description, href: github_integration_record.url)
-  end
 end

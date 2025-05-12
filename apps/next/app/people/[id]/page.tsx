@@ -4,15 +4,14 @@ import { CheckCircleIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outl
 import { useMutation } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/react-query";
 import { formatISO, isFuture } from "date-fns";
-import { Decimal } from "decimal.js";
 import { useParams, useRouter } from "next/navigation";
 import { parseAsString, useQueryState } from "nuqs";
-import React, { useMemo, useState } from "react";
+import React, { useId, useMemo, useState } from "react";
 import DividendStatusIndicator from "@/app/equity/DividendStatusIndicator";
 import EquityGrantExerciseStatusIndicator from "@/app/equity/EquityGrantExerciseStatusIndicator";
 import DetailsModal from "@/app/equity/grants/DetailsModal";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import Input from "@/components/Input";
+import { Input } from "@/components/ui/input";
 import MainLayout from "@/components/layouts/Main";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
@@ -23,13 +22,11 @@ import Tabs from "@/components/Tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { MAXIMUM_EQUITY_PERCENTAGE, MINIMUM_EQUITY_PERCENTAGE } from "@/models";
 import type { RouterOutput } from "@/trpc";
 import { PayRateType, trpc } from "@/trpc/client";
-import { assertDefined } from "@/utils/assert";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { approve_company_invoices_path, company_equity_exercise_payment_path } from "@/utils/routes";
@@ -37,12 +34,25 @@ import { formatDate } from "@/utils/time";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Form } from "@/components/ui/form";
+import { Form, FormField, FormLabel, FormControl, FormMessage, FormItem } from "@/components/ui/form";
 import FormFields from "../FormFields";
+import RadioButtons from "@/components/RadioButtons";
+import { Label } from "@/components/ui/label";
+import CopyButton from "@/components/CopyButton";
+import { Decimal } from "decimal.js";
+
+const issuePaymentSchema = z.object({
+  amountInCents: z.number().min(0),
+  description: z.string().min(1, "This field is required"),
+  equityType: z.enum(["fixed", "range"]),
+  equityPercentage: z.number().min(MINIMUM_EQUITY_PERCENTAGE).max(MAXIMUM_EQUITY_PERCENTAGE),
+  equityRange: z.tuple([z.number().min(MINIMUM_EQUITY_PERCENTAGE), z.number().max(MAXIMUM_EQUITY_PERCENTAGE)]),
+});
 
 export default function ContractorPage() {
   const currentUser = useCurrentUser();
   const company = useCurrentCompany();
+  const uid = useId();
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
   const { id } = useParams<{ id: string }>();
@@ -77,30 +87,14 @@ export default function ContractorPage() {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [endDate, setEndDate] = useState(formatISO(new Date(), { representation: "date" }));
   const [issuePaymentModalOpen, setIssuePaymentModalOpen] = useState(false);
-  const [paymentAmountInCents, setPaymentAmountInCents] = useState<number | null>(null);
-  const [paymentDescription, setPaymentDescription] = useState("");
-  const [equityType, setEquityType] = useState<"fixed" | "range">("fixed");
-  const [fixedEquityPercentage, setFixedEquityPercentage] = useState<number | null>(null);
-  const [equityRange, setEquityRange] = useState<[number, number]>([
-    MINIMUM_EQUITY_PERCENTAGE,
-    MAXIMUM_EQUITY_PERCENTAGE,
-  ]);
-  const [issuePaymentError, setIssuePaymentError] = useState<string | null>(null);
-  const hasValidPaymentInfo = () => {
-    let valid = paymentAmountInCents && paymentAmountInCents !== 0 && paymentDescription.length !== 0;
-    if (!valid) return false;
-    if (!company.flags.includes("equity_compensation")) return true;
-
-    if (equityType === "fixed") {
-      valid =
-        fixedEquityPercentage !== null &&
-        fixedEquityPercentage >= MINIMUM_EQUITY_PERCENTAGE &&
-        fixedEquityPercentage <= MAXIMUM_EQUITY_PERCENTAGE;
-    } else {
-      valid = equityRange[0] >= MINIMUM_EQUITY_PERCENTAGE && equityRange[1] <= MAXIMUM_EQUITY_PERCENTAGE;
-    }
-    return valid;
-  };
+  const issuePaymentForm = useForm({
+    defaultValues: {
+      equityType: "fixed",
+      equityPercentage: 0,
+      equityRange: [MINIMUM_EQUITY_PERCENTAGE, MAXIMUM_EQUITY_PERCENTAGE],
+    },
+    resolver: zodResolver(issuePaymentSchema),
+  });
 
   const tabs = [
     contractor && ({ label: "Details", tab: `details` } as const),
@@ -112,7 +106,13 @@ export default function ContractorPage() {
   ].filter((link) => !!link);
   const [selectedTab] = useQueryState("tab", parseAsString.withDefault(tabs[0]?.tab ?? ""));
 
-  const endContract = trpc.contractors.endContract.useMutation();
+  const endContract = trpc.contractors.endContract.useMutation({
+    onSuccess: async () => {
+      await trpcUtils.contractors.list.invalidate({ companyId: company.id });
+      await refetch();
+      router.push(`/people`);
+    },
+  });
   const cancelContractEnd = trpc.contractors.cancelContractEnd.useMutation();
   const cancelContractEndMutation = useMutation({
     mutationFn: async () => {
@@ -128,72 +128,26 @@ export default function ContractorPage() {
     },
   });
 
-  const endContractMutation = useMutation({
-    mutationFn: async () => {
-      if (!contractor) return;
-
-      await endContract.mutateAsync({
-        companyId: company.id,
-        id: contractor.id,
-        endDate,
-      });
-      await trpcUtils.contractors.list.invalidate({ companyId: company.id });
-      await refetch();
-      router.push(`/people`);
-    },
-  });
-
   const closeIssuePaymentModal = () => {
     setIssuePaymentModalOpen(false);
-    setPaymentAmountInCents(null);
-    setPaymentDescription("");
-    setEquityType("fixed");
-    setFixedEquityPercentage(null);
-    setEquityRange([MINIMUM_EQUITY_PERCENTAGE, MAXIMUM_EQUITY_PERCENTAGE]);
+    issuePaymentForm.reset();
   };
   const issuePayment = trpc.invoices.createAsAdmin.useMutation();
   const issuePaymentMutation = useMutation({
-    mutationFn: async () => {
-      if (!hasValidPaymentInfo()) return;
-
-      let invoice;
-      try {
-        const equityAttributes = (() => {
-          if (!company.flags.includes("equity_compensation")) {
-            return {
-              equityPercentage: 0,
-              minAllowedEquityPercentage: null,
-              maxAllowedEquityPercentage: null,
-            };
-          }
-
-          if (equityType === "fixed") {
-            return {
-              equityPercentage: fixedEquityPercentage ?? 0,
-              minAllowedEquityPercentage: null,
-              maxAllowedEquityPercentage: null,
-            };
-          }
-
-          return {
-            equityPercentage: equityRange[0],
-            minAllowedEquityPercentage: equityRange[0],
-            maxAllowedEquityPercentage: equityRange[1],
-          };
-        })();
-
-        invoice = await issuePayment.mutateAsync({
-          ...equityAttributes,
-          companyId: company.id,
-          userExternalId: id,
-          totalAmountCents: BigInt(assertDefined(paymentAmountInCents)),
-          description: paymentDescription,
-        });
-      } catch (error) {
-        setIssuePaymentError(error instanceof TRPCClientError ? error.message : "Something went wrong");
-        throw error;
-      }
-
+    mutationFn: async (values: z.infer<typeof issuePaymentSchema>) => {
+      const invoice = await issuePayment.mutateAsync({
+        ...(values.equityType === "range"
+          ? {
+              ...values,
+              equityPercentage: values.equityRange[0],
+              minAllowedEquityPercentage: values.equityRange[0],
+              maxAllowedEquityPercentage: values.equityRange[1],
+            }
+          : values),
+        companyId: company.id,
+        userExternalId: id,
+        totalAmountCents: BigInt(values.amountInCents),
+      });
       await request({
         method: "PATCH",
         url: approve_company_invoices_path(company.id),
@@ -207,10 +161,14 @@ export default function ContractorPage() {
       await trpcUtils.invoices.list.invalidate({ companyId: company.id });
       closeIssuePaymentModal();
     },
-    onSettled: () => {
-      issuePaymentMutation.reset();
+    onError: (error) => {
+      issuePaymentForm.setError("root", {
+        message: error instanceof TRPCClientError ? error.message : "Something went wrong",
+      });
     },
   });
+  const issuePaymentValues = issuePaymentForm.watch();
+  const submitIssuePayment = issuePaymentForm.handleSubmit((values) => issuePaymentMutation.mutateAsync(values));
 
   return (
     <MainLayout
@@ -236,7 +194,10 @@ export default function ContractorPage() {
             <DialogTitle>End contract with {user.displayName}?</DialogTitle>
           </DialogHeader>
           <p>This action cannot be undone.</p>
-          <Input type="date" label="End date" value={endDate} onChange={setEndDate} />
+          <div className="grid gap-2">
+            <Label htmlFor={`${uid}-end-date`}>End date</Label>
+            <Input type="date" id={`${uid}-end-date`} value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          </div>
           <div className="grid gap-3">
             <Status variant="success">{user.displayName} will be able to submit invoices after contract end.</Status>
             <Status variant="success">{user.displayName} will receive upcoming payments.</Status>
@@ -251,7 +212,9 @@ export default function ContractorPage() {
             <Button variant="outline" onClick={() => setEndModalOpen(false)}>
               No, cancel
             </Button>
-            <MutationButton mutation={endContractMutation}>Yes, end contract</MutationButton>
+            <MutationButton mutation={endContract} param={{ companyId: company.id, id: contractor?.id ?? "", endDate }}>
+              Yes, end contract
+            </MutationButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -276,99 +239,119 @@ export default function ContractorPage() {
           <DialogHeader>
             <DialogTitle>Issue one-time payment</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="payment-amount">Amount</Label>
-              <NumberInput
-                id="payment-amount"
-                value={paymentAmountInCents ? paymentAmountInCents / 100 : null}
-                onChange={(value) => {
-                  if (value !== null) {
-                    const cents = new Decimal(value).mul(100).toNumber();
-                    setPaymentAmountInCents(cents);
-                  } else {
-                    setPaymentAmountInCents(null);
-                  }
-                }}
-                placeholder="Enter amount"
-                prefix="$"
-                decimal
-              />
-            </div>
-            <Input
-              value={paymentDescription}
-              onChange={setPaymentDescription}
-              label="What is this for?"
-              placeholder="Enter payment description"
-            />
-            {company.flags.includes("equity_compensation") ? (
-              <div className="space-y-4">
-                <div className="flex flex-col gap-2">
-                  <Label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="equityType"
-                      checked={equityType === "fixed"}
-                      onChange={() => setEquityType("fixed")}
-                      className="h-4 w-4"
-                    />
-                    Fixed equity percentage
-                  </Label>
-                  <Label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="equityType"
-                      checked={equityType === "range"}
-                      onChange={() => setEquityType("range")}
-                      className="h-4 w-4"
-                    />
-                    Equity percentage range
-                  </Label>
-                </div>
-
-                {equityType === "fixed" ? (
-                  <NumberInput
-                    value={fixedEquityPercentage}
-                    onChange={setFixedEquityPercentage}
-                    placeholder="Enter percentage"
-                    suffix="%"
-                  />
-                ) : (
-                  <div className="space-y-2">
-                    <Slider
-                      defaultValue={[equityRange[0], equityRange[1]]}
-                      minStepsBetweenThumbs={1}
-                      onValueChange={([min, max]) => setEquityRange([min ?? equityRange[0], max ?? equityRange[1]])}
-                    />
-                    <div className="flex justify-between text-gray-600">
-                      <span>{(equityRange[0] / 100).toLocaleString(undefined, { style: "percent" })}</span>
-                      <span>{(equityRange[1] / 100).toLocaleString(undefined, { style: "percent" })}</span>
-                    </div>
-                  </div>
+          <Form {...issuePaymentForm}>
+            <form onSubmit={(e) => void submitIssuePayment(e)} className="grid gap-4">
+              <FormField
+                control={issuePaymentForm.control}
+                name="amountInCents"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Amount</FormLabel>
+                    <FormControl>
+                      <NumberInput
+                        {...field}
+                        value={field.value ? field.value / 100 : null}
+                        onChange={(value) =>
+                          field.onChange(value == null ? null : new Decimal(value).mul(100).toNumber())
+                        }
+                        prefix="$"
+                        decimal
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </div>
-            ) : null}
-          </div>
+              />
+              <FormField
+                control={issuePaymentForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>What is this for?</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Enter payment description" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {company.flags.includes("equity_compensation") ? (
+                <div className="space-y-4">
+                  <FormField
+                    control={issuePaymentForm.control}
+                    name="equityType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <RadioButtons
+                            {...field}
+                            options={[
+                              { label: "Fixed equity percentage", value: "fixed" },
+                              { label: "Equity percentage range", value: "range" },
+                            ]}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-          {issuePaymentError ? <small className="text-red">{issuePaymentError}</small> : null}
+                  <FormField
+                    control={issuePaymentForm.control}
+                    name="equityPercentage"
+                    render={({ field }) => (
+                      <FormItem hidden={issuePaymentValues.equityType === "range"}>
+                        <FormLabel>Equity percentage</FormLabel>
+                        <FormControl>
+                          <NumberInput {...field} suffix="%" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={issuePaymentForm.control}
+                    name="equityRange"
+                    render={({ field }) => (
+                      <FormItem hidden={issuePaymentValues.equityType === "fixed"}>
+                        <FormControl>
+                          <Slider value={field.value} minStepsBetweenThumbs={1} onValueChange={field.onChange} />
+                        </FormControl>
+                        <FormMessage>
+                          <div className="flex justify-between">
+                            <span>{(field.value[0] / 100).toLocaleString(undefined, { style: "percent" })}</span>
+                            <span>{(field.value[1] / 100).toLocaleString(undefined, { style: "percent" })}</span>
+                          </div>
+                        </FormMessage>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              ) : null}
 
-          <small className="text-gray-600">
-            Your'll be able to initiate payment once it has been accepted by the recipient
-            {company.requiredInvoiceApprovals > 1 ? " and has sufficient approvals" : ""}.
-          </small>
+              {issuePaymentForm.formState.errors.root ? (
+                <small className="text-red">{issuePaymentForm.formState.errors.root.message}</small>
+              ) : null}
 
-          <DialogFooter>
-            <div className="flex justify-end">
-              <MutationButton
-                mutation={issuePaymentMutation}
-                successText="Payment submitted!"
-                loadingText="Saving..."
-                disabled={!hasValidPaymentInfo()}
-              >
-                Issue payment
-              </MutationButton>
-            </div>
-          </DialogFooter>
+              <small className="text-gray-600">
+                Your'll be able to initiate payment once it has been accepted by the recipient
+                {company.requiredInvoiceApprovals > 1 ? " and has sufficient approvals" : ""}.
+              </small>
+
+              <DialogFooter>
+                <div className="flex justify-end">
+                  <MutationStatusButton
+                    type="submit"
+                    mutation={issuePaymentMutation}
+                    successText="Payment submitted!"
+                    loadingText="Saving..."
+                  >
+                    Issue payment
+                  </MutationStatusButton>
+                </div>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
 
@@ -430,92 +413,193 @@ const DetailsTab = ({
   const submit = form.handleSubmit((values) =>
     updateContractor.mutate({ companyId: company.id, id: contractor.id, ...values }),
   );
+  const personalInfoForm = useForm({
+    defaultValues: user,
+    disabled: true,
+  });
 
   return (
-    <Form {...form}>
-      <form onSubmit={(e) => void submit(e)} className="grid gap-4">
-        <h2 className="text-xl font-bold">Contract</h2>
-        {contractor.endedAt ? (
-          <Alert variant="destructive">
-            <ExclamationTriangleIcon />
-            <AlertDescription>
-              <div className="flex items-center justify-between">
-                Contract {isFuture(contractor.endedAt) ? "ends" : "ended"} on {formatDate(contractor.endedAt)}.
-                {isFuture(contractor.endedAt) && (
-                  <Button variant="outline" onClick={() => setCancelModalOpen(true)}>
-                    Cancel contract end
-                  </Button>
-                )}
-              </div>
-            </AlertDescription>
-          </Alert>
-        ) : null}
+    <div className="grid gap-6">
+      <Form {...form}>
+        <form onSubmit={(e) => void submit(e)} className="grid gap-4">
+          <h2 className="text-xl font-bold">Contract</h2>
+          {contractor.endedAt ? (
+            <Alert variant="destructive">
+              <ExclamationTriangleIcon />
+              <AlertDescription>
+                <div className="flex items-center justify-between">
+                  Contract {isFuture(contractor.endedAt) ? "ends" : "ended"} on {formatDate(contractor.endedAt)}.
+                  {isFuture(contractor.endedAt) && (
+                    <Button variant="outline" onClick={() => setCancelModalOpen(true)}>
+                      Cancel contract end
+                    </Button>
+                  )}
+                </div>
+              </AlertDescription>
+            </Alert>
+          ) : null}
 
-        <FormFields />
-        {contractor.payRateType !== PayRateType.ProjectBased && company.flags.includes("equity_compensation") && (
-          <div>
-            <span>Equity split</span>
-            <div className="my-2 flex h-2 overflow-hidden rounded-xs bg-gray-200">
-              <div
-                style={{ width: `${contractor.equityPercentage}%` }}
-                className="flex flex-col justify-center bg-blue-600 whitespace-nowrap"
-              ></div>
-              <div
-                style={{ width: `${100 - contractor.equityPercentage}%` }}
-                className="flex flex-col justify-center"
-              ></div>
-            </div>
-            <div className="flex justify-between">
-              <span>
-                {(contractor.equityPercentage / 100).toLocaleString(undefined, { style: "percent" })} Equity{" "}
-                <span className="text-gray-600">
-                  ({formatMoneyFromCents((contractor.equityPercentage * payRateInSubunits) / 100)})
+          <FormFields />
+          {contractor.payRateType !== PayRateType.ProjectBased && company.flags.includes("equity_compensation") && (
+            <div>
+              <span>Equity split</span>
+              <div className="my-2 flex h-2 overflow-hidden rounded-xs bg-gray-200">
+                <div
+                  style={{ width: `${contractor.equityPercentage}%` }}
+                  className="flex flex-col justify-center bg-blue-600 whitespace-nowrap"
+                ></div>
+                <div
+                  style={{ width: `${100 - contractor.equityPercentage}%` }}
+                  className="flex flex-col justify-center"
+                ></div>
+              </div>
+              <div className="flex justify-between">
+                <span>
+                  {(contractor.equityPercentage / 100).toLocaleString(undefined, { style: "percent" })} Equity{" "}
+                  <span className="text-gray-600">
+                    ({formatMoneyFromCents((contractor.equityPercentage * payRateInSubunits) / 100)})
+                  </span>
                 </span>
-              </span>
-              <span>
-                {((100 - contractor.equityPercentage) / 100).toLocaleString(undefined, { style: "percent" })} Cash{" "}
-                <span className="text-gray-600">
-                  ({formatMoneyFromCents(((100 - contractor.equityPercentage) * payRateInSubunits) / 100)})
+                <span>
+                  {((100 - contractor.equityPercentage) / 100).toLocaleString(undefined, { style: "percent" })} Cash{" "}
+                  <span className="text-gray-600">
+                    ({formatMoneyFromCents(((100 - contractor.equityPercentage) * payRateInSubunits) / 100)})
+                  </span>
                 </span>
-              </span>
+              </div>
             </div>
-          </div>
-        )}
-        {!contractor.endedAt && (
-          <div className="flex justify-end">
-            <MutationStatusButton type="submit" mutation={updateContractor} loadingText="Saving...">
+          )}
+          {!contractor.endedAt && (
+            <MutationStatusButton
+              type="submit"
+              mutation={updateContractor}
+              loadingText="Saving..."
+              className="justify-self-end"
+            >
               Save changes
             </MutationStatusButton>
+          )}
+        </form>
+      </Form>
+      <Form {...personalInfoForm}>
+        <div className="grid gap-4">
+          <h2 className="text-xl font-bold">Personal info</h2>
+          <FormField
+            control={personalInfoForm.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <div className="flex items-center gap-2">
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <CopyButton variant="link" aria-label="Copy Email" copyText={field.value}>
+                    <DocumentDuplicateIcon className="size-4" />
+                  </CopyButton>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={personalInfoForm.control}
+            name="legalName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Legal name</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="grid gap-3 md:grid-cols-2">
+            <FormField
+              control={personalInfoForm.control}
+              name="preferredName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Preferred name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={personalInfoForm.control}
+              name="businessName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Billing entity name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
-        )}
-        <h2 className="text-xl font-bold">Personal info</h2>
-        <Input
-          value={user.email}
-          label="Email"
-          disabled
-          suffix={
-            <Button
-              variant="link"
-              aria-label="Copy Email"
-              onClick={() => void navigator.clipboard.writeText(user.email)}
-            >
-              <DocumentDuplicateIcon className="size-4" />
-            </Button>
-          }
-        />
-        <Input value={user.legalName} label="Legal name" disabled />
-        <div className="grid gap-3 md:grid-cols-2">
-          <Input value={user.preferredName} label="Preferred name" disabled />
-          <Input value={user.businessName ?? ""} label="Billing entity name" disabled />
+          <FormField
+            control={personalInfoForm.control}
+            name="address.streetAddress"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Residential address (street name, number, apt)</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="grid gap-3 md:grid-cols-2">
+            <FormField
+              control={personalInfoForm.control}
+              name="address.city"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>City or town, state or province</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={personalInfoForm.control}
+              name="address.zipCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Postal code</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <FormField
+            control={personalInfoForm.control}
+            name="address.countryCode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Country of residence</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
-        <Input value={user.address.streetAddress} label="Residential address (street name, number, apt)" disabled />
-        <div className="grid gap-3 md:grid-cols-2">
-          <Input value={user.address.city} label="City or town, state or province" disabled />
-          <Input value={user.address.zipCode} label="Postal code" disabled />
-        </div>
-        <Input value={user.address.countryCode} label="Country of residence" disabled />
-      </form>
-    </Form>
+      </Form>
+    </div>
   );
 };
 

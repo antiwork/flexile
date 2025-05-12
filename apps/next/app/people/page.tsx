@@ -10,17 +10,14 @@ import Status from "@/components/Status";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
-import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
 
-type Contractor = RouterOutput["contractors"]["list"]["workers"][number];
-
 export default function PeoplePage() {
   const company = useCurrentCompany();
-  const [{ workers }] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id });
+  const [workers] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id });
 
-  const columnHelper = createColumnHelper<Contractor>();
+  const columnHelper = createColumnHelper<(typeof workers)[number]>();
   const columns = useMemo(
     () => [
       columnHelper.accessor("user.name", {

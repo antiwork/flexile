@@ -8,8 +8,6 @@ RSpec.describe "Creating a company worker update" do
 
   before do
     company.update!(team_updates_enabled: true)
-    create(:github_integration, company:)
-
     sign_in user
   end
 
@@ -19,22 +17,8 @@ RSpec.describe "Creating a company worker update" do
     input.native.send_keys(:return)
   end
 
-  def add_github_task(query)
-    input = find_field(placeholder: "Describe your task", with: "")
-    input.send_keys(["#"])
-    input.send_keys(query)
-    sleep 0.5 # wait for the suggestions to load
-    input.native.send_keys(:return)
-  end
-
   def toggle_task_completion(task_description)
     within(find_field("Describe your task", with: task_description).find(:xpath, "./ancestor::div[contains(@class, 'task-input')]")) do
-      find("input[type='checkbox']").check
-    end
-  end
-
-  def toggle_github_task_completion(github_url)
-    within(find_link(href: github_url).find(:xpath, "./ancestor::div[contains(@class, 'task-input')]")) do
       find("input[type='checkbox']").check
     end
   end
@@ -74,19 +58,6 @@ RSpec.describe "Creating a company worker update" do
         tasks: [
           { description: "Complete project A", completed: true, id: nil },
           { description: "Start project B", completed: false, id: nil },
-          {
-            description: "#3186",
-            completed: true,
-            id: nil,
-            integration_record: {
-              description: "Team Updates - GitHub Integration",
-              external_id: "PR_kwDOF4zYP859_ipp",
-              resource_name: "pulls",
-              resource_id: "3186",
-              status: "merged",
-              url: "https://github.com/antiwork/flexile/pull/3186",
-            },
-          },
           { description: "", completed: false, id: nil },
         ],
       },
@@ -110,8 +81,6 @@ RSpec.describe "Creating a company worker update" do
       add_task("Complete project A")
       add_task("Start project B")
       toggle_task_completion("Complete project A")
-      add_github_task("github integration")
-      toggle_github_task_completion("https://github.com/antiwork/flexile/pull/3186")
     end
 
     within("form", text: "What are you doing this week?") do

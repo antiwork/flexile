@@ -5,8 +5,8 @@ class CompanyAdministratorPresenter
 
   delegate :invitation_token, :email, :legal_name, to: :user, allow_nil: true
   delegate :name, :street_address, :city, :state, :zip_code, :display_country, :quickbooks_enabled?,
-           :domain_name, :logo_url, :brand_color, :website, :description,
-           :show_stats_in_job_descriptions, :display_name, :phone_number, :tax_id,
+           :domain_name, :logo_url, :brand_color, :website,
+           :display_name, :phone_number, :tax_id,
            :team_updates_enabled?, to: :company, allow_nil: true
 
   def initialize(company_administrator)

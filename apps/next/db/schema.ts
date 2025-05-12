@@ -23,6 +23,7 @@ import { customAlphabet } from "nanoid";
 import { deterministicEncryptedString, encryptedJson, encryptedString } from "@/lib/encryptedField";
 import {
   BusinessType,
+  companyUpdatePeriods,
   DocumentTemplateType,
   DocumentType,
   invoiceStatuses,
@@ -32,7 +33,7 @@ import {
   PayRateType,
   TaxClassification,
 } from "./enums";
-import type { GitHubIntegrationConfiguration, QuickbooksIntegrationConfiguration } from "./json";
+import type { QuickbooksIntegrationConfiguration } from "./json";
 
 const nanoid = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 13);
 
@@ -826,9 +827,9 @@ export const integrations = pgTable(
   {
     id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
     companyId: bigint("company_id", { mode: "bigint" }).notNull(),
-    type: varchar().notNull().$type<"GithubIntegration" | "QuickbooksIntegration">(),
+    type: varchar().notNull().$type<"QuickbooksIntegration">(),
     status: integrationStatus().default("initialized").notNull(),
-    configuration: encryptedJson().$type<QuickbooksIntegrationConfiguration | GitHubIntegrationConfiguration>(),
+    configuration: encryptedJson().$type<QuickbooksIntegrationConfiguration>(),
     syncError: text("sync_error"),
     lastSyncAt: timestamp("last_sync_at", { precision: 6, mode: "date" }),
     deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
@@ -1897,7 +1898,7 @@ export const companyUpdates = pgTable(
       .notNull()
       .$onUpdate(() => new Date()),
     externalId: varchar("external_id").$default(nanoid).notNull(),
-    period: varchar({ enum: ["month", "quarter", "year"] }),
+    period: varchar({ enum: companyUpdatePeriods }),
     periodStartedOn: date("period_started_on", { mode: "string" }),
     showRevenue: boolean("show_revenue").notNull().default(false),
     showNetIncome: boolean("show_net_income").notNull().default(false),
@@ -2067,7 +2068,6 @@ export const companies = pgTable(
     sharePriceInUsd: numeric("share_price_in_usd"),
     fmvPerShareInUsd: numeric("fmv_per_share_in_usd"),
     website: varchar(),
-    description: text(),
     publicName: varchar("public_name"),
     slug: varchar(),
     taxId: varchar("tax_id"),
@@ -2080,7 +2080,6 @@ export const companies = pgTable(
     isGumroad: boolean("is_gumroad").notNull().default(false),
     dividendsAllowed: boolean("dividends_allowed").notNull().default(false),
     isTrusted: boolean("is_trusted").notNull().default(false),
-    showStatsInJobDescriptions: boolean("show_stats_in_job_descriptions").notNull().default(false),
     irsTaxForms: boolean("irs_tax_forms").notNull().default(false),
     equityGrantsEnabled: boolean("equity_grants_enabled").notNull().default(false),
     showAnalyticsToContractors: boolean("show_analytics_to_contractors").notNull().default(false),
