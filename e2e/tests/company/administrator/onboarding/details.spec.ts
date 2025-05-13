@@ -14,11 +14,7 @@ test.describe("Company administrator onboarding - company details", () => {
     const { administrator } = await companyAdministratorsFactory.create({
       companyId: company.id,
     });
-    const admin = await db.query.users
-      .findFirst({
-        where: eq(users.id, administrator.userId),
-      })
-      .then(takeOrThrow);
+    const admin = await db.query.users.findFirst({ where: eq(users.id, administrator.userId) }).then(takeOrThrow);
 
     await login(page, admin);
     await page.goto(`/companies/${company.externalId}/administrator/onboarding/details`);
@@ -47,20 +43,14 @@ test.describe("Company administrator onboarding - company details", () => {
 
     await page.getByRole("button", { name: "Continue" }).click();
 
-    await expect(page.getByText("Link your bank account")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
 
     // Verify data was saved
-    const updatedAdmin = await db.query.users
-      .findFirst({
-        where: eq(users.id, admin.id),
-      })
-      .then(takeOrThrow);
+    const updatedAdmin = await db.query.users.findFirst({ where: eq(users.id, admin.id) }).then(takeOrThrow);
     expect(updatedAdmin.legalName).toBe(adminName);
 
     const updatedCompany = await db.query.companies
-      .findFirst({
-        where: eq(companies.id, company.id),
-      })
+      .findFirst({ where: eq(companies.id, company.id) })
       .then(takeOrThrow);
     expect(updatedCompany).toMatchObject({
       name: companyName,
