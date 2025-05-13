@@ -162,12 +162,6 @@ const AddBankAccount = () => {
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!stripe || !elements) return;
-      await request({
-        method: "POST",
-        url: company_administrator_settings_bank_accounts_path(company.id),
-        accept: "json",
-        assertOk: true,
-      });
       const { error } = await stripe.confirmSetup({
         elements,
         redirect: "if_required",
@@ -179,6 +173,12 @@ const AddBankAccount = () => {
       });
 
       if (error) throw error;
+      await request({
+        method: "POST",
+        url: company_administrator_settings_bank_accounts_path(company.id),
+        accept: "json",
+        assertOk: true,
+      });
       await queryClient.invalidateQueries({ queryKey: ["administratorBankAccount", company.id] });
       await trpcUtils.companies.microdepositVerificationDetails.invalidate();
       setOpen(false);
