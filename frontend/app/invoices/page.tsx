@@ -33,7 +33,6 @@ import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { pluralize } from "@/utils/pluralize";
 import { company_invoices_path, export_company_invoices_path } from "@/utils/routes";
 import { formatDate, formatDuration } from "@/utils/time";
-import { EquityAllocationStatus } from "@/db/enums";
 import NumberInput from "@/components/NumberInput";
 import DurationInput from "@/components/DurationInput";
 import { z } from "zod";
@@ -266,8 +265,7 @@ export default function InvoicesPage() {
                 )}
 
                 {data.some(
-                  (invoice) =>
-                    invoice.equityAllocationStatus === EquityAllocationStatus.PendingGrantCreation && !invoice.paidAt,
+                  (invoice) => invoice.equityAllocationStatus === "pending_grant_creation" && !invoice.paidAt,
                 ) && (
                   <Alert variant="destructive">
                     <ExclamationTriangleIcon />
@@ -280,8 +278,7 @@ export default function InvoicesPage() {
                               data
                                 .filter(
                                   (invoice) =>
-                                    invoice.equityAllocationStatus === EquityAllocationStatus.PendingGrantCreation &&
-                                    !invoice.paidAt,
+                                    invoice.equityAllocationStatus === "pending_grant_creation" && !invoice.paidAt,
                                 )
                                 .map((invoice) => invoice.billFrom),
                             ),
@@ -725,7 +722,7 @@ const QuickInvoicesSection = () => {
                   Send for approval
                 </MutationStatusButton>
                 {company.equityCompensationEnabled &&
-                (!equityAllocation || equityAllocation.status === EquityAllocationStatus.PendingConfirmation) ? (
+                (!equityAllocation || equityAllocation.status === "pending_confirmation") ? (
                   <EquityPercentageLockModal
                     open={lockModalOpen}
                     onClose={() => setLockModalOpen(false)}

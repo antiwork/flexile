@@ -32,27 +32,6 @@ export enum TaxClassification {
   Partnership,
 }
 
-export enum BoardConsentStatus {
-  Pending = "pending",
-  LawyerApproved = "lawyer_approved",
-  BoardApproved = "board_approved",
-}
-
-export enum EquityAllocationStatus {
-  PendingConfirmation = "pending_confirmation",
-  PendingGrantCreation = "pending_grant_creation",
-  PendingApproval = "pending_approval",
-  Approved = "approved",
-}
-
-export enum EquityGrantTransactionType {
-  ScheduledVesting = "scheduled_vesting",
-  VestingPostInvoicePayment = "vesting_post_invoice_payment",
-  Exercise = "exercise",
-  Cancellation = "cancellation",
-  ManualAdjustment = "manual_adjustment",
-}
-
 export const invoiceStatuses = [
   "received",
   "approved",

@@ -18,7 +18,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { omit, pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
-import { optionGrantTypes, optionGrantVestingTriggers, PayRateType, EquityGrantTransactionType } from "@/db/enums";
+import { optionGrantTypes, optionGrantVestingTriggers, PayRateType } from "@/db/enums";
 import {
   companyContractors,
   companyInvestors,
@@ -383,17 +383,16 @@ export const equityGrantsRouter = createRouter({
       },
     });
 
-    if (!equityGrant) throw new TRPCError({ code: "NOT_FOUND" });
+    if (equityGrant?.optionPool.companyId !== ctx.company.id) throw new TRPCError({ code: "NOT_FOUND" });
 
-    const forfeitedShares = equityGrant.unvestedShares;
-    const totalForfeitedShares = forfeitedShares + equityGrant.forfeitedShares;
+    const totalForfeitedShares = equityGrant.unvestedShares + equityGrant.forfeitedShares;
 
     await db.transaction(async (tx) => {
       await tx.insert(equityGrantTransactions).values([
         {
-          transactionType: EquityGrantTransactionType.Cancellation,
+          transactionType: "cancellation",
           equityGrantId: equityGrant.id,
-          forfeitedShares: BigInt(forfeitedShares),
+          forfeitedShares: BigInt(equityGrant.unvestedShares),
           totalNumberOfShares: BigInt(equityGrant.numberOfShares),
           totalVestedShares: BigInt(equityGrant.vestedShares),
           totalUnvestedShares: 0n,
@@ -405,10 +404,7 @@ export const equityGrantsRouter = createRouter({
       for (const vestingEvent of equityGrant.vestingEvents) {
         await tx
           .update(vestingEvents)
-          .set({
-            cancelledAt: new Date(),
-            cancellationReason: input.reason,
-          })
+          .set({ cancelledAt: new Date(), cancellationReason: input.reason })
           .where(eq(vestingEvents.id, vestingEvent.id));
       }
 
@@ -423,9 +419,7 @@ export const equityGrantsRouter = createRouter({
 
       await tx
         .update(optionPools)
-        .set({
-          issuedShares: sql`${optionPools.issuedShares} - ${forfeitedShares}`,
-        })
+        .set({ issuedShares: equityGrant.optionPool.issuedShares - BigInt(equityGrant.unvestedShares) })
         .where(eq(optionPools.id, equityGrant.optionPoolId));
     });
 

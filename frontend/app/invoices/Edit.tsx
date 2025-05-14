@@ -33,7 +33,6 @@ import { LegacyAddress as Address, useCanSubmitInvoices } from ".";
 import { Card, CardContent } from "@/components/ui/card";
 import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import RangeInput from "@/components/RangeInput";
-import { EquityAllocationStatus } from "@/db/enums";
 import DatePicker from "@/components/DatePicker";
 import { type DateValue, parseDate } from "@internationalized/date";
 
@@ -302,7 +301,7 @@ const Edit = () => {
       }
     >
       {company.equityCompensationEnabled &&
-      (!equityAllocation || equityAllocation.status === EquityAllocationStatus.PendingConfirmation) ? (
+      (!equityAllocation || equityAllocation.status === "pending_confirmation") ? (
         <section className="mb-6">
           <Card>
             <CardContent>

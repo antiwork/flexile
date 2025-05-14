@@ -2,7 +2,7 @@ import docuseal from "@docuseal/api";
 import { and, desc, eq, isNull, or } from "drizzle-orm";
 import { NonRetriableError } from "inngest";
 import { db } from "@/db";
-import { BoardConsentStatus, DocumentTemplateType, DocumentType } from "@/db/enums";
+import { DocumentTemplateType, DocumentType } from "@/db/enums";
 import {
   boardConsents,
   companyAdministrators,
@@ -143,7 +143,7 @@ export default inngest.createFunction(
           companyId: BigInt(companyId),
           companyInvestorId: companyInvestor.id,
           documentId: document.id,
-          status: BoardConsentStatus.Pending,
+          status: "pending",
           createdAt: new Date(),
           updatedAt: new Date(),
         })
@@ -191,10 +191,7 @@ export default inngest.createFunction(
       await step.run("board-consent.auto-approve", async () => {
         const [updated] = await db
           .update(boardConsents)
-          .set({
-            status: BoardConsentStatus.LawyerApproved,
-            lawyerApprovedAt: new Date(),
-          })
+          .set({ status: "lawyer_approved", lawyerApprovedAt: new Date() })
           .where(eq(boardConsents.id, boardConsent.id))
           .returning();
 
