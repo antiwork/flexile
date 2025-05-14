@@ -1,0 +1,130 @@
+import React from "react";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { PayRateType, trpc } from "@/trpc/client";
+import { useFormContext } from "react-hook-form";
+import RadioButtons from "@/components/RadioButtons";
+import NumberInput from "@/components/NumberInput";
+import { useUserStore } from "@/global";
+import { Popover, PopoverContent } from "@/components/ui/popover";
+import { PopoverTrigger } from "@radix-ui/react-popover";
+import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { Input } from "@/components/ui/input";
+import { skipToken } from "@tanstack/react-query";
+
+export default function FormFields() {
+  const form = useFormContext();
+  const payRateType: unknown = form.watch("payRateType");
+  const companyId = useUserStore((state) => state.user?.currentCompanyId);
+  const { data: workers } = trpc.contractors.list.useQuery(companyId ? { companyId, excludeAlumni: true } : skipToken);
+
+  const uniqueRoles = workers ? [...new Set(workers.map((worker) => worker.role))].sort() : [];
+
+  return (
+    <>
+      <FormField
+        control={form.control}
+        name="role"
+        render={({ field }) => {
+          const filter = new RegExp(`${field.value}`, "iu");
+          return (
+            <FormItem>
+              <FormLabel>Role</FormLabel>
+              <Command shouldFilter={false}>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Input {...field} type="text" />
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    onOpenAutoFocus={(e) => e.preventDefault()}
+                    className="p-0"
+                    style={{ width: "var(--radix-popover-trigger-width)" }}
+                  >
+                    <CommandList>
+                      <CommandGroup>
+                        {uniqueRoles
+                          .filter((role) => filter.test(role))
+                          .map((option) => (
+                            <CommandItem key={option} value={option} onSelect={(e) => field.onChange(e)}>
+                              {option}
+                            </CommandItem>
+                          ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </PopoverContent>
+                </Popover>
+              </Command>
+              <FormMessage />
+            </FormItem>
+          );
+        }}
+      />
+
+      <FormField
+        control={form.control}
+        name="payRateType"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Type</FormLabel>
+            <FormControl>
+              <RadioButtons
+                {...field}
+                options={[
+                  { label: "Hourly", value: PayRateType.Hourly } as const,
+                  { label: "Project-based", value: PayRateType.ProjectBased } as const,
+                  { label: "Salary", value: PayRateType.Salary } as const,
+                ]}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <div className="grid items-start gap-4 md:grid-cols-2">
+        <FormField
+          control={form.control}
+          name="payRateInSubunits"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Rate</FormLabel>
+              <FormControl>
+                <NumberInput
+                  value={field.value == null ? null : field.value / 100}
+                  onChange={(value) => field.onChange(value == null ? null : value * 100)}
+                  placeholder="0"
+                  prefix="$"
+                  suffix={
+                    payRateType === PayRateType.ProjectBased
+                      ? "/ project"
+                      : payRateType === PayRateType.Salary
+                        ? "/ year"
+                        : "/ hour"
+                  }
+                  decimal
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {payRateType !== PayRateType.ProjectBased && (
+          <FormField
+            control={form.control}
+            name="hoursPerWeek"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Average hours</FormLabel>
+                <FormControl>
+                  <NumberInput {...field} suffix="/ week" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+      </div>
+    </>
+  );
+}

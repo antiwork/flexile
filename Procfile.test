@@ -1,4 +1,4 @@
-web: cd apps/rails &&  ./bin/rails s -p 3100
-sidekiq: cd apps/rails && bundle exec sidekiq -q default -q mailers
-next: TZ=UTC [ -n "$CI" ] && node e2e/next.js || pnpm next dev apps/next -H test.flexile.dev --experimental-https -p 3101
+web: cd backend && ./bin/rails s -p 3100
+sidekiq: cd backend && bundle exec sidekiq -q default -q mailers
+next: TZ=UTC [ -n "$CI" ] && node e2e/next.js || pnpm next dev frontend -H test.flexile.dev --experimental-https -p 3101
 inngest: pnpm inngest-cli dev --no-discovery -p 8298 -u https://test.flexile.dev:3101/api/inngest

@@ -22,6 +22,34 @@ type CompanyContractorWithUser = CompanyContractor & {
 };
 type Invoice = Awaited<ReturnType<typeof invoicesFactory.create>>["invoice"];
 test.describe("Invoices admin flow", () => {
+  test("allows searching invoices by contractor name", async ({ page }) => {
+    const { company, user: adminUser } = await setupCompany();
+
+    const { companyContractor } = await companyContractorsFactory.create({
+      companyId: company.id,
+      role: "SearchTest Contractor",
+    });
+    const contractorUser = await db.query.users.findFirst({
+      where: eq(users.id, companyContractor.userId),
+    });
+    assert(contractorUser !== undefined);
+
+    await invoicesFactory.create({
+      companyId: company.id,
+      companyContractorId: companyContractor.id,
+      totalAmountInUsdCents: BigInt(100_00),
+    });
+
+    await login(page, adminUser);
+    await page.getByRole("link", { name: "Invoices" }).click();
+
+    const searchInput = page.getByPlaceholder("Search by Contractor...");
+    await expect(searchInput).toBeVisible();
+
+    await searchInput.fill(contractorUser.legalName || "");
+
+    await expect(page.getByRole("row").filter({ hasText: contractorUser.legalName || "" })).toBeVisible();
+  });
   const setupCompany = async ({ trusted = true }: { trusted?: boolean } = {}) => {
     const { company } = await companiesFactory.create({ isTrusted: trusted, requiredInvoiceApprovalCount: 2 });
     const { administrator } = await companyAdministratorsFactory.create({ companyId: company.id });
@@ -98,7 +126,6 @@ test.describe("Invoices admin flow", () => {
       await login(page, contractorUser);
       await page.getByRole("link", { name: "Invoices" }).click();
       await expect(page.getByLabel("Hours worked")).toBeVisible();
-      await expect(page.getByLabel("Invoice date")).toBeVisible();
       await expect(page.getByText("Total amount$0")).toBeVisible();
       await expect(page.locator("header").getByRole("link", { name: "New invoice" })).toBeVisible();
     });

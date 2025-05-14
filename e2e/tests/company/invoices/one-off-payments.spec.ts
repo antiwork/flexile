@@ -110,7 +110,7 @@ test.describe("One-off payments", () => {
           async (modal) => {
             await modal.getByLabel("Amount").fill("50000.00");
             await modal.getByLabel("What is this for?").fill("Bonus payment for Q4");
-            await modal.getByPlaceholder("Enter percentage").fill("80");
+            await modal.getByLabel("Equity percentage", { exact: true }).fill("80");
             await modal.getByRole("button", { name: "Issue payment" }).click();
             await page.waitForLoadState("networkidle");
             await expect(modal.getByText("Recipient has insufficient unvested equity")).toBeVisible();
@@ -129,7 +129,7 @@ test.describe("One-off payments", () => {
           async (modal) => {
             await modal.getByLabel("Amount").fill("500.00");
             await modal.getByLabel("What is this for?").fill("Bonus payment for Q4");
-            await modal.getByPlaceholder("Enter percentage").fill("10");
+            await modal.getByLabel("Equity percentage", { exact: true }).fill("10");
             await modal.getByRole("button", { name: "Issue payment" }).click();
           },
           { page },
@@ -170,7 +170,7 @@ test.describe("One-off payments", () => {
           async (modal) => {
             await modal.getByLabel("Amount").fill("500.00");
             await modal.getByLabel("What is this for?").fill("Bonus payment for Q4");
-            await modal.getByLabel("Equity percentage range").click();
+            await modal.getByLabel("Equity percentage range").evaluate((x) => x instanceof HTMLElement && x.click()); // playwright breaks on the hidden radio inputs
 
             const sliderContainer = modal.locator('[data-orientation="horizontal"]').first();
             const containerBounds = await sliderContainer.boundingBox();

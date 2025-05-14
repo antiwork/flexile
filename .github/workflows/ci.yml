@@ -66,7 +66,7 @@ jobs:
         uses: ./.github/common/
 
       - name: Setup test database
-        run: cd apps/rails && bundle exec rails db:create db:schema:load
+        run: cd backend && bundle exec rails db:create db:schema:load
 
       - name: Run tests
         env:
@@ -77,7 +77,7 @@ jobs:
           KNAPSACK_PRO_LOG_LEVEL: info
           GITHUB_REF: ${{ github.event.pull_request.head.ref }}
           GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
-        run: cd apps/rails && bundle exec rake "knapsack_pro:queue:rspec[--format RSpec::Github::Formatter --tag ~skip --tag ~type:system --format progress]"
+        run: cd backend && bundle exec rake "knapsack_pro:queue:rspec[--format RSpec::Github::Formatter --tag ~skip --tag ~type:system --format progress]"
         timeout-minutes: 20
 
   playwright:
@@ -105,8 +105,8 @@ jobs:
         id: next-cache
         uses: actions/cache@v4
         with:
-          path: apps/next/.next/cache
-          key: next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'apps/*/pnpm-lock.yaml') }}-${{ hashFiles('apps/next/**/*.{ts,tsx}') }}
+          path: frontend/.next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'backend/pnpm-lock.yaml', 'frontend/pnpm-lock.yaml') }}-${{ hashFiles('frontend/**/*.{ts,tsx}') }}
           restore-keys: |
             next-${{ runner.os }}-
 
@@ -121,7 +121,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'apps/*/pnpm-lock.yaml') }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'backend/pnpm-lock.yaml', 'frontend/pnpm-lock.yaml') }}
           restore-keys: |
             playwright-${{ runner.os }}-
 
