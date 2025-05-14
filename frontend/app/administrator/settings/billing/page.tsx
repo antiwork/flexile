@@ -190,9 +190,11 @@ const AddBankAccount = () => {
       <Alert>
         <InformationCircleIcon />
         <AlertTitle>You currently do not have a bank account linked.</AlertTitle>
-        <AlertDescription>
-          <p>We'll use this account to debit contractor payments and our monthly fee.</p>
-          <p>You won't be charged until the first payment.</p>
+        <AlertDescription className="flex items-center justify-between">
+          <div>
+            <p>We'll use this account to debit contractor payments and our monthly fee.</p>
+            <p>You won't be charged until the first payment.</p>
+          </div>
           <DialogTrigger asChild>
             <Button>Link your bank account</Button>
           </DialogTrigger>
