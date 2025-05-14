@@ -4,7 +4,7 @@ import { parse } from "url";
 import next from "next";
 import { createSelfSignedCertificate } from "next/dist/lib/mkcert.js";
 
-const app = next({ dir: "apps/next" });
+const app = next({ dir: "frontend" });
 const handle = app.getRequestHandler();
 await app.prepare();
 await createSelfSignedCertificate("test.flexile.dev");
