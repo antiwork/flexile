@@ -1,5 +1,5 @@
 "use client";
-import { ExclamationTriangleIcon, PencilIcon, TrashIcon } from "@heroicons/react/16/solid";
+import { ExclamationTriangleIcon, PencilIcon } from "@heroicons/react/16/solid";
 import { CheckCircleIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -39,13 +39,14 @@ const countryColumns = [
 export default function GrantsPage() {
   const router = useRouter();
   const company = useCurrentCompany();
-  const [data] = trpc.equityGrants.list.useSuspenseQuery({ companyId: company.id });
+  const [data, { refetch }] = trpc.equityGrants.list.useSuspenseQuery({ companyId: company.id });
   const [totals] = trpc.equityGrants.totals.useSuspenseQuery({ companyId: company.id });
   const [cancellingGrantId, setCancellingGrantId] = useState<string | null>(null);
   const cancellingGrant = data.find((grant) => grant.id === cancellingGrantId);
   const cancelGrant = trpc.equityGrants.cancel.useMutation({
     onSuccess: () => {
       setCancellingGrantId(null);
+      void refetch();
     },
   });
 
@@ -69,11 +70,12 @@ export default function GrantsPage() {
       columnHelper.display({
         id: "actions",
         header: "Actions",
-        cell: (info) => (
-          <Button variant="critical" size="icon" onClick={() => setCancellingGrantId(info.row.original.id)}>
-            <TrashIcon className="size-4" />
-          </Button>
-        ),
+        cell: (info) =>
+          info.row.original.unvestedShares > 0 ? (
+            <Button variant="critical" onClick={() => setCancellingGrantId(info.row.original.id)}>
+              Cancel
+            </Button>
+          ) : null,
       }),
     ],
     [],
@@ -182,7 +184,7 @@ export default function GrantsPage() {
                 <MutationButton
                   idleVariant="critical"
                   mutation={cancelGrant}
-                  param={{ companyId: company.id, id: cancellingGrant.id, reason: "" }}
+                  param={{ companyId: company.id, id: cancellingGrant.id, reason: "Cancelled by admin" }}
                 >
                   Confirm cancellation
                 </MutationButton>
