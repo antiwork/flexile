@@ -1,29 +1,19 @@
 import { SignOutButton } from "@clerk/nextjs";
 import {
-  ArrowRightStartOnRectangleIcon,
-  BriefcaseIcon,
-  ChartPieIcon,
-  Cog6ToothIcon,
-  CurrencyDollarIcon,
-  DocumentDuplicateIcon,
-  DocumentTextIcon,
-  MegaphoneIcon,
-  UserIcon,
-  UsersIcon,
-} from "@heroicons/react/24/outline";
-import {
-  BriefcaseIcon as SolidBriefcaseIcon,
-  ChartPieIcon as SolidChartPieIcon,
-  Cog6ToothIcon as SolidCog6ToothIcon,
-  CurrencyDollarIcon as SolidCurrencyDollarIcon,
-  DocumentDuplicateIcon as SolidDocumentDuplicateIcon,
-  DocumentTextIcon as SolidDocumentTextIcon,
-  MegaphoneIcon as SolidMegaphoneIcon,
-  UserIcon as SolidUserIcon,
-  UsersIcon as SolidUsersIcon,
-} from "@heroicons/react/24/solid";
+  Rss,
+  ChevronsUpDown,
+  ReceiptIcon,
+  Files,
+  Users,
+  BookUser,
+  Settings,
+  ChartPie,
+  BriefcaseBusiness,
+  CircleUserRound,
+  CircleDollarSign,
+  LogOut,
+} from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronsUpDown } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -156,25 +146,19 @@ export default function MainLayout({
                 {!user.companies.length && (
                   <NavLink
                     href="/company_invitations"
-                    icon={BriefcaseIcon}
-                    filledIcon={SolidBriefcaseIcon}
+                    icon={BriefcaseBusiness}
                     active={pathname.startsWith("/company_invitations")}
                   >
                     Invite companies
                   </NavLink>
                 )}
-                <NavLink
-                  href="/settings"
-                  icon={UserIcon}
-                  filledIcon={SolidUserIcon}
-                  active={pathname.startsWith("/settings")}
-                >
+                <NavLink href="/settings" icon={CircleUserRound} active={pathname.startsWith("/settings")}>
                   Account
                 </NavLink>
                 <SidebarMenuItem>
                   <SignOutButton>
                     <SidebarMenuButton className="cursor-pointer">
-                      <ArrowRightStartOnRectangleIcon className="size-6" />
+                      <LogOut className="size-6" />
                       <span>Log out</span>
                     </SidebarMenuButton>
                   </SignOutButton>
@@ -216,11 +200,11 @@ export default function MainLayout({
 
 const CompanyName = ({ company }: { company: Company }) => (
   <>
-    <div className="relative size-8">
-      <Image src={company.logo_url || defaultCompanyLogo} fill className="rounded-xs" alt="" />
+    <div className="relative size-6">
+      <Image src={company.logo_url || defaultCompanyLogo} fill className="rounded-sm" alt="" />
     </div>
     <div>
-      <span className="line-clamp-1 font-bold" title={company.name ?? ""}>
+      <span className="line-clamp-1 text-sm font-bold" title={company.name ?? ""}>
         {company.name}
       </span>
     </div>
@@ -242,8 +226,8 @@ const NavLinks = ({ company }: { company: Company }) => {
       {updatesPath ? (
         <NavLink
           href="/updates/company"
-          icon={MegaphoneIcon}
-          filledIcon={SolidMegaphoneIcon}
+          icon={Rss}
+          filledIcon={Rss}
           active={!!active && pathname.startsWith("/updates")}
         >
           Updates
@@ -255,8 +239,7 @@ const NavLinks = ({ company }: { company: Company }) => {
       {routes.has("Expenses") && (
         <NavLink
           href={`/companies/${company.id}/expenses`}
-          icon={CurrencyDollarIcon}
-          filledIcon={SolidCurrencyDollarIcon}
+          icon={CircleDollarSign}
           active={!!active && pathname.startsWith(`/companies/${company.id}/expenses`)}
         >
           Expenses
@@ -265,8 +248,7 @@ const NavLinks = ({ company }: { company: Company }) => {
       {routes.has("Documents") && (
         <NavLink
           href="/documents"
-          icon={DocumentDuplicateIcon}
-          filledIcon={SolidDocumentDuplicateIcon}
+          icon={Files}
           active={!!active && (pathname.startsWith("/documents") || pathname.startsWith("/document_templates"))}
         >
           Documents
@@ -275,28 +257,21 @@ const NavLinks = ({ company }: { company: Company }) => {
       {routes.has("People") && (
         <NavLink
           href="/people"
-          icon={UsersIcon}
-          filledIcon={SolidUsersIcon}
+          icon={Users}
           active={!!active && (pathname.startsWith("/people") || pathname.includes("/investor_entities/"))}
         >
           People
         </NavLink>
       )}
       {routes.has("Roles") && (
-        <NavLink
-          href="/roles"
-          icon={BriefcaseIcon}
-          filledIcon={SolidBriefcaseIcon}
-          active={!!active && pathname.startsWith("/roles")}
-        >
+        <NavLink href="/roles" icon={BookUser} active={!!active && pathname.startsWith("/roles")}>
           Roles
         </NavLink>
       )}
       {routes.has("Equity") && equityNavLink ? (
         <NavLink
           href={equityNavLink.route}
-          icon={ChartPieIcon}
-          filledIcon={SolidChartPieIcon}
+          icon={ChartPie}
           active={!!active && (pathname.startsWith("/equity") || pathname.includes("/equity_grants"))}
         >
           Equity
@@ -306,8 +281,7 @@ const NavLinks = ({ company }: { company: Company }) => {
         <NavLink
           href={user.roles.administrator ? `/administrator/settings` : `/settings`}
           active={!!active && (pathname.startsWith("/administrator/settings") || pathname.startsWith("/settings"))}
-          icon={Cog6ToothIcon}
-          filledIcon={SolidCog6ToothIcon}
+          icon={Settings}
         >
           Settings
         </NavLink>
@@ -359,13 +333,7 @@ function InvoicesNavLink({ companyId, active }: { companyId: string; active: boo
   );
 
   return (
-    <NavLink
-      href="/invoices"
-      icon={DocumentTextIcon}
-      filledIcon={SolidDocumentTextIcon}
-      active={active}
-      badge={data?.length}
-    >
+    <NavLink href="/invoices" icon={ReceiptIcon} active={active} badge={data?.length}>
       Invoices
     </NavLink>
   );

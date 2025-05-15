@@ -547,24 +547,6 @@ export const serialize = __jsr.serialize;
 
 /**
  * Generates rails route to
- * /internal/companies/:company_id/administrator/onboarding/added_bank_account(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const added_bank_account_company_administrator_onboarding_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"administrator"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"added_bank_account"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]], true);
-
-/**
- * Generates rails route to
- * /internal/companies/:company_id/administrator/onboarding/added_bank_account(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const added_bank_account_company_administrator_onboarding_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"administrator"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"added_bank_account"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]]);
-
-/**
- * Generates rails route to
  * /admin/companies(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
@@ -1003,24 +985,6 @@ export const balance_credit_webhooks_wise_index_path = /*#__PURE__*/ __jsr.r({"f
 
 /**
  * Generates rails route to
- * /internal/companies/:company_id/administrator/onboarding/bank_account(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const bank_account_company_administrator_onboarding_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"administrator"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"bank_account"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]], true);
-
-/**
- * Generates rails route to
- * /internal/companies/:company_id/administrator/onboarding/bank_account(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const bank_account_company_administrator_onboarding_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"administrator"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"bank_account"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]]);
-
-/**
- * Generates rails route to
  * /internal/onboarding/bank_account(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
@@ -1090,6 +1054,24 @@ export const company_administrator_quickbook_url = /*#__PURE__*/ __jsr.r({"compa
  * @returns {string} route path
  */
 export const company_administrator_quickbook_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"administrator"],[2,[7,"/"],[2,[6,"quickbooks"],[2,[7,"/"],[2,[3,"id"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]]);
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/administrator/settings/bank_accounts(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_administrator_settings_bank_accounts_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"administrator"],[2,[7,"/"],[2,[6,"settings"],[2,[7,"/"],[2,[6,"bank_accounts"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/administrator/settings/bank_accounts(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_administrator_settings_bank_accounts_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"administrator"],[2,[7,"/"],[2,[6,"settings"],[2,[7,"/"],[2,[6,"bank_accounts"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]]);
 
 /**
  * Generates rails route to

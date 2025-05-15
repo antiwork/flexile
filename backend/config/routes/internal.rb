@@ -24,12 +24,11 @@ scope path: :internal, module: :internal do
     namespace :administrator do
       resource :onboarding, only: [:update], controller: "onboarding" do
         get :details
-        get :bank_account
-        patch :added_bank_account
       end
 
       namespace :settings do
         resource :equity, only: [:show, :update], controller: "equity"
+        resource :bank_accounts, only: [:show, :create], controller: "bank_accounts"
       end
 
       resources :quickbooks, only: :update do

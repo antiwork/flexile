@@ -39,29 +39,6 @@ class Internal::Companies::Administrator::OnboardingController < Internal::Compa
     render json: { success: true }
   end
 
-  def bank_account
-    authorize Current.company, :show?
-
-    redirect_path = OnboardingState::Company.new(Current.company).redirect_path_from_onboarding_payment_details
-    return json_redirect(redirect_path) if redirect_path.present?
-
-    intent = Current.company.fetch_stripe_setup_intent
-    render json: {
-      client_secret: intent.client_secret,
-      setup_intent_status: intent.status,
-      stripe_public_key: GlobalConfig.get("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"),
-      name: Current.company.name,
-      email: Current.user.email,
-      unsigned_document_id: Current.company.documents.unsigned.where.not(docuseal_submission_id: nil).first&.id,
-    }
-  end
-
-  def added_bank_account
-    authorize Current.company, :show?
-
-    render json: { success: Current.company.bank_account.update(status: CompanyStripeAccount::PROCESSING) }
-  end
-
   private
     def company_params
       params.require(:company).permit(:name, :street_address, :city, :state, :zip_code)

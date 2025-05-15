@@ -3,7 +3,7 @@
 class OnboardingState::Company
   include Rails.application.routes.url_helpers
 
-  delegate :name, :email, :street_address, :city, :state, :zip_code, :bank_account_added?,
+  delegate :name, :email, :street_address, :city, :state, :zip_code,
            to: :company, allow_nil: true
 
   def initialize(company)
@@ -13,29 +13,19 @@ class OnboardingState::Company
   def redirect_path
     if !has_company_details?
       spa_company_administrator_onboarding_details_path(company.external_id)
-    elsif !bank_account_added?
-      spa_company_administrator_onboarding_bank_account_path(company.external_id)
     end
   end
 
   def redirect_path_from_onboarding_details
-    return completed_redirect_path if complete?
-
-    spa_company_administrator_onboarding_bank_account_path(company.external_id) if has_company_details?
-  end
-
-  def redirect_path_from_onboarding_payment_details
-    return completed_redirect_path if complete?
-
-    spa_company_administrator_onboarding_details_path(company.external_id) if !has_company_details?
+    completed_redirect_path if complete?
   end
 
   def redirect_path_after_onboarding_details_success
-    bank_account_added? ? completed_redirect_path : spa_company_administrator_onboarding_bank_account_path(company.external_id)
+    completed_redirect_path
   end
 
   def complete?
-    has_company_details? && bank_account_added?
+    has_company_details?
   end
 
   private

@@ -4,22 +4,23 @@ import { companyAdministratorsFactory } from "@test/factories/companyAdministrat
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
-import { users } from "@/db/schema";
+import { companyStripeAccounts, users } from "@/db/schema";
 
-test.describe("Company administrator onboarding - payment details", () => {
+test.describe("Company administrator settings - payment details", () => {
   test("allows connecting a bank account", async ({ page }) => {
     const { company } = await companiesFactory.create({ stripeCustomerId: null }, { withoutBankAccount: true });
     const { administrator } = await companyAdministratorsFactory.create({ companyId: company.id });
     const adminUser = await db.query.users.findFirst({ where: eq(users.id, administrator.userId) }).then(takeOrThrow);
 
     await login(page, adminUser);
+    await page.getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("tab", { name: "Billing" }).click();
 
-    await expect(page.getByText("Link your bank account")).toBeVisible();
     await expect(
       page.getByText("We'll use this account to debit contractor payments and our monthly fee"),
     ).toBeVisible();
     await expect(page.getByText("Payments to contractors may take up to 10 business days to process.")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Start using Flexile" })).toBeDisabled();
+    await page.getByRole("button", { name: "Link your bank account" }).click();
 
     const stripeFrame = page.frameLocator("[src^='https://js.stripe.com/v3/elements-inner-payment']");
     await stripeFrame.getByLabel("Test Institution").click();
@@ -29,22 +30,13 @@ test.describe("Company administrator onboarding - payment details", () => {
     await bankFrame.getByTestId("success").click();
     await bankFrame.getByRole("button", { name: "Connect account" }).click();
     await bankFrame.getByRole("button", { name: "Back to Flexile" }).click();
+    await expect(page.getByRole("dialog")).not.toBeVisible();
 
-    // TODO (techdebt): This is passing locally but failing on CI.
-
-    // await page.getByRole("button", { name: "Start using Flexile" }).click();
-
-    // await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
-    // await expect(page.getByText("Contractors will show up here.")).toBeVisible();
-
-    // // Verify bank account status
-    // const companyStripeAccount = await db.query.companyStripeAccounts
-    //   .findFirst({
-    //     where: eq(companyStripeAccounts.companyId, company.id),
-    //   })
-    //   .then(takeOrThrow);
-    // expect(companyStripeAccount.status).toBeTruthy();
-    // expect(companyStripeAccount.status).not.toBe("initial");
+    // Verify bank account status
+    const companyStripeAccount = await db.query.companyStripeAccounts
+      .findFirst({ where: eq(companyStripeAccounts.companyId, company.id) })
+      .then(takeOrThrow);
+    expect(companyStripeAccount.status).toBe("processing");
   });
 
   test("allows manually connecting a bank account with microdeposit verification", async ({ page }) => {
@@ -53,6 +45,9 @@ test.describe("Company administrator onboarding - payment details", () => {
     const adminUser = await db.query.users.findFirst({ where: eq(users.id, administrator.userId) }).then(takeOrThrow);
 
     await login(page, adminUser);
+    await page.getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("tab", { name: "Billing" }).click();
+    await page.getByRole("button", { name: "Link your bank account" }).click();
 
     const stripeFrame = page.frameLocator("[src^='https://js.stripe.com/v3/elements-inner-payment']");
     await stripeFrame.getByRole("button", { name: "Enter bank details manually instead" }).click();
@@ -69,23 +64,14 @@ test.describe("Company administrator onboarding - payment details", () => {
       ),
     ).toBeVisible();
 
-    // TODO (techdebt): This is passing locally but failing on CI.
+    await bankFrame.getByRole("button", { name: "Back to Flexile" }).click();
+    await expect(page.getByRole("dialog")).not.toBeVisible();
 
-    // await bankFrame.getByRole("button", { name: "Back to Flexile" }).click();
-    // await page.getByRole("button", { name: "Start using Flexile" }).click();
+    await expect(page.getByText("Verify your bank account to enable contractor payments")).toBeVisible();
 
-    // await page.getByRole("link", { name: "Settings" }).click();
-    // await expect(page.getByRole("heading", { name: "Company account" })).toBeVisible();
-
-    // TODO (techdebt): This is not visible locally either
-    // await expect(page.getByText("Verify your bank account to enable contractor payments")).toBeVisible();
-
-    // const companyStripeAccount = await db.query.companyStripeAccounts
-    //   .findFirst({
-    //     where: eq(companyStripeAccounts.companyId, company.id),
-    //   })
-    //   .then(takeOrThrow);
-    // expect(companyStripeAccount.status).toBeTruthy();
-    // expect(companyStripeAccount.status).not.toBe("initial");
+    const companyStripeAccount = await db.query.companyStripeAccounts
+      .findFirst({ where: eq(companyStripeAccounts.companyId, company.id) })
+      .then(takeOrThrow);
+    expect(companyStripeAccount.status).toBe("processing");
   });
 });

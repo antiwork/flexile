@@ -12,6 +12,7 @@ import { useCurrentUser } from "@/global";
 import { usStates } from "@/models";
 import { request } from "@/utils/request";
 import { company_administrator_onboarding_path, details_company_administrator_onboarding_path } from "@/utils/routes";
+import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   legal_name: z.string().refine((val) => /\S+\s+\S+/u.test(val), {
@@ -30,6 +31,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export const CompanyDetails = () => {
   const user = useCurrentUser();
+  const router = useRouter();
   const queryClient = useQueryClient();
 
   const { data } = useSuspenseQuery({
@@ -53,6 +55,7 @@ export const CompanyDetails = () => {
           states: z.array(z.tuple([z.string(), z.string()])),
           legal_name: z.string().nullable(),
           on_success_redirect_path: z.string(),
+          unsigned_document_id: z.number().nullable(),
         })
         .parse(await response.json());
     },
@@ -83,6 +86,7 @@ export const CompanyDetails = () => {
       });
 
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      router.push(data.unsigned_document_id ? `/documents?sign=${data.unsigned_document_id}` : "/people");
     },
   });
 

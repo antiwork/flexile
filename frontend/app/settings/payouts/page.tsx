@@ -23,7 +23,7 @@ import BankAccountModal, { type BankAccount, bankAccountSchema } from "./BankAcc
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormLabel, FormMessage, FormControl, FormItem, FormField } from "@/components/ui/form";
-import { Card, CardTitle, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardTitle, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { PlusIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 
 export default function PayoutsPage() {
@@ -32,7 +32,6 @@ export default function PayoutsPage() {
   return (
     <SettingsLayout>
       {user.roles.investor ? <DividendSection /> : null}
-      <Separator />
       <BankAccountsSection />
     </SettingsLayout>
   );
@@ -89,43 +88,51 @@ const DividendSection = () => {
   const submit = form.handleSubmit((values) => saveMutation.mutate(values));
 
   return (
-    <Form {...form}>
-      <form title="Dividends" onSubmit={(e) => void submit(e)} className="grid gap-4">
-        <h2 className="text-xl font-medium">Dividends</h2>
-        <FormField
-          control={form.control}
-          name="minimumDividendPaymentAmount"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Minimum dividend payout amount</FormLabel>
-              <FormControl>
-                <NumberInput
-                  {...field}
-                  max={data.max_minimum_dividend_payment_in_cents / 100}
-                  min={data.min_minimum_dividend_payment_in_cents / 100}
-                  step={0.01}
-                  placeholder="10"
-                  prefix="$"
-                />
-              </FormControl>
-              <FormMessage>
-                Payments below this threshold will be retained. This change will affect all companies you invested in
-                through Flexile.
-              </FormMessage>
-            </FormItem>
-          )}
-        />
-        <MutationStatusButton
-          type="submit"
-          mutation={saveMutation}
-          loadingText="Saving..."
-          successText="Saved!"
-          className="justify-self-end"
-        >
-          Save changes
-        </MutationStatusButton>
-      </form>
-    </Form>
+    <Card>
+      <CardHeader>
+        <CardTitle>Dividends</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={(e) => void submit(e)} className="grid gap-4">
+            <FormField
+              control={form.control}
+              name="minimumDividendPaymentAmount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Minimum dividend payout amount</FormLabel>
+                  <FormControl>
+                    <NumberInput
+                      {...field}
+                      max={data.max_minimum_dividend_payment_in_cents / 100}
+                      min={data.min_minimum_dividend_payment_in_cents / 100}
+                      step={0.01}
+                      placeholder="10"
+                      prefix="$"
+                    />
+                  </FormControl>
+                  <FormMessage>
+                    Payments below this threshold will be retained. This change will affect all companies you invested
+                    in through Flexile.
+                  </FormMessage>
+                </FormItem>
+              )}
+            />
+            <CardFooter className="justify-start p-0">
+              <MutationStatusButton
+                type="submit"
+                mutation={saveMutation}
+                loadingText="Saving..."
+                successText="Saved!"
+                className="justify-self-end"
+              >
+                Save changes
+              </MutationStatusButton>
+            </CardFooter>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 };
 
@@ -270,8 +277,8 @@ const BankAccountsSection = () => {
               <Fragment key={bankAccount.id}>
                 <div className="flex justify-between">
                   <div>
-                    <h2 className="text-xl font-bold">{bankAccount.currency} bank account</h2>
-                    <div className="text-xs">Ending in {bankAccount.last_four_digits}</div>
+                    <h2 className="text-xl font-semibold">{bankAccount.currency} bank account</h2>
+                    <div className="text-sm">Ending in {bankAccount.last_four_digits}</div>
                     {bankAccounts.length > 1 && bankAccountUsage(bankAccount)}
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
