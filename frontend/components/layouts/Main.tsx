@@ -229,7 +229,7 @@ const NavLinks = ({ company }: { company: Company }) => {
           filledIcon={Rss}
           active={!!active && pathname.startsWith("/updates")}
         >
-          Newsroom
+          Updates
         </NavLink>
       ) : null}
       {routes.has("Invoices") && (
