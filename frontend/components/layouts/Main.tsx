@@ -47,6 +47,7 @@ import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
 import { Separator } from "@/components/ui/separator";
+import type { Route } from "next";
 
 export default function MainLayout({
   children,
@@ -289,7 +290,7 @@ const NavLinks = ({ company }: { company: Company }) => {
   );
 };
 
-const NavLink = ({
+const NavLink = <T extends string>({
   icon,
   filledIcon,
   children,
@@ -300,7 +301,7 @@ const NavLink = ({
 }: {
   children: React.ReactNode;
   className?: string;
-  href: string; // TODO use Route<T> here once all of them are migrated
+  href: Route<T>;
   active?: boolean;
   icon: React.ComponentType;
   filledIcon?: React.ComponentType;
@@ -310,10 +311,7 @@ const NavLink = ({
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={active ?? false} className={className}>
-        <Link
-          // @ts-expect-error see the above comment
-          href={href}
-        >
+        <Link href={href}>
           <Icon />
           <span>{children}</span>
           {badge && badge > 0 ? (

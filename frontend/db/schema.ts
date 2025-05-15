@@ -1705,7 +1705,7 @@ export const equityGrants = pgTable(
     forfeitedShares: integer("forfeited_shares").notNull(),
     unvestedShares: integer("unvested_shares").notNull(),
     issuedAt: timestamp("issued_at", { precision: 6, mode: "date" }).notNull(),
-
+    cancelledAt: timestamp("cancelled_at", { precision: 6, mode: "date" }),
     optionHolderName: varchar("option_holder_name").notNull(),
     expiresAt: timestamp("expires_at", { precision: 6, mode: "date" }).notNull(),
     activeExerciseId: bigint("active_exercise_id", { mode: "bigint" }),
