@@ -176,7 +176,7 @@ attached = {
   "final.csv" => { mime_type: "text/csv", content: dividend_computation.to_final_csv }
 }
 
-AdminMailer.custom(to: ["sharang.d@gmail.com"], subject: "Test", body: "Attached", attached: ).deliver_now
+AdminMailer.custom(to: ["support@flexile.com"], subject: "Test", body: "Attached", attached: ).deliver_now
 ```
 
 Note that emails must be sent manually to investors if this approach is taken.
