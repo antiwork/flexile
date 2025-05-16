@@ -23,7 +23,10 @@ class CreateInvestorsAndDividends
 
     def process_sheet
       @data = {}
-      workbook = RubyXL::Parser.parse(workbook_url)
+      tempfile = Tempfile.new(['workbook', '.xlsx'], binmode: true)
+      tempfile.write(URI.open(workbook_url).read)
+      tempfile.rewind
+      workbook = RubyXL::Parser.parse(tempfile.path)
       workbook.worksheets.each do |sheet|
         puts "Processing sheet #{sheet.sheet_name}"
         header = sheet[0].cells.map { _1.present? ? _1.value : nil }
