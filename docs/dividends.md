@@ -30,7 +30,7 @@ Script for resending email to investors who didn't sign up to Flexile:
 company = Company.find(1823)
 dividend_date = Date.parse("June 6, 2025")
 primary_admin_user = company.primary_admin.user
-company.investors.joins(:dividends).where(dividends: { status: Dividend::ISSUED }).find_each do |user|
+company.investors.joins(:dividends).where(dividends: { status: Dividend::PENDING_SIGNUP }).find_each do |user|
   user.invite!(primary_admin_user,
                  subject: "Action required: start earning distributions on your investment in #{company.name}",
                  reply_to: primary_admin_user.email,
