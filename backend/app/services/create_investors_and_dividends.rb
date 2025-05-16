@@ -135,20 +135,12 @@ class CreateInvestorsAndDividends
         return_of_capital: true,
         total_amount_in_cents: @data.sum { |_email, info| (info[:investment][:dividend_amount] * 100.to_d).to_i }
       )
+      puts "Created Dividend round #{dividend_round.id}: #{dividend_round.total_amount_in_cents} cents"
 
       @data.each do |email, info|
         user = User.find_by!(email:)
         company_investor = user.company_investors.find_by!(company:)
         info[:investment].tap do |investment|
-          convertible_investment = safe
-
-          puts "Creating convertible_security for #{email}"
-          principal_value_in_cents = (investment[:amount] * 100.to_d).to_i
-          company_investor.convertible_securities.create!(
-            convertible_investment:, principal_value_in_cents:,
-            implied_shares: principal_value_in_cents, issued_at: investment[:date]
-          )
-
           puts "Creating dividend for #{email}"
           dividend_cents = (investment[:dividend_amount] * 100.to_d).to_i
           company_investor.dividends.create!(
@@ -159,6 +151,8 @@ class CreateInvestorsAndDividends
             qualified_amount_cents: dividend_cents,
           )
         end
+      rescue => e
+        puts "Error creating dividend for #{email}: #{e.message}"
       end
     end
 
