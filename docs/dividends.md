@@ -32,7 +32,7 @@ end
 fees.sum / 100.0 # 5490.21
 ```
 
-Pull funds via ACH (Stripe -> Wise):
+Pull funds via ACH using Stripe:
 
 ```
 company = Company.find(1823)
