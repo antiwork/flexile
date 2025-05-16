@@ -101,11 +101,7 @@ export const documentsRouter = createRouter({
   }),
   // TODO set up a DocuSeal webhook instead
   sign: companyProcedure.input(z.object({ id: z.bigint(), role: z.string() })).mutation(async ({ ctx, input }) => {
-    if (
-      (input.role === "Company Representative" || input.role === "Board member") &&
-      !ctx.companyAdministrator &&
-      !ctx.companyLawyer
-    )
+    if (input.role === "Company Representative" && !ctx.companyAdministrator && !ctx.companyLawyer)
       throw new TRPCError({ code: "FORBIDDEN" });
     const [document] = await db
       .select()
@@ -114,10 +110,7 @@ export const documentsRouter = createRouter({
       .where(
         and(
           eq(documents.id, input.id),
-          visibleDocuments(
-            ctx.company.id,
-            input.role === "Company Representative" || input.role === "Board member" ? undefined : ctx.user.id,
-          ),
+          visibleDocuments(ctx.company.id, input.role === "Company Representative" ? undefined : ctx.user.id),
           eq(documentSignatures.title, input.role),
           isNull(documentSignatures.signedAt),
         ),

@@ -259,9 +259,7 @@ export default function DocumentsPage() {
       document.signatories.some(
         (signatory) =>
           !signatory.signedAt &&
-          (signatory.id === user.id ||
-            ((signatory.title === "Company Representative" || signatory.title === "Board member") &&
-              isCompanyRepresentative)),
+          (signatory.id === user.id || (signatory.title === "Company Representative" && isCompanyRepresentative)),
       )
     );
   };
@@ -523,21 +521,11 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
           preview={document.type === DocumentType.BoardConsent && !document.lawyerApproved}
           customCss={customCss}
           onComplete={() => {
-            const userIsSigner = document.signatories.some(
-              (signatory) => signatory.id === user.id && signatory.title === "Signer",
-            );
-            const role = userIsSigner
-              ? "Signer"
-              : document.type === DocumentType.BoardConsent
-                ? assertDefined(
-                    document.signatories.find((signatory) => signatory.id === user.id)?.title,
-                    "User is not a board member",
-                  )
-                : "Company Representative";
             signDocument.mutate({
               companyId: company.id,
               id: document.id,
-              role,
+              role:
+                document.signatories.find((signatory) => signatory.id === user.id)?.title ?? "Company Representative",
             });
           }}
         />
