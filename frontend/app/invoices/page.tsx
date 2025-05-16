@@ -328,16 +328,14 @@ export default function InvoicesPage() {
               onRowClicked={setDetailInvoice}
               searchColumn={user.roles.administrator ? "billFrom" : undefined}
               actions={
-                <>
-                  {user.roles.administrator ? (
-                    <Button variant="outline" size="small" asChild>
-                      <a href={export_company_invoices_path(company.id)}>
-                        <Download className="size-4" />
-                        Download CSV
-                      </a>
-                    </Button>
-                  ) : null}
-                </>
+                user.roles.administrator ? (
+                  <Button variant="outline" size="small" asChild>
+                    <a href={export_company_invoices_path(company.id)}>
+                      <Download className="size-4" />
+                      Download CSV
+                    </a>
+                  </Button>
+                ) : null
               }
             />
           </>
