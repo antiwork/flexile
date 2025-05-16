@@ -1,5 +1,5 @@
 "use client";
-import { BriefcaseIcon } from "@heroicons/react/24/outline";
+import { BriefcaseBusiness } from "lucide-react";
 import Link from "next/link";
 import MainLayout from "@/components/layouts/Main";
 import Placeholder from "@/components/Placeholder";
@@ -46,7 +46,7 @@ export default function CompanyInvitationsPage() {
           <p>To get started, invite a company to work with.</p>
           <Button variant="outline" asChild>
             <Link href="/company_invitations/new">
-              <BriefcaseIcon className="h-4 w-4" />
+              <BriefcaseBusiness className="size-4" />
               Invite company
             </Link>
           </Button>

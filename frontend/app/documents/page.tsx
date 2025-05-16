@@ -1,9 +1,17 @@
 "use client";
-import { ArrowDownTrayIcon, InformationCircleIcon } from "@heroicons/react/16/solid";
-import { BriefcaseIcon, CheckCircleIcon, PaperAirplaneIcon, PencilIcon } from "@heroicons/react/24/outline";
+import {
+  BriefcaseBusiness,
+  CircleCheck,
+  Download,
+  FileTextIcon,
+  GavelIcon,
+  Info,
+  Pencil,
+  PercentIcon,
+  SendHorizontal,
+} from "lucide-react";
 import { skipToken } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel, type ColumnFiltersState } from "@tanstack/react-table";
-import { FileTextIcon, GavelIcon, PercentIcon } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -115,7 +123,7 @@ const EditTemplates = () => {
   return (
     <>
       <Button variant="outline" size="small" onClick={() => setOpen(true)}>
-        <PencilIcon className="size-4" />
+        <Pencil className="size-4" />
         Edit templates
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
@@ -146,7 +154,7 @@ const EditTemplates = () => {
             </Table>
             <h3 className="text-lg font-medium">Create a new template</h3>
             <Alert>
-              <InformationCircleIcon />
+              <Info className="size-4" />
               <AlertDescription>
                 By creating a custom document template, you acknowledge that Flexile shall not be liable for any claims,
                 liabilities, or damages arising from or related to such documents. See our{" "}
@@ -321,13 +329,13 @@ export default function DocumentsPage() {
                 {document.attachment ? (
                   <Button variant="outline" size="small" asChild>
                     <Link href={`/download/${document.attachment.key}/${document.attachment.filename}`} download>
-                      <ArrowDownTrayIcon className="size-4" />
+                      <Download className="size-4" />
                       Download
                     </Link>
                   </Button>
                 ) : document.docusealSubmissionId && document.signatories.every((signatory) => signatory.signedAt) ? (
                   <Button variant="outline" size="small" onClick={() => setDownloadDocument(document.id)}>
-                    <ArrowDownTrayIcon className="size-4" />
+                    <Download className="size-4" />
                     Download
                   </Button>
                 ) : null}
@@ -369,7 +377,7 @@ export default function DocumentsPage() {
           {isCompanyRepresentative && documents.length === 0 ? <EditTemplates /> : null}
           {user.roles.administrator && company.flags.includes("lawyers") ? (
             <Button onClick={() => setShowInviteModal(true)}>
-              <BriefcaseIcon className="size-4" />
+              <BriefcaseBusiness className="size-4" />
               Invite lawyer
             </Button>
           ) : null}
@@ -379,7 +387,7 @@ export default function DocumentsPage() {
       <div className="grid gap-4">
         {canSign ? null : (
           <Alert>
-            <InformationCircleIcon />
+            <Info className="size-4" />
             <AlertDescription>
               Please{" "}
               <Link className={linkClasses} href="/settings/tax">
@@ -412,7 +420,7 @@ export default function DocumentsPage() {
             ) : null}
           </>
         ) : (
-          <Placeholder icon={CheckCircleIcon}>No documents yet.</Placeholder>
+          <Placeholder icon={CircleCheck}>No documents yet.</Placeholder>
         )}
       </div>
       <Dialog open={showInviteModal} onOpenChange={setShowInviteModal}>
@@ -441,7 +449,7 @@ export default function DocumentsPage() {
                 className="mt-4 w-full"
                 loadingText="Inviting..."
               >
-                <PaperAirplaneIcon className="size-5" />
+                <SendHorizontal className="size-5" />
                 Invite
               </MutationStatusButton>
             </form>

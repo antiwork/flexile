@@ -1,4 +1,4 @@
-import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/20/solid";
+import { ChevronDown, ChevronUp, ListFilterIcon, SearchIcon } from "lucide-react";
 import {
   type AccessorKeyColumnDef,
   type Column,
@@ -12,7 +12,6 @@ import {
   type TableOptions,
   useReactTable,
 } from "@tanstack/react-table";
-import { FilterIcon, SearchIcon } from "lucide-react";
 import React, { useMemo } from "react";
 import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
@@ -139,11 +138,11 @@ export default function DataTable<T extends RowData>({
   return (
     <div className="grid gap-4">
       {filterable || actions ? (
-        <div className="flex justify-between">
+        <div className="grid gap-2 md:flex md:justify-between">
           <div className="flex gap-2">
             {table.options.enableGlobalFilter !== false ? (
-              <div className="relative">
-                <SearchIcon className="text-muted-foreground absolute top-2.5 left-2.5 size-4" />
+              <div className="relative w-full md:w-60">
+                <SearchIcon className="absolute top-2.5 left-2.5 size-4" />
                 <Input
                   value={
                     z
@@ -154,7 +153,7 @@ export default function DataTable<T extends RowData>({
                   onChange={(e) =>
                     searchColumn ? searchColumn.setFilterValue(e.target.value) : table.setGlobalFilter(e.target.value)
                   }
-                  className="w-60 pl-8"
+                  className="w-full pl-8"
                   placeholder={searchColumn ? `Search by ${getColumnName(searchColumn)}...` : "Search..."}
                 />
               </div>
@@ -164,7 +163,7 @@ export default function DataTable<T extends RowData>({
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="small">
                     <div className="flex items-center gap-1">
-                      <FilterIcon className="text-muted-foreground size-4" />
+                      <ListFilterIcon className="size-4" />
                       Filter
                       {activeFilterCount > 0 && (
                         <Badge variant="secondary" className="rounded-sm px-1 font-normal">
@@ -229,7 +228,7 @@ export default function DataTable<T extends RowData>({
               </DropdownMenu>
             ) : null}
           </div>
-          <div className="flex gap-2">{actions}</div>
+          <div className="flex justify-between md:justify-end md:gap-2">{actions}</div>
         </div>
       ) : null}
       <ShadcnTable className="caption-top not-print:max-md:grid">
@@ -263,8 +262,8 @@ export default function DataTable<T extends RowData>({
                   onClick={() => sortable && header.column.getCanSort() && header.column.toggleSorting()}
                 >
                   {!header.isPlaceholder && flexRender(header.column.columnDef.header, header.getContext())}
-                  {header.column.getIsSorted() === "asc" && <ChevronUpIcon className="inline size-5" />}
-                  {header.column.getIsSorted() === "desc" && <ChevronDownIcon className="inline size-5" />}
+                  {header.column.getIsSorted() === "asc" && <ChevronUp className="inline size-5" />}
+                  {header.column.getIsSorted() === "desc" && <ChevronDown className="inline size-5" />}
                 </TableHead>
               ))}
             </TableRow>

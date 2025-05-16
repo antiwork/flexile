@@ -114,7 +114,7 @@ test.describe("New Contractor", () => {
     await page.getByRole("link", { name: "Type" }).click();
     await page.getByPlaceholder("Type signature here...").fill("Flexy Bob");
     await page.getByRole("button", { name: "Complete" }).click();
-    await expect(page.getByRole("heading", { name: "Invoicing" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
   });
 
   test("allows inviting a project-based contractor", async ({ page, next }) => {
@@ -155,7 +155,7 @@ test.describe("New Contractor", () => {
     await page.getByRole("link", { name: "Type" }).click();
     await page.getByPlaceholder("Type signature here...").fill("Flexy Bob");
     await page.getByRole("button", { name: "Complete" }).click();
-    await expect(page.getByRole("heading", { name: "Invoicing" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
   });
 
   test("allows inviting a salary-based contractor", async ({ page }) => {

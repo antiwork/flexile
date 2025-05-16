@@ -1,6 +1,5 @@
 "use client";
-import { PencilIcon } from "@heroicons/react/16/solid";
-import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import { CircleCheck, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
@@ -36,9 +35,9 @@ export default function Buybacks() {
     <EquityLayout
       headerActions={
         user.roles.administrator ? (
-          <Button asChild>
+          <Button asChild size="small" variant="outline">
             <Link href="/equity/tender_offers/new">
-              <PencilIcon className="size-4" />
+              <Plus className="size-4" />
               New buyback
             </Link>
           </Button>
@@ -48,7 +47,7 @@ export default function Buybacks() {
       {data.length ? (
         <DataTable table={table} onRowClicked={(row) => router.push(`/equity/tender_offers/${row.id}`)} />
       ) : (
-        <Placeholder icon={CheckCircleIcon}>There are no buybacks yet.</Placeholder>
+        <Placeholder icon={CircleCheck}>There are no buybacks yet.</Placeholder>
       )}
     </EquityLayout>
   );

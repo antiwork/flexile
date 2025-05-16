@@ -1,5 +1,5 @@
 "use client";
-import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import { CircleCheck } from "lucide-react";
 import React from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Figures from "@/components/Figures";
@@ -52,7 +52,7 @@ export default function Convertibles() {
       {data.convertibleSecurities.length > 0 ? (
         <DataTable table={table} />
       ) : (
-        <Placeholder icon={CheckCircleIcon}>You do not hold any convertible securities.</Placeholder>
+        <Placeholder icon={CircleCheck}>You do not hold any convertible securities.</Placeholder>
       )}
     </EquityLayout>
   );

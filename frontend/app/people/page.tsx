@@ -1,5 +1,4 @@
 "use client";
-import { UserPlusIcon, UsersIcon } from "@heroicons/react/24/outline";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import Link from "next/link";
 import React, { useMemo } from "react";
@@ -12,6 +11,7 @@ import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
+import { UserPlus, Users } from "lucide-react";
 
 export default function PeoplePage() {
   const company = useCurrentCompany();
@@ -71,18 +71,31 @@ export default function PeoplePage() {
     <MainLayout
       title="People"
       headerActions={
-        <Button asChild>
-          <Link href="/people/new">
-            <UserPlusIcon className="size-4" />
-            Invite contractor
-          </Link>
-        </Button>
+        workers.length === 0 ? (
+          <Button asChild size="small" variant="outline">
+            <Link href="/people/new">
+              <UserPlus className="size-4" />
+              Invite contractor
+            </Link>
+          </Button>
+        ) : null
       }
     >
       {workers.length > 0 ? (
-        <DataTable table={table} searchColumn="user_name" />
+        <DataTable
+          table={table}
+          searchColumn="user_name"
+          actions={
+            <Button asChild size="small" variant="outline">
+              <Link href="/people/new">
+                <UserPlus className="size-4" />
+                Invite contractor
+              </Link>
+            </Button>
+          }
+        />
       ) : (
-        <Placeholder icon={UsersIcon}>Contractors will show up here.</Placeholder>
+        <Placeholder icon={Users}>Contractors will show up here.</Placeholder>
       )}
     </MainLayout>
   );

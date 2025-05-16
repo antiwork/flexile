@@ -1,5 +1,5 @@
 "use client";
-import { CheckCircleIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
+import { CircleCheck, Info } from "lucide-react";
 import React from "react";
 import DividendStatusIndicator from "@/app/equity/DividendStatusIndicator";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
@@ -55,7 +55,7 @@ export default function Dividends() {
     <EquityLayout>
       {user.hasPayoutMethod ? null : (
         <Alert>
-          <InformationCircleIcon />
+          <Info />
           <AlertDescription>
             Please{" "}
             <Link className={linkClasses} href="/settings/payouts">
@@ -68,7 +68,7 @@ export default function Dividends() {
       {data.length > 0 ? (
         <DataTable table={table} />
       ) : (
-        <Placeholder icon={CheckCircleIcon}>You have not been issued any dividends yet.</Placeholder>
+        <Placeholder icon={CircleCheck}>You have not been issued any dividends yet.</Placeholder>
       )}
     </EquityLayout>
   );

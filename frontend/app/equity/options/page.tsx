@@ -12,7 +12,6 @@ import { useMutation } from "@tanstack/react-query";
 import { request } from "@/utils/request";
 import EquityLayout from "@/app/equity/Layout";
 import Placeholder from "@/components/Placeholder";
-import { CheckCircleIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
 import Figures from "@/components/Figures";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,7 @@ import ExerciseModal from "@/app/equity/grants/ExerciseModal";
 import type { RouterOutput } from "@/trpc";
 import { resend_company_equity_grant_exercise_path } from "@/utils/routes";
 import { forbidden } from "next/navigation";
-
+import { CircleCheck, Info } from "lucide-react";
 const pluralizeGrants = (number: number) => `${number} ${pluralize("stock option grant", number)}`;
 
 type EquityGrant = RouterOutput["equityGrants"]["list"][number];
@@ -103,7 +102,7 @@ export default function OptionsPage() {
   return (
     <EquityLayout>
       {data.length === 0 ? (
-        <Placeholder icon={CheckCircleIcon}>You don't have any option grants right now.</Placeholder>
+        <Placeholder icon={CircleCheck}>You don't have any option grants right now.</Placeholder>
       ) : (
         <>
           <Figures
@@ -118,7 +117,7 @@ export default function OptionsPage() {
             <>
               {totalUnexercisedVestedShares > 0 && !exerciseInProgress && (
                 <Alert className="mb-4 w-full">
-                  <InformationCircleIcon />
+                  <Info />
                   <AlertDescription>
                     <div className="flex items-center justify-between">
                       <span className="font-bold">
@@ -134,7 +133,7 @@ export default function OptionsPage() {
 
               {exerciseInProgress ? (
                 <Alert className="mb-4 w-full">
-                  <InformationCircleIcon />
+                  <Info />
                   <AlertDescription>
                     <div className="flex items-center justify-between">
                       <span className="font-bold">
