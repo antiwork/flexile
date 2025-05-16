@@ -23,58 +23,59 @@ class CreateInvestorsAndDividends
 
     def process_sheet
       @data = {}
-      workbook = RubyXL::Parser.parse(workbook_path)
-      worksheet = workbook[0]
-      header = worksheet[0].cells.map { _1.present? ? _1.value : nil }
-      attribute_to_column_mapping = {
-        preferred_name: header.index("name"),
-        legal_name: header.index("full_legal_name"),
-        address_1: header.index("investment_address_1"),
-        address_2: header.index("investment_address_2"),
-        address_city: header.index("investment_address_city"),
-        address_region: header.index("investment_address_region"),
-        address_zip: header.index("investment_address_postal_code"),
-        address_country: header.index("investment_address_country"),
-        email: header.index("email"),
-        investment_date: header.index("investment_date"),
-        investment_amount: header.index("investment_amount"),
-        tax_id: header.index("tax_id"),
-        business_name: header.index("entity_name"),
-        dividend_amount: header.index("dividend_amount"),
-      }
-
-      puts "Processing first sheet"
-      worksheet.drop(1).each do |row| # drop the header
-        next if row.nil? || row[0].nil? || row[0].value.blank?
-
-        email = row[attribute_to_column_mapping[:email]].value
-        email = test_email_for(email) if !Rails.env.production?
-        puts "Processing email #{email}"
-
-        street_address = [row[attribute_to_column_mapping[:address_1]]&.value,
-                          row[attribute_to_column_mapping[:address_2]]&.value].compact.join(", ")
-        @data[email] = {
-          user_params: {
-            email:,
-            preferred_name: row[attribute_to_column_mapping[:preferred_name]].value,
-            legal_name: row[attribute_to_column_mapping[:legal_name]].value,
-            tax_id: row[attribute_to_column_mapping[:tax_id]]&.value,
-            business_entity: row[attribute_to_column_mapping[:business_name]]&.value.present? || false,
-            business_name: row[attribute_to_column_mapping[:business_name]]&.value,
-            country_code: row[attribute_to_column_mapping[:address_country]]&.value,
-            street_address:,
-            city: row[attribute_to_column_mapping[:address_city]]&.value,
-            state: row[attribute_to_column_mapping[:address_region]]&.value,
-            zip_code: row[attribute_to_column_mapping[:address_zip]]&.value,
-          },
-          investment:
-            {
-              round: 1,
-              date: row[attribute_to_column_mapping[:investment_date]].value,
-              amount: row[attribute_to_column_mapping[:investment_amount]].value.to_d,
-              dividend_amount: row[attribute_to_column_mapping[:dividend_amount]].value.to_d,
-            },
+      workbook = RubyXL::Parser.parse(workbook_url)
+      workbook.each do |sheet|
+        header = sheet[0].cells.map { _1.present? ? _1.value : nil }
+        attribute_to_column_mapping = {
+          preferred_name: header.index("name"),
+          legal_name: header.index("full_legal_name"),
+          address_1: header.index("investment_address_1"),
+          address_2: header.index("investment_address_2"),
+          address_city: header.index("investment_address_city"),
+          address_region: header.index("investment_address_region"),
+          address_zip: header.index("investment_address_postal_code"),
+          address_country: header.index("investment_address_country"),
+          email: header.index("email"),
+          investment_date: header.index("investment_date"),
+          investment_amount: header.index("investment_amount"),
+          tax_id: header.index("tax_id"),
+          business_name: header.index("entity_name"),
+          dividend_amount: header.index("dividend_amount"),
         }
+
+        puts "Processing sheet #{sheet.name}"
+        sheet.drop(1).each do |row| # drop the header
+          next if row.nil? || row[0].nil? || row[0].value.blank?
+
+          email = row[attribute_to_column_mapping[:email]].value
+          email = test_email_for(email) if !Rails.env.production?
+          puts "Processing email #{email}"
+
+          street_address = [row[attribute_to_column_mapping[:address_1]]&.value,
+                            row[attribute_to_column_mapping[:address_2]]&.value].compact.join(", ")
+          @data[email] = {
+            user_params: {
+              email:,
+              preferred_name: row[attribute_to_column_mapping[:preferred_name]].value,
+              legal_name: row[attribute_to_column_mapping[:legal_name]].value,
+              tax_id: row[attribute_to_column_mapping[:tax_id]]&.value,
+              business_entity: row[attribute_to_column_mapping[:business_name]]&.value.present? || false,
+              business_name: row[attribute_to_column_mapping[:business_name]]&.value,
+              country_code: row[attribute_to_column_mapping[:address_country]]&.value,
+              street_address:,
+              city: row[attribute_to_column_mapping[:address_city]]&.value,
+              state: row[attribute_to_column_mapping[:address_region]]&.value,
+              zip_code: row[attribute_to_column_mapping[:address_zip]]&.value,
+            },
+            investment:
+              {
+                round: 1,
+                date: row[attribute_to_column_mapping[:investment_date]].value,
+                amount: row[attribute_to_column_mapping[:investment_amount]].value.to_d,
+                dividend_amount: row[attribute_to_column_mapping[:dividend_amount]].value.to_d,
+              },
+          }
+        end
       end
     end
 
