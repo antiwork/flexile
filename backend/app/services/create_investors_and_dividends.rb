@@ -23,7 +23,7 @@ class CreateInvestorsAndDividends
 
     def process_sheet
       @data = {}
-      tempfile = Tempfile.new(['workbook', '.xlsx'], binmode: true)
+      tempfile = Tempfile.new(["workbook", ".xlsx"], binmode: true)
       tempfile.write(URI.open(workbook_url).read)
       tempfile.rewind
       workbook = RubyXL::Parser.parse(tempfile.path)
