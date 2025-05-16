@@ -32,7 +32,7 @@ test.describe("Contractor for multiple companies", () => {
 
     await login(page, adminUser);
     await page.getByRole("link", { name: "People" }).click();
-    await page.getByRole("link", { name: "Invite contractor" }).click();
+    await page.getByRole("button", { name: "Invite contractor" }).click();
 
     await page.getByLabel("Email").fill(contractorUser.email);
     await page.getByLabel("Start date").fill("2025-08-08");

@@ -42,7 +42,7 @@ test.describe("New Contractor", () => {
     const date = addMonths(new Date(), 1);
     await login(page, user);
     await page.getByRole("link", { name: "People" }).click();
-    await page.getByRole("link", { name: "Invite contractor" }).click();
+    await page.getByRole("button", { name: "Invite contractor" }).click();
     await expect(page.getByText("Who's joining?")).toBeVisible();
     await page.getByLabel("Email").fill(email);
     await page.getByLabel("Start date").fill(formatISO(date, { representation: "date" }));

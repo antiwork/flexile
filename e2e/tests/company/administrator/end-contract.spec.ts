@@ -44,7 +44,7 @@ test.describe("End contract", () => {
 
     // Re-invite
     await page.getByRole("link", { name: "People" }).click();
-    await page.getByRole("link", { name: "Invite contractor" }).click();
+    await page.getByRole("button", { name: "Invite contractor" }).click();
     const { mockForm } = mockDocuseal(next, {
       submitters: () => ({ "Company Representative": adminUser, Signer: contractor }),
     });
@@ -78,7 +78,7 @@ test.describe("End contract", () => {
     await page.getByRole("link", { name: "Type" }).click();
     await page.getByPlaceholder("Type signature here...").fill("Flexy Bob");
     await page.getByRole("button", { name: "Complete" }).click();
-    await expect(page.getByRole("heading", { name: "Invoicing" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
   });
 
   test("allows admin to end contractor's contract in the future", async ({ page }) => {
