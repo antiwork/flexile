@@ -29,23 +29,28 @@ test.describe("Document badge counter", () => {
   });
 
   test("shows badge with count of documents requiring signatures", async ({ page }) => {
-    const doc1 = await documentsFactory.createUnsigned(
+    // Create two unsigned documents that require signatures
+    const doc1 = await documentsFactory.create(
       {
         companyId: company.company.id,
         name: "Document 1 Requiring Signature",
+        docusealSubmissionId: 12345, // Add docusealSubmissionId
       },
       {
         signatures: [{ userId: contractorUser.id, title: "Signer" }],
+        signed: false,
       },
     );
 
-    const doc2 = await documentsFactory.createUnsigned(
+    const doc2 = await documentsFactory.create(
       {
         companyId: company.company.id,
         name: "Document 2 Requiring Signature",
+        docusealSubmissionId: 12346, // Add docusealSubmissionId
       },
       {
         signatures: [{ userId: contractorUser.id, title: "Signer" }],
+        signed: false,
       },
     );
 
@@ -55,21 +60,26 @@ test.describe("Document badge counter", () => {
     await expect(documentsBadge).toBeVisible();
     await expect(documentsBadge).toContainText("2");
 
-    await documentsFactory.createSigned(
+    // Create a document that's already signed - shouldn't affect the badge count
+    await documentsFactory.create(
       {
         companyId: company.company.id,
         name: "Document Already Signed",
+        docusealSubmissionId: 12347, // Add docusealSubmissionId
       },
       {
         signatures: [{ userId: contractorUser.id, title: "Signer" }],
+        signed: true,
       },
     );
 
     await page.reload();
 
+    // Badge should still show 2 since the third document is already signed
     await expect(documentsBadge).toBeVisible();
     await expect(documentsBadge).toContainText("2");
 
+    // Sign one of the documents
     await documentSignaturesFactory.createSigned({
       documentId: doc1.document.id,
       userId: contractorUser.id,
@@ -77,9 +87,11 @@ test.describe("Document badge counter", () => {
 
     await page.reload();
 
+    // Badge should now show 1
     await expect(documentsBadge).toBeVisible();
     await expect(documentsBadge).toContainText("1");
 
+    // Sign the last document
     await documentSignaturesFactory.createSigned({
       documentId: doc2.document.id,
       userId: contractorUser.id,
@@ -87,6 +99,7 @@ test.describe("Document badge counter", () => {
 
     await page.reload();
 
+    // Badge should no longer be visible
     await expect(documentsBadge).not.toBeVisible();
   });
 
