@@ -171,7 +171,7 @@ export default function MainLayout({
           <main className="flex flex-1 flex-col pb-4 not-print:overflow-y-auto">
             <div>
               <header className="px-3 py-2 md:px-4 md:py-4">
-                <div className="grid max-w-(--breakpoint-xl) gap-y-8">
+                <div className="grid gap-y-8">
                   <div className="grid items-center justify-between gap-3 md:flex">
                     <div>
                       <div className="flex items-center justify-between gap-2">
@@ -186,7 +186,7 @@ export default function MainLayout({
               </header>
               {subheader ? <div className="bg-gray-200/50">{subheader}</div> : null}
             </div>
-            <div className="mx-3 flex max-w-(--breakpoint-xl) flex-col gap-6">{children}</div>
+            <div className="mx-3 flex flex-col gap-6">{children}</div>
           </main>
           {footer ? <div className="mt-auto">{footer}</div> : null}
         </div>
