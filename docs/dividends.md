@@ -6,6 +6,8 @@ heroku run rails console -a flexile
 
 # Dividends
 
+### Creating a dividend from an import file
+
 Turn dividends on for a company:
 
 ```
@@ -18,6 +20,23 @@ Run the above script to create users, investors, investments, dividends, etc, an
 
 ```
 CreateInvestorsAndDividends.new(company_id: 1823, workbook_url: "https://docs.google.com/spreadsheets/d/.../edit?gid=123#gid=456", dividend_date: Date.new(2025, 5, 19), is_first_round: true)
+```
+
+See example Google Sheet here: https://docs.google.com/spreadsheets/d/1WLvHQaNx6PcofKChWhtD_4JDoTqy2y_bYxNgwNYZKBw/edit?usp=sharing
+
+Script for resending email to investors who didn't sign up to Flexile:
+
+```
+company = Company.find(1823)
+dividend_date = Date.parse("June 6, 2025")
+primary_admin_user = company.primary_admin.user
+company.investors.joins(:dividends).where(dividends: { status: Dividend::ISSUED }).find_each do |user|
+  user.invite!(primary_admin_user,
+                 subject: "Action required: start earning distributions on your investment in #{company.name}",
+                 reply_to: primary_admin_user.email,
+                 template_name: "investor_invitation_instructions",
+                 dividend_date:)
+end
 ```
 
 Calculate fees:
@@ -74,7 +93,7 @@ CompanyInvestor.joins(:dividends).where(dividends: { dividend_round_id: }).group
 end
 ```
 
-...Wait 14 days (?) for investors to sign up/onboard...
+...Wait for investors to sign up/onboard...
 
 Mark dividend as ready for automatic payments:
 
@@ -83,16 +102,68 @@ dividend_round = Company.find(1823).dividend_rounds.order(id: :desc).first
 dividend_round.update!(ready_for_payment: true)
 ```
 
+### Sending out dividend payments
+
+Attempt to pay all investors part of the dividend round:
+
+```
+delay = 0
+CompanyInvestor.joins(:dividends).
+                includes(:user).
+                where(dividends: { dividend_round_id:, status: [Dividend::ISSUED, Dividend::RETAINED] }).
+                group(:id).
+                each do |investor|
+  print "."
+  user = investor.user
+  next if !user.has_verified_tax_id? ||
+            user.restricted_payout_country_resident? ||
+            user.sanctioned_country_resident? ||
+            user.tax_information_confirmed_at.nil? ||
+            !investor.completed_onboarding?
+
+  InvestorDividendsPaymentJob.perform_in((delay * 2).seconds, investor.id)
+  delay += 1
+end; nil
+```
+
+After all `InvestorDividendsPaymentJob` jobs have completed, run this to send emails to investors with retained dividends:
+
+```
+dividend_round.investor_dividend_rounds.each do |investor_dividend_round|
+  dividends = dividend_round.dividends.where(company_investor_id: investor_dividend_round.company_investor_id)
+  status = dividends.pluck(:status).uniq
+  next unless status == [Dividend::RETAINED]
+
+  retained_reason = dividends.pluck(:retained_reason).uniq
+
+  if retained_reason == [Dividend::RETAINED_REASON_COUNTRY_SANCTIONED]
+    investor_dividend_round.send_sanctioned_country_email
+  elsif retained_reason == [Dividend::RETAINED_REASON_BELOW_THRESHOLD]
+    investor_dividend_round.send_payout_below_threshold_email
+  end
+end; nil
+```
+
+### Calculating a dividend (without an import file, based on existing cap table)
+
+This is only necessary if investors are not imported with investment and dividend amounts.
+
 DividendComputationGeneration
 
 ```
-...
+company = Company.is_gumroad.sole
+service = DividendComputationGeneration.new(company, amount_in_usd: 5_346_877, return_of_capital: false)
+service.process
+
+puts service.instance_variable_get(:@preferred_dividend_total)
+puts service.instance_variable_get(:@common_dividend_total)
+puts service.instance_variable_get(:@preferred_dividend_total) + service.instance_variable_get(:@common_dividend_total)
 ```
 
-DividendComputation#generate_dividends
+Then, generate the dividend using the computation:
 
 ```
-...
+DividendComputation.generate_dividends
 ```
 
 Validate the data looks correct:
@@ -108,8 +179,12 @@ attached = {
 AdminMailer.custom(to: ["sharang.d@gmail.com"], subject: "Test", body: "Attached", attached: ).deliver_now
 ```
 
-Tax document generation:
+Note that emails must be sent manually to investors if this approach is taken.
+
+### Tax document generation:
 
 ```
 Company.find(1823).update(irs_tax_forms: true)
 ```
+
+This is automated, so nothing more needs to be done.
