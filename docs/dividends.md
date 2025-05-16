@@ -55,7 +55,7 @@ Move money from Stripe to Wise:
 payout = Stripe::Payout.create({
            amount: 275_276_75,
            currency: "usd",
-           description: "LMNT dividends",
+           description: "Dividends for ...",
            statement_descriptor: "Flexile"
          })
 ```
@@ -98,14 +98,14 @@ DividendComputation#generate_dividends
 Validate the data looks correct:
 
 ```
-# dividend_computation = DividendComputation.last
-# attached = {
-#   "per_investor_and_share_class.csv" => { mime_type: "text/csv", content: dividend_computation.to_csv },
-#   "per_investor.csv" => { mime_type: "text/csv", content: dividend_computation.to_per_investor_csv },
-#   "final.csv" => { mime_type: "text/csv", content: dividend_computation.to_final_csv }
-# }
-#
-# AdminMailer.custom(to: ["sharang.d@gmail.com"], subject: "Test", body: "Attached", attached: ).deliver_now
+dividend_computation = DividendComputation.last
+attached = {
+  "per_investor_and_share_class.csv" => { mime_type: "text/csv", content: dividend_computation.to_csv },
+  "per_investor.csv" => { mime_type: "text/csv", content: dividend_computation.to_per_investor_csv },
+  "final.csv" => { mime_type: "text/csv", content: dividend_computation.to_final_csv }
+}
+
+AdminMailer.custom(to: ["sharang.d@gmail.com"], subject: "Test", body: "Attached", attached: ).deliver_now
 ```
 
 Tax document generation:
