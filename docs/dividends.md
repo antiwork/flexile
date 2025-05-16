@@ -1,6 +1,7 @@
 # Dividends Guide
 
 ## Table of Contents
+
 - [Getting Started](#getting-started)
 - [Creating Dividends](#creating-dividends)
   - [From Import File](#from-import-file)
@@ -33,6 +34,7 @@ Company.find(1823).update!(dividends_allowed: true)
 #### Create Investors and Dividends
 
 Write a script to invite investors AND save dividend records for them:
+
 - See: `backend/app/services/create_investors_and_dividends.rb`
 
 Run the script to create users, investors, investments, dividends, etc., and send invitation emails:
