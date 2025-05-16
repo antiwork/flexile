@@ -15,7 +15,13 @@ function Card({ className, asChild = false, ...props }: React.ComponentProps<"di
 }
 
 function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
-  return <div data-slot="card-header" className={cn("flex flex-col space-y-1.5 border-b p-4", className)} {...props} />;
+  return (
+    <div
+      data-slot="card-header"
+      className={cn("border-muted flex flex-col space-y-1.5 border-b p-4", className)}
+      {...props}
+    />
+  );
 }
 
 function CardTitle({ className, ...props }: React.ComponentProps<"div">) {

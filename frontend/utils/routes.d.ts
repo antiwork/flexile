@@ -88,30 +88,6 @@ export const serialize: RouterExposedMethods['serialize'];
 
 /**
  * Generates rails route to
- * /internal/companies/:company_id/administrator/onboarding/added_bank_account(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const added_bank_account_company_administrator_onboarding_url: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/companies/:company_id/administrator/onboarding/added_bank_account(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const added_bank_account_company_administrator_onboarding_path: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /admin/companies(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
@@ -676,30 +652,6 @@ export const balance_credit_webhooks_wise_index_path: ((
 
 /**
  * Generates rails route to
- * /internal/companies/:company_id/administrator/onboarding/bank_account(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const bank_account_company_administrator_onboarding_url: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/companies/:company_id/administrator/onboarding/bank_account(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const bank_account_company_administrator_onboarding_path: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /internal/onboarding/bank_account(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
@@ -791,6 +743,30 @@ export const company_administrator_quickbook_url: ((
 export const company_administrator_quickbook_path: ((
   company_id: RequiredRouteParameter,
   id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/administrator/settings/bank_accounts(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_administrator_settings_bank_accounts_url: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/administrator/settings/bank_accounts(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_administrator_settings_bank_accounts_path: ((
+  company_id: RequiredRouteParameter,
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
