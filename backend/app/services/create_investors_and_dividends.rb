@@ -24,7 +24,8 @@ class CreateInvestorsAndDividends
     def process_sheet
       @data = {}
       workbook = RubyXL::Parser.parse(workbook_url)
-      workbook.each do |sheet|
+      workbook.worksheets.each do |sheet|
+        puts "Processing sheet #{sheet.sheet_name}"
         header = sheet[0].cells.map { _1.present? ? _1.value : nil }
         attribute_to_column_mapping = {
           preferred_name: header.index("name"),
@@ -43,7 +44,6 @@ class CreateInvestorsAndDividends
           dividend_amount: header.index("dividend_amount"),
         }
 
-        puts "Processing sheet #{sheet.name}"
         sheet.drop(1).each do |row| # drop the header
           next if row.nil? || row[0].nil? || row[0].value.blank?
 
@@ -56,27 +56,28 @@ class CreateInvestorsAndDividends
           @data[email] = {
             user_params: {
               email:,
-              preferred_name: row[attribute_to_column_mapping[:preferred_name]].value,
-              legal_name: row[attribute_to_column_mapping[:legal_name]].value,
-              tax_id: row[attribute_to_column_mapping[:tax_id]]&.value,
-              business_entity: row[attribute_to_column_mapping[:business_name]]&.value.present? || false,
-              business_name: row[attribute_to_column_mapping[:business_name]]&.value,
-              country_code: row[attribute_to_column_mapping[:address_country]]&.value,
+              preferred_name: attribute_to_column_mapping[:preferred_name] ? row[attribute_to_column_mapping[:preferred_name]].value : nil,
+              legal_name: attribute_to_column_mapping[:legal_name] ? row[attribute_to_column_mapping[:legal_name]].value : nil,
+              business_entity: attribute_to_column_mapping[:business_name] ? row[attribute_to_column_mapping[:business_name]]&.value.present? || false : false,
+              business_name: attribute_to_column_mapping[:business_name] ? row[attribute_to_column_mapping[:business_name]]&.value : nil,
+              country_code: attribute_to_column_mapping[:address_country] ? row[attribute_to_column_mapping[:address_country]]&.value : nil,
               street_address:,
-              city: row[attribute_to_column_mapping[:address_city]]&.value,
-              state: row[attribute_to_column_mapping[:address_region]]&.value,
-              zip_code: row[attribute_to_column_mapping[:address_zip]]&.value,
+              city: attribute_to_column_mapping[:address_city] ? row[attribute_to_column_mapping[:address_city]]&.value : nil,
+              state: attribute_to_column_mapping[:address_region] ? row[attribute_to_column_mapping[:address_region]]&.value : nil,
+              zip_code: attribute_to_column_mapping[:address_zip] ? row[attribute_to_column_mapping[:address_zip]]&.value : nil,
             },
-            investment:
-              {
-                round: 1,
-                date: row[attribute_to_column_mapping[:investment_date]].value,
-                amount: row[attribute_to_column_mapping[:investment_amount]].value.to_d,
-                dividend_amount: row[attribute_to_column_mapping[:dividend_amount]].value.to_d,
-              },
+            investment: {
+              round: 1,
+              date: attribute_to_column_mapping[:investment_date] ? row[attribute_to_column_mapping[:investment_date]].value : nil,
+              amount: attribute_to_column_mapping[:investment_amount] ? row[attribute_to_column_mapping[:investment_amount]].value.to_d : nil,
+              dividend_amount: attribute_to_column_mapping[:dividend_amount] ? row[attribute_to_column_mapping[:dividend_amount]].value.to_d : nil,
+            },
           }
         end
+        puts "Done processing sheet #{sheet.sheet_name}. Processed #{sheet.sheet_data.size} rows"
       end
+      puts "Processed total of #{@data.size} rows"
+      @data
     end
 
     def create_investors
