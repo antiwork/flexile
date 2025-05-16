@@ -44,7 +44,6 @@ CreateInvestorsAndDividends.new(
   company_id: 1823,
   workbook_url: "https://docs.google.com/spreadsheets/d/.../edit?gid=123#gid=456",
   dividend_date: Date.new(2025, 5, 19),
-  is_first_round: true
 )
 ```
 
