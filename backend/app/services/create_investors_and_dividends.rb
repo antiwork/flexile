@@ -3,22 +3,23 @@
 class CreateInvestorsAndDividends
   attr_reader :errors
 
-  def initialize(company_id:, workbook_path:, dividend_date:)
+  def initialize(company_id:, workbook_url:, dividend_date:, is_first_round: false)
     @company = Company.find(company_id)
-    @workbook_path = workbook_path
+    @workbook_url = workbook_url
     @dividend_date = dividend_date
     @errors = []
+    @is_first_round = is_first_round
   end
 
   def process
     process_sheet
-    create_investors
+    create_investors if is_first_round
     create_investments_and_dividends
     nil
   end
 
   private
-    attr_reader :company, :workbook_path, :dividend_date
+    attr_reader :company, :workbook_url, :dividend_date, :is_first_round
 
     def process_sheet
       @data = {}
@@ -87,7 +88,7 @@ class CreateInvestorsAndDividends
 
         if User.where(email:).exists?
           if User.find_by(email:).company_investors.where(company:).exists?
-            @errors << { email:, error_message: "Investor exists. Should not have happened!" }
+            @errors << { email:, error_message: "Investor already exists." }
           else
             user = User.find_by(email:)
             user.company_investors.create!(company:, investment_amount_in_cents:)
@@ -123,14 +124,6 @@ class CreateInvestorsAndDividends
     end
 
     def create_investments_and_dividends
-      puts "Creating SAFE and investments"
-      total_cents = @data.sum { |_email, info| (info[:investment][:amount] * 100.to_d).to_i }
-      safe = company.convertible_investments.create!(
-        identifier: "SAFE-1", entity_name: "Republic.co - 1", company_valuation_in_dollars: 40_000_000,
-        amount_in_cents: total_cents, implied_shares: total_cents, valuation_type: "Pre-money",
-        convertible_type: "Crowd SAFE", issued_at: Date.parse("July 16, 2021")
-      )
-
       puts "Creating Dividend round"
       dividend_round = company.dividend_rounds.create!(
         issued_at: Time.current,
@@ -190,7 +183,7 @@ end
 =begin
 company_id = 2
 service = CreateInvestorsAndDividends.new(company_id:,
-                                          workbook_path: "/Users/sharang/Downloads/fierce-crowdsafe-investors_updated.xlsx",
+                                          workbook_url: "/Users/sharang/Downloads/fierce-crowdsafe-investors_updated.xlsx",
                                           dividend_date: Date.parse("December 21, 2024"))
 service.process
 puts service.errors
