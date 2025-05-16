@@ -14,6 +14,10 @@ class CompanyInvestorMailer < ApplicationMailer
     @gross_amount_in_cents = dividends.sum(:total_amount_in_cents)
     @roi = @gross_amount_in_cents / @company_investor.investment_amount_in_cents.to_d
 
+    # Calculate ROI note based on dividend years
+    dividend_years = dividends.map { |d| d.created_at.year }.uniq.sort
+    @roi_note = dividend_years.size > 1 ? " (#{dividend_years.first} and #{dividend_years.last} Distributions)" : ""
+
     mail(to: @user.email,
          subject: "Upcoming distribution from #{@company.name}")
   end
@@ -26,6 +30,10 @@ class CompanyInvestorMailer < ApplicationMailer
     @company = @company_investor.company
     @gross_amount_in_cents = dividends.sum(:total_amount_in_cents)
     @roi = @gross_amount_in_cents / @company_investor.investment_amount_in_cents.to_d
+
+    # Calculate ROI note based on dividend years
+    dividend_years = dividends.map { |d| d.created_at.year }.uniq.sort
+    @roi_note = dividend_years.size > 1 ? " (#{dividend_years.first} and #{dividend_years.last} Distributions)" : ""
 
     # If an investor is missing tax information, calculate the tax withholding and net amount
     if dividends.where(net_amount_in_cents: nil, withheld_tax_cents: nil).exists?

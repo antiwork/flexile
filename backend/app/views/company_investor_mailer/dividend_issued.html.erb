@@ -12,7 +12,7 @@
   <dt>Investment amount</dt>
   <dd><%= cents_format(@company_investor.investment_amount_in_cents, no_cents_if_whole: false) %></dd>
 
-  <dt>Cumulative ROI</dt>
+  <dt>Cumulative ROI <%= @roi_note %></dt>
   <dd>
     <%= (@roi * 100.0).round(2) %>%
   </dd>
@@ -30,22 +30,15 @@
   This amount will be deposited into your chosen payout method, minus any taxes (if applicable).
 </p>
 <p><strong>To avoid delays in your payment, make sure to review the following:</strong></p>
-<ol>
+<ul>
   <li>
-    <b>Your payout method is up to date</b><br>
+    Your payout method is up to date
     <% if @user.bank_account_for_dividends %>
-      Your distribution will be paid to a bank account ending in ***<%= @user.bank_account_for_dividends.last_four_digits %>.
+      (your distribution will be paid to a bank account ending in ***<%= @user.bank_account_for_dividends.last_four_digits %>)
     <% end %>
   </li>
   <li>
-    <b>You're comfortable with your minimum payout threshold</b><br>
-    <% if @user.minimum_dividend_payment_in_cents > 0 %>
-      Currently, amounts below
-      <%= cents_format(@user.minimum_dividend_payment_in_cents, no_cents_if_whole: false) %>
-      will not be paid out and accumulate instead.
-    <% else %>
-      Because your distribution payout threshold is set to $0, you will receive all dividends.
-    <% end %>
+    You're comfortable with your minimum payout threshold (your current threshold is <%= cents_format(@user.minimum_dividend_payment_in_cents, no_cents_if_whole: false) %>)
   </li>
   <% if @tax_amount_in_cents.positive? %>
     <li>
@@ -53,7 +46,17 @@
       Update your tax info in order to update your tax withholding amount
     </li>
   <% end %>
-</ol>
+</ul>
+<p>
+      If the balance in your Flexile account is below your minimum threshold, the balance will
+    not be paid out and will accumulate instead.
+</p>
+<p>
+  If the amount in your Flexile account is higher than the distribution noted above, it
+means your distribution was not claimed last year. To receive your full balance, please
+ensure your banking details are on file and that your minimum threshold is set below
+your current account balance.
+</p>
 <p>
   Please update your account information within 10 days, after which we will process your distribution.
 </p>
