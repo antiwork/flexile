@@ -1,5 +1,5 @@
 "use client";
-import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import { CircleCheck } from "lucide-react";
 import { useParams } from "next/navigation";
 import { parseAsString, useQueryState } from "nuqs";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
@@ -54,7 +54,7 @@ function SharesTab({ shares }: { shares: ShareHolding[] }) {
   return shares.length > 0 ? (
     <DataTable table={sharesTable} />
   ) : (
-    <Placeholder icon={CheckCircleIcon}>This investor entity does not hold any shares.</Placeholder>
+    <Placeholder icon={CircleCheck}>This investor entity does not hold any shares.</Placeholder>
   );
 }
 
@@ -79,6 +79,6 @@ function OptionsTab({ grants }: { grants: EquityGrant[] }) {
   return grants.length > 0 ? (
     <DataTable table={optionsTable} />
   ) : (
-    <Placeholder icon={CheckCircleIcon}>This investor entity does not have any option grants.</Placeholder>
+    <Placeholder icon={CircleCheck}>This investor entity does not have any option grants.</Placeholder>
   );
 }

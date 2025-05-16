@@ -1,5 +1,5 @@
 "use client";
-import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import { CircleCheck } from "lucide-react";
 import React from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
@@ -36,7 +36,7 @@ export default function OptionPools() {
       {data.length > 0 ? (
         <DataTable table={table} />
       ) : (
-        <Placeholder icon={CheckCircleIcon}>The company does not have any option pools.</Placeholder>
+        <Placeholder icon={CircleCheck}>The company does not have any option pools.</Placeholder>
       )}
     </EquityLayout>
   );
