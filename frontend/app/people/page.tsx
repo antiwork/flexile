@@ -68,7 +68,19 @@ export default function PeoplePage() {
   });
 
   return (
-    <MainLayout title="People">
+    <MainLayout
+      title="People"
+      headerActions={
+        workers.length === 0 ? (
+          <Button asChild size="small" variant="outline">
+            <Link href="/people/new">
+              <UserPlus className="size-4" />
+              Invite contractor
+            </Link>
+          </Button>
+        ) : null
+      }
+    >
       {workers.length > 0 ? (
         <DataTable
           table={table}
