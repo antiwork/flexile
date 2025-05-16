@@ -195,7 +195,19 @@ export default function InvoicesPage() {
   ) : null;
 
   return (
-    <MainLayout title="Invoices">
+    <MainLayout
+      title="Invoices"
+      headerActions={
+        user.roles.worker ? (
+          <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
+            <Link href="/invoices/new" inert={!canSubmitInvoices}>
+              <Plus className="size-4" />
+              New invoice
+            </Link>
+          </Button>
+        ) : null
+      }
+    >
       <div className="grid gap-4">
         {workerNotice ? (
           <Alert>
@@ -323,14 +335,6 @@ export default function InvoicesPage() {
                         <Download className="size-4" />
                         Download CSV
                       </a>
-                    </Button>
-                  ) : null}
-                  {user.roles.worker ? (
-                    <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
-                      <Link href="/invoices/new" inert={!canSubmitInvoices}>
-                        <Plus className="size-4" />
-                        New invoice
-                      </Link>
                     </Button>
                   ) : null}
                 </>
