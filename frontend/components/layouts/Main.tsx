@@ -243,13 +243,10 @@ const NavLinks = ({ company }: { company: Company }) => {
         </NavLink>
       )}
       {routes.has("Documents") && (
-        <NavLink
-          href="/documents"
-          icon={Files}
+        <DocumentsNavLink
+          companyId={company.id}
           active={!!active && (pathname.startsWith("/documents") || pathname.startsWith("/document_templates"))}
-        >
-          Documents
-        </NavLink>
+        />
       )}
       {routes.has("People") && (
         <NavLink
@@ -335,6 +332,20 @@ function InvoicesNavLink({ companyId, active }: { companyId: string; active: boo
   return (
     <NavLink href="/invoices" icon={ReceiptIcon} active={active} badge={data?.length}>
       Invoices
+    </NavLink>
+  );
+}
+
+function DocumentsNavLink({ companyId, active }: { companyId: string; active?: boolean }) {
+  const user = useCurrentUser();
+  const { data } = trpc.documents.list.useQuery(
+    { companyId, userId: user.id, signable: true },
+    { refetchInterval: 30_000, enabled: !!user.id },
+  );
+
+  return (
+    <NavLink href="/documents" icon={Files} active={active ?? false} badge={data?.length}>
+      Documents
     </NavLink>
   );
 }
