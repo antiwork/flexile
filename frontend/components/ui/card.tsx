@@ -8,7 +8,7 @@ function Card({ className, asChild = false, ...props }: React.ComponentProps<"di
   return (
     <Comp
       data-slot="card"
-      className={cn("bg-card text-card-foreground border-input rounded-lg border shadow-xs", className)}
+      className={cn("bg-card text-card-foreground border-input rounded-lg border", className)}
       {...props}
     />
   );

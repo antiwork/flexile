@@ -14,11 +14,12 @@ import { useCurrentUser } from "@/global";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
 import { trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
-import SettingsLayout from "./Layout";
+import SettingsLayout from "@/app/settings/Layout";
 
 export default function SettingsPage() {
   return (
     <SettingsLayout>
+      <h2 className="mb-8 text-xl font-medium">Profile settings</h2>
       <DetailsSection />
       <PasswordSection />
     </SettingsLayout>
@@ -42,7 +43,6 @@ const DetailsSection = () => {
   return (
     <Form {...form}>
       <form className="grid gap-4" onSubmit={(e) => void submit(e)}>
-        <h2 className="text-xl font-medium">Personal details</h2>
         <FormField
           control={form.control}
           name="email"
@@ -120,7 +120,7 @@ const PasswordSection = () => {
 
   return (
     <Form {...form}>
-      <form className="grid gap-4" onSubmit={(e) => void submit(e)}>
+      <form className="grid gap-8" onSubmit={(e) => void submit(e)}>
         <h2 className="text-xl font-medium">Password</h2>
         <FormField
           control={form.control}

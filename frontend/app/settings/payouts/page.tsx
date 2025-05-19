@@ -18,7 +18,7 @@ import { trpc } from "@/trpc/client";
 import { isEthereumAddress } from "@/utils/isEthereumAddress";
 import { request } from "@/utils/request";
 import { settings_bank_account_path, settings_bank_accounts_path, settings_dividend_path } from "@/utils/routes";
-import SettingsLayout from "../Layout";
+import SettingsLayout from "@/app/settings/Layout";
 import BankAccountModal, { type BankAccount, bankAccountSchema } from "./BankAccountModal";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,7 +31,12 @@ export default function PayoutsPage() {
 
   return (
     <SettingsLayout>
-      {user.roles.investor ? <DividendSection /> : null}
+      <h2 className="mb-8 text-xl font-medium">Payouts</h2>
+      {user.roles.investor ? (
+        <div className="mb-8">
+          <DividendSection />
+        </div>
+      ) : null}
       <BankAccountsSection />
     </SettingsLayout>
   );
@@ -94,7 +99,7 @@ const DividendSection = () => {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={(e) => void submit(e)} className="grid gap-4">
+          <form onSubmit={(e) => void submit(e)} className="grid gap-8">
             <FormField
               control={form.control}
               name="minimumDividendPaymentAmount"

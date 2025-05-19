@@ -93,7 +93,7 @@ export const Editor = ({
   };
 
   return (
-    <div className={cn("border-input rounded-md border bg-transparent shadow-xs", invalid ? "border-destructive" : "")}>
+    <div className={cn("border-input rounded-md border bg-transparent", invalid ? "border-destructive" : "")}>
       <div className={cn("flex border-b", invalid ? "border-destructive" : "border-input")}>
         {toolbarItems.map((item) => (
           <button

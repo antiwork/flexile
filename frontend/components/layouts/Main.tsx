@@ -150,9 +150,6 @@ export default function MainLayout({
                     Invite companies
                   </NavLink>
                 )}
-                <NavLink href="/settings" icon={CircleUserRound} active={pathname.startsWith("/settings")}>
-                  Account
-                </NavLink>
                 <SidebarMenuItem>
                   <SignOutButton>
                     <SidebarMenuButton className="cursor-pointer">

@@ -14,7 +14,6 @@ import RadioButtons from "@/components/RadioButtons";
 import Status from "@/components/Status";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { CardContent, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { BusinessType, TaxClassification } from "@/db/enums";
@@ -24,7 +23,7 @@ import { trpc } from "@/trpc/client";
 import { getTinName } from "@/utils/legal";
 import { request } from "@/utils/request";
 import { settings_tax_path } from "@/utils/routes";
-import SettingsLayout from "../Layout";
+import SettingsLayout from "@/app/settings/Layout";
 import ComboBox from "@/components/ComboBox";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -178,14 +177,14 @@ export default function TaxPage() {
   return (
     <SettingsLayout>
       <Form {...form}>
-        <form onSubmit={(e) => void submit(e)}>
+        <form onSubmit={(e) => void submit(e)} className="grid gap-8">
           <hgroup>
-            <h2 className="text-xl font-bold">Tax information</h2>
-            <p className="text-gray-400">
+            <h2 className="mb-1 text-xl font-bold">Tax information</h2>
+            <p className="text-sm text-gray-500">
               These details will be included in your {user.roles.worker ? "invoices and " : ""}applicable tax forms.
             </p>
           </hgroup>
-          <CardContent className="grid gap-4">
+          <div className="grid gap-4">
             {!isTaxInfoConfirmed && (
               <Alert variant="destructive">
                 <ExclamationTriangleIcon />
@@ -472,9 +471,8 @@ export default function TaxPage() {
                 )}
               />
             </div>
-          </CardContent>
-
-          <CardFooter className="flex-wrap gap-4">
+          </div>
+          <div className="flex-wrap gap-4">
             <MutationStatusButton
               type="submit"
               disabled={!!isTaxInfoConfirmed && !form.formState.isDirty}
@@ -490,7 +488,7 @@ export default function TaxPage() {
                 {data.contractor_for_companies.join(", ")}
               </div>
             ) : null}
-          </CardFooter>
+          </div>
         </form>
       </Form>
 
