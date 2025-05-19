@@ -163,17 +163,15 @@ export default function GrantsPage() {
                 </div>
                 <div>
                   <h3 className="text-muted-foreground text-sm">Options to be forfeited</h3>
-                  <p className="text-sm text-red-500">
-                    {(cancellingGrant.numberOfShares - cancellingGrant.vestedShares).toLocaleString()}
-                  </p>
+                  <p className="text-sm text-red-500">{cancellingGrant.unvestedShares.toLocaleString()}</p>
                 </div>
               </div>
               <Alert variant="destructive">
                 <CircleAlert className="size-4" />
                 <AlertTitle>Important note</AlertTitle>
                 <AlertDescription>
-                  {(cancellingGrant.numberOfShares - cancellingGrant.vestedShares).toLocaleString()} options will be
-                  returned to the option pool. This action cannot be undone.
+                  {cancellingGrant.unvestedShares.toLocaleString()} options will be returned to the option pool. This
+                  action cannot be undone.
                 </AlertDescription>
               </Alert>
               <DialogFooter>

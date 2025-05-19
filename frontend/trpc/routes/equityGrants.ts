@@ -369,25 +369,25 @@ export const equityGrantsRouter = createRouter({
   cancel: companyProcedure.input(z.object({ id: z.string(), reason: z.string() })).mutation(async ({ input, ctx }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-    const equityGrant = await db.query.equityGrants.findFirst({
-      where: eq(equityGrants.externalId, input.id),
-      with: {
-        vestingEvents: {
-          where: and(
-            isNull(vestingEvents.processedAt),
-            isNull(vestingEvents.cancelledAt),
-            gt(sql`DATE(${vestingEvents.vestingDate})`, new Date()),
-          ),
-        },
-        optionPool: true,
-      },
-    });
-
-    if (equityGrant?.optionPool.companyId !== ctx.company.id) throw new TRPCError({ code: "NOT_FOUND" });
-
-    const totalForfeitedShares = equityGrant.unvestedShares + equityGrant.forfeitedShares;
-
     await db.transaction(async (tx) => {
+      const equityGrant = await db.query.equityGrants.findFirst({
+        where: eq(equityGrants.externalId, input.id),
+        with: {
+          vestingEvents: {
+            where: and(
+              isNull(vestingEvents.processedAt),
+              isNull(vestingEvents.cancelledAt),
+              gt(sql`DATE(${vestingEvents.vestingDate})`, new Date()),
+            ),
+          },
+          optionPool: true,
+        },
+      });
+
+      if (equityGrant?.optionPool.companyId !== ctx.company.id) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const totalForfeitedShares = equityGrant.unvestedShares + equityGrant.forfeitedShares;
+
       await tx.insert(equityGrantTransactions).values([
         {
           transactionType: "cancellation",
@@ -401,10 +401,11 @@ export const equityGrantsRouter = createRouter({
         },
       ]);
 
+      const cancelledAt = new Date();
       for (const vestingEvent of equityGrant.vestingEvents) {
         await tx
           .update(vestingEvents)
-          .set({ cancelledAt: new Date(), cancellationReason: input.reason })
+          .set({ cancelledAt, cancellationReason: input.reason })
           .where(eq(vestingEvents.id, vestingEvent.id));
       }
 
@@ -413,7 +414,7 @@ export const equityGrantsRouter = createRouter({
         .set({
           forfeitedShares: totalForfeitedShares,
           unvestedShares: 0,
-          cancelledAt: new Date(),
+          cancelledAt,
         })
         .where(eq(equityGrants.id, equityGrant.id));
 
