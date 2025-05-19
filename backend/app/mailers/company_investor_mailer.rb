@@ -46,7 +46,7 @@ class CompanyInvestorMailer < ApplicationMailer
     end
 
     mail(to: @user.email,
-         reply_to: @company.email,
+         reply_to: SUPPORT_EMAIL_WITH_NAME,
          subject: "Upcoming distribution from #{@company.name}")
   end
 
@@ -66,7 +66,7 @@ class CompanyInvestorMailer < ApplicationMailer
       @dividends.pluck(:withholding_percentage).uniq.size == 1 ? first_dividend.withholding_percentage : nil
 
     mail(to: company_investor.user.email,
-         reply_to: @company.email,
+         reply_to: SUPPORT_EMAIL_WITH_NAME,
          subject: "💰 Distribution for your investment in #{@company.name}")
   end
 
@@ -93,7 +93,7 @@ class CompanyInvestorMailer < ApplicationMailer
     @by_date = by_date.to_date
 
     mail(to: user.email,
-         reply_to: company_investor.company.email,
+         reply_to: SUPPORT_EMAIL_WITH_NAME,
          subject: "🔴 Action needed: Confirm your tax information")
   end
 
@@ -107,7 +107,7 @@ class CompanyInvestorMailer < ApplicationMailer
     @withholding_percentage = withholding_percentage
 
     mail(to: @user.email,
-         reply_to: @company.email,
+         reply_to: SUPPORT_EMAIL_WITH_NAME,
          subject: "Important notice about your distribution")
   end
 
@@ -117,7 +117,7 @@ class CompanyInvestorMailer < ApplicationMailer
     @dividend_amount_in_cents = dividend_amount_in_cents
 
     mail(to: @company_investor.user.email,
-         reply_to: @company.email,
+         reply_to: SUPPORT_EMAIL_WITH_NAME,
          subject: "Important notice about your distribution")
   end
 
@@ -129,7 +129,7 @@ class CompanyInvestorMailer < ApplicationMailer
     @account_details = @exercise.bank_account.all_details
 
     mail(to: @user.email,
-         reply_to: @company.email,
+         reply_to: SUPPORT_EMAIL_WITH_NAME,
          subject: "🔴 Action needed: your stock options exercise")
   end
 
@@ -142,7 +142,7 @@ class CompanyInvestorMailer < ApplicationMailer
     @is_new_shareholder = company_investor.share_holdings.one?
 
     mail(to: company_investor.user.email,
-         reply_to: @company.email,
+         reply_to: SUPPORT_EMAIL_WITH_NAME,
          subject: "🎊 Your stock options are officially exercised")
   end
 
