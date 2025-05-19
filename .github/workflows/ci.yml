@@ -1,15 +1,11 @@
 name: CI
-on:
-  push:
-    branches:
-      - main
-  pull_request_target:
+on: push
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.head_ref || github.ref }}-ci
-  cancel-in-progress: ${{ !!github.head_ref }}
+  group: ${{ github.ref }}-rspec
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
   CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
@@ -51,22 +47,13 @@ jobs:
         ci_node_index: [0, 1]
 
     steps:
-      - uses: actions-cool/check-user-permission@7b90a27f92f3961b368376107661682c441f6103
-        if: ${{ github.event.pull_request && github.event.pull_request.head.user.login != 'antiwork' }}
-        with:
-          require: write
-          username: ${{ github.triggering_actor }}
-          error-if-missing: true
-
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Build setup
         uses: ./.github/common/
 
       - name: Setup test database
-        run: cd apps/rails && bundle exec rails db:create db:schema:load
+        run: cd backend && bundle exec rails db:create db:schema:load
 
       - name: Run tests
         env:
@@ -75,9 +62,7 @@ jobs:
           KNAPSACK_PRO_CI_NODE_TOTAL: ${{ matrix.ci_node_total }}
           KNAPSACK_PRO_CI_NODE_INDEX: ${{ matrix.ci_node_index }}
           KNAPSACK_PRO_LOG_LEVEL: info
-          GITHUB_REF: ${{ github.event.pull_request.head.ref }}
-          GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
-        run: cd apps/rails && bundle exec rake "knapsack_pro:queue:rspec[--format RSpec::Github::Formatter --tag ~skip --tag ~type:system --format progress]"
+        run: cd backend && bundle exec rake "knapsack_pro:queue:rspec[--format RSpec::Github::Formatter --tag ~skip --tag ~type:system --format progress]"
         timeout-minutes: 20
 
   playwright:
@@ -85,16 +70,7 @@ jobs:
     runs-on: ubicloud-standard-4
 
     steps:
-      - uses: actions-cool/check-user-permission@7b90a27f92f3961b368376107661682c441f6103
-        if: ${{ github.event.pull_request && github.event.pull_request.head.user.login != 'antiwork' }}
-        with:
-          require: write
-          username: ${{ github.triggering_actor }}
-          error-if-missing: true
-
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Build setup
         uses: ./.github/common/
@@ -105,8 +81,8 @@ jobs:
         id: next-cache
         uses: actions/cache@v4
         with:
-          path: apps/next/.next/cache
-          key: next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'apps/*/pnpm-lock.yaml') }}-${{ hashFiles('apps/next/**/*.{ts,tsx}') }}
+          path: frontend/.next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'backend/pnpm-lock.yaml', 'frontend/pnpm-lock.yaml') }}-${{ hashFiles('frontend/**/*.{ts,tsx}') }}
           restore-keys: |
             next-${{ runner.os }}-
 
@@ -121,7 +97,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'apps/*/pnpm-lock.yaml') }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'backend/pnpm-lock.yaml', 'frontend/pnpm-lock.yaml') }}
           restore-keys: |
             playwright-${{ runner.os }}-
 

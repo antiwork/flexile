@@ -45,11 +45,11 @@
     "zeed-dom": "^0.15.1"
   },
   "scripts": {
-    "typecheck": "pnpm run setup && tsc -p apps/next",
+    "typecheck": "pnpm run setup && tsc -p frontend",
     "typecheck:watch": "pnpm run typecheck --watch --preserveWatchOutput",
-    "setup": "cd apps/rails && bundle exec rails js:routes:typescript",
+    "setup": "cd backend && bundle exec rails js:routes:typescript",
     "lint-fast": "DISABLE_TYPE_CHECKED=1 pnpm eslint",
-    "build-next": "pnpm next build apps/next --no-lint"
+    "build-next": "pnpm next build frontend --no-lint"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.688.0",
@@ -136,8 +136,8 @@
   "lint-staged": {
     "*.{js,jsx,ts,tsx,cjs,mjs}": "pnpm run lint-fast --max-warnings 0 --fix --no-warn-ignored",
     "*.{css,md,json}": "prettier --write",
-    "{Gemfile,Rakefile,config.ru,*.rb}": "sh -c 'cd apps/rails && bundle exec rubocop --force-exclusion -a'",
-    "*.html.erb": "sh -c 'cd apps/rails && bundle exec erb_lint --lint-all --format compact -a'",
+    "{Gemfile,Rakefile,config.ru,*.rb}": "sh -c 'cd backend && bundle exec rubocop --force-exclusion -a'",
+    "*.html.erb": "sh -c 'cd backend && bundle exec erb_lint --lint-all --format compact -a'",
     "*.svg": "svgo --multipass"
   },
   "postcss": {

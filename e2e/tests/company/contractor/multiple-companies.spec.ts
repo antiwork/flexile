@@ -65,7 +65,7 @@ test.describe("Contractor for multiple companies", () => {
     await page.getByPlaceholder("Type signature here...").fill("Flexy Bob");
     await page.getByRole("button", { name: "Complete" }).click();
 
-    await expect(page.getByRole("heading", { name: "Invoicing" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
     await expect(page.getByText("You have an unsigned contract")).not.toBeVisible();
   });
 
@@ -118,18 +118,7 @@ test.describe("Contractor for multiple companies", () => {
     await selectComboboxOption(page, "State", "Missouri");
     await page.getByLabel("ZIP code").fill("12345");
     await page.getByRole("button", { name: "Continue" }).click();
-    await expect(page.getByRole("button", { name: "Start using Flexile" })).toBeDisabled();
 
-    const stripeFrame = page.frameLocator("[src^='https://js.stripe.com/v3/elements-inner-payment']");
-    await stripeFrame.getByLabel("Test Institution").click();
-
-    const bankFrame = page.frameLocator("[src^='https://js.stripe.com/v3/linked-accounts-inner']");
-    await bankFrame.getByRole("button", { name: "Agree" }).click();
-    await bankFrame.getByTestId("success").click();
-    await bankFrame.getByRole("button", { name: "Connect account" }).click();
-    await bankFrame.getByRole("button", { name: "Back to Flexile" }).click();
-
-    await page.getByRole("button", { name: "Start using Flexile" }).click();
     await page.getByRole("button", { name: "Sign now" }).click();
     await page.getByRole("link", { name: "Type" }).click();
     await page.getByPlaceholder("Type signature here...").fill("Admin Admin");

@@ -1,12 +1,12 @@
 {
-  "extends": "../apps/next/tsconfig.json",
+  "extends": "../frontend/tsconfig.json",
   "compilerOptions": {
     "types": ["node", "@playwright/test"],
     "baseUrl": ".",
     "paths": {
       "@test/*": ["./*"],
-      "@/*": ["../apps/next/*"]
+      "@/*": ["../frontend/*"]
     }
   },
-  "include": ["./**/*.ts", "../apps/next/types.d.ts"]
+  "include": ["./**/*.ts", "../frontend/types.d.ts"]
 }

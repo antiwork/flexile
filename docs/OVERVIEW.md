@@ -1,3 +1,5 @@
+Note: We are in the process of a migration from NextJS/tRPC for back-end back to Rails for all back-end logic. This includes moving from Clerk to Devise. Write new code in Rails.
+
 This codebase represents a web application named Flexile, designed for managing and paying contractors, particularly focused on remote teams and equity compensation. It's built using Ruby on Rails for the backend API, PostgreSQL for the database, and React/Next.js for the frontend, leveraging tRPC to talk to the back-end. Playwright is employed for end-to-end testing.
 
 Here's a breakdown of the architecture and key components:
@@ -18,19 +20,19 @@ Here's a breakdown of the architecture and key components:
 
 **Frontend (React, Next.js):**
 
-- **Pages (`apps/next/app/pages`):** Define the different routes and views of the application, now largely migrated to the `/apps/next/app` folder structure for a Next.js app router.
-- **Components (`apps/next/components`):** Reusable UI components.
-- **Database Client (`apps/next/db`):** Uses Drizzle ORM to interact with the PostgreSQL database. Includes a schema definition (`apps/next/db/schema.ts`) and utility functions.
-- **Models (Typescript) (`apps/next/models`):** Define TypeScript types for data objects, mirroring some of the backend models.
-- **Utilities (`apps/next/utils`):** Helper functions for formatting, assertions, OAuth, and other common tasks.
-- **tRPC (`apps/next/trpc`):** Provides a type-safe API layer between the frontend and backend using tRPC. Routes are defined in `apps/next/trpc/routes`. Uses SuperJSON for serialization.
+- **Pages (`frontend/app/pages`):** Define the different routes and views of the application, now largely migrated to the `/frontend/app` folder structure for a Next.js app router.
+- **Components (`frontend/components`):** Reusable UI components.
+- **Database Client (`frontend/db`):** Uses Drizzle ORM to interact with the PostgreSQL database. Includes a schema definition (`frontend/db/schema.ts`) and utility functions.
+- **Models (Typescript) (`frontend/models`):** Define TypeScript types for data objects, mirroring some of the backend models.
+- **Utilities (`frontend/utils`):** Helper functions for formatting, assertions, OAuth, and other common tasks.
+- **tRPC (`frontend/trpc`):** Provides a type-safe API layer between the frontend and backend using tRPC. Routes are defined in `frontend/trpc/routes`. Uses SuperJSON for serialization.
 
 **Integrations:**
 
 - **Stripe:** Handles payment processing.
 - **QuickBooks:** Integrates with QuickBooks for accounting.
 - **Wise:** Used for international money transfers.
-- **Clerk:** Handles user authentication (in progress).
+- **Clerk:** Handles user authentication (being removed).
 
 **Testing:**
 
