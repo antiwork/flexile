@@ -46,6 +46,7 @@ import { type Company } from "@/models/user";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
+import type { Route } from "next";
 
 export default function MainLayout({
   children,
