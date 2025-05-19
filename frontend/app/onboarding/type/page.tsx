@@ -29,13 +29,7 @@ export default function SignUp() {
           ]}
         />
       </div>
-      <Suspense>
-        {accessRole === "administrator" ? (
-          <CompanyDetails />
-        ) : (
-          <PersonalDetails nextLinkTo="/onboarding/bank_account" />
-        )}
-      </Suspense>
+      <Suspense>{accessRole === "administrator" ? <CompanyDetails /> : <PersonalDetails />}</Suspense>
     </OnboardingLayout>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
-import { ArrowDownTrayIcon, ArrowPathIcon, CurrencyDollarIcon } from "@heroicons/react/16/solid";
-import { DocumentCurrencyDollarIcon } from "@heroicons/react/24/solid";
+import { Download, CircleDollarSign, RefreshCw } from "lucide-react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
@@ -38,19 +37,19 @@ const columns = [
         return <Status variant="primary">Payment in progress</Status>;
       case "paid":
         return (
-          <Status variant="success" icon={<CurrencyDollarIcon />}>
+          <Status variant="success" icon={<CircleDollarSign />}>
             Paid
           </Status>
         );
       case "refunded":
         return (
-          <Status variant="success" icon={<ArrowPathIcon />}>
+          <Status variant="success" icon={<RefreshCw />}>
             Refunded
           </Status>
         );
       case "failed":
         return (
-          <Status variant="critical" icon={<ArrowPathIcon />}>
+          <Status variant="critical" icon={<RefreshCw />}>
             Failed
           </Status>
         );
@@ -64,7 +63,7 @@ const columns = [
       return attachment ? (
         <Button asChild variant="outline" size="small">
           <Link href={`/download/${attachment.key}/${attachment.filename}`} download>
-            <ArrowDownTrayIcon className="size-4" /> Download
+            <Download className="size-4" /> Download
           </Link>
         </Button>
       ) : null;
@@ -144,7 +143,7 @@ export default function Billing() {
       {data.length > 0 ? (
         <DataTable table={table} />
       ) : (
-        <Placeholder icon={DocumentCurrencyDollarIcon}>Invoices will appear here.</Placeholder>
+        <Placeholder icon={CircleDollarSign}>Invoices will appear here.</Placeholder>
       )}
     </div>
   );

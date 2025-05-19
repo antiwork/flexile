@@ -65,7 +65,7 @@ test.describe("Contractor for multiple companies", () => {
     await page.getByPlaceholder("Type signature here...").fill("Flexy Bob");
     await page.getByRole("button", { name: "Complete" }).click();
 
-    await expect(page.getByRole("heading", { name: "Invoicing" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
     await expect(page.getByText("You have an unsigned contract")).not.toBeVisible();
   });
 

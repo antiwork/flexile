@@ -1,3 +1,5 @@
+Note: We are in the process of a migration from NextJS/tRPC for back-end back to Rails for all back-end logic. This includes moving from Clerk to Devise. Write new code in Rails.
+
 This codebase represents a web application named Flexile, designed for managing and paying contractors, particularly focused on remote teams and equity compensation. It's built using Ruby on Rails for the backend API, PostgreSQL for the database, and React/Next.js for the frontend, leveraging tRPC to talk to the back-end. Playwright is employed for end-to-end testing.
 
 Here's a breakdown of the architecture and key components:
@@ -30,7 +32,7 @@ Here's a breakdown of the architecture and key components:
 - **Stripe:** Handles payment processing.
 - **QuickBooks:** Integrates with QuickBooks for accounting.
 - **Wise:** Used for international money transfers.
-- **Clerk:** Handles user authentication (in progress).
+- **Clerk:** Handles user authentication (being removed).
 
 **Testing:**
 

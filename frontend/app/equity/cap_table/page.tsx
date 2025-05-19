@@ -1,5 +1,5 @@
 "use client";
-import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import { CircleCheck } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import React, { useMemo } from "react";
 import CopyButton from "@/components/CopyButton";
@@ -189,7 +189,7 @@ export default function CapTable() {
           <DataTable table={investorsTable} caption="Investors" />
         </div>
       ) : (
-        <Placeholder icon={CheckCircleIcon}>There are no active investors right now.</Placeholder>
+        <Placeholder icon={CircleCheck}>There are no active investors right now.</Placeholder>
       )}
 
       {data.investors.length > 0 && data.shareClasses.length > 0 && (

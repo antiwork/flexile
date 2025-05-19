@@ -1,5 +1,5 @@
 "use client";
-import { ArrowRightIcon, CheckCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { ArrowRight, CircleCheck, Trash } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
@@ -43,7 +43,7 @@ export default function CompanyUpdates() {
           <ViewList />
         )
       ) : (
-        <Placeholder icon={CheckCircleIcon}>No updates to display.</Placeholder>
+        <Placeholder icon={CircleCheck}>No updates to display.</Placeholder>
       )}
     </MainLayout>
   );
@@ -89,7 +89,7 @@ const AdminList = () => {
             onClick={() => setDeletingUpdate(info.row.original.id)}
             className="inline-flex cursor-pointer items-center border-none bg-transparent text-inherit underline hover:text-blue-600"
           >
-            <TrashIcon className="size-4" />
+            <Trash className="size-4" />
           </Button>
         ),
       }),
@@ -141,7 +141,7 @@ const ViewList = () => {
             <h4 className="text-xl font-bold">{update.title}</h4>
             <p className="line-clamp-2">{update.summary}</p>
           </div>
-          <ArrowRightIcon className="size-7" />
+          <ArrowRight className="size-7" />
         </CardContent>
       </Link>
     </Card>

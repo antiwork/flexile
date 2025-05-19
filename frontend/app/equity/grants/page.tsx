@@ -1,6 +1,5 @@
 "use client";
-import { ExclamationTriangleIcon, PencilIcon } from "@heroicons/react/16/solid";
-import { CheckCircleIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
+import { CircleCheck, CircleAlert, Pencil, Info } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
@@ -104,7 +103,7 @@ export default function GrantsPage() {
         equityPlanContractTemplates.length > 0 && boardConsentTemplates.length > 0 ? (
           <Button asChild>
             <Link href={`/companies/${company.id}/administrator/equity_grants/new`}>
-              <PencilIcon className="size-4" />
+              <Pencil className="size-4" />
               New option grant
             </Link>
           </Button>
@@ -113,7 +112,7 @@ export default function GrantsPage() {
     >
       {equityPlanContractTemplates.length === 0 || boardConsentTemplates.length === 0 ? (
         <Alert>
-          <InformationCircleIcon />
+          <Info />
           <AlertDescription>
             <Link href="/documents" className={linkClasses}>
               Create equity plan contract and board consent templates
@@ -136,7 +135,7 @@ export default function GrantsPage() {
           <DataTable table={optionHolderCountriesTable} />
         </>
       ) : (
-        <Placeholder icon={CheckCircleIcon}>There are no option grants right now.</Placeholder>
+        <Placeholder icon={CircleCheck}>There are no option grants right now.</Placeholder>
       )}
       <Dialog open={!!cancellingGrantId} onOpenChange={() => setCancellingGrantId(null)}>
         <DialogContent>
@@ -170,7 +169,7 @@ export default function GrantsPage() {
                 </div>
               </div>
               <Alert variant="destructive">
-                <ExclamationTriangleIcon className="size-4" />
+                <CircleAlert className="size-4" />
                 <AlertTitle>Important note</AlertTitle>
                 <AlertDescription>
                   {(cancellingGrant.numberOfShares - cancellingGrant.vestedShares).toLocaleString()} options will be

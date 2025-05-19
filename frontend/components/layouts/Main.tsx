@@ -46,8 +46,6 @@ import { type Company } from "@/models/user";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
-import { Separator } from "@/components/ui/separator";
-import type { Route } from "next";
 
 export default function MainLayout({
   children,
@@ -170,15 +168,15 @@ export default function MainLayout({
       </Sidebar>
       <SidebarInset>
         <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
-          <main className="flex flex-1 flex-col gap-6 pb-4 not-print:overflow-y-auto">
+          <main className="flex flex-1 flex-col pb-4 not-print:overflow-y-auto">
             <div>
-              <header className="px-3 py-6 md:px-16">
-                <div className="grid max-w-(--breakpoint-xl) gap-y-8">
+              <header className="px-3 py-2 md:px-4 md:py-4">
+                <div className="grid gap-y-8">
                   <div className="grid items-center justify-between gap-3 md:flex">
                     <div>
                       <div className="flex items-center justify-between gap-2">
                         <SidebarTrigger className="md:hidden" />
-                        <h1 className="text-3xl/[2.75rem] font-bold">{title}</h1>
+                        <h1 className="text-sm font-bold">{title}</h1>
                       </div>
                       {subtitle}
                     </div>
@@ -186,10 +184,9 @@ export default function MainLayout({
                   </div>
                 </div>
               </header>
-              <Separator className="my-0" />
               {subheader ? <div className="bg-gray-200/50">{subheader}</div> : null}
             </div>
-            <div className="mx-3 flex max-w-(--breakpoint-xl) flex-col gap-6 md:mx-16">{children}</div>
+            <div className="mx-3 flex flex-col gap-6">{children}</div>
           </main>
           {footer ? <div className="mt-auto">{footer}</div> : null}
         </div>

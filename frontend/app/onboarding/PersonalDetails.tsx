@@ -1,7 +1,6 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -24,7 +23,7 @@ const formSchema = z.object({
   citizenship_country_code: z.string().min(1, "This field is required"),
 });
 
-const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T> }) => {
+const PersonalDetails = () => {
   const user = useCurrentUser();
   const router = useRouter();
   const { data } = useSuspenseQuery({
@@ -64,7 +63,7 @@ const PersonalDetails = <T extends string>({ nextLinkTo }: { nextLinkTo: Route<T
         jsonData: { user: form.getValues() },
         assertOk: true,
       });
-      router.push(nextLinkTo);
+      router.push("/dashboard");
     },
   });
 

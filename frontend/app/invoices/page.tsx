@@ -1,7 +1,6 @@
 "use client";
 
-import { ArrowDownTrayIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { CheckCircleIcon, InformationCircleIcon, PencilIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { Download, AlertTriangle, CircleCheck, Info, Pencil, Plus } from "lucide-react";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import Link from "next/link";
 import React, { Fragment, useEffect, useMemo, useState } from "react";
@@ -133,7 +132,7 @@ export default function InvoicesPage() {
             <>
               {invoice.contractor.user.id === user.id && EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
                 <Link href={`/invoices/${invoice.id}/edit`} aria-label="Edit">
-                  <PencilIcon className="size-4" />
+                  <Pencil className="size-4" />
                 </Link>
               ) : null}
               {user.roles.administrator && isActionable(invoice) ? <ApproveButton invoice={invoice} /> : null}
@@ -196,32 +195,22 @@ export default function InvoicesPage() {
 
   return (
     <MainLayout
-      title="Invoicing"
+      title="Invoices"
       headerActions={
-        <>
-          {user.roles.administrator ? (
-            <Button variant="outline" asChild>
-              <a href={export_company_invoices_path(company.id)}>
-                <ArrowDownTrayIcon className="size-4" />
-                Download CSV
-              </a>
-            </Button>
-          ) : null}
-          {user.roles.worker ? (
-            <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
-              <Link href="/invoices/new" inert={!canSubmitInvoices}>
-                <PlusIcon className="size-4" />
-                New invoice
-              </Link>
-            </Button>
-          ) : null}
-        </>
+        user.roles.worker ? (
+          <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
+            <Link href="/invoices/new" inert={!canSubmitInvoices}>
+              <Plus className="size-4" />
+              New invoice
+            </Link>
+          </Button>
+        ) : null
       }
     >
       <div className="grid gap-4">
         {workerNotice ? (
           <Alert>
-            <InformationCircleIcon className="size-5" />
+            <Info className="size-5" />
             <AlertDescription>{workerNotice}</AlertDescription>
           </Alert>
         ) : null}
@@ -234,7 +223,7 @@ export default function InvoicesPage() {
                 <StripeMicrodepositVerification />
                 {!company.completedPaymentMethodSetup && (
                   <Alert variant="destructive">
-                    <ExclamationTriangleIcon />
+                    <AlertTriangle className="size-5" />
                     <AlertTitle>Bank account setup incomplete.</AlertTitle>
                     <AlertDescription>
                       We're waiting for your bank details to be confirmed. Once done, you'll be able to start approving
@@ -245,7 +234,7 @@ export default function InvoicesPage() {
 
                 {company.completedPaymentMethodSetup && !company.isTrusted ? (
                   <Alert variant="destructive">
-                    <ExclamationTriangleIcon />
+                    <AlertTriangle className="size-5" />
                     <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
                     <AlertDescription>
                       Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete
@@ -256,7 +245,7 @@ export default function InvoicesPage() {
 
                 {data.some((invoice) => !areTaxRequirementsMet(invoice)) && (
                   <Alert variant="destructive">
-                    <ExclamationTriangleIcon />
+                    <AlertTriangle className="size-5" />
                     <AlertTitle>Missing tax information.</AlertTitle>
                     <AlertDescription>
                       Some invoices are not payable until contractors provide tax information.
@@ -268,7 +257,7 @@ export default function InvoicesPage() {
                   (invoice) => invoice.equityAllocationStatus === "pending_grant_creation" && !invoice.paidAt,
                 ) && (
                   <Alert variant="destructive">
-                    <ExclamationTriangleIcon />
+                    <AlertTriangle className="size-5" />
                     <AlertTitle>Equity grants are pending.</AlertTitle>
                     <AlertDescription>
                       <div className="flex items-center justify-between">
@@ -304,7 +293,7 @@ export default function InvoicesPage() {
                 {selectedApprovableInvoices.length > 0 && (
                   <Alert className="fixed right-0 bottom-0 left-0 z-50 flex items-center justify-between rounded-none border-r-0 border-b-0 border-l-0">
                     <div className="flex items-center gap-2">
-                      <InformationCircleIcon className="size-4" />
+                      <Info className="size-4" />
                       <AlertTitle>{selectedRows.length} selected</AlertTitle>
                     </div>
                     <div className="flex flex-row flex-wrap gap-3">
@@ -335,10 +324,20 @@ export default function InvoicesPage() {
               table={table}
               onRowClicked={setDetailInvoice}
               searchColumn={user.roles.administrator ? "billFrom" : undefined}
+              actions={
+                user.roles.administrator ? (
+                  <Button variant="outline" size="small" asChild>
+                    <a href={export_company_invoices_path(company.id)}>
+                      <Download className="size-4" />
+                      Download CSV
+                    </a>
+                  </Button>
+                ) : null
+              }
             />
           </>
         ) : (
-          <Placeholder icon={CheckCircleIcon}>No invoices to display.</Placeholder>
+          <Placeholder icon={CircleCheck}>No invoices to display.</Placeholder>
         )}
       </div>
 
@@ -429,7 +428,7 @@ const TasksModal = ({
         <div className="mt-4 grid gap-8">
           {invoice.status === "approved" && invoice.approvals.length > 0 ? (
             <Alert variant="default">
-              <InformationCircleIcon />
+              <Info className="size-5" />
               <AlertDescription>
                 Approved by{" "}
                 {invoice.approvals
@@ -439,7 +438,7 @@ const TasksModal = ({
             </Alert>
           ) : invoice.status === "rejected" ? (
             <Alert variant="destructive">
-              <ExclamationTriangleIcon />
+              <AlertTriangle className="size-5" />
               <AlertDescription>
                 Rejected {invoice.rejector ? `by ${invoice.rejector.name}` : ""}{" "}
                 {invoice.rejectedAt ? `on ${formatDate(invoice.rejectedAt)}` : ""} {invoice.rejectionReason}
