@@ -78,7 +78,7 @@ test.describe("End contract", () => {
     await page.getByRole("link", { name: "Type" }).click();
     await page.getByPlaceholder("Type signature here...").fill("Flexy Bob");
     await page.getByRole("button", { name: "Complete" }).click();
-    await expect(page.getByRole("heading", { name: "Invoicing" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
   });
 
   test("allows admin to end contractor's contract in the future", async ({ page }) => {

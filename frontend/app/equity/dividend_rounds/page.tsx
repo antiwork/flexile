@@ -1,5 +1,5 @@
 "use client";
-import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import { CircleCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
@@ -39,7 +39,7 @@ export default function DividendRounds() {
       {dividendRounds.length > 0 ? (
         <DataTable table={table} onRowClicked={(row) => router.push(`/equity/dividend_rounds/${row.id}`)} />
       ) : (
-        <Placeholder icon={CheckCircleIcon}>You have not issued any dividends yet.</Placeholder>
+        <Placeholder icon={CircleCheck}>You have not issued any dividends yet.</Placeholder>
       )}
     </EquityLayout>
   );

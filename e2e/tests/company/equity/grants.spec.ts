@@ -1,5 +1,5 @@
 import { clerk } from "@clerk/testing/playwright";
-import { db } from "@test/db";
+import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
@@ -144,6 +144,37 @@ test.describe("New Contractor", () => {
     await expect(page.locator("tbody")).toContainText("Nov 1, 2024");
     await expect(page.locator("tbody")).toContainText("1,000");
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
+  });
+
+  test("allows cancelling a grant", async ({ page }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
+      equityGrantsEnabled: true,
+      conversionSharePriceUsd: "1",
+    });
+    const { companyInvestor } = await companyInvestorsFactory.create({ companyId: company.id });
+    const { equityGrant } = await equityGrantsFactory.create({
+      companyInvestorId: companyInvestor.id,
+      vestedShares: 50,
+      unvestedShares: 50,
+    });
+
+    await login(page, adminUser);
+    await page.getByRole("link", { name: "Equity" }).click();
+    await page.getByRole("tab", { name: "Equity grants" }).click();
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await withinModal(
+      async (modal) => {
+        await modal.getByRole("button", { name: "Confirm cancellation" }).click();
+      },
+      { page },
+    );
+
+    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await expect(page.getByRole("button", { name: "Cancel" })).not.toBeVisible();
+    expect(
+      (await db.query.equityGrants.findFirst({ where: eq(equityGrants.id, equityGrant.id) }).then(takeOrThrow))
+        .cancelledAt,
+    ).not.toBeNull();
   });
 
   test("allows exercising options", async ({ page, next }) => {

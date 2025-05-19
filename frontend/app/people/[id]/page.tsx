@@ -1,6 +1,5 @@
 "use client";
-import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { CheckCircleIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
+import { AlertTriangle, Copy, CircleCheck } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/react-query";
 import { formatISO, isFuture } from "date-fns";
@@ -425,7 +424,7 @@ const DetailsTab = ({
           <h2 className="text-xl font-bold">Contract</h2>
           {contractor.endedAt ? (
             <Alert variant="destructive">
-              <ExclamationTriangleIcon />
+              <AlertTriangle />
               <AlertDescription>
                 <div className="flex items-center justify-between">
                   Contract {isFuture(contractor.endedAt) ? "ends" : "ended"} on {formatDate(contractor.endedAt)}.
@@ -495,7 +494,7 @@ const DetailsTab = ({
                     <Input {...field} />
                   </FormControl>
                   <CopyButton variant="link" aria-label="Copy Email" copyText={field.value}>
-                    <DocumentDuplicateIcon className="size-4" />
+                    <Copy className="size-4" />
                   </CopyButton>
                 </div>
                 <FormMessage />
@@ -627,7 +626,7 @@ function SharesTab({ investorId }: { investorId: string }) {
   return shareHoldings.length > 0 ? (
     <DataTable table={table} />
   ) : (
-    <Placeholder icon={CheckCircleIcon}>This investor does not hold any shares.</Placeholder>
+    <Placeholder icon={CircleCheck}>This investor does not hold any shares.</Placeholder>
   );
 }
 
@@ -667,7 +666,7 @@ function OptionsTab({ investorId, userId }: { investorId: string; userId: string
       ) : null}
     </>
   ) : (
-    <Placeholder icon={CheckCircleIcon}>This investor does not have any option grants.</Placeholder>
+    <Placeholder icon={CircleCheck}>This investor does not have any option grants.</Placeholder>
   );
 }
 
@@ -714,7 +713,7 @@ function ExercisesTab({ investorId }: { investorId: string }) {
   return exercises.length > 0 ? (
     <DataTable table={table} />
   ) : (
-    <Placeholder icon={CheckCircleIcon}>This investor has not exercised any options.</Placeholder>
+    <Placeholder icon={CircleCheck}>This investor has not exercised any options.</Placeholder>
   );
 }
 
@@ -739,7 +738,7 @@ function ConvertiblesTab({ investorId }: { investorId: string }) {
   return convertibles.totalCount > 0 ? (
     <DataTable table={table} />
   ) : (
-    <Placeholder icon={CheckCircleIcon}>This investor does not hold any convertible securities.</Placeholder>
+    <Placeholder icon={CircleCheck}>This investor does not hold any convertible securities.</Placeholder>
   );
 }
 
@@ -777,6 +776,6 @@ function DividendsTab({ investorId }: { investorId: string }) {
   return dividends.length > 0 ? (
     <DataTable table={table} />
   ) : (
-    <Placeholder icon={CheckCircleIcon}>This investor hasn't received any dividends yet.</Placeholder>
+    <Placeholder icon={CircleCheck}>This investor hasn't received any dividends yet.</Placeholder>
   );
 }
