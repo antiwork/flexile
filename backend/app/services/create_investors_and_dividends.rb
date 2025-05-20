@@ -3,12 +3,13 @@
 class CreateInvestorsAndDividends
   attr_reader :errors
 
-  def initialize(company_id:, workbook_url:, dividend_date:, is_first_round: false)
+  def initialize(company_id:, workbook_url:, dividend_date:, is_first_round: false, is_return_of_capital: false)
     @company = Company.find(company_id)
     @workbook_url = workbook_url
     @dividend_date = dividend_date
     @errors = []
     @is_first_round = is_first_round
+    @is_return_of_capital = is_return_of_capital
   end
 
   def process
@@ -19,7 +20,7 @@ class CreateInvestorsAndDividends
   end
 
   private
-    attr_reader :company, :workbook_url, :dividend_date, :is_first_round
+    attr_reader :company, :workbook_url, :dividend_date, :is_first_round, :is_return_of_capital
 
     def process_sheet
       @data = {}
@@ -135,7 +136,7 @@ class CreateInvestorsAndDividends
         number_of_shares: 0,
         number_of_shareholders: @data.keys.count,
         status: Dividend::ISSUED,
-        return_of_capital: true,
+        return_of_capital: is_return_of_capital,
         total_amount_in_cents: @data.sum { |_email, info| (info[:investment][:dividend_amount] * 100.to_d).to_i }
       )
       puts "Created Dividend round #{dividend_round.id}: #{dividend_round.total_amount_in_cents} cents"
