@@ -71,7 +71,7 @@ const DetailsSection = () => {
           )}
         />
         <MutationStatusButton
-          className="justify-self-end"
+          className="w-fit"
           type="submit"
           mutation={saveMutation}
           loadingText="Saving..."
@@ -120,8 +120,8 @@ const PasswordSection = () => {
 
   return (
     <Form {...form}>
-      <form className="grid gap-8" onSubmit={(e) => void submit(e)}>
-        <h2 className="text-xl font-medium">Password</h2>
+      <form className="grid gap-4" onSubmit={(e) => void submit(e)}>
+        <h2 className="mb-4 pt-12 text-xl font-medium">Password</h2>
         <FormField
           control={form.control}
           name="currentPassword"
@@ -163,12 +163,7 @@ const PasswordSection = () => {
             </FormItem>
           )}
         />
-        <MutationStatusButton
-          type="submit"
-          mutation={saveMutation}
-          loadingText="Saving..."
-          className="justify-self-end"
-        >
+        <MutationStatusButton className="w-fit" type="submit" mutation={saveMutation} loadingText="Saving...">
           Save
         </MutationStatusButton>
       </form>

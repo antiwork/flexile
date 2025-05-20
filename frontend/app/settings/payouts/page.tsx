@@ -97,7 +97,7 @@ const DividendSection = () => {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={(e) => void submit(e)} className="grid gap-8">
+          <form onSubmit={(e) => void submit(e)} className="grid gap-4">
             <FormField
               control={form.control}
               name="minimumDividendPaymentAmount"

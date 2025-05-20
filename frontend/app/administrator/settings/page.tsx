@@ -16,15 +16,13 @@ import { useCurrentCompany } from "@/global";
 import defaultLogo from "@/images/default-company-logo.svg";
 import { trpc } from "@/trpc/client";
 import { md5Checksum } from "@/utils";
-import QuickbooksIntegration from "./QuickbooksIntegration";
-import StripeMicrodepositVerification from "./StripeMicrodepositVerification";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const formSchema = z.object({
   website: z.string().url(),
   brandColor: z.string().nullable(),
   publicName: z.string(),
 });
+
 export default function SettingsPage() {
   const company = useCurrentCompany();
   const [settings, { refetch }] = trpc.companies.settings.useSuspenseQuery({ companyId: company.id });
@@ -85,15 +83,11 @@ export default function SettingsPage() {
 
   return (
     <>
-      <StripeMicrodepositVerification />
-      {company.flags.includes("quickbooks") ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Integrations</CardTitle>
-          </CardHeader>
-          <CardContent>{company.flags.includes("quickbooks") ? <QuickbooksIntegration /> : null}</CardContent>
-        </Card>
-      ) : null}
+      <hgroup className="mb-8">
+        <h2 className="mb-1 text-xl font-bold">Workspace settings</h2>
+        <p className="text-muted-foreground text-base">These details will be included in job descriptions.</p>
+      </hgroup>
+
       <Form {...form}>
         <form className="grid gap-4" onSubmit={(e) => void submit(e)}>
           <div className="grid gap-3 md:grid-cols-2">
@@ -115,7 +109,6 @@ export default function SettingsPage() {
                   <AvatarImage src={logoUrl} alt="Company logo" />
                   <AvatarFallback>Logo</AvatarFallback>
                 </Avatar>
-                <span className="ml-2">Upload...</span>
               </Label>
             </div>
             <FormField
@@ -167,7 +160,7 @@ export default function SettingsPage() {
             type="submit"
             successText="Changes saved"
             loadingText="Saving..."
-            className="justify-self-end"
+            className="w-fit"
           >
             Save changes
           </MutationStatusButton>

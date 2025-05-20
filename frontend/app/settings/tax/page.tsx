@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, type UseMutationResult, useSuspenseQuery } from "@tanstack/react-query";
 import { iso31662 } from "iso-3166";
-import { Eye, EyeOff, AlertTriangle, Info } from "lucide-react";
+import { Eye, EyeOff, AlertTriangle, Info, ArrowUpRightFromSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -25,7 +25,6 @@ import SettingsLayout from "@/app/settings/Layout";
 import ComboBox from "@/components/ComboBox";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid";
 import { linkClasses } from "@/components/Link";
 import { Label } from "@/components/ui/label";
 
@@ -178,7 +177,7 @@ export default function TaxPage() {
         <form onSubmit={(e) => void submit(e)} className="grid gap-8">
           <hgroup>
             <h2 className="mb-1 text-xl font-bold">Tax information</h2>
-            <p className="text-base text-gray-600">
+            <p className="text-muted-foreground text-base">
               These details will be included in your {user.roles.worker ? "invoices and " : ""}applicable tax forms.
             </p>
           </hgroup>
@@ -480,7 +479,7 @@ export default function TaxPage() {
             </MutationStatusButton>
 
             {user.roles.worker ? (
-              <div className="text-gray-600">
+              <div className="text-muted-foreground">
                 Changes to your tax information may trigger{" "}
                 {data.contractor_for_companies.length === 1 ? "a new contract" : "new contracts"} with{" "}
                 {data.contractor_for_companies.join(", ")}.
@@ -550,7 +549,7 @@ const LegalCertificationModal = ({
               link once available.
             </div>
             <div className="flex gap-1">
-              <ArrowTopRightOnSquareIcon className="size-4" />
+              <ArrowUpRightFromSquare className="size-4" />
               <a
                 target="_blank"
                 rel="noopener noreferrer nofollow"
@@ -569,7 +568,7 @@ const LegalCertificationModal = ({
               available.
             </div>
             <div className="flex gap-1">
-              <ArrowTopRightOnSquareIcon className="size-4" />
+              <ArrowUpRightFromSquare className="size-4" />
               <a
                 target="_blank"
                 rel="noopener noreferrer nofollow"

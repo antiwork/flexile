@@ -131,7 +131,7 @@ export default function QuickbooksRow() {
       <div className="flex justify-between gap-2">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="flex items-center text-xl font-bold">
+            <h2 className="flex items-center text-base font-bold">
               <Image src={quickbooksLogo.src} width={24} height={24} className="inline" alt="" />
               &ensp;QuickBooks
             </h2>
@@ -143,7 +143,9 @@ export default function QuickbooksRow() {
               <Status variant="critical">Setup required</Status>
             ) : null}
           </div>
-          <p className="text-gray-400">Sync invoices, payments, and expenses with your QuickBooks account.</p>
+          <p className="text-muted-foreground text-base">
+            Sync invoices, payments, and expenses with your QuickBooks account.
+          </p>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-4">
           {!quickbooksIntegration || quickbooksIntegration.status === "out_of_sync" ? (

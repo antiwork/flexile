@@ -3,13 +3,13 @@ import * as React from "react";
 import { cn } from "@/utils";
 
 const alertVariants = cva(
-  "relative w-full rounded-lg border px-4 py-3 text-base grid has-[>svg]:grid-cols-[auto_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-3 gap-y-0.5 items-center [&>svg]:size-5 [&>svg]:text-current flex-row flex-wrap",
+  "relative w-full rounded-lg px-4 py-3 text-base grid has-[>svg]:grid-cols-[auto_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-3 gap-y-0.5 items-center [&>svg]:size-5 [&>svg]:text-current flex-row flex-wrap",
   {
     variants: {
       variant: {
-        default: "bg-blue-50 text-black [&>svg]:text-blue-600 border-0",
+        default: "bg-blue-50 text-black [&>svg]:text-blue-600",
         destructive:
-          "text-destructive bg-card [&>svg]:text-current *:data-[slot=alert-description]:text-destructive/90",
+          "bg-red-50 text-destructive [&>svg]:text-current *:data-[slot=alert-description]:text-destructive/90",
       },
     },
     defaultVariants: {
