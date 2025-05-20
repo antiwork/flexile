@@ -19,7 +19,7 @@ import SettingsLayout from "@/app/settings/Layout";
 export default function SettingsPage() {
   return (
     <SettingsLayout>
-      <h2 className="mb-8 text-xl font-medium">Profile settings</h2>
+      <h2 className="mb-8 text-xl font-medium">Profile</h2>
       <DetailsSection />
       <PasswordSection />
     </SettingsLayout>

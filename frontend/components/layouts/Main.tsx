@@ -9,7 +9,6 @@ import {
   Settings,
   ChartPie,
   BriefcaseBusiness,
-  CircleUserRound,
   CircleDollarSign,
   LogOut,
 } from "lucide-react";
@@ -273,7 +272,7 @@ const NavLinks = ({ company }: { company: Company }) => {
       ) : null}
       {routes.has("Settings") && (
         <NavLink
-          href={user.roles.administrator ? `/administrator/settings` : `/settings`}
+          href="/settings"
           active={!!active && (pathname.startsWith("/administrator/settings") || pathname.startsWith("/settings"))}
           icon={Settings}
         >

@@ -148,7 +148,7 @@ const Settings = ({ children }: { children: React.ReactNode }) => {
           <div className="p-2 md:hidden">
             <SidebarTrigger />
           </div>
-          <main className="mx-auto w-full max-w-3xl flex-1 p-10">{children}</main>
+          <main className="mx-auto w-full max-w-3xl flex-1 p-16">{children}</main>
         </SidebarInset>
       </div>
     </SidebarProvider>

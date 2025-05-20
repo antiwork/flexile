@@ -15,7 +15,7 @@ function Input({
   suffix?: React.ReactNode;
 }) {
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <input
         type={type}
         value={value ?? ""}

@@ -1,11 +1,9 @@
 "use client";
 
-import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, type UseMutationResult, useSuspenseQuery } from "@tanstack/react-query";
 import { iso31662 } from "iso-3166";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, AlertTriangle, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -180,14 +178,14 @@ export default function TaxPage() {
         <form onSubmit={(e) => void submit(e)} className="grid gap-8">
           <hgroup>
             <h2 className="mb-1 text-xl font-bold">Tax information</h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-base text-gray-600">
               These details will be included in your {user.roles.worker ? "invoices and " : ""}applicable tax forms.
             </p>
           </hgroup>
           <div className="grid gap-4">
             {!isTaxInfoConfirmed && (
               <Alert variant="destructive">
-                <ExclamationTriangleIcon />
+                <AlertTriangle />
                 <AlertDescription>
                   Confirm your tax information to avoid delays on your payments or additional tax withholding.
                 </AlertDescription>
@@ -196,7 +194,7 @@ export default function TaxPage() {
 
             {taxIdStatus === "invalid" && (
               <Alert>
-                <InformationCircleIcon />
+                <Info />
                 <AlertTitle>Review your tax information</AlertTitle>
                 <AlertDescription>
                   Since there's a mismatch between the legal name and {tinName} you provided and your government
@@ -372,7 +370,7 @@ export default function TaxPage() {
                           {...field}
                           value={formatUSTaxId(field.value)}
                           onChange={(e) => field.onChange(normalizedTaxId(e.target.value))}
-                          className="rounded-r-none"
+                          className="w-full rounded-r-none border-r-0"
                         />
                       </FormControl>
                       <Button
@@ -398,7 +396,7 @@ export default function TaxPage() {
                   <FormItem>
                     <FormLabel>{`Date of ${formValues.business_entity ? "incorporation" : "birth"} (optional)`}</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input type="date" {...field} className="block" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -472,7 +470,7 @@ export default function TaxPage() {
               />
             </div>
           </div>
-          <div className="flex-wrap gap-4">
+          <div className="flex flex-wrap gap-8">
             <MutationStatusButton
               type="submit"
               disabled={!!isTaxInfoConfirmed && !form.formState.isDirty}
@@ -482,10 +480,10 @@ export default function TaxPage() {
             </MutationStatusButton>
 
             {user.roles.worker ? (
-              <div>
+              <div className="text-gray-600">
                 Changes to your tax information may trigger{" "}
                 {data.contractor_for_companies.length === 1 ? "a new contract" : "new contracts"} with{" "}
-                {data.contractor_for_companies.join(", ")}
+                {data.contractor_for_companies.join(", ")}.
               </div>
             ) : null}
           </div>
