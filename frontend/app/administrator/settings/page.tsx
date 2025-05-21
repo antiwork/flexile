@@ -88,7 +88,7 @@ export default function SettingsPage() {
       <hgroup>
         <h2 className="mb-1 text-xl font-bold">Workspace settings</h2>
         <p className="text-muted-foreground text-base">
-          Set your workspace identity with your company’s branding details.
+          Set your workspace identity with your company's branding details.
         </p>
       </hgroup>
       <Form {...form}>
@@ -170,16 +170,14 @@ export default function SettingsPage() {
         </form>
       </Form>
       <StripeMicrodepositVerification />
-      {company.flags.includes("quickbooks") && (
+      {company.flags.includes("quickbooks") ? (
         <Card>
           <CardHeader>
             <CardTitle>Integrations</CardTitle>
           </CardHeader>
-          <CardContent>
-            <QuickbooksIntegration />
-          </CardContent>
+          <CardContent>{company.flags.includes("quickbooks") ? <QuickbooksIntegration /> : null}</CardContent>
         </Card>
-      )}
+      ) : null}
     </div>
   );
 }
