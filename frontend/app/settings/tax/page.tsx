@@ -54,27 +54,31 @@ const dataSchema = z.object({
   contractor_for_companies: z.array(z.string()),
 });
 
-const formSchema = z
-  .object({
-    legal_name: z.string().regex(/\S+\s+\S+/u, "This doesn't look like a complete full name."),
-    citizenship_country_code: z.string(),
-    business_entity: z.boolean(),
-    business_name: z.string().nullable(),
-    business_type: z.nativeEnum(BusinessType).nullable(),
-    tax_classification: z.nativeEnum(TaxClassification).nullable(),
-    country_code: z.string(),
-    tax_id: z.string().min(1, "This field is required."),
-    birth_date: z.string().nullable(),
-    street_address: z.string().min(1, "Please add your residential address."),
-    city: z.string().min(1, "Please add your city or town."),
-    state: z.string(),
-    zip_code: z.string().regex(/\d/u, "Please add a valid postal code (must contain at least one number)."),
-  })
+const formValuesSchema = z.object({
+  legal_name: z.string().regex(/\S+\s+\S+/u, "This doesn't look like a complete full name."),
+  citizenship_country_code: z.string(),
+  business_entity: z.boolean(),
+  business_name: z.string().nullable(),
+  business_type: z.nativeEnum(BusinessType).nullable(),
+  tax_classification: z.nativeEnum(TaxClassification).nullable(),
+  country_code: z.string(),
+  tax_id: z.string().min(1, "This field is required."),
+  birth_date: z.string().nullable(),
+  street_address: z.string().min(1, "Please add your residential address."),
+  city: z.string().min(1, "Please add your city or town."),
+  state: z.string(),
+  zip_code: z.string().regex(/\d/u, "Please add a valid postal code (must contain at least one number)."),
+});
+
+const getIsForeign = (values: z.infer<typeof formValuesSchema>) =>
+  values.citizenship_country_code !== "US" && values.country_code !== "US";
+
+const formSchema = formValuesSchema
   .refine((data) => !data.business_entity || data.business_name, {
     path: ["business_name"],
     message: "Please add your business legal name.",
   })
-  .refine((data) => !data.business_entity || data.business_type !== null, {
+  .refine((data) => getIsForeign(data) || !data.business_entity || data.business_type !== null, {
     path: ["business_type"],
     message: "Please select a business type.",
   })
@@ -115,7 +119,7 @@ export default function TaxPage() {
   });
 
   const formValues = form.watch();
-  const isForeign = formValues.citizenship_country_code !== "US" && formValues.country_code !== "US";
+  const isForeign = getIsForeign(formValues);
 
   const countryCodePrefix = `${formValues.country_code}-`;
   const countrySubdivisions = iso31662.filter((entry) => entry.code.startsWith(countryCodePrefix));
@@ -151,11 +155,10 @@ export default function TaxPage() {
 
       setIsTaxInfoConfirmed(true);
       if (form.getFieldState("tax_id").isDirty) setTaxIdStatus(null);
-      setShowCertificationModal(false);
       if (data.documentId) {
         await trpcUtils.documents.list.invalidate();
         router.push(`/documents?sign=${data.documentId}`);
-      }
+      } else setShowCertificationModal(false);
     },
   });
 
