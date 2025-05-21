@@ -85,6 +85,4 @@ RSpec.describe "User settings" do
       it_behaves_like "doesn't render preferred name field"
     end
   end
-
-
 end
