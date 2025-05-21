@@ -152,7 +152,7 @@ export default function Equity() {
   });
 
   return (
-    <div className="grid gap-12">
+    <div className="grid gap-8">
       <Form {...form}>
         <form className="grid gap-8" onSubmit={(e) => void submit(e)}>
           <hgroup>

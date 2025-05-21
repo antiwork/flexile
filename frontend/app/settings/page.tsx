@@ -19,9 +19,10 @@ import SettingsLayout from "@/app/settings/Layout";
 export default function SettingsPage() {
   return (
     <SettingsLayout>
-      <h2 className="mb-8 text-xl font-medium">Profile</h2>
-      <DetailsSection />
-      <PasswordSection />
+      <div className="grid gap-8">
+        <DetailsSection />
+        <PasswordSection />
+      </div>
     </SettingsLayout>
   );
 }
@@ -43,6 +44,7 @@ const DetailsSection = () => {
   return (
     <Form {...form}>
       <form className="grid gap-4" onSubmit={(e) => void submit(e)}>
+        <h2 className="mb-4 text-xl font-medium">Profile</h2>
         <FormField
           control={form.control}
           name="email"
@@ -121,7 +123,7 @@ const PasswordSection = () => {
   return (
     <Form {...form}>
       <form className="grid gap-4" onSubmit={(e) => void submit(e)}>
-        <h2 className="mb-4 pt-12 text-xl font-medium">Password</h2>
+        <h2 className="mb-4 text-xl font-medium">Password</h2>
         <FormField
           control={form.control}
           name="currentPassword"
