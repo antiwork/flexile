@@ -479,7 +479,7 @@ export default function TaxPage() {
             </MutationStatusButton>
 
             {user.roles.worker ? (
-              <div className="text-muted-foreground">
+              <div className="flex items-center text-sm">
                 Changes to your tax information may trigger{" "}
                 {data.contractor_for_companies.length === 1 ? "a new contract" : "new contracts"} with{" "}
                 {data.contractor_for_companies.join(", ")}.
