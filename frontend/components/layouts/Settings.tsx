@@ -152,7 +152,7 @@ const Settings = ({ children }: { children: React.ReactNode }) => {
               <span className="text-muted-foreground font-medium">Back to app</span>
             </Link>
           </div>
-          <main className="mx-auto w-full max-w-3xl flex-1 p-3 md:p-16">{children}</main>
+          <main className="mx-auto w-full max-w-3xl flex-1 p-6 md:p-16">{children}</main>
         </SidebarInset>
       </div>
     </SidebarProvider>
