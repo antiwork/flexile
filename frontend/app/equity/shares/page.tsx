@@ -7,7 +7,6 @@ import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
-import { formatOwnershipPercentage } from "@/utils/numbers";
 import { formatDate } from "@/utils/time";
 import EquityLayout from "../Layout";
 

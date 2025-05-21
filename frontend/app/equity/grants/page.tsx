@@ -91,8 +91,6 @@ export default function GrantsPage() {
     signable: true,
   });
 
-  const totalGrantedShares = totals.unvestedShares + totals.vestedShares + totals.exercisedShares;
-
   const [countriesData] = trpc.equityGrants.byCountry.useSuspenseQuery({ companyId: company.id });
   const optionHolderCountriesTable = useTable({ columns: countryColumns, data: countriesData });
 

@@ -53,10 +53,6 @@ export default function OptionsPage() {
   const [exercisableGrants, setExercisableGrants] = useState<EquityGrant[]>([]);
   const [showExerciseModal, setShowExerciseModal] = useState(false);
 
-  const totalShares = data.reduce((acc, grant) => acc + grant.numberOfShares, 0);
-  const equityValueUsd = data.reduce((acc, grant) => acc.add(grant.vestedAmountUsd), new Decimal(0));
-  const equityValueLabel = `Vested equity value ($${(company.valuationInDollars ?? 0).toLocaleString([], { notation: "compact" })} valuation)`;
-
   const table = useTable({ columns: investorGrantColumns, data });
 
   const totalUnexercisedVestedShares = data.reduce((acc, grant) => {

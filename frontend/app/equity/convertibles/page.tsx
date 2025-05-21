@@ -29,8 +29,6 @@ export default function Convertibles() {
 
   const table = useTable({ columns, data: data.convertibleSecurities });
 
-  const companyValuation = Intl.NumberFormat([], { notation: "compact" }).format(company.valuationInDollars ?? 0);
-
   return (
     <EquityLayout>
       {data.convertibleSecurities.length > 0 ? (
