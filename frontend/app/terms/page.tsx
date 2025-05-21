@@ -1,6 +1,7 @@
 import React from "react";
-import Jumper from "@/components/Jumper";
 import SimpleLayout from "@/components/layouts/Simple";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/utils";
 
 const sections = [
   "Definitions",
@@ -41,7 +42,16 @@ export default function Terms() {
           Contractor must also agree to the terms of a separate independent contractor agreement (the "
           <strong>IC Agreement</strong>").
         </p>
-        <Jumper sections={sections} className="not-prose" />
+        <div role="navigation" className={cn("grid gap-1", "not-prose")}>
+          {sections.map((section, index) => (
+            <a key={index} href={`#jump_${index + 1}`} className="flex items-center text-gray-500 no-underline">
+              <Badge variant="outline" className="mr-1 shrink-0">
+                {index + 1}
+              </Badge>
+              <span className="truncate">{section}</span>
+            </a>
+          ))}
+        </div>
         <p>
           TO ACCESS AND USE THE FLEXILE PLATFORM, YOU MUST REVIEW AND ACCEPT THE TERMS OF THIS AGREEMENT BY CLICKING BY
           CLICKING THE "CONTINUE" BUTTON DURING THE SIGNING UP PROCESS.. ONCE ACCEPTED, THIS AGREEMENT BECOMES A BINDING
