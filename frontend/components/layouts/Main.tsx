@@ -8,7 +8,6 @@ import {
   BookUser,
   Settings,
   ChartPie,
-  BriefcaseBusiness,
   CircleDollarSign,
   LogOut,
 } from "lucide-react";
@@ -141,12 +140,8 @@ export default function MainLayout({
             <SidebarGroupContent>
               <SidebarMenu>
                 {!user.companies.length && (
-                  <NavLink
-                    href="/company_invitations"
-                    icon={BriefcaseBusiness}
-                    active={pathname.startsWith("/company_invitations")}
-                  >
-                    Invite companies
+                  <NavLink href="/settings" icon={Settings} active={pathname.startsWith("/settings")}>
+                    Settings
                   </NavLink>
                 )}
                 <SidebarMenuItem>
