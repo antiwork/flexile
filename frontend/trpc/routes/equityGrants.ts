@@ -24,8 +24,10 @@ import {
   companyInvestors,
   equityGrantExercises,
   equityGrants,
+  equityGrantTransactions,
   optionPools,
   users,
+  vestingEvents,
   vestingSchedules,
 } from "@/db/schema";
 import { inngest } from "@/inngest/client";
@@ -363,6 +365,66 @@ export const equityGrantsRouter = createRouter({
       }),
       defaultVestingSchedules,
     };
+  }),
+  cancel: companyProcedure.input(z.object({ id: z.string(), reason: z.string() })).mutation(async ({ input, ctx }) => {
+    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+
+    await db.transaction(async (tx) => {
+      const equityGrant = await db.query.equityGrants.findFirst({
+        where: eq(equityGrants.externalId, input.id),
+        with: {
+          vestingEvents: {
+            where: and(
+              isNull(vestingEvents.processedAt),
+              isNull(vestingEvents.cancelledAt),
+              gt(sql`DATE(${vestingEvents.vestingDate})`, new Date()),
+            ),
+          },
+          optionPool: true,
+        },
+      });
+
+      if (equityGrant?.optionPool.companyId !== ctx.company.id) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const totalForfeitedShares = equityGrant.unvestedShares + equityGrant.forfeitedShares;
+
+      await tx.insert(equityGrantTransactions).values([
+        {
+          transactionType: "cancellation",
+          equityGrantId: equityGrant.id,
+          forfeitedShares: BigInt(equityGrant.unvestedShares),
+          totalNumberOfShares: BigInt(equityGrant.numberOfShares),
+          totalVestedShares: BigInt(equityGrant.vestedShares),
+          totalUnvestedShares: 0n,
+          totalExercisedShares: BigInt(equityGrant.exercisedShares),
+          totalForfeitedShares: BigInt(totalForfeitedShares),
+        },
+      ]);
+
+      const cancelledAt = new Date();
+      for (const vestingEvent of equityGrant.vestingEvents) {
+        await tx
+          .update(vestingEvents)
+          .set({ cancelledAt, cancellationReason: input.reason })
+          .where(eq(vestingEvents.id, vestingEvent.id));
+      }
+
+      await tx
+        .update(equityGrants)
+        .set({
+          forfeitedShares: totalForfeitedShares,
+          unvestedShares: 0,
+          cancelledAt,
+        })
+        .where(eq(equityGrants.id, equityGrant.id));
+
+      await tx
+        .update(optionPools)
+        .set({ issuedShares: equityGrant.optionPool.issuedShares - BigInt(equityGrant.unvestedShares) })
+        .where(eq(optionPools.id, equityGrant.optionPoolId));
+    });
+
+    return { success: true };
   }),
 });
 

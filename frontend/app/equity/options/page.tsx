@@ -6,13 +6,11 @@ import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { useState } from "react";
-import { Decimal } from "decimal.js";
 import { isFuture } from "date-fns";
 import { useMutation } from "@tanstack/react-query";
 import { request } from "@/utils/request";
 import EquityLayout from "@/app/equity/Layout";
 import Placeholder from "@/components/Placeholder";
-import Figures from "@/components/Figures";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import MutationButton from "@/components/MutationButton";
@@ -53,10 +51,6 @@ export default function OptionsPage() {
   const [selectedEquityGrant, setSelectedEquityGrant] = useState<EquityGrant | null>(null);
   const [exercisableGrants, setExercisableGrants] = useState<EquityGrant[]>([]);
   const [showExerciseModal, setShowExerciseModal] = useState(false);
-
-  const totalShares = data.reduce((acc, grant) => acc + grant.numberOfShares, 0);
-  const equityValueUsd = data.reduce((acc, grant) => acc.add(grant.vestedAmountUsd), new Decimal(0));
-  const equityValueLabel = `Vested equity value ($${(company.valuationInDollars ?? 0).toLocaleString([], { notation: "compact" })} valuation)`;
 
   const table = useTable({ columns: investorGrantColumns, data });
 
@@ -105,14 +99,6 @@ export default function OptionsPage() {
         <Placeholder icon={CircleCheck}>You don't have any option grants right now.</Placeholder>
       ) : (
         <>
-          <Figures
-            items={[
-              { caption: "Total shares owned", value: totalShares.toLocaleString() },
-              { caption: "Share value", value: formatMoney(company.sharePriceInUsd ?? 0) },
-              { caption: equityValueLabel, value: formatMoney(equityValueUsd, { precise: true }) },
-            ]}
-          />
-
           {company.flags.includes("option_exercising") && (
             <>
               {totalUnexercisedVestedShares > 0 && !exerciseInProgress && (

@@ -343,17 +343,6 @@ const BankAccountsSection = () => {
               <>
                 {bankAccounts.length > 0 ? <Separator /> : null}
                 <div>
-                  {addingBankAccount ? (
-                    <BankAccountModal
-                      open={addingBankAccount}
-                      billingDetails={data}
-                      onClose={() => setAddingBankAccount(false)}
-                      onComplete={(result) => {
-                        setBankAccounts((prev) => [...prev, result]);
-                        setAddingBankAccount(false);
-                      }}
-                    />
-                  ) : null}
                   <Button onClick={() => setAddingBankAccount(true)} variant="outline">
                     <Plus className="size-4" />
                     Add bank account
@@ -363,6 +352,17 @@ const BankAccountsSection = () => {
             ) : null}
           </>
         )}
+        {addingBankAccount ? (
+          <BankAccountModal
+            open={addingBankAccount}
+            billingDetails={data}
+            onClose={() => setAddingBankAccount(false)}
+            onComplete={(result) => {
+              setBankAccounts((prev) => [...prev, result]);
+              setAddingBankAccount(false);
+            }}
+          />
+        ) : null}
       </CardContent>
     </Card>
   );

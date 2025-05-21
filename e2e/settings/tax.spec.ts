@@ -388,6 +388,23 @@ test.describe("Tax settings", () => {
 
       await expect(page.getByLabel("Tax ID (SSN or ITIN)")).toHaveValue("123-45-6789");
     });
+
+    test("allows legal names with two spaces", async ({ page }) => {
+      await page.goto("/settings/tax");
+
+      await page.getByLabel("Full legal name (must match your ID)").fill("John Middle Doe");
+
+      await page.getByLabel("Tax ID (SSN or ITIN)").fill("123456789");
+      await page.getByLabel("Residential address (street name, number, apartment)").fill("123 Main St");
+      await page.getByLabel("City").fill("Anytown");
+      await page.getByLabel("ZIP code").fill("12345");
+
+      await page.getByRole("button", { name: "Save changes" }).click();
+
+      await expect(page.getByText("This doesn't look like a complete full name.")).not.toBeVisible();
+
+      await expect(page.getByText("W-9 Certification and Tax Forms Delivery")).toBeVisible();
+    });
   });
 
   test.describe("as an investor", () => {
