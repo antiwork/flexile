@@ -30,12 +30,10 @@ export default function PayoutsPage() {
   return (
     <SettingsLayout>
       <h2 className="mb-8 text-xl font-medium">Payouts</h2>
-      {user.roles.investor ? (
-        <div className="mb-8">
-          <DividendSection />
-        </div>
-      ) : null}
-      <BankAccountsSection />
+      <div className="grid gap-8">
+        {user.roles.investor ? <DividendSection /> : null}
+        <BankAccountsSection />
+      </div>
     </SettingsLayout>
   );
 }
