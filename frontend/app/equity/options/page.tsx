@@ -12,7 +12,6 @@ import { useMutation } from "@tanstack/react-query";
 import { request } from "@/utils/request";
 import EquityLayout from "@/app/equity/Layout";
 import Placeholder from "@/components/Placeholder";
-import Figures from "@/components/Figures";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import MutationButton from "@/components/MutationButton";
@@ -105,14 +104,6 @@ export default function OptionsPage() {
         <Placeholder icon={CircleCheck}>You don't have any option grants right now.</Placeholder>
       ) : (
         <>
-          <Figures
-            items={[
-              { caption: "Total shares owned", value: totalShares.toLocaleString() },
-              { caption: "Share value", value: formatMoney(company.sharePriceInUsd ?? 0) },
-              { caption: equityValueLabel, value: formatMoney(equityValueUsd, { precise: true }) },
-            ]}
-          />
-
           {company.flags.includes("option_exercising") && (
             <>
               {totalUnexercisedVestedShares > 0 && !exerciseInProgress && (

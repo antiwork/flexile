@@ -4,7 +4,6 @@ import { useParams, useRouter } from "next/navigation";
 import React from "react";
 import DividendStatusIndicator from "@/app/equity/DividendStatusIndicator";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import Figures from "@/components/Figures";
 import MainLayout from "@/components/layouts/Main";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { useCurrentCompany } from "@/global";
@@ -62,13 +61,6 @@ export default function DividendRound() {
 
   return (
     <MainLayout title="Dividend">
-      <Figures
-        items={[
-          { caption: "Dividend amount", value: formatMoneyFromCents(dividendRound.totalAmountInCents) },
-          { caption: "Shareholders", value: dividendRound.numberOfShareholders.toLocaleString() },
-          { caption: "Date", value: formatDate(dividendRound.issuedAt) },
-        ]}
-      />
       <DataTable table={table} onRowClicked={(row) => router.push(rowLink(row))} />
     </MainLayout>
   );
