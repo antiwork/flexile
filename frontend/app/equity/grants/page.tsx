@@ -38,7 +38,6 @@ export default function GrantsPage() {
   const router = useRouter();
   const company = useCurrentCompany();
   const [data, { refetch }] = trpc.equityGrants.list.useSuspenseQuery({ companyId: company.id });
-  const [totals] = trpc.equityGrants.totals.useSuspenseQuery({ companyId: company.id });
   const [cancellingGrantId, setCancellingGrantId] = useState<string | null>(null);
   const cancellingGrant = data.find((grant) => grant.id === cancellingGrantId);
   const cancelGrant = trpc.equityGrants.cancel.useMutation({

@@ -10,7 +10,6 @@ import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
-import { formatDate } from "@/utils/time";
 
 type Dividend = RouterOutput["dividends"]["list"][number];
 const rowLink = (row: Dividend) => `/people/${row.investor.user.id}?tab=dividends` as const;
@@ -51,7 +50,6 @@ export default function DividendRound() {
   const { id } = useParams<{ id: string }>();
   const company = useCurrentCompany();
   const router = useRouter();
-  const [dividendRound] = trpc.dividendRounds.get.useSuspenseQuery({ companyId: company.id, id: Number(id) });
   const [data] = trpc.dividends.list.useSuspenseQuery({
     companyId: company.id,
     dividendRoundId: Number(id),

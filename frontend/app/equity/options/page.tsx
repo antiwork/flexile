@@ -6,7 +6,6 @@ import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { useState } from "react";
-import { Decimal } from "decimal.js";
 import { isFuture } from "date-fns";
 import { useMutation } from "@tanstack/react-query";
 import { request } from "@/utils/request";
