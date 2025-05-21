@@ -47,6 +47,7 @@ import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
 import type { Route } from "next";
+import { useIsActionable } from "@/app/invoices";
 
 export default function MainLayout({
   children,
@@ -329,9 +330,10 @@ function InvoicesNavLink({ companyId, active }: { companyId: string; active: boo
     { companyId, status: ["received", "approved", "failed"] },
     { refetchInterval: 30_000, enabled: !!user.roles.administrator },
   );
+  const isActionable = useIsActionable();
 
   return (
-    <NavLink href="/invoices" icon={ReceiptIcon} active={active} badge={data?.length}>
+    <NavLink href="/invoices" icon={ReceiptIcon} active={active} badge={data?.filter(isActionable).length}>
       Invoices
     </NavLink>
   );

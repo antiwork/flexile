@@ -205,6 +205,7 @@ test.describe("Invoices admin flow", () => {
           await targetInvoiceRow.getByRole("button", { name: "Approve" }).click();
           await expect(targetInvoiceRow.getByText("Approved!")).toBeVisible();
           const approvalButton = targetInvoiceRow.getByText("Awaiting approval (1/2)");
+          await expect(page.getByRole("link", { name: "Invoices" }).getByRole("status")).toContainText("1");
 
           const updatedTargetInvoice = await db.query.invoices.findFirst({
             where: eq(invoices.id, targetInvoice.id),
