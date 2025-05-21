@@ -10,6 +10,7 @@ import {
   ChartPie,
   CircleDollarSign,
   LogOut,
+  BriefcaseBusiness,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
@@ -140,9 +141,18 @@ export default function MainLayout({
             <SidebarGroupContent>
               <SidebarMenu>
                 {!user.companies.length && (
-                  <NavLink href="/settings" icon={Settings} active={pathname.startsWith("/settings")}>
-                    Settings
-                  </NavLink>
+                  <>
+                    <NavLink href="/settings" icon={Settings} active={pathname.startsWith("/settings")}>
+                      Settings
+                    </NavLink>
+                    <NavLink
+                      href="/company_invitations/new"
+                      icon={BriefcaseBusiness}
+                      active={pathname.startsWith("/company_invitations")}
+                    >
+                      Invite companies
+                    </NavLink>
+                  </>
                 )}
                 <SidebarMenuItem>
                   <SignOutButton>
