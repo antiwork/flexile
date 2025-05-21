@@ -16,13 +16,15 @@ import { useCurrentCompany } from "@/global";
 import defaultLogo from "@/images/default-company-logo.svg";
 import { trpc } from "@/trpc/client";
 import { md5Checksum } from "@/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import QuickbooksIntegration from "./QuickbooksIntegration";
+import StripeMicrodepositVerification from "./StripeMicrodepositVerification";
 
 const formSchema = z.object({
   website: z.string().url(),
   brandColor: z.string().nullable(),
   publicName: z.string(),
 });
-
 export default function SettingsPage() {
   const company = useCurrentCompany();
   const [settings, { refetch }] = trpc.companies.settings.useSuspenseQuery({ companyId: company.id });
@@ -82,12 +84,13 @@ export default function SettingsPage() {
   const submit = form.handleSubmit((values) => saveMutation.mutate(values));
 
   return (
-    <>
-      <hgroup className="mb-8">
+    <div className="grid gap-8">
+      <hgroup>
         <h2 className="mb-1 text-xl font-bold">Workspace settings</h2>
-        <p className="text-muted-foreground text-base">These details will be included in job descriptions.</p>
+        <p className="text-muted-foreground text-base">
+          Set your workspace identity with your company’s branding details.
+        </p>
       </hgroup>
-
       <Form {...form}>
         <form className="grid gap-4" onSubmit={(e) => void submit(e)}>
           <div className="grid gap-3 md:grid-cols-2">
@@ -166,6 +169,17 @@ export default function SettingsPage() {
           </MutationStatusButton>
         </form>
       </Form>
-    </>
+      <StripeMicrodepositVerification />
+      {company.flags.includes("quickbooks") && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Integrations</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <QuickbooksIntegration />
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }
