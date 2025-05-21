@@ -3,6 +3,7 @@
 import { useCurrentCompany } from "@/global";
 import QuickbooksIntegration from "../QuickbooksIntegration";
 import StripeMicrodepositVerification from "../StripeMicrodepositVerification";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function IntegrationsPage() {
   const company = useCurrentCompany();
@@ -16,7 +17,9 @@ export default function IntegrationsPage() {
 
       <div className="grid gap-8">
         <StripeMicrodepositVerification />
-        {company.flags.includes("quickbooks") && <QuickbooksIntegration />}
+        <Card>
+          <CardContent>{company.flags.includes("quickbooks") && <QuickbooksIntegration />}</CardContent>
+        </Card>
       </div>
     </>
   );

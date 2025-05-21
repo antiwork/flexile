@@ -131,7 +131,7 @@ export default function QuickbooksRow() {
       <div className="flex justify-between gap-2">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="flex items-center text-base font-bold">
+            <h2 className="flex items-center pb-1 text-base font-bold">
               <Image src={quickbooksLogo.src} width={24} height={24} className="inline" alt="" />
               &ensp;QuickBooks
             </h2>

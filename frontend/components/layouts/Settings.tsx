@@ -12,7 +12,7 @@ import {
   Building,
   Grid2x2Plus,
 } from "lucide-react";
-import { useCurrentUser } from "@/global";
+import { useCurrentUser, useCurrentCompany } from "@/global";
 import type { CurrentUser } from "@/models/user";
 import {
   SidebarProvider,
@@ -79,15 +79,17 @@ const companyLinks = [
     label: "Integrations",
     route: "/administrator/settings/integrations" as const,
     icon: Grid2x2Plus,
-    isVisible: (user: CurrentUser) => !!user.roles.administrator,
+    isVisible: (user: CurrentUser, company: any) =>
+      !!user.roles.administrator && company?.flags?.includes("quickbooks"),
   },
 ];
 
 const Settings = ({ children }: { children: React.ReactNode }) => {
   const user = useCurrentUser();
+  const company = useCurrentCompany();
   const pathname = usePathname();
   const filteredPersonalLinks = personalLinks.filter((link) => link.isVisible(user));
-  const filteredCompanyLinks = companyLinks.filter((link) => link.isVisible(user));
+  const filteredCompanyLinks = companyLinks.filter((link) => link.isVisible(user, company));
 
   return (
     <SidebarProvider>
