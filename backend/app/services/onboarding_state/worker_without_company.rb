@@ -8,6 +8,6 @@ class OnboardingState::WorkerWithoutCompany < OnboardingState::BaseUser
   end
 
   def after_complete_onboarding_path
-    "/company_invitations/new"
+    "/dashboard"
   end
 end

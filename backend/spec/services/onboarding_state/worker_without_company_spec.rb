@@ -3,7 +3,7 @@
 RSpec.describe OnboardingState::WorkerWithoutCompany do
   include Rails.application.routes.url_helpers
 
-  let(:user) { create(:user, inviting_company: true) }
+  let(:user) { create(:user) }
   let(:service) { described_class.new(user:, company: nil) }
 
   describe "#redirect_path" do
@@ -21,8 +21,8 @@ RSpec.describe OnboardingState::WorkerWithoutCompany do
   end
 
   describe "#after_complete_onboarding_path" do
-    it "returns the root path" do
-      expect(service.after_complete_onboarding_path).to eq("/company_invitations/new")
+    it "returns the dashboard path" do
+      expect(service.after_complete_onboarding_path).to eq("/dashboard")
     end
   end
 end

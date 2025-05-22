@@ -47,11 +47,7 @@ class UserPresenter
   end
 
   def logged_in_user
-    companies = if user.inviting_company?
-      []
-    else
-      user.all_companies
-    end
+    companies = user.all_companies
 
     roles = {}
     has_documents = documents.joins(:signatures).not_consulting_contract.or(documents.unsigned).exists?
@@ -86,7 +82,7 @@ class UserPresenter
         hasDocuments: has_documents,
         endedAt: worker.ended_at,
         payRateType: worker.pay_rate_type,
-        inviting_company: user.inviting_company,
+
         role: worker.role,
         payRateInSubunits: worker.pay_rate_in_subunits,
         hoursPerWeek: worker.hours_per_week,
@@ -162,12 +158,9 @@ class UserPresenter
     attr_reader :current_context, :user, :company, :company_administrator, :company_worker, :company_investor, :company_lawyer
 
     def user_props
-      is_inviting_company = user.inviting_company?
-
       result = common_props.merge(
         is_worker: company_worker.present?,
         is_investor: company_investor.present?,
-        is_inviting_company:,
         flags: {},
       )
       result[:has_documents] = documents.not_consulting_contract.or(documents.unsigned).exists?
@@ -216,14 +209,10 @@ class UserPresenter
     end
 
     def common_props
-      companies = if user.inviting_company?
-        []
-      else
-        user.all_companies
-      end
+      companies = user.all_companies
 
       {
-        company: company.present? && !user.inviting_company? ? {
+        company: company.present? ? {
           id: company.external_id,
           name: company.display_name,
           logo_url: company.logo_url,
