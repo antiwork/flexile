@@ -417,7 +417,7 @@ test.describe("Tax settings", () => {
       await expect(page.getByLabel("Tax ID (SSN or ITIN)")).toHaveValue("123-45-6789");
     });
 
-    test("allows legal names with two spaces", async ({ page }) => {
+    test("allows legal names with two spaces", async ({ page, sentEmails: _ }) => {
       await page.goto("/settings/tax");
 
       await page.getByLabel("Full legal name (must match your ID)").fill("John Middle Doe");
