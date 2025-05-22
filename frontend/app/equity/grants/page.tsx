@@ -3,7 +3,6 @@ import { CircleCheck, CircleAlert, Pencil, Info } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import Figures from "@/components/Figures";
 import { linkClasses } from "@/components/Link";
 import Placeholder from "@/components/Placeholder";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -39,7 +38,6 @@ export default function GrantsPage() {
   const router = useRouter();
   const company = useCurrentCompany();
   const [data, { refetch }] = trpc.equityGrants.list.useSuspenseQuery({ companyId: company.id });
-  const [totals] = trpc.equityGrants.totals.useSuspenseQuery({ companyId: company.id });
   const [cancellingGrantId, setCancellingGrantId] = useState<string | null>(null);
   const cancellingGrant = data.find((grant) => grant.id === cancellingGrantId);
   const cancelGrant = trpc.equityGrants.cancel.useMutation({
@@ -92,8 +90,6 @@ export default function GrantsPage() {
     signable: true,
   });
 
-  const totalGrantedShares = totals.unvestedShares + totals.vestedShares + totals.exercisedShares;
-
   const [countriesData] = trpc.equityGrants.byCountry.useSuspenseQuery({ companyId: company.id });
   const optionHolderCountriesTable = useTable({ columns: countryColumns, data: countriesData });
 
@@ -123,14 +119,6 @@ export default function GrantsPage() {
       ) : null}
       {data.length > 0 ? (
         <>
-          <Figures
-            items={[
-              totalGrantedShares ? { caption: "Granted", value: totalGrantedShares.toLocaleString() } : null,
-              totals.vestedShares ? { caption: "Vested", value: totals.vestedShares.toLocaleString() } : null,
-              totals.unvestedShares ? { caption: "Left to vest", value: totals.unvestedShares.toLocaleString() } : null,
-            ].filter((item) => !!item)}
-          />
-
           <DataTable table={table} onRowClicked={(row) => router.push(`/people/${row.user.id}`)} />
           <DataTable table={optionHolderCountriesTable} />
         </>

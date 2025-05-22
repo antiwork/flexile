@@ -8,10 +8,9 @@ import {
   BookUser,
   Settings,
   ChartPie,
-  BriefcaseBusiness,
-  CircleUserRound,
   CircleDollarSign,
   LogOut,
+  BriefcaseBusiness,
 } from "lucide-react";
 import { skipToken, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
@@ -46,6 +45,7 @@ import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
 import type { Route } from "next";
+import { useIsActionable } from "@/app/invoices";
 
 export default function MainLayout({
   children,
@@ -138,17 +138,19 @@ export default function MainLayout({
             <SidebarGroupContent>
               <SidebarMenu>
                 {!user.companies.length && (
-                  <NavLink
-                    href="/company_invitations"
-                    icon={BriefcaseBusiness}
-                    active={pathname.startsWith("/company_invitations")}
-                  >
-                    Invite companies
-                  </NavLink>
+                  <>
+                    <NavLink href="/settings" icon={Settings} active={pathname.startsWith("/settings")}>
+                      Settings
+                    </NavLink>
+                    <NavLink
+                      href="/company_invitations/new"
+                      icon={BriefcaseBusiness}
+                      active={pathname.startsWith("/company_invitations")}
+                    >
+                      Invite companies
+                    </NavLink>
+                  </>
                 )}
-                <NavLink href="/settings" icon={CircleUserRound} active={pathname.startsWith("/settings")}>
-                  Account
-                </NavLink>
                 <SidebarMenuItem>
                   <SignOutButton>
                     <SidebarMenuButton className="cursor-pointer">
@@ -220,6 +222,7 @@ const NavLinks = () => {
       : skipToken,
     { refetchInterval: 30_000 },
   );
+  const isInvoiceActionable = useIsActionable();
   const { data: documentsData } = trpc.documents.list.useQuery(
     user.currentCompanyId && user.id
       ? { companyId: user.currentCompanyId, userId: user.id, signable: true }
@@ -241,7 +244,7 @@ const NavLinks = () => {
           href="/invoices"
           icon={ReceiptIcon}
           active={pathname.startsWith("/invoices")}
-          badge={invoicesData?.length}
+          badge={invoicesData?.filter(isInvoiceActionable).length}
         >
           Invoices
         </NavLink>
@@ -289,11 +292,7 @@ const NavLinks = () => {
         </NavLink>
       ) : null}
       {routes.has("Settings") && (
-        <NavLink
-          href={user.roles.administrator ? `/administrator/settings` : `/settings`}
-          active={pathname.startsWith("/administrator/settings") || pathname.startsWith("/settings")}
-          icon={Settings}
-        >
+        <NavLink href="/settings" active={pathname.startsWith("/settings")} icon={Settings}>
           Settings
         </NavLink>
       )}

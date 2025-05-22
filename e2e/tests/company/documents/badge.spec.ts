@@ -5,7 +5,7 @@ import { documentsFactory } from "@test/factories/documents";
 import { documentSignaturesFactory } from "@test/factories/documentSignatures";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
-import { expect, type Page, test } from "@test/index";
+import { expect, test } from "@test/index";
 
 test.describe("Document badge counter", () => {
   let company: Awaited<ReturnType<typeof companiesFactory.create>>;
@@ -29,66 +29,34 @@ test.describe("Document badge counter", () => {
   });
 
   test("shows badge with count of documents requiring signatures", async ({ page }) => {
-    const doc1 = await documentsFactory.createUnsigned(
-      {
-        companyId: company.company.id,
-        name: "Document 1 Requiring Signature",
-      },
-      {
-        signatures: [{ userId: contractorUser.id, title: "Signer" }],
-      },
+    const doc1 = await documentsFactory.create(
+      { companyId: company.company.id, name: "Document 1 Requiring Signature" },
+      { signatures: [{ userId: adminUser.id, title: "Signer" }] },
     );
 
-    const doc2 = await documentsFactory.createUnsigned(
-      {
-        companyId: company.company.id,
-        name: "Document 2 Requiring Signature",
-      },
-      {
-        signatures: [{ userId: contractorUser.id, title: "Signer" }],
-      },
+    await documentsFactory.create(
+      { companyId: company.company.id, name: "Document 2 Requiring Signature" },
+      { signatures: [{ userId: contractorUser.id, title: "Signer" }] },
+    );
+    await documentsFactory.create(
+      { companyId: company.company.id, name: "Document Already Signed" },
+      { signatures: [{ userId: adminUser.id, title: "Signer" }], signed: true },
     );
 
     await login(page, adminUser);
 
-    const documentsBadge = locateDocumentsBadge(page);
-    await expect(documentsBadge).toBeVisible();
-    await expect(documentsBadge).toContainText("2");
-
-    await documentsFactory.createSigned(
-      {
-        companyId: company.company.id,
-        name: "Document Already Signed",
-      },
-      {
-        signatures: [{ userId: contractorUser.id, title: "Signer" }],
-      },
-    );
+    const documentsBadge = page.getByRole("link", { name: "Documents" }).getByRole("status");
+    await expect(documentsBadge).toContainText("1");
 
     await page.reload();
-
-    await expect(documentsBadge).toBeVisible();
-    await expect(documentsBadge).toContainText("2");
 
     await documentSignaturesFactory.createSigned({
       documentId: doc1.document.id,
-      userId: contractorUser.id,
-    });
-
-    await page.reload();
-
-    await expect(documentsBadge).toBeVisible();
-    await expect(documentsBadge).toContainText("1");
-
-    await documentSignaturesFactory.createSigned({
-      documentId: doc2.document.id,
-      userId: contractorUser.id,
+      userId: adminUser.id,
     });
 
     await page.reload();
 
     await expect(documentsBadge).not.toBeVisible();
   });
-
-  const locateDocumentsBadge = (page: Page) => page.getByRole("link", { name: "Documents" }).getByRole("status");
 });

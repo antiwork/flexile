@@ -28,6 +28,7 @@ export const documentsFactory = {
         name: "Consulting Agreement",
         type: DocumentType.ConsultingContract,
         year: new Date().getFullYear(),
+        docusealSubmissionId: 1,
         ...overrides,
       })
       .returning();
@@ -45,16 +46,6 @@ export const documentsFactory = {
 
     return { document };
   },
-
-  createSigned: async (
-    overrides: Partial<typeof documents.$inferInsert> = {},
-    options: CreateOptions = { signatures: [], signed: true },
-  ) => documentsFactory.create(overrides, options),
-
-  createUnsigned: async (
-    overrides: Partial<typeof documents.$inferInsert> = {},
-    options: CreateOptions = { signatures: [], signed: false },
-  ) => documentsFactory.create(overrides, options),
 
   createTaxDocument: async (
     overrides: Partial<typeof documents.$inferInsert> = {},

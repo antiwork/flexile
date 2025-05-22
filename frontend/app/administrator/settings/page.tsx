@@ -16,9 +16,9 @@ import { useCurrentCompany } from "@/global";
 import defaultLogo from "@/images/default-company-logo.svg";
 import { trpc } from "@/trpc/client";
 import { md5Checksum } from "@/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import QuickbooksIntegration from "./QuickbooksIntegration";
 import StripeMicrodepositVerification from "./StripeMicrodepositVerification";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const formSchema = z.object({
   website: z.string().url(),
@@ -84,16 +84,13 @@ export default function SettingsPage() {
   const submit = form.handleSubmit((values) => saveMutation.mutate(values));
 
   return (
-    <>
-      <StripeMicrodepositVerification />
-      {company.flags.includes("quickbooks") ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Integrations</CardTitle>
-          </CardHeader>
-          <CardContent>{company.flags.includes("quickbooks") ? <QuickbooksIntegration /> : null}</CardContent>
-        </Card>
-      ) : null}
+    <div className="grid gap-8">
+      <hgroup>
+        <h2 className="mb-1 text-xl font-bold">Workspace settings</h2>
+        <p className="text-muted-foreground text-base">
+          Set your workspace identity with your company's branding details.
+        </p>
+      </hgroup>
       <Form {...form}>
         <form className="grid gap-4" onSubmit={(e) => void submit(e)}>
           <div className="grid gap-3 md:grid-cols-2">
@@ -115,7 +112,6 @@ export default function SettingsPage() {
                   <AvatarImage src={logoUrl} alt="Company logo" />
                   <AvatarFallback>Logo</AvatarFallback>
                 </Avatar>
-                <span className="ml-2">Upload...</span>
               </Label>
             </div>
             <FormField
@@ -167,12 +163,21 @@ export default function SettingsPage() {
             type="submit"
             successText="Changes saved"
             loadingText="Saving..."
-            className="justify-self-end"
+            className="w-fit"
           >
             Save changes
           </MutationStatusButton>
         </form>
       </Form>
-    </>
+      <StripeMicrodepositVerification />
+      {company.flags.includes("quickbooks") ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Integrations</CardTitle>
+          </CardHeader>
+          <CardContent>{company.flags.includes("quickbooks") ? <QuickbooksIntegration /> : null}</CardContent>
+        </Card>
+      ) : null}
+    </div>
   );
 }

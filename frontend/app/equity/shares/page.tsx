@@ -2,13 +2,11 @@
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import React from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import Figures from "@/components/Figures";
 import Placeholder from "@/components/Placeholder";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
-import { formatOwnershipPercentage } from "@/utils/numbers";
 import { formatDate } from "@/utils/time";
 import EquityLayout from "../Layout";
 
@@ -31,27 +29,10 @@ export default function Shares() {
 
   const table = useTable({ data: shareHoldings, columns });
 
-  const totalShares = shareHoldings.reduce((acc, share) => acc + share.numberOfShares, 0);
-  const equityValueUsd =
-    company.valuationInDollars && company.fullyDilutedShares
-      ? (company.valuationInDollars / company.fullyDilutedShares) * totalShares
-      : 0;
-  const equityValueLabel = `Equity value ($${(company.valuationInDollars || 0).toLocaleString([], { notation: "compact" })} valuation)`;
-  const ownership = company.fullyDilutedShares ? totalShares / company.fullyDilutedShares : 0;
-
   return (
     <EquityLayout>
       {shareHoldings.length > 0 ? (
-        <>
-          <Figures
-            items={[
-              { caption: "Total shares", value: totalShares.toLocaleString() },
-              { caption: equityValueLabel, value: formatMoney(equityValueUsd) },
-              { caption: "Ownership", value: formatOwnershipPercentage(ownership) },
-            ]}
-          />
-          <DataTable table={table} />
-        </>
+        <DataTable table={table} />
       ) : (
         <Placeholder icon={CheckCircleIcon}>You do not hold any shares.</Placeholder>
       )}

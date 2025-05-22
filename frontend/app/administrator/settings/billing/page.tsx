@@ -123,6 +123,7 @@ export default function Billing() {
 
   return (
     <div className="grid gap-4">
+      <h2 className="mb-8 text-xl font-medium">Billing</h2>
       {stripeData.setup_intent_status === "succeeded" ? null : (
         <Elements
           stripe={stripePromise}

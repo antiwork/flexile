@@ -1,8 +1,7 @@
 "use client";
 
-import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
+import { AlertTriangle, Check, Plus, CircleDollarSign } from "lucide-react";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import { Check } from "lucide-react";
 import React, { Fragment, useState } from "react";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
@@ -18,21 +17,23 @@ import { trpc } from "@/trpc/client";
 import { isEthereumAddress } from "@/utils/isEthereumAddress";
 import { request } from "@/utils/request";
 import { settings_bank_account_path, settings_bank_accounts_path, settings_dividend_path } from "@/utils/routes";
-import SettingsLayout from "../Layout";
+import SettingsLayout from "@/app/settings/Layout";
 import BankAccountModal, { type BankAccount, bankAccountSchema } from "./BankAccountModal";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormLabel, FormMessage, FormControl, FormItem, FormField } from "@/components/ui/form";
 import { Card, CardTitle, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
-import { PlusIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 
 export default function PayoutsPage() {
   const user = useCurrentUser();
 
   return (
     <SettingsLayout>
-      {user.roles.investor ? <DividendSection /> : null}
-      <BankAccountsSection />
+      <h2 className="mb-8 text-xl font-medium">Payouts</h2>
+      <div className="grid gap-8">
+        {user.roles.investor ? <DividendSection /> : null}
+        <BankAccountsSection />
+      </div>
     </SettingsLayout>
   );
 }
@@ -231,10 +232,10 @@ const BankAccountsSection = () => {
         {bankAccounts.length === 0 && user.roles.investor ? (
           <div className="p-4">
             <div className="grid justify-items-center gap-4 p-6 text-center text-gray-700">
-              <CurrencyDollarIcon className="-mb-2 size-10" />
+              <CircleDollarSign className="-mb-2 size-10" />
               <p>Set up your bank account to receive payouts.</p>
               <Button onClick={() => setAddingBankAccount(true)} variant="outline">
-                <PlusIcon className="size-4" />
+                <Plus className="size-4" />
                 Add bank account
               </Button>
             </div>
@@ -242,7 +243,7 @@ const BankAccountsSection = () => {
         ) : isFromSanctionedCountry ? (
           <div>
             <Alert variant="destructive">
-              <ExclamationTriangleIcon />
+              <AlertTriangle className="size-4" />
               <AlertTitle>Payouts are disabled</AlertTitle>
               <AlertDescription>
                 Unfortunately, due to regulatory restrictions and compliance with international sanctions, individuals
@@ -343,7 +344,7 @@ const BankAccountsSection = () => {
                 {bankAccounts.length > 0 ? <Separator /> : null}
                 <div>
                   <Button onClick={() => setAddingBankAccount(true)} variant="outline">
-                    <PlusIcon className="size-4" />
+                    <Plus className="size-4" />
                     Add bank account
                   </Button>
                 </div>
@@ -408,7 +409,7 @@ const WalletAddressModal = ({
         </div>
 
         <Alert variant="destructive">
-          <ExclamationTriangleIcon />
+          <AlertTriangle className="size-4" />
           <AlertDescription>
             Ethereum transactions are irreversible. Please double-check your address before saving.
           </AlertDescription>
