@@ -142,11 +142,9 @@ export default function MainLayout({
             <SidebarGroupContent>
               <SidebarMenu>
                 {!user.companies.length && (
-                  <>
-                    <NavLink href="/settings" icon={Settings} active={pathname.startsWith("/settings")}>
-                      Settings
-                    </NavLink>
-                  </>
+                  <NavLink href="/settings" icon={Settings} active={pathname.startsWith("/settings")}>
+                    Settings
+                  </NavLink>
                 )}
                 <SidebarMenuItem>
                   <SignOutButton>
