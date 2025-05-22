@@ -707,7 +707,7 @@ const QuickInvoicesSection = () => {
               </div>
               <div className="flex flex-wrap items-center justify-end gap-3">
                 <Button variant="outline" className="grow sm:grow-0" asChild disabled={!canSubmitInvoices}>
-                  <Link inert={!canSubmitInvoices} href={`${newCompanyInvoiceRoute()}&expenses=true`}>
+                  <Link inert={!canSubmitInvoices} href={newCompanyInvoiceRoute()}>
                     Add more info
                   </Link>
                 </Button>
