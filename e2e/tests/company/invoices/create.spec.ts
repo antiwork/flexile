@@ -220,6 +220,7 @@ test.describe("invoice creation", () => {
     await page.getByLabel("Hours").fill("100:00");
     await page.getByPlaceholder("Description").fill("I worked on invoices");
 
+    await page.waitForTimeout(500); // Wait for UI to update
     await expect(page.getByText("Total$6,000")).toBeVisible();
     await expect(page.getByText("Swapped for equity (not paid in cash)$1,200")).toBeVisible();
     await expect(page.getByText("Net amount in cash$4,800")).toBeVisible();
@@ -263,7 +264,7 @@ test.describe("invoice creation", () => {
     await page.getByPlaceholder("Description").fill("item name");
     await page.getByPlaceholder("HH:MM").fill("01:00");
     await page.getByPlaceholder("Enter notes about your").fill("sent as alumni");
-    await page.waitForTimeout(100);
+    await page.waitForTimeout(500); // Increase wait time to ensure UI updates
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByRole("cell", { name: "Awaiting approval (0/2)" })).toBeVisible();
   });
@@ -290,12 +291,14 @@ test.describe("invoice creation", () => {
 
     await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("25");
 
+    await page.waitForTimeout(500); // Wait for UI to update
     await expect(page.getByText("Total services$2,000")).toBeVisible();
     await expect(page.getByText("Swapped for equity (not paid in cash)$500")).toBeVisible();
     await expect(page.getByText("Net amount in cash$1,500")).toBeVisible();
 
     await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("75");
 
+    await page.waitForTimeout(500); // Wait for UI to update
     await expect(page.getByText("Total services$2,000")).toBeVisible();
     await expect(page.getByText("Swapped for equity (not paid in cash)$1,500")).toBeVisible();
     await expect(page.getByText("Net amount in cash$500")).toBeVisible();
