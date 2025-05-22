@@ -91,7 +91,7 @@ const Settings = ({ children }: { children: React.ReactNode }) => {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link
-                    href={!user.companies.length ? "/company_invitations" : "/dashboard"}
+                    href="/dashboard"
                     className="flex items-center gap-2 text-sm"
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -144,7 +144,7 @@ const Settings = ({ children }: { children: React.ReactNode }) => {
           <div className="flex items-center gap-2 p-2 md:hidden">
             <SidebarTrigger />
             <Link
-              href={!user.companies.length ? "/company_invitations" : "/dashboard"}
+              href="/dashboard"
               className="flex items-center gap-2 text-sm"
             >
               <ChevronLeft className="h-4 w-4" />

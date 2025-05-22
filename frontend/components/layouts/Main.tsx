@@ -147,13 +147,6 @@ export default function MainLayout({
                     <NavLink href="/settings" icon={Settings} active={pathname.startsWith("/settings")}>
                       Settings
                     </NavLink>
-                    <NavLink
-                      href="/company_invitations/new"
-                      icon={BriefcaseBusiness}
-                      active={pathname.startsWith("/company_invitations")}
-                    >
-                      Invite companies
-                    </NavLink>
                   </>
                 )}
                 <SidebarMenuItem>

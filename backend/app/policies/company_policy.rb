@@ -6,6 +6,6 @@ class CompanyPolicy < ApplicationPolicy
   end
 
   def update?
-    company_administrator.present? || user.initial_onboarding?
+    company_administrator.present?
   end
 end

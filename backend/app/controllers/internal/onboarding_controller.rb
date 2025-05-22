@@ -83,8 +83,6 @@ class Internal::OnboardingController < Internal::BaseController
     def onboarding_service
       if Current.user.worker?
         OnboardingState::Worker.new(user: Current.user, company: Current.company)
-      elsif Current.user.initial_onboarding?
-        OnboardingState::WorkerWithoutCompany.new(user: Current.user, company: nil)
       else
         OnboardingState::Investor.new(user: Current.user, company: Current.company)
       end
