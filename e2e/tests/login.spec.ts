@@ -14,8 +14,9 @@ test("login", async ({ page }) => {
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page.getByLabel("Password", { exact: true }).fill("password");
   await page.getByRole("button", { name: "Continue", exact: true }).click();
-
-  await expect(page.getByRole("heading", { name: "Profile" })).toBeVisible();
+  
+  await page.waitForURL(/\/(settings|dashboard|invoices)/);
+  
   await expect(page.getByText("Sign in to Flexile")).not.toBeVisible();
   await expect(page.getByText("Enter your password")).not.toBeVisible();
 

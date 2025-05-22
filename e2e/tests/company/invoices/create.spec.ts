@@ -111,9 +111,9 @@ test.describe("invoice creation", () => {
       .then(takeOrThrow);
     expect(invoice).toBeDefined();
     expect(invoice.totalMinutes).toBe(205);
-    expect(invoice.totalAmountInUsdCents).toBe(20500n);
-    expect(invoice.cashAmountInCents).toBe(10250n);
-    expect(invoice.equityAmountInCents).toBe(10250n);
+    expect(invoice.totalAmountInUsdCents).toBe(BigInt(20500));
+    expect(invoice.cashAmountInCents).toBe(BigInt(10250));
+    expect(invoice.equityAmountInCents).toBe(BigInt(10250));
     expect(invoice.equityPercentage).toBe(50);
 
     const equityAllocation = await db.query.equityAllocations
@@ -168,9 +168,9 @@ test.describe("invoice creation", () => {
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
       .then(takeOrThrow);
     expect(invoice).toBeDefined();
-    expect(invoice.totalAmountInUsdCents).toBe(100000n);
-    expect(invoice.cashAmountInCents).toBe(50000n);
-    expect(invoice.equityAmountInCents).toBe(50000n);
+    expect(invoice.totalAmountInUsdCents).toBe(BigInt(100000));
+    expect(invoice.cashAmountInCents).toBe(BigInt(50000));
+    expect(invoice.equityAmountInCents).toBe(BigInt(50000));
     expect(invoice.equityPercentage).toBe(50);
 
     const equityAllocation = await db.query.equityAllocations
@@ -246,9 +246,9 @@ test.describe("invoice creation", () => {
       })
       .then(takeOrThrow);
     expect(invoice.totalMinutes).toBe(6000);
-    expect(invoice.totalAmountInUsdCents).toBe(600000n);
-    expect(invoice.cashAmountInCents).toBe(480000n);
-    expect(invoice.equityAmountInCents).toBe(120000n);
+    expect(invoice.totalAmountInUsdCents).toBe(BigInt(600000));
+    expect(invoice.cashAmountInCents).toBe(BigInt(480000));
+    expect(invoice.equityAmountInCents).toBe(BigInt(120000));
     expect(invoice.equityPercentage).toBe(20);
   });
 
