@@ -8,7 +8,7 @@ import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { subDays } from "date-fns";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { PayRateType } from "@/db/enums";
 import { companies, companyContractors, equityAllocations, invoices, users } from "@/db/schema";
 import { fillDatePicker } from "@test/helpers";
@@ -274,5 +274,26 @@ test.describe("invoice creation", () => {
     await login(page, contractorUser);
     await page.goto("/invoices/new");
     await expect(page.getByRole("textbox", { name: "Cash vs equity split" })).not.toBeVisible();
+  });
+
+  test("allows workers to add expenses when company has expenses enabled", async ({ page }) => {
+    await db.update(companies)
+      .set({ jsonData: { flags: ["expenses"] } })
+      .where(eq(companies.id, company.id));
+    
+    // Create an expense category for the company
+    await db.execute(sql`
+      INSERT INTO expense_categories (company_id, name, created_at, updated_at)
+      VALUES (${company.id}, 'Travel', NOW(), NOW())
+    `);
+
+    await login(page, contractorUser);
+    await page.goto("/invoices/new");
+    
+    await page.getByLabel("Hours").fill("3:25");
+    await page.getByPlaceholder("Description").fill("I worked on invoices");
+    
+    const addExpenseButton = page.getByRole("button", { name: "Add expense" });
+    await expect(addExpenseButton).toBeVisible();
   });
 });

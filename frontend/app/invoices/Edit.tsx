@@ -455,7 +455,7 @@ const Edit = () => {
                       <PlusIcon className="inline size-4" />
                       Add line item
                     </Button>
-                    {data.company.expenses.enabled && canManageExpenses ? (
+                    {data.company.expenses.enabled && !canManageExpenses ? (
                       <Button variant="link" asChild>
                         <Label>
                           <ArrowUpTrayIcon className="inline size-4" />
