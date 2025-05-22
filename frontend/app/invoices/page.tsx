@@ -540,14 +540,12 @@ const QuickInvoicesSection = () => {
     year: date.year,
   });
 
-  const { data: equityCalculation } = trpc.equityCalculations.calculate.useQuery(
-    {
-      companyId: company.id,
-      invoiceYear: date.year,
-      servicesInCents: totalAmountInCents,
-      selectedPercentage: invoiceEquityPercent,
-    },
-  );
+  const { data: equityCalculation } = trpc.equityCalculations.calculate.useQuery({
+    companyId: company.id,
+    invoiceYear: date.year,
+    servicesInCents: totalAmountInCents,
+    selectedPercentage: invoiceEquityPercent,
+  });
   const equityAmountCents = equityCalculation?.amountInCents ?? 0;
   const cashAmountCents = totalAmountInCents - equityAmountCents;
 
