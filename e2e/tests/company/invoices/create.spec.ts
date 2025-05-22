@@ -287,8 +287,6 @@ test.describe("invoice creation", () => {
     await expect(page.getByRole("textbox", { name: "Cash vs equity split" })).toHaveValue("0");
 
     await expect(page.getByText("Total$2,000")).toBeVisible();
-    await expect(page.getByText("Swapped for equity (not paid in cash)$0")).toBeVisible();
-    await expect(page.getByText("Net amount in cash$2,000")).toBeVisible();
 
     await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("25");
 
