@@ -8,27 +8,19 @@ import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 
 test.describe("Document badge counter", () => {
-  let company: Awaited<ReturnType<typeof companiesFactory.create>>;
-  let adminUser: Awaited<ReturnType<typeof usersFactory.create>>["user"];
-  let contractorUser: Awaited<ReturnType<typeof usersFactory.create>>["user"];
-
-  test.beforeEach(async () => {
-    company = await companiesFactory.create();
-    adminUser = (await usersFactory.create()).user;
-    contractorUser = (await usersFactory.create()).user;
-
+  test("shows badge with count of documents requiring signatures", async ({ page }) => {
+    const company = await companiesFactory.create();
+    const adminUser = (await usersFactory.create()).user;
+    const contractorUser = (await usersFactory.create()).user;
     await companyAdministratorsFactory.create({
       companyId: company.company.id,
       userId: adminUser.id,
     });
-
     await companyContractorsFactory.create({
       companyId: company.company.id,
       userId: contractorUser.id,
     });
-  });
 
-  test("shows badge with count of documents requiring signatures", async ({ page }) => {
     const doc1 = await documentsFactory.create(
       { companyId: company.company.id, name: "Document 1 Requiring Signature" },
       { signatures: [{ userId: adminUser.id, title: "Signer" }] },
