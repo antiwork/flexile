@@ -13,10 +13,10 @@ RSpec.describe OnboardingState::WorkerWithoutCompany do
       expect(service.redirect_path).to eq(spa_onboarding_path)
     end
 
-    it "returns nil if all onboarding data is present" do
+    it "returns the dashboard path if all onboarding data is present" do
       allow(service).to receive(:has_personal_details?).and_return(true)
 
-      expect(service.redirect_path).to be_nil
+      expect(service.redirect_path).to eq("/dashboard")
     end
   end
 
