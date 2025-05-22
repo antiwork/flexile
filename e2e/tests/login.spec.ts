@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
 
 test("login", async ({ page }) => {
-  const { user } = await usersFactory.create({ invitingCompany: true });
+  const { user } = await usersFactory.create();
   const { email } = await setClerkUser(user.id);
 
   await page.goto("/login");
