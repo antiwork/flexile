@@ -302,7 +302,7 @@ RSpec.describe "Main navigation" do
     end
 
     context "when the user is a contractor without a company" do
-      let(:user) { create(:user, inviting_company: true) }
+      let(:user) { create(:user) }
 
       before do
         sign_in user
@@ -316,7 +316,6 @@ RSpec.describe "Main navigation" do
         expect(page).to_not have_link("Analytics")
         expect(page).to_not have_link("Roles")
         expect(page).to_not have_link("Equity")
-        expect(page).to have_link("Invite company")
         expect(page).to have_link("Account")
         expect(page).to have_link("Log out")
       end

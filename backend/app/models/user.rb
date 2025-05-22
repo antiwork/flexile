@@ -173,7 +173,7 @@ class User < ApplicationRecord
   end
 
   def initial_onboarding?
-    all_companies.none? && !inviting_company
+    all_companies.none?
   end
 
   def upsert_clerk_user
