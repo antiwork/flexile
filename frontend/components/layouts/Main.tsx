@@ -8,10 +8,9 @@ import {
   BookUser,
   Settings,
   ChartPie,
-  BriefcaseBusiness,
-  CircleUserRound,
   CircleDollarSign,
   LogOut,
+  BriefcaseBusiness,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
@@ -144,17 +143,19 @@ export default function MainLayout({
             <SidebarGroupContent>
               <SidebarMenu>
                 {!user.companies.length && (
-                  <NavLink
-                    href="/company_invitations"
-                    icon={BriefcaseBusiness}
-                    active={pathname.startsWith("/company_invitations")}
-                  >
-                    Invite companies
-                  </NavLink>
+                  <>
+                    <NavLink href="/settings" icon={Settings} active={pathname.startsWith("/settings")}>
+                      Settings
+                    </NavLink>
+                    <NavLink
+                      href="/company_invitations/new"
+                      icon={BriefcaseBusiness}
+                      active={pathname.startsWith("/company_invitations")}
+                    >
+                      Invite companies
+                    </NavLink>
+                  </>
                 )}
-                <NavLink href="/settings" icon={CircleUserRound} active={pathname.startsWith("/settings")}>
-                  Account
-                </NavLink>
                 <SidebarMenuItem>
                   <SignOutButton>
                     <SidebarMenuButton className="cursor-pointer">
@@ -278,7 +279,7 @@ const NavLinks = ({ company }: { company: Company }) => {
       ) : null}
       {routes.has("Settings") && (
         <NavLink
-          href={user.roles.administrator ? `/administrator/settings` : `/settings`}
+          href="/settings"
           active={!!active && (pathname.startsWith("/administrator/settings") || pathname.startsWith("/settings"))}
           icon={Settings}
         >

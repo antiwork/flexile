@@ -73,87 +73,23 @@ export default function Details() {
   };
 
   return (
-    <form onSubmit={(e) => void onSubmit(e)} className="grid gap-4">
+    <form onSubmit={(e) => void onSubmit(e)} className="grid gap-8">
       <hgroup>
-        <h2 className="text-xl font-medium">Details</h2>
-        <p className="text-muted-foreground text-sm">
+        <h2 className="mb-1 text-xl font-medium">Details</h2>
+        <p className="text-muted-foreground text-base">
           These details will be included in tax forms, as well as in your contractor's invoices.
         </p>
       </hgroup>
       <Form {...form}>
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Company's legal name</FormLabel>
-              <FormControl>
-                <Input {...field} autoFocus />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="taxId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>EIN</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder="XX-XXXXXXX"
-                  onChange={(e) => field.onChange(formatTaxId(e.target.value))}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="phoneNumber"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Phone number</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder="(000) 000-0000"
-                  onChange={(e) => field.onChange(formatPhoneNumber(e.target.value))}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="streetAddress"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Residential address (street name, number, apt)</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-4">
           <FormField
             control={form.control}
-            name="city"
+            name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>City or town</FormLabel>
+                <FormLabel>Company's legal name</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input {...field} autoFocus />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -162,15 +98,15 @@ export default function Details() {
 
           <FormField
             control={form.control}
-            name="state"
+            name="taxId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>State</FormLabel>
+                <FormLabel>EIN</FormLabel>
                 <FormControl>
-                  <ComboBox
+                  <Input
                     {...field}
-                    placeholder="Choose State"
-                    options={usStates.map(({ name, code }) => ({ value: code, label: name }))}
+                    placeholder="XX-XXXXXXX"
+                    onChange={(e) => field.onChange(formatTaxId(e.target.value))}
                   />
                 </FormControl>
                 <FormMessage />
@@ -180,10 +116,28 @@ export default function Details() {
 
           <FormField
             control={form.control}
-            name="zipCode"
+            name="phoneNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Postal code</FormLabel>
+                <FormLabel>Phone number</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="(000) 000-0000"
+                    onChange={(e) => field.onChange(formatPhoneNumber(e.target.value))}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="streetAddress"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Residential address (street name, number, apt)</FormLabel>
                 <FormControl>
                   <Input {...field} />
                 </FormControl>
@@ -191,28 +145,76 @@ export default function Details() {
               </FormItem>
             )}
           />
-        </div>
 
-        <FormField
-          name="country"
-          render={() => (
-            <FormItem>
-              <FormLabel>Country</FormLabel>
-              <FormControl>
-                <ComboBox value="" onChange={(value) => value} placeholder="United States" options={[]} disabled />
-              </FormControl>
-              <FormMessage>
-                Flexile is currently available only to companies incorporated in the United States.
-              </FormMessage>
-            </FormItem>
-          )}
-        />
+          <div className="grid gap-3 md:grid-cols-3">
+            <FormField
+              control={form.control}
+              name="city"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>City or town</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="state"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>State</FormLabel>
+                  <FormControl>
+                    <ComboBox
+                      {...field}
+                      placeholder="Choose State"
+                      options={usStates.map(({ name, code }) => ({ value: code, label: name }))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="zipCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Postal code</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            name="country"
+            render={() => (
+              <FormItem>
+                <FormLabel>Country</FormLabel>
+                <FormControl>
+                  <ComboBox value="" onChange={(value) => value} placeholder="United States" options={[]} disabled />
+                </FormControl>
+                <FormMessage>
+                  Flexile is currently available only to companies incorporated in the United States.
+                </FormMessage>
+              </FormItem>
+            )}
+          />
+        </div>
         <MutationStatusButton
           mutation={updateSettings}
           type="submit"
           loadingText="Saving..."
           successText="Changes saved"
-          className="justify-self-end"
+          className="w-fit"
         >
           Save changes
         </MutationStatusButton>

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useCurrentUser } from "@/global";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
 import { trpc } from "@/trpc/client";
-import SettingsLayout from "./Layout";
+import SettingsLayout from "@/app/settings/Layout";
 
 export default function SettingsPage() {
   return (
@@ -35,7 +35,7 @@ const DetailsSection = () => {
   return (
     <Form {...form}>
       <form className="grid gap-4" onSubmit={(e) => void submit(e)}>
-        <h2 className="text-xl font-medium">Personal details</h2>
+        <h2 className="mb-4 text-xl font-medium">Profile</h2>
         <FormField
           control={form.control}
           name="email"
@@ -64,7 +64,7 @@ const DetailsSection = () => {
           )}
         />
         <MutationStatusButton
-          className="justify-self-end"
+          className="w-fit"
           type="submit"
           mutation={saveMutation}
           loadingText="Saving..."

@@ -82,7 +82,7 @@ test.describe("Contractor for multiple companies", () => {
     await mockForm(page);
 
     await login(page, user);
-    await page.getByRole("link", { name: "Invite companies" }).click();
+    await page.getByRole("link", { name: "Back to app" }).click();
     await page.getByRole("link", { name: "Invite company" }).click();
 
     await page.getByLabel("Email").fill("test+clerk_test@example.com");

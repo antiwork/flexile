@@ -22,7 +22,7 @@ function RadioButtons<T extends string | number>({
       {options.map((option) => (
         <Label
           key={option.label}
-          className={`border-input hover:bg-accent hover:text-accent-foreground has-[:checked]:text-primary flex cursor-pointer items-center gap-3 rounded-md border bg-transparent p-4 shadow-xs transition-[color,background-color,box-shadow,border-color] has-[:checked]:border-blue-600 has-[:checked]:bg-blue-500/10 ${ariaInvalid ? "border-destructive ring-destructive/20 has-[:checked]:border-destructive ring-2" : ""} ${disabled ? "pointer-events-none cursor-not-allowed opacity-50" : ""}`}
+          className={`border-input hover:bg-accent hover:text-accent-foreground has-[:checked]:text-primary flex cursor-pointer items-center gap-3 rounded-md border bg-transparent p-4 transition-[color,background-color,box-shadow,border-color] has-[:checked]:border-blue-600 has-[:checked]:bg-blue-500/10 ${ariaInvalid ? "border-destructive ring-destructive/20 has-[:checked]:border-destructive ring-2" : ""} ${disabled ? "pointer-events-none cursor-not-allowed opacity-50" : ""}`}
         >
           <input
             type="radio"
