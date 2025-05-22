@@ -17,7 +17,7 @@ class OnboardingState::User
       OnboardingState::Worker.new(user:, company:).redirect_path
     elsif user.company_investor_for?(company)
       OnboardingState::Investor.new(user:, company:).redirect_path
-    elsif user.initial_onboarding?
+    elsif user.initial_onboarding? && user.worker?
       OnboardingState::WorkerWithoutCompany.new(user:, company: nil).redirect_path || "/onboarding/type"
     else
       "/onboarding/type"
