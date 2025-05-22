@@ -63,5 +63,4 @@ test.describe("Contractor for multiple companies", () => {
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
     await expect(page.getByText("You have an unsigned contract")).not.toBeVisible();
   });
-
 });
