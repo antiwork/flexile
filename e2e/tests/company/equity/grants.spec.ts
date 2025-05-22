@@ -54,18 +54,14 @@ test.describe("New Contractor", () => {
     await page.getByRole("link", { name: "Equity" }).click();
     await page.getByRole("tab", { name: "Equity grants" }).click();
     await expect(page.getByRole("link", { name: "New option grant" })).not.toBeVisible();
-    await expect(page.getByText("Create equity plan contract and board consent templates")).toBeVisible();
+    await expect(page.getByText("Create equity plan contract templates")).toBeVisible();
 
     await documentTemplatesFactory.create({
       companyId: company.id,
       type: DocumentTemplateType.EquityPlanContract,
     });
-    await documentTemplatesFactory.create({
-      companyId: company.id,
-      type: DocumentTemplateType.BoardConsent,
-    });
     await page.reload();
-    await expect(page.getByText("Create equity plan contract and board consent templates")).not.toBeVisible();
+    await expect(page.getByText("Create equity plan contract templates")).not.toBeVisible();
     await page.getByRole("link", { name: "New option grant" }).click();
     await expect(page.getByLabel("Number of options")).toHaveValue("10000");
     await selectComboboxOption(page, "Recipient", contractorUser.preferredName ?? "");

@@ -17,51 +17,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 
-const BoardMembersSection = () => {
-  const company = useCurrentCompany();
-  const [administrators] = trpc.companyAdministrators.list.useSuspenseQuery({ companyId: company.id });
-  const [boardMemberIds, setBoardMemberIds] = useState(
-    Set(administrators.flatMap((admin) => (admin.boardMember ? [admin.id] : []))),
-  );
-  const updateBoardMembers = trpc.companyAdministrators.update.useMutation();
 
-  const updateMutation = useMutation({
-    mutationFn: async () => {
-      await Promise.all(
-        administrators.map((admin) =>
-          updateBoardMembers.mutateAsync({
-            companyId: company.id,
-            id: admin.id,
-            boardMember: boardMemberIds.has(admin.id),
-          }),
-        ),
-      );
-    },
-  });
-
-  return (
-    <div className="grid gap-4">
-      <hgroup className="mb-4">
-        <h2 className="mb-1 text-xl font-medium">Board members</h2>
-        <p className="text-muted-foreground text-base">Select company administrators who are board members.</p>
-      </hgroup>
-      <ComboBox
-        options={administrators.map((admin) => ({ value: admin.id, label: admin.name }))}
-        value={boardMemberIds.toArray()}
-        onChange={(value) => setBoardMemberIds(Set(value))}
-        multiple
-      />
-      <MutationButton
-        mutation={updateMutation}
-        disabled={updateMutation.isPending}
-        loadingText="Saving..."
-        className="w-fit"
-      >
-        Save board members
-      </MutationButton>
-    </div>
-  );
-};
 
 const formSchema = z.object({
   sharePriceInUsd: z.number().min(0),
@@ -214,7 +170,7 @@ export default function Equity() {
         </form>
       </Form>
 
-      <BoardMembersSection />
+
       <div className="grid gap-4">
         <hgroup>
           <h2 className="mb-1 text-xl font-medium">Import equity documents</h2>

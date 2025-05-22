@@ -60,7 +60,6 @@ export const equityAllocationsStatus = pgEnum("equity_allocations_status", [
   "pending_approval",
   "approved",
 ]);
-export const boardConsentStatus = pgEnum("board_consent_status", ["pending", "lawyer_approved", "board_approved"]);
 export const activeStorageVariantRecords = pgTable(
   "active_storage_variant_records",
   {
@@ -121,36 +120,6 @@ export const balances = pgTable(
   (table) => [index("index_balances_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops"))],
 );
 
-export const boardConsents = pgTable(
-  "board_consents",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    equityAllocationId: bigint("equity_allocation_id", { mode: "bigint" }).notNull(),
-    companyInvestorId: bigint("company_investor_id", { mode: "bigint" }).notNull(),
-    companyId: bigint("company_id", { mode: "bigint" }).notNull(),
-    documentId: bigint("document_id", { mode: "bigint" }).notNull(),
-    status: boardConsentStatus().notNull(),
-    lawyerApprovedAt: timestamp("lawyer_approved_at", { precision: 6, mode: "date" }),
-    boardApprovedAt: timestamp("board_approved_at", { precision: 6, mode: "date" }),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-  },
-  (table) => [
-    index("index_board_consents_on_equity_allocation_id").using(
-      "btree",
-      table.equityAllocationId.asc().nullsLast().op("int8_ops"),
-    ),
-    index("index_board_consents_on_company_investor_id").using(
-      "btree",
-      table.companyInvestorId.asc().nullsLast().op("int8_ops"),
-    ),
-    index("index_board_consents_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
-    index("index_board_consents_on_document_id").using("btree", table.documentId.asc().nullsLast().op("int8_ops")),
-  ],
-);
-
 export const capTableUploads = pgTable(
   "cap_table_uploads",
   {
@@ -184,7 +153,6 @@ export const companyAdministrators = pgTable(
     id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
     userId: bigint("user_id", { mode: "bigint" }).notNull(),
     companyId: bigint("company_id", { mode: "bigint" }).notNull(),
-    boardMember: boolean("board_member").notNull().default(false),
     createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
       .notNull()

@@ -14,6 +14,7 @@ import NumberInput from "@/components/NumberInput";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { optionGrantIssueDateRelationships, optionGrantTypes, optionGrantVestingTriggers } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
@@ -27,6 +28,7 @@ const formSchema = z.object({
   numberOfShares: z.number().gt(0),
   issueDateRelationship: z.enum(optionGrantIssueDateRelationships),
   optionGrantType: z.enum(optionGrantTypes),
+  boardConsentSigned: z.boolean().default(false),
   optionExpiryMonths: z.number().min(0),
   vestingTrigger: z.enum(optionGrantVestingTriggers),
   vestingScheduleId: z.string().nullish(),
@@ -65,6 +67,7 @@ export default function NewEquityGrant() {
       optionPoolId: data.optionPools[0]?.id ?? "",
       numberOfShares: 10_000,
       optionGrantType: "nso",
+      boardConsentSigned: false,
       vestingCommencementDate: today,
       vestingTrigger: "invoice_paid",
     },
@@ -281,6 +284,29 @@ export default function NewEquityGrant() {
                     />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="boardConsentSigned"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Board consent signed
+                    </FormLabel>
+                    <FormDescription>
+                      Confirm that proper documents have been signed to allow the company to issue this option grant.
+                    </FormDescription>
+                  </div>
                 </FormItem>
               )}
             />

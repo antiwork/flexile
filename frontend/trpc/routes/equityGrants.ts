@@ -219,14 +219,6 @@ export const equityGrantsRouter = createRouter({
       if (!response.ok) throw new TRPCError({ code: "BAD_REQUEST", message: await response.text() });
       const { equity_grant_id } = z.object({ equity_grant_id: z.number() }).parse(await response.json());
 
-      await inngest.send({
-        name: "board-consent.create",
-        data: {
-          equityGrantId: String(equity_grant_id),
-          companyId: String(ctx.company.id),
-          companyWorkerId: String(worker.id),
-        },
-      });
     }),
   totals: companyProcedure.query(async ({ ctx }) => {
     if (!ctx.companyAdministrator && !ctx.companyLawyer) throw new TRPCError({ code: "FORBIDDEN" });
