@@ -277,10 +277,11 @@ test.describe("invoice creation", () => {
   });
 
   test("allows workers to add expenses when company has expenses enabled", async ({ page }) => {
-    await db.update(companies)
+    await db
+      .update(companies)
       .set({ jsonData: { flags: ["expenses"] } })
       .where(eq(companies.id, company.id));
-    
+
     // Create an expense category for the company
     await db.execute(sql`
       INSERT INTO expense_categories (company_id, name, created_at, updated_at)
@@ -289,10 +290,10 @@ test.describe("invoice creation", () => {
 
     await login(page, contractorUser);
     await page.goto("/invoices/new");
-    
+
     await page.getByLabel("Hours").fill("3:25");
     await page.getByPlaceholder("Description").fill("I worked on invoices");
-    
+
     const addExpenseButton = page.getByRole("button", { name: "Add expense" });
     await expect(addExpenseButton).toBeVisible();
   });
