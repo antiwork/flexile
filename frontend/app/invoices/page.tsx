@@ -547,7 +547,6 @@ const QuickInvoicesSection = () => {
       servicesInCents: totalAmountInCents,
       selectedPercentage: invoiceEquityPercent,
     },
-    { enabled: !!duration },
   );
   const equityAmountCents = equityCalculation?.amountInCents ?? 0;
   const cashAmountCents = totalAmountInCents - equityAmountCents;
