@@ -529,7 +529,7 @@ const LegalCertificationModal = ({
   const signMutation = useMutation({
     mutationFn: async () => {
       await mutation.mutateAsync(signature);
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       onClose();
     },
   });
