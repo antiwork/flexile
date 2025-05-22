@@ -2138,7 +2138,7 @@ export const documentsRelations = relations(documents, ({ one, many }) => ({
     fields: [documents.equityGrantId],
     references: [equityGrants.id],
   }),
-  boardConsents: many(boardConsents),
+
   signatures: many(documentSignatures),
 }));
 
@@ -2697,24 +2697,5 @@ export const companyUpdatesRelations = relations(companyUpdates, ({ one, many })
   company: one(companies, {
     fields: [companyUpdates.companyId],
     references: [companies.id],
-  }),
-}));
-
-export const boardConsentsRelations = relations(boardConsents, ({ one }) => ({
-  company: one(companies, {
-    fields: [boardConsents.companyId],
-    references: [companies.id],
-  }),
-  companyInvestor: one(companyInvestors, {
-    fields: [boardConsents.companyInvestorId],
-    references: [companyInvestors.id],
-  }),
-  document: one(documents, {
-    fields: [boardConsents.documentId],
-    references: [documents.id],
-  }),
-  equityAllocation: one(equityAllocations, {
-    fields: [boardConsents.equityAllocationId],
-    references: [equityAllocations.id],
   }),
 }));

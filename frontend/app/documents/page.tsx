@@ -8,7 +8,7 @@ import {
   Pencil,
   PercentIcon,
   SendHorizontal,
-}from "lucide-react";
+} from "lucide-react";
 import { skipToken } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel, type ColumnFiltersState } from "@tanstack/react-table";
 import type { Route } from "next";
@@ -107,7 +107,7 @@ const EditTemplates = () => {
     [templates],
   );
   const createTemplate = trpc.documents.templates.create.useMutation({
-    onSuccess: (id) => {
+    onSuccess: (id: string) => {
       void refetchTemplates();
       router.push(`/document_templates/${id}`);
     },
@@ -188,7 +188,6 @@ const EditTemplates = () => {
                   <span className="mt-2 whitespace-normal">Equity grant contract</span>
                 </div>
               </MutationButton>
-
             </div>
           </div>
         </DialogContent>
@@ -230,16 +229,13 @@ export default function DocumentsPage() {
   );
   const [signDocumentParam] = useQueryState("sign");
   const [signDocumentId, setSignDocumentId] = useState<bigint | null>(null);
-  const isSignable = (document: Document): document is SignableDocument => {
-    return (
-      !!document.docusealSubmissionId &&
-      document.signatories.some(
-        (signatory) =>
-          !signatory.signedAt &&
-          (signatory.id === user.id || (signatory.title === "Company Representative" && isCompanyRepresentative)),
-      )
+  const isSignable = (document: Document): document is SignableDocument =>
+    !!document.docusealSubmissionId &&
+    document.signatories.some(
+      (signatory) =>
+        !signatory.signedAt &&
+        (signatory.id === user.id || (signatory.title === "Company Representative" && isCompanyRepresentative)),
     );
-  };
   const signDocument = signDocumentId
     ? documents.find((document): document is SignableDocument => document.id === signDocumentId && isSignable(document))
     : null;
@@ -264,20 +260,22 @@ export default function DocumentsPage() {
         columnHelper.simple("name", "Document"),
         columnHelper.accessor((row) => typeLabels[row.type], {
           header: "Type",
-          meta: { filterOptions: [...new Set(documents.map((document) => typeLabels[document.type]))] },
+          meta: { filterOptions: Array.from(new Set(documents.map((document) => typeLabels[document.type]))) },
         }),
         columnHelper.accessor("createdAt", {
           header: "Date",
           cell: (info) => formatDate(info.getValue()),
           meta: {
-            filterOptions: [...new Set(documents.map((document) => document.createdAt.getFullYear().toString()))],
+            filterOptions: Array.from(
+              new Set(documents.map((document) => document.createdAt.getFullYear().toString())),
+            ),
           },
           filterFn: (row, _, filterValue) =>
             Array.isArray(filterValue) && filterValue.includes(row.original.createdAt.getFullYear().toString()),
         }),
         columnHelper.accessor((row) => getStatus(row).name, {
           header: "Status",
-          meta: { filterOptions: [...new Set(documents.map((document) => getStatus(document).name))] },
+          meta: { filterOptions: Array.from(new Set(documents.map((document) => getStatus(document).name))) },
           cell: (info) => {
             const { variant, text } = getStatus(info.row.original);
             return <Status variant={variant}>{text}</Status>;
@@ -461,7 +459,6 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
   return (
     <Dialog open onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-4xl">
-
         <DocusealForm
           src={`https://docuseal.com/s/${slug}`}
           readonlyFields={readonlyFields}
