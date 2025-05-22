@@ -292,17 +292,12 @@ export default function NewEquityGrant() {
               control={form.control}
               name="boardConsentSigned"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                <FormItem className="flex flex-row items-start space-y-0 space-x-3 rounded-md border p-4">
                   <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
+                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      Board consent signed
-                    </FormLabel>
+                    <FormLabel>Board consent signed</FormLabel>
                     <FormDescription>
                       Confirm that proper documents have been signed to allow the company to issue this option grant.
                     </FormDescription>
