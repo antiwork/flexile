@@ -4,13 +4,7 @@ import { createUpdateSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
-import {
-  activeStorageAttachments,
-  activeStorageBlobs,
-  companies,
-  companyAdministrators,
-  users,
-} from "@/db/schema";
+import { activeStorageAttachments, activeStorageBlobs, companies, companyAdministrators, users } from "@/db/schema";
 import { companyProcedure, createRouter, protectedProcedure } from "@/trpc";
 import {
   company_administrator_stripe_microdeposit_verifications_url,
@@ -136,5 +130,4 @@ export const companiesRouter = createRouter({
         throw new TRPCError({ code: "BAD_REQUEST", message: error });
       }
     }),
-
 });
