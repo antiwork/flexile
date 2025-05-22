@@ -10,5 +10,3 @@
 <%= link_to "Confirm payment",
             "#{PROTOCOL}://#{DOMAIN}/people/#{@user.external_id}?#{URI.encode_www_form({ tab: "exercises" })}",
             class: "button" %>
-
-<%= render "shared/email_signature" %>
