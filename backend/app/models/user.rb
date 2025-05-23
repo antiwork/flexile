@@ -38,7 +38,6 @@ class User < ApplicationRecord
   has_many :company_investors
   has_many :portfolio_companies, -> { order("company_investors.created_at") }, through: :company_investors, source: :company
 
-  has_one :wallet, -> { alive.order(id: :desc) }
   has_many :dividends, through: :company_investors
   has_many :time_entries
   has_many :tos_agreements
