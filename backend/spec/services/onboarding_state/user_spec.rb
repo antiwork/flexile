@@ -58,10 +58,10 @@ RSpec.describe OnboardingState::User do
       end
     end
 
-    it "returns /onboarding/type for a user with an unknown role" do
+    it "returns admin onboarding for a user with an unknown role" do
       user = create(:user)
 
-      expect(described_class.new(user:, company: nil).redirect_path).to eq "/onboarding/type"
+      expect(described_class.new(user:, company: nil).redirect_path).to eq spa_company_administrator_onboarding_details_path("_")
     end
   end
 end

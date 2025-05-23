@@ -6,6 +6,6 @@ class CompanyPolicy < ApplicationPolicy
   end
 
   def update?
-    company_administrator.present?
+    company_administrator.present? || record.nil?
   end
 end

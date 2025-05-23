@@ -2045,7 +2045,6 @@ export const users = pgTable(
     signedDocuments: boolean("signed_documents").notNull().default(false),
     teamMember: boolean("team_member").notNull().default(false),
     sentInvalidTaxIdEmail: boolean("sent_invalid_tax_id_email").notNull().default(false),
-    invitingCompany: boolean("inviting_company").notNull().default(false),
     clerkId: varchar("clerk_id"),
   },
   (table) => [
