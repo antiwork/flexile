@@ -3,7 +3,7 @@ import React, { Suspense, useState } from "react";
 import { steps as adminSteps } from "@/app/companies/[companyId]/administrator/onboarding";
 import { CompanyDetails } from "@/app/companies/[companyId]/administrator/onboarding/details";
 import PersonalDetails from "@/app/onboarding/PersonalDetails";
-import OnboardingLayout from "@/components/layouts/Onboarding";
+import OnboardingLayout from "@/app/onboarding/layout";
 import RadioButtons from "@/components/RadioButtons";
 import { steps } from "..";
 import { Label } from "@/components/ui/label";

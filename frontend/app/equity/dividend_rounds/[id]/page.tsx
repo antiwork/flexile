@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import React from "react";
 import DividendStatusIndicator from "@/app/equity/DividendStatusIndicator";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import MainLayout from "@/components/layouts/Main";
+import MainLayout from "@/app/components/main-layout";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";

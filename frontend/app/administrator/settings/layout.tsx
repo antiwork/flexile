@@ -1,7 +1,7 @@
 "use client";
 
-import Settings from "@/components/layouts/Settings";
+import SettingsLayout from "@/app/settings/layout";
 
-const SettingsLayout = ({ children }: { children: React.ReactNode }) => <Settings>{children}</Settings>;
-
-export default SettingsLayout;
+export default function AdminSettingsLayout({ children }: { children: React.ReactNode }) {
+  return <SettingsLayout>{children}</SettingsLayout>;
+}

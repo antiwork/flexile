@@ -2,7 +2,7 @@
 
 import { ArrowDownTrayIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import MainLayout from "@/components/layouts/Main";
+import MainLayout from "@/app/components/main-layout";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
 import Link from "next/link";

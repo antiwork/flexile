@@ -20,7 +20,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import DocusealForm, { customCss } from "@/app/documents/DocusealForm";
 import DataTable, { createColumnHelper, filterValueSchema, useTable } from "@/components/DataTable";
 import { Input } from "@/components/ui/input";
-import MainLayout from "@/components/layouts/Main";
+import MainLayout from "@/app/components/main-layout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";

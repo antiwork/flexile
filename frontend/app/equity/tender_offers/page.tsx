@@ -11,7 +11,7 @@ import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
-import EquityLayout from "../Layout";
+import EquityLayout from "../layout";
 
 export default function Buybacks() {
   const company = useCurrentCompany();

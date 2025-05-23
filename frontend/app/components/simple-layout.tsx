@@ -9,7 +9,7 @@ interface SimpleLayoutProps {
   children: React.ReactNode;
 }
 
-const Simple = ({ title, subtitle, hideHeader, children }: SimpleLayoutProps) => (
+const SimpleLayout = ({ title, subtitle, hideHeader, children }: SimpleLayoutProps) => (
   <div className="flex h-full flex-col">
     {!hideHeader && (
       <header className="flex w-full items-center justify-center bg-black p-6 text-white print:hidden">
@@ -30,4 +30,4 @@ const Simple = ({ title, subtitle, hideHeader, children }: SimpleLayoutProps) =>
   </div>
 );
 
-export default Simple;
+export default SimpleLayout;

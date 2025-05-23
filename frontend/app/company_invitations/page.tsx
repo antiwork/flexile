@@ -1,7 +1,7 @@
 "use client";
 import { BriefcaseBusiness } from "lucide-react";
 import Link from "next/link";
-import MainLayout from "@/components/layouts/Main";
+import MainLayout from "@/app/components/main-layout";
 import Placeholder from "@/components/Placeholder";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";

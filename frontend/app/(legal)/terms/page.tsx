@@ -1,5 +1,5 @@
 import React from "react";
-import SimpleLayout from "@/components/layouts/Simple";
+import SimpleLayout from "@/app/components/simple-layout";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/utils";
 

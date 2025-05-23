@@ -17,7 +17,7 @@ import { trpc } from "@/trpc/client";
 import { isEthereumAddress } from "@/utils/isEthereumAddress";
 import { request } from "@/utils/request";
 import { settings_bank_account_path, settings_bank_accounts_path, settings_dividend_path } from "@/utils/routes";
-import SettingsLayout from "@/app/settings/Layout";
+import SettingsLayout from "@/app/settings/layout";
 import BankAccountModal, { type BankAccount, bankAccountSchema } from "./BankAccountModal";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

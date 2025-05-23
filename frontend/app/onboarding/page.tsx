@@ -1,4 +1,4 @@
-import OnboardingLayout from "@/components/layouts/Onboarding";
+import OnboardingLayout from "@/app/onboarding/layout";
 import PersonalDetails from "./PersonalDetails";
 import { steps } from ".";
 

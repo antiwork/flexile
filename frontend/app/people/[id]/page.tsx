@@ -11,7 +11,7 @@ import EquityGrantExerciseStatusIndicator from "@/app/equity/EquityGrantExercise
 import DetailsModal from "@/app/equity/grants/DetailsModal";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { Input } from "@/components/ui/input";
-import MainLayout from "@/components/layouts/Main";
+import MainLayout from "@/app/components/main-layout";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";

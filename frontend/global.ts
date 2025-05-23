@@ -1,3 +1,4 @@
+"use client";
 import { redirect, RedirectType, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { create } from "zustand";

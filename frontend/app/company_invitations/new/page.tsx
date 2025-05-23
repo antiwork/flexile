@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { z } from "zod";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
-import MainLayout from "@/components/layouts/Main";
+import MainLayout from "@/app/components/main-layout";
 import { MutationStatusButton } from "@/components/MutationButton";
 import { Input } from "@/components/ui/input";
 import { DocumentTemplateType, PayRateType } from "@/db/enums";
