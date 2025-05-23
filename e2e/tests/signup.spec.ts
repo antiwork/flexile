@@ -29,5 +29,4 @@ test("company signup flow", async ({ page }) => {
   await expect(page.getByText("Let's get to know you")).toBeVisible();
   const user = assertDefined(await db.query.users.findFirst({ where: eq(users.email, email) }));
   expect(user.confirmedAt).toBeInstanceOf(Date);
-
 });
