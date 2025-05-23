@@ -11,13 +11,13 @@ import {
   CircleDollarSign,
   LogOut,
   BriefcaseBusiness,
+  ChevronRight,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { navLinks as equityNavLinks } from "@/app/equity";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -35,6 +35,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
@@ -47,6 +50,8 @@ import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
 import type { Route } from "next";
 import { useIsActionable } from "@/app/invoices";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
+import { navLinks as equityNavLinks } from "@/app/equity";
 
 export default function MainLayout({
   children,
@@ -219,7 +224,13 @@ const NavLinks = ({ company }: { company: Company }) => {
     company.routes.flatMap((route) => [route.label, ...(route.subLinks?.map((subLink) => subLink.label) || [])]),
   );
   const updatesPath = company.routes.find((route) => route.label === "Updates")?.name;
-  const equityNavLink = equityNavLinks(user, company)[0];
+  const equityLinks = equityNavLinks(user, company);
+
+  const [isOpen, setIsOpen] = React.useState(() => {
+    if (typeof window === "undefined") return false;
+    const stored = localStorage.getItem("equity-menu-state");
+    return stored === "open";
+  });
 
   return (
     <SidebarMenu>
@@ -268,15 +279,37 @@ const NavLinks = ({ company }: { company: Company }) => {
           Roles
         </NavLink>
       )}
-      {routes.has("Equity") && equityNavLink ? (
-        <NavLink
-          href={equityNavLink.route}
-          icon={ChartPie}
-          active={!!active && (pathname.startsWith("/equity") || pathname.includes("/equity_grants"))}
+      {routes.has("Equity") && equityLinks.length > 0 && (
+        <Collapsible
+          open={isOpen}
+          onOpenChange={(state) => {
+            setIsOpen(state);
+            localStorage.setItem("equity-menu-state", state ? "open" : "closed");
+          }}
+          className="group/collapsible"
         >
-          Equity
-        </NavLink>
-      ) : null}
+          <SidebarMenuItem>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton>
+                <ChartPie />
+                <span>Equity</span>
+                <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarMenuSub>
+                {equityLinks.map((link) => (
+                  <SidebarMenuSubItem key={link.route}>
+                    <SidebarMenuSubButton asChild isActive={pathname === link.route}>
+                      <Link href={link.route}>{link.label}</Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                ))}
+              </SidebarMenuSub>
+            </CollapsibleContent>
+          </SidebarMenuItem>
+        </Collapsible>
+      )}
       {routes.has("Settings") && (
         <NavLink
           href="/settings"
