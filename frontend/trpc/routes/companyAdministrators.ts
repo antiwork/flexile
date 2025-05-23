@@ -14,7 +14,6 @@ export const companyAdministratorsRouter = createRouter({
       where: eq(companyAdministrators.companyId, ctx.company.id),
       columns: {
         externalId: true,
-        boardMember: true,
       },
       with: { user: true },
     });
@@ -26,13 +25,13 @@ export const companyAdministratorsRouter = createRouter({
   }),
 
   update: companyProcedure
-    .input(createUpdateSchema(companyAdministrators).pick({ boardMember: true }).extend({ id: z.string() }))
+    .input(createUpdateSchema(companyAdministrators).extend({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
       const [row] = await db
         .update(companyAdministrators)
-        .set(pick(input, "boardMember"))
+        .set({})
         .where(and(eq(companyAdministrators.externalId, input.id), eq(companyAdministrators.companyId, ctx.company.id)))
         .returning();
       if (!row) throw new TRPCError({ code: "NOT_FOUND" });
