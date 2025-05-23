@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 RSpec.describe OnboardingState::User do
+  include Rails.application.routes.url_helpers
+
   describe "#redirect_path" do
     context "when the user is a contractor" do
       let(:company_worker) { create(:company_worker) }
