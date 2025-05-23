@@ -11,11 +11,11 @@ import {
   CircleDollarSign,
   LogOut,
 } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { skipToken, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { navLinks as equityNavLinks } from "@/app/equity";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -37,10 +37,9 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { useCurrentUser, useUserStore } from "@/global";
+import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
 import defaultCompanyLogo from "@/images/default-company-logo.svg";
 import logo from "@/images/flexile-logo.svg";
-import { type Company } from "@/models/user";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
@@ -63,10 +62,6 @@ export default function MainLayout({
   footer?: React.ReactNode;
 }) {
   const user = useCurrentUser();
-
-  const [openCompanyId, setOpenCompanyId] = useState(user.currentCompanyId);
-  useEffect(() => setOpenCompanyId(user.currentCompanyId), [user.currentCompanyId]);
-  const openCompany = user.companies.find((company) => company.id === openCompanyId);
   const pathname = usePathname();
 
   const queryClient = useQueryClient();
@@ -85,13 +80,13 @@ export default function MainLayout({
     <SidebarProvider>
       <Sidebar collapsible="offcanvas">
         <SidebarHeader>
-          {user.companies.length > 1 && openCompany ? (
+          {user.companies.length > 1 ? (
             <SidebarMenu>
               <SidebarMenuItem>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <SidebarMenuButton size="lg" className="text-base" aria-label="Switch company">
-                      <CompanyName company={openCompany} />
+                      <CompanyName />
                       <ChevronsUpDown className="ml-auto" />
                     </SidebarMenuButton>
                   </DropdownMenuTrigger>
@@ -121,19 +116,19 @@ export default function MainLayout({
                 </DropdownMenu>
               </SidebarMenuItem>
             </SidebarMenu>
-          ) : openCompany ? (
+          ) : user.currentCompanyId ? (
             <div className="flex items-center gap-2 p-2">
-              <CompanyName company={openCompany} />
+              <CompanyName />
             </div>
           ) : (
             <Image src={logo} alt="Flexile" />
           )}
         </SidebarHeader>
         <SidebarContent>
-          {openCompany ? (
+          {user.currentCompanyId ? (
             <SidebarGroup>
               <SidebarGroupContent>
-                <NavLinks company={openCompany} />
+                <NavLinks />
               </SidebarGroupContent>
             </SidebarGroup>
           ) : null}
@@ -188,25 +183,41 @@ export default function MainLayout({
   );
 }
 
-const CompanyName = ({ company }: { company: Company }) => (
-  <>
-    <div className="relative size-6">
-      <Image src={company.logo_url || defaultCompanyLogo} fill className="rounded-sm" alt="" />
-    </div>
-    <div>
-      <span className="line-clamp-1 text-sm font-bold" title={company.name ?? ""}>
-        {company.name}
-      </span>
-    </div>
-  </>
-);
+const CompanyName = () => {
+  const company = useCurrentCompany();
+  return (
+    <>
+      <div className="relative size-6">
+        <Image src={company.logo_url || defaultCompanyLogo} fill className="rounded-sm" alt="" />
+      </div>
+      <div>
+        <span className="line-clamp-1 text-sm font-bold" title={company.name ?? ""}>
+          {company.name}
+        </span>
+      </div>
+    </>
+  );
+};
 
-const NavLinks = ({ company }: { company: Company }) => {
+const NavLinks = () => {
   const user = useCurrentUser();
+  const company = useCurrentCompany();
   const pathname = usePathname();
-  const active = user.currentCompanyId === company.id;
   const routes = new Set(
     company.routes.flatMap((route) => [route.label, ...(route.subLinks?.map((subLink) => subLink.label) || [])]),
+  );
+  const { data: invoicesData } = trpc.invoices.list.useQuery(
+    user.currentCompanyId && user.roles.administrator
+      ? { companyId: user.currentCompanyId, status: ["received", "approved", "failed"] }
+      : skipToken,
+    { refetchInterval: 30_000 },
+  );
+  const isInvoiceActionable = useIsActionable();
+  const { data: documentsData } = trpc.documents.list.useQuery(
+    user.currentCompanyId && user.id
+      ? { companyId: user.currentCompanyId, userId: user.id, signable: true }
+      : skipToken,
+    { refetchInterval: 30_000 },
   );
   const updatesPath = company.routes.find((route) => route.label === "Updates")?.name;
   const equityNavLink = equityNavLinks(user, company)[0];
@@ -214,23 +225,25 @@ const NavLinks = ({ company }: { company: Company }) => {
   return (
     <SidebarMenu>
       {updatesPath ? (
-        <NavLink
-          href="/updates/company"
-          icon={Rss}
-          filledIcon={Rss}
-          active={!!active && pathname.startsWith("/updates")}
-        >
+        <NavLink href="/updates/company" icon={Rss} filledIcon={Rss} active={pathname.startsWith("/updates")}>
           Updates
         </NavLink>
       ) : null}
       {routes.has("Invoices") && (
-        <InvoicesNavLink companyId={company.id} active={!!active && pathname.startsWith("/invoices")} />
+        <NavLink
+          href="/invoices"
+          icon={ReceiptIcon}
+          active={pathname.startsWith("/invoices")}
+          badge={invoicesData?.filter(isInvoiceActionable).length}
+        >
+          Invoices
+        </NavLink>
       )}
       {routes.has("Expenses") && (
         <NavLink
           href={`/companies/${company.id}/expenses`}
           icon={CircleDollarSign}
-          active={!!active && pathname.startsWith(`/companies/${company.id}/expenses`)}
+          active={pathname.startsWith(`/companies/${company.id}/expenses`)}
         >
           Expenses
         </NavLink>
@@ -239,7 +252,8 @@ const NavLinks = ({ company }: { company: Company }) => {
         <NavLink
           href="/documents"
           icon={Files}
-          active={!!active && (pathname.startsWith("/documents") || pathname.startsWith("/document_templates"))}
+          active={pathname.startsWith("/documents") || pathname.startsWith("/document_templates")}
+          badge={documentsData?.length}
         >
           Documents
         </NavLink>
@@ -248,13 +262,13 @@ const NavLinks = ({ company }: { company: Company }) => {
         <NavLink
           href="/people"
           icon={Users}
-          active={!!active && (pathname.startsWith("/people") || pathname.includes("/investor_entities/"))}
+          active={pathname.startsWith("/people") || pathname.includes("/investor_entities/")}
         >
           People
         </NavLink>
       )}
       {routes.has("Roles") && (
-        <NavLink href="/roles" icon={BookUser} active={!!active && pathname.startsWith("/roles")}>
+        <NavLink href="/roles" icon={BookUser} active={pathname.startsWith("/roles")}>
           Roles
         </NavLink>
       )}
@@ -262,17 +276,13 @@ const NavLinks = ({ company }: { company: Company }) => {
         <NavLink
           href={equityNavLink.route}
           icon={ChartPie}
-          active={!!active && (pathname.startsWith("/equity") || pathname.includes("/equity_grants"))}
+          active={pathname.startsWith("/equity") || pathname.includes("/equity_grants")}
         >
           Equity
         </NavLink>
       ) : null}
       {routes.has("Settings") && (
-        <NavLink
-          href="/settings"
-          active={!!active && (pathname.startsWith("/administrator/settings") || pathname.startsWith("/settings"))}
-          icon={Settings}
-        >
+        <NavLink href="/settings" active={pathname.startsWith("/settings")} icon={Settings}>
           Settings
         </NavLink>
       )}
@@ -314,18 +324,3 @@ const NavLink = <T extends string>({
     </SidebarMenuItem>
   );
 };
-
-function InvoicesNavLink({ companyId, active }: { companyId: string; active: boolean }) {
-  const user = useCurrentUser();
-  const { data } = trpc.invoices.list.useQuery(
-    { companyId, status: ["received", "approved", "failed"] },
-    { refetchInterval: 30_000, enabled: !!user.roles.administrator },
-  );
-  const isActionable = useIsActionable();
-
-  return (
-    <NavLink href="/invoices" icon={ReceiptIcon} active={active} badge={data?.filter(isActionable).length}>
-      Invoices
-    </NavLink>
-  );
-}

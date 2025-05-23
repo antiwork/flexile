@@ -42,7 +42,7 @@ test.describe("quick invoicing", () => {
       await page.getByRole("link", { name: "Add more info" }).click();
 
       await expect(page.getByRole("group", { name: "Date" })).toHaveText("8/8/2024");
-      await expect(page.getByRole("row")).toHaveCount(5); // Line items header + 1 row + footer + Expenses header + footer
+      await expect(page.getByRole("row")).toHaveCount(3); // Line items header + 1 row + footer
       const row = page.getByRole("row").nth(1);
       await expect(row.getByPlaceholder("Description")).toHaveValue("");
       await expect(row.getByLabel("Hours")).toHaveValue("10:30");
@@ -65,7 +65,7 @@ test.describe("quick invoicing", () => {
       await page.getByRole("link", { name: "Add more info" }).click();
 
       await expect(page.getByRole("group", { name: "Date" })).toHaveText("8/8/2024");
-      await expect(page.getByRole("row")).toHaveCount(5); // Line items header + 1 row + footer + Expenses header + footer
+      await expect(page.getByRole("row")).toHaveCount(3); // Line items header + 1 row + footer
       const row = page.getByRole("row").nth(1);
       await expect(row.getByPlaceholder("Description")).toHaveValue("");
       await expect(row.getByLabel("Amount")).toHaveValue("630");

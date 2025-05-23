@@ -242,6 +242,7 @@ test.describe("Tax settings", () => {
         await expect(page.getByLabel("Type")).not.toBeVisible();
         await page.getByRole("button", { name: "Save changes" }).click();
         await expect(page.getByText("W-8BEN-E Certification and Tax Forms Delivery")).toBeVisible();
+        await page.waitForTimeout(100);
         await page.getByRole("button", { name: "Save", exact: true }).click();
         await page.waitForTimeout(500);
         await expect(page.getByRole("dialog")).not.toBeVisible();
