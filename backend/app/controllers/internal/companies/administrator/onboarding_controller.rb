@@ -17,7 +17,7 @@ class Internal::Companies::Administrator::OnboardingController < Internal::Compa
   end
 
   def update
-    if Current.user.initial_onboarding?
+    if Current.user.company_administrators.none?
       company = Company.create!(email: Current.user.email, country_code: SignUpCompany::US_COUNTRY_CODE, default_currency: SignUpCompany::DEFAULT_CURRENCY)
       Current.user.company_administrators.create!(company:)
       subscribe_administrator_to_newsletter

@@ -83,15 +83,6 @@ class CompanyWorkerMailer < ApplicationMailer
     mail(to: user.email, reply_to: company_worker.company.email, subject:)
   end
 
-  def invite_company(company_worker_id: nil, company_contractor_id: nil, url:)
-    id = find_id!(company_worker_id:, company_contractor_id:)
-    @company_worker = CompanyWorker.find(id)
-    @company = @company_worker.company
-    @url = url
-
-    mail(to: @company_worker.company.primary_admin.user.email, subject: "You've been invited to Flexile")
-  end
-
   private
     def find_id!(company_worker_id:, company_contractor_id:)
       raise "Either company_worker_id or company_contractor_id must be provided" if company_worker_id.blank? && company_contractor_id.blank?

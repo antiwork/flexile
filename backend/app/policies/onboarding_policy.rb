@@ -2,7 +2,7 @@
 
 class OnboardingPolicy < ApplicationPolicy
   def show?
-    company_worker.present? || company_investor.present? || user.inviting_company? || user.initial_onboarding?
+    company_worker.present? || company_investor.present?
   end
 
   def update?

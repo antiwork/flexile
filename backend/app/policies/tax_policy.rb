@@ -2,7 +2,7 @@
 
 class TaxPolicy < ApplicationPolicy
   def show?
-    company_worker.present? || company_investor.present? || user.inviting_company?
+    company_worker.present? || company_investor.present?
   end
 
   def update?

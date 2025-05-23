@@ -90,10 +90,7 @@ const Settings = ({ children }: { children: React.ReactNode }) => {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <Link
-                    href={!user.companies.length ? "/company_invitations" : "/dashboard"}
-                    className="flex items-center gap-2 text-sm"
-                  >
+                  <Link href="/dashboard" className="flex items-center gap-2 text-sm">
                     <ChevronLeft className="h-4 w-4" />
                     <span className="text-muted-foreground font-medium">Back to app</span>
                   </Link>
@@ -143,10 +140,7 @@ const Settings = ({ children }: { children: React.ReactNode }) => {
         <SidebarInset>
           <div className="flex items-center gap-2 p-2 md:hidden">
             <SidebarTrigger />
-            <Link
-              href={!user.companies.length ? "/company_invitations" : "/dashboard"}
-              className="flex items-center gap-2 text-sm"
-            >
+            <Link href="/dashboard" className="flex items-center gap-2 text-sm">
               <ChevronLeft className="h-4 w-4" />
               <span className="text-muted-foreground font-medium">Back to app</span>
             </Link>
