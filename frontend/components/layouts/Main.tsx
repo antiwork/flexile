@@ -17,7 +17,7 @@ import { skipToken, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
