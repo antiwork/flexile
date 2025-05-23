@@ -1191,8 +1191,6 @@ export const versions = pgTable(
   ],
 );
 
-
-
 export const wiseCredentials = pgTable("wise_credentials", {
   id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
   profileId: deterministicEncryptedString("profile_id").notNull(),
@@ -2538,8 +2536,6 @@ export const userComplianceInfosRelations = relations(userComplianceInfos, ({ on
   dividends: many(dividends),
   taxDocuments: many(taxDocuments),
 }));
-
-
 
 export const wiseCredentialsRelations = relations(wiseCredentials, ({ many }) => ({
   wiseRecipients: many(wiseRecipients),

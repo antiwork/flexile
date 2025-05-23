@@ -163,7 +163,6 @@ const BankAccountsSection = () => {
     },
   });
 
-
   const [bankAccounts, setBankAccounts] = useState(data.bank_accounts);
   const [addingBankAccount, setAddingBankAccount] = useState(false);
   const [editingBankAccount, setEditingBankAccount] = useState<BankAccount | null>(null);
@@ -247,8 +246,6 @@ const BankAccountsSection = () => {
           </div>
         ) : (
           <>
-
-
             {bankAccounts.map((bankAccount, index) => (
               <Fragment key={bankAccount.id}>
                 <div className="flex justify-between">
