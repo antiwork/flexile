@@ -172,8 +172,6 @@ class User < ApplicationRecord
     company_lawyers.exists?
   end
 
-
-
   def upsert_clerk_user
     return if Rails.env.test?
     clerk = Clerk::SDK.new

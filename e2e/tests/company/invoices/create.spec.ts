@@ -111,9 +111,9 @@ test.describe("invoice creation", () => {
       .then(takeOrThrow);
     expect(invoice).toBeDefined();
     expect(invoice.totalMinutes).toBe(205);
-    expect(invoice.totalAmountInUsdCents).toBe(BigInt(20500));
-    expect(invoice.cashAmountInCents).toBe(BigInt(10250));
-    expect(invoice.equityAmountInCents).toBe(BigInt(10250));
+    expect(invoice.totalAmountInUsdCents).toBe(20500n);
+    expect(invoice.cashAmountInCents).toBe(10250n);
+    expect(invoice.equityAmountInCents).toBe(10250n);
     expect(invoice.equityPercentage).toBe(50);
 
     const equityAllocation = await db.query.equityAllocations
@@ -168,9 +168,9 @@ test.describe("invoice creation", () => {
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
       .then(takeOrThrow);
     expect(invoice).toBeDefined();
-    expect(invoice.totalAmountInUsdCents).toBe(BigInt(100000));
-    expect(invoice.cashAmountInCents).toBe(BigInt(50000));
-    expect(invoice.equityAmountInCents).toBe(BigInt(50000));
+    expect(invoice.totalAmountInUsdCents).toBe(100000n);
+    expect(invoice.cashAmountInCents).toBe(50000n);
+    expect(invoice.equityAmountInCents).toBe(50000n);
     expect(invoice.equityPercentage).toBe(50);
 
     const equityAllocation = await db.query.equityAllocations
@@ -220,9 +220,9 @@ test.describe("invoice creation", () => {
     await page.getByLabel("Hours").fill("100:00");
     await page.getByPlaceholder("Description").fill("I worked on invoices");
 
-    await expect(page.getByText("Total services", { exact: false })).toBeVisible();
-    await expect(page.getByText("Swapped for equity", { exact: false })).toBeVisible();
-    await expect(page.getByText("Net amount in cash", { exact: false })).toBeVisible();
+    await expect(page.getByText("Total services$6,000")).toBeVisible();
+    await expect(page.getByText("Swapped for equity (not paid in cash)$1,200")).toBeVisible();
+    await expect(page.getByText("Net amount in cash$4,800")).toBeVisible();
 
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.locator("tbody")).toContainText(
@@ -246,9 +246,9 @@ test.describe("invoice creation", () => {
       })
       .then(takeOrThrow);
     expect(invoice.totalMinutes).toBe(6000);
-    expect(invoice.totalAmountInUsdCents).toBe(BigInt(600000));
-    expect(invoice.cashAmountInCents).toBe(BigInt(480000));
-    expect(invoice.equityAmountInCents).toBe(BigInt(120000));
+    expect(invoice.totalAmountInUsdCents).toBe(600000n);
+    expect(invoice.cashAmountInCents).toBe(480000n);
+    expect(invoice.equityAmountInCents).toBe(120000n);
     expect(invoice.equityPercentage).toBe(20);
   });
 

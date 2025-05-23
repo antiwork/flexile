@@ -22,7 +22,6 @@ class Internal::OnboardingController < Internal::BaseController
     authorize :onboarding
 
     update_params = params_for_update
-    # Removed inviting_company flag as part of removing contractor inviting companies functionality
     error_message = UpdateUser.new(user: Current.user, update_params:).process
     if error_message.blank?
       render json: { success: true }

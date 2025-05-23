@@ -116,9 +116,9 @@ test.describe("quick invoicing", () => {
         })
         .then(takeOrThrow);
       expect(invoice.totalMinutes).toBe(630);
-      expect(invoice.totalAmountInUsdCents).toBe(BigInt(63000));
-      expect(invoice.cashAmountInCents).toBe(BigInt(50400));
-      expect(invoice.equityAmountInCents).toBe(BigInt(12600));
+      expect(invoice.totalAmountInUsdCents).toBe(63000n);
+      expect(invoice.cashAmountInCents).toBe(50400n);
+      expect(invoice.equityAmountInCents).toBe(12600n);
       expect(invoice.equityPercentage).toBe(20);
     });
 
@@ -155,9 +155,9 @@ test.describe("quick invoicing", () => {
         })
         .then(takeOrThrow);
       expect(invoice.totalMinutes).toBe(630);
-      expect(invoice.totalAmountInUsdCents).toBe(BigInt(63000));
-      expect(invoice.cashAmountInCents).toBe(BigInt(63000));
-      expect(invoice.equityAmountInCents).toBe(BigInt(0));
+      expect(invoice.totalAmountInUsdCents).toBe(63000n);
+      expect(invoice.cashAmountInCents).toBe(63000n);
+      expect(invoice.equityAmountInCents).toBe(0n);
       expect(invoice.equityPercentage).toBe(0);
     });
   });

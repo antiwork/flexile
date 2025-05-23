@@ -39,7 +39,6 @@ import {
 } from "@/components/ui/sidebar";
 import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
 import defaultCompanyLogo from "@/images/default-company-logo.svg";
-import logo from "@/images/flexile-logo.svg";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
@@ -62,7 +61,6 @@ export default function MainLayout({
   footer?: React.ReactNode;
 }) {
   const user = useCurrentUser();
-  const pathname = usePathname();
 
   const queryClient = useQueryClient();
   const switchCompany = async (companyId: string) => {
@@ -116,12 +114,10 @@ export default function MainLayout({
                 </DropdownMenu>
               </SidebarMenuItem>
             </SidebarMenu>
-          ) : user.currentCompanyId ? (
+          ) : (
             <div className="flex items-center gap-2 p-2">
               <CompanyName />
             </div>
-          ) : (
-            <Image src={logo} alt="Flexile" />
           )}
         </SidebarHeader>
         <SidebarContent>
@@ -136,11 +132,6 @@ export default function MainLayout({
           <SidebarGroup className="mt-auto">
             <SidebarGroupContent>
               <SidebarMenu>
-                {!user.companies.length && (
-                  <NavLink href="/settings" icon={Settings} active={pathname.startsWith("/settings")}>
-                    Settings
-                  </NavLink>
-                )}
                 <SidebarMenuItem>
                   <SignOutButton>
                     <SidebarMenuButton className="cursor-pointer">

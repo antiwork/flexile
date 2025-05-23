@@ -47,8 +47,6 @@ class UserPresenter
   end
 
   def logged_in_user
-    companies = user.all_companies
-
     roles = {}
     has_documents = documents.joins(:signatures).not_consulting_contract.or(documents.unsigned).exists?
     if user.company_administrator_for?(company)
@@ -90,7 +88,7 @@ class UserPresenter
     end
 
     {
-      companies: companies.compact.map do |company|
+      companies: user.all_companies.compact.map do |company|
         flags = %w[upcoming_dividend irs_tax_forms company_updates].filter { Flipper.enabled?(_1, company) }
         flags.push("equity_compensation") if company.equity_compensation_enabled?
         flags.push("equity_grants") if company.equity_grants_enabled?
@@ -209,15 +207,13 @@ class UserPresenter
     end
 
     def common_props
-      companies = user.all_companies
-
       {
         company: company.present? ? {
           id: company.external_id,
           name: company.display_name,
           logo_url: company.logo_url,
         } : nil,
-        companies: companies.compact.map do
+        companies: user.all_companies.compact.map do
           company_navigation_props(
             company: _1,
           )

@@ -244,7 +244,6 @@ test.describe("Tax settings", () => {
         await expect(page.getByText("W-8BEN-E Certification and Tax Forms Delivery")).toBeVisible();
         await page.waitForTimeout(100);
         await page.getByRole("button", { name: "Save", exact: true }).click();
-        await page.waitForTimeout(500);
         await expect(page.getByRole("dialog")).not.toBeVisible();
         await page.goto("/settings/tax", { waitUntil: "load" });
 
@@ -427,7 +426,6 @@ test.describe("Tax settings", () => {
 
       await page.getByRole("button", { name: "Save changes" }).click();
       await page.getByRole("button", { name: "Save", exact: true }).click();
-      await page.waitForTimeout(1500);
       await expect(page.getByRole("dialog")).not.toBeVisible();
 
       const updatedUser = await db.query.users.findFirst({ where: eq(users.id, user.id) }).then(takeOrThrow);

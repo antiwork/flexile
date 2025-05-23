@@ -79,6 +79,4 @@ RSpec.describe "Mobile navigation" do
       expect(page).to have_selector("h1", text: "People")
     end
   end
-
-  # Removed "when user is inviting a company" context as part of removing contractor inviting companies functionality
 end
