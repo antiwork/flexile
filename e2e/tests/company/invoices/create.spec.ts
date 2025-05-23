@@ -242,9 +242,7 @@ test.describe("invoice creation", () => {
     );
 
     const invoice = await db.query.invoices
-      .findFirst({
-        orderBy: desc(invoices.id),
-      })
+      .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
       .then(takeOrThrow);
     expect(invoice.totalMinutes).toBe(6000);
     expect(invoice.totalAmountInUsdCents).toBe(600000n);
