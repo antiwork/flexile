@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 RSpec.describe OnboardingState::User do
+  include Rails.application.routes.url_helpers
+
   describe "#redirect_path" do
     context "when the user is a contractor" do
       let(:company_worker) { create(:company_worker) }
@@ -58,10 +60,10 @@ RSpec.describe OnboardingState::User do
       end
     end
 
-    it "returns /onboarding/type for a user with an unknown role" do
+    it "returns admin onboarding for a user with an unknown role" do
       user = create(:user)
 
-      expect(described_class.new(user:, company: nil).redirect_path).to eq "/onboarding/type"
+      expect(described_class.new(user:, company: nil).redirect_path).to eq spa_company_administrator_onboarding_details_path("_")
     end
   end
 end

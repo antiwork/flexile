@@ -69,7 +69,7 @@ test.describe("New Contractor", () => {
     await selectComboboxOption(page, "Relationship to company", "Consultant");
     await page.getByRole("button", { name: "Create option grant" }).click();
 
-    await expect(page.getByRole("table")).toHaveCount(2);
+    await expect(page.getByRole("table")).toHaveCount(1);
     let rows = page.getByRole("table").first().getByRole("row");
     await expect(rows).toHaveCount(2);
     let row = rows.nth(1);
@@ -91,7 +91,7 @@ test.describe("New Contractor", () => {
     await selectComboboxOption(page, "Relationship to company", "Consultant");
     await page.getByRole("button", { name: "Create option grant" }).click();
 
-    await expect(page.getByRole("table")).toHaveCount(2);
+    await expect(page.getByRole("table")).toHaveCount(1);
     rows = page.getByRole("table").first().getByRole("row");
     await expect(rows).toHaveCount(3);
     row = rows.nth(1);

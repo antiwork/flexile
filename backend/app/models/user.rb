@@ -172,10 +172,6 @@ class User < ApplicationRecord
     company_lawyers.exists?
   end
 
-  def initial_onboarding?
-    all_companies.none? && !inviting_company
-  end
-
   def upsert_clerk_user
     return if Rails.env.test?
     clerk = Clerk::SDK.new

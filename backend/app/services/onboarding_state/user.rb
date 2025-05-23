@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class OnboardingState::User
+  include Rails.application.routes.url_helpers
   attr_reader :user, :company
 
   def initialize(user:, company:)
@@ -17,10 +18,8 @@ class OnboardingState::User
       OnboardingState::Worker.new(user:, company:).redirect_path
     elsif user.company_investor_for?(company)
       OnboardingState::Investor.new(user:, company:).redirect_path
-    elsif user.inviting_company?
-      OnboardingState::WorkerWithoutCompany.new(user:, company: nil).redirect_path
     else
-      "/onboarding/type"
+      spa_company_administrator_onboarding_details_path("_")
     end
   end
 end

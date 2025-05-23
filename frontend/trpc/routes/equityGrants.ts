@@ -1,19 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import {
-  and,
-  countDistinct,
-  desc,
-  eq,
-  gt,
-  gte,
-  isNotNull,
-  isNull,
-  lte,
-  or,
-  sql,
-  type SQLWrapper,
-  sum,
-} from "drizzle-orm";
+import { and, desc, eq, gt, gte, isNotNull, isNull, lte, or, sql, type SQLWrapper, sum } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { omit, pick } from "lodash-es";
 import { z } from "zod";
@@ -237,22 +223,6 @@ export const equityGrantsRouter = createRouter({
     grant: await getUniqueUnvestedEquityGrantForYear(ctx.companyContractor, input.year),
   })),
 
-  byCountry: companyProcedure.query(async ({ ctx }) => {
-    if (!ctx.companyAdministrator && !ctx.companyLawyer) throw new TRPCError({ code: "FORBIDDEN" });
-
-    const countries = await db
-      .select({
-        countryCode: users.countryCode,
-        optionHolders: countDistinct(companyInvestors.id),
-      })
-      .from(companyInvestors)
-      .innerJoin(equityGrants, eq(companyInvestors.id, equityGrants.companyInvestorId))
-      .innerJoin(users, eq(companyInvestors.userId, users.id))
-      .where(eq(companyInvestors.companyId, ctx.company.id))
-      .groupBy(users.countryCode)
-      .orderBy(users.countryCode);
-    return countries;
-  }),
   sumVestedShares: companyProcedure
     .input(z.object({ investorId: z.string().optional() }))
     .query(async ({ input, ctx }) => {

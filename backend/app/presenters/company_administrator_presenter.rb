@@ -28,7 +28,7 @@ class CompanyAdministratorPresenter
       states: iso_country.subdivision_names_with_codes.sort,
       legal_name:,
       on_success_redirect_path: OnboardingState::Company.new(company).redirect_path_after_onboarding_details_success,
-      unsigned_document_id: Current.company.documents.unsigned.where.not(docuseal_submission_id: nil).first&.id,
+      unsigned_document_id: company.documents.unsigned.where.not(docuseal_submission_id: nil).first&.id,
     }
   end
 

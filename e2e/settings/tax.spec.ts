@@ -244,7 +244,7 @@ test.describe("Tax settings", () => {
         await expect(page.getByText("W-8BEN-E Certification and Tax Forms Delivery")).toBeVisible();
         await page.waitForTimeout(100);
         await page.getByRole("button", { name: "Save", exact: true }).click();
-        await expect(page.getByRole("dialog")).not.toBeVisible();
+        await expect(page.getByText("W-8BEN-E Certification and Tax Forms Delivery")).not.toBeVisible();
         await page.goto("/settings/tax", { waitUntil: "load" });
 
         await selectComboboxOption(page, "Country of citizenship", "United States");
@@ -426,7 +426,7 @@ test.describe("Tax settings", () => {
 
       await page.getByRole("button", { name: "Save changes" }).click();
       await page.getByRole("button", { name: "Save", exact: true }).click();
-      await expect(page.getByRole("dialog")).not.toBeVisible();
+      await expect(page.getByText("W-9 Certification and Tax Forms Delivery")).not.toBeVisible();
 
       const updatedUser = await db.query.users.findFirst({ where: eq(users.id, user.id) }).then(takeOrThrow);
       expect(updatedUser.legalName).toBe("John Middle Doe");
