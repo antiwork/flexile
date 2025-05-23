@@ -4,8 +4,8 @@ import { createUpdateSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
-import { activeStorageAttachments, activeStorageBlobs, companies, companyAdministrators, users } from "@/db/schema";
-import { companyProcedure, createRouter, protectedProcedure } from "@/trpc";
+import { activeStorageAttachments, activeStorageBlobs, companies } from "@/db/schema";
+import { companyProcedure, createRouter } from "@/trpc";
 import {
   company_administrator_stripe_microdeposit_verifications_url,
   microdeposit_verification_details_company_invoices_url,
@@ -31,15 +31,6 @@ const companyLogo = (id: bigint) =>
 const decimalRegex = /^\d+(\.\d+)?$/u;
 
 export const companiesRouter = createRouter({
-  list: protectedProcedure.input(z.object({ invited: z.literal(true) })).query(
-    async ({ ctx }) =>
-      await db
-        .select({ email: users.email, company: companies.name })
-        .from(users)
-        .innerJoin(companyAdministrators, eq(users.id, companyAdministrators.userId))
-        .innerJoin(companies, eq(companyAdministrators.companyId, companies.id))
-        .where(and(eq(users.invitedByType, "User"), eq(users.invitedById, BigInt(ctx.userId)))),
-  ),
   settings: companyProcedure.query(({ ctx }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 

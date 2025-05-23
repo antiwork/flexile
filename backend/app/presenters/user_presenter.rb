@@ -80,7 +80,6 @@ class UserPresenter
         hasDocuments: has_documents,
         endedAt: worker.ended_at,
         payRateType: worker.pay_rate_type,
-
         role: worker.role,
         payRateInSubunits: worker.pay_rate_in_subunits,
         hoursPerWeek: worker.hours_per_week,
