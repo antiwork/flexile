@@ -14,7 +14,7 @@ test.describe("Company administrator settings - payment details", () => {
 
     await login(page, adminUser);
     await page.getByRole("link", { name: "Settings" }).click();
-    await page.getByRole("tab", { name: "Billing" }).click();
+    await page.getByRole("link", { name: "Billing" }).click();
 
     await expect(
       page.getByText("We'll use this account to debit contractor payments and our monthly fee"),
@@ -46,7 +46,7 @@ test.describe("Company administrator settings - payment details", () => {
 
     await login(page, adminUser);
     await page.getByRole("link", { name: "Settings" }).click();
-    await page.getByRole("tab", { name: "Billing" }).click();
+    await page.getByRole("link", { name: "Billing" }).click();
     await page.getByRole("button", { name: "Link your bank account" }).click();
 
     const stripeFrame = page.frameLocator("[src^='https://js.stripe.com/v3/elements-inner-payment']");

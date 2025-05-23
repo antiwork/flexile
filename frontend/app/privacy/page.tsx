@@ -1,6 +1,7 @@
 import React from "react";
-import Jumper from "@/components/Jumper";
 import SimpleLayout from "@/components/layouts/Simple";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/utils";
 
 const sections = [
   "Personal information we collect",
@@ -27,7 +28,16 @@ export default function Privacy() {
           digital properties that link to this Privacy Policy, including the Flexile website (collectively, the "
           <strong>Service</strong>"), as well as through other activities described in this Privacy Policy.
         </p>
-        <Jumper sections={sections} className="not-prose" />
+        <div role="navigation" className={cn("grid gap-1", "not-prose")}>
+          {sections.map((section, index) => (
+            <a key={index} href={`#jump_${index + 1}`} className="flex items-center text-gray-500 no-underline">
+              <Badge variant="outline" className="mr-1 shrink-0">
+                {index + 1}
+              </Badge>
+              <span className="truncate">{section}</span>
+            </a>
+          ))}
+        </div>
         <p>
           We may provide additional or supplemental privacy policies to individuals for specific products or services
           that we offer at the time we collect personal information.

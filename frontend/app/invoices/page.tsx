@@ -32,7 +32,6 @@ import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { pluralize } from "@/utils/pluralize";
 import { company_invoices_path, export_company_invoices_path } from "@/utils/routes";
 import { formatDate, formatDuration } from "@/utils/time";
-import { EquityAllocationStatus } from "@/db/enums";
 import NumberInput from "@/components/NumberInput";
 import DurationInput from "@/components/DurationInput";
 import { z } from "zod";
@@ -255,8 +254,7 @@ export default function InvoicesPage() {
                 )}
 
                 {data.some(
-                  (invoice) =>
-                    invoice.equityAllocationStatus === EquityAllocationStatus.PendingGrantCreation && !invoice.paidAt,
+                  (invoice) => invoice.equityAllocationStatus === "pending_grant_creation" && !invoice.paidAt,
                 ) && (
                   <Alert variant="destructive">
                     <AlertTriangle className="size-5" />
@@ -269,8 +267,7 @@ export default function InvoicesPage() {
                               data
                                 .filter(
                                   (invoice) =>
-                                    invoice.equityAllocationStatus === EquityAllocationStatus.PendingGrantCreation &&
-                                    !invoice.paidAt,
+                                    invoice.equityAllocationStatus === "pending_grant_creation" && !invoice.paidAt,
                                 )
                                 .map((invoice) => invoice.billFrom),
                             ),
@@ -543,15 +540,12 @@ const QuickInvoicesSection = () => {
     year: date.year,
   });
 
-  const { data: equityCalculation } = trpc.equityCalculations.calculate.useQuery(
-    {
-      companyId: company.id,
-      invoiceYear: date.year,
-      servicesInCents: totalAmountInCents,
-      selectedPercentage: invoiceEquityPercent,
-    },
-    { enabled: !!duration },
-  );
+  const { data: equityCalculation } = trpc.equityCalculations.calculate.useQuery({
+    companyId: company.id,
+    invoiceYear: date.year,
+    servicesInCents: totalAmountInCents,
+    selectedPercentage: invoiceEquityPercent,
+  });
   const equityAmountCents = equityCalculation?.amountInCents ?? 0;
   const cashAmountCents = totalAmountInCents - equityAmountCents;
 
@@ -710,7 +704,7 @@ const QuickInvoicesSection = () => {
               </div>
               <div className="flex flex-wrap items-center justify-end gap-3">
                 <Button variant="outline" className="grow sm:grow-0" asChild disabled={!canSubmitInvoices}>
-                  <Link inert={!canSubmitInvoices} href={`${newCompanyInvoiceRoute()}&expenses=true`}>
+                  <Link inert={!canSubmitInvoices} href={newCompanyInvoiceRoute()}>
                     Add more info
                   </Link>
                 </Button>
@@ -724,7 +718,7 @@ const QuickInvoicesSection = () => {
                   Send for approval
                 </MutationStatusButton>
                 {company.equityCompensationEnabled &&
-                (!equityAllocation || equityAllocation.status === EquityAllocationStatus.PendingConfirmation) ? (
+                (!equityAllocation || equityAllocation.status === "pending_confirmation") ? (
                   <EquityPercentageLockModal
                     open={lockModalOpen}
                     onClose={() => setLockModalOpen(false)}

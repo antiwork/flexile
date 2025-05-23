@@ -5,6 +5,8 @@ class VestingEvent < ApplicationRecord
 
   CANCELLATION_REASONS = {
     not_enough_shares_available: "not_enough_shares_available",
+    new_grant_created: "new_grant_created",
+    contract_ended: "contract_ended",
   }.freeze
 
   has_paper_trail

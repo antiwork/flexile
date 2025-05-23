@@ -22,7 +22,7 @@ test.describe("Company equity settings", () => {
 
     await login(page, adminUser);
     await page.getByRole("link", { name: "Settings" }).click();
-    await page.getByRole("tab", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Equity value" }).click();
 
     const sharePriceInput = page.getByLabel("Current share price (USD)");
     const valuationPriceInput = page.getByLabel("Current 409A valuation (USD per share)");

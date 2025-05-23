@@ -1,11 +1,9 @@
 "use client";
 
-import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, type UseMutationResult, useSuspenseQuery } from "@tanstack/react-query";
 import { iso31662 } from "iso-3166";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, AlertTriangle, Info, ArrowUpRightFromSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -14,7 +12,6 @@ import RadioButtons from "@/components/RadioButtons";
 import Status from "@/components/Status";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { CardContent, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { BusinessType, TaxClassification } from "@/db/enums";
@@ -24,11 +21,10 @@ import { trpc } from "@/trpc/client";
 import { getTinName } from "@/utils/legal";
 import { request } from "@/utils/request";
 import { settings_tax_path } from "@/utils/routes";
-import SettingsLayout from "../Layout";
+import SettingsLayout from "@/app/settings/Layout";
 import ComboBox from "@/components/ComboBox";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid";
 import { linkClasses } from "@/components/Link";
 import { Label } from "@/components/ui/label";
 
@@ -54,27 +50,31 @@ const dataSchema = z.object({
   contractor_for_companies: z.array(z.string()),
 });
 
-const formSchema = z
-  .object({
-    legal_name: z.string().regex(/^\S+\s+\S+$/u, "This doesn't look like a complete full name."),
-    citizenship_country_code: z.string(),
-    business_entity: z.boolean(),
-    business_name: z.string().nullable(),
-    business_type: z.nativeEnum(BusinessType).nullable(),
-    tax_classification: z.nativeEnum(TaxClassification).nullable(),
-    country_code: z.string(),
-    tax_id: z.string().min(1, "This field is required."),
-    birth_date: z.string().nullable(),
-    street_address: z.string().min(1, "Please add your residential address."),
-    city: z.string().min(1, "Please add your city or town."),
-    state: z.string(),
-    zip_code: z.string().regex(/\d/u, "Please add a valid postal code (must contain at least one number)."),
-  })
+const formValuesSchema = z.object({
+  legal_name: z.string().regex(/\S+\s+\S+/u, "This doesn't look like a complete full name."),
+  citizenship_country_code: z.string(),
+  business_entity: z.boolean(),
+  business_name: z.string().nullable(),
+  business_type: z.nativeEnum(BusinessType).nullable(),
+  tax_classification: z.nativeEnum(TaxClassification).nullable(),
+  country_code: z.string(),
+  tax_id: z.string().min(1, "This field is required."),
+  birth_date: z.string().nullable(),
+  street_address: z.string().min(1, "Please add your residential address."),
+  city: z.string().min(1, "Please add your city or town."),
+  state: z.string(),
+  zip_code: z.string().regex(/\d/u, "Please add a valid postal code (must contain at least one number)."),
+});
+
+const getIsForeign = (values: z.infer<typeof formValuesSchema>) =>
+  values.citizenship_country_code !== "US" && values.country_code !== "US";
+
+const formSchema = formValuesSchema
   .refine((data) => !data.business_entity || data.business_name, {
     path: ["business_name"],
     message: "Please add your business legal name.",
   })
-  .refine((data) => !data.business_entity || data.business_type !== null, {
+  .refine((data) => getIsForeign(data) || !data.business_entity || data.business_type !== null, {
     path: ["business_type"],
     message: "Please select a business type.",
   })
@@ -115,7 +115,7 @@ export default function TaxPage() {
   });
 
   const formValues = form.watch();
-  const isForeign = formValues.citizenship_country_code !== "US" && formValues.country_code !== "US";
+  const isForeign = getIsForeign(formValues);
 
   const countryCodePrefix = `${formValues.country_code}-`;
   const countrySubdivisions = iso31662.filter((entry) => entry.code.startsWith(countryCodePrefix));
@@ -151,11 +151,10 @@ export default function TaxPage() {
 
       setIsTaxInfoConfirmed(true);
       if (form.getFieldState("tax_id").isDirty) setTaxIdStatus(null);
-      setShowCertificationModal(false);
       if (data.documentId) {
         await trpcUtils.documents.list.invalidate();
         router.push(`/documents?sign=${data.documentId}`);
-      }
+      } else setShowCertificationModal(false);
     },
   });
 
@@ -178,17 +177,17 @@ export default function TaxPage() {
   return (
     <SettingsLayout>
       <Form {...form}>
-        <form onSubmit={(e) => void submit(e)}>
+        <form onSubmit={(e) => void submit(e)} className="grid gap-8">
           <hgroup>
-            <h2 className="text-xl font-bold">Tax information</h2>
-            <p className="text-gray-400">
+            <h2 className="mb-1 text-xl font-bold">Tax information</h2>
+            <p className="text-muted-foreground text-base">
               These details will be included in your {user.roles.worker ? "invoices and " : ""}applicable tax forms.
             </p>
           </hgroup>
-          <CardContent className="grid gap-4">
+          <div className="grid gap-4">
             {!isTaxInfoConfirmed && (
               <Alert variant="destructive">
-                <ExclamationTriangleIcon />
+                <AlertTriangle />
                 <AlertDescription>
                   Confirm your tax information to avoid delays on your payments or additional tax withholding.
                 </AlertDescription>
@@ -197,7 +196,7 @@ export default function TaxPage() {
 
             {taxIdStatus === "invalid" && (
               <Alert>
-                <InformationCircleIcon />
+                <Info />
                 <AlertTitle>Review your tax information</AlertTitle>
                 <AlertDescription>
                   Since there's a mismatch between the legal name and {tinName} you provided and your government
@@ -373,7 +372,7 @@ export default function TaxPage() {
                           {...field}
                           value={formatUSTaxId(field.value)}
                           onChange={(e) => field.onChange(normalizedTaxId(e.target.value))}
-                          className="rounded-r-none"
+                          className="w-full rounded-r-none border-r-0"
                         />
                       </FormControl>
                       <Button
@@ -399,7 +398,7 @@ export default function TaxPage() {
                   <FormItem>
                     <FormLabel>{`Date of ${formValues.business_entity ? "incorporation" : "birth"} (optional)`}</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input type="date" {...field} className="block" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -472,9 +471,8 @@ export default function TaxPage() {
                 )}
               />
             </div>
-          </CardContent>
-
-          <CardFooter className="flex-wrap gap-4">
+          </div>
+          <div className="flex flex-wrap gap-8">
             <MutationStatusButton
               type="submit"
               disabled={!!isTaxInfoConfirmed && !form.formState.isDirty}
@@ -484,13 +482,13 @@ export default function TaxPage() {
             </MutationStatusButton>
 
             {user.roles.worker ? (
-              <div>
+              <div className="flex items-center text-sm">
                 Changes to your tax information may trigger{" "}
                 {data.contractor_for_companies.length === 1 ? "a new contract" : "new contracts"} with{" "}
-                {data.contractor_for_companies.join(", ")}
+                {data.contractor_for_companies.join(", ")}.
               </div>
             ) : null}
-          </CardFooter>
+          </div>
         </form>
       </Form>
 
@@ -554,7 +552,7 @@ const LegalCertificationModal = ({
               link once available.
             </div>
             <div className="flex gap-1">
-              <ArrowTopRightOnSquareIcon className="size-4" />
+              <ArrowUpRightFromSquare className="size-4" />
               <a
                 target="_blank"
                 rel="noopener noreferrer nofollow"
@@ -573,7 +571,7 @@ const LegalCertificationModal = ({
               available.
             </div>
             <div className="flex gap-1">
-              <ArrowTopRightOnSquareIcon className="size-4" />
+              <ArrowUpRightFromSquare className="size-4" />
               <a
                 target="_blank"
                 rel="noopener noreferrer nofollow"

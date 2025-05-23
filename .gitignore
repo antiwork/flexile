@@ -24,6 +24,9 @@ tmp
 /backend/config/credentials/*.yml.enc
 /backend/config/credentials/*.key
 
+# Dividend round files
+/frontend/public/*.xlsx
+
 # IDE
 .vscode
 .idea

@@ -230,6 +230,35 @@ test.describe("Tax settings", () => {
         await expect(page.getByText("Review your tax information")).not.toBeVisible();
       });
 
+      test("only requires setting a business type for US citizens", async ({ page, sentEmails: _ }) => {
+        await db.update(users).set({ countryCode: "GB", citizenshipCountryCode: "GB" }).where(eq(users.id, user.id));
+
+        await page.goto("/settings/tax");
+
+        await page.locator("label").filter({ hasText: "Business" }).click();
+        await page.getByLabel("Business legal name").fill("Test Business LLC");
+        await page.getByLabel("Foreign tax ID").fill("123456789");
+        await page.getByLabel("Full legal name (must match your ID)").fill("John Smith");
+        await expect(page.getByLabel("Type")).not.toBeVisible();
+        await page.getByRole("button", { name: "Save changes" }).click();
+        await expect(page.getByText("W-8BEN-E Certification and Tax Forms Delivery")).toBeVisible();
+        await page.waitForTimeout(100);
+        await page.getByRole("button", { name: "Save", exact: true }).click();
+        await expect(page.getByRole("dialog")).not.toBeVisible();
+        await page.goto("/settings/tax", { waitUntil: "load" });
+
+        await selectComboboxOption(page, "Country of citizenship", "United States");
+        await selectComboboxOption(page, "Country of incorporation", "United States");
+
+        await selectComboboxOption(page, "Type", "LLC");
+        await selectComboboxOption(page, "Tax classification", "Partnership");
+        await page.getByRole("button", { name: "Save changes" }).click();
+
+        await page.getByLabel("Full legal name (must match your ID)").fill("John Smith");
+        await expect(page.getByText("W-9 Certification and Tax Forms Delivery")).toBeVisible();
+        await page.getByRole("button", { name: "Save", exact: true }).click();
+      });
+
       test("allows US citizen in Australia to set a 4-digit postal code", async ({ page, sentEmails }) => {
         await db.update(users).set({ countryCode: "AU", citizenshipCountryCode: "US" }).where(eq(users.id, user.id));
 
@@ -387,6 +416,20 @@ test.describe("Tax settings", () => {
       await expect(page.getByText("Tax ID (SSN or ITIN)")).toBeVisible();
 
       await expect(page.getByLabel("Tax ID (SSN or ITIN)")).toHaveValue("123-45-6789");
+    });
+
+    test("allows legal names with two spaces", async ({ page, sentEmails: _ }) => {
+      await page.goto("/settings/tax");
+
+      await page.getByLabel("Full legal name (must match your ID)").fill("John Middle Doe");
+      await page.getByLabel("Tax ID (SSN or ITIN)").fill("123456789");
+
+      await page.getByRole("button", { name: "Save changes" }).click();
+      await page.getByRole("button", { name: "Save", exact: true }).click();
+      await expect(page.getByRole("dialog")).not.toBeVisible();
+
+      const updatedUser = await db.query.users.findFirst({ where: eq(users.id, user.id) }).then(takeOrThrow);
+      expect(updatedUser.legalName).toBe("John Middle Doe");
     });
   });
 

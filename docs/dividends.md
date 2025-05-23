@@ -40,18 +40,62 @@ Write a script to invite investors AND save dividend records for them:
 Run the script to create users, investors, investments, dividends, etc., and send invitation emails:
 
 ```ruby
-CreateInvestorsAndDividends.new(
+service = CreateInvestorsAndDividends.new(
   company_id: 1823,
-  workbook_url: "https://docs.google.com/spreadsheets/d/.../edit?gid=123#gid=456",
-  dividend_date: Date.new(2025, 5, 19),
+  workbook_url: "https://41af-2603-7000-8e00-4c84-f4a1-418e-7aa5-e70d.ngrok-free.app/lmnt.xlsx",
+  dividend_date: Date.new(2025, 6, 4),
 )
+service.process
 ```
 
 #### Example Sheet and Usage
 
 See example Google Sheet here: [Dividend Import Template](https://docs.google.com/spreadsheets/d/1WLvHQaNx6PcofKChWhtD_4JDoTqy2y_bYxNgwNYZKBw/edit?usp=sharing)
 
-You can export this file as an .xlsx and put it within `frontend/public` and use ngrok to get a URL to access it.
+You can export this file as an .xlsx and put it within `frontend/public` and use ngrok to get a URL to access it:
+
+```
+ngrok http https://flexile.dev
+```
+
+Note: Make sure to Send Dividend-Issued Emails manually, see below.
+
+#### Manual Dividends
+
+In case an investor changed their email or is otherwise not in the new list of dividend recepients and needs to be added manually:
+
+```
+company = Company.find(1823)
+dividend_round = company.dividend_rounds.find(3)
+
+dividend_data = {
+  "email" => 18.44,
+}
+
+dividend_data.each do |email, amount|
+  user = User.find_by!(email: email)
+  company_investor = user.company_investors.find_by!(company: company)
+
+  dividend_cents = (amount * 100.to_d).to_i
+
+  company_investor.dividends.create!(
+    dividend_round: dividend_round,
+    company: company,
+    status: user.current_sign_in_at.nil? ? Dividend::PENDING_SIGNUP : Dividend::ISSUED,
+    total_amount_in_cents: dividend_cents,
+    qualified_amount_cents: dividend_cents
+  )
+
+  investor_dividend_round = company_investor.investor_dividend_rounds.find_or_create_by!(dividend_round_id: dividend_round_id)
+  investor_dividend_round.send_dividend_issued_email
+
+  puts "Created dividend for #{email}: $#{amount}"
+rescue => e
+  puts "Error creating dividend for #{email}: #{e.message}"
+end
+```
+
+This will also send out the dividend issued email.
 
 #### Resending Invitations
 
@@ -59,7 +103,7 @@ Script for resending email to investors who didn't sign up to Flexile:
 
 ```ruby
 company = Company.find(1823)
-dividend_date = Date.parse("June 6, 2025")
+dividend_date = Date.parse("June 4, 2025")
 primary_admin_user = company.primary_admin.user
 
 company.investors.joins(:dividends)
