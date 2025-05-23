@@ -5,6 +5,7 @@
     "baseUrl": ".",
     "target": "es2020",
     "lib": ["dom", "dom.iterable", "es2020"],
+    "downlevelIteration": true,
     "paths": {
       "@test/*": ["./*"],
       "@/*": ["../frontend/*"]

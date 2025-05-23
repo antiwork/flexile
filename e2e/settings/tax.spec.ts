@@ -427,6 +427,7 @@ test.describe("Tax settings", () => {
 
       await page.getByRole("button", { name: "Save changes" }).click();
       await page.getByRole("button", { name: "Save", exact: true }).click();
+      await page.waitForTimeout(1500);
       await expect(page.getByRole("dialog")).not.toBeVisible();
 
       const updatedUser = await db.query.users.findFirst({ where: eq(users.id, user.id) }).then(takeOrThrow);

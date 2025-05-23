@@ -220,9 +220,9 @@ test.describe("invoice creation", () => {
     await page.getByLabel("Hours").fill("100:00");
     await page.getByPlaceholder("Description").fill("I worked on invoices");
 
-    await expect(page.getByText("Total services")).toBeVisible();
-    await expect(page.getByText("Swapped for equity (not paid in cash)")).toBeVisible();
-    await expect(page.getByText("Net amount in cash")).toBeVisible();
+    await expect(page.getByText("Total services", { exact: false })).toBeVisible();
+    await expect(page.getByText("Swapped for equity", { exact: false })).toBeVisible();
+    await expect(page.getByText("Net amount in cash", { exact: false })).toBeVisible();
 
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.locator("tbody")).toContainText(

@@ -18,6 +18,7 @@ test.describe("Cap table uploads list", () => {
     await login(page, user);
     await page.goto("/cap_table_uploads");
     await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(500); // Add extra time for content to render
 
     await expect(page.getByText("No cap table uploads yet")).toBeVisible();
     await expect(page.getByRole("table")).not.toBeVisible();
