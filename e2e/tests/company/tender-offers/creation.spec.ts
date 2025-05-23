@@ -25,8 +25,8 @@ test.describe("Buyback creation", () => {
 
     await login(page, user);
 
-    await page.getByRole("link", { name: "Equity" }).click();
-    await page.getByRole("tab", { name: "Buybacks" }).click();
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Buybacks" }).click();
     await page.getByRole("link", { name: "New buyback" }).click();
 
     await fillDatePicker(page, "Start date", "08/08/2022");
