@@ -9,7 +9,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DocumentTemplateType } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
-import { countries } from "@/models/constants";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
@@ -26,13 +25,6 @@ import {
 } from "@/components/ui/dialog";
 import MutationButton from "@/components/MutationButton";
 type EquityGrant = RouterOutput["equityGrants"]["list"][number];
-type OptionHolderCountry = RouterOutput["equityGrants"]["byCountry"][number];
-
-const countryColumnHelper = createColumnHelper<OptionHolderCountry>();
-const countryColumns = [
-  countryColumnHelper.simple("countryCode", "Country", (v) => countries.get(v ?? "") ?? v),
-  countryColumnHelper.simple("optionHolders", "Number of option holders", (v) => v.toLocaleString(), "numeric"),
-];
 
 export default function GrantsPage() {
   const router = useRouter();
@@ -90,9 +82,6 @@ export default function GrantsPage() {
     signable: true,
   });
 
-  const [countriesData] = trpc.equityGrants.byCountry.useSuspenseQuery({ companyId: company.id });
-  const optionHolderCountriesTable = useTable({ columns: countryColumns, data: countriesData });
-
   return (
     <EquityLayout
       headerActions={
@@ -118,10 +107,7 @@ export default function GrantsPage() {
         </Alert>
       ) : null}
       {data.length > 0 ? (
-        <>
-          <DataTable table={table} onRowClicked={(row) => router.push(`/people/${row.user.id}`)} />
-          <DataTable table={optionHolderCountriesTable} />
-        </>
+        <DataTable table={table} onRowClicked={(row) => router.push(`/people/${row.user.id}`)} />
       ) : (
         <Placeholder icon={CircleCheck}>There are no option grants right now.</Placeholder>
       )}
