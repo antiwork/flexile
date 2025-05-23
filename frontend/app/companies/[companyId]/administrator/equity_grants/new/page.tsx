@@ -107,7 +107,6 @@ export default function NewEquityGrant() {
     onSuccess: async () => {
       await trpcUtils.equityGrants.list.invalidate();
       await trpcUtils.equityGrants.totals.invalidate();
-      await trpcUtils.equityGrants.byCountry.invalidate();
       await trpcUtils.capTable.show.invalidate();
       await trpcUtils.documents.list.invalidate();
       router.push(`/equity/grants`);

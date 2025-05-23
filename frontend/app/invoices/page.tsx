@@ -540,15 +540,12 @@ const QuickInvoicesSection = () => {
     year: date.year,
   });
 
-  const { data: equityCalculation } = trpc.equityCalculations.calculate.useQuery(
-    {
-      companyId: company.id,
-      invoiceYear: date.year,
-      servicesInCents: totalAmountInCents,
-      selectedPercentage: invoiceEquityPercent,
-    },
-    { enabled: !!duration },
-  );
+  const { data: equityCalculation } = trpc.equityCalculations.calculate.useQuery({
+    companyId: company.id,
+    invoiceYear: date.year,
+    servicesInCents: totalAmountInCents,
+    selectedPercentage: invoiceEquityPercent,
+  });
   const equityAmountCents = equityCalculation?.amountInCents ?? 0;
   const cashAmountCents = totalAmountInCents - equityAmountCents;
 
@@ -707,7 +704,7 @@ const QuickInvoicesSection = () => {
               </div>
               <div className="flex flex-wrap items-center justify-end gap-3">
                 <Button variant="outline" className="grow sm:grow-0" asChild disabled={!canSubmitInvoices}>
-                  <Link inert={!canSubmitInvoices} href={`${newCompanyInvoiceRoute()}&expenses=true`}>
+                  <Link inert={!canSubmitInvoices} href={newCompanyInvoiceRoute()}>
                     Add more info
                   </Link>
                 </Button>

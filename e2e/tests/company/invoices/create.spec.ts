@@ -275,4 +275,29 @@ test.describe("invoice creation", () => {
     await page.goto("/invoices/new");
     await expect(page.getByRole("textbox", { name: "Cash vs equity split" })).not.toBeVisible();
   });
+
+  test("updates equity calculation in real-time for project-based contractors", async ({ page }) => {
+    await login(page, projectBasedUser);
+    await page.goto("/invoices/new");
+
+    await page.getByPlaceholder("Description").fill("UI design project");
+    await page.getByLabel("Amount").fill("2000");
+    await fillDatePicker(page, "Date", "08/08/2023");
+
+    await expect(page.getByRole("textbox", { name: "Cash vs equity split" })).toHaveValue("0");
+
+    await expect(page.getByText("Total$2,000")).toBeVisible();
+
+    await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("25");
+
+    await expect(page.getByText("Total services$2,000")).toBeVisible();
+    await expect(page.getByText("Swapped for equity (not paid in cash)$500")).toBeVisible();
+    await expect(page.getByText("Net amount in cash$1,500")).toBeVisible();
+
+    await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("75");
+
+    await expect(page.getByText("Total services$2,000")).toBeVisible();
+    await expect(page.getByText("Swapped for equity (not paid in cash)$1,500")).toBeVisible();
+    await expect(page.getByText("Net amount in cash$500")).toBeVisible();
+  });
 });

@@ -2,7 +2,6 @@
   Please re-enter your bank account details to receive your distribution of <%= Money.from_amount(@amount, @currency).format(with_currency: true, symbol: false, no_cents_if_whole: true) %> from <%= @company.name %>
 </h1>
 <dl>
-  </dd>
   <dt>Distribution amount</dt>
   <dd>
     <%= cents_format(@net_amount_in_usd_cents, with_currency: true, symbol: false) %>
@@ -19,5 +18,3 @@
 <p>
   We'll try to process your payment again after you update your bank details.
 </p>
-
-<%= render "shared/email_signature" %>

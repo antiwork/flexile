@@ -103,9 +103,7 @@ const Edit = () => {
   if (!canSubmitInvoices) throw redirect("/invoices");
   const { id } = useParams<{ id: string }>();
   const searchParams = useSearchParams();
-  const [showExpenses, setShowExpenses] = useState(!!searchParams.get("expenses"));
   const [errorField, setErrorField] = useState<string | null>(null);
-  const uploadExpenseRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
 
@@ -146,7 +144,10 @@ const Edit = () => {
       },
     ]);
   });
+  const [showExpenses, setShowExpenses] = useState(false);
+  const uploadExpenseRef = useRef<HTMLInputElement>(null);
   const [expenses, setExpenses] = useState(List<InvoiceFormExpense>(data.invoice.expenses));
+  const showExpensesTable = showExpenses || expenses.size > 0;
 
   const [equityAllocation, { refetch: refetchEquityAllocation }] = trpc.equityAllocations.forYear.useSuspenseQuery({
     companyId: company.id,
@@ -249,7 +250,6 @@ const Edit = () => {
     invoiceYear,
     selectedPercentage: equityPercentage,
   });
-  const canManageExpenses = showExpenses || expenses.size > 0;
   const updateLineItem = (index: number, update: Partial<InvoiceFormLineItem>) =>
     setLineItems((lineItems) =>
       lineItems.update(index, (lineItem) => {
@@ -455,7 +455,7 @@ const Edit = () => {
                       <PlusIcon className="inline size-4" />
                       Add line item
                     </Button>
-                    {data.company.expenses.enabled && canManageExpenses ? (
+                    {data.company.expenses.enabled && !showExpensesTable ? (
                       <Button variant="link" asChild>
                         <Label>
                           <ArrowUpTrayIcon className="inline size-4" />
@@ -476,7 +476,7 @@ const Edit = () => {
               </TableRow>
             </TableFooter>
           </Table>
-          {canManageExpenses ? (
+          {showExpensesTable ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -562,13 +562,13 @@ const Edit = () => {
               className="w-full lg:w-96"
             />
             <div className="flex flex-col gap-2 md:self-start lg:items-end">
-              {canManageExpenses || equityCalculation.amountInCents > 0 ? (
+              {showExpensesTable || equityCalculation.amountInCents > 0 ? (
                 <div className="flex flex-col items-end">
                   <span>Total services</span>
                   <span className="numeric text-xl">{formatMoneyFromCents(totalServicesAmountInCents)}</span>
                 </div>
               ) : null}
-              {canManageExpenses ? (
+              {showExpensesTable ? (
                 <div className="flex flex-col items-end">
                   <span>Total expenses</span>
                   <span className="numeric text-xl">{formatMoneyFromCents(totalExpensesAmountInCents)}</span>

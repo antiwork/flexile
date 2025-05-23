@@ -1119,27 +1119,6 @@ export const taxDocuments = pgTable(
   ],
 );
 
-export const timeEntries = pgTable(
-  "time_entries",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    userId: bigint("user_id", { mode: "bigint" }).notNull(),
-    companyId: bigint("company_id", { mode: "bigint" }).notNull(),
-    description: varchar().notNull(),
-    minutes: integer(),
-    date: date({ mode: "string" }).notNull(),
-    invoicedAt: timestamp("invoiced_at", { precision: 6, mode: "date" }),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-  },
-  (table) => [
-    index("index_time_entries_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
-    index("index_time_entries_on_user_id").using("btree", table.userId.asc().nullsLast().op("int8_ops")),
-  ],
-);
-
 export const tosAgreements = pgTable(
   "tos_agreements",
   {
@@ -2117,7 +2096,6 @@ export const usersRelations = relations(users, ({ many }) => ({
   invoices: many(invoices),
   wiseRecipients: many(wiseRecipients),
   invoiceApprovals: many(invoiceApprovals),
-  timeEntries: many(timeEntries),
   tosAgreements: many(tosAgreements),
   userComplianceInfos: many(userComplianceInfos),
   wallets: many(wallets),
@@ -2523,17 +2501,6 @@ export const tenderOffersRelations = relations(tenderOffers, ({ one, many }) => 
     references: [companies.id],
   }),
   bids: many(tenderOfferBids),
-}));
-
-export const timeEntriesRelations = relations(timeEntries, ({ one }) => ({
-  company: one(companies, {
-    fields: [timeEntries.companyId],
-    references: [companies.id],
-  }),
-  user: one(users, {
-    fields: [timeEntries.userId],
-    references: [users.id],
-  }),
 }));
 
 export const tosAgreementsRelations = relations(tosAgreements, ({ one }) => ({
