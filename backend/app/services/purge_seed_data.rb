@@ -181,7 +181,6 @@ class PurgeSeedData
     end
 
     def purge_user!(user)
-      Wallet.where(user:).each(&:destroy!)
       user.user_compliance_infos.each do |user_compliance_info|
         user_compliance_info.tax_documents.each(&:destroy!)
         user_compliance_info.destroy!
