@@ -1,18 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import {
-  and,
-  desc,
-  eq,
-  gt,
-  gte,
-  isNotNull,
-  isNull,
-  lte,
-  or,
-  sql,
-  type SQLWrapper,
-  sum,
-} from "drizzle-orm";
+import { and, desc, eq, gt, gte, isNotNull, isNull, lte, or, sql, type SQLWrapper, sum } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { omit, pick } from "lodash-es";
 import { z } from "zod";
@@ -243,7 +230,6 @@ export const equityGrantsRouter = createRouter({
   getUniqueUnvested: companyProcedure.input(z.object({ year: z.number() })).query(async ({ input, ctx }) => ({
     grant: await getUniqueUnvestedEquityGrantForYear(ctx.companyContractor, input.year),
   })),
-
 
   sumVestedShares: companyProcedure
     .input(z.object({ investorId: z.string().optional() }))
