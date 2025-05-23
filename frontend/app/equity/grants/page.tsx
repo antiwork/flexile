@@ -82,8 +82,6 @@ export default function GrantsPage() {
     signable: true,
   });
 
-
-
   return (
     <EquityLayout
       headerActions={
