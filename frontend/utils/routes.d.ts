@@ -434,9 +434,49 @@ export const admin_sidekiq_web_path: ((
   options?: RouteOptions
 ) => string) & RouteHelperExtras;
 
+/**
+ * Generates rails route to
+ * /admin/time_entries(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const admin_time_entries_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
 
+/**
+ * Generates rails route to
+ * /admin/time_entries(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const admin_time_entries_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
 
+/**
+ * Generates rails route to
+ * /admin/time_entries/:id(.:format)
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const admin_time_entry_url: ((
+  id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
 
+/**
+ * Generates rails route to
+ * /admin/time_entries/:id(.:format)
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const admin_time_entry_path: ((
+  id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
 
 /**
  * Generates rails route to
@@ -1437,7 +1477,22 @@ export const edit_admin_payment_path: ((
  * @param {object | undefined} options
  * @returns {string} route path
  */
+export const edit_admin_time_entry_url: ((
+  id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
 
+/**
+ * Generates rails route to
+ * /admin/time_entries/:id/edit(.:format)
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const edit_admin_time_entry_path: ((
+  id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
 
 /**
  * Generates rails route to
@@ -1915,7 +1970,25 @@ export const new_admin_payment_path: ((
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
+/**
+ * Generates rails route to
+ * /admin/time_entries/new(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const new_admin_time_entry_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
 
+/**
+ * Generates rails route to
+ * /admin/time_entries/new(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const new_admin_time_entry_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
 
 /**
  * Generates rails route to

@@ -1119,8 +1119,6 @@ export const taxDocuments = pgTable(
   ],
 );
 
-
-
 export const tosAgreements = pgTable(
   "tos_agreements",
   {
@@ -2504,8 +2502,6 @@ export const tenderOffersRelations = relations(tenderOffers, ({ one, many }) => 
   }),
   bids: many(tenderOfferBids),
 }));
-
-
 
 export const tosAgreementsRelations = relations(tosAgreements, ({ one }) => ({
   user: one(users, {
