@@ -21,7 +21,7 @@ import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
 import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
-import { UserPlus, Users, SendHorizontal } from "lucide-react";
+import { UserPlus, Users } from "lucide-react";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import FormFields from "./FormFields";
 import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
