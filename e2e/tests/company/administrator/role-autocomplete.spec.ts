@@ -55,11 +55,10 @@ test.describe("Role autocomplete", () => {
     await expect(page.getByRole("option", { name: "Alumni Role" })).not.toBeVisible();
 
     await roleField.fill("dev");
-    await expect(page.getByRole("option", { name: role1 })).toBeVisible();
-    await expect(page.getByRole("option", { name: role2 })).toBeVisible();
-    await expect(page.getByRole("option", { name: role3 })).toBeVisible();
-
-    await page.getByRole("option", { name: role1 }).click();
+    await expect(page.getByRole("option", { name: role1, selected: true })).toBeVisible();
+    await expect(page.getByRole("option", { name: role2, selected: false })).toBeVisible();
+    await expect(page.getByRole("option", { name: role3, selected: false })).toBeVisible();
+    await roleField.press("Enter");
     await expect(roleField).toHaveValue(role1);
 
     await page.getByRole("option", { name: role2 }).click();
