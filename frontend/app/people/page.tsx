@@ -7,7 +7,6 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { formatISO } from "date-fns";
-import { PaperAirplaneIcon } from "@heroicons/react/16/solid";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
 import Placeholder from "@/components/Placeholder";
@@ -158,7 +157,7 @@ export default function PeoplePage() {
             <DialogTitle>Who's joining?</DialogTitle>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={(e) => void submit(e)} className="grid gap-4">
+            <form onSubmit={(e) => void submit(e)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="email"
@@ -180,7 +179,7 @@ export default function PeoplePage() {
                   <FormItem>
                     <FormLabel>Start date</FormLabel>
                     <FormControl>
-                      <Input {...field} type="date" />
+                      <Input {...field} type="date" className="block" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -195,12 +194,11 @@ export default function PeoplePage() {
                 companyId={company.id}
                 type={DocumentTemplateType.ConsultingContract}
               />
-              <MutationStatusButton mutation={saveMutation} type="submit" className="justify-self-end">
-                <PaperAirplaneIcon className="h-5 w-5" />
-                Send invite
-              </MutationStatusButton>
-              <div>
-                {saveMutation.isError ? <div className="text-red mb-4">{saveMutation.error.message}</div> : null}
+              <div className="flex flex-col items-end space-y-2">
+                <MutationStatusButton mutation={saveMutation} type="submit">
+                  Send invite
+                </MutationStatusButton>
+                {saveMutation.isError ? <div className="text-red text-sm">{saveMutation.error.message}</div> : null}
               </div>
             </form>
           </Form>

@@ -82,7 +82,9 @@ export default function FormFields() {
         )}
       />
 
-      <div className="grid items-start gap-4 md:grid-cols-2">
+      <div
+        className={`grid items-start gap-3 ${payRateType === PayRateType.ProjectBased ? "md:grid-cols-1" : "md:grid-cols-2"}`}
+      >
         <FormField
           control={form.control}
           name="payRateInSubunits"
