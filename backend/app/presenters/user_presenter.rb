@@ -5,7 +5,7 @@ class UserPresenter
            :documents, :business_name, :business_entity?, :display_country,
            :legal_name, :preferred_name, :display_name, :billing_entity_name, :unconfirmed_email,
            :created_at, :state, :city, :zip_code, :street_address, :bank_account, :contracts, :tax_id, :birth_date,
-           :requires_w9?, :tax_information_confirmed_at, :minimum_dividend_payment_in_cents, :wallet, :bank_accounts,
+           :requires_w9?, :tax_information_confirmed_at, :minimum_dividend_payment_in_cents, :bank_accounts,
            :tax_id_status, private: true, to: :user, allow_nil: true
 
   def initialize(current_context:)
@@ -137,7 +137,7 @@ class UserPresenter
       preferredName: preferred_name,
       billingEntityName: billing_entity_name,
       roles:,
-      hasPayoutMethod: user.bank_account.present? || user.wallet.present?,
+      hasPayoutMethod: user.bank_account.present?,
       address: {
         street_address: user.street_address,
         city: user.city,

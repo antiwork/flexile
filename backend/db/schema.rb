@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_05_23_221854) do
+ActiveRecord::Schema[8.0].define(version: 2025_05_27_191928) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1111,15 +1111,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_23_221854) do
     t.datetime "updated_at", null: false
     t.index ["external_id"], name: "index_vesting_schedules_on_external_id", unique: true
     t.index ["total_vesting_duration_months", "cliff_duration_months", "vesting_frequency_months"], name: "idx_vesting_schedule_option", unique: true
-  end
-
-  create_table "wallets", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.string "wallet_address", null: false
-    t.datetime "deleted_at"
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.index ["user_id"], name: "index_wallets_on_user_id"
   end
 
   create_table "wise_credentials", force: :cascade do |t|

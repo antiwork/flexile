@@ -28,13 +28,11 @@ import { quickbooksRouter } from "./routes/quickbooks";
 import { shareHoldingsRouter } from "./routes/shareHoldings";
 import { tenderOffersRouter } from "./routes/tenderOffers";
 import { usersRouter } from "./routes/users";
-import { walletsRouter } from "./routes/wallets";
 import { createClient } from "./shared";
 import { createCallerFactory, createRouter } from "./";
 
 export const appRouter = createRouter({
   users: usersRouter,
-  wallets: walletsRouter,
   contractors: contractorsRouter,
   quickbooks: quickbooksRouter,
   invoices: invoicesRouter,
