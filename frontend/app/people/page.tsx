@@ -32,6 +32,7 @@ const schema = z.object({
   hoursPerWeek: z.number().nullable(),
   role: z.string(),
   startDate: z.string(),
+  contractSignedElsewhere: z.boolean().default(false),
 });
 
 export default function PeoplePage() {
@@ -48,6 +49,7 @@ export default function PeoplePage() {
       payRateType: lastContractor?.payRateType ?? PayRateType.Hourly,
       hoursPerWeek: lastContractor?.hoursPerWeek ?? DEFAULT_WORKING_HOURS_PER_WEEK,
       startDate: formatISO(new Date(), { representation: "date" }),
+      contractSignedElsewhere: false,
     },
     resolver: zodResolver(schema),
   });
@@ -69,6 +71,7 @@ export default function PeoplePage() {
       ...values,
       startedAt: formatISO(new Date(`${values.startDate}T00:00:00`)),
       documentTemplateId: templateId ?? "",
+      contractSignedElsewhere: values.contractSignedElsewhere,
     });
   });
 
@@ -185,12 +188,37 @@ export default function PeoplePage() {
 
               <FormFields />
 
-              <TemplateSelector
-                selected={templateId}
-                setSelected={setTemplateId}
-                companyId={company.id}
-                type={DocumentTemplateType.ConsultingContract}
+              <FormField
+                control={form.control}
+                name="contractSignedElsewhere"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={field.onChange}
+                        className="h-4 w-4 mt-1"
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Already signed contract elsewhere</FormLabel>
+                      <p className="text-sm text-muted-foreground">
+                        Check this if the contractor has already signed a contract outside of Flexile
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
               />
+
+              {!form.watch("contractSignedElsewhere") && (
+                <TemplateSelector
+                  selected={templateId}
+                  setSelected={setTemplateId}
+                  companyId={company.id}
+                  type={DocumentTemplateType.ConsultingContract}
+                />
+              )}
               <div className="flex flex-col items-end space-y-2">
                 <MutationStatusButton mutation={saveMutation} type="submit">
                   Send invite

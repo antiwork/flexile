@@ -88,6 +88,7 @@ export const contractorsRouter = createRouter({
         hoursPerWeek: z.number().nullable(),
         role: z.string(),
         documentTemplateId: z.string(),
+        contractSignedElsewhere: z.boolean().default(false),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -117,6 +118,7 @@ export const contractorsRouter = createRouter({
                   ? "project_based"
                   : "salary",
             role: input.role,
+            contract_signed_elsewhere: input.contractSignedElsewhere,
             ...(input.payRateType === PayRateType.Hourly && { hours_per_week: input.hoursPerWeek }),
           },
         }),
