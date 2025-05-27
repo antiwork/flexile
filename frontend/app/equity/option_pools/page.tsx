@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
-import EquityLayout from "../Layout";
+import EquityLayout from "../layout";
 
 type OptionPool = RouterOutput["optionPools"]["list"][number];
 

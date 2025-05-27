@@ -7,7 +7,7 @@ import { startOfMonth, startOfQuarter, startOfYear, subMonths, subQuarters, subY
 import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
-import MainLayout from "@/components/layouts/Main";
+import MainLayout from "@/app/components/main-layout";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import { Editor as RichTextEditor } from "@/components/RichText";

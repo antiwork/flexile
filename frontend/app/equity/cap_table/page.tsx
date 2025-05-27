@@ -19,7 +19,7 @@ import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatOwnershipPercentage } from "@/utils/numbers";
-import EquityLayout from "../Layout";
+import EquityLayout from "../layout";
 
 type Data = RouterOutput["capTable"]["show"];
 

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import { Input } from "@/components/ui/input";
-import MainLayout from "@/components/layouts/Main";
+import MainLayout from "@/app/components/main-layout";
 import { MutationStatusButton } from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany } from "@/global";

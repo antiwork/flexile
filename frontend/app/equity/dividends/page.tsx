@@ -10,7 +10,7 @@ import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
-import EquityLayout from "../Layout";
+import EquityLayout from "../layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
 import { linkClasses } from "@/components/Link";

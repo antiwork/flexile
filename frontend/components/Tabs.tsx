@@ -1,3 +1,4 @@
+"use client";
 import { type Route } from "next";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -14,14 +15,14 @@ const Tabs = <T extends string>({ links }: { links: TabLink<T>[] }) => {
   const containerClass = "grid grid-flow-col auto-cols-max gap-4";
   let activeIndex = -1;
   let activeSearch: URLSearchParams | null = null;
-  for (const [i, link] of links.entries()) {
+  for (const [i, link] of Array.from(links.entries())) {
     const [path, searchStr] = link.route.split("?", 2);
     if (path && pathname !== path) continue;
     const search = searchStr == null ? null : new URLSearchParams(searchStr);
     if (
       search &&
       search.size > (activeSearch?.size ?? -1) &&
-      [...search].every(([key, value]) => searchParams.get(key) === value)
+      Array.from(search.entries()).every(([key, value]) => searchParams.get(key) === value)
     ) {
       activeSearch = search;
     } else if (activeIndex >= 0) continue;

@@ -10,7 +10,7 @@ import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
-import EquityLayout from "../Layout";
+import EquityLayout from "../layout";
 
 type DividendRound = RouterOutput["dividendRounds"]["list"][number];
 const columnHelper = createColumnHelper<DividendRound>();

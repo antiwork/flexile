@@ -16,7 +16,7 @@ import {
 } from "@/app/invoices/index";
 import { StatusWithTooltip } from "@/app/invoices/Status";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import MainLayout from "@/components/layouts/Main";
+import MainLayout from "@/app/components/main-layout";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";

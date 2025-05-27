@@ -3,7 +3,7 @@ import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import Link from "next/link";
 import React, { useMemo } from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import MainLayout from "@/components/layouts/Main";
+import MainLayout from "@/app/components/main-layout";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
 import { Button } from "@/components/ui/button";

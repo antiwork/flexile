@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useCurrentUser } from "@/global";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
 import { trpc } from "@/trpc/client";
-import SettingsLayout from "@/app/settings/Layout";
+import SettingsLayout from "@/app/settings/layout";
 
 export default function SettingsPage() {
   return (

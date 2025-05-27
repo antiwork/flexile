@@ -1,4 +1,7 @@
-import { SignOutButton } from "@clerk/nextjs";
+"use client";
+
+import React from "react";
+import type { ReactNode } from "react";
 import {
   Rss,
   ChevronsUpDown,
@@ -15,7 +18,7 @@ import { skipToken, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React from "react";
+import { SignOutButton } from "@clerk/nextjs";
 import { navLinks as equityNavLinks } from "@/app/equity";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -43,23 +46,18 @@ import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
 import type { Route } from "next";
-import { useIsActionable } from "@/app/invoices";
+import { useIsActionable } from "@/app/invoices/index";
 
-export default function MainLayout({
-  children,
-  title,
-  subtitle,
-  headerActions,
-  subheader,
-  footer,
-}: {
-  children: React.ReactNode;
-  title?: React.ReactNode;
-  subtitle?: React.ReactNode;
-  headerActions?: React.ReactNode;
-  subheader?: React.ReactNode;
-  footer?: React.ReactNode;
-}) {
+type MainLayoutProps = {
+  children: ReactNode;
+  title?: ReactNode;
+  subtitle?: ReactNode;
+  headerActions?: ReactNode;
+  subheader?: ReactNode;
+  footer?: ReactNode;
+};
+
+const MainLayout = ({ children, title, subtitle, headerActions, subheader, footer }: MainLayoutProps) => {
   const user = useCurrentUser();
 
   const queryClient = useQueryClient();
@@ -172,7 +170,7 @@ export default function MainLayout({
       </SidebarInset>
     </SidebarProvider>
   );
-}
+};
 
 const CompanyName = () => {
   const company = useCurrentCompany();
@@ -315,3 +313,5 @@ const NavLink = <T extends string>({
     </SidebarMenuItem>
   );
 };
+
+export default MainLayout;

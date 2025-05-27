@@ -9,7 +9,7 @@ import { useState } from "react";
 import { isFuture } from "date-fns";
 import { useMutation } from "@tanstack/react-query";
 import { request } from "@/utils/request";
-import EquityLayout from "@/app/equity/Layout";
+import EquityLayout from "@/app/equity/layout";
 import Placeholder from "@/components/Placeholder";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
