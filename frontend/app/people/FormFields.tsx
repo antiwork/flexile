@@ -18,6 +18,7 @@ export default function FormFields() {
   const { data: workers } = trpc.contractors.list.useQuery(companyId ? { companyId, excludeAlumni: true } : skipToken);
 
   const uniqueRoles = workers ? [...new Set(workers.map((worker) => worker.role))].sort() : [];
+  const roleRegex = new RegExp(`${form.watch("role")}`, "iu");
 
   return (
     <>
@@ -27,7 +28,7 @@ export default function FormFields() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Role</FormLabel>
-            <Command shouldFilter={false}>
+            <Command shouldFilter={false} value={uniqueRoles.find((role) => roleRegex.test(role)) ?? ""}>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
