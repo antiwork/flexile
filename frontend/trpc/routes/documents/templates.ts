@@ -9,13 +9,7 @@ import { pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
 import { DocumentTemplateType, DocumentType, PayRateType } from "@/db/enums";
-import {
-  companyContractors,
-  documents,
-  documentTemplates,
-  equityAllocations,
-  users,
-} from "@/db/schema";
+import { companyContractors, documents, documentTemplates, equityAllocations, users } from "@/db/schema";
 import env from "@/env";
 import { countries, MAX_WORKING_HOURS_PER_WEEK, WORKING_WEEKS_PER_YEAR } from "@/models/constants";
 import { companyProcedure, createRouter, type ProtectedContext, protectedProcedure } from "@/trpc";
@@ -132,9 +126,8 @@ export const templatesRouter = createRouter({
     const submission = await docuseal.getSubmission(input.id);
     const submitter = submission.submitters.find(
       (s) =>
-        ((s.role === "Company Representative" &&
-          (ctx.companyAdministrator || ctx.companyLawyer)) ||
-         (s.external_id === String(ctx.user.id))) &&
+        ((s.role === "Company Representative" && (ctx.companyAdministrator || ctx.companyLawyer)) ||
+          s.external_id === String(ctx.user.id)) &&
         (s.status === "awaiting" || s.status === "opened"),
     );
     if (!submitter) throw new TRPCError({ code: "NOT_FOUND" });

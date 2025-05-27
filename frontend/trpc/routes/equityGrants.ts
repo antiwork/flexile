@@ -203,7 +203,6 @@ export const equityGrantsRouter = createRouter({
 
       if (!response.ok) throw new TRPCError({ code: "BAD_REQUEST", message: await response.text() });
       await response.json();
-
     }),
   totals: companyProcedure.query(async ({ ctx }) => {
     if (!ctx.companyAdministrator && !ctx.companyLawyer) throw new TRPCError({ code: "FORBIDDEN" });

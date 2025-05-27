@@ -4,13 +4,7 @@ import { and, desc, eq, inArray, isNotNull, isNull, not, type SQLWrapper } from 
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
-import {
-  activeStorageAttachments,
-  activeStorageBlobs,
-  documents,
-  documentSignatures,
-  users,
-} from "@/db/schema";
+import { activeStorageAttachments, activeStorageBlobs, documents, documentSignatures, users } from "@/db/schema";
 import env from "@/env";
 import { companyProcedure, createRouter } from "@/trpc";
 import { simpleUser } from "@/trpc/routes/users";

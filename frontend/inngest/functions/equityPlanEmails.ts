@@ -1,13 +1,7 @@
 import { eq } from "drizzle-orm";
 import { inngest } from "@/inngest/client";
 import { db } from "@/db";
-import {
-  companies,
-  companyAdministrators,
-  companyInvestors,
-  documents,
-  equityGrants,
-} from "@/db/schema";
+import { companies, companyAdministrators, companyInvestors, documents, equityGrants } from "@/db/schema";
 import env from "@/env";
 import AdminSigningEmail from "@/inngest/functions/emails/AdminSigningEmail";
 import EquityGrantIssuedEmail from "@/inngest/functions/emails/EquityGrantIssuedEmail";
