@@ -161,6 +161,7 @@ test.describe("New Contractor", () => {
   test("allows inviting a salary-based contractor", async ({ page }) => {
     const { email } = await fillForm(page);
     await page.getByLabel("Role").fill("Salaried Role");
+    await page.getByLabel("Salary").scrollIntoViewIfNeeded();
     await page.getByLabel("Salary").check({ force: true });
     await page.getByLabel("Rate").fill("120000");
 

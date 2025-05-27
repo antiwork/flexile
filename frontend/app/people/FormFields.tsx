@@ -17,7 +17,7 @@ export default function FormFields() {
   const companyId = useUserStore((state) => state.user?.currentCompanyId);
   const { data: workers } = trpc.contractors.list.useQuery(companyId ? { companyId, excludeAlumni: true } : skipToken);
 
-  const uniqueRoles = workers ? [...new Set(workers.map((worker) => worker.role))].sort() : [];
+  const uniqueRoles = workers ? Array.from(new Set(workers.map((worker) => worker.role))).sort() : [];
   const roleRegex = new RegExp(`${form.watch("role")}`, "iu");
 
   return (
