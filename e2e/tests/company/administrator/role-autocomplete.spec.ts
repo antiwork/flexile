@@ -49,6 +49,7 @@ test.describe("Role autocomplete", () => {
   const testAutofill = async (page: Page) => {
     const roleField = page.getByLabel("Role");
     await roleField.click();
+    await page.waitForSelector('[role="option"]');
     await expect(page.getByRole("option", { name: role1, selected: false })).toBeVisible();
     await expect(page.getByRole("option", { name: role2, selected: false })).toBeVisible();
     await expect(page.getByRole("option", { name: role3, selected: true })).toBeVisible();
