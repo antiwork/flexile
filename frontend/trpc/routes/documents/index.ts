@@ -1,10 +1,9 @@
 import docuseal from "@docuseal/api";
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, inArray, isNotNull, isNull, not, sql, type SQLWrapper } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull, not, type SQLWrapper } from "drizzle-orm";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
-import { DocumentType } from "@/db/enums";
 import {
   activeStorageAttachments,
   activeStorageBlobs,
@@ -13,7 +12,6 @@ import {
   users,
 } from "@/db/schema";
 import env from "@/env";
-import { inngest } from "@/inngest/client";
 import { companyProcedure, createRouter } from "@/trpc";
 import { simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";

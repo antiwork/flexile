@@ -16,7 +16,6 @@ import {
   vestingEvents,
   vestingSchedules,
 } from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import { DEFAULT_VESTING_SCHEDULE_OPTIONS } from "@/models";
 import { type CompanyContext, companyProcedure, createRouter } from "@/trpc";
 import { simpleUser } from "@/trpc/routes/users";
@@ -203,7 +202,7 @@ export const equityGrantsRouter = createRouter({
       );
 
       if (!response.ok) throw new TRPCError({ code: "BAD_REQUEST", message: await response.text() });
-      const { equity_grant_id } = z.object({ equity_grant_id: z.number() }).parse(await response.json());
+      await response.json();
 
     }),
   totals: companyProcedure.query(async ({ ctx }) => {
@@ -357,7 +356,7 @@ export const equityGrantsRouter = createRouter({
           forfeitedShares: BigInt(equityGrant.unvestedShares),
           totalNumberOfShares: BigInt(equityGrant.numberOfShares),
           totalVestedShares: BigInt(equityGrant.vestedShares),
-          totalUnvestedShares: 0n,
+          totalUnvestedShares: BigInt(0),
           totalExercisedShares: BigInt(equityGrant.exercisedShares),
           totalForfeitedShares: BigInt(totalForfeitedShares),
         },
