@@ -346,6 +346,7 @@ test.describe("Bank account settings", () => {
 
     test.describe("when user's country is France", () => {
       test("should pre-fill currency with EUR", async ({ page }) => {
+        await db.update(users).set({ countryCode: "FR" }).where(eq(users.id, onboardingUser.id));
         await page.getByRole("link", { name: "Settings" }).click();
         await page.getByRole("link", { name: "Payouts" }).click();
         await page.getByRole("button", { name: "Add bank account" }).click();
