@@ -90,7 +90,7 @@ export default function EditTemplatePage() {
       { name: "__payRate", type: "text", title: "Pay rate (auto-filled)", role: "Company Representative" },
       { name: "__startDate", type: "date", title: "Start date (auto-filled)", role: "Company Representative" },
     );
-  } else if (template.type === DocumentTemplateType.EquityPlanContract) {
+  } else {
     fields.push(
       { name: "__name", type: "text", title: "Optionholder name (auto-filled)", role: "Company Representative" },
       {
