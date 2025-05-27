@@ -71,7 +71,7 @@ test.describe("Role autocomplete", () => {
     const { admin } = await setup();
     await login(page, admin);
     await page.getByRole("link", { name: "People" }).click();
-    await page.getByRole("link", { name: "Invite contractor" }).click();
+    await page.getByRole("button", { name: "Invite contractor" }).click();
     await testAutofill(page);
   });
 
