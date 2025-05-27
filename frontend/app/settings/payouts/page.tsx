@@ -156,7 +156,6 @@ const BankAccountsSection = () => {
           billing_entity_name: z.string(),
           legal_type: z.enum(["BUSINESS", "PRIVATE"]),
           bank_account_currency: z.enum(currencyCodes).nullable(),
-          wallet_address: z.string().nullable(),
           bank_accounts: z.array(bankAccountSchema),
         })
         .parse(await response.json());
