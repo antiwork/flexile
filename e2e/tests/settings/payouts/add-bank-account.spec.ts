@@ -49,8 +49,8 @@ test.describe("Bank account settings", () => {
     );
 
     await login(page, onboardingUser);
-    await page.getByRole("link", { name: "Account" }).click();
-    await page.getByRole("tab", { name: "Payouts" }).click();
+    await page.getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("link", { name: "Payouts" }).click();
     await page.getByRole("button", { name: "Add bank account" }).click();
   });
 

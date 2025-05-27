@@ -48,6 +48,11 @@ export const usersFactory = {
   createPreOnboarding: async (overrides: Partial<typeof users.$inferInsert> = {}) =>
     usersFactory.create({
       preferredName: null,
+      streetAddress: null,
+      city: null,
+      state: null,
+      zipCode: null,
+      birthDate: null,
       legalName: null,
       countryCode: null,
       citizenshipCountryCode: null,
