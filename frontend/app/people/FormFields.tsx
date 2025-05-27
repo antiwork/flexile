@@ -24,41 +24,36 @@ export default function FormFields() {
       <FormField
         control={form.control}
         name="role"
-        render={({ field }) => {
-          const filter = new RegExp(`${field.value}`, "iu");
-          return (
-            <FormItem>
-              <FormLabel>Role</FormLabel>
-              <Command shouldFilter={false}>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Input {...field} type="text" />
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    onOpenAutoFocus={(e) => e.preventDefault()}
-                    className="p-0"
-                    style={{ width: "var(--radix-popover-trigger-width)" }}
-                  >
-                    <CommandList>
-                      <CommandGroup>
-                        {uniqueRoles
-                          .filter((role) => filter.test(role))
-                          .map((option) => (
-                            <CommandItem key={option} value={option} onSelect={(e) => field.onChange(e)}>
-                              {option}
-                            </CommandItem>
-                          ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </PopoverContent>
-                </Popover>
-              </Command>
-              <FormMessage />
-            </FormItem>
-          );
-        }}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Role</FormLabel>
+            <Command shouldFilter={false}>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Input {...field} type="text" />
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                  className="p-0"
+                  style={{ width: "var(--radix-popover-trigger-width)" }}
+                >
+                  <CommandList>
+                    <CommandGroup>
+                      {uniqueRoles.map((option) => (
+                        <CommandItem key={option} value={option} onSelect={(e) => field.onChange(e)}>
+                          {option}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </PopoverContent>
+              </Popover>
+            </Command>
+            <FormMessage />
+          </FormItem>
+        )}
       />
 
       <FormField

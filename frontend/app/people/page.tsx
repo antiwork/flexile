@@ -37,7 +37,7 @@ const schema = z.object({
 export default function PeoplePage() {
   const company = useCurrentCompany();
   const router = useRouter();
-  const [workers] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id });
+  const [workers, { refetch }] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id });
   const [showInviteModal, setShowInviteModal] = useState(false);
   const lastContractor = workers[0];
   const [templateId, setTemplateId] = useState<string | null>(null);
@@ -55,15 +55,12 @@ export default function PeoplePage() {
   const trpcUtils = trpc.useUtils();
   const saveMutation = trpc.contractors.create.useMutation({
     onSuccess: async (data) => {
-      await trpcUtils.contractors.list.invalidate();
+      await refetch();
       await trpcUtils.documents.list.invalidate();
       setShowInviteModal(false);
       form.reset();
-      router.push(
-        data.documentId
-          ? `/documents?${new URLSearchParams({ sign: data.documentId.toString(), next: "/people" })}`
-          : "/people",
-      );
+      if (data.documentId)
+        router.push(`/documents?${new URLSearchParams({ sign: data.documentId.toString(), next: "/people" })}`);
     },
   });
   const submit = form.handleSubmit((values) => {
