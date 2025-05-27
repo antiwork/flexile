@@ -293,7 +293,9 @@ export default function DocumentsPage() {
           header: "Date",
           cell: (info) => formatDate(info.getValue()),
           meta: {
-            filterOptions: Array.from(new Set(documents.map((document) => document.createdAt.getFullYear().toString()))),
+            filterOptions: Array.from(
+              new Set(documents.map((document) => document.createdAt.getFullYear().toString())),
+            ),
           },
           filterFn: (row, _, filterValue) =>
             Array.isArray(filterValue) && filterValue.includes(row.original.createdAt.getFullYear().toString()),
