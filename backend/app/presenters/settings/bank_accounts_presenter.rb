@@ -19,7 +19,6 @@ class Settings::BankAccountsPresenter
       legal_type: user.business_entity? ? "BUSINESS" : "PRIVATE",
       bank_accounts: user.bank_accounts.alive.order(:id).map(&:edit_props),
       bank_account_currency: user.bank_account&.currency,
-      wallet_address: user.wallet&.wallet_address,
     }
   end
 

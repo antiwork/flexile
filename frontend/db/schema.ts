@@ -1170,21 +1170,6 @@ export const versions = pgTable(
   ],
 );
 
-export const wallets = pgTable(
-  "wallets",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    userId: bigint("user_id", { mode: "bigint" }).notNull(),
-    walletAddress: varchar("wallet_address").notNull(),
-    deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-  },
-  (table) => [index("index_wallets_on_user_id").using("btree", table.userId.asc().nullsLast().op("int8_ops"))],
-);
-
 export const wiseCredentials = pgTable("wise_credentials", {
   id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
   profileId: deterministicEncryptedString("profile_id").notNull(),
@@ -2045,7 +2030,6 @@ export const users = pgTable(
     signedDocuments: boolean("signed_documents").notNull().default(false),
     teamMember: boolean("team_member").notNull().default(false),
     sentInvalidTaxIdEmail: boolean("sent_invalid_tax_id_email").notNull().default(false),
-    invitingCompany: boolean("inviting_company").notNull().default(false),
     clerkId: varchar("clerk_id"),
   },
   (table) => [
@@ -2098,7 +2082,6 @@ export const usersRelations = relations(users, ({ many }) => ({
   invoiceApprovals: many(invoiceApprovals),
   tosAgreements: many(tosAgreements),
   userComplianceInfos: many(userComplianceInfos),
-  wallets: many(wallets),
   documentSignatures: many(documentSignatures),
 }));
 
@@ -2518,13 +2501,6 @@ export const userComplianceInfosRelations = relations(userComplianceInfos, ({ on
   documents: many(documents),
   dividends: many(dividends),
   taxDocuments: many(taxDocuments),
-}));
-
-export const walletsRelations = relations(wallets, ({ one }) => ({
-  user: one(users, {
-    fields: [wallets.userId],
-    references: [users.id],
-  }),
 }));
 
 export const wiseCredentialsRelations = relations(wiseCredentials, ({ many }) => ({

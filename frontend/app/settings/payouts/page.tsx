@@ -4,17 +4,13 @@ import { AlertTriangle, Check, Plus, CircleDollarSign } from "lucide-react";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import React, { Fragment, useState } from "react";
 import { z } from "zod";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { useCurrentCompany, useCurrentUser } from "@/global";
-import { currencyCodes, sanctionedCountries, supportedCountries } from "@/models/constants";
-import { trpc } from "@/trpc/client";
-import { isEthereumAddress } from "@/utils/isEthereumAddress";
+import { useCurrentUser } from "@/global";
+import { currencyCodes, sanctionedCountries } from "@/models/constants";
 import { request } from "@/utils/request";
 import { settings_bank_account_path, settings_bank_accounts_path, settings_dividend_path } from "@/utils/routes";
 import SettingsLayout from "@/app/settings/Layout";
@@ -160,15 +156,12 @@ const BankAccountsSection = () => {
           billing_entity_name: z.string(),
           legal_type: z.enum(["BUSINESS", "PRIVATE"]),
           bank_account_currency: z.enum(currencyCodes).nullable(),
-          wallet_address: z.string().nullable(),
           bank_accounts: z.array(bankAccountSchema),
         })
         .parse(await response.json());
     },
   });
 
-  const [editingWalletPayoutMethod, setEditingWalletPayoutMethod] = useState(false);
-  const [walletAddress, setWalletAddress] = useState(data.wallet_address || "");
   const [bankAccounts, setBankAccounts] = useState(data.bank_accounts);
   const [addingBankAccount, setAddingBankAccount] = useState(false);
   const [editingBankAccount, setEditingBankAccount] = useState<BankAccount | null>(null);
@@ -180,7 +173,6 @@ const BankAccountsSection = () => {
   );
 
   const isFromSanctionedCountry = sanctionedCountries.has(data.country_code);
-  const showWalletPayoutMethod = user.roles.investor && !supportedCountries.has(data.country_code);
 
   const useBankAccountMutation = useMutation({
     mutationFn: async ({ bankAccountId, useFor }: { bankAccountId: number; useFor: "invoices" | "dividends" }) => {
@@ -253,27 +245,6 @@ const BankAccountsSection = () => {
           </div>
         ) : (
           <>
-            {showWalletPayoutMethod ? (
-              <>
-                <div className="flex justify-between">
-                  <div>
-                    <h2 className="text-xl font-bold">ETH wallet</h2>
-                    <div className="text-xs">{walletAddress}</div>
-                  </div>
-                  <Button variant="outline" onClick={() => setEditingWalletPayoutMethod(true)}>
-                    Edit
-                  </Button>
-                  <WalletAddressModal
-                    open={editingWalletPayoutMethod}
-                    value={walletAddress}
-                    onClose={() => setEditingWalletPayoutMethod(false)}
-                    onComplete={setWalletAddress}
-                  />
-                </div>
-                <Separator />
-              </>
-            ) : null}
-
             {bankAccounts.map((bankAccount, index) => (
               <Fragment key={bankAccount.id}>
                 <div className="flex justify-between">
@@ -365,80 +336,5 @@ const BankAccountsSection = () => {
         ) : null}
       </CardContent>
     </Card>
-  );
-};
-
-const walletAddressSchema = z.object({
-  walletAddress: z.string().refine(isEthereumAddress, "The entered address is not a valid Ethereum address."),
-});
-
-const WalletAddressModal = ({
-  open,
-  onClose,
-  value,
-  onComplete,
-}: {
-  open: boolean;
-  onClose: () => void;
-  value: string;
-  onComplete: (address: string) => void;
-}) => {
-  const form = useForm({
-    defaultValues: { walletAddress: value },
-    resolver: zodResolver(walletAddressSchema),
-  });
-  const company = useCurrentCompany();
-
-  const walletUpdateMutation = trpc.wallets.update.useMutation({
-    onSuccess: () => {
-      onClose();
-      onComplete(form.getValues("walletAddress"));
-    },
-  });
-  const submit = form.handleSubmit((values) => walletUpdateMutation.mutateAsync({ companyId: company.id, ...values }));
-
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Get paid with ETH</DialogTitle>
-        </DialogHeader>
-        <div className="text-gray-500">
-          Payments will be sent to the specified Ethereum address. The amount will be based on the current exchange
-          rate, and Flexile will cover network fees.
-        </div>
-
-        <Alert variant="destructive">
-          <AlertTriangle className="size-4" />
-          <AlertDescription>
-            Ethereum transactions are irreversible. Please double-check your address before saving.
-          </AlertDescription>
-        </Alert>
-
-        <Form {...form}>
-          <form onSubmit={(e) => void submit(e)}>
-            <FormField
-              control={form.control}
-              name="walletAddress"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Ethereum wallet address (ERC20 Network)</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Paste or type your ETH address" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="mt-6 flex justify-end">
-              <MutationStatusButton mutation={walletUpdateMutation} disabled={!form.formState.isValid}>
-                Save
-              </MutationStatusButton>
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
   );
 };

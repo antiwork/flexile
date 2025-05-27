@@ -5,7 +5,7 @@ class UserPresenter
            :documents, :business_name, :business_entity?, :display_country,
            :legal_name, :preferred_name, :display_name, :billing_entity_name, :unconfirmed_email,
            :created_at, :state, :city, :zip_code, :street_address, :bank_account, :contracts, :tax_id, :birth_date,
-           :requires_w9?, :tax_information_confirmed_at, :minimum_dividend_payment_in_cents, :wallet, :bank_accounts,
+           :requires_w9?, :tax_information_confirmed_at, :minimum_dividend_payment_in_cents, :bank_accounts,
            :tax_id_status, private: true, to: :user, allow_nil: true
 
   def initialize(current_context:)
@@ -47,12 +47,6 @@ class UserPresenter
   end
 
   def logged_in_user
-    companies = if user.inviting_company?
-      []
-    else
-      user.all_companies
-    end
-
     roles = {}
     has_documents = documents.joins(:signatures).not_consulting_contract.or(documents.unsigned).exists?
     if user.company_administrator_for?(company)
@@ -86,7 +80,6 @@ class UserPresenter
         hasDocuments: has_documents,
         endedAt: worker.ended_at,
         payRateType: worker.pay_rate_type,
-        inviting_company: user.inviting_company,
         role: worker.role,
         payRateInSubunits: worker.pay_rate_in_subunits,
         hoursPerWeek: worker.hours_per_week,
@@ -94,7 +87,7 @@ class UserPresenter
     end
 
     {
-      companies: companies.compact.map do |company|
+      companies: user.all_companies.compact.map do |company|
         flags = %w[upcoming_dividend irs_tax_forms company_updates].filter { Flipper.enabled?(_1, company) }
         flags.push("equity_compensation") if company.equity_compensation_enabled?
         flags.push("equity_grants") if company.equity_grants_enabled?
@@ -144,7 +137,7 @@ class UserPresenter
       preferredName: preferred_name,
       billingEntityName: billing_entity_name,
       roles:,
-      hasPayoutMethod: user.bank_account.present? || user.wallet.present?,
+      hasPayoutMethod: user.bank_account.present?,
       address: {
         street_address: user.street_address,
         city: user.city,
@@ -162,12 +155,9 @@ class UserPresenter
     attr_reader :current_context, :user, :company, :company_administrator, :company_worker, :company_investor, :company_lawyer
 
     def user_props
-      is_inviting_company = user.inviting_company?
-
       result = common_props.merge(
         is_worker: company_worker.present?,
         is_investor: company_investor.present?,
-        is_inviting_company:,
         flags: {},
       )
       result[:has_documents] = documents.not_consulting_contract.or(documents.unsigned).exists?
@@ -216,19 +206,13 @@ class UserPresenter
     end
 
     def common_props
-      companies = if user.inviting_company?
-        []
-      else
-        user.all_companies
-      end
-
       {
-        company: company.present? && !user.inviting_company? ? {
+        company: company.present? ? {
           id: company.external_id,
           name: company.display_name,
           logo_url: company.logo_url,
         } : nil,
-        companies: companies.compact.map do
+        companies: user.all_companies.compact.map do
           company_navigation_props(
             company: _1,
           )

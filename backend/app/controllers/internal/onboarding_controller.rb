@@ -22,7 +22,6 @@ class Internal::OnboardingController < Internal::BaseController
     authorize :onboarding
 
     update_params = params_for_update
-    update_params[:inviting_company] = true if Current.user.initial_onboarding?
     error_message = UpdateUser.new(user: Current.user, update_params:).process
     if error_message.blank?
       render json: { success: true }
@@ -83,8 +82,6 @@ class Internal::OnboardingController < Internal::BaseController
     def onboarding_service
       if Current.user.worker?
         OnboardingState::Worker.new(user: Current.user, company: Current.company)
-      elsif Current.user.inviting_company?
-        OnboardingState::WorkerWithoutCompany.new(user: Current.user, company: nil)
       else
         OnboardingState::Investor.new(user: Current.user, company: Current.company)
       end
