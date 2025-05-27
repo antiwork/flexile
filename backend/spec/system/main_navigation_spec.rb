@@ -280,49 +280,6 @@ RSpec.describe "Main navigation" do
     end
   end
 
-  context "when the user is not associated with a company" do
-    context "when the user is a regular user" do
-      let(:user) { create(:user) }
-
-      before do
-        sign_in user
-      end
-
-      it "renders the expected navigation links" do
-        visit root_path
-        expect(page).to_not have_link("Invoices")
-        expect(page).to_not have_link("Documents")
-        expect(page).to_not have_link("People")
-        expect(page).to_not have_link("Analytics")
-        expect(page).to_not have_link("Roles")
-        expect(page).to_not have_link("Equity")
-        expect(page).to have_link("Account")
-        expect(page).to have_link("Log out")
-      end
-    end
-
-    context "when the user is a contractor without a company" do
-      let(:user) { create(:user, inviting_company: true) }
-
-      before do
-        sign_in user
-      end
-
-      it "renders the expected navigation links" do
-        visit root_path
-        expect(page).to_not have_link("Invoices")
-        expect(page).to_not have_link("Documents")
-        expect(page).to_not have_link("People")
-        expect(page).to_not have_link("Analytics")
-        expect(page).to_not have_link("Roles")
-        expect(page).to_not have_link("Equity")
-        expect(page).to have_link("Invite company")
-        expect(page).to have_link("Account")
-        expect(page).to have_link("Log out")
-      end
-    end
-  end
-
   describe "Role switcher" do
     let(:user) { create(:user) }
     let(:company) { create(:company) }

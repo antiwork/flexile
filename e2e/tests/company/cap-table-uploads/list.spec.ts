@@ -13,7 +13,7 @@ test.describe.configure({ mode: "serial" });
 test.describe("Cap table uploads list", () => {
   test("shows empty state when no uploads exist", async ({ page }: { page: Page }) => {
     await db.delete(capTableUploads);
-    const { user } = await usersFactory.create({ teamMember: true, invitingCompany: true });
+    const { user } = await usersFactory.createCompanyAdmin({ teamMember: true });
 
     await login(page, user);
     await page.goto("/cap_table_uploads");
@@ -24,7 +24,7 @@ test.describe("Cap table uploads list", () => {
 
   test("shows list of uploads with different statuses", async ({ page }: { page: Page }) => {
     await db.delete(capTableUploads);
-    const { user } = await usersFactory.create({ teamMember: true, invitingCompany: true });
+    const { user } = await usersFactory.createCompanyAdmin({ teamMember: true });
 
     // Create test data for different statuses
     const statuses = ["submitted", "processing", "failed"] as const;

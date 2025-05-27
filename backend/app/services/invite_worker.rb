@@ -31,7 +31,6 @@ class InviteWorker
     end
 
     company_worker = user.company_workers.find_or_initialize_by(company:)
-    user.inviting_company = false
     company_worker.assign_attributes(**params, ended_at: nil)
 
     if is_existing_user

@@ -79,34 +79,4 @@ RSpec.describe "Mobile navigation" do
       expect(page).to have_selector("h1", text: "People")
     end
   end
-
-  context "when user is inviting a company" do
-    let(:user) { create(:user, inviting_company: true) }
-
-    before do
-      sign_in user
-    end
-
-    it "allows navigating through pages via the mobile nav menu" do
-      visit root_path
-
-      expect(page).to have_selector("h1", text: "Who are you billing?")
-
-      click_on "Toggle Main Menu"
-
-      expect(page).to have_link("Invite company")
-      expect(page).to have_link("Account")
-
-      click_on "Account"
-      expect(page).to have_selector("h1", text: "Profile")
-      expect(page).to_not have_link("Invite company")
-      expect(page).to_not have_link("Account")
-
-      click_on "Toggle Main Menu"
-      click_on "Invite company"
-      expect(page).to have_selector("h1", text: "Who are you billing?")
-      expect(page).to_not have_link("Invite company")
-      expect(page).to_not have_link("Account")
-    end
-  end
 end

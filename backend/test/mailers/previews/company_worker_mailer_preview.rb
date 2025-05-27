@@ -55,16 +55,6 @@ class CompanyWorkerMailerPreview < ActionMailer::Preview
     )
   end
 
-  def invite_company
-    company_worker = CompanyWorker.last
-    token = SecureRandom.hex(20)
-
-    CompanyMailer.invite_company(
-      company_worker_id: company_worker.id,
-      token: token
-    )
-  end
-
   def vesting_event_processed
     CompanyWorkerMailer.vesting_event_processed(VestingEvent.last.id)
   end

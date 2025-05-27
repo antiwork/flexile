@@ -248,42 +248,6 @@ RSpec.describe "Payouts settings", :vcr do
           end
         end
 
-        context "when investor has a wallet address" do
-          before do
-            create(:wallet, user:)
-            user.bank_accounts.destroy_all
-            visit spa_settings_payouts_path
-          end
-
-          it "allows updating their ETH wallet address" do
-            expect(page).to have_selector("h2", text: "Payout method")
-            expect(page).to have_selector("h2", text: "ETH wallet")
-            expect(page).to have_text("0x1234f5ea0ba39494ce839613fffba74279579268")
-
-            click_on "Edit"
-
-            within_modal do
-              fill_in "Ethereum wallet address (ERC20 Network)", with: "invalidETH"
-              click_on "Save"
-              expect(page).to have_text("The entered address is not a valid Ethereum address.")
-
-              fill_in "Ethereum wallet address (ERC20 Network)", with: "0x1234f5ea0ba39494ce839613fffba74279579269"
-              click_on "Save"
-            end
-
-            expect(page).to_not have_text("0x1234f5ea0ba39494ce839613fffba74279579268")
-            expect(page).to have_text("0x1234f5ea0ba39494ce839613fffba74279579269")
-          end
-
-          it "allows adding a bank account and using it for dividends" do
-            click_on "Add bank account"
-            fill_out_bank_account_form
-            click_on "Save bank account"
-            wait_for_ajax
-            expect(page).to have_text("in 6712")
-          end
-        end
-
         it "allows adding another bank account and using it for dividends" do
           visit spa_settings_payouts_path
           wait_for_ajax

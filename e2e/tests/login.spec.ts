@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
 
 test("login", async ({ page }) => {
-  const { user } = await usersFactory.create({ invitingCompany: true });
+  const { user } = await usersFactory.create();
   const { email } = await setClerkUser(user.id);
 
   await page.goto("/login");
@@ -15,7 +15,8 @@ test("login", async ({ page }) => {
   await page.getByLabel("Password", { exact: true }).fill("password");
   await page.getByRole("button", { name: "Continue", exact: true }).click();
 
-  await expect(page.getByRole("heading", { name: "Profile" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Set up your company" })).toBeVisible();
+
   await expect(page.getByText("Sign in to Flexile")).not.toBeVisible();
   await expect(page.getByText("Enter your password")).not.toBeVisible();
 
