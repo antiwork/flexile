@@ -28,17 +28,17 @@ heroku run rails console -a flexile
 First, locate the company admin user who will be inviting the workers:
 
 ```ruby
-print("👋 Starting worker invitation script")
+puts "👋 Starting worker invitation script"
 
-# Find the company admin user
-admin = User.find_by(email: "ed@keepers.team")
-print("👤 Found admin user | email =", admin.email)
+# Find the company admin user - replace with actual admin email
+admin = User.find_by(email: "admin@company.com")
+puts "👤 Found admin user | email = #{admin.email}"
 
 # Find the company and company administrator
 company = admin.companies.first
 company_administrator = admin.company_administrators.first
-print("🏢 Found company | name =", company.name)
-print("👔 Found company administrator | id =", company_administrator.id)
+puts "🏢 Found company | name = #{company.name}"
+puts "👔 Found company administrator | id = #{company_administrator.id}"
 ```
 
 ### Defining Worker Data
@@ -66,7 +66,7 @@ workers = [
   }
 ]
 
-print("📋 Processing", workers.length, "workers")
+puts "📋 Processing #{workers.length} workers"
 ```
 
 ## Inviting Workers
@@ -77,7 +77,7 @@ Iterate through each worker and create invitation parameters:
 
 ```ruby
 workers.each do |worker|
-  print("👤 Processing worker | name =", worker[:name], "email =", worker[:email])
+  puts "👤 Processing worker | name = #{worker[:name]} | email = #{worker[:email]}"
 
   worker_params = {
     email: worker[:email],
@@ -88,7 +88,7 @@ workers.each do |worker|
     hours_per_week: worker[:pay_type] == "hourly" ? 40 : nil
   }
 
-  print("📝 Inviting worker with params |", worker_params)
+  puts "📝 Inviting worker with params | #{worker_params}"
 
   result = InviteWorker.new(
     current_user: admin,
@@ -98,13 +98,13 @@ workers.each do |worker|
   ).perform
 
   if result[:success]
-    print("✅ Successfully invited worker | name =", worker[:name])
+    puts "✅ Successfully invited worker | name = #{worker[:name]}"
   else
-    print("❌ Failed to invite worker | name =", worker[:name], "error =", result[:error_message])
+    puts "❌ Failed to invite worker | name = #{worker[:name]} | error = #{result[:error_message]}"
   end
 end
 
-print("🎉 Finished processing all workers")
+puts "🎉 Finished processing all workers"
 ```
 
 ### Handling Results
@@ -130,17 +130,17 @@ For hourly workers:
 ## Complete Script Example
 
 ```ruby
-print("👋 Starting worker invitation script")
+puts "👋 Starting worker invitation script"
 
-# Find the company admin user
-admin = User.find_by(email: "ed@keepers.team")
-print("👤 Found admin user | email =", admin.email)
+# Find the company admin user - replace with actual admin email
+admin = User.find_by(email: "admin@company.com")
+puts "👤 Found admin user | email = #{admin.email}"
 
 # Find the company and company administrator
 company = admin.companies.first
 company_administrator = admin.company_administrators.first
-print("🏢 Found company | name =", company.name)
-print("👔 Found company administrator | id =", company_administrator.id)
+puts "🏢 Found company | name = #{company.name}"
+puts "👔 Found company administrator | id = #{company_administrator.id}"
 
 # Define workers data
 workers = [
@@ -162,10 +162,10 @@ workers = [
   }
 ]
 
-print("📋 Processing", workers.length, "workers")
+puts "📋 Processing #{workers.length} workers"
 
 workers.each do |worker|
-  print("👤 Processing worker | name =", worker[:name], "email =", worker[:email])
+  puts "👤 Processing worker | name = #{worker[:name]} | email = #{worker[:email]}"
 
   worker_params = {
     email: worker[:email],
@@ -176,7 +176,7 @@ workers.each do |worker|
     hours_per_week: worker[:pay_type] == "hourly" ? 40 : nil
   }
 
-  print("📝 Inviting worker with params |", worker_params)
+  puts "📝 Inviting worker with params | #{worker_params}"
 
   result = InviteWorker.new(
     current_user: admin,
@@ -186,11 +186,11 @@ workers.each do |worker|
   ).perform
 
   if result[:success]
-    print("✅ Successfully invited worker | name =", worker[:name])
+    puts "✅ Successfully invited worker | name = #{worker[:name]}"
   else
-    print("❌ Failed to invite worker | name =", worker[:name], "error =", result[:error_message])
+    puts "❌ Failed to invite worker | name = #{worker[:name]} | error = #{result[:error_message]}"
   end
 end
 
-print("🎉 Finished processing all workers")
+puts "🎉 Finished processing all workers"
 ```
