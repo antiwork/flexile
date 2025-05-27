@@ -218,11 +218,7 @@ const NavLinks = () => {
   const updatesPath = company.routes.find((route) => route.label === "Updates")?.name;
   const equityLinks = equityNavLinks(user, company);
 
-  const [isOpen, setIsOpen] = React.useState(() => {
-    if (typeof window === "undefined") return false;
-    const stored = localStorage.getItem("equity-menu-state");
-    return stored === "open";
-  });
+  const [isOpen, setIsOpen] = React.useState(() => localStorage.getItem("equity-menu-state") === "open");
 
   return (
     <SidebarMenu>

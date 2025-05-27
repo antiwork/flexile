@@ -463,6 +463,8 @@ const sidebarMenuButtonVariants = cva(
 function SidebarMenuButton({
   asChild = false,
   isActive = false,
+  variant = "default",
+  size = "default",
   className,
   onClick,
   ...props
@@ -474,22 +476,20 @@ function SidebarMenuButton({
   const { isMobile, setOpenMobile } = useSidebar();
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    // For CollapsibleTrigger, prevent sidebar from closing
-    if (props["aria-controls"] && isMobile) {
-      event.stopPropagation();
-    } else if (isMobile) {
+    onClick?.(event);
+    if (isMobile) {
       setOpenMobile(false);
     }
-    onClick?.(event);
   };
 
   return (
     <Comp
       data-slot="sidebar-menu-button"
       data-sidebar="menu-button"
+      data-size={size}
       data-active={isActive}
       onClick={handleClick}
-      className={cn(sidebarMenuButtonVariants(props), className)}
+      className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
       {...props}
     />
   );
@@ -603,7 +603,7 @@ function SidebarMenuSubItem({ className, ...props }: React.ComponentProps<"li">)
 
 function SidebarMenuSubButton({
   asChild = false,
-  size = "md",
+  size = "default",
   isActive = false,
   variant = "default",
   className,
@@ -612,8 +612,7 @@ function SidebarMenuSubButton({
   asChild?: boolean;
   size?: "sm" | "md";
   isActive?: boolean;
-  variant?: VariantProps<typeof sidebarMenuButtonVariants>["variant"];
-}) {
+} & VariantProps<typeof sidebarMenuButtonVariants>) {
   const Comp = asChild ? Slot : "a";
 
   return (
@@ -623,10 +622,7 @@ function SidebarMenuSubButton({
       data-size={size}
       data-active={isActive}
       className={cn(
-        sidebarMenuButtonVariants({
-          variant,
-          size: size === "md" ? "default" : "sm",
-        }),
+        sidebarMenuButtonVariants({ variant, size }),
         "-translate-x-px",
         "group-data-[collapsible=icon]:hidden",
         className,
