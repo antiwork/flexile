@@ -214,12 +214,12 @@ test.describe("One-off payments", () => {
         expect(invoice).toEqual(
           expect.objectContaining({
             totalAmountInUsdCents: 50000n,
-            equityPercentage: 26,
-            cashAmountInCents: 37000n,
-            equityAmountInCents: 13000n,
+            equityPercentage: 25,
+            cashAmountInCents: 37500n,
+            equityAmountInCents: 12500n,
             equityAmountInOptions: 13,
-            minAllowedEquityPercentage: 26,
-            maxAllowedEquityPercentage: 74,
+            minAllowedEquityPercentage: 25,
+            maxAllowedEquityPercentage: 75,
           }),
         );
 
