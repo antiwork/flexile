@@ -92,7 +92,7 @@ export default function PeoplePage() {
       columnHelper.accessor("role", {
         header: "Role",
         cell: (info) => info.getValue() || "N/A",
-        meta: { filterOptions: [...new Set(workers.map((worker) => worker.role))] },
+        meta: { filterOptions: Array.from(new Set(workers.map((worker) => worker.role))) },
       }),
       columnHelper.simple("user.countryCode", "Country", (v) => v && countries.get(v)),
       columnHelper.accessor((row) => (row.endedAt ? "Alumni" : row.startedAt > new Date() ? "Onboarding" : "Active"), {
@@ -192,18 +192,13 @@ export default function PeoplePage() {
                 control={form.control}
                 name="contractSignedElsewhere"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormItem className="flex flex-row items-start space-y-0 space-x-3 rounded-md border p-4">
                     <FormControl>
-                      <input
-                        type="checkbox"
-                        checked={field.value}
-                        onChange={field.onChange}
-                        className="h-4 w-4 mt-1"
-                      />
+                      <input type="checkbox" checked={field.value} onChange={field.onChange} className="mt-1 h-4 w-4" />
                     </FormControl>
                     <div className="space-y-1 leading-none">
                       <FormLabel>Already signed contract elsewhere</FormLabel>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         Check this if the contractor has already signed a contract outside of Flexile
                       </p>
                     </div>
