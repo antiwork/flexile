@@ -60,7 +60,7 @@ test.describe("Investor onboarding - personal details", () => {
 
     await page.getByRole("button", { name: "Continue" }).click();
 
-    await expect(page.getByRole("heading", { name: "Equity" })).toBeVisible();
+    await expect(page.getByRole("heading").getByText("Equity")).toBeVisible();
     await expect(page.getByText("Please provide a payout method for your dividends.")).toBeVisible();
 
     const updatedUser = await db.query.users.findFirst({
@@ -102,7 +102,7 @@ test.describe("Investor onboarding - personal details", () => {
       { page, title: "Important notice" },
     );
 
-    await expect(page.getByRole("heading", { name: "Equity" })).toBeVisible();
+    await expect(page.getByRole("heading").getByText("Equity")).toBeVisible();
 
     const updatedUser = await db.query.users.findFirst({
       where: eq(users.id, onboardingUser.id),
@@ -130,7 +130,7 @@ test.describe("Investor onboarding - personal details", () => {
 
     await page.getByRole("button", { name: "Continue" }).click();
 
-    await expect(page.getByRole("heading", { name: "Equity" })).toBeVisible();
+    await expect(page.getByRole("heading").getByText("Equity")).toBeVisible();
 
     const updatedUser = await db.query.users.findFirst({
       where: eq(users.id, onboardingUser.id),
