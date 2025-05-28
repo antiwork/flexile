@@ -101,7 +101,6 @@ export const contractorsRouter = createRouter({
             ),
           })
         : null;
-      if (!template) throw new TRPCError({ code: "NOT_FOUND" });
 
       const response = await fetch(company_workers_url(ctx.company.externalId, { host: ctx.host }), {
         method: "POST",
