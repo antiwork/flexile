@@ -86,20 +86,21 @@ export const contractorsRouter = createRouter({
         payRateType: z.nativeEnum(PayRateType),
         hoursPerWeek: z.number().nullable(),
         role: z.string(),
-        documentTemplateId: z.string(),
-        contractSignedElsewhere: z.boolean().default(false),
+        documentTemplateId: z.string().nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-      const template = await db.query.documentTemplates.findFirst({
-        where: and(
-          eq(documentTemplates.externalId, input.documentTemplateId),
-          or(eq(documentTemplates.companyId, ctx.company.id), isNull(documentTemplates.companyId)),
-          eq(documentTemplates.type, DocumentTemplateType.ConsultingContract),
-        ),
-      });
+      const template = input.documentTemplateId
+        ? await db.query.documentTemplates.findFirst({
+            where: and(
+              eq(documentTemplates.externalId, input.documentTemplateId),
+              or(eq(documentTemplates.companyId, ctx.company.id), isNull(documentTemplates.companyId)),
+              eq(documentTemplates.type, DocumentTemplateType.ConsultingContract),
+            ),
+          })
+        : null;
       if (!template) throw new TRPCError({ code: "NOT_FOUND" });
 
       const response = await fetch(company_workers_url(ctx.company.externalId, { host: ctx.host }), {
@@ -117,7 +118,7 @@ export const contractorsRouter = createRouter({
                   ? "project_based"
                   : "salary",
             role: input.role,
-            contract_signed_elsewhere: input.contractSignedElsewhere,
+            contract_signed_elsewhere: !template,
             ...(input.payRateType === PayRateType.Hourly && { hours_per_week: input.hoursPerWeek }),
           },
         }),
@@ -126,7 +127,7 @@ export const contractorsRouter = createRouter({
         const json = z.object({ error_message: z.string() }).parse(await response.json());
         throw new TRPCError({ code: "BAD_REQUEST", message: json.error_message });
       }
-      if (input.payRateType === PayRateType.Salary || input.contractSignedElsewhere) return { documentId: null };
+      if (input.payRateType === PayRateType.Salary || !template) return { documentId: null };
       const { new_user_id, document_id } = z
         .object({ new_user_id: z.number(), document_id: z.number() })
         .parse(await response.json());

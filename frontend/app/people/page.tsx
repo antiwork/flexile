@@ -71,8 +71,7 @@ export default function PeoplePage() {
       companyId: company.id,
       ...values,
       startedAt: formatISO(new Date(`${values.startDate}T00:00:00`)),
-      documentTemplateId: templateId ?? "",
-      contractSignedElsewhere: values.contractSignedElsewhere,
+      documentTemplateId: values.contractSignedElsewhere ? templateId : null,
     });
   });
 
