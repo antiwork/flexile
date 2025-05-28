@@ -191,7 +191,7 @@ intent = Stripe::PaymentIntent.create({
   payment_method: stripe_setup_intent.payment_method,
   customer: stripe_setup_intent.customer,
   confirm: true,
-  amount: 275_276_75, # set manually
+  amount: 292_356_93, # set manually
   currency: "USD",
   expand: ["latest_charge"],
   capture_method: "automatic",

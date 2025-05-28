@@ -18,47 +18,43 @@ export default function FormFields() {
   const { data: workers } = trpc.contractors.list.useQuery(companyId ? { companyId, excludeAlumni: true } : skipToken);
 
   const uniqueRoles = workers ? [...new Set(workers.map((worker) => worker.role))].sort() : [];
+  const roleRegex = new RegExp(`${form.watch("role")}`, "iu");
 
   return (
     <>
       <FormField
         control={form.control}
         name="role"
-        render={({ field }) => {
-          const filter = new RegExp(`${field.value}`, "iu");
-          return (
-            <FormItem>
-              <FormLabel>Role</FormLabel>
-              <Command shouldFilter={false}>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Input {...field} type="text" />
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    onOpenAutoFocus={(e) => e.preventDefault()}
-                    className="p-0"
-                    style={{ width: "var(--radix-popover-trigger-width)" }}
-                  >
-                    <CommandList>
-                      <CommandGroup>
-                        {uniqueRoles
-                          .filter((role) => filter.test(role))
-                          .map((option) => (
-                            <CommandItem key={option} value={option} onSelect={(e) => field.onChange(e)}>
-                              {option}
-                            </CommandItem>
-                          ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </PopoverContent>
-                </Popover>
-              </Command>
-              <FormMessage />
-            </FormItem>
-          );
-        }}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Role</FormLabel>
+            <Command shouldFilter={false} value={uniqueRoles.find((role) => roleRegex.test(role)) ?? ""}>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Input {...field} type="text" />
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                  className="p-0"
+                  style={{ width: "var(--radix-popover-trigger-width)" }}
+                >
+                  <CommandList>
+                    <CommandGroup>
+                      {uniqueRoles.map((option) => (
+                        <CommandItem key={option} value={option} onSelect={(e) => field.onChange(e)}>
+                          {option}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </PopoverContent>
+              </Popover>
+            </Command>
+            <FormMessage />
+          </FormItem>
+        )}
       />
 
       <FormField
@@ -82,7 +78,9 @@ export default function FormFields() {
         )}
       />
 
-      <div className="grid items-start gap-4 md:grid-cols-2">
+      <div
+        className={`grid items-start gap-3 ${payRateType === PayRateType.ProjectBased ? "md:grid-cols-1" : "md:grid-cols-2"}`}
+      >
         <FormField
           control={form.control}
           name="payRateInSubunits"

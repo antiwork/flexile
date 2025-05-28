@@ -51,8 +51,8 @@ test.describe("New Contractor", () => {
     });
     await optionPoolsFactory.create({ companyId: company.id });
     await login(page, adminUser);
-    await page.getByRole("link", { name: "Equity" }).click();
-    await page.getByRole("tab", { name: "Equity grants" }).click();
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Equity grants" }).click();
     await expect(page.getByRole("link", { name: "New option grant" })).not.toBeVisible();
     await expect(page.getByText("Create equity plan contract templates")).toBeVisible();
 
@@ -155,8 +155,8 @@ test.describe("New Contractor", () => {
     });
 
     await login(page, adminUser);
-    await page.getByRole("link", { name: "Equity" }).click();
-    await page.getByRole("tab", { name: "Equity grants" }).click();
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Equity grants" }).click();
     await page.getByRole("button", { name: "Cancel" }).click();
     await withinModal(
       async (modal) => {
@@ -187,8 +187,8 @@ test.describe("New Contractor", () => {
     await equityGrantsFactory.create({ companyInvestorId: companyInvestor.id, vestedShares: 100 });
 
     await login(page, user);
-    await page.getByRole("link", { name: "Equity" }).click();
-    await page.getByRole("tab", { name: "Options" }).click();
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Options" }).click();
     await expect(page.getByText("You have 100 vested options available for exercise.")).toBeVisible();
     await page.getByRole("button", { name: "Exercise Options" }).click();
     await withinModal(

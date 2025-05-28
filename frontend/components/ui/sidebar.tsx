@@ -439,7 +439,7 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
 }
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center gap-3 overflow-hidden rounded-sm p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:text-accent-foreground focus-visible:ring-2 active:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:font-medium data-[active=true]:text-accent-foreground cursor-pointer data-[state=open]:hover:text-accent-foreground hover:bg-gray-100 active:bg-gray-100/50 data-[active=true]:bg-gray-100/30 data-[state=open]:hover:bg-gray-100 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+  "peer/menu-button flex w-full items-center gap-3 overflow-hidden rounded-sm p-2 text-left outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:text-accent-foreground focus-visible:ring-2 active:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:font-medium data-[active=true]:text-accent-foreground cursor-pointer hover:bg-gray-100 active:bg-gray-100/50 data-[active=true]:bg-gray-100/30 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>[data-state=open]>svg]:rotate-90",
   {
     variants: {
       variant: {
@@ -581,7 +581,7 @@ function SidebarMenuSub({ className, ...props }: React.ComponentProps<"ul">) {
       data-slot="sidebar-menu-sub"
       data-sidebar="menu-sub"
       className={cn(
-        "border-sidebar-border mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l px-2.5 py-0.5",
+        "flex min-w-0 translate-x-px flex-col gap-1 py-0.5 pl-7",
         "group-data-[collapsible=icon]:hidden",
         className,
       )}
@@ -603,15 +603,15 @@ function SidebarMenuSubItem({ className, ...props }: React.ComponentProps<"li">)
 
 function SidebarMenuSubButton({
   asChild = false,
-  size = "md",
+  size = "default",
   isActive = false,
+  variant = "default",
   className,
   ...props
 }: React.ComponentProps<"a"> & {
   asChild?: boolean;
-  size?: "sm" | "md";
   isActive?: boolean;
-}) {
+} & VariantProps<typeof sidebarMenuButtonVariants>) {
   const Comp = asChild ? Slot : "a";
 
   return (
@@ -621,10 +621,8 @@ function SidebarMenuSubButton({
       data-size={size}
       data-active={isActive}
       className={cn(
-        "text-foreground ring-sidebar-ring hover:text-accent-foreground active:text-accent-foreground [&>svg]:text-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden hover:bg-gray-100 focus-visible:ring-2 active:bg-gray-100/50 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
-        "data-[active=true]:text-accent-foreground data-[active=true]:bg-gray-100",
-        size === "sm" && "text-xs",
-        size === "md" && "text-sm",
+        sidebarMenuButtonVariants({ variant, size }),
+        "-translate-x-px",
         "group-data-[collapsible=icon]:hidden",
         className,
       )}

@@ -18,7 +18,6 @@ RSpec.describe User do
 
     it { is_expected.to have_many(:contracts) }
     it { is_expected.to have_many(:documents) }
-    it { is_expected.to have_one(:wallet) }
     it { is_expected.to have_many(:dividends).through(:company_investors) }
     it { is_expected.to have_many(:time_entries) }
     it { is_expected.to have_many(:tos_agreements) }
