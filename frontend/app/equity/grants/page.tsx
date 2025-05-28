@@ -76,16 +76,11 @@ export default function GrantsPage() {
     type: DocumentTemplateType.EquityPlanContract,
     signable: true,
   });
-  const [boardConsentTemplates] = trpc.documents.templates.list.useSuspenseQuery({
-    companyId: company.id,
-    type: DocumentTemplateType.BoardConsent,
-    signable: true,
-  });
 
   return (
     <EquityLayout
       headerActions={
-        equityPlanContractTemplates.length > 0 && boardConsentTemplates.length > 0 ? (
+        equityPlanContractTemplates.length > 0 ? (
           <Button asChild>
             <Link href={`/companies/${company.id}/administrator/equity_grants/new`}>
               <Pencil className="size-4" />
@@ -95,12 +90,12 @@ export default function GrantsPage() {
         ) : null
       }
     >
-      {equityPlanContractTemplates.length === 0 || boardConsentTemplates.length === 0 ? (
+      {equityPlanContractTemplates.length === 0 ? (
         <Alert>
           <Info />
           <AlertDescription>
             <Link href="/documents" className={linkClasses}>
-              Create equity plan contract and board consent templates
+              Create equity plan contract templates
             </Link>{" "}
             before adding new option grants.
           </AlertDescription>

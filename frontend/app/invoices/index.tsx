@@ -80,14 +80,6 @@ const useIsApprovedByCurrentUser = () => {
   return (invoice: Invoice) => invoice.approvals.some((approval) => approval.approver.id === user.id);
 };
 
-const useIsEquityRequirementMet = () => {
-  const company = useCurrentCompany();
-  return (invoice: Invoice) =>
-    invoice.equityAmountInCents === 0n ||
-    !company.equityCompensationEnabled ||
-    invoice.equityAllocationStatus === "approved";
-};
-
 export function useIsActionable() {
   const isPayable = useIsPayable();
   const isApprovedByCurrentUser = useIsApprovedByCurrentUser();
@@ -99,13 +91,11 @@ export function useIsActionable() {
 export function useIsPayable() {
   const company = useCurrentCompany();
   const isApprovedByCurrentUser = useIsApprovedByCurrentUser();
-  const isEquityRequirementMet = useIsEquityRequirementMet();
 
   return (invoice: Invoice) =>
     invoice.status === "failed" ||
     (["received", "approved"].includes(invoice.status) &&
       !invoice.requiresAcceptanceByPayee &&
-      isEquityRequirementMet(invoice) &&
       company.requiredInvoiceApprovals - invoice.approvals.length <= (isApprovedByCurrentUser(invoice) ? 0 : 1));
 }
 

@@ -4,10 +4,12 @@ import { createInsertSchema } from "drizzle-zod";
 import { omit, pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
-import { optionGrantTypes, optionGrantVestingTriggers, PayRateType } from "@/db/enums";
+import { DocumentTemplateType, optionGrantTypes, optionGrantVestingTriggers, PayRateType } from "@/db/enums";
 import {
   companyContractors,
   companyInvestors,
+  documents,
+  documentTemplates,
   equityGrantExercises,
   equityGrants,
   equityGrantTransactions,
@@ -16,12 +18,12 @@ import {
   vestingEvents,
   vestingSchedules,
 } from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import { DEFAULT_VESTING_SCHEDULE_OPTIONS } from "@/models";
 import { type CompanyContext, companyProcedure, createRouter } from "@/trpc";
 import { simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
 import { company_administrator_equity_grants_url } from "@/utils/routes";
+import { createSubmission } from "@/trpc/routes/documents/templates";
 
 export type EquityGrant = typeof equityGrants.$inferSelect;
 export const equityGrantsRouter = createRouter({
@@ -153,16 +155,26 @@ export const equityGrantsRouter = createRouter({
           deathExerciseMonths: z.number(),
           disabilityExerciseMonths: z.number(),
           retirementExerciseMonths: z.number(),
+          boardApprovalDate: z.string(),
           vestingTrigger: z.enum(optionGrantVestingTriggers),
           vestingScheduleId: z.string().nullable(),
           vestingCommencementDate: z.string().nullable(),
           totalVestingDurationMonths: z.number().nullable(),
           cliffDurationMonths: z.number().nullable(),
           vestingFrequencyMonths: z.string().nullable(),
+          docusealTemplateId: z.string(),
         }),
     )
     .mutation(async ({ input, ctx }) => {
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+      const template = await db.query.documentTemplates.findFirst({
+        where: and(
+          eq(documentTemplates.externalId, input.docusealTemplateId),
+          eq(documentTemplates.type, DocumentTemplateType.EquityPlanContract),
+          or(eq(documentTemplates.companyId, ctx.company.id), isNull(documentTemplates.companyId)),
+        ),
+      });
+      if (!template) throw new TRPCError({ code: "NOT_FOUND" });
 
       const worker = await db.query.companyContractors.findFirst({
         where: and(
@@ -191,6 +203,7 @@ export const equityGrantsRouter = createRouter({
               death_exercise_months: input.deathExerciseMonths,
               disability_exercise_months: input.disabilityExerciseMonths,
               retirement_exercise_months: input.retirementExerciseMonths,
+              board_approval_date: input.boardApprovalDate,
               vesting_trigger: input.vestingTrigger,
               vesting_schedule_id: input.vestingScheduleId,
               vesting_commencement_date: input.vestingCommencementDate,
@@ -203,16 +216,13 @@ export const equityGrantsRouter = createRouter({
       );
 
       if (!response.ok) throw new TRPCError({ code: "BAD_REQUEST", message: await response.text() });
-      const { equity_grant_id } = z.object({ equity_grant_id: z.number() }).parse(await response.json());
-
-      await inngest.send({
-        name: "board-consent.create",
-        data: {
-          equityGrantId: String(equity_grant_id),
-          companyId: String(ctx.company.id),
-          companyWorkerId: String(worker.id),
-        },
-      });
+      const { document_id } = z.object({ document_id: z.number() }).parse(await response.json());
+      const submission = await createSubmission(ctx, template.docusealId, worker.user, "Company Representative");
+      await db
+        .update(documents)
+        .set({ docusealSubmissionId: submission.id })
+        .where(eq(documents.id, BigInt(document_id)));
+      return { documentId: document_id };
     }),
   totals: companyProcedure.query(async ({ ctx }) => {
     if (!ctx.companyAdministrator && !ctx.companyLawyer) throw new TRPCError({ code: "FORBIDDEN" });
@@ -365,7 +375,7 @@ export const equityGrantsRouter = createRouter({
           forfeitedShares: BigInt(equityGrant.unvestedShares),
           totalNumberOfShares: BigInt(equityGrant.numberOfShares),
           totalVestedShares: BigInt(equityGrant.vestedShares),
-          totalUnvestedShares: 0n,
+          totalUnvestedShares: BigInt(0),
           totalExercisedShares: BigInt(equityGrant.exercisedShares),
           totalForfeitedShares: BigInt(totalForfeitedShares),
         },

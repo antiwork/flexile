@@ -32,6 +32,7 @@ const schema = z.object({
   hoursPerWeek: z.number().nullable(),
   role: z.string(),
   startDate: z.string(),
+  documentTemplateId: z.string(),
 });
 
 export default function PeoplePage() {
@@ -40,7 +41,6 @@ export default function PeoplePage() {
   const [workers, { refetch }] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id });
   const [showInviteModal, setShowInviteModal] = useState(false);
   const lastContractor = workers[0];
-  const [templateId, setTemplateId] = useState<string | null>(null);
 
   const form = useForm({
     defaultValues: {
@@ -68,7 +68,6 @@ export default function PeoplePage() {
       companyId: company.id,
       ...values,
       startedAt: formatISO(new Date(`${values.startDate}T00:00:00`)),
-      documentTemplateId: templateId ?? "",
     });
   });
 
@@ -185,11 +184,10 @@ export default function PeoplePage() {
 
               <FormFields />
 
-              <TemplateSelector
-                selected={templateId}
-                setSelected={setTemplateId}
-                companyId={company.id}
-                type={DocumentTemplateType.ConsultingContract}
+              <FormField
+                control={form.control}
+                name="documentTemplateId"
+                render={({ field }) => <TemplateSelector type={DocumentTemplateType.ConsultingContract} {...field} />}
               />
               <div className="flex flex-col items-end space-y-2">
                 <MutationStatusButton mutation={saveMutation} type="submit">

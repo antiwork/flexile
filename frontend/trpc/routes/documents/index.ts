@@ -1,20 +1,11 @@
 import docuseal from "@docuseal/api";
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, inArray, isNotNull, isNull, not, sql, type SQLWrapper } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull, not, type SQLWrapper } from "drizzle-orm";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
-import { DocumentType } from "@/db/enums";
-import {
-  activeStorageAttachments,
-  activeStorageBlobs,
-  boardConsents,
-  documents,
-  documentSignatures,
-  users,
-} from "@/db/schema";
+import { activeStorageAttachments, activeStorageBlobs, documents, documentSignatures, users } from "@/db/schema";
 import env from "@/env";
-import { inngest } from "@/inngest/client";
 import { companyProcedure, createRouter } from "@/trpc";
 import { simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
@@ -45,13 +36,11 @@ export const documentsRouter = createRouter({
       const rows = await db
         .selectDistinctOn([documents.id], {
           ...pick(documents, "id", "name", "createdAt", "docusealSubmissionId", "type"),
-          lawyerApproved: sql<boolean>`${boardConsents.lawyerApprovedAt} IS NOT NULL`,
           attachment: pick(activeStorageBlobs, "key", "filename"),
         })
         .from(documents)
         .innerJoin(documentSignatures, eq(documents.id, documentSignatures.documentId))
         .innerJoin(users, eq(documentSignatures.userId, users.id))
-        .leftJoin(boardConsents, eq(documents.id, boardConsents.documentId))
         .leftJoin(
           activeStorageAttachments,
           and(eq(activeStorageAttachments.recordType, "Document"), eq(documents.id, activeStorageAttachments.recordId)),
@@ -135,64 +124,6 @@ export const documentsRouter = createRouter({
 
     return { documentId: input.id, complete: allSigned };
   }),
-  approveByLawyer: companyProcedure.input(z.object({ id: z.bigint() })).mutation(async ({ ctx, input }) => {
-    if (!ctx.companyLawyer) throw new TRPCError({ code: "FORBIDDEN" });
 
-    const document = await db.query.documents.findFirst({
-      where: and(eq(documents.id, input.id), eq(documents.companyId, ctx.company.id)),
-      with: { boardConsents: true, signatures: true },
-    });
-    if (!document) throw new TRPCError({ code: "NOT_FOUND" });
-    if (document.type !== DocumentType.BoardConsent) throw new TRPCError({ code: "BAD_REQUEST" });
-
-    const boardConsent = document.boardConsents.find((consent) => consent.status === "pending");
-    if (!boardConsent) throw new TRPCError({ code: "BAD_REQUEST" });
-
-    await db
-      .update(boardConsents)
-      .set({
-        status: "lawyer_approved",
-        lawyerApprovedAt: new Date(),
-      })
-      .where(eq(boardConsents.id, boardConsent.id));
-
-    await inngest.send({
-      name: "board-consent.lawyer-approved",
-      data: {
-        boardConsentId: String(boardConsent.id),
-        documentId: String(document.id),
-        companyId: String(document.companyId),
-      },
-    });
-  }),
-  approveByMember: companyProcedure.input(z.object({ id: z.bigint() })).mutation(async ({ ctx, input }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
-
-    const document = await db.query.documents.findFirst({
-      where: and(eq(documents.id, input.id), eq(documents.companyId, ctx.company.id)),
-      with: { boardConsents: true, signatures: true },
-    });
-
-    if (!document) throw new TRPCError({ code: "NOT_FOUND" });
-    if (document.type !== DocumentType.BoardConsent) return null;
-
-    const boardConsent = document.boardConsents.find((consent) => consent.status === "lawyer_approved");
-    if (!boardConsent) throw new TRPCError({ code: "BAD_REQUEST" });
-
-    await db
-      .update(boardConsents)
-      .set({
-        status: "board_approved",
-        boardApprovedAt: new Date(),
-      })
-      .where(eq(boardConsents.id, boardConsent.id));
-
-    await inngest.send({
-      name: "board-consent.member-approved",
-      data: {
-        boardConsentId: String(boardConsent.id),
-      },
-    });
-  }),
   templates: templatesRouter,
 });

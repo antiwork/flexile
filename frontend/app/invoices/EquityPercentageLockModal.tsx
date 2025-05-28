@@ -25,7 +25,7 @@ const EquityPercentageLockModal = ({
   onComplete: () => void;
 }) => {
   const company = useCurrentCompany();
-  const equityPercentageMutation = trpc.equitySettings.update.useMutation({ onSuccess: onComplete });
+  const equityPercentageMutation = trpc.equityAllocations.update.useMutation({ onSuccess: onComplete });
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

@@ -10,13 +10,11 @@ export enum DocumentType {
   ShareCertificate,
   TaxDocument,
   ExerciseNotice,
-  BoardConsent,
 }
 
 export enum DocumentTemplateType {
   ConsultingContract = 0,
   EquityPlanContract,
-  BoardConsent,
 }
 
 export enum BusinessType {
@@ -51,7 +49,6 @@ export const optionGrantIssueDateRelationships = [
   "founder",
   "officer",
   "executive",
-  "board_member",
 ] as const;
 
 export const companyUpdatePeriods = ["month", "quarter", "year"] as const;
