@@ -15,13 +15,12 @@ import {
   users,
 } from "@/db/schema";
 import env from "@/env";
-import { sanctionedCountries } from "@/models/constants";
 import { companyProcedure, createRouter } from "@/trpc";
 import { sendEmail } from "@/trpc/email";
 import { createSubmission } from "@/trpc/routes/documents/templates";
 import { assertDefined } from "@/utils/assert";
 import { company_workers_url } from "@/utils/routes";
-import { latestUserComplianceInfo, simpleUser, type User } from "../users";
+import { latestUserComplianceInfo, simpleUser } from "../users";
 import RateUpdated from "./RateUpdated";
 
 type CompanyContractor = typeof companyContractors.$inferSelect;
@@ -54,7 +53,7 @@ export const contractorsRouter = createRouter({
         user: {
           ...simpleUser(worker.user),
           ...pick(worker.user, "countryCode", "invitationAcceptedAt"),
-          onboardingCompleted: isOnboardingCompleted(worker.user),
+          onboardingCompleted: worker.user.legalName && worker.user.preferredName && worker.user.countryCode,
         } as const,
       }));
       return workers;
@@ -280,11 +279,6 @@ export const contractorsRouter = createRouter({
         .where(eq(companyContractors.id, activeContractor.id));
     }),
 });
-
-const isOnboardingCompleted = (user: User & { wiseRecipients: unknown[] }) =>
-  user.legalName &&
-  user.preferredName &&
-  (user.wiseRecipients.length > 0 || (user.countryCode && sanctionedCountries.has(user.countryCode)));
 
 export const isActive = (contractor: CompanyContractor | undefined): contractor is CompanyContractor =>
   !!contractor && (!contractor.endedAt || isFuture(contractor.endedAt));

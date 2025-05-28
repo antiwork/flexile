@@ -33,14 +33,14 @@ test.describe("Role autocomplete", () => {
 
     await companyContractorsFactory.create({
       companyId: company.id,
-      role: role3,
+      role: "Alumni Role",
+      endedAt: new Date(),
       payRateType: PayRateType.Hourly,
     });
 
     await companyContractorsFactory.create({
       companyId: company.id,
-      role: "Alumni Role",
-      endedAt: new Date(),
+      role: role3,
       payRateType: PayRateType.Hourly,
     });
     return { company, admin };
@@ -48,30 +48,28 @@ test.describe("Role autocomplete", () => {
 
   const testAutofill = async (page: Page) => {
     const roleField = page.getByLabel("Role");
-    await roleField.fill("");
     await roleField.click();
-    await expect(page.getByRole("option", { name: role1 })).toBeVisible();
-    await expect(page.getByRole("option", { name: role2 })).toBeVisible();
-    await expect(page.getByRole("option", { name: role3 })).toBeVisible();
+    await expect(page.getByRole("option", { name: role1, selected: false })).toBeVisible();
+    await expect(page.getByRole("option", { name: role2, selected: false })).toBeVisible();
+    await expect(page.getByRole("option", { name: role3, selected: true })).toBeVisible();
     await expect(page.getByRole("option", { name: "Alumni Role" })).not.toBeVisible();
 
     await roleField.fill("dev");
-    await expect(page.getByRole("option", { name: role1 })).toBeVisible();
-    await expect(page.getByRole("option", { name: role2 })).not.toBeVisible();
-
-    await page.getByRole("option", { name: role1 }).click();
-    await expect(roleField).toHaveValue(role1);
-
-    await roleField.fill("dev");
+    await expect(page.getByRole("option", { name: role1, selected: true })).toBeVisible();
+    await expect(page.getByRole("option", { name: role2, selected: false })).toBeVisible();
+    await expect(page.getByRole("option", { name: role3, selected: false })).toBeVisible();
     await roleField.press("Enter");
     await expect(roleField).toHaveValue(role1);
+
+    await page.getByRole("option", { name: role2 }).click();
+    await expect(roleField).toHaveValue(role2);
   };
 
   test("suggests existing roles when inviting a new contractor", async ({ page }) => {
     const { admin } = await setup();
     await login(page, admin);
     await page.getByRole("link", { name: "People" }).click();
-    await page.getByRole("link", { name: "Invite contractor" }).click();
+    await page.getByRole("button", { name: "Invite contractor" }).click();
     await testAutofill(page);
   });
 
@@ -81,6 +79,7 @@ test.describe("Role autocomplete", () => {
     const { companyContractor: contractor } = await companyContractorsFactory.create({
       companyId: company.id,
       userId: user.id,
+      role: role3,
     });
 
     await login(page, admin);
