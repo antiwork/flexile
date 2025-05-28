@@ -127,6 +127,7 @@ test.describe("New Contractor", () => {
     await mockForm(page);
     const { email } = await fillForm(page);
     await page.getByLabel("Role").fill("Project-based Role");
+    await page.getByLabel("Project-based").scrollIntoViewIfNeeded();
     await page.getByLabel("Project-based").check({ force: true });
     await page.getByLabel("Rate").fill("1000");
 
