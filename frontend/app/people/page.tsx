@@ -24,6 +24,7 @@ import { UserPlus, Users } from "lucide-react";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import FormFields from "./FormFields";
 import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
+import { Switch } from "@/components/ui/switch";
 
 const schema = z.object({
   email: z.string().email(),
@@ -192,16 +193,14 @@ export default function PeoplePage() {
                 control={form.control}
                 name="contractSignedElsewhere"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-y-0 space-x-3 rounded-md border p-4">
+                  <FormItem>
                     <FormControl>
-                      <input type="checkbox" checked={field.value} onChange={field.onChange} className="mt-1 h-4 w-4" />
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        label="Already signed contract elsewhere"
+                      />
                     </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Already signed contract elsewhere</FormLabel>
-                      <p className="text-muted-foreground text-sm">
-                        Check this if the contractor has already signed a contract outside of Flexile
-                      </p>
-                    </div>
                   </FormItem>
                 )}
               />

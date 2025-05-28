@@ -177,7 +177,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_27_225258) do
     t.integer "pay_rate_in_subunits", null: false
     t.string "pay_rate_currency", default: "usd", null: false
     t.string "role", null: false
-    t.boolean "contract_signed_elsewhere", default: false, null: false, comment: "Indicates if the contractor has already signed a contract elsewhere, negating the need for a Flexile consulting agreement"
+    t.boolean "contract_signed_elsewhere", default: false, null: false
     t.index ["company_id"], name: "index_company_contractors_on_company_id"
     t.index ["external_id"], name: "index_company_contractors_on_external_id", unique: true
     t.index ["user_id", "company_id"], name: "index_company_contractors_on_user_id_and_company_id", unique: true
