@@ -172,6 +172,28 @@ test.describe("New Contractor", () => {
     await expect(row).toContainText("Invited");
   });
 
+  test("allows inviting a contractor with contract signed elsewhere", async ({ page }) => {
+    const { email } = await fillForm(page);
+    await page.getByLabel("Role").fill("Contract Signed Elsewhere Role");
+    await page.getByLabel("Rate").fill("100");
+    
+    await page.getByLabel("Already signed contract elsewhere").check();
+    
+    await page.getByRole("button", { name: "Send invite" }).click();
+    
+    const row = page.getByRole("row").filter({ hasText: email });
+    await expect(row).toContainText(email);
+    await expect(row).toContainText("Contract Signed Elsewhere Role");
+    await expect(row).toContainText("Invited");
+    
+    await clerk.signOut({ page });
+    const [deletedUser] = await db.delete(users).where(eq(users.email, email)).returning();
+    const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
+    await login(page, newUser);
+    
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+  });
+
   // TODO: write these tests after the most important tests are done
   // TODO: write test - allows reactivating an alumni contractor
   // TODO: write test - excludes equity paragraphs when equity compensation is disabled
