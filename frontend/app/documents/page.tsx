@@ -462,7 +462,6 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
         <DocusealForm
           src={`https://docuseal.com/s/${slug}`}
           readonlyFields={readonlyFields}
-          preview={false}
           customCss={customCss}
           onComplete={() => {
             signDocument.mutate({
