@@ -176,21 +176,21 @@ test.describe("New Contractor", () => {
     const { email } = await fillForm(page);
     await page.getByLabel("Role").fill("Contract Signed Elsewhere Role");
     await page.getByLabel("Rate").fill("100");
-    
+
     await page.getByLabel("Already signed contract elsewhere").check();
-    
+
     await page.getByRole("button", { name: "Send invite" }).click();
-    
+
     const row = page.getByRole("row").filter({ hasText: email });
     await expect(row).toContainText(email);
     await expect(row).toContainText("Contract Signed Elsewhere Role");
     await expect(row).toContainText("Invited");
-    
+
     await clerk.signOut({ page });
     const [deletedUser] = await db.delete(users).where(eq(users.email, email)).returning();
     const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
     await login(page, newUser);
-    
+
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
   });
 
