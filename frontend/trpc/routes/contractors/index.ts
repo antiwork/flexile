@@ -126,7 +126,7 @@ export const contractorsRouter = createRouter({
         const json = z.object({ error_message: z.string() }).parse(await response.json());
         throw new TRPCError({ code: "BAD_REQUEST", message: json.error_message });
       }
-      if (input.payRateType === PayRateType.Salary) return { documentId: null };
+      if (input.payRateType === PayRateType.Salary || input.contractSignedElsewhere) return { documentId: null };
       const { new_user_id, document_id } = z
         .object({ new_user_id: z.number(), document_id: z.number() })
         .parse(await response.json());
