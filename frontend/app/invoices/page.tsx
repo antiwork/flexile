@@ -71,7 +71,7 @@ export default function InvoicesPage() {
     companyId: company.id,
     contractorId: user.roles.administrator ? undefined : user.roles.worker?.id,
   });
-  const { data: equityAllocation } = trpc.equityAllocations.forYear.useQuery(
+  const { data: equityAllocation } = trpc.equityAllocations.get.useQuery(
     { companyId: company.id, year: new Date().getFullYear() },
     { enabled: !!user.roles.worker },
   );
@@ -187,8 +187,6 @@ export default function InvoicesPage() {
       </Link>{" "}
       for your invoices.
     </>
-  ) : equityAllocation?.status === "pending_grant_creation" || equityAllocation?.status === "pending_approval" ? (
-    "Your allocation is pending board approval. You can submit invoices for this year, but they're only going to be paid once the allocation is approved."
   ) : equityAllocation?.locked ? (
     `You'll be able to select a new allocation for ${new Date().getFullYear() + 1} later this year.`
   ) : null;
@@ -249,43 +247,6 @@ export default function InvoicesPage() {
                     <AlertTitle>Missing tax information.</AlertTitle>
                     <AlertDescription>
                       Some invoices are not payable until contractors provide tax information.
-                    </AlertDescription>
-                  </Alert>
-                )}
-
-                {data.some(
-                  (invoice) => invoice.equityAllocationStatus === "pending_grant_creation" && !invoice.paidAt,
-                ) && (
-                  <Alert variant="destructive">
-                    <AlertTriangle className="size-5" />
-                    <AlertTitle>Equity grants are pending.</AlertTitle>
-                    <AlertDescription>
-                      <div className="flex items-center justify-between">
-                        {(() => {
-                          const pendingContractors = [
-                            ...new Set(
-                              data
-                                .filter(
-                                  (invoice) =>
-                                    invoice.equityAllocationStatus === "pending_grant_creation" && !invoice.paidAt,
-                                )
-                                .map((invoice) => invoice.billFrom),
-                            ),
-                          ];
-                          return (
-                            <>
-                              Some invoices are not payable until equity{" "}
-                              {pendingContractors.length === 1 ? "grant is" : "grants are"} created for{" "}
-                              {pendingContractors.join(", ")}.
-                            </>
-                          );
-                        })()}
-                        <Button variant="outline" size="small" asChild>
-                          <Link href={`/companies/${company.id}/administrator/equity_grants/new`}>
-                            Create equity grants
-                          </Link>
-                        </Button>
-                      </div>
                     </AlertDescription>
                   </Alert>
                 )}
@@ -535,7 +496,7 @@ const QuickInvoicesSection = () => {
     return `/invoices/new?${params.toString()}` as const;
   };
 
-  const [equityAllocation] = trpc.equityAllocations.forYear.useSuspenseQuery({
+  const [equityAllocation] = trpc.equityAllocations.get.useSuspenseQuery({
     companyId: company.id,
     year: date.year,
   });
@@ -717,8 +678,7 @@ const QuickInvoicesSection = () => {
                 >
                   Send for approval
                 </MutationStatusButton>
-                {company.equityCompensationEnabled &&
-                (!equityAllocation || equityAllocation.status === "pending_confirmation") ? (
+                {company.equityCompensationEnabled && !equityAllocation?.locked ? (
                   <EquityPercentageLockModal
                     open={lockModalOpen}
                     onClose={() => setLockModalOpen(false)}

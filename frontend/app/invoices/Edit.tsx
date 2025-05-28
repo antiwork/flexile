@@ -149,7 +149,7 @@ const Edit = () => {
   const [expenses, setExpenses] = useState(List<InvoiceFormExpense>(data.invoice.expenses));
   const showExpensesTable = showExpenses || expenses.size > 0;
 
-  const [equityAllocation, { refetch: refetchEquityAllocation }] = trpc.equityAllocations.forYear.useSuspenseQuery({
+  const [equityAllocation, { refetch: refetchEquityAllocation }] = trpc.equityAllocations.get.useSuspenseQuery({
     companyId: company.id,
     year: invoiceYear,
   });
@@ -157,7 +157,7 @@ const Edit = () => {
     parseInt(searchParams.get("split") ?? "", 10) || equityAllocation?.equityPercentage || 0,
   );
 
-  const equityPercentageMutation = trpc.equitySettings.update.useMutation();
+  const equityPercentageMutation = trpc.equityAllocations.update.useMutation();
   const validate = () => {
     setErrorField(null);
     if (invoiceNumber.length === 0) setErrorField("invoiceNumber");
@@ -300,8 +300,7 @@ const Edit = () => {
         </>
       }
     >
-      {company.equityCompensationEnabled &&
-      (!equityAllocation || equityAllocation.status === "pending_confirmation") ? (
+      {company.equityCompensationEnabled && !equityAllocation?.locked ? (
         <section className="mb-6">
           <Card>
             <CardContent>

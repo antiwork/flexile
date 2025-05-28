@@ -14,11 +14,18 @@ import NumberInput from "@/components/NumberInput";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { optionGrantIssueDateRelationships, optionGrantTypes, optionGrantVestingTriggers } from "@/db/enums";
+import {
+  DocumentTemplateType,
+  optionGrantIssueDateRelationships,
+  optionGrantTypes,
+  optionGrantVestingTriggers,
+} from "@/db/enums";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
+import TemplateSelector from "@/app/document_templates/TemplateSelector";
+import DatePicker from "@/components/DatePicker";
+import { CalendarDate } from "@internationalized/date";
 
 const MAX_VESTING_DURATION_IN_MONTHS = 120;
 
@@ -28,7 +35,6 @@ const formSchema = z.object({
   numberOfShares: z.number().gt(0),
   issueDateRelationship: z.enum(optionGrantIssueDateRelationships),
   optionGrantType: z.enum(optionGrantTypes),
-  boardConsentSigned: z.boolean().default(false),
   optionExpiryMonths: z.number().min(0),
   vestingTrigger: z.enum(optionGrantVestingTriggers),
   vestingScheduleId: z.string().nullish(),
@@ -42,6 +48,8 @@ const formSchema = z.object({
   deathExerciseMonths: z.number().min(0),
   disabilityExerciseMonths: z.number().min(0),
   retirementExerciseMonths: z.number().min(0),
+  boardApprovalDate: z.instanceof(CalendarDate),
+  docusealTemplateId: z.string(),
 });
 const refinedSchema = formSchema.refine(
   (data) => data.optionGrantType !== "iso" || ["employee", "founder"].includes(data.issueDateRelationship),
@@ -67,7 +75,6 @@ export default function NewEquityGrant() {
       optionPoolId: data.optionPools[0]?.id ?? "",
       numberOfShares: 10_000,
       optionGrantType: "nso",
-      boardConsentSigned: false,
       vestingCommencementDate: today,
       vestingTrigger: "invoice_paid",
     },
@@ -169,6 +176,7 @@ export default function NewEquityGrant() {
       vestingFrequencyMonths: values.vestingFrequencyMonths ?? null,
       vestingCommencementDate: values.vestingCommencementDate ?? null,
       vestingScheduleId: values.vestingScheduleId ?? null,
+      boardApprovalDate: values.boardApprovalDate.toString(),
     });
   });
 
@@ -289,24 +297,6 @@ export default function NewEquityGrant() {
 
             <FormField
               control={form.control}
-              name="boardConsentSigned"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-y-0 space-x-3 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Board consent signed</FormLabel>
-                    <FormDescription>
-                      Confirm that proper documents have been signed to allow the company to issue this option grant.
-                    </FormDescription>
-                  </div>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="optionExpiryMonths"
               render={({ field }) => (
                 <FormItem>
@@ -320,6 +310,19 @@ export default function NewEquityGrant() {
               )}
             />
           </div>
+
+          <FormField
+            control={form.control}
+            name="boardApprovalDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <DatePicker {...field} label="Board approval date" granularity="day" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <div className="grid gap-4">
             <h2 className="text-2xl font-medium">Vesting details</h2>
@@ -527,6 +530,12 @@ export default function NewEquityGrant() {
               )}
             />
           </div>
+
+          <FormField
+            control={form.control}
+            name="docusealTemplateId"
+            render={({ field }) => <TemplateSelector type={DocumentTemplateType.EquityPlanContract} {...field} />}
+          />
 
           <div className="grid gap-2">
             {form.formState.errors.root ? (

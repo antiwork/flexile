@@ -54,12 +54,6 @@ export const equityGrantsVestingTrigger = pgEnum("equity_grants_vesting_trigger"
 export const integrationStatus = pgEnum("integration_status", ["initialized", "active", "out_of_sync", "deleted"]);
 export const taxDocumentsStatus = pgEnum("tax_documents_status", ["initialized", "submitted", "deleted"]);
 export const invoicesInvoiceType = pgEnum("invoices_invoice_type", ["services", "other"]);
-export const equityAllocationsStatus = pgEnum("equity_allocations_status", [
-  "pending_confirmation",
-  "pending_grant_creation",
-  "pending_approval",
-  "approved",
-]);
 export const activeStorageVariantRecords = pgTable(
   "active_storage_variant_records",
   {
@@ -721,7 +715,6 @@ export const equityAllocations = pgTable(
     companyContractorId: bigint("company_contractor_id", { mode: "bigint" }).notNull(),
     equityPercentage: integer("equity_percentage"),
     year: integer().notNull(),
-    status: equityAllocationsStatus().default("pending_confirmation").notNull(),
     createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
       .notNull()
