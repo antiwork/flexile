@@ -33,14 +33,14 @@ test.describe("Role autocomplete", () => {
 
     await companyContractorsFactory.create({
       companyId: company.id,
-      role: role3,
+      role: "Alumni Role",
+      endedAt: new Date(),
       payRateType: PayRateType.Hourly,
     });
 
     await companyContractorsFactory.create({
       companyId: company.id,
-      role: "Alumni Role",
-      endedAt: new Date(),
+      role: role3,
       payRateType: PayRateType.Hourly,
     });
     return { company, admin };

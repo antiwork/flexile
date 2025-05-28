@@ -542,6 +542,7 @@ const BankAccountField = ({
 
           requestAnimationFrame(() => e.target.setSelectionRange(cursorPosition, cursorPosition));
         }}
+        aria-invalid={invalid}
         {...inputProps}
       />
       {help ? <div className={cn("text-sm", invalid && "text-red")}>{help}</div> : null}

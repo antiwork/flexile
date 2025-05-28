@@ -19,7 +19,7 @@ export const userComplianceInfosFactory = {
   create: async (overrides: Partial<typeof userComplianceInfos.$inferInsert> = {}) => {
     const user = overrides.userId
       ? await db.query.users.findFirst({ where: eq(users.id, overrides.userId) }).then(takeOrThrow)
-      : (await usersFactory.createWithoutComplianceInfo()).user;
+      : (await usersFactory.create()).user;
 
     const nonTaxComplianceAttributeDefaultValues = Object.fromEntries(
       NON_TAX_COMPLIANCE_ATTRIBUTES.map((attr) => [attr, user[attr]]),
@@ -58,25 +58,6 @@ export const userComplianceInfosFactory = {
       city: "Paris",
       state: "75C",
       zipCode: "75001",
-      ...overrides,
-    }),
-
-  createWithoutLegalDetails: async (overrides: Partial<typeof userComplianceInfos.$inferInsert> = {}) =>
-    userComplianceInfosFactory.create({
-      birthDate: null,
-      streetAddress: null,
-      city: null,
-      state: null,
-      zipCode: null,
-      taxId: null,
-      ...overrides,
-    }),
-
-  createPreOnboarding: async (overrides: Partial<typeof userComplianceInfos.$inferInsert> = {}) =>
-    userComplianceInfosFactory.createWithoutLegalDetails({
-      legalName: null,
-      countryCode: null,
-      citizenshipCountryCode: null,
       ...overrides,
     }),
 

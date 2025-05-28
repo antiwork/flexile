@@ -272,11 +272,9 @@ const NavLinks = () => {
           Equity
         </NavLink>
       ) : null}
-      {routes.has("Settings") && (
-        <NavLink href="/settings" active={pathname.startsWith("/settings")} icon={Settings}>
-          Settings
-        </NavLink>
-      )}
+      <NavLink href="/settings" active={pathname.startsWith("/settings")} icon={Settings}>
+        Settings
+      </NavLink>
     </SidebarMenu>
   );
 };

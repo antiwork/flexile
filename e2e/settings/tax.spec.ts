@@ -22,7 +22,7 @@ test.describe("Tax settings", () => {
     ({ company, adminUser } = await companiesFactory.createCompletedOnboarding({ irsTaxForms: true }));
 
     user = (
-      await usersFactory.createWithoutComplianceInfo({
+      await usersFactory.create({
         legalName: "Caro Example",
         preferredName: "Caro",
         birthDate: "1980-06-27",
