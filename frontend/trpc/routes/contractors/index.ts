@@ -24,6 +24,7 @@ import { latestUserComplianceInfo, simpleUser } from "../users";
 import RateUpdated from "./RateUpdated";
 
 type CompanyContractor = typeof companyContractors.$inferSelect;
+type DocumentTemplate = typeof documentTemplates.$inferSelect;
 
 export const contractorsRouter = createRouter({
   list: companyProcedure
@@ -86,21 +87,24 @@ export const contractorsRouter = createRouter({
         payRateType: z.nativeEnum(PayRateType),
         hoursPerWeek: z.number().nullable(),
         role: z.string(),
-        documentTemplateId: z.string().nullable(),
+        documentTemplateId: z.string(),
+        contractSignedElsewhere: z.boolean().default(false),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-      const template = input.documentTemplateId
-        ? await db.query.documentTemplates.findFirst({
-            where: and(
-              eq(documentTemplates.externalId, input.documentTemplateId),
-              or(eq(documentTemplates.companyId, ctx.company.id), isNull(documentTemplates.companyId)),
-              eq(documentTemplates.type, DocumentTemplateType.ConsultingContract),
-            ),
-          })
-        : null;
+      let template: DocumentTemplate | undefined;
+      if (!input.contractSignedElsewhere) {
+        template = await db.query.documentTemplates.findFirst({
+          where: and(
+            eq(documentTemplates.externalId, input.documentTemplateId),
+            or(eq(documentTemplates.companyId, ctx.company.id), isNull(documentTemplates.companyId)),
+            eq(documentTemplates.type, DocumentTemplateType.ConsultingContract),
+          ),
+        });
+        if (!template) throw new TRPCError({ code: "NOT_FOUND" });
+      }
 
       const response = await fetch(company_workers_url(ctx.company.externalId, { host: ctx.host }), {
         method: "POST",
@@ -117,7 +121,7 @@ export const contractorsRouter = createRouter({
                   ? "project_based"
                   : "salary",
             role: input.role,
-            contract_signed_elsewhere: !template,
+            contract_signed_elsewhere: input.contractSignedElsewhere,
             ...(input.payRateType === PayRateType.Hourly && { hours_per_week: input.hoursPerWeek }),
           },
         }),
