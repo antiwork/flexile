@@ -170,6 +170,13 @@ test.describe("New Contractor", () => {
     await expect(row).toContainText(email);
     await expect(row).toContainText("Role");
     await expect(row).toContainText("Invited");
+
+    await clerk.signOut({ page });
+    const [deletedUser] = await db.delete(users).where(eq(users.email, email)).returning();
+    const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
+    await login(page, newUser);
+
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
   });
 
   test("allows inviting a contractor with contract signed elsewhere", async ({ page }) => {
@@ -177,7 +184,7 @@ test.describe("New Contractor", () => {
     await page.getByLabel("Role").fill("Contract Signed Elsewhere Role");
     await page.getByLabel("Rate").fill("100");
 
-    await page.getByLabel("Already signed contract elsewhere").check();
+    await page.getByLabel("Already signed contract elsewhere").check({ force: true });
 
     await page.getByRole("button", { name: "Send invite" }).click();
 
