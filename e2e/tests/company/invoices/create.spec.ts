@@ -307,16 +307,16 @@ test.describe("invoice creation", () => {
     await page.getByRole("button", { name: "Remove" }).click();
 
     await page.getByRole("button", { name: "Add expense" }).click();
-    
+
     await page.setInputFiles('input[type="file"][accept="application/pdf, image/*"]', {
       name: "receipt.pdf",
-      mimeType: "application/pdf", 
+      mimeType: "application/pdf",
       buffer: Buffer.from("test expense receipt"),
     });
 
     await page.getByLabel("Merchant").fill("Office Supplies Inc");
     await page.getByLabel("Amount").fill("45.99");
-    
+
     await page.getByLabel("Category").click();
     await page.getByRole("option").first().click();
 
