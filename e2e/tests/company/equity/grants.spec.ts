@@ -34,7 +34,6 @@ test.describe("New Contractor", () => {
     await equityAllocationsFactory.create({
       companyContractorId: companyContractor.id,
       equityPercentage: 50,
-      status: "pending_grant_creation",
       locked: true,
     });
     await companyContractorsFactory.createProjectBased({ companyId: company.id });
@@ -46,7 +45,6 @@ test.describe("New Contractor", () => {
     await equityAllocationsFactory.create({
       companyContractorId: projectBasedContractor.id,
       equityPercentage: 10,
-      status: "pending_grant_creation",
       locked: true,
     });
     await optionPoolsFactory.create({ companyId: company.id });

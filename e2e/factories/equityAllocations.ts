@@ -13,7 +13,6 @@ export const equityAllocationsFactory = {
         year: overrides.year || new Date().getFullYear(),
         equityPercentage: overrides.equityPercentage || 0,
         locked: overrides.locked || false,
-        status: overrides.status || "pending_confirmation",
         ...overrides,
       })
       .returning();
@@ -21,11 +20,4 @@ export const equityAllocationsFactory = {
 
     return { equityAllocation };
   },
-
-  createLocked: async (overrides = {}) =>
-    equityAllocationsFactory.create({
-      locked: true,
-      status: "approved",
-      ...overrides,
-    }),
 };

@@ -107,7 +107,7 @@ const EditTemplates = () => {
     [templates],
   );
   const createTemplate = trpc.documents.templates.create.useMutation({
-    onSuccess: (id: string) => {
+    onSuccess: (id) => {
       void refetchTemplates();
       router.push(`/document_templates/${id}`);
     },
@@ -260,22 +260,20 @@ export default function DocumentsPage() {
         columnHelper.simple("name", "Document"),
         columnHelper.accessor((row) => typeLabels[row.type], {
           header: "Type",
-          meta: { filterOptions: Array.from(new Set(documents.map((document) => typeLabels[document.type]))) },
+          meta: { filterOptions: [...new Set(documents.map((document) => typeLabels[document.type]))] },
         }),
         columnHelper.accessor("createdAt", {
           header: "Date",
           cell: (info) => formatDate(info.getValue()),
           meta: {
-            filterOptions: Array.from(
-              new Set(documents.map((document) => document.createdAt.getFullYear().toString())),
-            ),
+            filterOptions: [...new Set(documents.map((document) => document.createdAt.getFullYear().toString()))],
           },
           filterFn: (row, _, filterValue) =>
             Array.isArray(filterValue) && filterValue.includes(row.original.createdAt.getFullYear().toString()),
         }),
         columnHelper.accessor((row) => getStatus(row).name, {
           header: "Status",
-          meta: { filterOptions: Array.from(new Set(documents.map((document) => getStatus(document).name))) },
+          meta: { filterOptions: [...new Set(documents.map((document) => getStatus(document).name))] },
           cell: (info) => {
             const { variant, text } = getStatus(info.row.original);
             return <Status variant={variant}>{text}</Status>;
@@ -443,12 +441,8 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
   const trpcUtils = trpc.useUtils();
 
   const signDocument = trpc.documents.sign.useMutation({
-    onSuccess: async (data) => {
-      if (data.complete) {
-        await trpcUtils.documents.list.invalidate();
-        router.push("/documents");
-        onClose();
-      }
+    onSuccess: async () => {
+      router.replace("/documents");
       await trpcUtils.documents.list.refetch();
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- not ideal, but there's no good way to assert this right now
       if (redirectUrl) router.push(redirectUrl as Route);

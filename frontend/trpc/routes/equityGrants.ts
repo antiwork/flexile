@@ -375,7 +375,7 @@ export const equityGrantsRouter = createRouter({
           forfeitedShares: BigInt(equityGrant.unvestedShares),
           totalNumberOfShares: BigInt(equityGrant.numberOfShares),
           totalVestedShares: BigInt(equityGrant.vestedShares),
-          totalUnvestedShares: BigInt(0),
+          totalUnvestedShares: 0n,
           totalExercisedShares: BigInt(equityGrant.exercisedShares),
           totalForfeitedShares: BigInt(totalForfeitedShares),
         },

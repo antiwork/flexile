@@ -28,14 +28,6 @@ export const inngest = new Inngest({
         recipients: z.array(recipientSchema).optional(),
       }),
     },
-
-    "email.equity-plan.signing-needed": {
-      data: z.object({
-        documentId: z.string(),
-        companyId: z.string(),
-        optionGrantId: z.string(),
-      }),
-    },
   }),
   middleware: [superjsonMiddleware],
 });

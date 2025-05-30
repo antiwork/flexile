@@ -1,4 +1,3 @@
-import { sendEquityPlanSigningEmail } from "./equityPlanEmails";
 import quickbooksFinancialReportSync from "./quickbooksFinancialReportSync";
 import quickbooksIntegrationSync from "./quickbooksIntegrationSync";
 import quickbooksWorkersSync from "./quickbooksVendorsSync";
@@ -9,6 +8,4 @@ export default [
   quickbooksFinancialReportSync,
   quickbooksIntegrationSync,
   sendCompanyUpdateEmails,
-
-  sendEquityPlanSigningEmail,
 ];
