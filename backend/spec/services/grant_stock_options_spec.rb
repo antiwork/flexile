@@ -246,6 +246,7 @@ RSpec.describe GrantStockOptions do
           result = service.process
           expect(result).to eq(success: true, equity_grant_id: EquityGrant.last.id)
         end.to change { EquityGrant.count }.by(1)
+                         .and have_enqueued_mail(CompanyWorkerMailer, :equity_grant_issued)
 
         equity_grant = EquityGrant.last
         expect(equity_grant.period_started_at).to eq(DateTime.parse(vesting_commencement_date).beginning_of_day)

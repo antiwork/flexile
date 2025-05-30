@@ -455,7 +455,7 @@ const TasksModal = ({
 const quickInvoiceSchema = z.object({
   amountUsd: z.number().min(0.01),
   duration: z.number().min(0),
-  date: z.instanceof(CalendarDate),
+  date: z.instanceof(CalendarDate, { message: "This field is required." }),
   invoiceEquityPercent: z.number().min(0).max(100),
 });
 

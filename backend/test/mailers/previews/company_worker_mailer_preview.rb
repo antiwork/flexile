@@ -16,6 +16,9 @@ class CompanyWorkerMailerPreview < ActionMailer::Preview
     )
   end
 
+  def equity_grant_issued
+    CompanyWorkerMailer.equity_grant_issued(EquityGrant.last.id)
+  end
 
   def payment_sent
     CompanyWorkerMailer.payment_sent(Payment.last.id)

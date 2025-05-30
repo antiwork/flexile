@@ -4,7 +4,7 @@ class GrantStockOptions
   MAX_HOURS_PER_WEEK = 35
   private_constant :MAX_HOURS_PER_WEEK
 
-  def initialize(company_worker, option_pool:, vesting_commencement_date:,
+  def initialize(company_worker, option_pool:, board_approval_date:, vesting_commencement_date:,
                 number_of_shares: :calculate, issue_date_relationship:, option_grant_type:, option_expiry_months:,
                 vesting_trigger:, vesting_schedule_params:, voluntary_termination_exercise_months:,
                 involuntary_termination_exercise_months:, termination_with_cause_exercise_months:,
@@ -12,6 +12,7 @@ class GrantStockOptions
     @company_worker = company_worker
     @option_pool = option_pool
     @company = company_worker.company
+    @board_approval_date = board_approval_date
     @vesting_commencement_date = vesting_commencement_date
     @number_of_shares = number_of_shares
     @issue_date_relationship = issue_date_relationship
@@ -64,7 +65,7 @@ class GrantStockOptions
                                                            exercise_price_usd:, number_of_shares:,
                                                            vested_shares: 0, period_started_at:, period_ended_at:,
                                                            issue_date_relationship:, option_expiry_months:,
-                                                           vesting_trigger:, vesting_schedule:,
+                                                           board_approval_date:, vesting_trigger:, vesting_schedule:,
                                                            voluntary_termination_exercise_months:,
                                                            involuntary_termination_exercise_months:,
                                                            termination_with_cause_exercise_months:,
@@ -72,6 +73,7 @@ class GrantStockOptions
                                                            retirement_exercise_months:)
                                                       .process
     if equity_grant_creation_result.success?
+      CompanyWorkerMailer.equity_grant_issued(equity_grant.id).deliver_later
       { success: true, equity_grant_id: equity_grant_creation_result.equity_grant.id }
     else
       { success: false, error: equity_grant_creation_result.error }
@@ -79,7 +81,7 @@ class GrantStockOptions
   end
 
   private
-    attr_reader :company_worker, :option_pool, :option_grant_type, :company, :vesting_commencement_date,
+    attr_reader :company_worker, :option_pool, :option_grant_type, :company, :board_approval_date, :vesting_commencement_date,
                 :issue_date_relationship, :option_expiry_months, :vesting_trigger, :vesting_schedule_params,
                 :voluntary_termination_exercise_months, :involuntary_termination_exercise_months,
                 :termination_with_cause_exercise_months, :death_exercise_months, :disability_exercise_months,

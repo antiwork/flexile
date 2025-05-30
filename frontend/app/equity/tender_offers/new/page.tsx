@@ -19,10 +19,10 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { CalendarDate } from "@internationalized/date";
 
 const formSchema = z.object({
-  startDate: z.instanceof(CalendarDate),
-  endDate: z.instanceof(CalendarDate),
+  startDate: z.instanceof(CalendarDate, { message: "This field is required." }),
+  endDate: z.instanceof(CalendarDate, { message: "This field is required." }),
   minimumValuation: z.number(),
-  attachment: z.instanceof(File),
+  attachment: z.instanceof(File, { message: "This field is required." }),
 });
 
 export default function NewBuyback() {
