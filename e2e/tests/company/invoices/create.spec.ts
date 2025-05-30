@@ -299,4 +299,37 @@ test.describe("invoice creation", () => {
     await expect(page.getByText("Swapped for equity (not paid in cash)$1,500")).toBeVisible();
     await expect(page.getByText("Net amount in cash$500")).toBeVisible();
   });
+
+  test("creates an invoice with only expenses, no line items", async ({ page }) => {
+    await login(page, contractorUser);
+    await page.goto("/invoices/new");
+
+    await page.getByRole("button", { name: "Remove" }).click();
+
+    await page.getByRole("button", { name: "Add expense" }).click();
+    
+    await page.setInputFiles('input[type="file"][accept="application/pdf, image/*"]', {
+      name: "receipt.pdf",
+      mimeType: "application/pdf", 
+      buffer: Buffer.from("test expense receipt"),
+    });
+
+    await page.getByLabel("Merchant").fill("Office Supplies Inc");
+    await page.getByLabel("Amount").fill("45.99");
+    
+    await page.getByLabel("Category").click();
+    await page.getByRole("option").first().click();
+
+    await page.getByRole("button", { name: "Send invoice" }).click();
+
+    await expect(page.locator("tbody")).toContainText("$45.99");
+    await expect(page.locator("tbody")).toContainText("Awaiting approval");
+
+    const invoice = await db.query.invoices
+      .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
+      .then(takeOrThrow);
+    expect(invoice).toBeDefined();
+    expect(invoice.totalAmountInUsdCents).toBe(4599n);
+    expect(invoice.totalMinutes).toBe(null); // No line items means no minutes
+  });
 });
