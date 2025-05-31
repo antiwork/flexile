@@ -13,7 +13,7 @@ class Internal::Companies::Administrator::EquityGrantsController < Internal::Com
     ).process
 
     if result[:success]
-      render json: { equity_grant_id: result[:equity_grant_id] }
+      render json: result
     else
       render_error_response(result[:error])
     end

@@ -24,7 +24,7 @@ export const equityAllocationsRouter = createRouter({
   update: companyProcedure
     .input(z.object({ equityPercentage: z.number().min(0).max(MAX_EQUITY_PERCENTAGE), year: z.number().optional() }))
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.companyContractor || !ctx.company.equityCompensationEnabled) throw new TRPCError({ code: "FORBIDDEN" });
+      if (!ctx.companyContractor) throw new TRPCError({ code: "FORBIDDEN" });
       await db
         .insert(equityAllocations)
         .values({

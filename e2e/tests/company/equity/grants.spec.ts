@@ -12,19 +12,20 @@ import { selectComboboxOption, fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { DocumentTemplateType } from "@/db/enums";
-import { companyInvestors, equityGrants } from "@/db/schema";
+import { companyInvestors, documents, documentSignatures, equityGrants } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 
 test.describe("New Contractor", () => {
   test("allows issuing equity grants", async ({ page, next }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
       equityGrantsEnabled: true,
+      equityCompensationEnabled: true,
       conversionSharePriceUsd: "1",
     });
     const { user: contractorUser } = await usersFactory.create();
-    const submitters = { "Company Representative": adminUser, Signer: contractorUser };
+    let submitters = { "Company Representative": adminUser, Signer: contractorUser };
     const { mockForm } = mockDocuseal(next, { submitters: () => submitters });
     await mockForm(page);
     const { companyContractor } = await companyContractorsFactory.create({
@@ -83,6 +84,7 @@ test.describe("New Contractor", () => {
       }),
     );
 
+    submitters = { "Company Representative": adminUser, Signer: projectBasedUser };
     await page.getByRole("link", { name: "New option grant" }).click();
     await selectComboboxOption(page, "Recipient", projectBasedUser.preferredName ?? "");
     await page.getByLabel("Number of options").fill("20");
@@ -105,6 +107,16 @@ test.describe("New Contractor", () => {
       }),
     );
 
+    const companyDocuments = await db.query.documents.findMany({ where: eq(documents.companyId, company.id) });
+    await db
+      .update(documentSignatures)
+      .set({ signedAt: new Date() })
+      .where(
+        inArray(
+          documentSignatures.documentId,
+          companyDocuments.map((d) => d.id),
+        ),
+      );
     await clerk.signOut({ page });
     await login(page, contractorUser);
     await page.goto("/invoices");

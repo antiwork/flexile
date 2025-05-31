@@ -73,8 +73,19 @@ class GrantStockOptions
                                                            retirement_exercise_months:)
                                                       .process
     if equity_grant_creation_result.success?
+      company_administrator = company.primary_admin
+
+      equity_grant = equity_grant_creation_result.equity_grant
+      document = company_worker.user.documents.build(equity_grant:,
+                                                     company:,
+                                                     name: "Equity Incentive Plan #{Date.current.year}",
+                                                     year: Date.current.year,
+                                                     document_type: :equity_plan_contract)
+      document.signatures.build(user:, title: "Signer")
+      document.signatures.build(user: company_administrator.user, title: "Company Representative")
+      document.save!
       CompanyWorkerMailer.equity_grant_issued(equity_grant.id).deliver_later
-      { success: true, equity_grant_id: equity_grant_creation_result.equity_grant.id }
+      { success: true, document_id: document.id }
     else
       { success: false, error: equity_grant_creation_result.error }
     end
