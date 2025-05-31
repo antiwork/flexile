@@ -17,6 +17,7 @@ RSpec.describe EquityGrantCreation do
       period_started_at: Date.new(2018, 1, 1),
       period_ended_at: Date.new(2018, 12, 31),
       issue_date_relationship: "employee",
+      board_approval_date: Date.new(2020, 1, 1),
       option_grant_type: "iso",
       option_expiry_months: 36,
       vesting_trigger: "invoice_paid",
@@ -72,7 +73,7 @@ RSpec.describe EquityGrantCreation do
     expect(result.equity_grant.issued_at).to be_within(2.seconds).of(Time.current)
     expect(result.equity_grant.expires_at).to be_within(2.seconds).of(Time.current + 36.months)
     expect(result.equity_grant.issue_date_relationship_employee?).to be(true)
-    expect(result.equity_grant.board_approval_date).to eq(nil)
+    expect(result.equity_grant.board_approval_date).to eq(Date.new(2020, 1, 1))
     expect(result.equity_grant.option_grant_type_iso?).to be(true)
     expect(result.equity_grant.vesting_trigger_invoice_paid?).to be(true)
     expect(result.equity_grant.vesting_events).to be_empty

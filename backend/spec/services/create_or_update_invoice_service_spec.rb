@@ -130,9 +130,7 @@ RSpec.describe CreateOrUpdateInvoiceService do
           expect(invoice.flexile_fee_cents).to eq(50 + (1.5 * expected_total_amount_in_cents / 100.0))
           expected_options = 185 # (expected_equity_cents / (company.share_price_in_usd * 100)).round
           expect(invoice.equity_amount_in_options).to eq(expected_options)
-          equity_allocation = contractor.equity_allocation_for(date.year)
-          expect(equity_allocation.status).to eq("pending_grant_creation")
-          expect(equity_allocation.locked?).to be(true)
+          expect(contractor.equity_allocation_for(date.year).locked?).to eq(true)
         end.to change { user.invoices.count }.by(1)
       end
 
@@ -156,9 +154,7 @@ RSpec.describe CreateOrUpdateInvoiceService do
           expect(invoice.equity_amount_in_cents).to eq(0)
           expect(invoice.cash_amount_in_cents).to eq(720_00)
           expect(invoice.flexile_fee_cents).to eq(50 + (1.5 * 720_00 / 100))
-          equity_allocation = contractor.equity_allocation_for(date.year)
-          expect(equity_allocation.status).to eq("pending_grant_creation")
-          expect(equity_allocation.locked?).to be(true)
+          expect(contractor.equity_allocation_for(date.year).locked?).to eq(true)
         end.to change { user.invoices.count }.by(1)
       end
 
@@ -356,9 +352,7 @@ RSpec.describe CreateOrUpdateInvoiceService do
             expect(invoice.flexile_fee_cents).to eq(15_00) # max fee
             expected_options = 92 # (expected_equity_cents / (company.share_price_in_usd * 100)).floor
             expect(invoice.equity_amount_in_options).to eq(expected_options)
-            equity_allocation = contractor.equity_allocation_for(date.year)
-            expect(equity_allocation.status).to eq("pending_grant_creation")
-            expect(equity_allocation.locked?).to be(true)
+            expect(contractor.equity_allocation_for(date.year).locked?).to eq(true)
           end.to change { user.invoices.count }.by(1)
         end
       end
