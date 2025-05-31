@@ -28,6 +28,8 @@ RSpec.describe EquityAllocation do
       it { is_expected.to validate_uniqueness_of(:year).scoped_to(:company_contractor_id) }
     end
 
+    it { is_expected.to define_enum_for(:status).with_values(described_class.statuses).backed_by_column_of_type(:enum) }
+
     describe "changing equity_percentage" do
       it "disallows unsetting the equity percentage value" do
         equity_allocation = create(:equity_allocation)
