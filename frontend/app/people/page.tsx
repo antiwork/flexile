@@ -24,6 +24,7 @@ import { UserPlus, Users } from "lucide-react";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import FormFields from "./FormFields";
 import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
+import { Switch } from "@/components/ui/switch";
 
 const schema = z.object({
   email: z.string().email(),
@@ -33,6 +34,7 @@ const schema = z.object({
   role: z.string(),
   startDate: z.string(),
   documentTemplateId: z.string(),
+  contractSignedElsewhere: z.boolean().default(false),
 });
 
 export default function PeoplePage() {
@@ -48,6 +50,7 @@ export default function PeoplePage() {
       payRateType: lastContractor?.payRateType ?? PayRateType.Hourly,
       hoursPerWeek: lastContractor?.hoursPerWeek ?? DEFAULT_WORKING_HOURS_PER_WEEK,
       startDate: formatISO(new Date(), { representation: "date" }),
+      contractSignedElsewhere: false,
     },
     resolver: zodResolver(schema),
   });
@@ -186,9 +189,27 @@ export default function PeoplePage() {
 
               <FormField
                 control={form.control}
-                name="documentTemplateId"
-                render={({ field }) => <TemplateSelector type={DocumentTemplateType.ConsultingContract} {...field} />}
+                name="contractSignedElsewhere"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        label="Already signed contract elsewhere"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
               />
+
+              {!form.watch("contractSignedElsewhere") && (
+                <FormField
+                  control={form.control}
+                  name="documentTemplateId"
+                  render={({ field }) => <TemplateSelector type={DocumentTemplateType.ConsultingContract} {...field} />}
+                />
+              )}
               <div className="flex flex-col items-end space-y-2">
                 <MutationStatusButton mutation={saveMutation} type="submit">
                   Send invite

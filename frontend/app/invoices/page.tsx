@@ -311,7 +311,7 @@ export default function InvoicesPage() {
             <div>
               You are paying{" "}
               {formatMoneyFromCents(
-                selectedPayableInvoices.reduce((sum, invoice) => sum + invoice.totalAmountInUsdCents, 0n),
+                selectedPayableInvoices.reduce((sum, invoice) => sum + invoice.totalAmountInUsdCents, BigInt(0)),
               )}{" "}
               now.
             </div>

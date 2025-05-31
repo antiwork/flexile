@@ -119,7 +119,7 @@ export default function CapTable() {
       ...data.optionPools.map((pool) => ({
         name: `Options available (${pool.name})`,
         fullyDilutedShares: pool.availableShares,
-        upcomingDividendCents: 0n,
+        upcomingDividendCents: BigInt(0),
       })),
     ],
     [data.investors, data.optionPools],

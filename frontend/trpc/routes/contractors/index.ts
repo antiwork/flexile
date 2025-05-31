@@ -24,6 +24,7 @@ import { latestUserComplianceInfo, simpleUser } from "../users";
 import RateUpdated from "./RateUpdated";
 
 type CompanyContractor = typeof companyContractors.$inferSelect;
+type DocumentTemplate = typeof documentTemplates.$inferSelect;
 
 export const contractorsRouter = createRouter({
   list: companyProcedure
@@ -87,19 +88,23 @@ export const contractorsRouter = createRouter({
         hoursPerWeek: z.number().nullable(),
         role: z.string(),
         documentTemplateId: z.string(),
+        contractSignedElsewhere: z.boolean().default(false),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-      const template = await db.query.documentTemplates.findFirst({
-        where: and(
-          eq(documentTemplates.externalId, input.documentTemplateId),
-          or(eq(documentTemplates.companyId, ctx.company.id), isNull(documentTemplates.companyId)),
-          eq(documentTemplates.type, DocumentTemplateType.ConsultingContract),
-        ),
-      });
-      if (!template) throw new TRPCError({ code: "NOT_FOUND" });
+      let template: DocumentTemplate | undefined;
+      if (!input.contractSignedElsewhere) {
+        template = await db.query.documentTemplates.findFirst({
+          where: and(
+            eq(documentTemplates.externalId, input.documentTemplateId),
+            or(eq(documentTemplates.companyId, ctx.company.id), isNull(documentTemplates.companyId)),
+            eq(documentTemplates.type, DocumentTemplateType.ConsultingContract),
+          ),
+        });
+        if (!template) throw new TRPCError({ code: "NOT_FOUND" });
+      }
 
       const response = await fetch(company_workers_url(ctx.company.externalId, { host: ctx.host }), {
         method: "POST",
@@ -116,6 +121,7 @@ export const contractorsRouter = createRouter({
                   ? "project_based"
                   : "salary",
             role: input.role,
+            contract_signed_elsewhere: input.contractSignedElsewhere,
             ...(input.payRateType === PayRateType.Hourly && { hours_per_week: input.hoursPerWeek }),
           },
         }),
@@ -124,7 +130,7 @@ export const contractorsRouter = createRouter({
         const json = z.object({ error_message: z.string() }).parse(await response.json());
         throw new TRPCError({ code: "BAD_REQUEST", message: json.error_message });
       }
-      if (input.payRateType === PayRateType.Salary) return { documentId: null };
+      if (input.payRateType === PayRateType.Salary || !template) return { documentId: null };
       const { new_user_id, document_id } = z
         .object({ new_user_id: z.number(), document_id: z.number() })
         .parse(await response.json());

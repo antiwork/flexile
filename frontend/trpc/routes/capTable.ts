@@ -22,8 +22,8 @@ export const capTableRouter = createRouter({
     if (!ctx.company.capTableEnabled || !(isAdminOrLawyer || ctx.companyInvestor))
       throw new TRPCError({ code: "FORBIDDEN" });
 
-    let upcomingDividendCents = 0n;
-    let outstandingShares = 0n;
+    let upcomingDividendCents = BigInt(0);
+    let outstandingShares = BigInt(0);
 
     const investors: (CapTableInvestor | CapTableInvestorForAdmin)[] = [];
     const investorsConditions = (relation: typeof companyInvestorEntities | typeof companyInvestors) =>
@@ -50,7 +50,7 @@ export const capTableRouter = createRouter({
         outstandingShares += investor.outstandingShares;
         investors.push({
           ...(isAdminOrLawyer ? investor : omit(investor, "email")),
-          upcomingDividendCents: 0n,
+          upcomingDividendCents: BigInt(0),
         });
       });
     } else {
@@ -71,7 +71,7 @@ export const capTableRouter = createRouter({
           .where(investorsConditions(companyInvestors))
           .orderBy(desc(companyInvestors.totalShares), desc(companyInvestors.totalOptions))
       ).forEach((investor) => {
-        upcomingDividendCents += investor.upcomingDividendCents || 0n;
+        upcomingDividendCents += investor.upcomingDividendCents || BigInt(0);
         outstandingShares += investor.outstandingShares;
         investors.push(isAdminOrLawyer ? investor : omit(investor, "email"));
       });
@@ -87,7 +87,7 @@ export const capTableRouter = createRouter({
         .where(eq(convertibleInvestments.companyId, ctx.company.id))
         .orderBy(desc(convertibleInvestments.impliedShares))
     ).forEach((investment) => {
-      upcomingDividendCents += investment.upcomingDividendCents || 0n;
+      upcomingDividendCents += investment.upcomingDividendCents || BigInt(0);
       investors.push(investment);
     });
 

@@ -2,6 +2,7 @@
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { ArrowDownTrayIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { isFuture, isPast } from "date-fns";
+import { utc } from "@date-fns/utc";
 import { useParams } from "next/navigation";
 import React, { useMemo, useState } from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
@@ -39,7 +40,7 @@ export default function BuybackView() {
   const company = useCurrentCompany();
   const user = useCurrentUser();
   const [data] = trpc.tenderOffers.get.useSuspenseQuery({ companyId: company.id, id });
-  const isOpen = isPast(data.startsAt) && isFuture(data.endsAt);
+  const isOpen = isPast(utc(data.startsAt)) && isFuture(utc(data.endsAt));
   const investorId = user.roles.investor?.id;
   const [bids, { refetch: refetchBids }] = trpc.tenderOffers.bids.list.useSuspenseQuery({
     companyId: company.id,

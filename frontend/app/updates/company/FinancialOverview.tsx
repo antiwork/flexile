@@ -22,10 +22,10 @@ export default function FinancialOverview({
   netIncomeTitle?: React.ReactNode;
 }) {
   const months = period === "month" ? 1 : period === "quarter" ? 3 : 12;
-  let netIncome: bigint | null = 0n;
-  let revenue: bigint | null = 0n;
-  let netIncomeLastYear: bigint | null = 0n;
-  let revenueLastYear: bigint | null = 0n;
+  let netIncome: bigint | null = BigInt(0);
+  let revenue: bigint | null = BigInt(0);
+  let netIncomeLastYear: bigint | null = BigInt(0);
+  let revenueLastYear: bigint | null = BigInt(0);
 
   for (let i = 0; i < months; ++i) {
     const date = addMonths(periodStartedOn, i);

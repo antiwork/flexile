@@ -41,7 +41,10 @@ class InviteWorker
     end
 
     if user.errors.blank? && company_worker.errors.blank?
-      document = CreateConsultingContract.new(company_worker:, company_administrator:, current_user:).perform!
+      document = nil
+      unless company_worker.contract_signed_elsewhere
+        document = CreateConsultingContract.new(company_worker:, company_administrator:, current_user:).perform!
+      end
       GenerateContractorInvitationJob.perform_async(company_worker.id, is_existing_user)
 
       { success: true, company_worker:, document: }

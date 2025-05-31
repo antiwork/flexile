@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { and, desc, eq, exists, gte, lte, sum } from "drizzle-orm";
 import { pick } from "lodash-es";
 import { z } from "zod";
+import { utc } from "@date-fns/utc";
 import { VESTED_SHARES_CLASS } from "@/app/equity/tender_offers";
 import { byExternalId, db } from "@/db";
 import { companyInvestors, shareClasses, shareHoldings, tenderOfferBids, tenderOffers } from "@/db/schema";
@@ -61,8 +62,8 @@ export const tenderOffersBidsRouter = createRouter({
         where: and(
           eq(tenderOffers.externalId, input.tenderOfferId),
           eq(tenderOffers.companyId, ctx.company.id),
-          lte(tenderOffers.startsAt, new Date()),
-          gte(tenderOffers.endsAt, new Date()),
+          lte(tenderOffers.startsAt, utc(new Date())),
+          gte(tenderOffers.endsAt, utc(new Date())),
         ),
       });
       if (!tenderOffer) throw new TRPCError({ code: "NOT_FOUND" });
@@ -111,8 +112,8 @@ export const tenderOffersBidsRouter = createRouter({
                 and(
                   eq(tenderOffers.id, tenderOfferBids.tenderOfferId),
                   eq(tenderOffers.companyId, ctx.company.id),
-                  lte(tenderOffers.startsAt, new Date()),
-                  gte(tenderOffers.endsAt, new Date()),
+                  lte(tenderOffers.startsAt, utc(new Date())),
+                  gte(tenderOffers.endsAt, utc(new Date())),
                 ),
               ),
           ),

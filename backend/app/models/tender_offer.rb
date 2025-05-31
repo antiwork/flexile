@@ -22,7 +22,7 @@ class TenderOffer < ApplicationRecord
   validate :correct_attachment_mime_type
 
   def open?
-    Time.current.between?(starts_at, ends_at)
+    Time.current.utc.between?(starts_at, ends_at)
   end
 
   def securities_available_for_purchase(company_investor)
