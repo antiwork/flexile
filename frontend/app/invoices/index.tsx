@@ -83,7 +83,7 @@ const useIsApprovedByCurrentUser = () => {
 const useIsEquityRequirementMet = () => {
   const company = useCurrentCompany();
   return (invoice: Invoice) =>
-    invoice.equityAmountInCents === 0n ||
+    invoice.equityAmountInCents === BigInt(0) ||
     !company.equityCompensationEnabled ||
     invoice.equityAllocationStatus === "approved";
 };

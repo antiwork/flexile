@@ -57,7 +57,7 @@ export default function InvoicePage() {
   const [equityPercentage, setEquityPercentageElected] = useState(defaultEquityPercentage);
 
   const equityAmountInCents = useMemo(
-    () => (invoice.totalAmountInUsdCents * BigInt(equityPercentage)) / 100n,
+    () => (invoice.totalAmountInUsdCents * BigInt(equityPercentage)) / BigInt(100),
     [equityPercentage],
   );
 
@@ -345,7 +345,7 @@ export default function InvoicePage() {
                         <strong>Total expenses</strong>
                         <span>
                           {formatMoneyFromCents(
-                            invoice.expenses.reduce((acc, expense) => acc + expense.totalAmountInCents, 0n),
+                            invoice.expenses.reduce((acc, expense) => acc + expense.totalAmountInCents, BigInt(0)),
                           )}
                         </span>
                       </div>

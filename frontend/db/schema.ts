@@ -112,7 +112,7 @@ export const balances = pgTable(
   {
     id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
     companyId: bigint("company_id", { mode: "bigint" }).notNull(),
-    amountCents: bigint("amount_cents", { mode: "bigint" }).default(0n).notNull(),
+    amountCents: bigint("amount_cents", { mode: "bigint" }).default(BigInt(0)).notNull(),
     createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
       .notNull()

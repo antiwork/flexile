@@ -55,11 +55,11 @@ const getNextAdminInvoiceNumber = async (companyId: bigint, userId: bigint) => {
 };
 
 const getFlexileFeeCents = (totalAmountCents: bigint) => {
-  const BASE_FLEXILE_FEE_CENTS = 50n;
-  const MAX_FLEXILE_FEE_CENTS = 1500n;
+  const BASE_FLEXILE_FEE_CENTS = BigInt(50);
+  const MAX_FLEXILE_FEE_CENTS = BigInt(1500);
   const PERCENT_FLEXILE_FEE = 1.5;
 
-  const feeCents = BASE_FLEXILE_FEE_CENTS + (totalAmountCents * BigInt(Math.round(PERCENT_FLEXILE_FEE * 100))) / 10000n;
+  const feeCents = BASE_FLEXILE_FEE_CENTS + (totalAmountCents * BigInt(Math.round(PERCENT_FLEXILE_FEE * 100))) / BigInt(10000);
   return feeCents > MAX_FLEXILE_FEE_CENTS ? MAX_FLEXILE_FEE_CENTS : feeCents;
 };
 
@@ -134,7 +134,7 @@ export const invoicesRouter = createRouter({
     const invoiceNumber = await getNextAdminInvoiceNumber(ctx.company.id, invoicer.id);
     const billFrom = assertDefined(invoicer.userComplianceInfos[0]?.businessName || invoicer.legalName);
 
-    let equityAmountInCents = 0n;
+    let equityAmountInCents = BigInt(0);
     let equityAmountInOptions = 0;
     let equityPercentage = 0;
     const { userExternalId, description, totalAmountCents, ...values } = input;
