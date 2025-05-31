@@ -59,7 +59,8 @@ const getFlexileFeeCents = (totalAmountCents: bigint) => {
   const MAX_FLEXILE_FEE_CENTS = BigInt(1500);
   const PERCENT_FLEXILE_FEE = 1.5;
 
-  const feeCents = BASE_FLEXILE_FEE_CENTS + (totalAmountCents * BigInt(Math.round(PERCENT_FLEXILE_FEE * 100))) / BigInt(10000);
+  const feeCents =
+    BASE_FLEXILE_FEE_CENTS + (totalAmountCents * BigInt(Math.round(PERCENT_FLEXILE_FEE * 100))) / BigInt(10000);
   return feeCents > MAX_FLEXILE_FEE_CENTS ? MAX_FLEXILE_FEE_CENTS : feeCents;
 };
 
