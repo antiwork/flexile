@@ -174,6 +174,7 @@ const Edit = () => {
       formData.append("invoice[invoice_number]", invoiceNumber);
       formData.append("invoice[invoice_date]", issueDate.toString());
       for (const lineItem of lineItems) {
+        if (!lineItem.description) continue;
         if (lineItem.id) {
           formData.append("invoice_line_items[][id]", lineItem.id.toString());
         }
@@ -455,7 +456,7 @@ const Edit = () => {
                       <PlusIcon className="inline size-4" />
                       Add line item
                     </Button>
-                    {data.company.expenses.enabled && !showExpensesTable ? (
+                    {data.company.expenses.categories.length && !showExpensesTable ? (
                       <Button variant="link" asChild>
                         <Label>
                           <ArrowUpTrayIcon className="inline size-4" />

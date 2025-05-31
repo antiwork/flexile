@@ -10,7 +10,15 @@ import { expect, test } from "@test/index";
 import { subDays } from "date-fns";
 import { desc, eq } from "drizzle-orm";
 import { PayRateType } from "@/db/enums";
-import { companies, companyContractors, equityAllocations, invoices, users } from "@/db/schema";
+import {
+  companies,
+  companyContractors,
+  equityAllocations,
+  expenseCategories,
+  invoiceExpenses,
+  invoices,
+  users,
+} from "@/db/schema";
 import { fillDatePicker } from "@test/helpers";
 
 test.describe("invoice creation", () => {
@@ -301,14 +309,14 @@ test.describe("invoice creation", () => {
   });
 
   test("creates an invoice with only expenses, no line items", async ({ page }) => {
+    await db.insert(expenseCategories).values({
+      companyId: company.id,
+      name: "Office Supplies",
+    });
     await login(page, contractorUser);
     await page.goto("/invoices/new");
 
-    await page.getByRole("button", { name: "Remove" }).click();
-
-    await page.getByRole("button", { name: "Add expense" }).click();
-
-    await page.setInputFiles('input[type="file"][accept="application/pdf, image/*"]', {
+    await page.getByLabel("Add expense").setInputFiles({
       name: "receipt.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("test expense receipt"),
@@ -317,10 +325,8 @@ test.describe("invoice creation", () => {
     await page.getByLabel("Merchant").fill("Office Supplies Inc");
     await page.getByLabel("Amount").fill("45.99");
 
-    await page.getByLabel("Category").click();
-    await page.getByRole("option").first().click();
-
     await page.getByRole("button", { name: "Send invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     await expect(page.locator("tbody")).toContainText("$45.99");
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
@@ -328,8 +334,11 @@ test.describe("invoice creation", () => {
     const invoice = await db.query.invoices
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
       .then(takeOrThrow);
-    expect(invoice).toBeDefined();
     expect(invoice.totalAmountInUsdCents).toBe(4599n);
-    expect(invoice.totalMinutes).toBe(null); // No line items means no minutes
+    expect(invoice.totalMinutes).toBe(0);
+    const expense = await db.query.invoiceExpenses
+      .findFirst({ where: eq(invoiceExpenses.invoiceId, invoice.id) })
+      .then(takeOrThrow);
+    expect(expense.totalAmountInCents).toBe(4599n);
   });
 });
