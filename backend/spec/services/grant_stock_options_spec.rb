@@ -298,7 +298,7 @@ RSpec.describe GrantStockOptions do
           expect do
             result = service.process
             equity_grant = EquityGrant.last
-            expect(result).to eq(success: true, document_id: document.id)
+            expect(result).to eq(success: true, document_id: Document.last.id)
             expect(equity_grant.vesting_schedule).to have_attributes(vesting_schedule_params.except(:vesting_schedule_id).to_h.symbolize_keys)
           end.to change { VestingSchedule.count }.by(1)
         end

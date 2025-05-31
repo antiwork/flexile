@@ -749,9 +749,8 @@ class SeedDataGeneratorFromTemplate
       Timecop.travel(option_pool_created_at) do
         GrantStockOptions.new(
           company_worker,
+          board_approval_date: option_pool_created_at,
         ).process
-        equity_grant = EquityGrant.last
-        equity_grant.update!(board_approval_date: option_pool_created_at)
         CreateOrUpdateEquityAllocation.new(
           company_worker,
           equity_percentage: equity_grant_data.fetch("equity_allocation").fetch("equity_percentage")
@@ -806,6 +805,7 @@ class SeedDataGeneratorFromTemplate
           vested_shares: equity_grant_data.fetch("vested_shares"),
           period_started_at:,
           period_ended_at:,
+          board_approval_date: equity_grant_data.fetch("board_approval_date"),
           issue_date_relationship: equity_grant_data.fetch("issue_date_relationship"),
           vesting_trigger: "invoice_paid",
           vesting_schedule: nil,

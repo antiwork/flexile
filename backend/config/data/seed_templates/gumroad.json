@@ -328,6 +328,7 @@
               "number_of_shares": 5647,
               "vested_shares": 5647,
               "issue_date_relationship": "employee",
+                  "board_approval_date": "2020-01-01",
               "option_grant_type": "iso",
               "voluntary_termination_exercise_months": 3,
               "involuntary_termination_exercise_months": 3,
@@ -336,8 +337,7 @@
               "disability_exercise_months": 12,
               "retirement_exercise_months": 3,
               "model_attributes": {
-                "accepted_at": "2020-01-02",
-                "board_approval_date": "2020-01-01"
+                    "accepted_at": "2020-01-02"
               },
               "equity_grant_exercise": {
                 "model_attributes": {
