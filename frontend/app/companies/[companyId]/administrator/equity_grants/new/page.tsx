@@ -36,7 +36,7 @@ const formSchema = z.object({
   optionExpiryMonths: z.number().min(0),
   vestingTrigger: z.enum(optionGrantVestingTriggers),
   vestingScheduleId: z.string().nullish(),
-  vestingCommencementDate: z.instanceof(CalendarDate),
+  vestingCommencementDate: z.instanceof(CalendarDate, { message: "This field is required." }),
   totalVestingDurationMonths: z.number().nullish(),
   cliffDurationMonths: z.number().nullish(),
   vestingFrequencyMonths: z.string().nullish(),

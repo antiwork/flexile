@@ -10,13 +10,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_05_27_225258) do
+ActiveRecord::Schema[8.0].define(version: 2025_05_30_184215) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   # Custom types defined in this database.
   # Note that some types may not work with other database engines. Be careful if changing database.
-  create_enum "board_consent_status", ["pending", "lawyer_approved", "board_approved"]
   create_enum "equity_allocations_status", ["pending_confirmation", "pending_grant_creation", "pending_approval", "approved"]
   create_enum "equity_grant_transactions_transaction_type", ["scheduled_vesting", "vesting_post_invoice_payment", "exercise", "cancellation", "manual_adjustment", "end_of_period_forfeiture"]
   create_enum "equity_grants_issue_date_relationship", ["employee", "consultant", "investor", "founder", "officer", "executive", "board_member"]
@@ -74,22 +73,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_27_225258) do
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.index ["company_id"], name: "index_balances_on_company_id"
-  end
-
-  create_table "board_consents", force: :cascade do |t|
-    t.bigint "equity_allocation_id", null: false
-    t.bigint "company_investor_id", null: false
-    t.bigint "company_id", null: false
-    t.bigint "document_id", null: false
-    t.enum "status", null: false, enum_type: "board_consent_status"
-    t.datetime "lawyer_approved_at"
-    t.datetime "board_approved_at"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["company_id"], name: "index_board_consents_on_company_id"
-    t.index ["company_investor_id"], name: "index_board_consents_on_company_investor_id"
-    t.index ["document_id"], name: "index_board_consents_on_document_id"
-    t.index ["equity_allocation_id"], name: "index_board_consents_on_equity_allocation_id"
   end
 
   create_table "cap_table_uploads", force: :cascade do |t|
@@ -156,7 +139,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_27_225258) do
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.string "external_id", null: false
-    t.boolean "board_member", default: false, null: false
     t.index ["company_id"], name: "index_company_administrators_on_company_id"
     t.index ["external_id"], name: "index_company_administrators_on_external_id", unique: true
     t.index ["user_id", "company_id"], name: "index_company_administrators_on_user_id_and_company_id", unique: true

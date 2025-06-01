@@ -53,7 +53,6 @@ class UserPresenter
       administrator = user.company_administrator_for(company)
       roles[Company::ACCESS_ROLE_ADMINISTRATOR] = {
         id: administrator.id.to_s,
-        isBoardMember: administrator.board_member?,
         isInvited: !!user.invited_by&.company_worker_for?(company),
       }
     end
