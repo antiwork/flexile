@@ -169,7 +169,7 @@ RSpec.describe CompanyWorker do
 
         it "returns the list of company_workers who are eligible for 1099-NEC" do
           expect(described_class.with_required_tax_info_for(tax_year:)).to match_array(
-            [company_worker_1, company_worker_2]
+            [company_worker_1, company_worker_2, company_worker_8]
           )
         end
       end

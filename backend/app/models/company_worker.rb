@@ -80,7 +80,6 @@ class CompanyWorker < ApplicationRecord
     joins(:company).merge(Company.active.irs_tax_forms)
       .joins(user: :compliance_info).merge(User.where(country_code: "US"))
       .where(id: invoices_subquery)
-      .where.not(pay_rate_type: :salary)
   end
 
   after_commit :notify_rate_updated, on: :update, if: -> { saved_change_to_pay_rate_in_subunits? && hourly? }
