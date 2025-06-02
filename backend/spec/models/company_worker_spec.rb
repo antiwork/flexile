@@ -149,10 +149,10 @@ RSpec.describe CompanyWorker do
         company_worker_7 = create(:company_worker, company:, user:)
         create(:invoice, :paid, company_worker: company_worker_7, company:, total_amount_in_usd_cents: 1000_00)
 
-        # Salary worker that should be excluded
+        # Project-based worker that should be excluded (since scope excludes non-hourly workers)
         user = create(:user, :without_compliance_info, country_code: "US")
         create(:user_compliance_info, :confirmed, user:)
-        company_worker_8 = create(:company_worker, :salary, company:, user:)
+        company_worker_8 = create(:company_worker, :project_based, company:, user:)
         create(:invoice, :paid, company_worker: company_worker_8, company:, total_amount_in_usd_cents: 1000_00)
       end
 

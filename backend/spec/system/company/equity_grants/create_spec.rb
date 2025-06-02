@@ -10,7 +10,7 @@ RSpec.describe "Creating an equity grant" do
   end
 
   it "creates a new equity grant" do
-    company_worker = create(:company_worker, company:, pay_rate_type: :salary)
+    company_worker = create(:company_worker, company:, pay_rate_type: :hourly)
 
     visit spa_company_equity_grants_path(company.external_id)
 
