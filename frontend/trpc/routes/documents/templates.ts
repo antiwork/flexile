@@ -160,9 +160,7 @@ export const templatesRouter = createRouter({
         __startDate: startDate.toLocaleString(),
         __electionYear: startDate.getFullYear().toString(),
         __payRate: `${(contractor.payRateInSubunits / 100).toLocaleString()} ${
-          contractor.payRateType === PayRateType.Hourly
-            ? "per hour"
-            : "per project"
+          contractor.payRateType === PayRateType.Hourly ? "per hour" : "per project"
         }`,
         __targetAnnualHours:
           contractor.payRateType === PayRateType.Hourly && contractor.hoursPerWeek
