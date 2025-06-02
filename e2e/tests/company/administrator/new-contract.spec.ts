@@ -158,8 +158,6 @@ test.describe("New Contractor", () => {
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
   });
 
-
-
   test("allows inviting a contractor with contract signed elsewhere", async ({ page }) => {
     const { email } = await fillForm(page);
     await page.getByLabel("Role").fill("Contract Signed Elsewhere Role");
