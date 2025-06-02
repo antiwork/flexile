@@ -21,7 +21,6 @@ class CompanyWorker < ApplicationRecord
   enum :pay_rate_type, {
     hourly: 0,
     project_based: 1,
-    salary: 2,
   }, validate: true
 
   validates :user_id, uniqueness: { scope: :company_id }

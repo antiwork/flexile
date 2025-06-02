@@ -1,7 +1,6 @@
 export enum PayRateType {
   Hourly = 0,
   ProjectBased,
-  Salary,
 }
 
 export enum DocumentType {

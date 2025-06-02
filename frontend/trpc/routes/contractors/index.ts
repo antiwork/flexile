@@ -117,9 +117,7 @@ export const contractorsRouter = createRouter({
             pay_rate_type:
               input.payRateType === PayRateType.Hourly
                 ? "hourly"
-                : input.payRateType === PayRateType.ProjectBased
-                  ? "project_based"
-                  : "salary",
+                : "project_based",
             role: input.role,
             contract_signed_elsewhere: input.contractSignedElsewhere,
             ...(input.payRateType === PayRateType.Hourly && { hours_per_week: input.hoursPerWeek }),
@@ -130,7 +128,7 @@ export const contractorsRouter = createRouter({
         const json = z.object({ error_message: z.string() }).parse(await response.json());
         throw new TRPCError({ code: "BAD_REQUEST", message: json.error_message });
       }
-      if (input.payRateType === PayRateType.Salary || !template) return { documentId: null };
+      if (!template) return { documentId: null };
       const { new_user_id, document_id } = z
         .object({ new_user_id: z.number(), document_id: z.number() })
         .parse(await response.json());
@@ -164,8 +162,7 @@ export const contractorsRouter = createRouter({
         let documentId: bigint | null = null;
         if (input.payRateInSubunits != null && input.payRateInSubunits !== contractor.payRateInSubunits) {
           const payRateType = input.payRateType ?? contractor.payRateType;
-          if (payRateType !== PayRateType.Salary) {
-            await tx.delete(documents).where(
+          await tx.delete(documents).where(
               and(
                 eq(documents.type, DocumentType.ConsultingContract),
                 exists(
@@ -182,7 +179,7 @@ export const contractorsRouter = createRouter({
                 ),
               ),
             );
-            // TODO store which template was used for the previous contract
+          // TODO store which template was used for the previous contract
             const template = await db.query.documentTemplates.findFirst({
               where: and(
                 or(eq(documentTemplates.companyId, ctx.company.id), isNull(documentTemplates.companyId)),
@@ -220,7 +217,7 @@ export const contractorsRouter = createRouter({
                 title: "Signer",
               },
             ]);
-          }
+
           if (payRateType === PayRateType.Hourly) {
             await sendEmail({
               from: `Flexile <support@${env.DOMAIN}>`,

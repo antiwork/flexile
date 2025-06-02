@@ -69,7 +69,6 @@ export default function FormFields() {
                 options={[
                   { label: "Hourly", value: PayRateType.Hourly } as const,
                   { label: "Project-based", value: PayRateType.ProjectBased } as const,
-                  { label: "Salary", value: PayRateType.Salary } as const,
                 ]}
               />
             </FormControl>
@@ -93,13 +92,7 @@ export default function FormFields() {
                   onChange={(value) => field.onChange(value == null ? null : value * 100)}
                   placeholder="0"
                   prefix="$"
-                  suffix={
-                    payRateType === PayRateType.ProjectBased
-                      ? "/ project"
-                      : payRateType === PayRateType.Salary
-                        ? "/ year"
-                        : "/ hour"
-                  }
+                  suffix={payRateType === PayRateType.ProjectBased ? "/ project" : "/ hour"}
                   decimal
                 />
               </FormControl>

@@ -4,7 +4,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { omit, pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
-import { DocumentTemplateType, optionGrantTypes, optionGrantVestingTriggers, PayRateType } from "@/db/enums";
+import { DocumentTemplateType, optionGrantTypes, optionGrantVestingTriggers } from "@/db/enums";
 import {
   companyContractors,
   companyInvestors,
@@ -334,7 +334,7 @@ export const equityGrantsRouter = createRouter({
         return {
           id: worker.externalId,
           user: { ...simpleUser(worker.user), legalName: worker.user.legalName },
-          salaried: worker.payRateType === PayRateType.Salary,
+          salaried: false,
           lastGrant: lastGrant
             ? {
                 optionGrantType: lastGrant.optionGrantType,

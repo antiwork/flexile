@@ -158,26 +158,7 @@ test.describe("New Contractor", () => {
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
   });
 
-  test("allows inviting a salary-based contractor", async ({ page }) => {
-    const { email } = await fillForm(page);
-    await page.getByLabel("Role").fill("Salaried Role");
-    await page.getByLabel("Salary").check({ force: true });
-    await page.getByLabel("Rate").fill("120000");
 
-    await page.getByRole("button", { name: "Send invite" }).click();
-
-    const row = page.getByRole("row").filter({ hasText: email });
-    await expect(row).toContainText(email);
-    await expect(row).toContainText("Role");
-    await expect(row).toContainText("Invited");
-
-    await clerk.signOut({ page });
-    const [deletedUser] = await db.delete(users).where(eq(users.email, email)).returning();
-    const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
-    await login(page, newUser);
-
-    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
-  });
 
   test("allows inviting a contractor with contract signed elsewhere", async ({ page }) => {
     const { email } = await fillForm(page);
