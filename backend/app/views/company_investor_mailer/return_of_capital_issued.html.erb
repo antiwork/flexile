@@ -12,7 +12,7 @@
   <dt>Investment amount</dt>
   <dd><%= cents_format(@company_investor.investment_amount_in_cents, no_cents_if_whole: false) %></dd>
 
-  <dt>Cumulative ROI</dt>
+  <dt>Cumulative ROI <%= @roi_note %></dt>
   <dd>
     <%= (@roi * 100.0).round(2) %>%
   </dd>

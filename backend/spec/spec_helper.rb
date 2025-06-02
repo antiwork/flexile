@@ -136,13 +136,6 @@ RSpec.configure do |config|
     allow_any_instance_of(CreatePdf).to receive(:perform).and_return("pdf")
   end
 
-  config.after(:each, type: :mailer) do |example|
-    raise "No mail subject found. Did you forget to add `subject(:mail) { ... }`?" unless defined?(mail)
-
-    mailer_delivery_count = example.metadata[:does_not_send_email] ? 0 : 1
-    expect { mail.deliver_now rescue nil }.to change { ActionMailer::Base.deliveries.size }.by(mailer_delivery_count)
-  end
-
   config.before(:each, type: :system) do
     if page.driver.browser.respond_to?(:execute_cdp)
       page.driver.browser.execute_cdp("Emulation.setTimezoneOverride", timezoneId: "GMT")

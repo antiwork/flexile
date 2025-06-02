@@ -12,10 +12,10 @@ class CompanyInvestorMailer < ApplicationMailer
     @user = @company_investor.user
     @company = @company_investor.company
     @gross_amount_in_cents = dividends.sum(:total_amount_in_cents)
-    @roi = @gross_amount_in_cents / @company_investor.investment_amount_in_cents.to_d
+    @roi = @company_investor.dividends.sum(:total_amount_in_cents) / @company_investor.investment_amount_in_cents.to_d
 
     # Calculate ROI note based on dividend years
-    dividend_years = dividends.map { |d| d.created_at.year }.uniq.sort
+    dividend_years = @company_investor.dividends.map { |d| d.created_at.year }.uniq.sort
     @roi_note = dividend_years.size > 1 ? " (#{dividend_years.first} and #{dividend_years.last} Distributions)" : ""
 
     mail(to: @user.email,
@@ -29,10 +29,10 @@ class CompanyInvestorMailer < ApplicationMailer
     @user = @company_investor.user
     @company = @company_investor.company
     @gross_amount_in_cents = dividends.sum(:total_amount_in_cents)
-    @roi = @gross_amount_in_cents / @company_investor.investment_amount_in_cents.to_d
+    @roi = @company_investor.dividends.sum(:total_amount_in_cents) / @company_investor.investment_amount_in_cents.to_d
 
     # Calculate ROI note based on dividend years
-    dividend_years = dividends.map { |d| d.created_at.year }.uniq.sort
+    dividend_years = @company_investor.dividends.map { |d| d.created_at.year }.uniq.sort
     @roi_note = dividend_years.size > 1 ? " (#{dividend_years.first} and #{dividend_years.last} Distributions)" : ""
 
     # If an investor is missing tax information, calculate the tax withholding and net amount
