@@ -1924,7 +1924,6 @@ export const companies = pgTable(
     externalId: varchar("external_id").$default(nanoid).notNull(),
     countryCode: varchar("country_code"),
     isGumroad: boolean("is_gumroad").notNull().default(false),
-    dividendsAllowed: boolean("dividends_allowed").notNull().default(false),
     isTrusted: boolean("is_trusted").notNull().default(false),
     irsTaxForms: boolean("irs_tax_forms").notNull().default(false),
     equityGrantsEnabled: boolean("equity_grants_enabled").notNull().default(false),

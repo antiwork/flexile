@@ -27,9 +27,7 @@ heroku run rails console -a flexile
 
 #### Enable Dividends for a Company
 
-```ruby
-Company.find(1823).update!(dividends_allowed: true)
-```
+Dividends are now enabled by default for all companies.
 
 #### Create Investors and Dividends
 

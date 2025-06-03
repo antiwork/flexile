@@ -22,7 +22,6 @@ class PayInvestorDividends
               user.bank_account_for_dividends.nil?
     return unless user.has_verified_tax_id?
 
-    raise "Feature unsupported for company #{company.id}" unless company.dividends_allowed?
     raise "Flexile balance insufficient to pay for dividends to investor #{company_investor.id}" unless Wise::AccountBalance.has_sufficient_flexile_balance?(net_amount_in_usd)
     raise "Unknown country for user #{user.id}" if user.country_code.blank?
 

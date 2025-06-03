@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe PayInvestorDividends, :vcr do
-  let(:company) { create(:company, dividends_allowed: true) }
+  let(:company) { create(:company) }
   let(:user) { create(:user, :without_compliance_info) }
   let!(:user_compliance_info) { create(:user_compliance_info, user:, tax_id_status: UserComplianceInfo::TAX_ID_STATUS_VERIFIED, tax_information_confirmed_at: 1.day.ago) }
   let(:company_investor) { create(:company_investor, user:, company:) }
@@ -72,13 +72,7 @@ RSpec.describe PayInvestorDividends, :vcr do
     end.to change(DividendPayment, :count).by(0)
   end
 
-  it "raises an exception if the company does not have access to the dividends feature" do
-    company.update!(dividends_allowed: false)
 
-    expect do
-      described_class.new(company_investor, dividends).process
-    end.to raise_error("Feature unsupported for company #{company.id}")
-  end
 
   it "raises an exception if Flexile does not have sufficient balance to pay for the dividend" do
     allow(Wise::AccountBalance).to receive(:has_sufficient_flexile_balance?).and_return(false)

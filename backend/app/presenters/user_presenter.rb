@@ -90,7 +90,7 @@ class UserPresenter
         flags = %w[upcoming_dividend irs_tax_forms company_updates].filter { Flipper.enabled?(_1, company) }
         flags.push("equity_compensation") if company.equity_compensation_enabled?
         flags.push("equity_grants") if company.equity_grants_enabled?
-        flags.push("dividends") if company.dividends_allowed?
+        flags.push("dividends")
         flags.push("quickbooks") if company.quickbooks_enabled?
         flags.push("tender_offers") if company.tender_offers_enabled?
         flags.push("cap_table") if company.cap_table_enabled?
@@ -197,7 +197,7 @@ class UserPresenter
           cap_table: company.cap_table_enabled?,
           upcoming_dividend: Flipper.enabled?(:upcoming_dividend, company),
           tender_offers: company.tender_offers_enabled?,
-          dividends: company.dividends_allowed?,
+          dividends: true,
           irs_tax_forms: company.irs_tax_forms?,
           company_updates: company.company_updates_enabled?,
         },

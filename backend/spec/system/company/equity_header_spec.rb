@@ -26,7 +26,6 @@ RSpec.describe "Equity section navigation" do
 
     it "shows the expected nav link and tabs if feature dividends is enabled" do
       Flipper.enable(:cap_table, company) if equity_path == spa_company_cap_table_path(company.external_id)
-      company.update!(dividends_allowed: true)
 
       visit root_path
 
@@ -42,7 +41,7 @@ RSpec.describe "Equity section navigation" do
 
     it "shows the expected nav link and tabs if all features are enabled" do
       Flipper.enable(:cap_table, company)
-      company.update!(dividends_allowed: true, equity_grants_enabled: true)
+      company.update!(equity_grants_enabled: true)
 
       visit root_path
 
@@ -86,7 +85,7 @@ RSpec.describe "Equity section navigation" do
     before { sign_in company_worker.user }
 
     it "does not show the nav link irrespective of enabled features" do
-      company.update!(dividends_allowed: true, equity_grants_enabled: true)
+      company.update!(equity_grants_enabled: true)
 
       visit root_path
 
