@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_05_30_184215) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_05_160217) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -113,7 +113,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_30_184215) do
     t.string "phone_number"
     t.string "brand_color"
     t.string "registration_state"
-    t.bigint "upcoming_dividend_cents"
     t.string "external_id", null: false
     t.string "country_code"
     t.boolean "is_gumroad", default: false, null: false
@@ -191,7 +190,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_30_184215) do
     t.bigint "total_shares", default: 0, null: false
     t.bigint "investment_amount_in_cents", null: false
     t.string "cap_table_notes"
-    t.bigint "upcoming_dividend_cents"
     t.string "external_id", null: false
     t.bigint "total_options", default: 0, null: false
     t.virtual "fully_diluted_shares", type: :bigint, as: "(total_shares + total_options)", stored: true
@@ -338,7 +336,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_30_184215) do
     t.string "entity_name", null: false
     t.datetime "issued_at", null: false
     t.string "convertible_type", null: false
-    t.bigint "upcoming_dividend_cents"
     t.index ["company_id"], name: "index_convertible_investments_on_company_id"
   end
 
