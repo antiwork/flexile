@@ -4,7 +4,6 @@ FactoryBot.define do
   factory :user_compliance_info do
     association :user, factory: :user, without_compliance_info: true
     tax_id { "000-00-0000" }
-    tax_information_confirmed_at { Time.current }
 
     after :build do |info|
       User::NON_TAX_COMPLIANCE_ATTRIBUTES.each do |attr|
@@ -37,6 +36,9 @@ FactoryBot.define do
       state { nil }
       zip_code { nil }
       tax_id { nil }
+      country_code { "US" }
+      citizenship_country_code { "US" }
+      legal_name { "Test User" }
     end
 
     trait :pre_onboarding do
