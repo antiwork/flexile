@@ -99,7 +99,7 @@ export default function CapTable() {
         }),
 
         investorColumnHelper.simple("notes", "Notes"),
-      ].filter((column) => !!column),
+      ],
     [],
   );
 
