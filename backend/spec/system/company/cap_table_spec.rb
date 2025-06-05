@@ -101,7 +101,6 @@ RSpec.describe "Cap table page" do
       end
 
       it "shows the cap table for the company" do
-
         sign_in user
 
         visit spa_company_cap_table_path(company.external_id)

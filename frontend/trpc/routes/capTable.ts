@@ -22,7 +22,6 @@ export const capTableRouter = createRouter({
     if (!ctx.company.capTableEnabled || !(isAdminOrLawyer || ctx.companyInvestor))
       throw new TRPCError({ code: "FORBIDDEN" });
 
-
     let outstandingShares = BigInt(0);
 
     const investors: (CapTableInvestor | CapTableInvestorForAdmin)[] = [];
@@ -70,7 +69,6 @@ export const capTableRouter = createRouter({
           .where(investorsConditions(companyInvestors))
           .orderBy(desc(companyInvestors.totalShares), desc(companyInvestors.totalOptions))
       ).forEach((investor) => {
-
         outstandingShares += investor.outstandingShares;
         investors.push(isAdminOrLawyer ? investor : omit(investor, "email"));
       });
@@ -85,7 +83,6 @@ export const capTableRouter = createRouter({
         .where(eq(convertibleInvestments.companyId, ctx.company.id))
         .orderBy(desc(convertibleInvestments.impliedShares))
     ).forEach((investment) => {
-
       investors.push(investment);
     });
 

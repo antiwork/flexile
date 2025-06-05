@@ -47,59 +47,58 @@ export default function CapTable() {
   };
 
   const investorsColumns = useMemo(
-    () =>
-      [
-        investorColumnHelper.accessor("name", {
-          header: "Name",
-          cell: (info) => {
-            const investor = info.row.original;
-            const contents = (
-              <div className="flex flex-wrap gap-1">
-                <strong>{info.getValue()}</strong>
-                {isInvestorForAdmin(investor) && investor.email}
-              </div>
-            );
-            return canViewInvestor && isInvestor(investor) ? (
-              <a href={investorRowLink(investor)} className={linkClasses}>
-                {contents}
-              </a>
-            ) : (
-              contents
-            );
-          },
-          footer: "Total",
-        }),
-        investorColumnHelper.accessor((row) => (isInvestor(row) ? row.outstandingShares : undefined), {
-          header: "Outstanding shares",
-          cell: (info) => info.getValue()?.toLocaleString() ?? "—",
-          meta: { numeric: true },
-        }),
-        investorColumnHelper.accessor((row) => (isInvestor(row) ? row.outstandingShares : undefined), {
-          header: "Outstanding ownership",
-          cell: (info) => {
-            const value = info.getValue();
-            return value ? formatOwnershipPercentage(Number(value) / Number(data.outstandingShares)) : "—";
-          },
-          meta: { numeric: true },
-        }),
-        investorColumnHelper.accessor((row) => ("fullyDilutedShares" in row ? row.fullyDilutedShares : undefined), {
-          header: "Fully diluted shares",
-          cell: (info) => info.getValue()?.toLocaleString() ?? "—",
-          meta: { numeric: true },
-          footer: data.fullyDilutedShares.toLocaleString(),
-        }),
-        investorColumnHelper.accessor((row) => ("fullyDilutedShares" in row ? row.fullyDilutedShares : undefined), {
-          header: "Fully diluted ownership",
-          cell: (info) => {
-            const value = info.getValue();
-            return value ? formatOwnershipPercentage(Number(value) / Number(data.fullyDilutedShares)) : "—";
-          },
-          meta: { numeric: true },
-          footer: "100%",
-        }),
+    () => [
+      investorColumnHelper.accessor("name", {
+        header: "Name",
+        cell: (info) => {
+          const investor = info.row.original;
+          const contents = (
+            <div className="flex flex-wrap gap-1">
+              <strong>{info.getValue()}</strong>
+              {isInvestorForAdmin(investor) && investor.email}
+            </div>
+          );
+          return canViewInvestor && isInvestor(investor) ? (
+            <a href={investorRowLink(investor)} className={linkClasses}>
+              {contents}
+            </a>
+          ) : (
+            contents
+          );
+        },
+        footer: "Total",
+      }),
+      investorColumnHelper.accessor((row) => (isInvestor(row) ? row.outstandingShares : undefined), {
+        header: "Outstanding shares",
+        cell: (info) => info.getValue()?.toLocaleString() ?? "—",
+        meta: { numeric: true },
+      }),
+      investorColumnHelper.accessor((row) => (isInvestor(row) ? row.outstandingShares : undefined), {
+        header: "Outstanding ownership",
+        cell: (info) => {
+          const value = info.getValue();
+          return value ? formatOwnershipPercentage(Number(value) / Number(data.outstandingShares)) : "—";
+        },
+        meta: { numeric: true },
+      }),
+      investorColumnHelper.accessor((row) => ("fullyDilutedShares" in row ? row.fullyDilutedShares : undefined), {
+        header: "Fully diluted shares",
+        cell: (info) => info.getValue()?.toLocaleString() ?? "—",
+        meta: { numeric: true },
+        footer: data.fullyDilutedShares.toLocaleString(),
+      }),
+      investorColumnHelper.accessor((row) => ("fullyDilutedShares" in row ? row.fullyDilutedShares : undefined), {
+        header: "Fully diluted ownership",
+        cell: (info) => {
+          const value = info.getValue();
+          return value ? formatOwnershipPercentage(Number(value) / Number(data.fullyDilutedShares)) : "—";
+        },
+        meta: { numeric: true },
+        footer: "100%",
+      }),
 
-        investorColumnHelper.simple("notes", "Notes"),
-      ],
+      investorColumnHelper.simple("notes", "Notes"),
+    ],
     [],
   );
 

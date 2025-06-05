@@ -362,7 +362,6 @@ export const convertibleInvestments = pgTable(
     entityName: varchar("entity_name").notNull(),
     issuedAt: timestamp("issued_at", { precision: 6, mode: "date" }).notNull(),
     convertibleType: varchar("convertible_type").notNull(),
-
   },
   (table) => [
     index("index_convertible_investments_on_company_id").using(

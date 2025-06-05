@@ -221,6 +221,4 @@ class Company < ApplicationRecord
       update!(stripe_customer_id: stripe_customer.id)
       stripe_customer_id
     end
-
-
 end
