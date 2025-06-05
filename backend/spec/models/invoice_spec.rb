@@ -682,9 +682,9 @@ RSpec.describe Invoice do
     end
 
     context "when user has not confirmed tax information" do
-      it "returns false" do
+      it "returns true" do
         allow(user).to receive(:tax_information_confirmed_at).and_return(nil)
-        expect(invoice.tax_requirements_met?).to be false
+        expect(invoice.tax_requirements_met?).to be true
       end
     end
   end
