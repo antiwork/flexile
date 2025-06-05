@@ -174,7 +174,7 @@ class Invoice < ApplicationRecord
   end
 
   def tax_requirements_met?
-    user.tax_information_confirmed_at.present?
+    true
   end
 
   def payment_expected_by
