@@ -61,23 +61,7 @@ RSpec.describe TaxDocument do
     end
   end
 
-  describe "scopes" do
-    describe ".irs_tax_forms" do
-      let!(:form_1099nec) { create(:tax_document, :form_1099nec) }
-      let!(:form_1099div) { create(:tax_document, :form_1099div) }
-      let!(:form_1042s) { create(:tax_document, :form_1042s) }
 
-      before do
-        create(:tax_document, :form_w9)
-        create(:tax_document, :form_w8ben)
-        create(:tax_document, :form_w8bene)
-      end
-
-      it "returns only IRS tax documents" do
-        expect(described_class.irs_tax_forms).to match_array([form_1099nec, form_1099div, form_1042s])
-      end
-    end
-  end
 
   describe "#mark_deleted!" do
     let(:tax_document) { create(:tax_document) }

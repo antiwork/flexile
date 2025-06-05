@@ -41,7 +41,7 @@ class TaxDocument < ApplicationRecord
   validates :status, inclusion: { in: statuses.values }
   validate :tax_document_must_be_unique
 
-  scope :irs_tax_forms, -> { where(name: SUPPORTED_IRS_TAX_FORM_NAMES) }
+
 
   def mark_deleted!
     self.status = self.class.statuses[:deleted]

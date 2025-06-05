@@ -29,7 +29,7 @@ class Document < ApplicationRecord
     exercise_notice: 4,
   }
 
-  scope :irs_tax_forms, -> { tax_document.where(name: TaxDocument::SUPPORTED_IRS_TAX_FORM_NAMES) }
+
   scope :unsigned, -> { joins(:signatures).where(signatures: { signed_at: nil }) }
 
   def fetch_serializer(namespace: nil)

@@ -674,8 +674,6 @@ RSpec.describe Invoice do
     let(:invoice) { create(:invoice, company:, user:) }
 
     context "when company has no IRS tax forms requirement" do
-      before { company.update!(irs_tax_forms: false) }
-
       it "returns true" do
         expect(invoice.tax_requirements_met?).to be true
       end
@@ -689,7 +687,6 @@ RSpec.describe Invoice do
     end
 
     context "when company requires IRS tax forms" do
-      before { company.update!(irs_tax_forms: true) }
 
       context "when user has confirmed tax information" do
         it "returns true" do

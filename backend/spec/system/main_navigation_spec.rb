@@ -138,7 +138,6 @@ RSpec.describe "Main navigation" do
       expect(page).to have_current_path(spa_company_updates_company_index_path(company.external_id))
       Flipper.disable(:company_updates, company)
 
-      company.update!(irs_tax_forms: true)
       visit root_path
       expect(page).to have_link("Documents")
       company.update!(expense_cards_enabled: true)
@@ -225,7 +224,7 @@ RSpec.describe "Main navigation" do
       expect(page).to_not have_link("Roles")
 
       Flipper.enable(:cap_table, company)
-      company.update!(expense_cards_enabled: true, irs_tax_forms: true)
+      company.update!(expense_cards_enabled: true)
 
       visit root_path
 
@@ -269,11 +268,9 @@ RSpec.describe "Main navigation" do
       expect(page).to have_link("Analytics")
       Flipper.disable(:company_updates, company)
 
-      company.update!(irs_tax_forms: true)
       visit root_path
       expect(page).to have_link("Documents")
 
-      company.update!(irs_tax_forms: false)
       create(:share_certificate_doc, company:, user: company_investor.user)
       visit root_path
       expect(page).to have_link("Documents")

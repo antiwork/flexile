@@ -92,21 +92,7 @@ RSpec.describe Document do
     end
   end
 
-  describe ".irs_tax_forms" do
-    let!(:form_1099nec) { create(:tax_doc, :form_1099nec) }
-    let!(:form_1099div) { create(:tax_doc, :form_1099div) }
-    let!(:form_1042s) { create(:tax_doc, :form_1042s) }
 
-    before do
-      create(:tax_doc, :form_w9)
-      create(:tax_doc, :form_w8ben)
-      create(:tax_doc, :form_w8bene)
-    end
-
-    it "returns only IRS tax documents" do
-      expect(described_class.irs_tax_forms).to match_array([form_1099nec, form_1099div, form_1042s])
-    end
-  end
 
   describe "#fetch_serializer" do
     it "returns the correct serializer for the W-9 tax document" do

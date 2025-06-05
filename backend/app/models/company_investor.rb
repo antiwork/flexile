@@ -30,7 +30,7 @@ class CompanyInvestor < ApplicationRecord
                                  .group("company_investor_id")
                                  .having("SUM(total_amount_in_cents) >= ?", MIN_DIVIDENDS_AMOUNT_FOR_TAX_FORMS)
 
-    joins(:company).merge(Company.active.irs_tax_forms)
+    joins(:company).merge(Company.active)
       .where(id: dividends_subquery)
   end
 

@@ -22,7 +22,6 @@ RSpec.describe Irs::Form1099divDataGenerator do
     create(
       :company,
       :completed_onboarding,
-      irs_tax_forms: true,
       email: "hi@acme.com",
       name: "Acme, Inc.",
       tax_id: "123456789",

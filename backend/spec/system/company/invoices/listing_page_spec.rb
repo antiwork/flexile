@@ -356,7 +356,6 @@ RSpec.describe "Invoice listing page" do
       end
 
       before do
-        company.update!(irs_tax_forms: true)
       end
 
       it "does not allow invoices to be paid" do
