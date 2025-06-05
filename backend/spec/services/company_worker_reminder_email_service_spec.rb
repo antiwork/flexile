@@ -48,14 +48,14 @@ RSpec.describe CompanyWorkerReminderEmailService do
     end
 
     it "sends reminder email to contractors who are eligible for 1099-NEC" do
-        eligible_contractor_ids = [company_worker_1.id, company_worker_2.id]
-        expect do
-          described_class.new.confirm_tax_info_reminder(tax_year:)
-        end.to have_enqueued_mail(CompanyWorkerMailer, :confirm_tax_info_reminder).twice.with do |args|
-          expect(args[:tax_year]).to eq tax_year
-          expect(eligible_contractor_ids.delete(args[:company_worker_id])).to be_present
-        end
+      eligible_contractor_ids = [company_worker_1.id, company_worker_2.id]
+      expect do
+        described_class.new.confirm_tax_info_reminder(tax_year:)
+      end.to have_enqueued_mail(CompanyWorkerMailer, :confirm_tax_info_reminder).twice.with do |args|
+        expect(args[:tax_year]).to eq tax_year
+        expect(eligible_contractor_ids.delete(args[:company_worker_id])).to be_present
       end
+    end
 
     context "when company is inactive" do
       it "doesn't send reminder emails to contractors" do

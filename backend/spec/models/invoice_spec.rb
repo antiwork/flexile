@@ -687,7 +687,6 @@ RSpec.describe Invoice do
     end
 
     context "when company requires IRS tax forms" do
-
       context "when user has confirmed tax information" do
         it "returns true" do
           allow(user).to receive(:tax_information_confirmed_at).and_return(Time.current)
