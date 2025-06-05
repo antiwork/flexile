@@ -17,7 +17,7 @@ import {
 } from "@/models/investor";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
-import { formatMoneyFromCents } from "@/utils/formatMoney";
+
 import { formatOwnershipPercentage } from "@/utils/numbers";
 import EquityLayout from "../Layout";
 
@@ -97,17 +97,7 @@ export default function CapTable() {
           meta: { numeric: true },
           footer: "100%",
         }),
-        company.flags.includes("upcoming_dividend")
-          ? investorColumnHelper.accessor("upcomingDividendCents", {
-              header: "Upcoming dividend",
-              cell: (info) => {
-                const value = info.getValue();
-                return value ? formatMoneyFromCents(value) : "—";
-              },
-              meta: { numeric: true },
-              footer: data.upcomingDividendCents > 0 ? formatMoneyFromCents(data.upcomingDividendCents) : "—",
-            })
-          : null,
+
         investorColumnHelper.simple("notes", "Notes"),
       ].filter((column) => !!column),
     [],
@@ -119,7 +109,6 @@ export default function CapTable() {
       ...data.optionPools.map((pool) => ({
         name: `Options available (${pool.name})`,
         fullyDilutedShares: pool.availableShares,
-        upcomingDividendCents: BigInt(0),
       })),
     ],
     [data.investors, data.optionPools],

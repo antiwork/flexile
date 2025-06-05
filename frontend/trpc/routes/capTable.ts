@@ -22,7 +22,7 @@ export const capTableRouter = createRouter({
     if (!ctx.company.capTableEnabled || !(isAdminOrLawyer || ctx.companyInvestor))
       throw new TRPCError({ code: "FORBIDDEN" });
 
-    let upcomingDividendCents = BigInt(0);
+
     let outstandingShares = BigInt(0);
 
     const investors: (CapTableInvestor | CapTableInvestorForAdmin)[] = [];
@@ -50,7 +50,6 @@ export const capTableRouter = createRouter({
         outstandingShares += investor.outstandingShares;
         investors.push({
           ...(isAdminOrLawyer ? investor : omit(investor, "email")),
-          upcomingDividendCents: BigInt(0),
         });
       });
     } else {
@@ -63,7 +62,7 @@ export const capTableRouter = createRouter({
             outstandingShares: companyInvestors.totalShares,
             fullyDilutedShares: companyInvestors.fullyDilutedShares,
             notes: companyInvestors.capTableNotes,
-            upcomingDividendCents: companyInvestors.upcomingDividendCents,
+
             email: users.email,
           })
           .from(companyInvestors)
@@ -71,7 +70,7 @@ export const capTableRouter = createRouter({
           .where(investorsConditions(companyInvestors))
           .orderBy(desc(companyInvestors.totalShares), desc(companyInvestors.totalOptions))
       ).forEach((investor) => {
-        upcomingDividendCents += investor.upcomingDividendCents || BigInt(0);
+
         outstandingShares += investor.outstandingShares;
         investors.push(isAdminOrLawyer ? investor : omit(investor, "email"));
       });
@@ -81,13 +80,12 @@ export const capTableRouter = createRouter({
       await db
         .select({
           name: sql<string>`CONCAT(${convertibleInvestments.entityName}, ' ', ${convertibleInvestments.convertibleType})`,
-          upcomingDividendCents: convertibleInvestments.upcomingDividendCents,
         })
         .from(convertibleInvestments)
         .where(eq(convertibleInvestments.companyId, ctx.company.id))
         .orderBy(desc(convertibleInvestments.impliedShares))
     ).forEach((investment) => {
-      upcomingDividendCents += investment.upcomingDividendCents || BigInt(0);
+
       investors.push(investment);
     });
 
@@ -133,7 +131,7 @@ export const capTableRouter = createRouter({
       investors,
       fullyDilutedShares: ctx.company.fullyDilutedShares,
       outstandingShares,
-      upcomingDividendCents,
+
       optionPools: pools.map((pool) => pick(pool, ["name", "availableShares"])),
       shareClasses: classes,
     };

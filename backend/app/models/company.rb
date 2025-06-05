@@ -98,7 +98,7 @@ class Company < ApplicationRecord
 
   after_create_commit :create_balance!
   after_update_commit :update_convertible_implied_shares, if: :saved_change_to_fully_diluted_shares?
-  after_update_commit :update_upcoming_dividend_for_investors, if: :saved_change_to_upcoming_dividend_cents?
+
 
   accepts_nested_attributes_for :expense_categories
 
@@ -222,5 +222,5 @@ class Company < ApplicationRecord
       stripe_customer_id
     end
 
-    def update_upcoming_dividend_for_investors = UpdateUpcomingDividendValuesJob.perform_async(id)
+
 end

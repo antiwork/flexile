@@ -1,6 +1,5 @@
 type SAFEInvestor = {
   name: string;
-  upcomingDividendCents: bigint | null;
 };
 
 type Investor = SAFEInvestor & {

@@ -19,12 +19,10 @@ RSpec.describe "Cap table page" do
       let(:user3) { create(:user, email: "contractor+1@example.com", legal_name: "John Doe") }
       let(:user4) { create(:user, email: "contractor+2@example.com", legal_name: "Jane Snow") }
       let(:company_investor1) do
-        # The upcoming_dividend_cents is set to null to test the UI rendering but it should not happen really
         create(:company_investor, user: user1, company:, cap_table_notes: "Founder")
       end
       let(:company_investor2) do
-        create(:company_investor, user: user2, company:, cap_table_notes: "Partner",
-                                  upcoming_dividend_cents: 349_913_90)
+        create(:company_investor, user: user2, company:, cap_table_notes: "Partner")
       end
       let(:company_investor3) do
         create(:company_investor, user: user3, company:,)
@@ -73,8 +71,7 @@ RSpec.describe "Cap table page" do
                                company_investor_entity: company_investor_entity2, number_of_shares: 99_877)
         create(:convertible_investment, company:, entity_name: "Republic.co",
                                         implied_shares: 1_000_000,
-                                        convertible_type: "Crowd SAFE",
-                                        upcoming_dividend_cents: 700_000_00)
+                                        convertible_type: "Crowd SAFE")
         create(:equity_grant, company_investor: company_investor3, company_investor_entity: company_investor_entity3,
                               option_pool:, number_of_shares: 378_987, vested_shares: 192_234, unvested_shares: 186_753)
         create(:equity_grant, company_investor: company_investor4, company_investor_entity: company_investor_entity4,
@@ -104,7 +101,6 @@ RSpec.describe "Cap table page" do
       end
 
       it "shows the cap table for the company" do
-        Flipper.enable(:upcoming_dividend, company)
 
         sign_in user
 
@@ -124,7 +120,6 @@ RSpec.describe "Cap table page" do
                                        "Outstanding shares" => "500,123",
                                        "Outstanding ownership" => "50.012%", # (500,123 * 100 / (500,123 + 499,877)) with 3 decimals
                                        "Fully diluted ownership" => "4.168%", # (500,123 * 100 / 12,000,000) with 3 decimals
-                                       "Upcoming dividend" => "—",
                                        "Notes" => "Founder",
                                      },
                                      {
@@ -133,7 +128,6 @@ RSpec.describe "Cap table page" do
                                        "Outstanding shares" => "499,877",
                                        "Outstanding ownership" => "49.988%", # (499,877 * 100 / (500,123 + 499,877)) with 3 decimals
                                        "Fully diluted ownership" => "4.166%", # (499,877 * 100 / 12_000,000) with 3 decimals
-                                       "Upcoming dividend" => "$349,913.90",
                                        "Notes" => "Partner",
                                      },
                                      {
@@ -142,7 +136,6 @@ RSpec.describe "Cap table page" do
                                        "Outstanding shares" => "0",
                                        "Outstanding ownership" => "0.000%",
                                        "Fully diluted ownership" => "5.175%", # (621,013 * 100 / 12_000,000) with 3 decimals
-                                       "Upcoming dividend" => "—",
                                      },
                                      {
                                        "Name" => "John Doe#{can_view_investor ? " contractor+1@example.com" : nil}",
@@ -150,7 +143,6 @@ RSpec.describe "Cap table page" do
                                        "Outstanding shares" => "0",
                                        "Outstanding ownership" => "0.000%",
                                        "Fully diluted ownership" => "3.158%", # (378,987 * 100 / 12_000,000) with 3 decimals
-                                       "Upcoming dividend" => "—",
                                      },
                                      {
                                        "Name" => "Republic.co Crowd SAFE",
@@ -158,7 +150,6 @@ RSpec.describe "Cap table page" do
                                        "Outstanding shares" => "—",
                                        "Outstanding ownership" => "—",
                                        "Fully diluted ownership" => "—",
-                                       "Upcoming dividend" => "$700,000",
                                      },
                                      {
                                        "Name" => "Options available (#{option_pool.name})",
@@ -166,13 +157,11 @@ RSpec.describe "Cap table page" do
                                        "Outstanding shares" => "—",
                                        "Outstanding ownership" => "—",
                                        "Fully diluted ownership" => "83.333%", # (10,000,000 * 100 / 12_000,000)
-                                       "Upcoming dividend" => "—",
                                      },
                                      {
                                        "Name" => "Total",
                                        "Fully diluted shares" => "12,000,000",
                                        "Fully diluted ownership" => "100%",
-                                       "Upcoming dividend" => "$1,049,913.90",
                                      }
                                    ])
 
@@ -221,7 +210,7 @@ RSpec.describe "Cap table page" do
         expect(page).to have_table(with_rows: expected_rows)
       end
 
-      it "does not render the upcoming dividend data if the feature is disabled" do
+      it "shows the cap table without upcoming dividend data" do
         sign_in user
 
         visit spa_company_cap_table_path(company.external_id)
@@ -230,7 +219,6 @@ RSpec.describe "Cap table page" do
           expect(page).to have_selector("tbody > tr", count: 6)
           expect(page).to have_selector("tfoot > tr", count: 1)
         end
-        expect(page).not_to have_text("Upcoming dividend")
       end
 
       context "when using new schema" do

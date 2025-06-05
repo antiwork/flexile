@@ -362,7 +362,7 @@ export const convertibleInvestments = pgTable(
     entityName: varchar("entity_name").notNull(),
     issuedAt: timestamp("issued_at", { precision: 6, mode: "date" }).notNull(),
     convertibleType: varchar("convertible_type").notNull(),
-    upcomingDividendCents: bigint("upcoming_dividend_cents", { mode: "bigint" }),
+
   },
   (table) => [
     index("index_convertible_investments_on_company_id").using(
@@ -1380,7 +1380,7 @@ export const companyInvestors = pgTable(
     totalShares: bigint("total_shares", { mode: "bigint" }).default(0n).notNull(),
     investmentAmountInCents: bigint("investment_amount_in_cents", { mode: "bigint" }).notNull(),
     capTableNotes: varchar("cap_table_notes"),
-    upcomingDividendCents: bigint("upcoming_dividend_cents", { mode: "bigint" }),
+
     externalId: varchar("external_id").$default(nanoid).notNull(),
     totalOptions: bigint("total_options", { mode: "bigint" }).default(0n).notNull(),
     fullyDilutedShares: bigint("fully_diluted_shares", { mode: "bigint" }).generatedAlwaysAs(
@@ -1920,7 +1920,7 @@ export const companies = pgTable(
     phoneNumber: varchar("phone_number"),
     brandColor: varchar("brand_color"),
     registrationState: varchar("registration_state"),
-    upcomingDividendCents: bigint("upcoming_dividend_cents", { mode: "bigint" }),
+
     externalId: varchar("external_id").$default(nanoid).notNull(),
     countryCode: varchar("country_code"),
     isGumroad: boolean("is_gumroad").notNull().default(false),
