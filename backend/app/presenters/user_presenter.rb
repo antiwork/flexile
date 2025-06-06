@@ -87,7 +87,7 @@ class UserPresenter
 
     {
       companies: user.all_companies.compact.map do |company|
-        flags = %w[upcoming_dividend company_updates].filter { Flipper.enabled?(_1, company) }
+        flags = %w[company_updates].filter { Flipper.enabled?(_1, company) }
         flags.push("irs_tax_forms")
         flags.push("equity_compensation") if company.equity_compensation_enabled?
         flags.push("equity_grants") if company.equity_grants_enabled?
@@ -165,14 +165,14 @@ class UserPresenter
         if company_worker.active?
           result[:flags][:equity] = true if company_worker.hourly?
           result[:flags][:cap_table] = true if company.is_gumroad? && company.cap_table_enabled?
-          result[:flags][:upcoming_dividend] = Flipper.enabled?(:upcoming_dividend, company)
+
         end
       end
       if company_investor.present?
         result[:flags][:cap_table] ||= true if company.cap_table_enabled?
         result[:flags][:option_exercising] = company.json_flag?("option_exercising")
         result[:flags][:equity_grants] = company.equity_grants_enabled?
-        result[:flags][:upcoming_dividend] ||= Flipper.enabled?(:upcoming_dividend, company)
+
         result[:flags][:tender_offers] ||= company.tender_offers_enabled?
         result[:flags][:irs_tax_forms] ||= true
       end
@@ -195,7 +195,7 @@ class UserPresenter
         flags: {
           equity_grants: company.equity_grants_enabled?,
           cap_table: company.cap_table_enabled?,
-          upcoming_dividend: Flipper.enabled?(:upcoming_dividend, company),
+
           tender_offers: company.tender_offers_enabled?,
           dividends: true,
           irs_tax_forms: true,

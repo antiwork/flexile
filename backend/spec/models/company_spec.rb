@@ -237,14 +237,6 @@ RSpec.describe Company do
          .and change { investment2.reload.implied_shares }.to(expected_implied_shares2)
       end
     end
-
-    it "enqueues `UpdateUpcomingDividendValuesJob` when `upcoming_dividend_cents` is updated" do
-      company = create(:company)
-      expect(UpdateUpcomingDividendValuesJob.jobs.size).to eq(0)
-
-      company.update!(upcoming_dividend_cents: 1_000_000)
-      expect(UpdateUpcomingDividendValuesJob).to have_enqueued_sidekiq_job(company.id)
-    end
   end
 
   describe "#active?" do
