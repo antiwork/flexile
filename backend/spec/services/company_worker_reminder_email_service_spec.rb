@@ -2,7 +2,7 @@
 
 RSpec.describe CompanyWorkerReminderEmailService do
   describe "#confirm_tax_info_reminder" do
-    let(:company) { create(:company, irs_tax_forms:) }
+    let(:company) { create(:company) }
     let(:tax_year) { Date.current.year }
     let(:company_worker_1) do
       user = create(:user, :without_compliance_info, country_code: "US", citizenship_country_code: "IN")
@@ -47,33 +47,19 @@ RSpec.describe CompanyWorkerReminderEmailService do
       create(:invoice, :paid, company_worker: company_worker_7, company:, total_amount_in_usd_cents: 1000_00)
     end
 
-    context "when 'irs_tax_forms' bit flag is set for the company" do
-      let(:irs_tax_forms) { true }
-
-      it "sends reminder email to contractors who are eligible for 1099-NEC" do
-        eligible_contractor_ids = [company_worker_1.id, company_worker_2.id]
-        expect do
-          described_class.new.confirm_tax_info_reminder(tax_year:)
-        end.to have_enqueued_mail(CompanyWorkerMailer, :confirm_tax_info_reminder).twice.with do |args|
-          expect(args[:tax_year]).to eq tax_year
-          expect(eligible_contractor_ids.delete(args[:company_worker_id])).to be_present
-        end
-      end
-
-      context "when company is inactive" do
-        it "doesn't send reminder emails to contractors" do
-          company.deactivate!
-          expect do
-            described_class.new.confirm_tax_info_reminder(tax_year:)
-          end.not_to have_enqueued_mail(CompanyWorkerMailer, :confirm_tax_info_reminder)
-        end
+    it "sends reminder email to contractors who are eligible for 1099-NEC" do
+      eligible_contractor_ids = [company_worker_1.id, company_worker_2.id]
+      expect do
+        described_class.new.confirm_tax_info_reminder(tax_year:)
+      end.to have_enqueued_mail(CompanyWorkerMailer, :confirm_tax_info_reminder).twice.with do |args|
+        expect(args[:tax_year]).to eq tax_year
+        expect(eligible_contractor_ids.delete(args[:company_worker_id])).to be_present
       end
     end
 
-    context "when 'irs_tax_forms' bit flag is not set for the company" do
-      let(:irs_tax_forms) { false }
-
+    context "when company is inactive" do
       it "doesn't send reminder emails to contractors" do
+        company.deactivate!
         expect do
           described_class.new.confirm_tax_info_reminder(tax_year:)
         end.not_to have_enqueued_mail(CompanyWorkerMailer, :confirm_tax_info_reminder)

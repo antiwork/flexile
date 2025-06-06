@@ -49,7 +49,7 @@ RSpec.describe CompanyInvestor do
     end
 
     describe ".with_required_tax_info_for" do
-      let(:company) { create(:company, irs_tax_forms:) }
+      let(:company) { create(:company) }
       let(:tax_year) { Date.current.year }
       let(:company_investor_1) do
         user = create(:user, citizenship_country_code: "IN")
@@ -88,22 +88,10 @@ RSpec.describe CompanyInvestor do
                                  paid_at: Date.current.prev_year)
       end
 
-      context "when 'irs_tax_forms' bit flag is not set for the company" do
-        let(:irs_tax_forms) { false }
-
-        it "returns an empty array" do
-          expect(described_class.with_required_tax_info_for(tax_year:)).to eq([])
-        end
-      end
-
-      context "when 'irs_tax_forms' bit flag is set for the company" do
-        let(:irs_tax_forms) { true }
-
-        it "returns the list of company_workers who are eligible for 1099-NEC" do
-          expect(described_class.with_required_tax_info_for(tax_year:)).to match_array(
-            [company_investor_1, company_investor_2, company_investor_3]
-          )
-        end
+      it "returns the list of company_investors who are eligible for tax forms" do
+        expect(described_class.with_required_tax_info_for(tax_year:)).to match_array(
+          [company_investor_1, company_investor_2, company_investor_3]
+        )
       end
     end
   end

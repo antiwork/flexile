@@ -27,7 +27,7 @@ class UserMailer < ApplicationMailer
 
     @tax_document_names = @user_compliance_info.documents
                                                .alive
-                                               .irs_tax_forms
+                                               .irs_tax_form
                                                .where(year: @tax_year)
                                                .pluck(:name)
     @title = @tax_document_names.one? ?

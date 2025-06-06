@@ -431,7 +431,7 @@ RSpec.describe GenerateTaxFormService do
                                                         invoice_date: Date.new(tax_year, 2, 1))
         create(:invoice_expense, invoice: invoice_with_expenses)
         create(:invoice, :processing, company_worker: company_worker_2, invoice_date: Date.new(tax_year, 3, 1))
-        create(:invoice, :fully_approved, company_worker: company_worker_2, invoice_date: Date.new(tax_year, 4, 1))
+        create(:invoice, :fully_approved, user: create(:user_compliance_info, :confirmed).user, company_worker: company_worker_2, invoice_date: Date.new(tax_year, 4, 1))
         create(:invoice, :partially_approved, company_worker: company_worker_2, invoice_date: Date.new(tax_year, 12, 1))
       end
 

@@ -191,8 +191,6 @@ RSpec.describe "Invoice details page" do
       end
 
       context "when the contractor has not provided tax information" do
-        before { company.update!(irs_tax_forms: true) }
-
         it "does not allow paying an invoice if the contractor has not provided tax information" do
           visit spa_company_invoice_path(company.external_id, invoice.external_id)
 

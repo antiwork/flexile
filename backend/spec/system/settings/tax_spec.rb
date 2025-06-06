@@ -15,7 +15,6 @@ RSpec.describe "Tax Settings" do
     let!(:company_worker) { create(:company_worker, company:, user:) }
 
     before do
-      company.update!(irs_tax_forms: true)
       company_administrator = create(:company_administrator, company:)
       user.update!(invited_by_id: company_administrator.user_id)
     end
