@@ -17,7 +17,6 @@ import {
 } from "@/models/investor";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
-
 import { formatOwnershipPercentage } from "@/utils/numbers";
 import EquityLayout from "../Layout";
 
