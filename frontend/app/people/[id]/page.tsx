@@ -196,11 +196,11 @@ export default function ContractorPage() {
           </DialogHeader>
           <p>This action cannot be undone.</p>
           <div className="grid gap-2">
-            <DatePicker
-              value={endDate}
-              onChange={(value) => value && setEndDate(value)}
-              label="End date"
-              granularity="day"
+            <DatePicker 
+              value={endDate} 
+              onChange={(value) => value && setEndDate(value as CalendarDate)} 
+              label="End date" 
+              granularity="day" 
             />
           </div>
           <div className="grid gap-3">
