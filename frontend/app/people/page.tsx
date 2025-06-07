@@ -7,6 +7,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { formatISO } from "date-fns";
+import DatePicker from "@/components/DatePicker";
+import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
 import Placeholder from "@/components/Placeholder";
@@ -32,7 +34,7 @@ const schema = z.object({
   payRateInSubunits: z.number(),
   hoursPerWeek: z.number().nullable(),
   role: z.string(),
-  startDate: z.string(),
+  startDate: z.instanceof(CalendarDate),
   documentTemplateId: z.string(),
   contractSignedElsewhere: z.boolean().default(false),
 });
@@ -49,7 +51,7 @@ export default function PeoplePage() {
       ...(lastContractor ? { payRateInSubunits: lastContractor.payRateInSubunits, role: lastContractor.role } : {}),
       payRateType: lastContractor?.payRateType ?? PayRateType.Hourly,
       hoursPerWeek: lastContractor?.hoursPerWeek ?? DEFAULT_WORKING_HOURS_PER_WEEK,
-      startDate: formatISO(new Date(), { representation: "date" }),
+      startDate: today(getLocalTimeZone()),
       contractSignedElsewhere: false,
     },
     resolver: zodResolver(schema),
@@ -70,7 +72,7 @@ export default function PeoplePage() {
     saveMutation.mutate({
       companyId: company.id,
       ...values,
-      startedAt: formatISO(new Date(`${values.startDate}T00:00:00`)),
+      startedAt: formatISO(values.startDate.toDate(getLocalTimeZone())),
     });
   });
 
@@ -176,9 +178,8 @@ export default function PeoplePage() {
                 name="startDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Start date</FormLabel>
                     <FormControl>
-                      <Input {...field} type="date" className="block" />
+                      <DatePicker {...field} label="Start date" granularity="day" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
