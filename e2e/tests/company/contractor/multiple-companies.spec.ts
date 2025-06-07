@@ -5,6 +5,7 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
+import { fillDatePicker } from "@test/helpers";
 import { expect, test, withinModal } from "@test/index";
 
 test.describe("Contractor for multiple companies", () => {
@@ -30,7 +31,7 @@ test.describe("Contractor for multiple companies", () => {
     await page.getByRole("button", { name: "Invite contractor" }).click();
 
     await page.getByLabel("Email").fill(contractorUser.email);
-    await page.getByLabel("Start date").fill("2025-08-08");
+    await fillDatePicker(page, "Start date", "2025-08-08");
     await page.getByLabel("Average hours").fill("25");
     await page.getByLabel("Rate").fill("110");
     await page.getByLabel("Role").fill("Role");

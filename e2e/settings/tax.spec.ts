@@ -11,7 +11,7 @@ import { and, desc, eq, isNull } from "drizzle-orm";
 import { BusinessType, DocumentType, TaxClassification } from "@/db/enums";
 import { companies, documents, users } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
-import { selectComboboxOption } from "@test/helpers";
+import { selectComboboxOption, fillDatePicker } from "@test/helpers";
 
 test.describe("Tax settings", () => {
   let company: typeof companies.$inferSelect;
@@ -99,7 +99,7 @@ test.describe("Tax settings", () => {
       await expect(page.getByText("Please select a tax classification.")).toBeVisible();
 
       await selectComboboxOption(page, "Tax classification", "Partnership");
-      await page.getByLabel("Date of incorporation (optional)").fill("1980-06-07");
+      await fillDatePicker(page, "Date of incorporation (optional)", "1980-06-07");
       await selectComboboxOption(page, "State", "New York");
       await page.getByRole("button", { name: "Save changes" }).click();
 

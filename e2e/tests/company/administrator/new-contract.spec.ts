@@ -6,6 +6,7 @@ import { companyAdministratorsFactory } from "@test/factories/companyAdministrat
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { mockDocuseal as mockDocusealHelper } from "@test/helpers/docuseal";
+import { fillDatePicker } from "@test/helpers";
 import { expect, type Page, test, withinModal } from "@test/index";
 import { addMonths, formatISO } from "date-fns";
 import { desc, eq } from "drizzle-orm";
@@ -45,7 +46,7 @@ test.describe("New Contractor", () => {
     await page.getByRole("button", { name: "Invite contractor" }).click();
     await expect(page.getByText("Who's joining?")).toBeVisible();
     await page.getByLabel("Email").fill(email);
-    await page.getByLabel("Start date").fill(formatISO(date, { representation: "date" }));
+    await fillDatePicker(page, "Start date", formatISO(date, { representation: "date" }));
     return { email, date };
   };
 
