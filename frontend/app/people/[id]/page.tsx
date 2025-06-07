@@ -7,7 +7,8 @@ import { useParams, useRouter } from "next/navigation";
 import { parseAsString, useQueryState } from "nuqs";
 import React, { useMemo, useState } from "react";
 import DatePicker from "@/components/DatePicker";
-import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
+import { getLocalTimeZone, today } from "@internationalized/date";
+import type { DateValue } from "react-aria-components";
 import DividendStatusIndicator from "@/app/equity/DividendStatusIndicator";
 import EquityGrantExerciseStatusIndicator from "@/app/equity/EquityGrantExerciseStatusIndicator";
 import DetailsModal from "@/app/equity/grants/DetailsModal";
@@ -86,7 +87,7 @@ export default function ContractorPage() {
 
   const [endModalOpen, setEndModalOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
-  const [endDate, setEndDate] = useState<CalendarDate>(today(getLocalTimeZone()));
+  const [endDate, setEndDate] = useState<DateValue | null>(today(getLocalTimeZone()));
   const [issuePaymentModalOpen, setIssuePaymentModalOpen] = useState(false);
   const issuePaymentForm = useForm({
     defaultValues: {
@@ -196,12 +197,7 @@ export default function ContractorPage() {
           </DialogHeader>
           <p>This action cannot be undone.</p>
           <div className="grid gap-2">
-            <DatePicker 
-              value={endDate} 
-              onChange={(value) => value && setEndDate(value as CalendarDate)} 
-              label="End date" 
-              granularity="day" 
-            />
+            <DatePicker value={endDate} onChange={setEndDate} label="End date" granularity="day" />
           </div>
           <div className="grid gap-3">
             <Status variant="success">{user.displayName} will be able to submit invoices after contract end.</Status>
@@ -219,7 +215,7 @@ export default function ContractorPage() {
             </Button>
             <MutationButton
               mutation={endContract}
-              param={{ companyId: company.id, id: contractor?.id ?? "", endDate: endDate.toString() }}
+              param={{ companyId: company.id, id: contractor?.id ?? "", endDate: endDate?.toString() ?? "" }}
             >
               Yes, end contract
             </MutationButton>
