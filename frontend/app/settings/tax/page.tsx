@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import DatePicker from "@/components/DatePicker";
+import { CalendarDate } from "@internationalized/date";
 import RadioButtons from "@/components/RadioButtons";
 import Status from "@/components/Status";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -29,7 +31,7 @@ import { linkClasses } from "@/components/Link";
 import { Label } from "@/components/ui/label";
 
 const dataSchema = z.object({
-  birth_date: z.string().nullable(),
+  birth_date: z.instanceof(CalendarDate).nullable(),
   business_name: z.string().nullable(),
   business_type: z.number().nullable(),
   tax_classification: z.number().nullable(),
@@ -59,7 +61,7 @@ const formValuesSchema = z.object({
   tax_classification: z.nativeEnum(TaxClassification).nullable(),
   country_code: z.string(),
   tax_id: z.string().min(1, "This field is required."),
-  birth_date: z.string().nullable(),
+  birth_date: z.instanceof(CalendarDate).nullable(),
   street_address: z.string().min(1, "Please add your residential address."),
   city: z.string().min(1, "Please add your city or town."),
   state: z.string(),
@@ -396,9 +398,12 @@ export default function TaxPage() {
                 name="birth_date"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{`Date of ${formValues.business_entity ? "incorporation" : "birth"} (optional)`}</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} className="block" />
+                      <DatePicker
+                        {...field}
+                        label={`Date of ${formValues.business_entity ? "incorporation" : "birth"} (optional)`}
+                        granularity="day"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
