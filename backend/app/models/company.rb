@@ -93,7 +93,6 @@ class Company < ApplicationRecord
 
   scope :active, -> { where(deactivated_at: nil) }
   scope :is_gumroad, -> { where(is_gumroad: true) }
-
   scope :is_trusted, -> { where(is_trusted: true) }
 
   after_create_commit :create_balance!

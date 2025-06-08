@@ -39,14 +39,13 @@ RSpec.describe ConsolidatedInvoiceCreation do
       end
 
       let!(:paid_or_pending_payment_not_charged) do
-        Invoice::PAID_OR_PAYING_STATES.map { create(:invoice, user: create(:user_compliance_info, :confirmed).user, company:, invoice_date: Date.parse("2020-10-10"), status: _1) }
+        Invoice::PAID_OR_PAYING_STATES.map { create(:invoice, user: create(:user, :contractor), company:, invoice_date: Date.parse("2020-10-10"), status: _1) }
       end
       let!(:fully_approved_failed_invoices) do
-        user = create(:user_compliance_info, :confirmed).user
-        create_list(:invoice, 2, :failed, user:, invoice_date: Date.parse("2020-10-01"), company:)
+        create_list(:invoice, 2, :failed, invoice_date: Date.parse("2020-10-01"), company:)
       end
       let!(:fully_approved_invoices) do
-        user = create(:user_compliance_info, :confirmed).user
+        user = create(:user, :contractor)
         [
           create(:invoice_with_equity, :fully_approved, user:, invoice_date: Date.parse("2020-10-10"), company:),
           create(:invoice_with_equity, :fully_approved, user:, invoice_date: Date.parse("2019-11-11"), company:),
@@ -89,10 +88,9 @@ RSpec.describe ConsolidatedInvoiceCreation do
         invoices
       end
       let!(:fully_approved_invoices) do
-        user = create(:user_compliance_info, :confirmed).user
         [
-          create(:invoice_with_equity, :fully_approved, user:, invoice_date: Date.parse("2020-10-10"), company:),
-          create(:invoice_with_equity, :fully_approved, user:, invoice_date: Date.parse("2019-11-11"), company:),
+          create(:invoice_with_equity, :fully_approved, invoice_date: Date.parse("2020-10-10"), company:),
+          create(:invoice_with_equity, :fully_approved, invoice_date: Date.parse("2019-11-11"), company:),
         ]
       end
       let(:total_invoiced_cents) { fully_approved_invoices.sum(&:cash_amount_in_cents) }

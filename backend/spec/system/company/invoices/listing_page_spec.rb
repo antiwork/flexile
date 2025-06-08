@@ -355,9 +355,6 @@ RSpec.describe "Invoice listing page" do
         create(:invoice, company:, user: user_without_tax_info, company_worker: company_worker_without_tax_info)
       end
 
-      before do
-      end
-
       it "does not allow invoices to be paid" do
         visit spa_company_invoices_path(company.external_id)
 

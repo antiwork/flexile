@@ -88,7 +88,6 @@ class UserPresenter
     {
       companies: user.all_companies.compact.map do |company|
         flags = %w[company_updates].filter { Flipper.enabled?(_1, company) }
-        flags.push("irs_tax_forms")
         flags.push("equity_compensation") if company.equity_compensation_enabled?
         flags.push("equity_grants") if company.equity_grants_enabled?
         flags.push("dividends")
@@ -161,7 +160,6 @@ class UserPresenter
       )
       result[:has_documents] = documents.not_consulting_contract.or(documents.unsigned).exists?
       if company_worker.present?
-        result[:flags][:irs_tax_forms] = true
         if company_worker.active?
           result[:flags][:equity] = true if company_worker.hourly?
           result[:flags][:cap_table] = true if company.is_gumroad? && company.cap_table_enabled?
@@ -174,7 +172,6 @@ class UserPresenter
         result[:flags][:equity_grants] = company.equity_grants_enabled?
 
         result[:flags][:tender_offers] ||= company.tender_offers_enabled?
-        result[:flags][:irs_tax_forms] ||= true
       end
       result
     end
@@ -198,7 +195,6 @@ class UserPresenter
 
           tender_offers: company.tender_offers_enabled?,
           dividends: true,
-          irs_tax_forms: true,
           company_updates: company.company_updates_enabled?,
         },
       }

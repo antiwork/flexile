@@ -5,7 +5,7 @@ RSpec.describe UpdateUser do
     let(:service) { described_class.new(user:, update_params:, confirm_tax_info:) }
 
     context "when saving the user's legal details" do
-      let(:original_compliance_info) { create(:user_compliance_info, :without_legal_details, :us_resident) }
+      let(:original_compliance_info) { create(:user_compliance_info, :without_legal_details) }
       let(:user) { original_compliance_info.user }
       let(:update_params) do
         ActionController::Parameters.new(

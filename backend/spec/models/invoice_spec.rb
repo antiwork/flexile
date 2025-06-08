@@ -456,7 +456,6 @@ RSpec.describe Invoice do
   end
 
   describe "#payable?" do
-    let(:user) { create(:user_compliance_info, :confirmed).user }
     let(:invoice) { create(:invoice, status:, user:) }
 
     [Invoice::RECEIVED, Invoice::REJECTED, Invoice::PROCESSING, Invoice::PAID].each do |status|
