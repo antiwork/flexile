@@ -6,7 +6,7 @@ import { login } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { fillDatePicker } from "@test/helpers";
 import { expect, test, withinModal } from "@test/index";
-import { addDays, addYears, format, formatISO } from "date-fns";
+import { addDays, addYears, format } from "date-fns";
 import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
 import { assert } from "@/utils/assert";
@@ -30,8 +30,7 @@ test.describe("End contract", () => {
     await page.getByRole("link", { name: contractor.preferredName }).click();
     await page.getByRole("button", { name: "End contract" }).click();
 
-    const today = formatISO(new Date(), { representation: "date" });
-    await expect(page.getByLabel("End date")).toHaveValue(today);
+    await expect(page.getByLabel("End date").first()).toHaveText(format(new Date(), "M/d/yyyy"));
 
     await page.getByRole("button", { name: "Yes, end contract" }).click();
 
@@ -53,7 +52,7 @@ test.describe("End contract", () => {
     await page.getByLabel("Email").fill(contractor.email);
     await page.getByLabel("Average hours").fill("25");
     const startDate = addYears(new Date(), 1);
-    await fillDatePicker(page, "Start date", formatISO(startDate, { representation: "date" }));
+    await fillDatePicker(page, "Start date", format(startDate, "MM/dd/yyyy"));
     await page.getByRole("button", { name: "Send invite" }).click();
     await withinModal(
       async (modal) => {
@@ -97,13 +96,12 @@ test.describe("End contract", () => {
     assert(contractor.preferredName != null, "Contractor preferred name is required");
 
     const futureDate = addDays(new Date(), 30);
-    const futureDateString = formatISO(futureDate, { representation: "date" });
 
     await page.getByRole("link", { name: "People" }).click();
     await page.getByRole("link", { name: contractor.preferredName }).click();
     await page.getByRole("button", { name: "End contract" }).click();
 
-    await fillDatePicker(page, "End date", futureDateString);
+    await fillDatePicker(page, "End date", format(futureDate, "MM/dd/yyyy"));
     await page.getByRole("button", { name: "Yes, end contract" }).click();
 
     await page.getByRole("link", { name: contractor.preferredName }).click();

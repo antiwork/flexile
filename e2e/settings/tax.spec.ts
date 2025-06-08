@@ -99,7 +99,7 @@ test.describe("Tax settings", () => {
       await expect(page.getByText("Please select a tax classification.")).toBeVisible();
 
       await selectComboboxOption(page, "Tax classification", "Partnership");
-      await fillDatePicker(page, "Date of incorporation (optional)", "1980-06-07");
+      await fillDatePicker(page, "Date of incorporation (optional)", "06/07/1980");
       await selectComboboxOption(page, "State", "New York");
       await page.getByRole("button", { name: "Save changes" }).click();
 
