@@ -9,7 +9,7 @@ import React, { useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import DatePicker from "@/components/DatePicker";
-import { CalendarDate } from "@internationalized/date";
+import { CalendarDate, parseDate } from "@internationalized/date";
 import RadioButtons from "@/components/RadioButtons";
 import Status from "@/components/Status";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -31,7 +31,7 @@ import { linkClasses } from "@/components/Link";
 import { Label } from "@/components/ui/label";
 
 const dataSchema = z.object({
-  birth_date: z.instanceof(CalendarDate).nullable(),
+  birth_date: z.string().nullable(),
   business_name: z.string().nullable(),
   business_type: z.number().nullable(),
   tax_classification: z.number().nullable(),
@@ -113,6 +113,7 @@ export default function TaxPage() {
       state: data.state ?? "",
       zip_code: data.zip_code ?? "",
       street_address: data.street_address ?? "",
+      birth_date: data.birth_date ? parseDate(data.birth_date) : null,
     },
   });
 
