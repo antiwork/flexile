@@ -36,9 +36,6 @@ FactoryBot.define do
       state { nil }
       zip_code { nil }
       tax_id { nil }
-      country_code { "US" }
-      citizenship_country_code { "US" }
-      legal_name { "Test User" }
     end
 
     trait :pre_onboarding do

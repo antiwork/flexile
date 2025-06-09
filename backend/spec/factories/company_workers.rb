@@ -3,7 +3,7 @@
 FactoryBot.define do
   factory :company_worker do
     company
-    user
+    user { create(:user, :confirmed) }
 
     role { "Role" }
     started_at { Date.today }
