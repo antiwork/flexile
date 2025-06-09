@@ -29,11 +29,18 @@ FactoryBot.define do
 
     after :create do |user, evaluator|
       create(:wise_recipient, user:) unless evaluator.without_bank_account
-      create(:user_compliance_info, :confirmed, user:) unless evaluator.without_compliance_info
+      create(:user_compliance_info, user:) unless evaluator.without_compliance_info
     end
 
     trait :without_compliance_info do
       without_compliance_info { true }
+    end
+
+    trait :confirmed do
+      without_compliance_info { true }
+      after :create do |user|
+        create(:user_compliance_info, :us_resident, :confirmed, user:)
+      end
     end
 
     trait :without_legal_details do

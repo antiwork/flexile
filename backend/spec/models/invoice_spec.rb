@@ -348,7 +348,7 @@ RSpec.describe Invoice do
     end
 
     describe "#sync_with_quickbooks" do
-      let(:invoice) { create(:invoice) }
+      let(:invoice) { create(:invoice, company_worker: create(:company_worker, user: create(:user, :confirmed))) }
 
       [Invoice::RECEIVED, Invoice::PROCESSING, Invoice::REJECTED, Invoice::PAID].each do |status|
         context "when an invoice is being marked as #{status}" do
@@ -456,7 +456,7 @@ RSpec.describe Invoice do
   end
 
   describe "#payable?" do
-    let(:invoice) { create(:invoice, status:, user:) }
+    let(:invoice) { create(:invoice, status:) }
 
     [Invoice::RECEIVED, Invoice::REJECTED, Invoice::PROCESSING, Invoice::PAID].each do |status|
       context "when invoice status is #{status}" do

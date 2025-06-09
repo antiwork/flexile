@@ -21,20 +21,8 @@ RSpec.describe GenerateTaxFormService do
       described_class.new(user_compliance_info:, form_name:, tax_year:, company:)
     end
 
-    context "when the user is a company administrator" do
-      let(:user) { create(:user, :company_admin) }
-      let(:user_compliance_info) { user.compliance_info }
-      let(:form_name) { TaxDocument::ALL_SUPPORTED_TAX_FORM_NAMES.sample }
-
-      it "does not create a new tax document" do
-        expect do
-          expect(generate_tax_form_service.process).to be_nil
-        end.to_not change { user_compliance_info.documents.tax_document.count }
-      end
-    end
-
-    context "when the user is a company lawyer" do
-      let(:user) { create(:user, :company_lawyer) }
+    context "when the user does not have confirmed tax info" do
+      let(:user) { create(:user, :pre_onboarding) }
       let(:user_compliance_info) { user.compliance_info }
       let(:form_name) { TaxDocument::ALL_SUPPORTED_TAX_FORM_NAMES.sample }
 
