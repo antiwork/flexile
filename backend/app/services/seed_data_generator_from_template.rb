@@ -599,7 +599,8 @@ class SeedDataGeneratorFromTemplate
 
             error_message = UpdateUser.new(
               user: contractor,
-              update_params: user_attributes.slice("legal_name", "preferred_name", "country_code", "citizenship_country_code")
+              update_params: user_attributes.symbolize_keys,
+              confirm_tax_info: user_attributes.dig("tax_id").present?,
             ).process
             raise Error, error_message if error_message.present?
 
@@ -706,6 +707,7 @@ class SeedDataGeneratorFromTemplate
             company:,
             invoice_ids: invoices.map(&:external_id),
           ).perform
+          return unless consolidated_invoice.present?
           perform_with_retries do
             consolidated_invoice.consolidated_payments.each do |consolidated_payment|
               ProcessPaymentIntentForConsolidatedPaymentJob.perform_inline(consolidated_payment.id)

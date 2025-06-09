@@ -283,7 +283,8 @@
             "street_address": "123 Main St",
             "city": "Los Angeles",
             "zip_code": "90001",
-            "state": "CA"
+            "state": "CA",
+            "tax_id": "123456789"
           },
           "wise_recipient_attributes": {
             "currency": "USD",
@@ -387,7 +388,8 @@
             "street_address": "456 Oak Avenue",
             "city": "San Francisco",
             "zip_code": "94122",
-            "state": "CA"
+            "state": "CA",
+            "tax_id": "123456789"
           },
           "wise_recipient_attributes": {
             "currency": "USD",
@@ -422,7 +424,8 @@
             "street_address": "Rua da Boa Nova, 114",
             "city": "Lisbon",
             "zip_code": "1000-001",
-            "state": "Lisbon"
+            "state": "Lisbon",
+            "tax_id": "123456789"
           },
           "wise_recipient_attributes": {
             "currency": "EUR",

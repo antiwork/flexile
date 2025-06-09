@@ -76,8 +76,8 @@ class CompanyWorker < ApplicationRecord
                                .for_tax_year(tax_year)
                                .group("company_contractor_id")
                                .having("SUM(cash_amount_in_cents) >= ?", MIN_COMPENSATION_AMOUNT_FOR_1099_NEC)
-
-    joins(user: :compliance_info).merge(User.where(country_code: "US"))
+    joins(:company).merge(Company.active)
+      .joins(user: :compliance_info).merge(User.where(country_code: "US"))
       .where(id: invoices_subquery)
   end
 
