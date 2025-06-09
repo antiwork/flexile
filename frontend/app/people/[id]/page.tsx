@@ -39,7 +39,6 @@ import { z } from "zod";
 import { Form, FormField, FormLabel, FormControl, FormMessage, FormItem } from "@/components/ui/form";
 import FormFields from "../FormFields";
 import RadioButtons from "@/components/RadioButtons";
-
 import CopyButton from "@/components/CopyButton";
 import { Decimal } from "decimal.js";
 
@@ -54,7 +53,6 @@ const issuePaymentSchema = z.object({
 export default function ContractorPage() {
   const currentUser = useCurrentUser();
   const company = useCurrentCompany();
-
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
   const { id } = useParams<{ id: string }>();
