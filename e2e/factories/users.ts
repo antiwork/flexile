@@ -10,7 +10,10 @@ import { users } from "@/db/schema";
 import { assert } from "@/utils/assert";
 
 export const usersFactory = {
-  create: async (overrides: Partial<typeof users.$inferInsert> = {}) => {
+  create: async (
+    overrides: Partial<typeof users.$inferInsert> = {},
+    options: { withoutComplianceInfo?: boolean } = {},
+  ) => {
     const [user] = await db
       .insert(users)
       .values({
@@ -35,29 +38,37 @@ export const usersFactory = {
       })
       .returning();
     assert(user != null);
+    if (!options.withoutComplianceInfo) await userComplianceInfosFactory.createConfirmed({ userId: user.id });
 
     return { user };
   },
 
   createWithBusinessEntity: async (overrides: Partial<typeof users.$inferInsert> = {}) => {
-    const { user } = await usersFactory.create(overrides);
-    await userComplianceInfosFactory.create({ userId: user.id, businessEntity: true, businessName: "Business Inc." });
+    const { user } = await usersFactory.create(overrides, { withoutComplianceInfo: true });
+    await userComplianceInfosFactory.createConfirmed({
+      userId: user.id,
+      businessEntity: true,
+      businessName: "Business Inc.",
+    });
     return { user };
   },
 
   createPreOnboarding: async (overrides: Partial<typeof users.$inferInsert> = {}) =>
-    usersFactory.create({
-      preferredName: null,
-      streetAddress: null,
-      city: null,
-      state: null,
-      zipCode: null,
-      birthDate: null,
-      legalName: null,
-      countryCode: null,
-      citizenshipCountryCode: null,
-      ...overrides,
-    }),
+    usersFactory.create(
+      {
+        preferredName: null,
+        streetAddress: null,
+        city: null,
+        state: null,
+        zipCode: null,
+        birthDate: null,
+        legalName: null,
+        countryCode: null,
+        citizenshipCountryCode: null,
+        ...overrides,
+      },
+      { withoutComplianceInfo: true },
+    ),
 
   createContractor: async (overrides: Partial<typeof users.$inferInsert> = {}) => {
     const { user } = await usersFactory.create(overrides);
