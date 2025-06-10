@@ -276,7 +276,9 @@ export default function InvoicePage() {
                       <TableCell>{lineItem.description}</TableCell>
                       {invoice.contractor.payRateType === PayRateType.ProjectBased ? null : (
                         <>
-                          <TableCell className="text-right tabular-nums">{lineItem.minutes ? formatDuration(lineItem.minutes) : null}</TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {lineItem.minutes ? formatDuration(lineItem.minutes) : null}
+                          </TableCell>
                           <TableCell className="text-right tabular-nums">
                             {lineItem.payRateInSubunits
                               ? `${formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)} / hour`
