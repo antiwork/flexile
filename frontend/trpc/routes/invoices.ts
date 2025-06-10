@@ -64,12 +64,10 @@ const getFlexileFeeCents = (totalAmountCents: bigint) => {
 };
 
 const invoiceInputSchema = createInsertSchema(invoiceLineItems)
-  .pick({
-    description: true,
-    totalAmountCents: true,
-  })
+  .pick({ description: true })
   .extend({
     userExternalId: z.string(),
+    totalAmountCents: z.bigint(),
     ...createInsertSchema(invoices).pick({
       equityPercentage: true,
       minAllowedEquityPercentage: true,
@@ -204,7 +202,8 @@ export const invoicesRouter = createRouter({
         .values({
           invoiceId: invoice.id,
           description,
-          totalAmountCents,
+          quantity: 1,
+          payRateInSubunits: Number(totalAmountCents),
         })
         .returning();
 
@@ -380,7 +379,7 @@ export const invoicesRouter = createRouter({
           : undefined,
       ),
       with: {
-        lineItems: { columns: { description: true, totalAmountCents: true, minutes: true, payRateInSubunits: true } },
+        lineItems: { columns: { description: true, quantity: true, hourly: true, payRateInSubunits: true } },
         expenses: { columns: { id: true, totalAmountInCents: true, description: true, expenseCategoryId: true } },
         contractor: {
           with: {

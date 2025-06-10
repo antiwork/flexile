@@ -582,7 +582,6 @@ class SeedDataGeneratorFromTemplate
               pay_rate_in_subunits: company_worker_attributes.fetch("pay_rate_in_subunits"),
               pay_rate_type: company_worker_attributes.fetch("pay_rate_type"),
               role: company_worker_attributes.fetch("role"),
-              hours_per_week: company_worker_attributes.fetch("hours_per_week", nil),
             }
             result = InviteWorker.new(
               current_user: company_administrator.user,
@@ -660,7 +659,7 @@ class SeedDataGeneratorFromTemplate
         else
           {
             description: "Consulting",
-            minutes: company_worker.hours_per_week * 60 * 4 + rand(-30..30),
+            minutes: 10 * 60 * 4 + rand(-30..30),
           }
         end
         params = ActionController::Parameters.new(

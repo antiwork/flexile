@@ -86,7 +86,6 @@ test.describe("Edit contractor", () => {
     });
     assert(updatedContractor !== undefined);
     expect(updatedContractor.role).toBe("Stuff-doer");
-    expect(updatedContractor.hoursPerWeek).toBe(24);
     expect(updatedContractor.payRateInSubunits).toBe(10700);
 
     expect(sentEmails).toEqual([

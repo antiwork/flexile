@@ -16,20 +16,12 @@
   <dd>
     <b>
       <% if contractor.hourly? %>
-        <%= "$#{contractor.pay_rate_in_subunits / 100.0}/hr, " \
-            "$#{number_to_human(contractor.avg_yearly_usd, format: "%n%u", precision: 0,
-                                                           units: { thousand: "K", million: "M" })}" \
-            "/yr" %>
+        <%= "#{money_format(contractor.pay_rate_in_subunits / 100.0)} per hour" %>
       <% else %>
-        <%= "#{money_format(contractor.pay_rate_in_subunits / 100.0)} per project" %>
+        <%= "#{money_format(contractor.pay_rate_in_subunits / 100.0)} per #{contractor.unit_of_work}" %>
       <% end %>
     </b>
   </dd>
-
-  <% if contractor.hourly? %>
-    <dt>Average hours</dt>
-    <dd><b><%= "#{contractor.hours_per_week}/week" %></b></dd>
-  <% end %>
 </dl>
 
 <%= link_to("Review and sign your contract", url || "#{PROTOCOL}://#{DOMAIN}/documents?sign=#{user.documents.unsigned.where(docuseal_submission_id: nil).first&.id}", class: "button") %>

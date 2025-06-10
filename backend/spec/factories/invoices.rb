@@ -23,11 +23,6 @@ FactoryBot.define do
     zip_code { Faker::Address.zip_code }
     country_code { "US" }
 
-    trait :project_based do
-      total_minutes { nil }
-      company_worker { association :company_worker, :project_based }
-    end
-
     after :build do |invoice|
       invoice.invoice_line_items << build(:invoice_line_item, invoice: nil, minutes: invoice.total_minutes)
       invoice.flexile_fee_cents ||= invoice.calculate_flexile_fee_cents

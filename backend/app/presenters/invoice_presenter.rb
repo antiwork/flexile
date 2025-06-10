@@ -31,7 +31,6 @@ class InvoicePresenter
         status: nil,
         rejected_by: nil,
         rejection_reason: nil,
-        max_minutes: Invoice::MAX_MINUTES,
         equity_amount_in_cents: 0,
         line_items: [],
         expenses:,
@@ -65,7 +64,6 @@ class InvoicePresenter
           status:,
           rejected_by: rejector_name,
           rejection_reason:,
-          max_minutes: Invoice::MAX_MINUTES,
           total_amount_in_usd:,
           equity_amount_in_cents:,
           line_items:,
@@ -92,7 +90,6 @@ class InvoicePresenter
         business_entity: user.business_entity?,
         billing_entity_name: user.billing_entity_name,
         pay_rate_in_subunits: contractor.pay_rate_in_subunits,
-        project_based: contractor.project_based?,
       }
     end
 

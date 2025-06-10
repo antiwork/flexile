@@ -84,8 +84,7 @@ workers.each do |worker|
     started_at: worker[:start_date],
     pay_rate_in_subunits: (worker[:pay_rate] * 100).to_i,
     pay_rate_type: worker[:pay_type].downcase,
-    role: worker[:role],
-    hours_per_week: worker[:pay_type] == "hourly" ? 40 : nil
+    role: worker[:role]
   }
 
   puts "📝 Inviting worker with params | #{worker_params}"
@@ -118,7 +117,6 @@ The script will output success or failure messages for each worker invitation. M
 For project-based workers:
 
 - Set `pay_type: "project_based"`
-- `hours_per_week` is set to `nil`
 - Pay rate represents the total project amount
 
 ### Hourly Workers
@@ -126,7 +124,6 @@ For project-based workers:
 For hourly workers:
 
 - Set `pay_type: "hourly"`
-- `hours_per_week` is typically set to `40`
 - Pay rate represents the hourly rate
 
 ## Complete Script Example
@@ -174,8 +171,7 @@ workers.each do |worker|
     started_at: worker[:start_date],
     pay_rate_in_subunits: (worker[:pay_rate] * 100).to_i,
     pay_rate_type: worker[:pay_type].downcase,
-    role: worker[:role],
-    hours_per_week: worker[:pay_type] == "hourly" ? 40 : nil
+    role: worker[:role]
   }
 
   puts "📝 Inviting worker with params | #{worker_params}"

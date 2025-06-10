@@ -10,15 +10,25 @@ import { PopoverTrigger } from "@radix-ui/react-popover";
 import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { skipToken } from "@tanstack/react-query";
+import { Switch } from "@/components/ui/switch";
+import { z } from "zod";
+
+export const schema = z.object({
+  payRateType: z.nativeEnum(PayRateType),
+  payRateInSubunits: z.number().nullable(),
+  role: z.string(),
+  specifyDefaultAmount: z.boolean().optional(),
+  unitOfWork: z.string().nullable(),
+});
 
 export default function FormFields() {
-  const form = useFormContext();
-  const payRateType: unknown = form.watch("payRateType");
+  const form = useFormContext<z.infer<typeof schema>>();
+  const payRateType = form.watch("payRateType");
   const companyId = useUserStore((state) => state.user?.currentCompanyId);
   const { data: workers } = trpc.contractors.list.useQuery(companyId ? { companyId, excludeAlumni: true } : skipToken);
 
   const uniqueRoles = workers ? [...new Set(workers.map((worker) => worker.role))].sort() : [];
-  const roleRegex = new RegExp(`${form.watch("role")}`, "iu");
+  const roleRegex = new RegExp(form.watch("role"), "iu");
 
   return (
     <>
@@ -68,7 +78,7 @@ export default function FormFields() {
                 {...field}
                 options={[
                   { label: "Hourly", value: PayRateType.Hourly } as const,
-                  { label: "Project-based", value: PayRateType.ProjectBased } as const,
+                  { label: "Custom", value: PayRateType.Custom } as const,
                 ]}
               />
             </FormControl>
@@ -77,45 +87,58 @@ export default function FormFields() {
         )}
       />
 
-      <div
-        className={`grid items-start gap-3 ${payRateType === PayRateType.ProjectBased ? "md:grid-cols-1" : "md:grid-cols-2"}`}
-      >
-        <FormField
-          control={form.control}
-          name="payRateInSubunits"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Rate</FormLabel>
-              <FormControl>
-                <NumberInput
-                  value={field.value == null ? null : field.value / 100}
-                  onChange={(value) => field.onChange(value == null ? null : value * 100)}
-                  placeholder="0"
-                  prefix="$"
-                  suffix={payRateType === PayRateType.ProjectBased ? "/ project" : "/ hour"}
-                  decimal
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {payRateType !== PayRateType.ProjectBased && (
+      <FormField
+        control={form.control}
+        name="specifyDefaultAmount"
+        render={({ field }) => (
+          <FormItem>
+            <FormControl>
+              <Switch checked={field.value ?? false} onCheckedChange={field.onChange} label="Specify default amount" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {form.watch("specifyDefaultAmount") && (
+        <>
           <FormField
             control={form.control}
-            name="hoursPerWeek"
+            name="payRateInSubunits"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Average hours</FormLabel>
+                <FormLabel>Rate</FormLabel>
                 <FormControl>
-                  <NumberInput {...field} suffix="/ week" />
+                  <NumberInput
+                    value={field.value == null ? null : field.value / 100}
+                    onChange={(value) => field.onChange(value == null ? null : value * 100)}
+                    placeholder="0"
+                    prefix="$"
+                    suffix={payRateType === PayRateType.Custom ? "/ project" : "/ hour"}
+                    decimal
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-        )}
-      </div>
+          {payRateType === PayRateType.Custom && (
+            <FormField
+              control={form.control}
+              name="unitOfWork"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Unit of work</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+        </>
+      )}
     </>
   );
 }

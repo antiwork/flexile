@@ -100,42 +100,6 @@ RSpec.describe Invoice do
       expect(invoice.errors.full_messages).to eq(["Total amount in USD cents must equal the sum of cash and equity amounts"])
     end
 
-    describe "total_minutes" do
-      context "for hourly contractor invoices" do
-        it "ensures that total minutes is present for a services invoice type" do
-          invoice = build(:invoice, user: create(:user, :contractor), total_minutes: nil)
-          expect(invoice).to be_invalid
-          expect(invoice.errors.full_messages).to eq(["Invoice line items minutes can't be blank", "Invoice line items minutes is not a number", "Total minutes can't be blank", "Total minutes is not a number"])
-
-          invoice.total_minutes = 0
-          invoice.invoice_line_items.first.minutes = 0
-          expect(invoice).to be_invalid
-          expect(invoice.errors.full_messages).to eq(["Invoice line items minutes must be greater than 0"])
-
-          invoice.total_minutes = Invoice::MAX_MINUTES + 1
-          invoice.invoice_line_items.first.minutes = Invoice::MAX_MINUTES + 1
-          expect(invoice).to be_invalid
-          expect(invoice.errors.full_messages).to eq(["Total minutes must be less than or equal to 9600"])
-
-          invoice.total_minutes = 60
-          expect(invoice).to be_valid
-        end
-
-        it "does not validate total minutes for a non-services invoice type" do
-          invoice = build(:invoice, user: create(:user, :contractor), total_minutes: nil, invoice_type: "other")
-          expect(invoice).to be_valid
-        end
-      end
-
-      it "does not validate total minutes for project-based contractor invoices" do
-        invoice = build(:invoice, company_worker: create(:company_worker, :project_based), total_minutes: nil)
-        expect(invoice).to be_valid
-
-        invoice.total_minutes = 0
-        expect(invoice).to be_valid
-      end
-    end
-
     describe "allowed equity percentage range" do
       it "ensures that min allowed equity percentage is less than or equal to max allowed equity percentage" do
         invoice = build(:invoice, min_allowed_equity_percentage: 81, max_allowed_equity_percentage: 80)

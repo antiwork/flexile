@@ -34,7 +34,7 @@ test.describe("quick invoicing", () => {
   });
 
   test.describe("when equity compensation is disabled", () => {
-    test("allows filling out the form and previewing the invoice for hourly rate", async ({ page }) => {
+    test("allows filling out the form and previewing the invoice", async ({ page }) => {
       await login(page, contractorUser);
       await page.getByLabel("Hours worked").fill("10:30");
       await fillDatePicker(page, "Date", "08/08/2024");
@@ -48,27 +48,6 @@ test.describe("quick invoicing", () => {
       await expect(row.getByLabel("Hours")).toHaveValue("10:30");
       await expect(row.getByText("$60 / hour")).toBeVisible();
       await expect(row.getByText("$630")).toBeVisible();
-      await expect(page.getByText("Total$630")).toBeVisible();
-    });
-
-    test("allows filling out the form and previewing the invoice for project-based rate", async ({ page }) => {
-      await db
-        .update(companyContractors)
-        .set({ payRateType: PayRateType.ProjectBased })
-        .where(eq(companyContractors.id, companyContractor.id));
-
-      await login(page, contractorUser);
-
-      await page.getByLabel("Amount").fill("630");
-      await fillDatePicker(page, "Date", "08/08/2024");
-      await expect(page.getByText("Total amount$630")).toBeVisible();
-      await page.getByRole("link", { name: "Add more info" }).click();
-
-      await expect(page.getByRole("group", { name: "Date" })).toHaveText("8/8/2024");
-      await expect(page.getByRole("row")).toHaveCount(3); // Line items header + 1 row + footer
-      const row = page.getByRole("row").nth(1);
-      await expect(row.getByPlaceholder("Description")).toHaveValue("");
-      await expect(row.getByLabel("Amount")).toHaveValue("630");
       await expect(page.getByText("Total$630")).toBeVisible();
     });
   });

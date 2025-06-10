@@ -7,7 +7,6 @@ FactoryBot.define do
 
     role { "Role" }
     started_at { Date.today }
-    hours_per_week { 40 }
     pay_rate_in_subunits { 60_00 }
     pay_rate_type { CompanyWorker.pay_rate_types[:hourly] }
 
@@ -16,15 +15,13 @@ FactoryBot.define do
     end
 
     trait :hourly do
-      hours_per_week { 40 }
       pay_rate_in_subunits { 60_00 }
       pay_rate_type { CompanyWorker.pay_rate_types[:hourly] }
     end
 
-    trait :project_based do
-      hours_per_week { nil }
+    trait :custom do
       pay_rate_in_subunits { 1_000_00 }
-      pay_rate_type { CompanyWorker.pay_rate_types[:project_based] }
+      pay_rate_type { CompanyWorker.pay_rate_types[:custom] }
     end
 
     transient do
