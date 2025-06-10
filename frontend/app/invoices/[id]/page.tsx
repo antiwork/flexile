@@ -6,7 +6,7 @@ import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Fragment, useMemo, useState } from "react";
-import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import MainLayout from "@/components/layouts/Main";
 import { linkClasses } from "@/components/Link";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -17,7 +17,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
-import type { RouterOutput } from "@/trpc";
 import { PayRateType, trpc } from "@/trpc/client";
 import { assert } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
@@ -33,8 +32,6 @@ import {
 } from "..";
 import InvoiceStatus, { StatusDetails } from "../Status";
 
-type Invoice = RouterOutput["invoices"]["get"];
-type InvoiceLineItem = Invoice["lineItems"][number];
 export default function InvoicePage() {
   const { id } = useParams<{ id: string }>();
   const user = useCurrentUser();
@@ -76,32 +73,7 @@ export default function InvoicePage() {
   });
 
   const details = StatusDetails(invoice);
-  const columnHelper = createColumnHelper<InvoiceLineItem>();
   const cashFactor = 1 - invoice.equityPercentage / 100;
-  const columns = [
-    columnHelper.simple(
-      "description",
-      complianceInfo?.businessEntity ? `Services (${complianceInfo.legalName})` : "Services",
-    ),
-    invoice.contractor.payRateType === PayRateType.ProjectBased
-      ? null
-      : columnHelper.simple("minutes", "Hours", (v) => (v ? formatDuration(v) : null), "numeric"),
-    invoice.contractor.payRateType === PayRateType.ProjectBased
-      ? null
-      : columnHelper.simple(
-          "payRateInSubunits",
-          "Cash rate",
-          (v) => (v ? `${formatMoneyFromCents(v * cashFactor)} / hour` : ""),
-          "numeric",
-        ),
-    columnHelper.simple(
-      "totalAmountCents",
-      "Line total",
-      (v) => formatMoneyFromCents(Number(v) * cashFactor),
-      "numeric",
-    ),
-  ].filter((column) => !!column);
-  const table = useTable({ columns, data: invoice.lineItems });
 
   assert(!!invoice.invoiceDate); // must be defined due to model checks in rails
 
@@ -282,7 +254,44 @@ export default function InvoicePage() {
               </div>
             </div>
 
-            {invoice.lineItems.length > 0 ? <DataTable table={table} /> : null}
+            {invoice.lineItems.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>
+                      {complianceInfo?.businessEntity ? `Services (${complianceInfo.legalName})` : "Services"}
+                    </TableHead>
+                    {invoice.contractor.payRateType === PayRateType.ProjectBased ? null : (
+                      <>
+                        <TableHead>Hours</TableHead>
+                        <TableHead>Cash rate</TableHead>
+                      </>
+                    )}
+                    <TableHead className="text-right">Line total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {invoice.lineItems.map((lineItem, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{lineItem.description}</TableCell>
+                      {invoice.contractor.payRateType === PayRateType.ProjectBased ? null : (
+                        <>
+                          <TableCell>{lineItem.minutes ? formatDuration(lineItem.minutes) : null}</TableCell>
+                          <TableCell>
+                            {lineItem.payRateInSubunits
+                              ? `${formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)} / hour`
+                              : ""}
+                          </TableCell>
+                        </>
+                      )}
+                      <TableCell className="text-right tabular-nums">
+                        {formatMoneyFromCents(Number(lineItem.totalAmountCents) * cashFactor)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : null}
 
             {invoice.expenses.length > 0 && (
               <Card>
