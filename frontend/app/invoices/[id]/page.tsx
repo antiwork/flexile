@@ -263,8 +263,8 @@ export default function InvoicePage() {
                     </TableHead>
                     {invoice.contractor.payRateType === PayRateType.ProjectBased ? null : (
                       <>
-                        <TableHead>Hours</TableHead>
-                        <TableHead>Cash rate</TableHead>
+                        <TableHead className="text-right">Hours</TableHead>
+                        <TableHead className="text-right">Cash rate</TableHead>
                       </>
                     )}
                     <TableHead className="text-right">Line total</TableHead>
