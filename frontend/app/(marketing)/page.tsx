@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 import logo from "@/public/flexile-logo.svg";
 import { cn } from "@/utils";
 import iconClock from "./icon-clock.svg";
-import iconDiamond from "./icon-diamond.svg";
+
 import iconGlobe from "./icon-globe.svg";
 import iconEye from "./icon-eye.svg";
 
