@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 import logo from "@/public/flexile-logo.svg";
 import { cn } from "@/utils";
 import iconClock from "./icon-clock.svg";
-
+import iconDiamond from "./icon-diamond.svg";
 import iconGlobe from "./icon-globe.svg";
 import iconEye from "./icon-eye.svg";
 
@@ -101,7 +101,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex items-center gap-8">
-              <Image src={iconClock} alt="Contract Management" className="w-12 shrink-0" />
+              <Image src={iconDiamond} alt="Contract Management" className="w-12 shrink-0" />
               <div>
                 <h3 className="text-xl font-medium">Contract Management</h3>
                 <div className="text-xl text-gray-600">
