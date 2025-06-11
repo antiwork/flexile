@@ -23,7 +23,7 @@ FactoryBot.define do
     country_code { "US" }
 
     after :build do |invoice|
-      invoice.invoice_line_items << build(:invoice_line_item, invoice: nil, minutes: 60)
+      invoice.invoice_line_items << build(:invoice_line_item, invoice: nil, quantity: 1)
       invoice.flexile_fee_cents ||= invoice.calculate_flexile_fee_cents
     end
 

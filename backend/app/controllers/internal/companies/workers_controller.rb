@@ -25,7 +25,6 @@ class Internal::Companies::WorkersController < Internal::Companies::BaseControll
 
   private
     def worker_params
-      permitted_keys = %i[email started_at pay_rate_type pay_rate_in_subunits role]
-      params.require(:contractor).permit(*permitted_keys)
+      params.require(:contractor).permit(:email, :started_at, :pay_rate_type, :pay_rate_in_subunits, :role, :unit_of_work)
     end
 end
