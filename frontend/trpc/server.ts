@@ -5,7 +5,7 @@ import { companiesRouter } from "@/trpc/routes/companies";
 import { equityCalculationsRouter } from "@/trpc/routes/equityCalculations";
 import { filesRouter } from "@/trpc/routes/files";
 import { investorEntitiesRouter } from "@/trpc/routes/investorEntities";
-import { capTableUploadsRouter } from "./routes/capTableUploads";
+
 import { companyUpdatesRouter } from "./routes/companyUpdates";
 import { consolidatedInvoicesRouter } from "./routes/consolidatedInvoices";
 import { contractorsRouter } from "./routes/contractors";
@@ -48,7 +48,7 @@ export const appRouter = createRouter({
   optionPools: optionPoolsRouter,
   companyUpdates: companyUpdatesRouter,
   capTable: capTableRouter,
-  capTableUploads: capTableUploadsRouter,
+
   companies: companiesRouter,
   files: filesRouter,
   expenseCategories: expenseCategoriesRouter,
