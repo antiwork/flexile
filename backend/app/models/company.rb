@@ -27,7 +27,6 @@ class Company < ApplicationRecord
   end
 
   has_many :company_administrators
-  has_many :cap_table_uploads
   has_many :administrators, through: :company_administrators, source: :user
   has_many :company_lawyers
   has_many :lawyers, through: :company_lawyers, source: :user

@@ -9,7 +9,6 @@ RSpec.describe Company do
     it { is_expected.to have_many(:administrators).through(:company_administrators).source(:user) }
     it { is_expected.to have_many(:company_lawyers) }
     it { is_expected.to have_many(:lawyers).through(:company_lawyers).source(:user) }
-    it { is_expected.to have_many(:cap_table_uploads) }
     it { is_expected.to have_many(:contracts) }
     it { is_expected.to have_many(:company_workers) }
     it { is_expected.to have_many(:company_investor_entities) }

@@ -114,33 +114,6 @@ export const balances = pgTable(
   (table) => [index("index_balances_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops"))],
 );
 
-export const capTableUploads = pgTable(
-  "cap_table_uploads",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    companyId: bigint("company_id", { mode: "bigint" }).notNull(),
-    userId: bigint("user_id", { mode: "bigint" }).notNull(),
-    uploadedAt: timestamp("uploaded_at", { precision: 6, mode: "date" }).notNull(),
-    status: varchar()
-      .$type<"submitted" | "processing" | "needs_additional_info" | "completed" | "failed" | "canceled">()
-      .notNull(),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-    parsedData: jsonb("parsed_data"),
-    externalId: varchar("external_id").$default(nanoid).notNull(),
-  },
-  (table) => [
-    index("index_cap_table_uploads_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
-    index("index_cap_table_uploads_on_user_id").using("btree", table.userId.asc().nullsLast().op("int8_ops")),
-    uniqueIndex("index_cap_table_uploads_on_external_id").using(
-      "btree",
-      table.externalId.asc().nullsLast().op("text_ops"),
-    ),
-  ],
-);
-
 export const companyAdministrators = pgTable(
   "company_administrators",
   {
@@ -2046,7 +2019,6 @@ export const usersRelations = relations(users, ({ many }) => ({
 
 export const companiesRelations = relations(companies, ({ many }) => ({
   administrators: many(companyAdministrators),
-  capTableUploads: many(capTableUploads),
   contractors: many(companyContractors),
   investors: many(companyInvestors),
   lawyers: many(companyLawyers),
