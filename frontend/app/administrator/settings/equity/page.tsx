@@ -46,8 +46,6 @@ export default function Equity() {
     }),
   );
 
-
-
   return (
     <div className="grid gap-8">
       <Form {...form}>
