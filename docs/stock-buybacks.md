@@ -100,7 +100,7 @@ company_investors_with_bids = CompanyInvestor.joins(:tender_offer_bids)
 
 company_investors_with_bids.each do |investor|
   CompanyInvestorMailer.tender_offer_closed(
-    company_investor_id: investor.id,
+    investor.id,
     tender_offer_id: tender_offer.id
   ).deliver_now
 end
@@ -117,11 +117,10 @@ end
 
 ```ruby
 tender_offer = TenderOffer.find(TENDER_OFFER_ID)
-puts "Tender Offer: #{tender_offer.name}"
 puts "Total Amount: $#{tender_offer.total_amount_in_cents / 100.0}"
 puts "Accepted Price: $#{tender_offer.accepted_price_cents / 100.0}" if tender_offer.accepted_price_cents
-puts "Total Bids: #{tender_offer.tender_offer_bids.count}"
-puts "Accepted Bids: #{tender_offer.tender_offer_bids.where('accepted_shares > 0').count}"
+puts "Total Bids: #{tender_offer.bids.count}"
+puts "Accepted Bids: #{tender_offer.bids.where('accepted_shares > 0').count}"
 ```
 
 ### Processing Payments
@@ -141,7 +140,7 @@ equity_buyback_round.equity_buybacks.each do |equity_buyback|
           user.tax_information_confirmed_at.nil? ||
           !investor.completed_onboarding?
 
-  EquityBuybackPaymentJob.perform_in((delay * 2).seconds, equity_buyback.id)
+  InvestorEquityBuybacksPaymentJob.perform_in((delay * 2).seconds, equity_buyback.id)
   delay += 1
 end
 ```
