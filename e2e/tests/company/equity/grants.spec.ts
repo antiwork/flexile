@@ -25,7 +25,7 @@ test.describe("New Contractor", () => {
       conversionSharePriceUsd: "1",
     });
     const { user: contractorUser } = await usersFactory.create();
-    let submitters = { "Company Representative": adminUser, Signer: contractorUser };
+    const submitters = { "Company Representative": adminUser, Signer: contractorUser };
     const { mockForm } = mockDocuseal(next, { submitters: () => submitters });
     await mockForm(page);
     const { companyContractor } = await companyContractorsFactory.create({
@@ -35,17 +35,6 @@ test.describe("New Contractor", () => {
     await equityAllocationsFactory.create({
       companyContractorId: companyContractor.id,
       equityPercentage: 50,
-      locked: true,
-    });
-    await companyContractorsFactory.createProjectBased({ companyId: company.id });
-    const { user: projectBasedUser } = await usersFactory.create();
-    const { companyContractor: projectBasedContractor } = await companyContractorsFactory.createProjectBased({
-      companyId: company.id,
-      userId: projectBasedUser.id,
-    });
-    await equityAllocationsFactory.create({
-      companyContractorId: projectBasedContractor.id,
-      equityPercentage: 10,
       locked: true,
     });
     await optionPoolsFactory.create({ companyId: company.id });
@@ -68,41 +57,13 @@ test.describe("New Contractor", () => {
     await selectComboboxOption(page, "Relationship to company", "Consultant");
     await page.getByRole("button", { name: "Create option grant" }).click();
 
-    await expect(page.getByRole("table")).toHaveCount(1);
-    let rows = page.getByRole("table").first().getByRole("row");
-    await expect(rows).toHaveCount(2);
-    let row = rows.nth(1);
-    await expect(row).toContainText(contractorUser.legalName ?? "");
-    await expect(row).toContainText("10");
+    await expect(page.getByRole("row", { name: contractorUser.legalName ?? "" })).toContainText("10");
     const companyInvestor = await db.query.companyInvestors.findFirst({
       where: and(eq(companyInvestors.companyId, company.id), eq(companyInvestors.userId, contractorUser.id)),
     });
     assertDefined(
       await db.query.equityGrants.findFirst({
         where: eq(equityGrants.companyInvestorId, assertDefined(companyInvestor).id),
-        orderBy: desc(equityGrants.createdAt),
-      }),
-    );
-
-    submitters = { "Company Representative": adminUser, Signer: projectBasedUser };
-    await page.getByRole("link", { name: "New option grant" }).click();
-    await selectComboboxOption(page, "Recipient", projectBasedUser.preferredName ?? "");
-    await page.getByLabel("Number of options").fill("20");
-    await selectComboboxOption(page, "Relationship to company", "Consultant");
-    await page.getByRole("button", { name: "Create option grant" }).click();
-
-    await expect(page.getByRole("table")).toHaveCount(1);
-    rows = page.getByRole("table").first().getByRole("row");
-    await expect(rows).toHaveCount(3);
-    row = rows.nth(1);
-    await expect(row).toContainText(projectBasedUser.legalName ?? "");
-    await expect(row).toContainText("20");
-    const projectBasedCompanyInvestor = await db.query.companyInvestors.findFirst({
-      where: and(eq(companyInvestors.companyId, company.id), eq(companyInvestors.userId, projectBasedUser.id)),
-    });
-    assertDefined(
-      await db.query.equityGrants.findFirst({
-        where: eq(equityGrants.companyInvestorId, assertDefined(projectBasedCompanyInvestor).id),
         orderBy: desc(equityGrants.createdAt),
       }),
     );
@@ -132,23 +93,6 @@ test.describe("New Contractor", () => {
     await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Oct 15, 2024");
     await expect(page.locator("tbody")).toContainText("05:30");
-    await expect(page.locator("tbody")).toContainText("Awaiting approval");
-
-    await clerk.signOut({ page });
-    await login(page, projectBasedUser);
-    await page.goto("/invoices");
-    await page.getByRole("link", { name: "New invoice" }).first().click();
-    await page.getByLabel("Invoice ID").fill("CUSTOM-2");
-    await fillDatePicker(page, "Date", "11/01/2024");
-    await page.getByLabel("Amount").fill("1000");
-    await page.waitForTimeout(500); // TODO (techdebt): avoid this
-    await page.getByPlaceholder("Description").fill("Promotional video production work");
-    await page.waitForTimeout(500); // TODO (techdebt): avoid this
-    await page.getByRole("button", { name: "Send invoice" }).click();
-
-    await expect(page.getByRole("cell", { name: "CUSTOM-2" })).toBeVisible();
-    await expect(page.locator("tbody")).toContainText("Nov 1, 2024");
-    await expect(page.locator("tbody")).toContainText("1,000");
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
   });
 

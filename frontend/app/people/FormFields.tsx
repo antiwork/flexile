@@ -101,43 +101,42 @@ export default function FormFields() {
       />
 
       {form.watch("specifyDefaultAmount") && (
-        <>
-          <FormField
-            control={form.control}
-            name="payRateInSubunits"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Rate</FormLabel>
-                <FormControl>
-                  <NumberInput
-                    value={field.value == null ? null : field.value / 100}
-                    onChange={(value) => field.onChange(value == null ? null : value * 100)}
-                    placeholder="0"
-                    prefix="$"
-                    suffix={payRateType === PayRateType.Custom ? "/ project" : "/ hour"}
-                    decimal
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {payRateType === PayRateType.Custom && (
-            <FormField
-              control={form.control}
-              name="unitOfWork"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Unit of work</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <FormField
+          control={form.control}
+          name="payRateInSubunits"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Rate</FormLabel>
+              <FormControl>
+                <NumberInput
+                  value={field.value == null ? null : field.value / 100}
+                  onChange={(value) => field.onChange(value == null ? null : value * 100)}
+                  placeholder="0"
+                  prefix="$"
+                  suffix={payRateType === PayRateType.Custom ? "/ project" : "/ hour"}
+                  decimal
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </>
+        />
+      )}
+
+      {payRateType === PayRateType.Custom && (
+        <FormField
+          control={form.control}
+          name="unitOfWork"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Unit of work</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       )}
     </>
   );

@@ -9,7 +9,6 @@ import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { subDays } from "date-fns";
 import { desc, eq } from "drizzle-orm";
-import { PayRateType } from "@/db/enums";
 import {
   companies,
   companyContractors,
@@ -25,18 +24,14 @@ test.describe("invoice creation", () => {
   let company: typeof companies.$inferSelect;
   let contractorUser: typeof users.$inferSelect;
   let companyContractor: typeof companyContractors.$inferSelect;
-  let projectBasedUser: typeof users.$inferSelect;
-  let projectBasedContractor: typeof companyContractors.$inferSelect;
 
   test.beforeEach(async () => {
-    // Create company with equity compensation enabled
     company = (
       await companiesFactory.createCompletedOnboarding({
         equityCompensationEnabled: true,
       })
     ).company;
 
-    // Create contractor user with business info
     contractorUser = (
       await usersFactory.createWithBusinessEntity({
         zipCode: "22222",
@@ -44,13 +39,11 @@ test.describe("invoice creation", () => {
       })
     ).user;
 
-    // Create contractor with hourly rate and equity allocation
     companyContractor = (
       await companyContractorsFactory.create({
         companyId: company.id,
         userId: contractorUser.id,
-        payRateInSubunits: 6000, // $60/hr
-        payRateType: PayRateType.Hourly,
+        payRateInSubunits: 6000,
       })
     ).companyContractor;
     await equityAllocationsFactory.create({
@@ -58,21 +51,6 @@ test.describe("invoice creation", () => {
       equityPercentage: 20,
       year: 2023,
     });
-
-    projectBasedUser = (
-      await usersFactory.createWithBusinessEntity({
-        zipCode: "33333",
-        streetAddress: "2nd Ave.",
-      })
-    ).user;
-
-    projectBasedContractor = (
-      await companyContractorsFactory.createProjectBased({
-        companyId: company.id,
-        userId: projectBasedUser.id,
-        payRateInSubunits: 1_000_00, // $1,000/project
-      })
-    ).companyContractor;
   });
 
   test("creates an invoice with an equity component", async ({ page }) => {
@@ -118,7 +96,6 @@ test.describe("invoice creation", () => {
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
       .then(takeOrThrow);
     expect(invoice).toBeDefined();
-    expect(invoice.totalMinutes).toBe(205);
     expect(invoice.totalAmountInUsdCents).toBe(20500n);
     expect(invoice.cashAmountInCents).toBe(10250n);
     expect(invoice.equityAmountInCents).toBe(10250n);
@@ -127,62 +104,6 @@ test.describe("invoice creation", () => {
     const equityAllocation = await db.query.equityAllocations
       .findFirst({
         where: eq(equityAllocations.companyContractorId, companyContractor.id),
-        orderBy: desc(equityAllocations.year),
-      })
-      .then(takeOrThrow);
-    expect(equityAllocation.equityPercentage).toBe(50);
-    expect(equityAllocation.locked).toBe(true);
-  });
-
-  test("creates an invoice with an equity component for a project-based contractor", async ({ page }) => {
-    await login(page, projectBasedUser);
-    await page.goto("/invoices/new");
-
-    await page.getByPlaceholder("Description").fill("Website redesign project");
-    await page.getByLabel("Amount").fill("1000");
-    await fillDatePicker(page, "Date", "08/08/2023");
-
-    await expect(page.getByRole("textbox", { name: "Cash vs equity split" })).toHaveValue("0");
-    await expect(
-      page.getByText("By submitting this invoice, your current equity selection will be locked for all 2023."),
-    ).toBeVisible();
-
-    await expect(page.getByText("Total$1,000")).toBeVisible();
-
-    await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("50");
-    await expect(page.getByText("Total services$1,000")).toBeVisible();
-    await expect(page.getByText("Swapped for equity (not paid in cash)$500")).toBeVisible();
-    await expect(page.getByText("Net amount in cash$500")).toBeVisible();
-
-    await page.getByRole("button", { name: "Send invoice" }).click();
-
-    await expect(page.locator("tbody")).toContainText(
-      [
-        "Invoice ID",
-        "1",
-        "Sent on",
-        "Aug 8, 2023",
-        "Hours",
-        "N/A",
-        "Amount",
-        "$1,000",
-        "Status",
-        "Awaiting approval (0/2)",
-      ].join(""),
-    );
-
-    const invoice = await db.query.invoices
-      .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
-      .then(takeOrThrow);
-    expect(invoice).toBeDefined();
-    expect(invoice.totalAmountInUsdCents).toBe(100000n);
-    expect(invoice.cashAmountInCents).toBe(50000n);
-    expect(invoice.equityAmountInCents).toBe(50000n);
-    expect(invoice.equityPercentage).toBe(50);
-
-    const equityAllocation = await db.query.equityAllocations
-      .findFirst({
-        where: eq(equityAllocations.companyContractorId, projectBasedContractor.id),
         orderBy: desc(equityAllocations.year),
       })
       .then(takeOrThrow);
@@ -249,7 +170,6 @@ test.describe("invoice creation", () => {
     const invoice = await db.query.invoices
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
       .then(takeOrThrow);
-    expect(invoice.totalMinutes).toBe(6000);
     expect(invoice.totalAmountInUsdCents).toBe(600000n);
     expect(invoice.cashAmountInCents).toBe(480000n);
     expect(invoice.equityAmountInCents).toBe(120000n);
@@ -280,31 +200,6 @@ test.describe("invoice creation", () => {
     await expect(page.getByRole("textbox", { name: "Cash vs equity split" })).not.toBeVisible();
   });
 
-  test("updates equity calculation in real-time for project-based contractors", async ({ page }) => {
-    await login(page, projectBasedUser);
-    await page.goto("/invoices/new");
-
-    await page.getByPlaceholder("Description").fill("UI design project");
-    await page.getByLabel("Amount").fill("2000");
-    await fillDatePicker(page, "Date", "08/08/2023");
-
-    await expect(page.getByRole("textbox", { name: "Cash vs equity split" })).toHaveValue("0");
-
-    await expect(page.getByText("Total$2,000")).toBeVisible();
-
-    await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("25");
-
-    await expect(page.getByText("Total services$2,000")).toBeVisible();
-    await expect(page.getByText("Swapped for equity (not paid in cash)$500")).toBeVisible();
-    await expect(page.getByText("Net amount in cash$1,500")).toBeVisible();
-
-    await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("75");
-
-    await expect(page.getByText("Total services$2,000")).toBeVisible();
-    await expect(page.getByText("Swapped for equity (not paid in cash)$1,500")).toBeVisible();
-    await expect(page.getByText("Net amount in cash$500")).toBeVisible();
-  });
-
   test("creates an invoice with only expenses, no line items", async ({ page }) => {
     await db.insert(expenseCategories).values({
       companyId: company.id,
@@ -332,7 +227,6 @@ test.describe("invoice creation", () => {
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
       .then(takeOrThrow);
     expect(invoice.totalAmountInUsdCents).toBe(4599n);
-    expect(invoice.totalMinutes).toBe(0);
     const expense = await db.query.invoiceExpenses
       .findFirst({ where: eq(invoiceExpenses.invoiceId, invoice.id) })
       .then(takeOrThrow);

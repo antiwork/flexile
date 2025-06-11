@@ -1034,7 +1034,7 @@ RSpec.describe Invoice do
         end
 
         before do
-          invoice.update!(total_amount_in_usd_cents: 1_180_00, cash_amount_in_cents: 1_180_00, total_minutes: 180)
+          invoice.update!(total_amount_in_usd_cents: 1_180_00, cash_amount_in_cents: 1_180_00)
           invoice.reload
         end
 

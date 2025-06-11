@@ -64,7 +64,6 @@ const dataSchema = z.object({
     bill_address: addressSchema,
     invoice_date: z.string(),
     description: z.string().nullable(),
-    total_minutes: z.number().nullable(),
     invoice_number: z.string(),
     notes: z.string().nullable(),
     status: z.enum(["received", "approved", "processing", "payment_pending", "paid", "rejected", "failed"]).nullable(),

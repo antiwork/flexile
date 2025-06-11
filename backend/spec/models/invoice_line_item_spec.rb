@@ -51,41 +51,6 @@ RSpec.describe InvoiceLineItem do
         end
       end
     end
-
-    describe "total_minutes" do
-      context "for hourly contractor invoices" do
-        it "ensures that minutes is present for a services invoice type" do
-          invoice = build(:invoice, total_minutes: nil)
-          invoice_line_item = invoice.invoice_line_items.first
-          expect(invoice_line_item).to be_invalid
-          expect(invoice_line_item.errors.full_messages).to eq(["Minutes can't be blank", "Minutes is not a number"])
-
-          invoice_line_item.minutes = 0
-          expect(invoice_line_item).to be_invalid
-          expect(invoice_line_item.errors.full_messages).to eq(["Minutes must be greater than 0"])
-
-          invoice_line_item.minutes = 60
-          expect(invoice_line_item).to be_valid
-        end
-
-        it "does not validate minutes for a non-services invoice type" do
-          invoice = build(:invoice, invoice_type: "other")
-          invoice_line_item = build(:invoice_line_item, invoice:, minutes: nil)
-          invoice.invoice_line_items << invoice_line_item
-          expect(invoice_line_item).to be_valid
-        end
-      end
-
-      it "does not validate minutes for project-based contractor invoice line items" do
-        invoice = build(:invoice, :project_based)
-        invoice_line_item = build(:invoice_line_item, invoice:, minutes: nil)
-        invoice.invoice_line_items << invoice_line_item
-        expect(invoice_line_item).to be_valid
-
-        invoice_line_item.minutes = 0
-        expect(invoice_line_item).to be_valid
-      end
-    end
   end
 
   describe "#cash_amount_in_cents" do

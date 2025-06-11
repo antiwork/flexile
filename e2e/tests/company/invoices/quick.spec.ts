@@ -92,7 +92,6 @@ test.describe("quick invoicing", () => {
       const invoice = await db.query.invoices
         .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
         .then(takeOrThrow);
-      expect(invoice.totalMinutes).toBe(630);
       expect(invoice.totalAmountInUsdCents).toBe(63000n);
       expect(invoice.cashAmountInCents).toBe(50400n);
       expect(invoice.equityAmountInCents).toBe(12600n);
@@ -129,7 +128,6 @@ test.describe("quick invoicing", () => {
       const invoice = await db.query.invoices
         .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
         .then(takeOrThrow);
-      expect(invoice.totalMinutes).toBe(630);
       expect(invoice.totalAmountInUsdCents).toBe(63000n);
       expect(invoice.cashAmountInCents).toBe(63000n);
       expect(invoice.equityAmountInCents).toBe(0n);

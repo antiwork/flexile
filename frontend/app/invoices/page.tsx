@@ -31,7 +31,7 @@ import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { pluralize } from "@/utils/pluralize";
 import { company_invoices_path, export_company_invoices_path } from "@/utils/routes";
-import { formatDate, formatDuration } from "@/utils/time";
+import { formatDate } from "@/utils/time";
 import NumberInput from "@/components/NumberInput";
 import DurationInput from "@/components/DurationInput";
 import { z } from "zod";
@@ -105,7 +105,6 @@ export default function InvoicesPage() {
             ),
           }),
       columnHelper.simple("invoiceDate", "Sent on", (value) => (value ? formatDate(value) : "N/A")),
-      columnHelper.simple("totalMinutes", "Hours", (value) => (value ? formatDuration(value) : "N/A"), "numeric"),
       columnHelper.simple(
         "totalAmountInUsdCents",
         "Amount",

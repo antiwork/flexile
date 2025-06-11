@@ -68,24 +68,4 @@ export const companyContractorsFactory = {
       },
       options,
     ),
-
-  createHourly: async (overrides: Partial<typeof companyContractors.$inferInsert> = {}, options: CreateOptions = {}) =>
-    companyContractorsFactory.create(
-      {
-        payRateInSubunits: 6000,
-        payRateType: PayRateType.Hourly,
-        ...overrides,
-      },
-      options,
-    ),
-
-  createCustom: async (overrides: Partial<typeof companyContractors.$inferInsert> = {}, options: CreateOptions = {}) =>
-    companyContractorsFactory.create(
-      {
-        payRateInSubunits: 100000,
-        payRateType: PayRateType.Custom,
-        ...overrides,
-      },
-      options,
-    ),
 };

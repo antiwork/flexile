@@ -86,7 +86,6 @@ RSpec.describe CreateOrUpdateInvoiceService do
           expect(invoice_line_item.description).to eq("I worked on XYZ")
           expect(invoice_line_item.minutes).to eq(34)
           expect(invoice_line_item.pay_rate_in_subunits).to eq(pay_rate_in_subunits)
-          expect(invoice.total_minutes).to eq(34)
           expected_total_amount_in_cents = 28_34 # hours X hourly rate in cents = (34 / 60.0) * 50_00
           expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents)
           expect(invoice.equity_percentage).to eq(0)
@@ -119,7 +118,6 @@ RSpec.describe CreateOrUpdateInvoiceService do
           result = invoice_service.process
           expect(result[:success]).to be(true)
           invoice = result[:invoice]
-          expect(invoice.total_minutes).to eq(720)
           expected_total_amount_in_cents = 720_00 # hours X hourly rate in cents = (720 / 60) * 60_00
           expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents)
           expect(invoice.equity_percentage).to eq(60)
@@ -142,7 +140,6 @@ RSpec.describe CreateOrUpdateInvoiceService do
           result = invoice_service.process
           expect(result[:success]).to eq(true)
           invoice = result[:invoice]
-          expect(invoice.total_minutes).to eq(720)
           expected_total_amount_in_cents = 72_000 # hours X hourly rate in cents = (720 / 60) * 60_00
           expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents)
 
@@ -172,7 +169,6 @@ RSpec.describe CreateOrUpdateInvoiceService do
           expect(invoice_line_item.description).to eq("I worked on XYZ")
           expect(invoice_line_item.minutes).to eq(12 * 60)
           expect(invoice_line_item.pay_rate_in_subunits).to eq(contractor.pay_rate_in_subunits)
-          expect(invoice.total_minutes).to eq(12 * 60)
           expected_total_amount_in_usd = (invoice.total_minutes / 60) * (contractor.pay_rate_in_subunits / 100.0)
           expect(invoice.total_amount_in_usd).to eq(expected_total_amount_in_usd)
           expect(invoice.equity_percentage).to eq(0)
@@ -230,7 +226,6 @@ RSpec.describe CreateOrUpdateInvoiceService do
             expect(invoice_line_item.minutes).to eq(nil)
             expect(invoice_line_item.pay_rate_in_subunits).to eq(1_000_00)
             expect(invoice_line_item.total_amount_cents).to eq(1_000_00)
-            expect(invoice.total_minutes).to eq(nil)
             expect(invoice.total_amount_in_usd).to eq(1_000)
             expect(invoice.equity_percentage).to eq(0)
             expect(invoice.cash_amount_in_cents).to eq(1_000_00)
@@ -286,7 +281,6 @@ RSpec.describe CreateOrUpdateInvoiceService do
             expect(invoice_line_item.description).to eq("I worked on XYZ")
             expect(invoice_line_item.minutes).to eq(12 * 60)
             expect(invoice_line_item.pay_rate_in_subunits).to eq(contractor.pay_rate_in_subunits)
-            expect(invoice.total_minutes).to eq(12 * 60)
             expected_total_amount_in_usd = (invoice.total_minutes / 60) * (contractor.pay_rate_in_subunits / 100.0) + invoice_expense.total_amount_in_cents / 100.0
             expect(invoice.total_amount_in_usd).to eq(expected_total_amount_in_usd)
             expect(invoice.equity_percentage).to eq(0)

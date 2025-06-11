@@ -10,7 +10,6 @@ FactoryBot.define do
     description { Faker::Lorem.sentence }
     status { Invoice::RECEIVED }
     invoice_date { Date.current }
-    total_minutes { 60 }
     total_amount_in_usd_cents { 60_00 }
     cash_amount_in_cents { total_amount_in_usd_cents }
     equity_percentage { 0 }
@@ -24,7 +23,7 @@ FactoryBot.define do
     country_code { "US" }
 
     after :build do |invoice|
-      invoice.invoice_line_items << build(:invoice_line_item, invoice: nil, minutes: invoice.total_minutes)
+      invoice.invoice_line_items << build(:invoice_line_item, invoice: nil, minutes: 60)
       invoice.flexile_fee_cents ||= invoice.calculate_flexile_fee_cents
     end
 

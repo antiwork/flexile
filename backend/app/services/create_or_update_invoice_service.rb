@@ -27,7 +27,6 @@ class CreateOrUpdateInvoiceService
                                 street_address:, city:, state:, zip_code:, country_code:,
                                 invoice_number: invoice.recommended_invoice_number, created_by: user,
                                 **invoice_params)
-      invoice.total_minutes = 0 if hourly?
       invoice.total_amount_in_usd_cents = 0
       if invoice_line_items_params.present?
         invoice_line_items_params.each do |line_item|
@@ -45,7 +44,6 @@ class CreateOrUpdateInvoiceService
           if hourly?
             total_amount_cents = (pay_rate_in_subunits * (invoice_line_item.minutes / 60.0)).ceil
             invoice_line_item.total_amount_cents = total_amount_cents
-            invoice.total_minutes += invoice_line_item.minutes
           end
           invoice.total_amount_in_usd_cents += invoice_line_item.total_amount_cents
         end
