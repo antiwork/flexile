@@ -14,7 +14,6 @@ class CompanyWorkerDashboard < Administrate::BaseDashboard
     user: Field::BelongsTo,
     id: Field::Number,
     started_at: Field::DateTime,
-    hours_per_week: Field::Number,
     pay_rate_in_subunits: Field::Number,
     role: Field::String,
     created_at: Field::DateTime,
@@ -40,7 +39,6 @@ class CompanyWorkerDashboard < Administrate::BaseDashboard
     user
     id
     started_at
-    hours_per_week
     pay_rate_in_subunits
     role
     created_at
@@ -54,7 +52,6 @@ class CompanyWorkerDashboard < Administrate::BaseDashboard
     company
     user
     started_at
-    hours_per_week
     pay_rate_in_subunits
     role
   ].freeze

@@ -81,7 +81,6 @@ class UserPresenter
         payRateType: worker.pay_rate_type,
         role: worker.role,
         payRateInSubunits: worker.pay_rate_in_subunits,
-        hoursPerWeek: worker.hours_per_week,
       }
     end
 

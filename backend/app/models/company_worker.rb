@@ -13,22 +13,17 @@ class CompanyWorker < ApplicationRecord
   has_many :invoices, foreign_key: :company_contractor_id
   has_many :integration_records, as: :integratable
 
-  DEFAULT_HOURS_PER_WEEK = 20
-  WORKING_WEEKS_PER_YEAR = 44
   MAX_EQUITY_PERCENTAGE = 100
   MIN_COMPENSATION_AMOUNT_FOR_1099_NEC = 600_00
 
   enum :pay_rate_type, {
     hourly: 0,
-    project_based: 1,
+    custom: 1,
   }, validate: true
 
   validates :user_id, uniqueness: { scope: :company_id }
   validates :role, presence: true
   validates :started_at, presence: true
-  validates :hours_per_week, presence: true,
-                             numericality: { only_integer: true, greater_than: 0 },
-                             if: :hourly?
   validates :pay_rate_in_subunits, presence: true, numericality: { only_integer: true, greater_than: 0 }
 
   scope :active, -> { where(ended_at: nil) }
@@ -92,10 +87,6 @@ class CompanyWorker < ApplicationRecord
   end
 
   def active? = ended_at.nil?
-
-  def avg_yearly_usd
-    (pay_rate_in_subunits / 100) * hours_per_week * WORKING_WEEKS_PER_YEAR
-  end
 
   def alumni?
     ended_at?

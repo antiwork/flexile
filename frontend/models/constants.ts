@@ -183,13 +183,6 @@ export const currencyByCountryCode = new Map<string, Currency>([
   ["ZW", "USD"],
 ]);
 
-export const MAX_WORKING_HOURS_PER_WEEK = 35;
-export const WORKING_WEEKS_PER_YEAR = 44;
-export const WEEKS_PER_YEAR = 52;
-export const DAY_MS = 86400_000;
-
-export const GOOGLE_AUTH_LIB_URL = "https://accounts.google.com/gsi/client";
-
 export const countries = new Map<string, string>(
   Object.entries(c).map(([countryCode, info]) => [countryCode, info.countryName]),
 );

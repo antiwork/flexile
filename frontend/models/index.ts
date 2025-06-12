@@ -1,6 +1,3 @@
-export const MAX_WORKING_HOURS_PER_WEEK = 35;
-export const WORKING_WEEKS_PER_YEAR = 44;
-export const DEFAULT_WORKING_HOURS_PER_WEEK = 20;
 export const MAX_EQUITY_PERCENTAGE = 100;
 export const MAX_PREFERRED_NAME_LENGTH = 50; // Must match User::MAX_PREFERRED_NAME_LENGTH in Rails
 export const MIN_EMAIL_LENGTH = 5; // Must match User::MIN_EMAIL_LENGTH in Rails

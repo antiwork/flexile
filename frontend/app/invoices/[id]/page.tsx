@@ -17,7 +17,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
-import { PayRateType, trpc } from "@/trpc/client";
+import { trpc } from "@/trpc/client";
 import { assert } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate, formatDuration } from "@/utils/time";
@@ -72,6 +72,8 @@ export default function InvoicePage() {
     },
   });
 
+  const lineItemTotal = (lineItem: (typeof invoice.lineItems)[number]) =>
+    (lineItem.quantity / (lineItem.hourly ? 60 : 1)) * lineItem.payRateInSubunits;
   const details = StatusDetails(invoice);
   const cashFactor = 1 - invoice.equityPercentage / 100;
 
@@ -261,12 +263,8 @@ export default function InvoicePage() {
                     <TableHead>
                       {complianceInfo?.businessEntity ? `Services (${complianceInfo.legalName})` : "Services"}
                     </TableHead>
-                    {invoice.contractor.payRateType === PayRateType.ProjectBased ? null : (
-                      <>
-                        <TableHead className="text-right">Hours</TableHead>
-                        <TableHead className="text-right">Cash rate</TableHead>
-                      </>
-                    )}
+                    <TableHead className="text-right">Qty / Hours</TableHead>
+                    <TableHead className="text-right">Cash rate</TableHead>
                     <TableHead className="text-right">Line total</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -274,20 +272,16 @@ export default function InvoicePage() {
                   {invoice.lineItems.map((lineItem, index) => (
                     <TableRow key={index}>
                       <TableCell>{lineItem.description}</TableCell>
-                      {invoice.contractor.payRateType === PayRateType.ProjectBased ? null : (
-                        <>
-                          <TableCell className="text-right tabular-nums">
-                            {lineItem.minutes ? formatDuration(lineItem.minutes) : null}
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums">
-                            {lineItem.payRateInSubunits
-                              ? `${formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)} / hour`
-                              : ""}
-                          </TableCell>
-                        </>
-                      )}
                       <TableCell className="text-right tabular-nums">
-                        {formatMoneyFromCents(Number(lineItem.totalAmountCents) * cashFactor)}
+                        {lineItem.hourly ? formatDuration(lineItem.quantity) : lineItem.quantity}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {lineItem.payRateInSubunits
+                          ? `${formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)} / hour`
+                          : ""}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatMoneyFromCents(lineItemTotal(lineItem) * cashFactor)}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -344,10 +338,7 @@ export default function InvoicePage() {
                         <strong>Total services</strong>
                         <span>
                           {formatMoneyFromCents(
-                            invoice.lineItems.reduce(
-                              (acc, lineItem) => acc + Number(lineItem.totalAmountCents) * cashFactor,
-                              0,
-                            ),
+                            invoice.lineItems.reduce((acc, lineItem) => acc + lineItemTotal(lineItem) * cashFactor, 0),
                           )}
                         </span>
                       </div>

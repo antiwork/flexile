@@ -8,14 +8,11 @@ RSpec.describe InvoiceLineItem do
   end
 
   describe "delegations" do
-    it { is_expected.to delegate_method(:for_hourly_services?).to(:invoice) }
     it { is_expected.to delegate_method(:invoice_type_services?).to(:invoice) }
   end
 
   describe "validations" do
     it { is_expected.to validate_presence_of(:description) }
-    it { is_expected.to validate_presence_of(:total_amount_cents) }
-    it { is_expected.to validate_numericality_of(:total_amount_cents).only_integer.is_greater_than(0) }
 
     describe "pay_rate_in_subunits" do
       let(:invoice_line_item) { build(:invoice_line_item) }
@@ -51,47 +48,12 @@ RSpec.describe InvoiceLineItem do
         end
       end
     end
-
-    describe "total_minutes" do
-      context "for hourly contractor invoices" do
-        it "ensures that minutes is present for a services invoice type" do
-          invoice = build(:invoice, total_minutes: nil)
-          invoice_line_item = invoice.invoice_line_items.first
-          expect(invoice_line_item).to be_invalid
-          expect(invoice_line_item.errors.full_messages).to eq(["Minutes can't be blank", "Minutes is not a number"])
-
-          invoice_line_item.minutes = 0
-          expect(invoice_line_item).to be_invalid
-          expect(invoice_line_item.errors.full_messages).to eq(["Minutes must be greater than 0"])
-
-          invoice_line_item.minutes = 60
-          expect(invoice_line_item).to be_valid
-        end
-
-        it "does not validate minutes for a non-services invoice type" do
-          invoice = build(:invoice, invoice_type: "other")
-          invoice_line_item = build(:invoice_line_item, invoice:, minutes: nil)
-          invoice.invoice_line_items << invoice_line_item
-          expect(invoice_line_item).to be_valid
-        end
-      end
-
-      it "does not validate minutes for project-based contractor invoice line items" do
-        invoice = build(:invoice, :project_based)
-        invoice_line_item = build(:invoice_line_item, invoice:, minutes: nil)
-        invoice.invoice_line_items << invoice_line_item
-        expect(invoice_line_item).to be_valid
-
-        invoice_line_item.minutes = 0
-        expect(invoice_line_item).to be_valid
-      end
-    end
   end
 
   describe "#cash_amount_in_cents" do
     let(:invoice) { create(:invoice, total_amount_in_usd_cents: 50_00, equity_percentage: 25) }
     let(:invoice_line_item) do
-      build(:invoice_line_item, invoice:, minutes: 30, pay_rate_in_subunits: 100_00, total_amount_cents: 50_00)
+      build(:invoice_line_item, invoice:, quantity: 30, hourly: true, pay_rate_in_subunits: 100_00)
     end
 
     context "when the invoice has an equity percentage" do
@@ -112,7 +74,7 @@ RSpec.describe InvoiceLineItem do
   describe "#cash_amount_in_usd" do
     let(:invoice) { create(:invoice, total_amount_in_usd_cents: 50_00, equity_percentage: 25) }
     let(:invoice_line_item) do
-      build(:invoice_line_item, invoice:, minutes: 30, pay_rate_in_subunits: 100_00, total_amount_cents: 50_00)
+      build(:invoice_line_item, invoice:, quantity: 30, hourly: true, pay_rate_in_subunits: 100_00)
     end
 
     context "when the invoice has an equity percentage" do

@@ -19,21 +19,6 @@ RSpec.describe CompanyWorker do
     it { is_expected.to validate_presence_of(:pay_rate_in_subunits) }
     it { is_expected.to validate_numericality_of(:pay_rate_in_subunits).is_greater_than(0).only_integer }
     it { is_expected.to validate_inclusion_of(:pay_rate_type).in_array(described_class.pay_rate_types.values) }
-
-    context "when pay_rate_type is 'hourly'" do
-      subject(:company_worker) { create(:company_worker, pay_rate_type: :hourly) }
-
-      it { is_expected.to validate_presence_of(:hours_per_week) }
-      it { is_expected.to validate_numericality_of(:hours_per_week).is_greater_than(0).only_integer }
-    end
-
-    context "when pay_rate_type is 'project_based'" do
-      subject(:company_worker) { build(:company_worker, pay_rate_type: :project_based, hours_per_week: nil) }
-
-      it "does not validate presence of hours_per_week" do
-        expect(company_worker.valid?).to eq(true)
-      end
-    end
   end
 
   describe "scopes" do
@@ -117,11 +102,6 @@ RSpec.describe CompanyWorker do
         create(:user_compliance_info, user:, tax_information_confirmed_at: nil)
         create(:company_worker, company:, user:)
       end
-      let(:company_worker_8) do
-        user = create(:user, :without_compliance_info, country_code: "US")
-        create(:user_compliance_info, :confirmed, user:)
-        create(:company_worker, :project_based, company:, user:)
-      end
 
       before do
         create(:invoice, :paid, company_worker: company_worker_1, company:, total_amount_in_usd_cents: 1000_00)
@@ -153,14 +133,11 @@ RSpec.describe CompanyWorker do
         user = create(:user, country_code: "AR", citizenship_country_code: "AR")
         company_worker_7 = create(:company_worker, company:, user:)
         create(:invoice, :paid, company_worker: company_worker_7, company:, total_amount_in_usd_cents: 1000_00)
-
-        # Project-based worker that should be included now that salary exclusion is removed
-        create(:invoice, :paid, company_worker: company_worker_8, company:, total_amount_in_usd_cents: 1000_00)
       end
 
       it "returns the list of company_workers who are eligible for 1099-NEC" do
         expect(described_class.with_required_tax_info_for(tax_year:)).to match_array(
-          [company_worker_1, company_worker_2, company_worker_8]
+          [company_worker_1, company_worker_2]
         )
       end
     end
@@ -195,8 +172,8 @@ RSpec.describe CompanyWorker do
         end
       end
 
-      context "when company worker has a project-based role" do
-        let!(:company_worker) { create(:company_worker, :project_based, started_at: 1.day.ago) }
+      context "when company worker has a custom rate role" do
+        let!(:company_worker) { create(:company_worker, :custom, started_at: 1.day.ago) }
         let(:old_pay_rate_in_subunits) { company_worker.pay_rate_in_subunits }
 
         context "when rate is unchanged" do
@@ -231,15 +208,6 @@ RSpec.describe CompanyWorker do
     it "return `true` when the contract hasn't ended" do
       expect(build(:company_worker, ended_at: Date.current).active?).to eq(false)
       expect(build(:company_worker).active?).to eq(true)
-    end
-  end
-
-  describe "#avg_yearly_usd" do
-    it "calculates and returns the average pay in USD for a year" do
-      company_worker = build(:company_worker, hours_per_week: 40, pay_rate_in_subunits: 30_00)
-
-      yearly_rate_in_usd = company_worker.avg_yearly_usd
-      expect(yearly_rate_in_usd).to eq(52_800)
     end
   end
 
