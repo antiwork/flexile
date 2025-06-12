@@ -7,45 +7,28 @@ RSpec.describe InvoiceLineItem do
     it { is_expected.to have_one(:quickbooks_integration_record) }
   end
 
-  describe "delegations" do
-    it { is_expected.to delegate_method(:invoice_type_services?).to(:invoice) }
-  end
-
   describe "validations" do
     it { is_expected.to validate_presence_of(:description) }
 
     describe "pay_rate_in_subunits" do
       let(:invoice_line_item) { build(:invoice_line_item) }
 
-      context "for a services invoice type" do
-        before { allow(invoice_line_item).to receive(:invoice_type_services?).and_return(true) }
-
-        it "requires pay_rate_in_subunits to be present" do
-          invoice_line_item.pay_rate_in_subunits = nil
-          expect(invoice_line_item).to be_invalid
-          expect(invoice_line_item.errors[:pay_rate_in_subunits]).to include("can't be blank")
-        end
-
-        it "requires pay_rate_in_subunits to be greater than 0" do
-          invoice_line_item.pay_rate_in_subunits = 0
-          expect(invoice_line_item).to be_invalid
-          expect(invoice_line_item.errors[:pay_rate_in_subunits]).to include("must be greater than 0")
-        end
-
-        it "requires pay_rate_in_subunits to be an integer" do
-          invoice_line_item.pay_rate_in_subunits = 1.5
-          expect(invoice_line_item).to be_invalid
-          expect(invoice_line_item.errors[:pay_rate_in_subunits]).to include("must be an integer")
-        end
+      it "requires pay_rate_in_subunits to be present" do
+        invoice_line_item.pay_rate_in_subunits = nil
+        expect(invoice_line_item).to be_invalid
+        expect(invoice_line_item.errors[:pay_rate_in_subunits]).to include("can't be blank")
       end
 
-      context "for a non-services invoice type" do
-        before { allow(invoice_line_item).to receive(:invoice_type_services?).and_return(false) }
+      it "requires pay_rate_in_subunits to be greater than 0" do
+        invoice_line_item.pay_rate_in_subunits = 0
+        expect(invoice_line_item).to be_invalid
+        expect(invoice_line_item.errors[:pay_rate_in_subunits]).to include("must be greater than 0")
+      end
 
-        it "does not validate pay_rate_in_subunits" do
-          invoice_line_item.pay_rate_in_subunits = nil
-          expect(invoice_line_item).to be_valid
-        end
+      it "requires pay_rate_in_subunits to be an integer" do
+        invoice_line_item.pay_rate_in_subunits = 1.5
+        expect(invoice_line_item).to be_invalid
+        expect(invoice_line_item.errors[:pay_rate_in_subunits]).to include("must be an integer")
       end
     end
   end
