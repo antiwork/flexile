@@ -43,7 +43,8 @@ export default function PeoplePage() {
 
   const form = useForm({
     defaultValues: {
-      ...(lastContractor ? { payRateInSubunits: lastContractor.payRateInSubunits, role: lastContractor.role } : {}),
+      ...(lastContractor ? { role: lastContractor.role } : {}),
+      payRateInSubunits: lastContractor?.payRateInSubunits ?? null,
       payRateType: lastContractor?.payRateType ?? PayRateType.Hourly,
       startDate: today(getLocalTimeZone()),
       contractSignedElsewhere: false,

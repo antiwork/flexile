@@ -372,9 +372,7 @@ const Edit = () => {
                       value={item.description}
                       placeholder="Description"
                       aria-invalid={item.errors?.includes("description")}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        updateLineItem(rowIndex, { description: e.target.value })
-                      }
+                      onChange={(e) => updateLineItem(rowIndex, { description: e.target.value })}
                     />
                   </TableCell>
                   <TableCell>

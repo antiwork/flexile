@@ -158,8 +158,6 @@ test.describe("New Contractor", () => {
   test("allows inviting a contractor with contract signed elsewhere", async ({ page }) => {
     const { email } = await fillForm(page);
     await page.getByLabel("Role").fill("Contract Signed Elsewhere Role");
-    await page.getByLabel("Specify a default amount").check({ force: true });
-    await page.getByLabel("Rate").fill("100");
 
     await page.getByLabel("Already signed contract elsewhere").check({ force: true });
 

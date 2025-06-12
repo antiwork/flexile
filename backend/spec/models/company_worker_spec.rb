@@ -16,8 +16,6 @@ RSpec.describe CompanyWorker do
 
     it { is_expected.to validate_uniqueness_of(:user_id).scoped_to(:company_id) }
     it { is_expected.to validate_presence_of(:started_at) }
-    it { is_expected.to validate_presence_of(:pay_rate_in_subunits) }
-    it { is_expected.to validate_numericality_of(:pay_rate_in_subunits).is_greater_than(0).only_integer }
     it { is_expected.to validate_inclusion_of(:pay_rate_type).in_array(described_class.pay_rate_types.values) }
   end
 
