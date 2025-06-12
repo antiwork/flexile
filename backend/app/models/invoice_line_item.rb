@@ -7,11 +7,11 @@ class InvoiceLineItem < ApplicationRecord
   has_many :integration_records, as: :integratable
 
   validates :description, presence: true
-  validates :pay_rate_in_subunits, presence: true, numericality: { only_integer: true, greater_than: 0 }, if: -> { invoice.invoice_type_services? }
+  validates :pay_rate_in_subunits, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :quantity, presence: true, numericality: { only_integer: true, greater_than: 0 }
 
   def total_amount_cents
-    pay_rate_in_subunits * quantity / (hourly ? 60 : 1)
+    (pay_rate_in_subunits * quantity / (hourly ? 60.0 : 1.0)).ceil
   end
 
   def cash_amount_in_cents

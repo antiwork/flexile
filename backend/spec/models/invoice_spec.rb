@@ -973,7 +973,7 @@ RSpec.describe Invoice do
       end
 
       context "when a new invoice line item is added" do
-        let!(:new_invoice_line_item) { create(:invoice_line_item, invoice:, description: "Programming", minutes: 120) }
+        let!(:new_invoice_line_item) { create(:invoice_line_item, invoice:, description: "Programming", quantity: 120, hourly: true) }
         let(:parsed_body) do
           {
             "SyncToken" => "2",
