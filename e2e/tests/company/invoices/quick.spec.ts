@@ -36,7 +36,7 @@ test.describe("quick invoicing", () => {
   test.describe("when equity compensation is disabled", () => {
     test("allows filling out the form and previewing the invoice", async ({ page }) => {
       await login(page, contractorUser);
-      await page.getByLabel("Hours worked").fill("10:30");
+      await page.getByLabel("Hours / Qty").fill("10:30");
       await fillDatePicker(page, "Date", "08/08/2024");
       await expect(page.getByText("Total amount$630")).toBeVisible();
       await page.getByRole("link", { name: "Add more info" }).click();
@@ -65,7 +65,7 @@ test.describe("quick invoicing", () => {
       });
 
       await login(page, contractorUser);
-      await page.getByLabel("Hours worked").fill("10:30");
+      await page.getByLabel("Hours / Qty").fill("10:30");
       await fillDatePicker(page, "Date", "08/08/2024");
       await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("20");
 

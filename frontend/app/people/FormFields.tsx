@@ -18,7 +18,7 @@ export const schema = z.object({
   payRateInSubunits: z.number().nullable(),
   role: z.string(),
   specifyDefaultAmount: z.boolean().optional(),
-  unitOfWork: z.string().nullable(),
+  unitOfWork: z.string().nullish(),
 });
 
 export default function FormFields() {
