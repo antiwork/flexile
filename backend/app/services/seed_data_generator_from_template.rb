@@ -650,25 +650,13 @@ class SeedDataGeneratorFromTemplate
       invoice_count = 0
       while invoice_datetime < current_time - 1.month
         break if ended_at && invoice_datetime >= ended_at
-
-        invoice_line_item = if company_worker.project_based?
-          {
-            description: "Project work",
-            total_amount_cents: company_worker.pay_rate_in_subunits,
-          }
-        else
-          {
-            description: "Consulting",
-            minutes: 10 * 60 * 4 + rand(-30..30),
-          }
-        end
         params = ActionController::Parameters.new(
           {
             invoice: {
               invoice_number: Invoice.new(user:, company:).recommended_invoice_number,
               invoice_date: invoice_datetime.end_of_month.to_date,
             },
-            invoice_line_items: [invoice_line_item],
+            invoice_line_items: [{ description: "Consulting", quantity: 10 * 60 * 4 + rand(-30..30) }],
           },
         )
         Timecop.travel(invoice_datetime) do

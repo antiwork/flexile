@@ -106,7 +106,7 @@ class InvoicePresenter
 
     def line_items
       invoice_line_items.map do |line_item|
-        line_item.attributes.symbolize_keys!.slice(:id, :description, :minutes, :pay_rate_in_subunits, :total_amount_cents)
+        line_item.attributes.symbolize_keys!.slice(:id, :description, :hourly, :quantity, :pay_rate_in_subunits)
       end
     end
 

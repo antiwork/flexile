@@ -222,10 +222,6 @@ class Invoice < ApplicationRecord
     [fee_cents, MAX_FLEXILE_FEE_CENTS].min.round
   end
 
-  def for_hourly_services?
-    invoice_type_services? && hourly?
-  end
-
   def created_by_user?
     created_by_id == user_id
   end

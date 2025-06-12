@@ -78,9 +78,8 @@ RSpec.describe Invoice do
       invoice.invoice_line_items.build(
         {
           description: "Doing",
-          minutes: 60,
+          quantity: 1,
           pay_rate_in_subunits: 50_00,
-          total_amount_cents: 50_00,
         }
       )
       expect(invoice).to be_valid
