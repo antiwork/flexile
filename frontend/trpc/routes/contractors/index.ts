@@ -110,7 +110,7 @@ export const contractorsRouter = createRouter({
             email: input.email,
             started_at: input.startedAt,
             pay_rate_in_subunits: input.payRateInSubunits,
-            pay_rate_type: input.payRateType === PayRateType.Hourly ? "hourly" : "project_based",
+            pay_rate_type: input.payRateType === PayRateType.Hourly ? "hourly" : "custom",
             role: input.role,
             contract_signed_elsewhere: input.contractSignedElsewhere,
           },

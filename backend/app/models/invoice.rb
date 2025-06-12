@@ -45,8 +45,6 @@ class Invoice < ApplicationRecord
   end, as: :integratable, class_name: "IntegrationRecord"
   has_many_attached :attachments
 
-  delegate :hourly?, to: :company_worker, allow_nil: true
-
   validates :status, inclusion: { in: ALL_STATES }, presence: true
   validates :invoice_date, presence: true
   validates :total_amount_in_usd_cents, presence: true,

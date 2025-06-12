@@ -19,10 +19,6 @@ RSpec.describe Invoice do
     it { is_expected.to have_one(:quickbooks_journal_entry) }
   end
 
-  describe "delegations" do
-    it { is_expected.to delegate_method(:hourly?).to(:company_worker).allow_nil }
-  end
-
   describe "validations" do
     it { is_expected.to define_enum_for(:invoice_type).with_values(services: "services", other: "other").backed_by_column_of_type(:enum).with_prefix(:invoice_type) }
     it { is_expected.to validate_presence_of(:status) }

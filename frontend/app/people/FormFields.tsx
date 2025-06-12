@@ -93,7 +93,11 @@ export default function FormFields() {
         render={({ field }) => (
           <FormItem>
             <FormControl>
-              <Switch checked={field.value ?? false} onCheckedChange={field.onChange} label="Specify default amount" />
+              <Switch
+                checked={field.value ?? false}
+                onCheckedChange={field.onChange}
+                label="Specify a default amount"
+              />
             </FormControl>
             <FormMessage />
           </FormItem>

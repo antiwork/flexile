@@ -10,8 +10,12 @@ class InvoiceLineItem < ApplicationRecord
   validates :pay_rate_in_subunits, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :quantity, presence: true, numericality: { only_integer: true, greater_than: 0 }
 
+  def normalized_quantity
+    quantity / (hourly? ? 60.0 : 1.0)
+  end
+
   def total_amount_cents
-    (pay_rate_in_subunits * quantity / (hourly ? 60.0 : 1.0)).ceil
+    (pay_rate_in_subunits * normalized_quantity).ceil
   end
 
   def cash_amount_in_cents

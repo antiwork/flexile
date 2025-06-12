@@ -92,7 +92,6 @@ test.describe("New Contractor", () => {
 
     await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Oct 15, 2024");
-    await expect(page.locator("tbody")).toContainText("05:30");
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
   });
 

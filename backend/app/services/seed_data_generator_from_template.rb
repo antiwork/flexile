@@ -656,7 +656,7 @@ class SeedDataGeneratorFromTemplate
               invoice_number: Invoice.new(user:, company:).recommended_invoice_number,
               invoice_date: invoice_datetime.end_of_month.to_date,
             },
-            invoice_line_items: [{ description: "Consulting", quantity: 10 * 60 * 4 + rand(-30..30), pay_rate_in_subunits: company_worker.pay_rate_in_subunits }],
+            invoice_line_items: [{ description: "Consulting", quantity: 10 * 60 * 4 + rand(-30..30), pay_rate_in_subunits: company_worker.pay_rate_in_subunits, hourly: true }],
           },
         )
         Timecop.travel(invoice_datetime) do

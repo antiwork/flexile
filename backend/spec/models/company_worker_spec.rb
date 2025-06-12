@@ -172,7 +172,7 @@ RSpec.describe CompanyWorker do
         end
       end
 
-      context "when company worker has a custom rate role" do
+      context "when company worker has a custom rate" do
         let!(:company_worker) { create(:company_worker, :custom, started_at: 1.day.ago) }
         let(:old_pay_rate_in_subunits) { company_worker.pay_rate_in_subunits }
 

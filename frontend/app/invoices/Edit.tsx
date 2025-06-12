@@ -172,6 +172,7 @@ const Edit = () => {
         }
         formData.append("invoice_line_items[][description]", lineItem.description);
         formData.append("invoice_line_items[][quantity]", lineItem.quantity.toString());
+        formData.append("invoice_line_items[][pay_rate_in_subunits]", lineItem.pay_rate_in_subunits.toString());
       }
       for (const expense of expenses) {
         if (expense.id) {
