@@ -17,7 +17,7 @@ import { equityAllocationsRouter } from "./routes/equityAllocations";
 import { equityGrantExercisesRouter } from "./routes/equityGrantExercises";
 import { equityGrantsRouter } from "./routes/equityGrants";
 import { expenseCategoriesRouter } from "./routes/expenseCategories";
-import { financialReportsRouter } from "./routes/financialReports";
+
 import { investorsRouter } from "./routes/investors";
 import { invoicesRouter } from "./routes/invoices";
 import { lawyersRouter } from "./routes/lawyers";
@@ -44,7 +44,7 @@ export const appRouter = createRouter({
   dividendRounds: dividendRoundsRouter,
   equityGrantExercises: equityGrantExercisesRouter,
   tenderOffers: tenderOffersRouter,
-  financialReports: financialReportsRouter,
+
   optionPools: optionPoolsRouter,
   companyUpdates: companyUpdatesRouter,
   capTable: capTableRouter,

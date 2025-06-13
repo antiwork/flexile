@@ -26,11 +26,6 @@ export default inngest.createFunction(
 
     if (!integration) return { message: "integration not found or deleted" };
 
-    await step.sendEvent("quickbooks/sync-financial-report", {
-      name: "quickbooks/sync-financial-report",
-      data: { companyId },
-    });
-
     const activeWorkers = await step.run("fetch-workers", () =>
       db.query.companyContractors.findMany({
         columns: { id: true },

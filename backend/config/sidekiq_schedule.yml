@@ -64,11 +64,6 @@ dividend_payment_csv_email_job:
     - - "solson@earlygrowth.com"
       - "raul@gumroad.com"
 
-quickbooks_monthly_financial_report_sync_job:
-  cron: "0 0 20 * *" # The 20th of every month at UTC 00:00
-  class: QuickbooksMonthlyFinancialReportSyncJob
-  description: Syncs the monthly financials from Quickbooks to our database
-
 stripe_balance_top_up_job:
   cron: "0 19 * * 1" # UTC 19:00 Monday
   class: StripeBalanceTopUpJob
