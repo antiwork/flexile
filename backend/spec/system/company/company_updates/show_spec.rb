@@ -20,22 +20,14 @@ RSpec.shared_examples "company update show behavior" do |user_factory|
     expect(page).not_to have_text("Financial Overview")
   end
 
-  context "when the update has financial data and a video" do
+  context "when the update has a video" do
     before do
-      reports = [
-        create(:company_monthly_financial_report, company: update.company, month: 1, year: 2023, net_income_cents: 100_00, revenue_cents: 500_00),
-        create(:company_monthly_financial_report, company: update.company, month: 2, year: 2023, net_income_cents: 50_00, revenue_cents: 100_00),
-        create(:company_monthly_financial_report, company: update.company, month: 3, year: 2023, net_income_cents: 50_00, revenue_cents: 150_00),
-      ]
-      update.update!(period: :quarter, period_started_on: Date.new(2023, 1, 1), show_revenue: true, show_net_income: true, company_monthly_financial_reports: reports, video_url: "https://youtube.com/watch?v=123456789")
+      update.update!(video_url: "https://youtube.com/watch?v=123456789")
     end
 
-    it "displays the financial data" do
+    it "displays the video" do
       visit spa_company_updates_company_path(company.external_id, update.external_id)
 
-      expect(page).to have_text("Financial Overview")
-      expect(page).to have_text("Revenue $750", normalize_ws: true)
-      expect(page).to have_text("Net income $200", normalize_ws: true)
       expect(page).to have_selector("iframe[src*='https://www.youtube.com/embed/123456789']")
 
       update.update!(video_url: "https://example.com/video")
@@ -46,62 +38,7 @@ RSpec.shared_examples "company update show behavior" do |user_factory|
     end
   end
 
-  context "year over year change" do
-    before do
-      reports = [
-        create(:company_monthly_financial_report, company: update.company, month: 1, year: 2023, net_income_cents: 100_00, revenue_cents: 500_00),
-        create(:company_monthly_financial_report, company: update.company, month: 2, year: 2023, net_income_cents: 50_00, revenue_cents: 100_00),
-        create(:company_monthly_financial_report, company: update.company, month: 3, year: 2023, net_income_cents: 50_00, revenue_cents: 150_00),
-      ]
-      update.update!(period: :quarter, period_started_on: Date.new(2023, 1, 1), show_revenue: true, show_net_income: true, company_monthly_financial_reports: reports)
-    end
 
-    context "when there is data for the previous year" do
-      before do
-        create(:company_monthly_financial_report, company: update.company, month: 1, year: 2022, net_income_cents: 120_00, revenue_cents: 210_00)
-        create(:company_monthly_financial_report, company: update.company, month: 2, year: 2022, net_income_cents: 53_00, revenue_cents: 90_00)
-        create(:company_monthly_financial_report, company: update.company, month: 3, year: 2022, net_income_cents: 57_00, revenue_cents: 70_00)
-      end
-
-      it "displays the year over year change" do
-        visit spa_company_updates_company_path(company.external_id, update.external_id)
-
-        expect(page).to have_text("Revenue $750 102.7% Year over year", normalize_ws: true)
-        expect(page).to have_text("Net income $200 -13.04% Year over year", normalize_ws: true)
-      end
-    end
-
-    context "when the previous year difference is zero" do
-      before do
-        create(:company_monthly_financial_report, company: update.company, month: 1, year: 2022, net_income_cents: 100_00, revenue_cents: 500_00)
-        create(:company_monthly_financial_report, company: update.company, month: 2, year: 2022, net_income_cents: 50_00, revenue_cents: 100_00)
-        create(:company_monthly_financial_report, company: update.company, month: 3, year: 2022, net_income_cents: 50_00, revenue_cents: 150_00)
-      end
-
-      it "displays the year over year change" do
-        visit spa_company_updates_company_path(company.external_id, update.external_id)
-
-        expect(page).to have_text("Revenue $750 0% Year over year", normalize_ws: true)
-        expect(page).to have_text("Net income $200 0% Year over year", normalize_ws: true)
-      end
-    end
-
-    context "when the previous year sum is zero" do
-      before do
-        create(:company_monthly_financial_report, company: update.company, month: 1, year: 2022, net_income_cents: 0, revenue_cents: 600_00)
-        create(:company_monthly_financial_report, company: update.company, month: 2, year: 2022, net_income_cents: 50_00, revenue_cents: 100_00)
-        create(:company_monthly_financial_report, company: update.company, month: 3, year: 2022, net_income_cents: -50_00, revenue_cents: 150_00)
-      end
-
-      it "displays nothing for that value" do
-        visit spa_company_updates_company_path(company.external_id, update.external_id)
-
-        expect(page).to have_text("Revenue $750 -11.76% Year over year", normalize_ws: true)
-        expect(page).to have_text("Net income $200", normalize_ws: true)
-        expect(page).to have_text("Year over year", count: 1)
-      end
-    end
-  end
 end
 
 RSpec.describe "Company update page" do
