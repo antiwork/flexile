@@ -161,10 +161,12 @@ Flexile's QuickBooks integration automates the process of recording financial da
 **Manual step**:
 
 1. **Access Flexile Settings**:
+
    - Log in to your Flexile account as a company administrator
    - Navigate to the company settings page (e.g., `/companies/_/administrator/settings`)
 
 2. **Connect to QuickBooks**:
+
    - Locate the **Integrations** section
    - Find the **QuickBooks** box and click the **Connect** button
    - You will be redirected to QuickBooks. If you're setting this up locally, ensure you're connecting to the [Flexile QuickBooks sandbox account](https://app.sandbox.qbo.intuit.com/app/homepage). For production, you'll connect to your company's live QuickBooks account.
@@ -202,6 +204,7 @@ The `integration_records` table in Flexile's database links Flexile entities to 
 **When**: After contractor completes onboarding or updates key information
 
 **What triggers sync**:
+
 - Contractor completes onboarding in Flexile
 - Updates to email, preferred/legal name
 - Changes to tax ID, business name
@@ -268,10 +271,12 @@ QuickbooksDataSyncJob.perform_async(consolidated_payment_id, 'ConsolidatedPaymen
 **What this does**:
 
 1. **BillPayment for Consolidated Invoice**:
+
    - Creates BillPayment in QBO for the `ConsolidatedPayment`
    - Applies to Bill created from `ConsolidatedInvoice`
 
 2. **BillPayments for Individual Invoices**:
+
    - Creates BillPayments for each individual `Payment` in the `ConsolidatedPayment`
    - Applies to respective Bills from individual Flexile Invoices
 
@@ -366,6 +371,7 @@ puts integration.sync_error if integration.sync_error.present?
 ### Check Inngest Dashboard
 
 Monitor function status for:
+
 - `quickbooks/sync-integration`
 - `quickbooks/sync-workers`
 - `quickbooks/sync-financial-report`
