@@ -26,6 +26,7 @@ import { quickbooksRouter } from "./routes/quickbooks";
 import { shareHoldingsRouter } from "./routes/shareHoldings";
 import { tenderOffersRouter } from "./routes/tenderOffers";
 import { usersRouter } from "./routes/users";
+import { slackRouter } from "./routes/slack";
 import { createClient } from "./shared";
 import { createCallerFactory, createRouter } from "./";
 
@@ -56,6 +57,7 @@ export const appRouter = createRouter({
   equityAllocations: equityAllocationsRouter,
   equityCalculations: equityCalculationsRouter,
   lawyers: lawyersRouter,
+  slack: slackRouter,
 });
 export type AppRouter = typeof appRouter;
 
