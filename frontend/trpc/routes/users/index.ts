@@ -18,10 +18,16 @@ export type User = typeof users.$inferSelect;
 export const usersRouter = createRouter({
   get: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
     let user = ctx.user;
+    let hasBankAccount = false;
+    
     if (input.id !== ctx.user.externalId) {
       if (!ctx.companyAdministrator && !ctx.companyLawyer) throw new TRPCError({ code: "FORBIDDEN" });
       const data = await db.query.users.findFirst({
-        with: { ...withRoles(ctx.company.id), userComplianceInfos: latestUserComplianceInfo },
+        with: { 
+          ...withRoles(ctx.company.id), 
+          userComplianceInfos: latestUserComplianceInfo,
+          wiseRecipients: { columns: { id: true }, limit: 1 },
+        },
         where: eq(users.externalId, input.id),
       });
       if (
@@ -32,6 +38,18 @@ export const usersRouter = createRouter({
       )
         throw new TRPCError({ code: "NOT_FOUND" });
       user = data;
+      hasBankAccount = data.wiseRecipients && data.wiseRecipients.length > 0;
+    } else {
+      const currentUserData = await db.query.users.findFirst({
+        with: { 
+          userComplianceInfos: latestUserComplianceInfo,
+          wiseRecipients: { columns: { id: true }, limit: 1 },
+        },
+        where: eq(users.id, BigInt(ctx.userId)),
+      });
+      if (currentUserData) {
+        hasBankAccount = currentUserData.wiseRecipients && currentUserData.wiseRecipients.length > 0;
+      }
     }
 
     return {
@@ -42,6 +60,7 @@ export const usersRouter = createRouter({
       businessName: user.userComplianceInfos[0]?.businessName,
       address: getAddress(user),
       displayName: userDisplayName(user),
+      hasBankAccount,
     };
   }),
 
