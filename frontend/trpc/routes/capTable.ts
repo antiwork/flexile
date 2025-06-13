@@ -61,7 +61,10 @@ export const capTableRouter = createRouter({
             outstandingShares: companyInvestors.totalShares,
             fullyDilutedShares: companyInvestors.fullyDilutedShares,
             notes: companyInvestors.capTableNotes,
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
             email: users.email,
           })
           .from(companyInvestors)
@@ -128,7 +131,10 @@ export const capTableRouter = createRouter({
       investors,
       fullyDilutedShares: ctx.company.fullyDilutedShares,
       outstandingShares,
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
       optionPools: pools.map((pool) => pick(pool, ["name", "availableShares"])),
       shareClasses: classes,
     };

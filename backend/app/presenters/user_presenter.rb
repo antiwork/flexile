@@ -87,7 +87,11 @@ class UserPresenter
 
     {
       companies: user.all_companies.compact.map do |company|
+<<<<<<< Updated upstream
         flags = %w[company_updates].filter { Flipper.enabled?(_1, company) }
+=======
+        flags = %w[irs_tax_forms company_updates].filter { Flipper.enabled?(_1, company) }
+>>>>>>> Stashed changes
         flags.push("equity_compensation") if company.equity_compensation_enabled?
         flags.push("equity_grants") if company.equity_grants_enabled?
         flags.push("dividends")
@@ -163,14 +167,20 @@ class UserPresenter
         if company_worker.active?
           result[:flags][:equity] = true if company_worker.hourly?
           result[:flags][:cap_table] = true if company.is_gumroad? && company.cap_table_enabled?
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
         end
       end
       if company_investor.present?
         result[:flags][:cap_table] ||= true if company.cap_table_enabled?
         result[:flags][:option_exercising] = company.json_flag?("option_exercising")
         result[:flags][:equity_grants] = company.equity_grants_enabled?
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
         result[:flags][:tender_offers] ||= company.tender_offers_enabled?
       end
       result
@@ -192,7 +202,10 @@ class UserPresenter
         flags: {
           equity_grants: company.equity_grants_enabled?,
           cap_table: company.cap_table_enabled?,
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
           tender_offers: company.tender_offers_enabled?,
           dividends: true,
           company_updates: company.company_updates_enabled?,

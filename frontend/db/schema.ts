@@ -1352,7 +1352,10 @@ export const companyInvestors = pgTable(
     totalShares: bigint("total_shares", { mode: "bigint" }).default(0n).notNull(),
     investmentAmountInCents: bigint("investment_amount_in_cents", { mode: "bigint" }).notNull(),
     capTableNotes: varchar("cap_table_notes"),
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
     externalId: varchar("external_id").$default(nanoid).notNull(),
     totalOptions: bigint("total_options", { mode: "bigint" }).default(0n).notNull(),
     fullyDilutedShares: bigint("fully_diluted_shares", { mode: "bigint" }).generatedAlwaysAs(
@@ -1892,7 +1895,10 @@ export const companies = pgTable(
     phoneNumber: varchar("phone_number"),
     brandColor: varchar("brand_color"),
     registrationState: varchar("registration_state"),
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
     externalId: varchar("external_id").$default(nanoid).notNull(),
     countryCode: varchar("country_code"),
     isGumroad: boolean("is_gumroad").notNull().default(false),

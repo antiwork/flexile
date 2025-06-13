@@ -96,7 +96,10 @@ class Company < ApplicationRecord
 
   after_create_commit :create_balance!
   after_update_commit :update_convertible_implied_shares, if: :saved_change_to_fully_diluted_shares?
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 
   accepts_nested_attributes_for :expense_categories
 
@@ -219,4 +222,8 @@ class Company < ApplicationRecord
       update!(stripe_customer_id: stripe_customer.id)
       stripe_customer_id
     end
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 end

@@ -236,6 +236,10 @@ RSpec.describe Company do
          .and change { investment2.reload.implied_shares }.to(expected_implied_shares2)
       end
     end
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
   end
 
   describe "#active?" do

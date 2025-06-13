@@ -38,6 +38,10 @@ transfer_from_stripe_to_wise_job:
   description: Moves consolidated invoice payments money from Stripe to Wise
   class: TransferFromStripeToWiseJob
 
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 pay_all_dividends_job:
   cron: "0 1 * * *" # Every day at UTC 01:00
   description: Attempts to pay pending dividends
