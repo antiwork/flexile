@@ -10,10 +10,10 @@ interface HelperWrapperProps {
 
 export function HelperWrapper({ children }: HelperWrapperProps) {
   const user = useCurrentUser();
-  const [helperAuth, setHelperAuth] = useState<any>({ mailbox_slug: "flexile" });
+  const [helperAuth, setHelperAuth] = useState<Record<string, unknown>>({ mailbox_slug: "flexile" });
 
   useEffect(() => {
-    if (user?.email) {
+    if (user.email) {
       fetch("/api/helper-auth", {
         method: "POST",
         headers: {
@@ -25,19 +25,15 @@ export function HelperWrapper({ children }: HelperWrapperProps) {
         }),
       })
         .then((res) => res.json())
-        .then((auth) => setHelperAuth(auth))
-        .catch((error) => {
-          console.error("Failed to get Helper auth:", error);
+        .then((auth: Record<string, unknown>) => setHelperAuth(auth))
+        .catch(() => {
           setHelperAuth({ mailbox_slug: "flexile" });
         });
     }
   }, [user]);
 
   return (
-    <HelperProvider 
-      host="https://help.gumroad.com" 
-      {...helperAuth}
-    >
+    <HelperProvider host="https://help.gumroad.com" mailbox_slug="flexile" {...helperAuth}>
       {children}
     </HelperProvider>
   );
