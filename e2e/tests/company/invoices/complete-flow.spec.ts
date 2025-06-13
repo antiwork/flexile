@@ -40,9 +40,10 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-1");
     await fillDatePicker(page, "Date", "11/01/2024");
+    await page.getByPlaceholder("Description").fill("first item");
+    await page.waitForTimeout(500); // TODO (dani) avoid this
     await page.getByLabel("Hours / Qty").first().fill("01:23");
     await page.waitForTimeout(500); // TODO (dani) avoid this
-    await page.getByPlaceholder("Description").fill("first item");
     await page.getByRole("button", { name: "Add line item" }).click();
     await page.getByPlaceholder("Description").nth(1).fill("second item");
     await page.getByLabel("Hours / Qty").nth(1).fill("02:34");
