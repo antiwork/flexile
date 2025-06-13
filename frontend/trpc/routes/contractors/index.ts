@@ -54,6 +54,8 @@ export const contractorsRouter = createRouter({
         user: {
           ...simpleUser(worker.user),
           ...pick(worker.user, "countryCode", "invitationAcceptedAt"),
+          legalName: worker.user.legalName,
+          preferredName: worker.user.preferredName,
           onboardingCompleted: worker.user.legalName && worker.user.preferredName && worker.user.countryCode,
         } as const,
       }));

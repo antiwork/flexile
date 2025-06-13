@@ -43,11 +43,42 @@ test.describe("Edit contractor", () => {
     const searchInput = page.getByPlaceholder("Search by name...");
     await expect(searchInput).toBeVisible();
 
+    const contractor1FullName = `${contractor1User.legalName || ""} ${contractor1User.preferredName || ""}`.trim();
     await searchInput.fill(contractor1User.preferredName || "");
 
-    await expect(page.getByRole("row").filter({ hasText: contractor1User.preferredName || "" })).toBeVisible();
+    await expect(page.getByRole("row").filter({ hasText: contractor1FullName })).toBeVisible();
     await expect(page.getByRole("row").filter({ hasText: contractor2User.preferredName || "" })).not.toBeVisible();
   });
+  test("displays concatenated first and last names in people table", async ({ page }) => {
+    const { company } = await companiesFactory.create();
+    const { user: admin } = await usersFactory.create();
+    await companyAdministratorsFactory.create({
+      companyId: company.id,
+      userId: admin.id,
+    });
+
+    const { companyContractor } = await companyContractorsFactory.create({
+      companyId: company.id,
+      role: "Test Role",
+    });
+    const contractor = await db.query.users.findFirst({
+      where: eq(users.id, companyContractor.userId),
+    });
+    assert(contractor != null, "Contractor is required");
+    assert(contractor.legalName != null, "Contractor legal name is required");
+    assert(contractor.preferredName != null, "Contractor preferred name is required");
+
+    await login(page, admin);
+    await page.getByRole("link", { name: "People" }).click();
+
+    const expectedFullName = `${contractor.legalName} ${contractor.preferredName}`;
+    await expect(page.getByRole("row").filter({ hasText: expectedFullName })).toBeVisible();
+
+    await expect(page.getByRole("columnheader", { name: "First name" })).not.toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Last name" })).not.toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Name" })).toBeVisible();
+  });
+
   test("allows editing details of contractors", async ({ page, sentEmails, next }) => {
     const { company } = await companiesFactory.create();
     const { user: admin } = await usersFactory.create();
@@ -68,7 +99,8 @@ test.describe("Edit contractor", () => {
 
     await login(page, admin);
     await page.getByRole("link", { name: "People" }).click();
-    await page.getByRole("link", { name: contractor.preferredName }).click();
+    const contractorFullName = `${contractor.legalName || ""} ${contractor.preferredName || ""}`.trim();
+    await page.getByRole("link", { name: contractorFullName }).click();
 
     await page.getByRole("heading", { name: contractor.preferredName }).click();
     await expect(page.getByLabel("Role")).toHaveValue(companyContractor.role);
@@ -123,7 +155,9 @@ test.describe("Edit contractor", () => {
 
     await login(page, admin);
     await page.getByRole("link", { name: "People" }).click();
-    await page.getByRole("link", { name: projectBasedUser.preferredName }).click();
+    const projectBasedUserFullName =
+      `${projectBasedUser.legalName || ""} ${projectBasedUser.preferredName || ""}`.trim();
+    await page.getByRole("link", { name: projectBasedUserFullName }).click();
 
     await page.getByRole("heading", { name: projectBasedUser.preferredName }).click();
     await expect(page.getByLabel("Role")).toHaveValue(projectBasedContractor.role);
