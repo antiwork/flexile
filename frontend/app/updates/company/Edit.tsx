@@ -26,7 +26,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 
 const formSchema = z.object({
   title: z.string().trim().min(1, "This field is required."),
-  body: z.string().regex(/>\w/, "This field is required."),
+  body: z.string().regex(/>\w/u, "This field is required."),
   videoUrl: z.string().nullable(),
 });
 type CompanyUpdate = RouterOutput["companyUpdates"]["get"];
