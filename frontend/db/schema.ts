@@ -221,28 +221,7 @@ export const companyStripeAccounts = pgTable(
   ],
 );
 
-export const companyUpdatesFinancialReports = pgTable(
-  "company_updates_financial_reports",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    companyUpdateId: bigint("company_update_id", { mode: "bigint" }).notNull(),
-    companyMonthlyFinancialReportId: bigint("company_monthly_financial_report_id", { mode: "bigint" }).notNull(),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-  },
-  (table) => [
-    index("idx_on_company_monthly_financial_report_id_d65ba22efd").using(
-      "btree",
-      table.companyMonthlyFinancialReportId.asc().nullsLast().op("int8_ops"),
-    ),
-    index("index_company_updates_financial_reports_on_company_update_id").using(
-      "btree",
-      table.companyUpdateId.asc().nullsLast().op("int8_ops"),
-    ),
-  ],
-);
+
 
 export const consolidatedInvoices = pgTable(
   "consolidated_invoices",
@@ -2587,19 +2566,9 @@ export const integrationsRelations = relations(integrations, ({ one, many }) => 
   }),
 }));
 
-export const companyUpdatesFinancialReportsRelations = relations(companyUpdatesFinancialReports, ({ one }) => ({
-  update: one(companyUpdates, {
-    fields: [companyUpdatesFinancialReports.companyUpdateId],
-    references: [companyUpdates.id],
-  }),
-  financialReport: one(companyMonthlyFinancialReports, {
-    fields: [companyUpdatesFinancialReports.companyMonthlyFinancialReportId],
-    references: [companyMonthlyFinancialReports.id],
-  }),
-}));
 
-export const companyUpdatesRelations = relations(companyUpdates, ({ one, many }) => ({
-  financialReports: many(companyUpdatesFinancialReports),
+
+export const companyUpdatesRelations = relations(companyUpdates, ({ one }) => ({
   company: one(companies, {
     fields: [companyUpdates.companyId],
     references: [companies.id],
