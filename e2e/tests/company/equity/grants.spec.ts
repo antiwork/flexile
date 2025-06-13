@@ -84,7 +84,7 @@ test.describe("New Contractor", () => {
     await page.getByRole("link", { name: "New invoice" }).first().click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-1");
     await fillDatePicker(page, "Date", "10/15/2024");
-    await page.getByPlaceholder("HH:MM").first().fill("05:30");
+    await page.getByLabel("Hours / Qty").first().fill("05:30");
     await page.waitForTimeout(500); // TODO (techdebt): avoid this
     await page.getByPlaceholder("Description").fill("Software development work");
     await page.waitForTimeout(500); // TODO (techdebt): avoid this

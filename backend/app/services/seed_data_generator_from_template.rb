@@ -580,7 +580,7 @@ class SeedDataGeneratorFromTemplate
               email: generate_user_email(user_attributes),
               started_at:,
               pay_rate_in_subunits: company_worker_attributes.fetch("pay_rate_in_subunits"),
-              pay_rate_type: company_worker_attributes.fetch("pay_rate_type"),
+              pay_rate_type: company_worker_attributes.fetch("pay_rate_type", "hourly"),
               role: company_worker_attributes.fetch("role"),
             }
             result = InviteWorker.new(

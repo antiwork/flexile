@@ -40,12 +40,12 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-1");
     await fillDatePicker(page, "Date", "11/01/2024");
-    await page.getByPlaceholder("HH:MM").first().fill("01:23");
+    await page.getByLabel("Hours / Qty").first().fill("01:23");
     await page.waitForTimeout(500); // TODO (dani) avoid this
     await page.getByPlaceholder("Description").fill("first item");
     await page.getByRole("button", { name: "Add line item" }).click();
     await page.getByPlaceholder("Description").nth(1).fill("second item");
-    await page.getByPlaceholder("HH:MM").nth(1).fill("02:34");
+    await page.getByLabel("Hours / Qty").nth(1).fill("02:34");
     await page.getByPlaceholder("Enter notes about your").fill("A note in the invoice");
     await page.waitForTimeout(200); // TODO (dani) avoid this
     await page.getByRole("button", { name: "Send invoice" }).click();
@@ -57,7 +57,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByPlaceholder("Description").fill("woops too little time");
-    await page.getByPlaceholder("HH:MM").fill("0:23");
+    await page.getByLabel("Hours / Qty").fill("0:23");
     await page.getByLabel("Invoice ID").fill("CUSTOM-2");
     await page.waitForTimeout(300); // TODO (dani) avoid this
     await fillDatePicker(page, "Date", "12/01/2024");
@@ -72,7 +72,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByRole("cell", { name: "CUSTOM-1" }).click();
     await page.getByRole("link", { name: "Edit invoice" }).click();
     await page.getByPlaceholder("Description").first().fill("first item updated");
-    const timeField = page.getByPlaceholder("HH:MM").first();
+    const timeField = page.getByLabel("Hours / Qty").first();
     await timeField.fill("04:30");
     await timeField.blur(); // work around a test-specific issue; this works fine in a real browser
     await page.waitForTimeout(1000); // TODO (dani) avoid this
@@ -86,7 +86,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByPlaceholder("Description").fill("line item");
-    await page.getByPlaceholder("HH:MM").fill("10:23");
+    await page.getByLabel("Hours / Qty").fill("10:23");
     await fillDatePicker(page, "Date", "11/20/2024");
     await page.waitForTimeout(200); // TODO (dani) avoid this
     await page.getByRole("button", { name: "Send invoice" }).click();
@@ -178,7 +178,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await rejectedInvoiceRow.getByLabel("Edit").click();
     await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
-    await page.getByPlaceholder("HH:MM").fill("02:30");
+    await page.getByLabel("Hours / Qty").fill("02:30");
     await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
     await page.waitForTimeout(200); // TODO (dani) avoid this
     await page.getByRole("button", { name: "Re-submit invoice" }).click();

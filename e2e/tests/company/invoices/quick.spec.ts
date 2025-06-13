@@ -38,7 +38,7 @@ test.describe("quick invoicing", () => {
       await expect(page.getByLabel("Rate")).toHaveValue("60");
       await page.getByLabel("Rate").fill("50");
       await fillDatePicker(page, "Date", "08/08/2024");
-      await expect(page.getByText("Total amount$630")).toBeVisible();
+      await expect(page.getByText("Total amount$525")).toBeVisible();
       await page.getByRole("link", { name: "Add more info" }).click();
 
       await expect(page.getByRole("group", { name: "Date" })).toHaveText("8/8/2024");

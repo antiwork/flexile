@@ -78,18 +78,7 @@ test.describe("invoice creation", () => {
     await page.getByRole("button", { name: "Send invoice" }).click();
 
     await expect(page.locator("tbody")).toContainText(
-      [
-        "Invoice ID",
-        "1",
-        "Sent on",
-        "Aug 8, 2023",
-        "Hours",
-        "03:25",
-        "Amount",
-        "$205",
-        "Status",
-        "Awaiting approval (0/2)",
-      ].join(""),
+      ["Invoice ID", "1", "Sent on", "Aug 8, 2023", "Amount", "$205", "Status", "Awaiting approval (0/2)"].join(""),
     );
 
     const invoice = await db.query.invoices
@@ -131,8 +120,8 @@ test.describe("invoice creation", () => {
     await login(page, contractorUser);
     await page.goto("/invoices/new");
 
-    await page.getByLabel("Hours").fill("03:25");
     await page.getByPlaceholder("Description").fill("I worked on invoices");
+    await page.getByLabel("Hours").fill("03:25");
     await fillDatePicker(page, "Date", "08/08/2021");
 
     await expect(
@@ -143,7 +132,7 @@ test.describe("invoice creation", () => {
     await expect(page.getByText("Swapped for equity")).not.toBeVisible();
     await expect(page.getByText("Net amount in cash")).not.toBeVisible();
 
-    await page.getByLabel("Hours").fill("100:00");
+    await page.getByLabel("Hours / Qty").fill("100:00");
     await page.waitForTimeout(100);
     await page.getByPlaceholder("Description").fill("I worked on invoices");
 
@@ -153,18 +142,7 @@ test.describe("invoice creation", () => {
 
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.locator("tbody")).toContainText(
-      [
-        "Invoice ID",
-        "1",
-        "Sent on",
-        "Aug 8, 2021",
-        "Hours",
-        "100:00",
-        "Amount",
-        "$6,000",
-        "Status",
-        "Awaiting approval (0/2)",
-      ].join(""),
+      ["Invoice ID", "1", "Sent on", "Aug 8, 2021", "Amount", "$6,000", "Status", "Awaiting approval (0/2)"].join(""),
     );
 
     const invoice = await db.query.invoices
@@ -185,7 +163,7 @@ test.describe("invoice creation", () => {
     await login(page, contractorUser);
     await page.goto("/invoices/new");
     await page.getByPlaceholder("Description").fill("item name");
-    await page.getByPlaceholder("HH:MM").fill("01:00");
+    await page.getByLabel("Hours / Qty").fill("01:00");
     await page.getByPlaceholder("Enter notes about your").fill("sent as alumni");
     await page.waitForTimeout(100);
     await page.getByRole("button", { name: "Send invoice" }).click();

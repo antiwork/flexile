@@ -26,18 +26,6 @@ RSpec.describe CreateOrUpdateEquityAllocation do
     end
   end
 
-  context "when the contractor has a custom pay rate" do
-    before do
-      company_worker.update_column(:pay_rate_type, "custom")
-    end
-
-    it "raises an error" do
-      expect do
-        service.perform!
-      end.to raise_error(described_class::Error, "Equity allocation is not available.")
-    end
-  end
-
   context "when the contractor doesn't have an equity grant for the year" do
     before do
       equity_grant.destroy!
