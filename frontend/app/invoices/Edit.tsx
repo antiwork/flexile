@@ -9,7 +9,6 @@ import { redirect, useParams, useRouter, useSearchParams } from "next/navigation
 import React, { useEffect, useId, useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
-import DurationInput from "@/components/DurationInput";
 import MainLayout from "@/components/layouts/Main";
 import NumberInput from "@/components/NumberInput";
 import { Button } from "@/components/ui/button";
@@ -35,7 +34,7 @@ import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import RangeInput from "@/components/RangeInput";
 import DatePicker from "@/components/DatePicker";
 import { type DateValue, parseDate } from "@internationalized/date";
-
+import QuantityInput from "./QuantityInput";
 const addressSchema = z.object({
   street_address: z.string(),
   city: z.string(),
@@ -376,11 +375,16 @@ const Edit = () => {
                     />
                   </TableCell>
                   <TableCell>
-                    <DurationInput
-                      value={item.quantity}
+                    <QuantityInput
+                      value={item.quantity ? { quantity: item.quantity, hourly: item.hourly } : null}
                       aria-label="Hours / Qty"
                       aria-invalid={item.errors?.includes("quantity")}
-                      onChange={(value) => updateLineItem(rowIndex, { quantity: value })}
+                      onChange={(value) =>
+                        updateLineItem(rowIndex, {
+                          quantity: value?.quantity ?? null,
+                          hourly: value?.hourly ?? false,
+                        })
+                      }
                     />
                   </TableCell>
                   <TableCell>

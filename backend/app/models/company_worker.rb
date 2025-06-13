@@ -24,6 +24,7 @@ class CompanyWorker < ApplicationRecord
   validates :user_id, uniqueness: { scope: :company_id }
   validates :role, presence: true
   validates :started_at, presence: true
+  validates :pay_rate_in_subunits, numericality: { only_integer: true, greater_than: 0, allow_nil: true }
 
   scope :active, -> { where(ended_at: nil) }
   scope :active_as_of, ->(date) { active.or(where("ended_at > ?", date)) }
@@ -75,7 +76,7 @@ class CompanyWorker < ApplicationRecord
       .where(id: invoices_subquery)
   end
 
-  after_commit :notify_rate_updated, on: :update, if: -> { saved_change_to_pay_rate_in_subunits? && hourly? }
+  after_commit :notify_rate_updated, on: :update, if: -> { saved_change_to_pay_rate_in_subunits? }
 
   def equity_allocation_for(year)
     equity_allocations.find_by(year:)

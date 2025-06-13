@@ -4,7 +4,6 @@ import { documentsFactory } from "@test/factories/documents";
 import { usersFactory } from "@test/factories/users";
 import { subDays } from "date-fns";
 import { eq } from "drizzle-orm";
-import { PayRateType } from "@/db/enums";
 import { companyAdministrators, companyContractors } from "@/db/schema";
 import { assert } from "@/utils/assert";
 
@@ -25,7 +24,6 @@ export const companyContractorsFactory = {
         userId,
         startedAt: new Date(),
         payRateInSubunits: 6000,
-        payRateType: PayRateType.Hourly,
         role: "Role",
         ...overrides,
       })

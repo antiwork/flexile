@@ -6,7 +6,6 @@ import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { desc, eq } from "drizzle-orm";
-import { PayRateType } from "@/db/enums";
 import { companies, companyContractors, invoices, users } from "@/db/schema";
 import { fillDatePicker } from "@test/helpers";
 
@@ -27,8 +26,7 @@ test.describe("quick invoicing", () => {
       await companyContractorsFactory.create({
         companyId: company.id,
         userId: contractorUser.id,
-        payRateInSubunits: 6000, // $60/hr
-        payRateType: PayRateType.Hourly,
+        payRateInSubunits: 6000,
       })
     ).companyContractor;
   });
@@ -37,6 +35,8 @@ test.describe("quick invoicing", () => {
     test("allows filling out the form and previewing the invoice", async ({ page }) => {
       await login(page, contractorUser);
       await page.getByLabel("Hours / Qty").fill("10:30");
+      await expect(page.getByLabel("Rate")).toHaveValue("60");
+      await page.getByLabel("Rate").fill("50");
       await fillDatePicker(page, "Date", "08/08/2024");
       await expect(page.getByText("Total amount$630")).toBeVisible();
       await page.getByRole("link", { name: "Add more info" }).click();
@@ -45,9 +45,9 @@ test.describe("quick invoicing", () => {
       await expect(page.getByRole("row")).toHaveCount(3); // Line items header + 1 row + footer
       const row = page.getByRole("row").nth(1);
       await expect(row.getByPlaceholder("Description")).toHaveValue("");
-      await expect(row.getByLabel("Hours")).toHaveValue("10:30");
-      await expect(row.getByText("$60 / hour")).toBeVisible();
-      await expect(row.getByText("$630")).toBeVisible();
+      await expect(row.getByLabel("Hours / Qty")).toHaveValue("10:30");
+      await expect(page.getByLabel("Rate")).toHaveValue("50");
+      await expect(row.getByText("$525")).toBeVisible();
       await expect(page.getByText("Total$630")).toBeVisible();
     });
   });
@@ -69,9 +69,6 @@ test.describe("quick invoicing", () => {
       await fillDatePicker(page, "Date", "08/08/2024");
       await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("20");
 
-      await expect(page.getByText("Cash amount$48 / hourly")).toBeVisible();
-      await expect(page.getByText("Equity value$12 / hourly")).toBeVisible();
-      await expect(page.getByText("Total rate$60 / hourly")).toBeVisible();
       await expect(page.getByText("($504 cash + $126 equity)")).toBeVisible();
       await expect(page.getByText("$630", { exact: true })).toBeVisible();
 
@@ -105,9 +102,6 @@ test.describe("quick invoicing", () => {
 
       await expect(page.getByRole("textbox", { name: "Cash vs equity split" })).toHaveValue("0");
 
-      await expect(page.getByText("Cash amount$60 / hourly")).toBeVisible();
-      await expect(page.getByText("Equity value$0 / hourly")).toBeVisible();
-      await expect(page.getByText("Total rate$60 / hourly")).toBeVisible();
       await expect(page.getByText("($630 cash + $0 equity)")).toBeVisible();
       await expect(page.getByText("$630", { exact: true })).toBeVisible();
 

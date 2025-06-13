@@ -299,8 +299,7 @@
             "model_attributes": {
               "started_at": "2024-03-01",
               "pay_rate_in_subunits": 19900,
-              "role": "Software engineer",
-              "pay_rate_type": "hourly"
+              "role": "Software engineer"
             }
           },
           "company_investor_attributes": {
@@ -368,8 +367,7 @@
             "model_attributes": {
               "started_at": "2024-08-01",
               "pay_rate_in_subunits": 10000,
-              "role": "Software engineer",
-              "pay_rate_type": "hourly"
+              "role": "Software engineer"
             }
           }
         },
@@ -399,8 +397,7 @@
               "started_at": "2023-07-01",
               "ended_at": "2024-01-20",
               "pay_rate_in_subunits": 9900,
-              "role": "Software engineer",
-              "pay_rate_type": "hourly"
+              "role": "Software engineer"
             }
           }
         },
@@ -427,8 +424,7 @@
             "model_attributes": {
               "started_at": "2023-05-01",
               "pay_rate_in_subunits": 19800,
-              "role": "Product designer",
-              "pay_rate_type": "hourly"
+              "role": "Product designer"
             }
           }
         },
@@ -485,8 +481,7 @@
             "model_attributes": {
               "started_at": "2024-05-01",
               "pay_rate_in_subunits": 12400,
-              "role": "Customer supporter",
-              "pay_rate_type": "hourly"
+              "role": "Customer supporter"
             }
           }
         }

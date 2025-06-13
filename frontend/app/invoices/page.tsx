@@ -33,7 +33,7 @@ import { pluralize } from "@/utils/pluralize";
 import { company_invoices_path, export_company_invoices_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import NumberInput from "@/components/NumberInput";
-import DurationInput from "@/components/DurationInput";
+import QuantityInput from "./QuantityInput";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
@@ -453,7 +453,7 @@ const TasksModal = ({
 
 const quickInvoiceSchema = z.object({
   rate: z.number().min(0.01),
-  duration: z.number().min(1),
+  quantity: z.object({ quantity: z.number().min(1), hourly: z.boolean() }),
   date: z.instanceof(CalendarDate, { message: "This field is required." }),
   invoiceEquityPercent: z.number().min(0).max(100),
 });
@@ -464,13 +464,14 @@ const QuickInvoicesSection = () => {
   const trpcUtils = trpc.useUtils();
   if (!user.roles.worker) return null;
   const payRateInSubunits = user.roles.worker.payRateInSubunits;
+  const isHourly = user.roles.worker.payRateType === "hourly";
 
   const { canSubmitInvoices } = useCanSubmitInvoices();
   const form = useForm({
     resolver: zodResolver(quickInvoiceSchema),
     defaultValues: {
       rate: payRateInSubunits ? payRateInSubunits / 100 : 0,
-      duration: 1,
+      quantity: { quantity: isHourly ? 60 : 1, hourly: isHourly },
       date: today(getLocalTimeZone()),
       invoiceEquityPercent: 0,
     },
@@ -479,20 +480,18 @@ const QuickInvoicesSection = () => {
 
   const [lockModalOpen, setLockModalOpen] = useState(false);
   const date = form.watch("date");
-  const duration = form.watch("duration");
-  const rate = form.watch("rate");
-  const totalAmountInCents = Math.ceil((duration / 60) * (payRateInSubunits ?? 0));
+  const quantity = form.watch("quantity").quantity;
+  const hourly = form.watch("quantity").hourly;
+  const rate = form.watch("rate") * 100;
+  const totalAmountInCents = Math.ceil((quantity / (hourly ? 60 : 1)) * rate);
   const invoiceEquityPercent = form.watch("invoiceEquityPercent");
-  const hourlyEquityRateCents =
-    totalAmountInCents > 0 ? Math.ceil((payRateInSubunits ?? 0) * (invoiceEquityPercent / 100)) : 0;
-  const hourlyRateCashCents =
-    totalAmountInCents > 0 ? Math.ceil((payRateInSubunits ?? 0) * (1 - invoiceEquityPercent / 100)) : 0;
   const newCompanyInvoiceRoute = () => {
     const params = new URLSearchParams({
       date: date.toString(),
       split: String(invoiceEquityPercent),
       rate: rate.toString(),
-      duration: duration.toString(),
+      quantity: quantity.toString(),
+      hourly: hourly.toString(),
     });
     return `/invoices/new?${params.toString()}` as const;
   };
@@ -522,7 +521,7 @@ const QuickInvoicesSection = () => {
         accept: "json",
         jsonData: {
           invoice: { invoice_date: date.toString() },
-          invoice_line_items: [{ description: "-", total_amount_cents: totalAmountInCents }],
+          invoice_line_items: [{ description: "-", pay_rate_in_subunits: payRateInSubunits, quantity, hourly }],
         },
       });
 
@@ -568,12 +567,12 @@ const QuickInvoicesSection = () => {
               />
               <FormField
                 control={form.control}
-                name="duration"
+                name="quantity"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Hours / Qty</FormLabel>
                     <FormControl>
-                      <DurationInput {...field} />
+                      <QuantityInput {...field} />
                     </FormControl>
                   </FormItem>
                 )}
@@ -617,33 +616,6 @@ const QuickInvoicesSection = () => {
             <Separator orientation="vertical" className="hidden lg:block" />
 
             <div className="grid gap-2">
-              {company.equityCompensationEnabled ? (
-                <>
-                  <div className="flex justify-between gap-2 text-sm">
-                    <span>Cash amount</span>
-                    <span>
-                      {formatMoneyFromCents(hourlyRateCashCents)} <span className="text-gray-500">/ hourly</span>
-                    </span>
-                  </div>
-                  <Separator className="m-0" />
-                  <div className="flex justify-between gap-2 text-sm">
-                    <span>Equity value</span>
-                    <span>
-                      {formatMoneyFromCents(hourlyEquityRateCents)} <span className="text-gray-500">/ hourly</span>
-                    </span>
-                  </div>
-                  <Separator className="m-0" />
-                  <div className="flex justify-between gap-2 text-sm">
-                    <span>Total rate</span>
-                    <span>
-                      {formatMoneyFromCents(hourlyRateCashCents + hourlyEquityRateCents)}{" "}
-                      <span className="text-gray-500">/ hourly</span>
-                    </span>
-                  </div>
-                  <Separator className="m-0" />
-                </>
-              ) : null}
-
               <div className="mt-2 mb-2 pt-2 text-right lg:mt-16 lg:mb-3 lg:pt-0">
                 <span className="text-sm text-gray-500">Total amount</span>
                 <div className="text-3xl font-bold">{formatMoneyFromCents(totalAmountInCents)}</div>

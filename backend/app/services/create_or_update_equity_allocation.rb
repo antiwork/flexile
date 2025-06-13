@@ -10,7 +10,6 @@ class CreateOrUpdateEquityAllocation
 
   def perform!
     raise Error, "Feature is not enabled." unless company_worker.company.equity_compensation_enabled?
-    raise Error, "Equity allocation is not available." unless company_worker.hourly?
 
     unvested_equity_grant = company_worker.unique_unvested_equity_grant_for_year(Date.current.year)
     equity_allocation = company_worker.equity_allocations.find_or_initialize_by(year: Date.current.year)
