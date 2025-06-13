@@ -129,8 +129,8 @@ const Edit = () => {
     return List([
       {
         description: "",
-        quantity: parseInt(searchParams.get("quantity") ?? "", 10) || 1,
-        hourly: !!searchParams.get("hourly"),
+        quantity: parseInt(searchParams.get("quantity") ?? "", 10) || (data.user.hourly ? 60 : 1),
+        hourly: searchParams.has("hourly") ? searchParams.get("hourly") === "true" : data.user.hourly,
         pay_rate_in_subunits: parseInt(searchParams.get("rate") ?? "", 10) || data.user.pay_rate_in_subunits,
       },
     ]);

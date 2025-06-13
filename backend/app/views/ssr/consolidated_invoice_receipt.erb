@@ -93,7 +93,7 @@
         <tr>
           <td><%= "#{invoice.bill_from} - Invoice #{invoice.invoice_number}" %></td>
           <td class="numeric">
-            <%= invoice.invoice_line_items.sum { _1.normalized_quantity } %>
+            <%= invoice.invoice_line_items.sum { _1.normalized_quantity.round(2) } %>
           </td>
           <td class="numeric">
             <%= format_money(invoice.invoice_line_items.first.pay_rate_in_subunits / 100.0) %>

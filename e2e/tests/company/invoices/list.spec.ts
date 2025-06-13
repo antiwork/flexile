@@ -158,6 +158,8 @@ test.describe("Invoices admin flow", () => {
 
     test("allows approving multiple invoices", async ({ page }) => {
       const { company, user: adminUser } = await setupCompany();
+      await invoicesFactory.create({ companyId: company.id });
+      await invoicesFactory.create({ companyId: company.id });
       await login(page, adminUser);
       await page.getByRole("link", { name: "Invoices" }).click();
 
@@ -171,8 +173,7 @@ test.describe("Invoices admin flow", () => {
 
       await withinModal(
         async (modal) => {
-          await expect(modal.getByText("$60")).toHaveCount(1);
-          await expect(modal.getByText("$75")).toHaveCount(1);
+          await expect(modal.getByText("$60")).toHaveCount(2);
           await modal.getByRole("button", { name: "Yes, proceed" }).click();
         },
         { page },
