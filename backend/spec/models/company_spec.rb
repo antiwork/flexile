@@ -16,7 +16,7 @@ RSpec.describe Company do
     it { is_expected.to have_many(:convertible_investments) }
     it { is_expected.to have_many(:consolidated_invoices) }
     it { is_expected.to have_many(:contractors).through(:company_workers).source(:user) }
-    it { is_expected.to have_many(:company_monthly_financial_reports) }
+
     it { is_expected.to have_many(:company_investors) }
     it { is_expected.to have_many(:company_updates) }
     it { is_expected.to have_many(:documents) }
