@@ -221,8 +221,6 @@ export const companyStripeAccounts = pgTable(
   ],
 );
 
-
-
 export const consolidatedInvoices = pgTable(
   "consolidated_invoices",
   {
@@ -2565,8 +2563,6 @@ export const integrationsRelations = relations(integrations, ({ one, many }) => 
     references: [companies.id],
   }),
 }));
-
-
 
 export const companyUpdatesRelations = relations(companyUpdates, ({ one }) => ({
   company: one(companies, {

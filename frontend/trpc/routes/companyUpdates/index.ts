@@ -13,7 +13,6 @@ import { assertDefined } from "@/utils/assert";
 const byId = (ctx: CompanyContext, id: string) =>
   and(eq(companyUpdates.companyId, ctx.company.id), eq(companyUpdates.externalId, id));
 
-
 const dataSchema = createInsertSchema(companyUpdates).pick({
   title: true,
   body: true,
@@ -51,12 +50,7 @@ export const companyUpdatesRouter = createRouter({
     if (!update) throw new TRPCError({ code: "NOT_FOUND" });
 
     return {
-      ...pick(update, [
-        "title",
-        "body",
-        "videoUrl",
-        "sentAt",
-      ]),
+      ...pick(update, ["title", "body", "videoUrl", "sentAt"]),
 
       id: update.externalId,
     };

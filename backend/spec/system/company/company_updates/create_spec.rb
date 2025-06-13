@@ -15,7 +15,6 @@ RSpec.describe "Company update create flow" do
 
   context "when creating a new company update" do
     it "allows creation and publishing of a company update" do
-
       visit new_spa_company_updates_company_path(company.external_id)
 
       expect(page).to have_button("Publish")
@@ -79,7 +78,6 @@ RSpec.describe "Company update create flow" do
     end
 
     it "allows creation without optional fields" do
-
       visit new_spa_company_updates_company_path(company.external_id)
 
       fill_in "Title", with: "April 2023"

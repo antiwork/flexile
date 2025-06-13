@@ -90,7 +90,6 @@ class PurgeSeedData
 
     def purge_company_updates!(company)
       company.company_updates.each(&:destroy!)
-
     end
 
     def purge_balance_transactions!(company)

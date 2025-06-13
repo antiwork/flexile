@@ -72,7 +72,6 @@ export default inngest.createFunction(
 
     const logoUrl = await step.run("get-logo-url", async () => companyLogoUrl(company.id));
 
-
     const react = CompanyUpdatePublished({
       company,
       update,

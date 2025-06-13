@@ -20,6 +20,4 @@ class CreateOrUpdateCompanyUpdate
 
   private
     attr_reader :company, :company_update_params, :company_update
-
-
 end

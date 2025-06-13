@@ -30,8 +30,6 @@ Flexile syncs back to QuickBooks the following data:
 - Invoices and consolidated invoices as QBO **Bill**
 - Payments and consolidated payments as QBO **BillPayment**
 
-
-
 **ℹ️ Note:**
 
 The integration's data is linked to QBO via the `integration_records` table.
@@ -83,8 +81,6 @@ Synchronized when a consolidated invoice [is created](../app/models/consolidated
 #### 5. Consolidated payments
 
 Synchronized when a consolidated payment [changes its status to `SUCCEEDED`](../app/models/consolidated_payment.rb).
-
-
 
 ### Integration statuses
 
