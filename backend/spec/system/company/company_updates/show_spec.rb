@@ -37,8 +37,6 @@ RSpec.shared_examples "company update show behavior" do |user_factory|
       expect(page).to have_link("Watch the video", href: "https://example.com/video")
     end
   end
-
-
 end
 
 RSpec.describe "Company update page" do
