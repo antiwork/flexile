@@ -28,8 +28,6 @@ class Invoice < ApplicationRecord
   PAID_OR_PAYING_STATES = [PAYMENT_PENDING, PROCESSING, PAID]
   ALL_STATES = READ_ONLY_STATES + EDITABLE_STATES
 
-  MAX_MINUTES = 160 * 60 # 160 hours
-
   BASE_FLEXILE_FEE_CENTS = 50
   MAX_FLEXILE_FEE_CENTS = 15_00
   PERCENT_FLEXILE_FEE = 1.5
@@ -47,11 +45,8 @@ class Invoice < ApplicationRecord
   end, as: :integratable, class_name: "IntegrationRecord"
   has_many_attached :attachments
 
-  delegate :hourly?, to: :company_worker, allow_nil: true
-
   validates :status, inclusion: { in: ALL_STATES }, presence: true
   validates :invoice_date, presence: true
-  validates :total_minutes, presence: true, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: MAX_MINUTES }, if: :for_hourly_services?
   validates :total_amount_in_usd_cents, presence: true,
                                         numericality: { only_integer: true, greater_than: 99 }
   validates :invoice_number, presence: true
@@ -223,10 +218,6 @@ class Invoice < ApplicationRecord
   def calculate_flexile_fee_cents
     fee_cents = BASE_FLEXILE_FEE_CENTS + (total_amount_in_usd_cents * PERCENT_FLEXILE_FEE / 100)
     [fee_cents, MAX_FLEXILE_FEE_CENTS].min.round
-  end
-
-  def for_hourly_services?
-    invoice_type_services? && hourly?
   end
 
   def created_by_user?
