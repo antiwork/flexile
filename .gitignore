@@ -13,6 +13,9 @@ tmp
 .vercel
 .tool-versions
 
+# Claude Code
+.claude
+
 # Dependencies
 /node_modules
 /.puppeteer
