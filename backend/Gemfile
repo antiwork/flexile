@@ -125,8 +125,6 @@ gem "slack-notifier", "~> 2.4"
 
 gem "color", "~> 1.8"
 
-gem "rubyXL", "~> 3.4"
-
 gem "countries", "~> 7.0"
 
 gem "grover", "~> 1.1"

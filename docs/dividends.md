@@ -38,9 +38,15 @@ Write a script to invite investors AND save dividend records for them:
 Run the script to create users, investors, investments, dividends, etc., and send invitation emails:
 
 ```ruby
+data = <<~CSV
+  name,full_legal_name,investment_address_1,investment_address_2,investment_address_city,investment_address_region,investment_address_postal_code,investment_address_country,email,investment_date,investment_amount,tax_id,entity_name,dividend_amount
+  John Doe,John Michael Doe,123 Main St,,San Francisco,CA,94102,US,john@example.com,2024-01-15,10000.00,123-45-6789,,500.00
+  Jane Smith,Jane Elizabeth Smith,456 Oak Ave,Apt 2B,New York,NY,10001,US,jane@example.com,2024-02-20,25000.00,987-65-4321,,1250.00
+CSV
+
 service = CreateInvestorsAndDividends.new(
   company_id: 1823,
-  workbook_url: "https://41af-2603-7000-8e00-4c84-f4a1-418e-7aa5-e70d.ngrok-free.app/lmnt.xlsx",
+  csv_data: data,
   dividend_date: Date.new(2025, 6, 4),
 )
 service.process
@@ -50,7 +56,7 @@ service.process
 
 See example Google Sheet here: [Dividend Import Template](https://docs.google.com/spreadsheets/d/1WLvHQaNx6PcofKChWhtD_4JDoTqy2y_bYxNgwNYZKBw/edit?usp=sharing)
 
-You can export this file as an .xlsx and put it within `frontend/public` and use ngrok to get a URL to access it:
+You can export this file as a CSV and use it directly with the service:
 
 ```
 ngrok http https://flexile.dev

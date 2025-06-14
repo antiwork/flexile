@@ -3,62 +3,53 @@
 class ImportShareHoldings
   attr_reader :errors
 
-  def initialize(file_path)
-    @file_path = file_path
+  def initialize(user_mapping_csv:, share_data_csv:)
+    @user_mapping_csv = user_mapping_csv
+    @share_data_csv = share_data_csv
     @errors = []
   end
 
   def process
     name_to_user_mapping = {}
 
-    workbook = RubyXL::Parser.parse(@file_path)
-    worksheet = workbook[1]
-    header = worksheet[0].cells.map(&:value)
-
-    attribute_to_column_mapping = {
-      legal_name: header.index("Name"),
-      email: header.index("Email"),
-    }
-
     puts "Building name -> user mapping"
-    worksheet.drop(1).each do |row| # drop the header row
-      next if row.nil?
+    CSV.parse(@user_mapping_csv, headers: true).each do |row|
+      next if row["Email"].blank? || row["Name"].blank?
 
-      email = row[attribute_to_column_mapping[:email]].value
+      email = row["Email"]
       email = test_email if !Rails.env.production?
-      name = row[attribute_to_column_mapping[:legal_name]].value
+      name = row["Name"]
       puts "Processing email #{email}"
       name_to_user_mapping[name] = User.find_by!(email:)
     end
 
-    worksheet = workbook[0]
-    worksheet.each do |row|
-      next if row.nil? || row[0].nil?
-      next if row[0].value.blank? || row[0].value == "Security"
+    puts "Processing share data"
+    CSV.parse(@share_data_csv, headers: true).each do |row|
+      next if row["Security"].blank? || row["Security"] == "Security"
 
       attrs = {
-        name: row[0].value,
-        share_class_id: ShareClass.find_by(name: row[7].value, company: gumroad_company!).id,
-        issued_at: row[6].value,
-        originally_acquired_at: row[6].value, # TODO (sharang): Fix this to import the correct date
-        number_of_shares: row[3].value,
-        share_price_usd: row[4].value.delete_prefix("$").to_d,
-        total_amount_in_cents: (row[5].value * 100).to_i,
+        name: row["Security"],
+        share_class_id: ShareClass.find_by(name: row["Share Class"], company: gumroad_company!).id,
+        issued_at: row["Issue Date"],
+        originally_acquired_at: row["Issue Date"],
+        number_of_shares: row["Shares"].to_i,
+        share_price_usd: row["Price"].delete_prefix("$").to_d,
+        total_amount_in_cents: (row["Total"].to_f * 100).to_i,
       }
 
-      puts "Processing security #{row[0].value}"
+      puts "Processing security #{row["Security"]}"
 
-      user = name_to_user_mapping[row[1].value]
+      user = name_to_user_mapping[row["Holder"]]
       company_investor = user.company_investors.find_by(company: gumroad_company!)
       if company_investor.nil?
-        @errors << { name: row[0].value, error_message: "Could not find an investor record" }
+        @errors << { name: row["Security"], error_message: "Could not find an investor record" }
         next
       end
 
       share = company_investor.share_holdings.build(**attrs, share_holder_name: user.legal_name)
       share.save
       if share.errors.present?
-        @errors << { name: row[0].value, error_message: share.errors.full_messages.to_sentence }
+        @errors << { name: row["Security"], error_message: share.errors.full_messages.to_sentence }
         next
       end
     end
@@ -77,7 +68,19 @@ class ImportShareHoldings
 end
 
 =begin
-service = ImportShareHoldings.new("/Users/sharang/Downloads/new data for flexile.xlsx")
+user_mapping_csv = <<~CSV
+  Name,Email
+  John Doe,john@example.com
+  Jane Smith,jane@example.com
+CSV
+
+share_data_csv = <<~CSV
+  Security,Holder,Shares,Price,Total,Issue Date,Share Class
+  Common Stock,John Doe,1000,$1.00,1000.00,2024-01-01,Common
+  Preferred Stock,Jane Smith,500,$2.00,1000.00,2024-01-15,Preferred
+CSV
+
+service = ImportShareHoldings.new(user_mapping_csv: user_mapping_csv, share_data_csv: share_data_csv)
 service.process; nil
 puts service.errors
 =end
