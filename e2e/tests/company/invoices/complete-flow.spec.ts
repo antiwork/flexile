@@ -46,14 +46,14 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.waitForTimeout(500); // TODO (dani) avoid this
     await page.getByRole("button", { name: "Add line item" }).click();
     await page.getByPlaceholder("Description").nth(1).fill("second item");
-    await page.getByLabel("Hours / Qty").nth(1).fill("02:34");
+    await page.getByLabel("Hours / Qty").nth(1).fill("10");
     await page.getByPlaceholder("Enter notes about your").fill("A note in the invoice");
     await page.waitForTimeout(200); // TODO (dani) avoid this
     await page.getByRole("button", { name: "Send invoice" }).click();
 
     await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Nov 1, 2024");
-    await expect(page.locator("tbody")).toContainText("$237.01");
+    await expect(page.locator("tbody")).toContainText("$683");
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
 
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
@@ -79,7 +79,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.waitForTimeout(1000); // TODO (dani) avoid this
     await page.getByRole("button", { name: "Re-submit invoice" }).click();
 
-    await expect(page.getByRole("cell", { name: "$424.01" })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "$870" })).toBeVisible();
     await expect(locateOpenInvoicesBadge(page)).not.toBeVisible();
 
     await clerk.signOut({ page });
@@ -111,7 +111,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(secondRow).toContainText("Awaiting approval");
     await expect(secondRow.getByRole("button", { name: "Pay now" })).toBeVisible();
     await expect(thirdRow).toContainText("Nov 1, 2024");
-    await expect(thirdRow).toContainText("$424.01");
+    await expect(thirdRow).toContainText("$870");
     await expect(thirdRow).toContainText("Awaiting approval");
     await expect(thirdRow.getByRole("button", { name: "Pay now" })).toBeVisible();
 
