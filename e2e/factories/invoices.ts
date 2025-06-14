@@ -76,7 +76,6 @@ export const invoicesFactory = {
         city: user.city,
         zipCode: user.zipCode,
         flexileFeeCents: BigInt(calculateFlexileFeeCents(600_00)),
-        totalMinutes: 60,
         ...overrides,
       })
       .returning();
@@ -84,8 +83,8 @@ export const invoicesFactory = {
 
     await invoiceLineItemsFactory.create({
       invoiceId: invoice.id,
-      totalAmountCents: invoice.totalAmountInUsdCents,
-      minutes: invoice.totalMinutes ?? 60,
+      payRateInSubunits: Number(invoice.totalAmountInUsdCents),
+      quantity: 1,
     });
 
     return { invoice };

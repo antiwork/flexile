@@ -21,7 +21,14 @@ RSpec.describe CreateOrUpdateInvoiceService do
       invoice_line_items: [
         {
           description: "I worked on XYZ",
-          minutes: 720,
+          pay_rate_in_subunits: contractor.pay_rate_in_subunits,
+          quantity: 121,
+          hourly: true,
+        },
+        {
+          description: "I also did ABC",
+          pay_rate_in_subunits: 1000,
+          quantity: 2,
         }
       ],
     }
@@ -31,6 +38,7 @@ RSpec.describe CreateOrUpdateInvoiceService do
     create(:active_grant, company_investor: create(:company_investor, company:, user:),
                           share_price_usd: 2.34, year: Date.current.year)
   end
+  let(:expected_total_amount_in_cents) { 14100 }
 
   before { company.update!(equity_compensation_enabled: true) }
 
@@ -66,28 +74,18 @@ RSpec.describe CreateOrUpdateInvoiceService do
       let(:params) { ActionController::Parameters.new({ **invoice_params, **invoice_line_item_params }) }
 
       it "creates an invoice with valid params" do
-        # Update hourly rate and minutes to assert rounding of amounts
-        pay_rate_in_subunits = 50_00
-        contractor.update!(pay_rate_in_subunits:)
-        params[:invoice_line_items][0][:minutes] = 34
-        # Ensure pay rate and total amount params are ignored
-        params[:invoice_line_items][0][:pay_rate_in_subunits] = 100_00
-        params[:invoice_line_items][0][:total_amount_cents] = 100_00
-
         expect do
           result = invoice_service.process
           expect(result[:success]).to be(true)
 
           invoice = result[:invoice]
-          invoice_line_item = invoice.invoice_line_items.first
+          expect(invoice.invoice_line_items).to match([
+                                                        an_object_having_attributes(description: "I worked on XYZ", quantity: 121, hourly: true, pay_rate_in_subunits: contractor.pay_rate_in_subunits),
+                                                        an_object_having_attributes(description: "I also did ABC", quantity: 2, hourly: false, pay_rate_in_subunits: 1000),
+                                                      ])
           expect(invoice.invoice_date.strftime("%Y-%m-%d")).to eq(Date.current.strftime("%Y-%m-%d"))
           expect(invoice.invoice_number).to eq("INV-123")
           expect(invoice.company_worker).to eq(contractor)
-          expect(invoice_line_item.description).to eq("I worked on XYZ")
-          expect(invoice_line_item.minutes).to eq(34)
-          expect(invoice_line_item.pay_rate_in_subunits).to eq(pay_rate_in_subunits)
-          expect(invoice.total_minutes).to eq(34)
-          expected_total_amount_in_cents = 28_34 # hours X hourly rate in cents = (34 / 60.0) * 50_00
           expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents)
           expect(invoice.equity_percentage).to eq(0)
           expect(invoice.cash_amount_in_cents).to eq(expected_total_amount_in_cents)
@@ -119,16 +117,14 @@ RSpec.describe CreateOrUpdateInvoiceService do
           result = invoice_service.process
           expect(result[:success]).to be(true)
           invoice = result[:invoice]
-          expect(invoice.total_minutes).to eq(720)
-          expected_total_amount_in_cents = 720_00 # hours X hourly rate in cents = (720 / 60) * 60_00
           expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents)
           expect(invoice.equity_percentage).to eq(60)
-          expected_equity_cents = 43_200 # $720 * 0.6
+          expected_equity_cents = 8460
           expect(invoice.equity_amount_in_cents).to eq(expected_equity_cents)
-          expected_cash_cents = 28_800 # invoice.total_amount_in_usd_cents - expected_equity_cents
+          expected_cash_cents = 5640
           expect(invoice.cash_amount_in_cents).to eq(expected_cash_cents)
-          expect(invoice.flexile_fee_cents).to eq(50 + (1.5 * expected_total_amount_in_cents / 100.0))
-          expected_options = 185 # (expected_equity_cents / (company.share_price_in_usd * 100)).round
+          expect(invoice.flexile_fee_cents).to eq(50 + (1.5 * expected_total_amount_in_cents / 100.0).round)
+          expected_options = 36 # (expected_equity_cents / (company.share_price_in_usd * 100)).round
           expect(invoice.equity_amount_in_options).to eq(expected_options)
           expect(contractor.equity_allocation_for(date.year).locked?).to eq(true)
         end.to change { user.invoices.count }.by(1)
@@ -136,24 +132,19 @@ RSpec.describe CreateOrUpdateInvoiceService do
 
       it "does not apply an equity split if the equity portion makes up less than one share" do
         create(:equity_allocation, company_worker: contractor, equity_percentage: 1, year: date.year)
-        equity_grant.update!(share_price_usd: 14.90)
+        equity_grant.update!(share_price_usd: 20)
 
         expect do
           result = invoice_service.process
           expect(result[:success]).to eq(true)
           invoice = result[:invoice]
-          expect(invoice.total_minutes).to eq(720)
-          expected_total_amount_in_cents = 72_000 # hours X hourly rate in cents = (720 / 60) * 60_00
-          expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents)
 
-          # Equity portion = $720 * 1% = $7.20
-          # Shares = $7.20 / $14.9 = 0.4832214765100671 = 0 (rounded)
-          # Don't allocate any portion to equity as the number of shares comes to 0
+          expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents)
           expect(invoice.equity_amount_in_options).to eq(0)
           expect(invoice.equity_percentage).to eq(0)
           expect(invoice.equity_amount_in_cents).to eq(0)
-          expect(invoice.cash_amount_in_cents).to eq(720_00)
-          expect(invoice.flexile_fee_cents).to eq(50 + (1.5 * 720_00 / 100))
+          expect(invoice.cash_amount_in_cents).to eq(expected_total_amount_in_cents)
+          expect(invoice.flexile_fee_cents).to eq(50 + (1.5 * expected_total_amount_in_cents / 100).round)
           expect(contractor.equity_allocation_for(date.year).locked?).to eq(true)
         end.to change { user.invoices.count }.by(1)
       end
@@ -166,18 +157,10 @@ RSpec.describe CreateOrUpdateInvoiceService do
           result = invoice_service.process
           expect(result[:success]).to be(true)
           invoice = result[:invoice]
-          invoice_line_item = invoice.invoice_line_items.first
-          expect(invoice.invoice_date.strftime("%Y-%m-%d")).to eq(Date.current.strftime("%Y-%m-%d"))
-          expect(invoice.invoice_number).to eq("INV-123")
-          expect(invoice_line_item.description).to eq("I worked on XYZ")
-          expect(invoice_line_item.minutes).to eq(12 * 60)
-          expect(invoice_line_item.pay_rate_in_subunits).to eq(contractor.pay_rate_in_subunits)
-          expect(invoice.total_minutes).to eq(12 * 60)
-          expected_total_amount_in_usd = (invoice.total_minutes / 60) * (contractor.pay_rate_in_subunits / 100.0)
-          expect(invoice.total_amount_in_usd).to eq(expected_total_amount_in_usd)
+          expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents)
           expect(invoice.equity_percentage).to eq(0)
-          expect(invoice.cash_amount_in_cents).to eq(expected_total_amount_in_usd * 100)
-          expect(invoice.flexile_fee_cents).to eq(50 + (1.5 * expected_total_amount_in_usd))
+          expect(invoice.cash_amount_in_cents).to eq(expected_total_amount_in_cents)
+          expect(invoice.flexile_fee_cents).to eq(50 + (1.5 * expected_total_amount_in_cents / 100).round)
           expect(invoice.equity_amount_in_cents).to eq(0)
           expect(invoice.equity_amount_in_options).to eq(0)
           expect(invoice.notes).to eq("Tax ID: 123efjo32r")
@@ -198,62 +181,6 @@ RSpec.describe CreateOrUpdateInvoiceService do
       end
 
       include_examples "common invoice failure specs", expected_invoices_count: 1
-
-      context "when contractor is project-based" do
-        let(:contractor) { create(:company_worker, :project_based, company:) }
-        let(:user) { contractor.user }
-        let(:invoice_line_item_params) do
-          {
-            invoice_line_items: [
-              {
-                description: "I worked on XYZ",
-                total_amount_cents: 1_000_00,
-              }
-            ],
-          }
-        end
-
-        before { EquityGrant.destroy_all }
-
-        it "creates an invoice with valid params" do
-          # Ensure minutes param is ignored
-          params[:invoice_line_items][0][:minutes] = 60
-
-          expect do
-            result = invoice_service.process
-            expect(result[:success]).to be(true)
-            invoice = result[:invoice]
-            invoice_line_item = invoice.invoice_line_items.first
-            expect(invoice.invoice_date.strftime("%Y-%m-%d")).to eq(Date.current.strftime("%Y-%m-%d"))
-            expect(invoice.invoice_number).to eq("INV-123")
-            expect(invoice_line_item.description).to eq("I worked on XYZ")
-            expect(invoice_line_item.minutes).to eq(nil)
-            expect(invoice_line_item.pay_rate_in_subunits).to eq(1_000_00)
-            expect(invoice_line_item.total_amount_cents).to eq(1_000_00)
-            expect(invoice.total_minutes).to eq(nil)
-            expect(invoice.total_amount_in_usd).to eq(1_000)
-            expect(invoice.equity_percentage).to eq(0)
-            expect(invoice.cash_amount_in_cents).to eq(1_000_00)
-            expect(invoice.flexile_fee_cents).to eq(15_00) # max fee
-            expect(invoice.equity_amount_in_cents).to eq(0)
-            expect(invoice.equity_amount_in_options).to eq(0)
-            expect(invoice.notes).to eq("Tax ID: 123efjo32r")
-            expect(invoice.street_address).to eq(user.street_address)
-            expect(invoice.city).to eq(user.city)
-            expect(invoice.state).to eq(user.state)
-            expect(invoice.zip_code).to eq(user.zip_code)
-            expect(invoice.country_code).to eq(user.country_code)
-          end.to change { user.invoices.count }.by(1)
-        end
-
-        it "returns an error when invoice line item description is missing" do
-          params[:invoice_line_items] = [{ description: "", total_amount_cents: 1_000_00 }]
-          result = invoice_service.process
-          expect(result[:error_message]).to eq("Please input all values")
-        end
-
-        include_examples "common invoice failure specs", expected_invoices_count: 1
-      end
 
       context "when invoice_expenses param exists" do
         let(:params) do
@@ -277,20 +204,16 @@ RSpec.describe CreateOrUpdateInvoiceService do
           expect do
             result = invoice_service.process
             invoice = result[:invoice]
-            invoice_line_item = invoice.invoice_line_items.first
             invoice_expense = invoice.invoice_expenses.first
 
             expect(invoice.invoice_expenses.count).to eq(1)
             expect(invoice.invoice_date.strftime("%Y-%m-%d")).to eq(Date.current.strftime("%Y-%m-%d"))
             expect(invoice.invoice_number).to eq("INV-123")
-            expect(invoice_line_item.description).to eq("I worked on XYZ")
-            expect(invoice_line_item.minutes).to eq(12 * 60)
-            expect(invoice_line_item.pay_rate_in_subunits).to eq(contractor.pay_rate_in_subunits)
-            expect(invoice.total_minutes).to eq(12 * 60)
-            expected_total_amount_in_usd = (invoice.total_minutes / 60) * (contractor.pay_rate_in_subunits / 100.0) + invoice_expense.total_amount_in_cents / 100.0
-            expect(invoice.total_amount_in_usd).to eq(expected_total_amount_in_usd)
+            expect(invoice.invoice_line_items.length).to eq(2)
+            expected_total_amount = expected_total_amount_in_cents + invoice_expense.total_amount_in_cents
+            expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount)
             expect(invoice.equity_percentage).to eq(0)
-            expect(invoice.cash_amount_in_cents).to eq(expected_total_amount_in_usd * 100)
+            expect(invoice.cash_amount_in_cents).to eq(expected_total_amount)
             expect(invoice.flexile_fee_cents).to eq(15_00) # max fee
             expect(invoice.equity_amount_in_cents).to eq(0)
             expect(invoice.equity_amount_in_options).to eq(0)
@@ -319,7 +242,6 @@ RSpec.describe CreateOrUpdateInvoiceService do
 
             expect(invoice.invoice_line_items.count).to eq(0)
             expect(invoice.invoice_expenses.count).to eq(1)
-            expect(invoice.total_minutes).to eq(0)
             expect(invoice.total_amount_in_usd).to eq(1_000)
             expect(invoice.equity_percentage).to eq(0)
             expect(invoice.cash_amount_in_cents).to eq(1_000_00)
@@ -340,17 +262,16 @@ RSpec.describe CreateOrUpdateInvoiceService do
           expect do
             result = invoice_service.process
             invoice = result[:invoice]
-            expect(invoice.total_minutes).to eq(720)
+            invoice_expense = invoice.invoice_expenses.first
             expect(invoice.invoice_expenses.count).to eq(1)
-            expected_total_amount_in_usd = 1_720 # services amount + expenses = 720 + 1000
-            expect(invoice.total_amount_in_usd).to eq(expected_total_amount_in_usd)
+            expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents + invoice_expense.total_amount_in_cents)
             expect(invoice.equity_percentage).to eq(30)
-            expected_equity_cents = 21_600 # $720 * 0.3
+            expected_equity_cents = expected_total_amount_in_cents * 0.3
             expect(invoice.equity_amount_in_cents).to eq(expected_equity_cents)
-            expected_cash_cents = 150_400 # invoice.total_amount_in_usd_cents - expected_equity_cents
+            expected_cash_cents = expected_total_amount_in_cents + invoice_expense.total_amount_in_cents - expected_equity_cents
             expect(invoice.cash_amount_in_cents).to eq(expected_cash_cents)
             expect(invoice.flexile_fee_cents).to eq(15_00) # max fee
-            expected_options = 92 # (expected_equity_cents / (company.share_price_in_usd * 100)).floor
+            expected_options = 18 # (expected_equity_cents / (company.share_price_in_usd * 100)).floor
             expect(invoice.equity_amount_in_options).to eq(expected_options)
             expect(contractor.equity_allocation_for(date.year).locked?).to eq(true)
           end.to change { user.invoices.count }.by(1)
@@ -366,16 +287,10 @@ RSpec.describe CreateOrUpdateInvoiceService do
           expect do
             result = invoice_service.process
             invoice = result[:invoice]
-            invoice_line_item = invoice.invoice_line_items.first
+            expect(invoice.invoice_line_items.length).to eq(2)
             expect(invoice.invoice_date.strftime("%Y-%m-%d")).to eq(Date.current.strftime("%Y-%m-%d"))
             expect(invoice.invoice_number).to eq("INV-123")
-            expect(invoice_line_item.description).to eq("I worked on XYZ")
-            expect(invoice_line_item.minutes).to eq(12 * 60)
-            expect(invoice_line_item.pay_rate_in_subunits).to eq(contractor.pay_rate_in_subunits)
-            expect(invoice.total_minutes).to eq(12 * 60)
-            expected_total_amount_in_usd = (invoice.total_minutes / 60) * contractor.pay_rate_in_subunits / 100.0
-            expect(invoice_line_item.total_amount_cents).to eq(expected_total_amount_in_usd * 100)
-            expect(invoice.total_amount_in_usd).to eq(expected_total_amount_in_usd)
+            expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents)
             expect(invoice.notes).to eq("Tax ID: 123efjo32r")
             expect(invoice.street_address).to eq(user.street_address)
             expect(invoice.city).to eq(user.city)
@@ -389,18 +304,6 @@ RSpec.describe CreateOrUpdateInvoiceService do
 
     describe "updating an invoice" do
       let!(:invoice) { create(:invoice, company:, user:) }
-      let(:invoice_line_item) { invoice.invoice_line_items.first! }
-      let(:invoice_line_item_params) do
-        {
-          invoice_line_items: [
-            {
-              id: invoice_line_item.id,
-              description: "I worked on XYZ",
-              minutes: 720,
-            }
-          ],
-        }
-      end
       let(:params) { ActionController::Parameters.new({ **invoice_params, **invoice_line_item_params }) }
 
       it "updates an invoice with valid params" do
@@ -410,16 +313,14 @@ RSpec.describe CreateOrUpdateInvoiceService do
 
           expect(invoice.invoice_date.strftime("%Y-%m-%d")).to eq(Date.current.strftime("%Y-%m-%d"))
           expect(invoice.invoice_number).to eq("INV-123")
-          expect(invoice_line_item.reload.description).to eq("I worked on XYZ")
-          expect(invoice_line_item.minutes).to eq(12 * 60)
-          expect(invoice_line_item.pay_rate_in_subunits).to eq(contractor.pay_rate_in_subunits)
-          expect(invoice.total_minutes).to eq(12 * 60)
-          expected_total_amount_in_usd = (invoice.total_minutes / 60) * contractor.pay_rate_in_subunits / 100.0
-          expect(invoice_line_item.total_amount_cents).to eq(expected_total_amount_in_usd * 100)
-          expect(invoice.total_amount_in_usd).to eq(expected_total_amount_in_usd)
+          expect(invoice.invoice_line_items).to match([
+                                                        an_object_having_attributes(description: "I worked on XYZ", quantity: 121, hourly: true, pay_rate_in_subunits: contractor.pay_rate_in_subunits),
+                                                        an_object_having_attributes(description: "I also did ABC", quantity: 2, hourly: false, pay_rate_in_subunits: 1000),
+                                                      ])
+          expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents)
           expect(invoice.equity_percentage).to eq(0)
-          expect(invoice.cash_amount_in_cents).to eq(expected_total_amount_in_usd * 100)
-          expect(invoice.flexile_fee_cents).to eq(50 + (1.5 * expected_total_amount_in_usd))
+          expect(invoice.cash_amount_in_cents).to eq(expected_total_amount_in_cents)
+          expect(invoice.flexile_fee_cents).to eq(50 + (1.5 * expected_total_amount_in_cents / 100).round)
           expect(invoice.equity_amount_in_cents).to eq(0)
           expect(invoice.equity_amount_in_options).to eq(0)
           expect(invoice.notes).to eq("Tax ID: 123efjo32r")
@@ -453,36 +354,35 @@ RSpec.describe CreateOrUpdateInvoiceService do
           result = invoice_service.process
           expect(result[:success]).to eq(true)
           invoice.reload
-          expect(invoice.total_minutes).to eq(720)
-          expected_total_amount_in_usd = 720 # hours X hourly rate = (720 / 60) * 60
-          expect(invoice.total_amount_in_usd).to eq(expected_total_amount_in_usd)
+          expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents)
           expect(invoice.equity_percentage).to eq(60)
-          expected_equity_cents = 43_200 # $720 * 0.6
+          expected_equity_cents = expected_total_amount_in_cents * 0.6
           expect(invoice.equity_amount_in_cents).to eq(expected_equity_cents)
-          expected_cash_cents = 28_800 # invoice.total_amount_in_usd_cents - expected_equity_cents
+          expected_cash_cents = expected_total_amount_in_cents - expected_equity_cents
           expect(invoice.cash_amount_in_cents).to eq(expected_cash_cents)
-          expect(invoice.flexile_fee_cents).to eq(50 + (1.5 * expected_total_amount_in_usd))
-          expected_options = 185 # (expected_equity_cents / (company.share_price_in_usd * 100)).round
+          expect(invoice.flexile_fee_cents).to eq(50 + (1.5 * expected_total_amount_in_cents / 100).round)
+          expected_options = 36 # (expected_equity_cents / (company.share_price_in_usd * 100)).round
           expect(invoice.equity_amount_in_options).to eq(expected_options)
         end.to change { user.invoices.count }.by(0)
       end
 
-      it "returns an error message when invoice line item minutes are zero" do
-        params[:invoice_line_items] = [{ description: "I worked on XYZ", minutes: 0 }]
+      it "returns an error message when invoice line item quantity is zero" do
+        params[:invoice_line_items] = [{ description: "I worked on XYZ", quantity: 0, pay_rate_in_subunits: 1 }]
         expect do
           result = invoice_service.process
           expect(result[:success]).to eq(false)
           expect(result[:error_message]).to eq(
-            "Invoice line items total amount cents must be greater than 0, Invoice line items minutes must be greater than 0, and Total amount in usd cents must be greater than 99"
+            "Invoice line items quantity must be greater than 0 and Total amount in usd cents must be greater than 99"
           )
           expect(user.invoices.count).to eq(1)
-        end.to_not change { invoice_line_item.reload.minutes }
+        end.to_not change { invoice.invoice_line_items.first.quantity }
       end
 
       include_examples "common invoice failure specs", expected_invoices_count: 0
 
       context "when line items were removed" do
         before do
+          create(:invoice_line_item, invoice:)
           create(:invoice_line_item, invoice:)
           invoice.reload
         end
@@ -527,21 +427,16 @@ RSpec.describe CreateOrUpdateInvoiceService do
             expect(result[:success]).to eq(true)
             invoice = result[:invoice]
 
-            invoice_line_item = invoice.invoice_line_items.first
             expense_1, expense_2 = invoice.invoice_expenses.to_a
 
+            expect(invoice.invoice_line_items.length).to eq(2)
             expect(invoice.invoice_expenses.count).to eq(2)
             expect(invoice.invoice_date.strftime("%Y-%m-%d")).to eq(Date.current.strftime("%Y-%m-%d"))
             expect(invoice.invoice_number).to eq("INV-123")
-            expect(invoice_line_item.reload.description).to eq("I worked on XYZ")
-            expect(invoice_line_item.minutes).to eq(12 * 60)
-            expect(invoice_line_item.pay_rate_in_subunits).to eq(contractor.pay_rate_in_subunits)
-            expect(invoice_line_item.total_amount_cents).to eq(12 * contractor.pay_rate_in_subunits)
-            expect(invoice.total_minutes).to eq(12 * 60)
-            expected_total_amount_in_usd = (invoice.total_minutes / 60) * contractor.pay_rate_in_subunits / 100.0 + expense_1.total_amount_in_cents / 100.0 + expense_2.total_amount_in_cents / 100.0
-            expect(invoice.total_amount_in_usd).to eq(expected_total_amount_in_usd)
+            expected_total_amount = expected_total_amount_in_cents + expense_1.total_amount_in_cents + expense_2.total_amount_in_cents
+            expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount)
             expect(invoice.equity_percentage).to eq(0)
-            expect(invoice.cash_amount_in_cents).to eq(expected_total_amount_in_usd * 100)
+            expect(invoice.cash_amount_in_cents).to eq(expected_total_amount)
             expect(invoice.flexile_fee_cents).to eq(15_00) # max fee
             expect(invoice.equity_amount_in_cents).to eq(0)
             expect(invoice.equity_amount_in_options).to eq(0)
@@ -577,17 +472,17 @@ RSpec.describe CreateOrUpdateInvoiceService do
             result = invoice_service.process
             expect(result[:success]).to be(true)
             invoice.reload
-            expect(invoice.total_minutes).to eq(720)
             expect(invoice.invoice_expenses.count).to eq(2)
-            expected_total_amount_in_usd = 2_720 # services amount + expenses = 720 + 2000
-            expect(invoice.total_amount_in_usd).to eq(expected_total_amount_in_usd)
+            expense_1, expense_2 = invoice.invoice_expenses.to_a
+            expected_total_amount = expected_total_amount_in_cents + expense_1.total_amount_in_cents + expense_2.total_amount_in_cents
+            expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount)
             expect(invoice.equity_percentage).to eq(30)
-            expected_equity_cents = 21_600 # $720 * 0.3
+            expected_equity_cents = expected_total_amount_in_cents * 0.3
             expect(invoice.equity_amount_in_cents).to eq(expected_equity_cents)
-            expected_cash_cents = 250_400 # invoice.total_amount_in_usd_cents - expected_equity_cents
+            expected_cash_cents = expected_total_amount - expected_equity_cents
             expect(invoice.cash_amount_in_cents).to eq(expected_cash_cents)
             expect(invoice.flexile_fee_cents).to eq(15_00) # max fee
-            expected_options = 92 # (expected_equity_cents / (company.share_price_in_usd * 100)).round
+            expected_options = 18 # (expected_equity_cents / (company.share_price_in_usd * 100)).round
             expect(invoice.equity_amount_in_options).to eq(expected_options)
             expect(contractor.equity_allocation_for(date.year).locked?).to eq(true)
           end.to change { user.invoices.count }.by(0)
@@ -603,15 +498,10 @@ RSpec.describe CreateOrUpdateInvoiceService do
           expect do
             result = invoice_service.process
             expect(result[:success]).to be(true)
+            expect(invoice.invoice_line_items.length).to eq(2)
             expect(invoice.reload.invoice_date.strftime("%Y-%m-%d")).to eq(Date.current.strftime("%Y-%m-%d"))
             expect(invoice.invoice_number).to eq("INV-123")
-            expect(invoice_line_item.reload.description).to eq("I worked on XYZ")
-            expect(invoice_line_item.minutes).to eq(12 * 60)
-            expect(invoice_line_item.pay_rate_in_subunits).to eq(contractor.pay_rate_in_subunits)
-            expect(invoice_line_item.total_amount_cents).to eq(12 * contractor.pay_rate_in_subunits)
-            expect(invoice.total_minutes).to eq(12 * 60)
-            expected_total_amount_in_usd = (invoice.total_minutes / 60) * contractor.pay_rate_in_subunits / 100.0
-            expect(invoice.total_amount_in_usd).to eq(expected_total_amount_in_usd)
+            expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents)
             expect(invoice.notes).to eq("Tax ID: 123efjo32r")
             expect(invoice.street_address).to eq(user.street_address)
             expect(invoice.city).to eq(user.city)
@@ -620,60 +510,6 @@ RSpec.describe CreateOrUpdateInvoiceService do
             expect(invoice.country_code).to eq(user.country_code)
           end.to_not change { user.invoices.count }
         end
-      end
-
-      context "when contractor is project-based" do
-        let(:contractor) { create(:company_worker, :project_based, company:) }
-        let(:user) { contractor.user }
-        let!(:invoice) { create(:invoice, :project_based, company_worker: contractor) }
-        let(:invoice_line_item) { invoice.invoice_line_items.first! }
-        let(:invoice_line_item_params) do
-          {
-            invoice_line_items: [
-              {
-                id: invoice_line_item.id,
-                description: "I worked on XYZ",
-                total_amount_cents: 1_500_00,
-              }
-            ],
-          }
-        end
-
-        before { EquityGrant.destroy_all }
-
-        it "updates an invoice with valid params" do
-          # Ensure minutes param is ignored
-          params[:invoice_line_items][0][:minutes] = 60
-
-          expect do
-            result = invoice_service.process
-            expect(result[:success]).to eq(true)
-            invoice = result[:invoice]
-
-            expect(invoice.invoice_date.strftime("%Y-%m-%d")).to eq(Date.current.strftime("%Y-%m-%d"))
-            expect(invoice.invoice_number).to eq("INV-123")
-            expect(invoice_line_item.reload.description).to eq("I worked on XYZ")
-            expect(invoice_line_item.minutes).to eq(nil)
-            expect(invoice_line_item.pay_rate_in_subunits).to eq(1_000_00)
-            expect(invoice_line_item.pay_rate_currency).to eq("usd")
-            expect(invoice.total_minutes).to eq(nil)
-            expect(invoice.total_amount_in_usd).to eq(1_500)
-            expect(invoice.equity_percentage).to eq(0)
-            expect(invoice.cash_amount_in_cents).to eq(1_500_00)
-            expect(invoice.flexile_fee_cents).to eq(15_00) # max fee
-            expect(invoice.equity_amount_in_cents).to eq(0)
-            expect(invoice.equity_amount_in_options).to eq(0)
-            expect(invoice.notes).to eq("Tax ID: 123efjo32r")
-            expect(invoice.street_address).to eq(user.street_address)
-            expect(invoice.city).to eq(user.city)
-            expect(invoice.state).to eq(user.state)
-            expect(invoice.zip_code).to eq(user.zip_code)
-            expect(invoice.country_code).to eq(user.country_code)
-          end.to change { user.invoices.count }.by(0)
-             .and change { invoice.reload.attachments.count }.to(0)
-        end
-
-        include_examples "common invoice failure specs", expected_invoices_count: 0
       end
     end
   end
