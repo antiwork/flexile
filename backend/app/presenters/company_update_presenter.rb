@@ -52,15 +52,7 @@ class CompanyUpdatePresenter
       status: company_update.status,
     }
 
-    if company_update.show_revenue?
-      props[:revenue] = { amount_cents: company_update.company_monthly_financial_reports.sum(:revenue_cents) }
-      props[:revenue][:year_over_year_change] = year_over_year_change(:revenue_cents) if has_last_year_data?
-    end
 
-    if company_update.show_net_income?
-      props[:net_income] = { amount_cents: company_update.company_monthly_financial_reports.sum(:net_income_cents) }
-      props[:net_income][:year_over_year_change] = year_over_year_change(:net_income_cents) if has_last_year_data?
-    end
 
     props
   end
@@ -76,41 +68,7 @@ class CompanyUpdatePresenter
       end
     end
 
-    def fetch_financial_data(date, period)
-      period = period.to_sym
-      reports = fetch_reports(date, period)
-      return unless has_completed_period_data?(reports, period)
 
-      data = { net_income: { amount_cents: reports.sum(:net_income_cents) }, revenue: { amount_cents: reports.sum(:revenue_cents) } }
-
-      if has_last_year_data?(date:, period:)
-        data[:net_income][:year_over_year_change] = year_over_year_change(:net_income_cents, date:, period:, reports:)
-        data[:revenue][:year_over_year_change] = year_over_year_change(:revenue_cents, date:, period:, reports:)
-      end
-
-      data
-    end
-
-    def year_over_year_change(column, date: company_update.period_started_on, period: company_update.period, reports: company_update.company_monthly_financial_reports)
-      last_year_sum = fetch_reports(date.last_year, period).sum(column)
-      return if last_year_sum.zero?
-      (reports.sum(column) - last_year_sum) / last_year_sum.abs.to_f
-    end
-
-    def has_completed_period_data?(reports, period)
-      reports.count == CompanyUpdate.months_for_period(period)
-    end
-
-    def has_last_year_data?(date: company_update.period_started_on, period: company_update.period)
-      has_completed_period_data?(fetch_reports(date.last_year, period), period)
-    end
-
-    def fetch_reports(date, period)
-      report = company.company_monthly_financial_reports.where(year: date.year)
-      report = report.where(month: date.month) if period.to_sym == :month
-      report = report.where(month: date.beginning_of_quarter.month..date.end_of_quarter.month) if period.to_sym == :quarter
-      report
-    end
 
     def present_update(company_update)
       {

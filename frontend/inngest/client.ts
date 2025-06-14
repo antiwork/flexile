@@ -12,11 +12,7 @@ export const inngest = new Inngest({
         activeWorkerIds: z.array(z.string()),
       }),
     },
-    "quickbooks/sync-financial-report": {
-      data: z.object({
-        companyId: z.string(),
-      }),
-    },
+
     "quickbooks/sync-integration": {
       data: z.object({
         companyId: z.string(),

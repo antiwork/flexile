@@ -9,8 +9,7 @@ class CompanyUpdate < ApplicationRecord
   SENT = "Sent"
 
   belongs_to :company
-  has_many :company_updates_financial_reports, dependent: :destroy
-  has_and_belongs_to_many :company_monthly_financial_reports, join_table: :company_updates_financial_reports
+
 
   validates :title, presence: true
   validates :body, presence: true

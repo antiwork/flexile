@@ -7,7 +7,7 @@ import { inngest } from "@/inngest/client";
 import CompanyUpdatePublished from "@/inngest/functions/emails/CompanyUpdatePublished";
 import { BATCH_SIZE, resend } from "@/trpc/email";
 import { companyLogoUrl, companyName } from "@/trpc/routes/companies";
-import { getFinancialReports } from "@/trpc/routes/companyUpdates";
+
 import { userDisplayName } from "@/trpc/routes/users";
 
 export default inngest.createFunction(
@@ -71,13 +71,12 @@ export default inngest.createFunction(
     });
 
     const logoUrl = await step.run("get-logo-url", async () => companyLogoUrl(company.id));
-    const financialReports = await step.run("get-financial-reports", async () => getFinancialReports(update));
 
     const react = CompanyUpdatePublished({
       company,
       update,
       senderName: userDisplayName(sender),
-      financialReports,
+
       logoUrl,
     });
     const name = companyName(company);

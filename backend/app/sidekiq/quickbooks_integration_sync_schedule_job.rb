@@ -12,8 +12,6 @@ class QuickbooksIntegrationSyncScheduleJob
 
     integration.status_active!
 
-    QuickbooksCompanyFinancialReportSyncJob.perform_async(company_id)
-
     contractors = company.company_workers.active
     return if contractors.none?
 

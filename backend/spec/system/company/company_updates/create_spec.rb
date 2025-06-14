@@ -15,8 +15,6 @@ RSpec.describe "Company update create flow" do
 
   context "when creating a new company update" do
     it "allows creation and publishing of a company update" do
-      financial_report = create(:company_monthly_financial_report, company:, year: 2023, month: 4, revenue_cents: 100_12, net_income_cents: 80_34)
-
       visit new_spa_company_updates_company_path(company.external_id)
 
       expect(page).to have_button("Publish")
@@ -31,21 +29,14 @@ RSpec.describe "Company update create flow" do
       expect(page).to have_text("Update")
       expect(page).to have_text("Video URL (optional)")
 
-      expect(page).to have_select("Financial overview", with_options: [
-                                    "April 2023 (Last month)",
-                                    "Q1 2023 (Last quarter)",
-                                    "2022 (Last year)",
-                                  ])
+
 
       fill_in "Title", with: "April 2023"
 
-      select "April 2023 (Last month)", from: "Financial overview"
-      expect(page).to have_text("Financial overview")
-      expect(page).to have_field("Revenue", type: "checkbox", role: "switch")
-      expect(page).to have_field("Net income", type: "checkbox", role: "switch")
+
 
       fill_in_rich_text_editor("Update", with: "This is our monthly update for April 2023.")
-      uncheck "Revenue"
+
       fill_in "Video URL (optional)", with: "https://example.com/video"
 
       click_button "Publish"
@@ -62,10 +53,7 @@ RSpec.describe "Company update create flow" do
       company_update = CompanyUpdate.last
       expect(company_update.title).to eq("April 2023")
       expect(company_update.body).to eq("<p>This is our monthly update for April 2023.</p>")
-      expect(company_update.show_revenue).to be false
-      expect(company_update.show_net_income).to be true
       expect(company_update.video_url).to eq("https://example.com/video")
-      expect(company_update.company_monthly_financial_reports.sole).to eq(financial_report)
 
       expect(page).to have_table(with_rows: [
                                    {
@@ -90,8 +78,6 @@ RSpec.describe "Company update create flow" do
     end
 
     it "allows creation without optional fields" do
-      create(:company_monthly_financial_report, company:, year: 2023, month: 4, revenue_cents: 100_12, net_income_cents: 80_34)
-
       visit new_spa_company_updates_company_path(company.external_id)
 
       fill_in "Title", with: "April 2023"
@@ -105,30 +91,10 @@ RSpec.describe "Company update create flow" do
 
       company_update = CompanyUpdate.last
       expect(company_update.video_url).to eq(nil)
-      expect(company_update.show_revenue).to be false
-      expect(company_update.show_net_income).to be false
       expect(company_update.period).to be_nil
-      expect(company_update.company_monthly_financial_reports.count).to eq(0)
     end
 
-    it "shows the financial overview based on the selected period and financial records" do
-      create(:company_monthly_financial_report, company:, year: 2023, month: 4, revenue_cents: 100_12, net_income_cents: 80_34)
-      create(:company_monthly_financial_report, company:, year: 2022, month: 4, revenue_cents: 99_12, net_income_cents: 70_34)
 
-      visit new_spa_company_updates_company_path(company.external_id)
-
-      # Financial overview is hidden while period is unset
-      expect(page).not_to have_text("Revenue")
-
-      select "April 2023 (Last month)", from: "Financial overview"
-      # Financial overview is shown when we have all financial records for the period
-      expect(page).to have_text("Revenue $100.12 1.01% Year over year", normalize_ws: true)
-      expect(page).to have_text("Net income $80.34 14.22% Year over year", normalize_ws: true)
-
-      select "Q1 2023 (Last quarter)", from: "Financial overview"
-      # Financial overview is hidden when we don't have all financial records for the period
-      expect(page).not_to have_text("Revenue")
-    end
 
     it "allows formatting text using rich text editor buttons" do
       visit new_spa_company_updates_company_path(company.external_id)
@@ -184,7 +150,7 @@ RSpec.describe "Company update create flow" do
     it "shows the preview on a new tab" do
       visit new_spa_company_updates_company_path(company.external_id)
 
-      select "April 2023 (Last month)", from: "Financial overview"
+
       fill_in_rich_text_editor("Update", with: "This is our monthly update for April 2023.")
 
       click_button "Preview"
@@ -196,7 +162,7 @@ RSpec.describe "Company update create flow" do
       visit new_spa_company_updates_company_path(company.external_id)
 
       fill_in "Title", with: "another title"
-      select "April 2023 (Last month)", from: "Financial overview"
+
       fill_in_rich_text_editor("Update", with: "This is our monthly update for April 2023.")
 
       initial_tab = current_window
@@ -215,7 +181,7 @@ RSpec.describe "Company update create flow" do
       visit new_spa_company_updates_company_path(company.external_id)
 
       fill_in "Title", with: "another title"
-      select "April 2023 (Last month)", from: "Financial overview"
+
       fill_in_rich_text_editor("Update", with: "This is our monthly update for April 2023.")
 
       expect do
@@ -246,7 +212,7 @@ RSpec.describe "Company update create flow" do
       visit new_spa_company_updates_company_path(company.external_id)
 
       fill_in "Title", with: "another title"
-      select "April 2023 (Last month)", from: "Financial overview"
+
       fill_in_rich_text_editor("Update", with: "This is our monthly update for April 2023.")
 
       preview_window = window_opened_by { click_button "Preview" }

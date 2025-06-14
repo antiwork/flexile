@@ -55,9 +55,9 @@ export default function HomePage() {
       <main className="min-h-screen bg-white pt-20">
         <Section className="bg-blue-600 py-8 md:py-16">
           <h1 className="text-[84px] leading-[0.9] font-medium tracking-tight sm:text-8xl md:text-[12rem]">
-            Equity for
+            Contractor
             <br />
-            everyone
+            payments
           </h1>
           <div className="flex">
             <Link
@@ -72,40 +72,41 @@ export default function HomePage() {
         <Section className="py-8 md:py-16">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-16">
             <div className="flex items-center gap-8">
-              <Image src={iconClock} alt="Automate Operations" className="w-12 shrink-0" />
+              <Image src={iconClock} alt="Invoice Management" className="w-12 shrink-0" />
               <div>
-                <h3 className="text-xl font-medium">Automate Operations</h3>
+                <h3 className="text-xl font-medium">Invoice Management</h3>
                 <div className="text-xl text-gray-600">
-                  Onboard in seconds, track status async, and streamline invoicing
+                  Streamlined invoice creation, approval workflows, and automated processing
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-8">
-              <Image src={iconGlobe} alt="Pay Globally" className="w-12 shrink-0" />
+              <Image src={iconGlobe} alt="Pay Contractors" className="w-12 shrink-0" />
               <div>
-                <h3 className="text-xl font-medium">Pay Globally</h3>
+                <h3 className="text-xl font-medium">Pay Contractors</h3>
                 <div className="text-xl text-gray-600">
-                  Make unlimited, international <br />
-                  payments to 190+ countries
+                  Fast, reliable contractor payments <br />
+                  with transparent processing
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-8">
-              <Image src={iconEye} alt="Offer Equity" className="w-12 shrink-0" />
+              <Image src={iconEye} alt="Equity Option" className="w-12 shrink-0" />
               <div>
-                <h3 className="text-xl font-medium">Offer Equity</h3>
+                <h3 className="text-xl font-medium">Equity Option</h3>
                 <div className="text-xl text-gray-600">
-                  Align your incentives with a <br />
-                  mix of cash, equity, and/or dividends
+                  Optional equity compensation <br />
+                  for aligned contractor incentives
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-8">
-              <Image src={iconDiamond} alt="Dividends & Buybacks" className="w-12 shrink-0" />
+              <Image src={iconDiamond} alt="Contract Management" className="w-12 shrink-0" />
               <div>
-                <h3 className="text-xl font-medium">Dividends & Buybacks</h3>
+                <h3 className="text-xl font-medium">Contract Management</h3>
                 <div className="text-xl text-gray-600">
-                  Distribute profits or repurchase equity easily and transparently
+                  Digital contract signing and <br />
+                  automated contractor onboarding
                 </div>
               </div>
             </div>

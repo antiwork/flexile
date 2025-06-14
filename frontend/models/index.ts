@@ -1,7 +1,7 @@
 export const MAX_EQUITY_PERCENTAGE = 100;
 export const MAX_PREFERRED_NAME_LENGTH = 50; // Must match User::MAX_PREFERRED_NAME_LENGTH in Rails
 export const MIN_EMAIL_LENGTH = 5; // Must match User::MIN_EMAIL_LENGTH in Rails
-export const MAX_FILES_PER_CAP_TABLE_UPLOAD = 4;
+
 export const MINIMUM_EQUITY_PERCENTAGE = 0;
 export const MAXIMUM_EQUITY_PERCENTAGE = 100;
 

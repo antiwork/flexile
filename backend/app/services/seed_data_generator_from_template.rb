@@ -72,7 +72,6 @@ class SeedDataGeneratorFromTemplate
         create_dividend_rounds!(company, company_data)
         create_tender_offer!(company, company_data.fetch("tender_offer"))
         create_equity_buyback_rounds!(company, company_data)
-        create_company_monthly_financial_reports!(company, company_data.fetch("company_monthly_financial_reports"))
         create_expense_categories!(company, company_data.fetch("expense_categories"))
         create_other_administrators!(company, company_data.fetch("other_administrators"))
         create_lawyers!(company, company_data.fetch("lawyers"))
@@ -326,20 +325,6 @@ class SeedDataGeneratorFromTemplate
         if !result[:success]
           raise Error, "Error creating tender offer: #{result.inspect}"
         end
-      end
-    end
-
-    def create_company_monthly_financial_reports!(company, company_monthly_financial_reports_data)
-      count = fast_mode ? FAST_MODE_RANDOM_RECORDS_METADATA_COUNT : company_monthly_financial_reports_data.fetch("random_records_metadata").fetch("count")
-      report_datetime = (current_time - count.months).beginning_of_month
-      while report_datetime < current_time - 1.month
-        company.company_monthly_financial_reports.create!(
-          month: report_datetime.month,
-          year: report_datetime.year,
-          revenue_cents: rand(10_000_00..100_000_00),
-          net_income_cents: rand(-10_000_00..50_000_00)
-        )
-        report_datetime += 1.month
       end
     end
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_09_204642) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_12_194925) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -73,20 +73,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_09_204642) do
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.index ["company_id"], name: "index_balances_on_company_id"
-  end
-
-  create_table "cap_table_uploads", force: :cascade do |t|
-    t.bigint "company_id", null: false
-    t.bigint "user_id", null: false
-    t.datetime "uploaded_at", null: false
-    t.string "status", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.jsonb "parsed_data"
-    t.string "external_id", null: false
-    t.index ["company_id"], name: "index_cap_table_uploads_on_company_id"
-    t.index ["external_id"], name: "index_cap_table_uploads_on_external_id", unique: true
-    t.index ["user_id"], name: "index_cap_table_uploads_on_user_id"
   end
 
   create_table "companies", force: :cascade do |t|
@@ -763,7 +749,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_09_204642) do
     t.datetime "updated_at", null: false
     t.integer "pay_rate_in_subunits", null: false
     t.string "pay_rate_currency", default: "usd", null: false
-    t.boolean "hourly", default: false
+    t.boolean "hourly", default: false, null: false
     t.index ["invoice_id"], name: "index_invoice_line_items_on_invoice_id"
   end
 
