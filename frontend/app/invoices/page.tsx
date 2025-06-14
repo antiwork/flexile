@@ -521,7 +521,7 @@ const QuickInvoicesSection = () => {
         accept: "json",
         jsonData: {
           invoice: { invoice_date: date.toString() },
-          invoice_line_items: [{ description: "-", pay_rate_in_subunits: payRateInSubunits, quantity, hourly }],
+          invoice_line_items: [{ description: "-", pay_rate_in_subunits: rate, quantity, hourly }],
         },
       });
 

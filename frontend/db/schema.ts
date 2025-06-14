@@ -809,7 +809,7 @@ export const invoiceLineItems = pgTable(
     invoiceId: bigint("invoice_id", { mode: "bigint" }).notNull(),
     description: varchar().notNull(),
     quantity: integer().notNull(),
-    hourly: boolean().default(false),
+    hourly: boolean().default(false).notNull(),
     createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
       .notNull()
