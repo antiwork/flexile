@@ -134,7 +134,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_12_194925) do
     t.bigint "user_id", null: false
     t.bigint "company_id", null: false
     t.datetime "started_at", null: false
-    t.integer "hours_per_week"
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.datetime "ended_at"
@@ -145,6 +144,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_12_194925) do
     t.string "pay_rate_currency", default: "usd", null: false
     t.string "role", null: false
     t.boolean "contract_signed_elsewhere", default: false, null: false
+    t.integer "hours_per_week"
     t.index ["company_id"], name: "index_company_contractors_on_company_id"
     t.index ["external_id"], name: "index_company_contractors_on_external_id", unique: true
     t.index ["user_id", "company_id"], name: "index_company_contractors_on_user_id_and_company_id", unique: true
@@ -744,12 +744,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_12_194925) do
   create_table "invoice_line_items", force: :cascade do |t|
     t.bigint "invoice_id", null: false
     t.string "description", null: false
-    t.integer "minutes"
+    t.integer "quantity", null: false
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
-    t.bigint "total_amount_cents", null: false
-    t.integer "pay_rate_in_subunits"
+    t.integer "pay_rate_in_subunits", null: false
     t.string "pay_rate_currency", default: "usd", null: false
+    t.boolean "hourly", default: false, null: false
     t.index ["invoice_id"], name: "index_invoice_line_items_on_invoice_id"
   end
 
@@ -757,7 +757,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_12_194925) do
     t.bigint "user_id", null: false
     t.bigint "company_id", null: false
     t.date "invoice_date", null: false
-    t.integer "total_minutes"
     t.bigint "total_amount_in_usd_cents", null: false
     t.string "status", null: false
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
