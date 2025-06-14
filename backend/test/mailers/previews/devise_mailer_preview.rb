@@ -11,29 +11,6 @@ class DeviseMailerPreview < ActionMailer::Preview
     DeviseMailer.email_changed(User.last, {})
   end
 
-  def contractor_invitation_instructions
-    company = Company.last
-    inviter = company.primary_admin.user
-    invitee = company.company_workers.first.user
-    invitee.invited_by = inviter
-    DeviseMailer.invitation_instructions(invitee, "SomeInvitationToken", {
-      subject: "You're invited to #{company.name}'s team",
-      reply_to: company.email,
-    })
-  end
-
-  def project_based_contractor_invitation_instructions
-    company_worker = CompanyWorker.project_based.first
-    company = company_worker.company
-    inviter = company.primary_admin.user
-    invitee = company_worker.user
-    invitee.invited_by = inviter
-    DeviseMailer.invitation_instructions(invitee, "SomeInvitationToken", {
-      subject: "You're invited to #{company.name}'s team",
-      reply_to: company.email,
-    })
-  end
-
   def investor_invitation_instructions
     investor = CompanyInvestor.last
     company = investor.company

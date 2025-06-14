@@ -101,7 +101,7 @@ RSpec.describe "New Contractor" do
     old_country_code = "UY"
     existing_user = create(:user, email:, country_code: old_country_code)
     contractor = create(:company_worker, company:, user: existing_user, ended_at: 3.months.ago,
-                                         hours_per_week: 10, pay_rate_usd: 50, company_role: create(:company_role, company:))
+                                         pay_rate_usd: 50, company_role: create(:company_role, company:))
 
     expect(page).to have_field("Start date", with: Date.current.strftime("%F"))
 
@@ -227,7 +227,7 @@ RSpec.describe "New Contractor" do
   end
 
   it "pre-fills the form with the last-used hourly contractor values" do
-    create(:company_worker, company:, company_role: role, pay_rate_usd: 300, hours_per_week: 10)
+    create(:company_worker, company:, company_role: role, pay_rate_usd: 300)
 
     visit new_spa_company_worker_path(company.external_id)
 
