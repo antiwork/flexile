@@ -73,7 +73,7 @@ export default function InvoicePage() {
   });
 
   const lineItemTotal = (lineItem: (typeof invoice.lineItems)[number]) =>
-    (lineItem.quantity / (lineItem.hourly ? 60 : 1)) * lineItem.payRateInSubunits;
+    Math.ceil((lineItem.quantity / (lineItem.hourly ? 60 : 1)) * lineItem.payRateInSubunits);
   const details = StatusDetails(invoice);
   const cashFactor = 1 - invoice.equityPercentage / 100;
 

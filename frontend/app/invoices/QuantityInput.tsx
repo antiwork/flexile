@@ -3,12 +3,15 @@ import { Input } from "@/components/ui/input";
 import { formatDuration } from "@/utils/time";
 
 type Value = { quantity: number; hourly: boolean } | null;
-type DurationInputProps = {
+
+const QuantityInput = ({
+  value,
+  onChange,
+  ...props
+}: {
   value: Value;
   onChange: (value: Value) => void;
-} & Omit<React.ComponentProps<"input">, "value" | "onChange">;
-
-const QuantityInput = ({ value, onChange, ...props }: DurationInputProps) => {
+} & Omit<React.ComponentProps<"input">, "value" | "onChange">) => {
   const [rawValue, setRawValue] = useState("");
   useEffect(
     () => setRawValue(value ? (value.hourly ? formatDuration(value.quantity) : value.quantity.toString()) : ""),

@@ -232,7 +232,7 @@ const Edit = () => {
   };
 
   const lineItemTotal = (lineItem: InvoiceFormLineItem) =>
-    ((lineItem.quantity ?? 0) / (lineItem.hourly ? 60 : 1)) * lineItem.pay_rate_in_subunits;
+    Math.ceil(((lineItem.quantity ?? 0) / (lineItem.hourly ? 60 : 1)) * lineItem.pay_rate_in_subunits);
   const totalExpensesAmountInCents = expenses.reduce((acc, expense) => acc + expense.total_amount_in_cents, 0);
   const totalServicesAmountInCents = lineItems.reduce((acc, lineItem) => acc + lineItemTotal(lineItem), 0);
   const totalInvoiceAmountInCents = totalServicesAmountInCents + totalExpensesAmountInCents;
