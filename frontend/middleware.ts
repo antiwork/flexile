@@ -11,6 +11,7 @@ export default clerkMiddleware((_, req) => {
   const s3Urls = [env.S3_PRIVATE_BUCKET, env.S3_PUBLIC_BUCKET]
     .map((bucket) => `https://${bucket}.s3.${env.AWS_REGION}.amazonaws.com https://${bucket}.s3.amazonaws.com`)
     .join(" ");
+  const helperHost = env.HELPER_WIDGET_HOST ?? "";
 
   const cspHeader = `
     default-src 'self';
@@ -18,13 +19,13 @@ export default clerkMiddleware((_, req) => {
       NODE_ENV === "production" ? "" : `'unsafe-eval'` // required by Clerk, as is style-src 'unsafe-inline' and worker-src blob:.
     };
     style-src 'self' 'unsafe-inline';
-    connect-src 'self' ${clerkFapiUrl} https://docuseal.com ${s3Urls};
+    connect-src 'self' ${clerkFapiUrl} https://docuseal.com ${s3Urls} ${helperHost};
     img-src 'self' https://img.clerk.com https://docuseal.s3.amazonaws.com ${s3Urls};
     worker-src 'self' blob:;
     font-src 'self';
     base-uri 'self';
     frame-ancestors 'none';
-    frame-src 'self' https://challenges.cloudflare.com https://js.stripe.com;
+    frame-src 'self' https://challenges.cloudflare.com https://js.stripe.com ${helperHost};
     form-action 'self';
     upgrade-insecure-requests;
   `

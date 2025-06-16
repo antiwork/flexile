@@ -8,6 +8,8 @@ interface HelperWrapperProps {
 }
 
 export async function HelperWrapper({ children }: HelperWrapperProps) {
+  if (!env.HELPER_WIDGET_HOST) return children;
+
   const user = await currentUser();
   const email = user?.emailAddresses[0]?.emailAddress;
   const helperAuth =
@@ -20,7 +22,7 @@ export async function HelperWrapper({ children }: HelperWrapperProps) {
       : null;
 
   return (
-    <HelperProvider host="https://help.gumroad.com" mailboxSlug="flexile" {...helperAuth}>
+    <HelperProvider host={env.HELPER_WIDGET_HOST} mailboxSlug="flexile" {...helperAuth}>
       {children}
     </HelperProvider>
   );
