@@ -20,7 +20,7 @@ export async function HelperWrapper({ children }: HelperWrapperProps) {
       : null;
 
   return (
-    <HelperProvider host="https://help.gumroad.com" {...helperAuth}>
+    <HelperProvider host="https://help.gumroad.com" mailboxSlug="flexile" {...helperAuth}>
       {children}
     </HelperProvider>
   );

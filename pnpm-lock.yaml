@@ -50,8 +50,8 @@ importers:
         specifier: ^1.0.63
         version: 1.0.63
       '@helperai/react':
-        specifier: ^0.5.1
-        version: 0.5.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        specifier: ^0.6.0
+        version: 0.6.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@heroicons/react':
         specifier: ^2.1.5
         version: 2.2.0(react@19.0.0)
@@ -964,8 +964,8 @@ packages:
   '@formatjs/intl-localematcher@0.6.1':
     resolution: {integrity: sha512-ePEgLgVCqi2BBFnTMWPfIghu6FkbZnnBVhO2sSxvLfrdFw7wCHAHiDoM2h4NRgjbaY7+B7HgOLZGkK187pZTZg==}
 
-  '@helperai/react@0.5.1':
-    resolution: {integrity: sha512-ER8R3EnsjtGB8vIG25OvJEAuqP64DD3ukckUoBmnLzkOp8zAiZSpAeeXVEqOjfbNBIDwkesXB/FfvhRDEmON7A==}
+  '@helperai/react@0.6.0':
+    resolution: {integrity: sha512-RdK+aocpGgoZmnnGc+Sohmuc75LbDOpsAq+Nz10G17nHn1rzRjqjbaPsnffRkBnk8rZyZk4p0UUmdlgDU0SHCQ==}
     peerDependencies:
       react: '>=18'
       react-dom: '>=18'
@@ -6941,7 +6941,7 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@helperai/react@0.5.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
+  '@helperai/react@0.6.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:
       crypto-js: 4.2.0
       react: 19.0.0
