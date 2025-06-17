@@ -601,12 +601,12 @@ const DetailsTab = ({
           />
           <div className="grid gap-3">
             <div>
-              <label className="text-sm font-medium">Bank account status</label>
+              <label className="text-sm font-medium">Bank account</label>
               <div className="mt-1">
                 {user.hasBankAccount ? (
-                  <Status variant="success">Bank account added</Status>
+                  <Status variant="success">Active</Status>
                 ) : (
-                  <Status variant="primary">Bank account not added</Status>
+                  <Status variant="primary">Not added</Status>
                 )}
               </div>
             </div>
