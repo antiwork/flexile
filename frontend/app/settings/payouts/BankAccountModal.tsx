@@ -108,11 +108,11 @@ interface Props {
 const countryOptions = Array.from(supportedCountries).map(([countryCode, name]) => ({ name, key: countryCode }));
 
 const validateCPF = (cpf: string): boolean => {
-  const digits = cpf.replace(/\D/g, "");
-  
+  const digits = cpf.replace(/\D/gu, "");
+
   if (digits.length !== 11) return false;
-  
-  if (/^(\d)\1{10}$/.test(digits)) return false;
+
+  if (/^(\d)\1{10}$/u.test(digits)) return false;
 
   let sum = 0;
   for (let i = 0; i < 9; i++) {
@@ -549,7 +549,7 @@ const BankAccountField = ({
 
     let index = 0;
 
-    const value = Array.from(inputValue).filter((c) => /[A-Z0-9]/i.test(c));
+    const value = Array.from(inputValue).filter((c) => /[A-Z0-9]/iu.test(c));
 
     const formatted = Array.from(field.displayFormat)
       .map((c, i) => {
