@@ -60,7 +60,7 @@ You can export this file as a CSV and use it directly with the service:
 
 The CSV data can be directly copy-pasted into the service without needing external file hosting.
 
-Note: Make sure to Send Dividend-Issued Emails manually, see below.
+Note: Dividend emails are now sent automatically. To send manually, see dividend_round.send_dividend_emails.
 
 #### Manual Dividends
 
@@ -97,7 +97,12 @@ rescue => e
 end
 ```
 
-This will also send out the dividend issued email.
+This will also send out the dividend issued email automatically.
+
+To send emails manually if needed:
+```ruby
+dividend_round.send_dividend_emails
+```
 
 #### Resending Invitations
 
@@ -165,7 +170,7 @@ AdminMailer.custom(
 ).deliver_now
 ```
 
-> Note: Emails must be sent manually to investors if this approach is taken.
+> Note: After generating dividends, call `dividend_round.send_dividend_emails` to send emails to investors.
 
 ## Processing Dividends
 
@@ -212,22 +217,6 @@ payout = Stripe::Payout.create({
 ```
 
 ### Sending Notifications
-
-#### Send Dividend-Issued Emails
-
-```ruby
-dividend_round = Company.find(1823).dividend_rounds.order(id: :desc).first
-dividend_round_id = dividend_round.id
-
-# Send dividend issued emails to investors part of the dividend round
-CompanyInvestor.joins(:dividends)
-  .where(dividends: { dividend_round_id: dividend_round_id })
-  .group(:id)
-  .each do |investor|
-    investor_dividend_round = investor.investor_dividend_rounds.find_or_create_by!(dividend_round_id: dividend_round_id)
-    investor_dividend_round.send_dividend_issued_email
-  end
-```
 
 #### Mark Dividend as Ready for Payments
 
