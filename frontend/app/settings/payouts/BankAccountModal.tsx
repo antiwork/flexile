@@ -105,7 +105,33 @@ interface Props {
   onClose: () => void;
 }
 
-const countryOptions = [...supportedCountries].map(([countryCode, name]) => ({ name, key: countryCode }));
+const countryOptions = Array.from(supportedCountries).map(([countryCode, name]) => ({ name, key: countryCode }));
+
+const validateCPF = (cpf: string): boolean => {
+  const digits = cpf.replace(/\D/g, "");
+  
+  if (digits.length !== 11) return false;
+  
+  if (/^(\d)\1{10}$/.test(digits)) return false;
+
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    sum += parseInt(digits.charAt(i), 10) * (10 - i);
+  }
+  let remainder = sum % 11;
+  const firstCheckDigit = remainder < 2 ? 0 : 11 - remainder;
+
+  if (parseInt(digits.charAt(9), 10) !== firstCheckDigit) return false;
+
+  sum = 0;
+  for (let i = 0; i < 10; i++) {
+    sum += parseInt(digits.charAt(i), 10) * (11 - i);
+  }
+  remainder = sum % 11;
+  const secondCheckDigit = remainder < 2 ? 0 : 11 - remainder;
+
+  return parseInt(digits.charAt(10), 10) === secondCheckDigit;
+};
 
 const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClose }: Props) => {
   const [showBillingDetails, setShowBillingDetails] = useState(false);
@@ -126,7 +152,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
       previousForms.current?.[selectedFormIndex]?.fields.flatMap((field) =>
         field.group.map((field) => [field.key, detailsRef.current.get(field.key)] as const),
       ) ?? detailsRef.current.entries();
-    for (const [k, v] of values) {
+    for (const [k, v] of Array.from(values)) {
       if (v) set(result, k, v.trim());
     }
     return result;
@@ -245,6 +271,12 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
       return field.valuesAllowed?.some((option) => option.key === value) ? null : "";
     }
 
+    if (field.key === "cpf") {
+      if (!validateCPF(value)) {
+        return "This CPF number looks invalid";
+      }
+    }
+
     if (field.minLength && value.length < field.minLength) {
       return `This must be at least ${field.minLength} characters long.`;
     }
@@ -332,7 +364,10 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
         }
       } finally {
         setErrors(newErrors);
-        if (newErrors.size === 0 || [...newErrors.keys()].some((field) => !field.startsWith(KEY_ADDRESS_PREFIX))) {
+        if (
+          newErrors.size === 0 ||
+          Array.from(newErrors.keys()).some((field) => !field.startsWith(KEY_ADDRESS_PREFIX))
+        ) {
           setShowBillingDetails(false);
         }
       }
@@ -513,10 +548,10 @@ const BankAccountField = ({
     if (!field.displayFormat || !inputValue) return { value: inputValue, cursorPosition };
 
     let index = 0;
-    // eslint-disable-next-line @typescript-eslint/no-misused-spread -- doesn't apply to alphanumeric characters
-    const value = [...inputValue].filter((c) => /[A-Z0-9]/iu.test(c));
-    // eslint-disable-next-line @typescript-eslint/no-misused-spread -- same with basic ASCII
-    const formatted = [...field.displayFormat]
+
+    const value = Array.from(inputValue).filter((c) => /[A-Z0-9]/i.test(c));
+
+    const formatted = Array.from(field.displayFormat)
       .map((c, i) => {
         if (index >= value.length) return "";
         if (c === "*") return value.at(index++);
@@ -543,9 +578,10 @@ const BankAccountField = ({
           requestAnimationFrame(() => e.target.setSelectionRange(cursorPosition, cursorPosition));
         }}
         aria-invalid={invalid}
+        className={cn(invalid && "border-red-500 focus-visible:ring-red-500", inputProps.className)}
         {...inputProps}
       />
-      {help ? <div className={cn("text-sm", invalid && "text-red")}>{help}</div> : null}
+      {help ? <div className={cn("text-sm", invalid && "text-red-500")}>{help}</div> : null}
     </div>
   );
 };
