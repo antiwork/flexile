@@ -100,6 +100,7 @@ end
 This will also send out the dividend issued email automatically.
 
 To send emails manually if needed:
+
 ```ruby
 dividend_round.send_dividend_emails
 ```
