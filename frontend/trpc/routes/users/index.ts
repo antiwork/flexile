@@ -38,7 +38,7 @@ export const usersRouter = createRouter({
       )
         throw new TRPCError({ code: "NOT_FOUND" });
       user = data;
-      hasBankAccount = data.wiseRecipients && data.wiseRecipients.length > 0;
+      hasBankAccount = data.wiseRecipients.length > 0;
     } else {
       const currentUserData = await db.query.users.findFirst({
         with: { 
@@ -48,7 +48,7 @@ export const usersRouter = createRouter({
         where: eq(users.id, BigInt(ctx.userId)),
       });
       if (currentUserData) {
-        hasBankAccount = currentUserData.wiseRecipients && currentUserData.wiseRecipients.length > 0;
+        hasBankAccount = currentUserData.wiseRecipients.length > 0;
       }
     }
 
