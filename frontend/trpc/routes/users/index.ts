@@ -19,12 +19,12 @@ export const usersRouter = createRouter({
   get: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
     let user = ctx.user;
     let hasBankAccount = false;
-    
+
     if (input.id !== ctx.user.externalId) {
       if (!ctx.companyAdministrator && !ctx.companyLawyer) throw new TRPCError({ code: "FORBIDDEN" });
       const data = await db.query.users.findFirst({
-        with: { 
-          ...withRoles(ctx.company.id), 
+        with: {
+          ...withRoles(ctx.company.id),
           userComplianceInfos: latestUserComplianceInfo,
           wiseRecipients: { columns: { id: true }, limit: 1 },
         },
@@ -41,7 +41,7 @@ export const usersRouter = createRouter({
       hasBankAccount = data.wiseRecipients.length > 0;
     } else {
       const currentUserData = await db.query.users.findFirst({
-        with: { 
+        with: {
           userComplianceInfos: latestUserComplianceInfo,
           wiseRecipients: { columns: { id: true }, limit: 1 },
         },
