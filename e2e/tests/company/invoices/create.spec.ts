@@ -349,7 +349,7 @@ test.describe("invoice creation", () => {
     await page.goto("/invoices/new");
 
     await page.getByRole("button", { name: "Add expense" }).click();
-    await page.locator('input[type="file"]').setInputFiles({
+    await page.locator('input[accept="application/pdf, image/*"]').setInputFiles({
       name: "receipt1.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("first expense receipt"),
@@ -359,7 +359,7 @@ test.describe("invoice creation", () => {
     await page.getByLabel("Amount").fill("25.50");
 
     await page.getByRole("button", { name: "Add expense" }).click();
-    await page.locator('input[type="file"]').setInputFiles({
+    await page.locator('input[accept="application/pdf, image/*"]').setInputFiles({
       name: "receipt2.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("second expense receipt"),
