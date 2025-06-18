@@ -313,7 +313,8 @@ test.describe("invoice creation", () => {
     await login(page, contractorUser);
     await page.goto("/invoices/new");
 
-    await page.getByRole("button", { name: "Add expense" }).setInputFiles({
+    await page.getByRole("button", { name: "Add expense" }).click();
+    await page.locator('input[type="file"]').setInputFiles({
       name: "receipt.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("test expense receipt"),
@@ -347,7 +348,8 @@ test.describe("invoice creation", () => {
     await login(page, contractorUser);
     await page.goto("/invoices/new");
 
-    await page.getByRole("button", { name: "Add expense" }).setInputFiles({
+    await page.getByRole("button", { name: "Add expense" }).click();
+    await page.locator('input[type="file"]').setInputFiles({
       name: "receipt1.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("first expense receipt"),
@@ -356,7 +358,8 @@ test.describe("invoice creation", () => {
     await page.getByLabel("Merchant").fill("Office Supplies Inc");
     await page.getByLabel("Amount").fill("25.50");
 
-    await page.getByRole("button", { name: "Add expense" }).setInputFiles({
+    await page.getByRole("button", { name: "Add expense" }).click();
+    await page.locator('input[type="file"]').setInputFiles({
       name: "receipt2.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("second expense receipt"),
@@ -384,7 +387,7 @@ test.describe("invoice creation", () => {
       where: eq(invoiceExpenses.invoiceId, invoice.id) 
     });
     expect(expenses).toHaveLength(2);
-    expect(expenses[0].totalAmountInCents).toBe(2550n);
-    expect(expenses[1].totalAmountInCents).toBe(15075n);
+    expect(expenses[0]?.totalAmountInCents).toBe(2550n);
+    expect(expenses[1]?.totalAmountInCents).toBe(15075n);
   });
 });
