@@ -456,20 +456,20 @@ const Edit = () => {
                       Add line item
                     </Button>
                     {data.company.expenses.categories.length && !showExpensesTable ? (
-                      <Button variant="link" asChild>
-                        <Label>
+                      <>
+                        <Button variant="link" onClick={() => uploadExpenseRef.current?.click()}>
                           <ArrowUpTrayIcon className="inline size-4" />
                           Add expense
-                          <input
-                            ref={uploadExpenseRef}
-                            type="file"
-                            className="hidden"
-                            accept="application/pdf, image/*"
-                            multiple
-                            onChange={createNewExpenseEntries}
-                          />
-                        </Label>
-                      </Button>
+                        </Button>
+                        <input
+                          ref={uploadExpenseRef}
+                          type="file"
+                          className="hidden"
+                          accept="application/pdf, image/*"
+                          multiple
+                          onChange={createNewExpenseEntries}
+                        />
+                      </>
                     ) : null}
                   </div>
                 </TableCell>

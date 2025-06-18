@@ -313,7 +313,7 @@ test.describe("invoice creation", () => {
     await login(page, contractorUser);
     await page.goto("/invoices/new");
 
-    await page.getByLabel("Add expense").setInputFiles({
+    await page.getByRole("button", { name: "Add expense" }).setInputFiles({
       name: "receipt.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("test expense receipt"),
@@ -337,5 +337,54 @@ test.describe("invoice creation", () => {
       .findFirst({ where: eq(invoiceExpenses.invoiceId, invoice.id) })
       .then(takeOrThrow);
     expect(expense.totalAmountInCents).toBe(4599n);
+  });
+
+  test("allows adding multiple expense rows", async ({ page }) => {
+    await db.insert(expenseCategories).values([
+      { companyId: company.id, name: "Office Supplies" },
+      { companyId: company.id, name: "Travel" },
+    ]);
+    await login(page, contractorUser);
+    await page.goto("/invoices/new");
+
+    await page.getByRole("button", { name: "Add expense" }).setInputFiles({
+      name: "receipt1.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("first expense receipt"),
+    });
+
+    await page.getByLabel("Merchant").fill("Office Supplies Inc");
+    await page.getByLabel("Amount").fill("25.50");
+
+    await page.getByRole("button", { name: "Add expense" }).setInputFiles({
+      name: "receipt2.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("second expense receipt"),
+    });
+
+    const merchantInputs = page.getByLabel("Merchant");
+    await merchantInputs.nth(1).fill("Travel Agency");
+    
+    const amountInputs = page.getByLabel("Amount");
+    await amountInputs.nth(1).fill("150.75");
+
+    await expect(page.getByText("Total expenses$176.25")).toBeVisible();
+
+    await page.getByRole("button", { name: "Send invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+    await expect(page.locator("tbody")).toContainText("$176.25");
+
+    const invoice = await db.query.invoices
+      .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
+      .then(takeOrThrow);
+    expect(invoice.totalAmountInUsdCents).toBe(17625n);
+    
+    const expenses = await db.query.invoiceExpenses.findMany({ 
+      where: eq(invoiceExpenses.invoiceId, invoice.id) 
+    });
+    expect(expenses).toHaveLength(2);
+    expect(expenses[0].totalAmountInCents).toBe(2550n);
+    expect(expenses[1].totalAmountInCents).toBe(15075n);
   });
 });
