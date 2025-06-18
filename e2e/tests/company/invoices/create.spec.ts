@@ -367,7 +367,7 @@ test.describe("invoice creation", () => {
 
     const merchantInputs = page.getByLabel("Merchant");
     await merchantInputs.nth(1).fill("Travel Agency");
-    
+
     const amountInputs = page.getByLabel("Amount");
     await amountInputs.nth(1).fill("150.75");
 
@@ -382,9 +382,9 @@ test.describe("invoice creation", () => {
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
       .then(takeOrThrow);
     expect(invoice.totalAmountInUsdCents).toBe(17625n);
-    
-    const expenses = await db.query.invoiceExpenses.findMany({ 
-      where: eq(invoiceExpenses.invoiceId, invoice.id) 
+
+    const expenses = await db.query.invoiceExpenses.findMany({
+      where: eq(invoiceExpenses.invoiceId, invoice.id),
     });
     expect(expenses).toHaveLength(2);
     expect(expenses[0]?.totalAmountInCents).toBe(2550n);
