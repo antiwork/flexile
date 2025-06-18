@@ -754,6 +754,7 @@ DEPENDENCIES
   rubocop-rake (~> 0.7.0)
   rubocop-rspec (~> 3.5.0)
   ruby-openai (~> 8.0)
+  rubyzip (~> 2.4)
   selenium-webdriver (~> 4.31.0)
   shoulda-matchers (~> 6.0)
   sidekiq (~> 8)
