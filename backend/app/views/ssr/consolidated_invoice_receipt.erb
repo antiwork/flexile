@@ -83,8 +83,7 @@
     <thead>
       <tr>
         <th>Invoices</th>
-        <th class="numeric">Hours</th>
-        <th class="numeric">Rate</th>
+        <th class="numeric">Hours / Qty</th>
         <th class="numeric">Amount</th>
       </tr>
     </thead>
@@ -93,14 +92,7 @@
         <tr>
           <td><%= "#{invoice.bill_from} - Invoice #{invoice.invoice_number}" %></td>
           <td class="numeric">
-            <%= invoice.total_minutes ? "#{(invoice.total_minutes / 60).to_i}:#{invoice.total_minutes % 60}" : "N/A" %>
-          </td>
-          <td class="numeric">
-            <% if invoice.invoice_line_items&.first&.pay_rate_in_subunits.present? %>
-              <%= format_money(invoice.invoice_line_items.first.pay_rate_in_subunits / 100.0) %>
-            <% else %>
-              N/A
-            <% end %>
+            <%= invoice.invoice_line_items.sum { _1.normalized_quantity.round(2) } %>
           </td>
           <td class="numeric"><%= format_money(invoice.total_amount_in_usd) %></td>
         </tr>

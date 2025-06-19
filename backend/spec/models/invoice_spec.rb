@@ -19,10 +19,6 @@ RSpec.describe Invoice do
     it { is_expected.to have_one(:quickbooks_journal_entry) }
   end
 
-  describe "delegations" do
-    it { is_expected.to delegate_method(:hourly?).to(:company_worker).allow_nil }
-  end
-
   describe "validations" do
     it { is_expected.to define_enum_for(:invoice_type).with_values(services: "services", other: "other").backed_by_column_of_type(:enum).with_prefix(:invoice_type) }
     it { is_expected.to validate_presence_of(:status) }
@@ -78,9 +74,8 @@ RSpec.describe Invoice do
       invoice.invoice_line_items.build(
         {
           description: "Doing",
-          minutes: 60,
+          quantity: 1,
           pay_rate_in_subunits: 50_00,
-          total_amount_cents: 50_00,
         }
       )
       expect(invoice).to be_valid
@@ -98,42 +93,6 @@ RSpec.describe Invoice do
       invoice.equity_amount_in_cents = 99_99
       expect(invoice).to be_invalid
       expect(invoice.errors.full_messages).to eq(["Total amount in USD cents must equal the sum of cash and equity amounts"])
-    end
-
-    describe "total_minutes" do
-      context "for hourly contractor invoices" do
-        it "ensures that total minutes is present for a services invoice type" do
-          invoice = build(:invoice, user: create(:user, :contractor), total_minutes: nil)
-          expect(invoice).to be_invalid
-          expect(invoice.errors.full_messages).to eq(["Invoice line items minutes can't be blank", "Invoice line items minutes is not a number", "Total minutes can't be blank", "Total minutes is not a number"])
-
-          invoice.total_minutes = 0
-          invoice.invoice_line_items.first.minutes = 0
-          expect(invoice).to be_invalid
-          expect(invoice.errors.full_messages).to eq(["Invoice line items minutes must be greater than 0"])
-
-          invoice.total_minutes = Invoice::MAX_MINUTES + 1
-          invoice.invoice_line_items.first.minutes = Invoice::MAX_MINUTES + 1
-          expect(invoice).to be_invalid
-          expect(invoice.errors.full_messages).to eq(["Total minutes must be less than or equal to 9600"])
-
-          invoice.total_minutes = 60
-          expect(invoice).to be_valid
-        end
-
-        it "does not validate total minutes for a non-services invoice type" do
-          invoice = build(:invoice, user: create(:user, :contractor), total_minutes: nil, invoice_type: "other")
-          expect(invoice).to be_valid
-        end
-      end
-
-      it "does not validate total minutes for project-based contractor invoices" do
-        invoice = build(:invoice, company_worker: create(:company_worker, :project_based), total_minutes: nil)
-        expect(invoice).to be_valid
-
-        invoice.total_minutes = 0
-        expect(invoice).to be_valid
-      end
     end
 
     describe "allowed equity percentage range" do
@@ -1010,7 +969,7 @@ RSpec.describe Invoice do
       end
 
       context "when a new invoice line item is added" do
-        let!(:new_invoice_line_item) { create(:invoice_line_item, invoice:, description: "Programming", minutes: 120) }
+        let!(:new_invoice_line_item) { create(:invoice_line_item, invoice:, description: "Programming", quantity: 120, hourly: true) }
         let(:parsed_body) do
           {
             "SyncToken" => "2",
@@ -1070,7 +1029,7 @@ RSpec.describe Invoice do
         end
 
         before do
-          invoice.update!(total_amount_in_usd_cents: 1_180_00, cash_amount_in_cents: 1_180_00, total_minutes: 180)
+          invoice.update!(total_amount_in_usd_cents: 1_180_00, cash_amount_in_cents: 1_180_00)
           invoice.reload
         end
 
