@@ -393,13 +393,16 @@ test.describe("invoice creation", () => {
 
   test("shows legal details warning when tax information is not confirmed", async ({ page }) => {
     const userWithoutTax = (
-      await usersFactory.create({
-        streetAddress: "123 Main St",
-        zipCode: "12345",
-        city: "Test City",
-        state: "CA",
-        countryCode: "US",
-      }, { withoutComplianceInfo: true })
+      await usersFactory.create(
+        {
+          streetAddress: "123 Main St",
+          zipCode: "12345",
+          city: "Test City",
+          state: "CA",
+          countryCode: "US",
+        },
+        { withoutComplianceInfo: true },
+      )
     ).user;
 
     await companyContractorsFactory.create({
