@@ -399,7 +399,7 @@ test.describe("invoice creation", () => {
         city: "Test City",
         state: "CA",
         countryCode: "US",
-      })
+      }, { withoutComplianceInfo: true })
     ).user;
 
     await companyContractorsFactory.create({
