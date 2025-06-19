@@ -72,7 +72,6 @@ export default function InvoicesPage() {
     contractorId: user.roles.administrator ? undefined : user.roles.worker?.id,
   });
 
-
   const { canSubmitInvoices, hasLegalDetails, unsignedContractId } = useCanSubmitInvoices();
 
   const approveInvoices = useApproveInvoices(() => {
