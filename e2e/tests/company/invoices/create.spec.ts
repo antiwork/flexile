@@ -402,14 +402,14 @@ test.describe("invoice creation", () => {
       })
     ).user;
 
-    const contractor = (
+    const companyContractor = (
       await companyContractorsFactory.create({
         companyId: company.id,
         userId: userWithoutTax.id,
-        payRateType: PayRateType.HOURLY,
+        payRateType: PayRateType.Hourly,
         payRateInSubunits: 5000,
       })
-    ).contractor;
+    ).companyContractor;
 
     await login(page, userWithoutTax);
 
