@@ -198,7 +198,7 @@ const Edit = () => {
       }
       if (notes.length) formData.append("invoice[notes]", notes);
 
-      if (equityPercentage !== data.equity_allocation?.percentage && !data.equity_allocation?.is_locked) {
+      if (equityPercentage !== data.equity_allocation?.percentage) {
         await equityPercentageMutation.mutateAsync({ companyId: company.id, equityPercentage, year: invoiceYear });
       }
       await request({
@@ -301,7 +301,7 @@ const Edit = () => {
         </>
       }
     >
-      {company.equityCompensationEnabled && !equityAllocation?.locked ? (
+      {company.equityCompensationEnabled ? (
         <section className="mb-6">
           <Card>
             <CardContent>
