@@ -29,8 +29,9 @@ export const useCanSubmitInvoices = () => {
     { companyId: company.id, userId: user.id, signable: true },
     { enabled: !!user.roles.worker },
   );
+  const { data: userData } = trpc.users.get.useQuery({ id: user.id });
   const unsignedContractId = documents?.[0]?.id;
-  const hasLegalDetails = user.address.street_address;
+  const hasLegalDetails = user.address.street_address && !!userData?.taxInformationConfirmedAt;
   return { unsignedContractId, hasLegalDetails, canSubmitInvoices: !unsignedContractId && hasLegalDetails };
 };
 

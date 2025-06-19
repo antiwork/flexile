@@ -61,6 +61,7 @@ export const usersRouter = createRouter({
       address: getAddress(user),
       displayName: userDisplayName(user),
       hasBankAccount,
+      taxInformationConfirmedAt: user.userComplianceInfos[0]?.taxInformationConfirmedAt,
     };
   }),
 
