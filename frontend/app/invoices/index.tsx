@@ -31,7 +31,7 @@ export const useCanSubmitInvoices = () => {
   );
   const [userData] = trpc.users.get.useSuspenseQuery({ id: user.id });
   const unsignedContractId = documents?.[0]?.id;
-  const hasLegalDetails = user.address.street_address && !!userData?.taxInformationConfirmedAt;
+  const hasLegalDetails = user.address.street_address && !!userData.taxInformationConfirmedAt;
   return { unsignedContractId, hasLegalDetails, canSubmitInvoices: !unsignedContractId && hasLegalDetails };
 };
 
