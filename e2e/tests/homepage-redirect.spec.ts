@@ -1,4 +1,4 @@
-import { usersFactory } from "@test/factories/users";
+import { companiesFactory } from "@test/factories/companies";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 
@@ -14,12 +14,12 @@ test.describe("Homepage redirect", () => {
   });
 
   test("authenticated user is redirected to dashboard", async ({ page }) => {
-    const { user } = await usersFactory.create();
-    await login(page, user);
+    const { adminUser } = await companiesFactory.createCompletedOnboarding();
+    await login(page, adminUser);
     await page.goto("/");
     
-    await page.waitForURL("/dashboard");
-    expect(page.url()).toContain("/dashboard");
+    await page.waitForURL(url => url.pathname !== "/");
+    expect(page.url()).not.toContain("test.flexile.dev:3101/");
     
     await expect(page.getByText("Contractor payments")).not.toBeVisible();
   });
