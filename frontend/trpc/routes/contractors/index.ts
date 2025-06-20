@@ -159,7 +159,7 @@ export const contractorsRouter = createRouter({
         let documentId: bigint | null = null;
         if (input.payRateInSubunits != null && input.payRateInSubunits !== contractor.payRateInSubunits) {
           const payRateType = input.payRateType ?? contractor.payRateType;
-          
+
           if (!contractor.contractSignedElsewhere) {
             await tx.delete(documents).where(
               and(
