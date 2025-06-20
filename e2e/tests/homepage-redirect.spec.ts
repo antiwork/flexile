@@ -6,11 +6,11 @@ test.describe("Homepage redirect", () => {
   test("unauthenticated user sees marketing homepage", async ({ page }) => {
     await page.goto("/");
     
-    await expect(page.getByText("Equity for everyone")).toBeVisible();
+    await expect(page.getByText("Contractor payments")).toBeVisible();
     await expect(page.getByRole("link", { name: "Get started" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Log in" })).toBeVisible();
     
-    expect(page.url()).toMatch(/\/$|\/$/);
+    expect(page.url()).toMatch(/\/$/);
   });
 
   test("authenticated user is redirected to dashboard", async ({ page }) => {
@@ -22,6 +22,6 @@ test.describe("Homepage redirect", () => {
     await page.waitForURL("/dashboard");
     expect(page.url()).toContain("/dashboard");
     
-    await expect(page.getByText("Equity for everyone")).not.toBeVisible();
+    await expect(page.getByText("Contractor payments")).not.toBeVisible();
   });
 });
