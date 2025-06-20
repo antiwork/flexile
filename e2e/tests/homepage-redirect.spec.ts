@@ -1,5 +1,5 @@
 import { usersFactory } from "@test/factories/users";
-import { setClerkUser } from "@test/helpers/auth";
+import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 
 test.describe("Homepage redirect", () => {
@@ -7,16 +7,15 @@ test.describe("Homepage redirect", () => {
     await page.goto("/");
     
     await expect(page.getByText("Contractor payments")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Get started" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Get started" }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: "Log in" })).toBeVisible();
     
-    expect(page.url()).toMatch(/\/$/);
+    expect(page.url()).toBe("https://test.flexile.dev:3101/");
   });
 
   test("authenticated user is redirected to dashboard", async ({ page }) => {
     const { user } = await usersFactory.create();
-    await setClerkUser(user.id);
-    
+    await login(page, user);
     await page.goto("/");
     
     await page.waitForURL("/dashboard");
