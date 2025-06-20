@@ -17,10 +17,10 @@ test.describe("Homepage redirect", () => {
     const { adminUser } = await companiesFactory.createCompletedOnboarding();
     await login(page, adminUser);
     await page.goto("/");
-    
-    await page.waitForURL(url => url.pathname !== "/");
+
+    await page.waitForURL((url) => url.pathname !== "/");
     expect(page.url()).not.toContain("test.flexile.dev:3101/");
-    
+
     await expect(page.getByText("Contractor payments")).not.toBeVisible();
   });
 });
