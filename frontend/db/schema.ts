@@ -384,7 +384,6 @@ export const dividendPayments = pgTable(
   {
     id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
     status: varchar().notNull(),
-    gumroadUserId: varchar("gumroad_user_id"),
     processorUuid: varchar("processor_uuid"),
     wiseQuoteId: varchar("wise_quote_id"),
     transferId: varchar("transfer_id"),

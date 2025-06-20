@@ -369,7 +369,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_12_194925) do
 
   create_table "dividend_payments", force: :cascade do |t|
     t.string "status", null: false
-    t.string "gumroad_user_id"
     t.string "processor_uuid"
     t.string "wise_quote_id"
     t.string "transfer_id"
