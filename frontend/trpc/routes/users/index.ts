@@ -146,6 +146,13 @@ export const usersRouter = createRouter({
     }
     return { documentId: createdDocuments[0]?.id };
   }),
+
+  getContractorInfo: protectedProcedure.query(async ({ ctx }) => {
+    if (!ctx.companyContractor) return null;
+    return {
+      contractSignedElsewhere: ctx.companyContractor.contractSignedElsewhere,
+    };
+  }),
 });
 
 const getAddress = (user: User) => ({
