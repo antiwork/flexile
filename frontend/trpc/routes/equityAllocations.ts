@@ -36,7 +36,6 @@ export const equityAllocationsRouter = createRouter({
         .onConflictDoUpdate({
           target: [equityAllocations.companyContractorId, equityAllocations.year],
           set: { equityPercentage: input.equityPercentage, locked: true },
-          setWhere: eq(equityAllocations.locked, false),
         });
     }),
 });
