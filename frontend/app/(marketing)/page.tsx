@@ -1,11 +1,14 @@
 "use client";
 
 import { SignedIn, SignedOut } from "@clerk/nextjs";
+import { redirect, RedirectType } from "next/navigation";
+import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import logo from "@/public/flexile-logo.svg";
 import { cn } from "@/utils";
+import { useUserStore } from "@/global";
 import iconClock from "./icon-clock.svg";
 import iconDiamond from "./icon-diamond.svg";
 import iconGlobe from "./icon-globe.svg";
@@ -20,6 +23,11 @@ const Section = ({ children, className }: { children: ReactNode; className?: str
 );
 
 export default function HomePage() {
+  const user = useUserStore((state) => state.user);
+  useEffect(() => {
+    if (user) throw redirect("/dashboard", RedirectType.replace);
+  }, [user]);
+
   return (
     <>
       <nav className="fixed top-0 right-0 left-0 z-50 m-0 box-border flex h-20 w-full items-center justify-between bg-black p-0 text-white">
