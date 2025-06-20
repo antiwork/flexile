@@ -8,6 +8,7 @@ import { byExternalId, db } from "@/db";
 import {
   activeStorageAttachments,
   companyContractors,
+  invoiceApprovals,
   invoiceLineItems,
   invoices,
   users,
@@ -36,7 +37,8 @@ const getNextAdminInvoiceNumber = async (companyId: bigint, userId: bigint) => {
   });
   if (!lastAdminInvoice) return INITIAL_ADMIN_INVOICE_NUMBER;
 
-  const digits = lastAdminInvoice.invoiceNumber.match(/\d+/gu)?.at(-1); // may include leading zeros
+  // eslint-disable-next-line require-unicode-regexp
+  const digits = lastAdminInvoice.invoiceNumber.match(/\d+/g)?.at(-1); // may include leading zeros
   if (!digits || parseInt(digits, 10) === 0) return INITIAL_ADMIN_INVOICE_NUMBER;
 
   const nextInvoiceId = parseInt(digits, 10) + 1;
@@ -207,6 +209,17 @@ export const invoicesRouter = createRouter({
           totalAmountCents,
         })
         .returning();
+
+      await tx
+        .insert(invoiceApprovals)
+        .values({
+          invoiceId: invoice.id,
+          approverId: ctx.user.id,
+          approvedAt: new Date(),
+        })
+        .onConflictDoNothing();
+
+      await tx.update(invoices).set({ status: "approved" }).where(eq(invoices.id, invoice.id));
 
       return { invoice, paymentDescriptions: lineItems.map((item) => item.description) };
     });
