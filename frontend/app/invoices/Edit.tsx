@@ -357,7 +357,7 @@ const Edit = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Line item</TableHead>
+                <TableHead className="w-[50%]">Line item</TableHead>
                 <TableHead>Hours / Qty</TableHead>
                 <TableHead>Rate</TableHead>
                 <TableHead>Amount</TableHead>
