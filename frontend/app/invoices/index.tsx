@@ -29,9 +29,19 @@ export const useCanSubmitInvoices = () => {
     { companyId: company.id, userId: user.id, signable: true },
     { enabled: !!user.roles.worker },
   );
+  const { data: contractorInfo } = trpc.users.getContractorInfo.useQuery(
+    { companyId: company.id },
+    { enabled: !!user.roles.worker },
+  );
   const unsignedContractId = documents?.[0]?.id;
-  const hasLegalDetails = user.address.street_address;
-  return { unsignedContractId, hasLegalDetails, canSubmitInvoices: !unsignedContractId && hasLegalDetails };
+  const hasLegalDetails = user.address.street_address && !!user.taxInformationConfirmedAt;
+  const contractSignedElsewhere = contractorInfo?.contractSignedElsewhere ?? false;
+
+  return {
+    unsignedContractId: contractSignedElsewhere ? null : unsignedContractId,
+    hasLegalDetails,
+    canSubmitInvoices: (contractSignedElsewhere || !unsignedContractId) && hasLegalDetails,
+  };
 };
 
 export const Address = ({

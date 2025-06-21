@@ -187,7 +187,7 @@ const Edit = () => {
       }
       if (notes.length) formData.append("invoice[notes]", notes);
 
-      if (equityPercentage !== data.equity_allocation?.percentage && !data.equity_allocation?.is_locked) {
+      if (equityPercentage !== data.equity_allocation?.percentage) {
         await equityPercentageMutation.mutateAsync({ companyId: company.id, equityPercentage, year: invoiceYear });
       }
       await request({
@@ -287,7 +287,7 @@ const Edit = () => {
         </>
       }
     >
-      {company.equityCompensationEnabled && !equityAllocation?.locked ? (
+      {company.equityCompensationEnabled ? (
         <section className="mb-6">
           <Card>
             <CardContent>
@@ -422,19 +422,9 @@ const Edit = () => {
                       Add line item
                     </Button>
                     {data.company.expenses.categories.length && !showExpensesTable ? (
-                      <Button variant="link" asChild>
-                        <Label>
-                          <ArrowUpTrayIcon className="inline size-4" />
-                          Add expense
-                          <input
-                            ref={uploadExpenseRef}
-                            type="file"
-                            className="hidden"
-                            accept="application/pdf, image/*"
-                            multiple
-                            onChange={createNewExpenseEntries}
-                          />
-                        </Label>
+                      <Button variant="link" onClick={() => uploadExpenseRef.current?.click()}>
+                        <ArrowUpTrayIcon className="inline size-4" />
+                        Add expense
                       </Button>
                     ) : null}
                   </div>
@@ -442,6 +432,16 @@ const Edit = () => {
               </TableRow>
             </TableFooter>
           </Table>
+          {data.company.expenses.categories.length ? (
+            <input
+              ref={uploadExpenseRef}
+              type="file"
+              className="hidden"
+              accept="application/pdf, image/*"
+              multiple
+              onChange={createNewExpenseEntries}
+            />
+          ) : null}
           {showExpensesTable ? (
             <Table>
               <TableHeader>

@@ -599,6 +599,18 @@ const DetailsTab = ({
               </FormItem>
             )}
           />
+          <div className="grid gap-3">
+            <div>
+              <label className="text-sm font-medium">Bank account</label>
+              <div className="mt-1">
+                {user.hasBankAccount ? (
+                  <Status variant="success">Active</Status>
+                ) : (
+                  <Status variant="primary">Not added</Status>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </Form>
     </div>

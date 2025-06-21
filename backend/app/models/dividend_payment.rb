@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class DividendPayment < ApplicationRecord
+  self.ignored_columns = ["gumroad_user_id"]
   include Payments::Status, Payments::Wise
 
   belongs_to :wise_credential, optional: true

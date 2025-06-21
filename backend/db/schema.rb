@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_12_194925) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_20_155105) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -369,7 +369,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_12_194925) do
 
   create_table "dividend_payments", force: :cascade do |t|
     t.string "status", null: false
-    t.string "gumroad_user_id"
     t.string "processor_uuid"
     t.string "wise_quote_id"
     t.string "transfer_id"

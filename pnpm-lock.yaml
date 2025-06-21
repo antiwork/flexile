@@ -49,6 +49,9 @@ importers:
       '@docuseal/react':
         specifier: ^1.0.63
         version: 1.0.63
+      '@helperai/react':
+        specifier: ^0.6.0
+        version: 0.6.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@heroicons/react':
         specifier: ^2.1.5
         version: 2.2.0(react@19.0.0)
@@ -960,6 +963,12 @@ packages:
 
   '@formatjs/intl-localematcher@0.6.1':
     resolution: {integrity: sha512-ePEgLgVCqi2BBFnTMWPfIghu6FkbZnnBVhO2sSxvLfrdFw7wCHAHiDoM2h4NRgjbaY7+B7HgOLZGkK187pZTZg==}
+
+  '@helperai/react@0.6.0':
+    resolution: {integrity: sha512-RdK+aocpGgoZmnnGc+Sohmuc75LbDOpsAq+Nz10G17nHn1rzRjqjbaPsnffRkBnk8rZyZk4p0UUmdlgDU0SHCQ==}
+    peerDependencies:
+      react: '>=18'
+      react-dom: '>=18'
 
   '@heroicons/react@2.2.0':
     resolution: {integrity: sha512-LMcepvRaS9LYHJGsF0zzmgKCUim/X3N/DQKc4jepAXJ7l8QxJ1PmxJzqplF2Z3FE4PqBAIGyJAQ/w4B5dsqbtQ==}
@@ -3617,6 +3626,9 @@ packages:
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
+
+  crypto-js@4.2.0:
+    resolution: {integrity: sha512-KALDyEYgpY+Rlob/iriUtjV6d5Eq+Y191A5g4UqLAi8CyGP9N1+FdVbkc1SxKc2r4YAYqG8JzO2KGL+AizD70Q==}
 
   csrf@3.1.0:
     resolution: {integrity: sha512-uTqEnCvWRk042asU6JtapDTcJeeailFy4ydOQS28bj1hcLnYRiqi8SsD2jS412AY1I/4qdOwWZun774iqywf9w==}
@@ -6929,6 +6941,12 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  '@helperai/react@0.6.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
+    dependencies:
+      crypto-js: 4.2.0
+      react: 19.0.0
+      react-dom: 19.0.0(react@19.0.0)
+
   '@heroicons/react@2.2.0(react@19.0.0)':
     dependencies:
       react: 19.0.0
@@ -10091,6 +10109,8 @@ snapshots:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
+
+  crypto-js@4.2.0: {}
 
   csrf@3.1.0:
     dependencies:

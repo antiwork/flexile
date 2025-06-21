@@ -38,9 +38,15 @@ Write a script to invite investors AND save dividend records for them:
 Run the script to create users, investors, investments, dividends, etc., and send invitation emails:
 
 ```ruby
+data = <<~CSV
+  name,full_legal_name,investment_address_1,investment_address_2,investment_address_city,investment_address_region,investment_address_postal_code,investment_address_country,email,investment_date,investment_amount,tax_id,entity_name,dividend_amount
+  John Doe,John Michael Doe,123 Main St,,San Francisco,CA,94102,US,john@example.com,2024-01-15,10000.00,123-45-6789,,500.00
+  Jane Smith,Jane Elizabeth Smith,456 Oak Ave,Apt 2B,New York,NY,10001,US,jane@example.com,2024-02-20,25000.00,987-65-4321,,1250.00
+CSV
+
 service = CreateInvestorsAndDividends.new(
   company_id: 1823,
-  workbook_url: "https://41af-2603-7000-8e00-4c84-f4a1-418e-7aa5-e70d.ngrok-free.app/lmnt.xlsx",
+  csv_data: data,
   dividend_date: Date.new(2025, 6, 4),
 )
 service.process
@@ -50,13 +56,11 @@ service.process
 
 See example Google Sheet here: [Dividend Import Template](https://docs.google.com/spreadsheets/d/1WLvHQaNx6PcofKChWhtD_4JDoTqy2y_bYxNgwNYZKBw/edit?usp=sharing)
 
-You can export this file as an .xlsx and put it within `frontend/public` and use ngrok to get a URL to access it:
+You can export this file as a CSV and use it directly with the service:
 
-```
-ngrok http https://flexile.dev
-```
+The CSV data can be directly copy-pasted into the service without needing external file hosting.
 
-Note: Make sure to Send Dividend-Issued Emails manually, see below.
+Note: Dividend emails are now sent automatically. To send manually, see dividend_round.send_dividend_emails.
 
 #### Manual Dividends
 
@@ -93,7 +97,13 @@ rescue => e
 end
 ```
 
-This will also send out the dividend issued email.
+This will also send out the dividend issued email automatically.
+
+To send emails manually if needed:
+
+```ruby
+dividend_round.send_dividend_emails
+```
 
 #### Resending Invitations
 
@@ -161,7 +171,7 @@ AdminMailer.custom(
 ).deliver_now
 ```
 
-> Note: Emails must be sent manually to investors if this approach is taken.
+> Note: After generating dividends, call `dividend_round.send_dividend_emails` to send emails to investors.
 
 ## Processing Dividends
 
@@ -208,22 +218,6 @@ payout = Stripe::Payout.create({
 ```
 
 ### Sending Notifications
-
-#### Send Dividend-Issued Emails
-
-```ruby
-dividend_round = Company.find(1823).dividend_rounds.order(id: :desc).first
-dividend_round_id = dividend_round.id
-
-# Send dividend issued emails to investors part of the dividend round
-CompanyInvestor.joins(:dividends)
-  .where(dividends: { dividend_round_id: dividend_round_id })
-  .group(:id)
-  .each do |investor|
-    investor_dividend_round = investor.investor_dividend_rounds.find_or_create_by!(dividend_round_id: dividend_round_id)
-    investor_dividend_round.send_dividend_issued_email
-  end
-```
 
 #### Mark Dividend as Ready for Payments
 

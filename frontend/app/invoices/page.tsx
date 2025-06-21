@@ -71,10 +71,6 @@ export default function InvoicesPage() {
     companyId: company.id,
     contractorId: user.roles.administrator ? undefined : user.roles.worker?.id,
   });
-  const { data: equityAllocation } = trpc.equityAllocations.get.useQuery(
-    { companyId: company.id, year: new Date().getFullYear() },
-    { enabled: !!user.roles.worker },
-  );
 
   const { canSubmitInvoices, hasLegalDetails, unsignedContractId } = useCanSubmitInvoices();
 
@@ -186,8 +182,6 @@ export default function InvoicesPage() {
       </Link>{" "}
       for your invoices.
     </>
-  ) : equityAllocation?.locked ? (
-    `You'll be able to select a new allocation for ${new Date().getFullYear() + 1} later this year.`
   ) : null;
 
   return (
@@ -603,7 +597,7 @@ const QuickInvoicesSection = () => {
                         min={0}
                         max={MAX_EQUITY_PERCENTAGE}
                         unit="%"
-                        disabled={!canSubmitInvoices || !!equityAllocation?.locked}
+                        disabled={!canSubmitInvoices}
                         aria-label="Cash vs equity split"
                       />
                     </FormControl>

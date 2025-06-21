@@ -159,61 +159,64 @@ export const contractorsRouter = createRouter({
         let documentId: bigint | null = null;
         if (input.payRateInSubunits != null && input.payRateInSubunits !== contractor.payRateInSubunits) {
           const payRateType = input.payRateType ?? contractor.payRateType;
-          await tx.delete(documents).where(
-            and(
-              eq(documents.type, DocumentType.ConsultingContract),
-              exists(
-                tx
-                  .select({ _: sql`1` })
-                  .from(documentSignatures)
-                  .where(
-                    and(
-                      eq(documentSignatures.documentId, documents.id),
-                      eq(documentSignatures.userId, contractor.userId),
-                      isNull(documentSignatures.signedAt),
-                    ),
-                  ),
-              ),
-            ),
-          );
-          // TODO store which template was used for the previous contract
-          const template = await db.query.documentTemplates.findFirst({
-            where: and(
-              or(eq(documentTemplates.companyId, ctx.company.id), isNull(documentTemplates.companyId)),
-              eq(documentTemplates.type, DocumentTemplateType.ConsultingContract),
-            ),
-            orderBy: desc(documentTemplates.createdAt),
-          });
-          const submission = await createSubmission(
-            ctx,
-            assertDefined(template).docusealId,
-            contractor.user,
-            "Company Representative",
-          );
-          const [document] = await tx
-            .insert(documents)
-            .values({
-              name: "Consulting agreement",
-              year: new Date().getFullYear(),
-              companyId: ctx.company.id,
-              type: DocumentType.ConsultingContract,
-              docusealSubmissionId: submission.id,
-            })
-            .returning();
-          documentId = assertDefined(document).id;
 
-          await tx.insert(documentSignatures).values([
-            {
-              documentId,
-              userId: ctx.companyAdministrator.userId,
-              title: "Company Representative",
-            },
-            {
-              documentId,
-              userId: contractor.userId,
-              title: "Signer",
-            },
-          ]);
+          if (!contractor.contractSignedElsewhere) {
+            await tx.delete(documents).where(
+              and(
+                eq(documents.type, DocumentType.ConsultingContract),
+                exists(
+                  tx
+                    .select({ _: sql`1` })
+                    .from(documentSignatures)
+                    .where(
+                      and(
+                        eq(documentSignatures.documentId, documents.id),
+                        eq(documentSignatures.userId, contractor.userId),
+                        isNull(documentSignatures.signedAt),
+                      ),
+                    ),
+                ),
+              ),
+            );
+            // TODO store which template was used for the previous contract
+            const template = await db.query.documentTemplates.findFirst({
+              where: and(
+                or(eq(documentTemplates.companyId, ctx.company.id), isNull(documentTemplates.companyId)),
+                eq(documentTemplates.type, DocumentTemplateType.ConsultingContract),
+              ),
+              orderBy: desc(documentTemplates.createdAt),
+            });
+            const submission = await createSubmission(
+              ctx,
+              assertDefined(template).docusealId,
+              contractor.user,
+              "Company Representative",
+            );
+            const [document] = await tx
+              .insert(documents)
+              .values({
+                name: "Consulting agreement",
+                year: new Date().getFullYear(),
+                companyId: ctx.company.id,
+                type: DocumentType.ConsultingContract,
+                docusealSubmissionId: submission.id,
+              })
+              .returning();
+            documentId = assertDefined(document).id;
+
+            await tx.insert(documentSignatures).values([
+              {
+                documentId,
+                userId: ctx.companyAdministrator.userId,
+                title: "Company Representative",
+              },
+              {
+                documentId,
+                userId: contractor.userId,
+                title: "Signer",
+              },
+            ]);
+          }
 
           if (payRateType === PayRateType.Hourly) {
             await sendEmail({

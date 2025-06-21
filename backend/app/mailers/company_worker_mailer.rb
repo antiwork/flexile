@@ -8,7 +8,12 @@ class CompanyWorkerMailer < ApplicationMailer
     @company_worker = CompanyWorker.find(company_worker_id)
     @company = @company_worker.company
     @user = @company_worker.user
-    mail(to: @user.email, reply_to: @company.email, subject: "You're invited to #{@company.name}'s team")
+    subject = if @company_worker.contract_signed_elsewhere
+      "Set up your payment info with #{@company.name}"
+    else
+      "You're invited to #{@company.name}'s team"
+    end
+    mail(to: @user.email, reply_to: @company.email, subject: subject)
   end
 
   def equity_grant_issued(equity_grant_id)

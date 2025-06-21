@@ -1,6 +1,10 @@
 <h1 class="text-3xl leading-9 font-bold">
   <% inviter = url ? user.invited_by.name : company.name %>
-  <%= "#{inviter} has invited you to join Flexile to sign your contract#{contractor.hourly? ? ", track your hours," : nil} and get paid." %>
+  <% if contractor.contract_signed_elsewhere %>
+    <%= "#{inviter} has invited you to join Flexile to get set up for payment#{contractor.hourly? ? " and track your hours" : nil}." %>
+  <% else %>
+    <%= "#{inviter} has invited you to join Flexile to sign your contract#{contractor.hourly? ? ", track your hours," : nil} and get paid." %>
+  <% end %>
 </h1>
 <p class="mb-4">
   It takes a few minutes to sign up–we'll need your personal information and your bank account info to pay you out.
@@ -32,4 +36,4 @@
   <% end %>
 </dl>
 
-<%= link_to("Review and sign your contract", url || "#{PROTOCOL}://#{DOMAIN}/documents?sign=#{user.documents.unsigned.where(docuseal_submission_id: nil).first&.id}", class: "button") %>
+<%= link_to(contractor.contract_signed_elsewhere ? "Set up your payment info" : "Review and sign your contract", url || (contractor.contract_signed_elsewhere ? "#{PROTOCOL}://#{DOMAIN}/invoices" : "#{PROTOCOL}://#{DOMAIN}/documents?sign=#{user.documents.unsigned.where(docuseal_submission_id: nil).first&.id}"), class: "button") %>
