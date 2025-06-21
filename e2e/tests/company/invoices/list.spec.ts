@@ -304,7 +304,7 @@ test.describe("Invoices admin flow", () => {
               const { invoice: invoice3 } = await invoicesFactory.create({
                 companyId: company.id,
                 companyContractorId: companyContractor.id,
-                totalAmountInUsdCents: 75_00n,
+                totalAmountInUsdCents: BigInt(7500),
               });
               await invoiceApprovalsFactory.create({
                 invoiceId: invoice3.id,
@@ -315,7 +315,7 @@ test.describe("Invoices admin flow", () => {
               const { invoice: invoice4 } = await invoicesFactory.create({
                 companyId: company.id,
                 companyContractorId: companyContractor.id,
-                totalAmountInUsdCents: 75_00n,
+                totalAmountInUsdCents: BigInt(7500),
               });
               await invoiceApprovalsFactory.create({
                 invoiceId: invoice4.id,

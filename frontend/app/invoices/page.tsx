@@ -3,7 +3,7 @@
 import { Download, AlertTriangle, CircleCheck, Info, Pencil, Plus } from "lucide-react";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import Link from "next/link";
-import React, { Fragment, useEffect, useMemo, useState } from "react";
+import React, { Fragment, useEffect, useMemo, useState, Suspense } from "react";
 import StripeMicrodepositVerification from "@/app/administrator/settings/StripeMicrodepositVerification";
 import {
   ApproveButton,
@@ -47,6 +47,9 @@ import { linkClasses } from "@/components/Link";
 import DatePicker from "@/components/DatePicker";
 import { CalendarDate, today, getLocalTimeZone } from "@internationalized/date";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { InvoiceTableSkeleton } from "@/components/skeletons/InvoiceTableSkeleton";
+import { QuickInvoiceSkeleton } from "@/components/skeletons/QuickInvoiceSkeleton";
+import { AlertSkeleton, AlertWithTitleSkeleton } from "@/components/skeletons/AlertSkeleton";
 
 const statusNames = {
   received: "Awaiting approval",
@@ -59,7 +62,8 @@ const statusNames = {
 };
 
 type Invoice = RouterOutput["invoices"]["list"][number];
-export default function InvoicesPage() {
+
+function InvoicesContent() {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const [openModal, setOpenModal] = useState<"approve" | "reject" | null>(null);
@@ -67,10 +71,14 @@ export default function InvoicesPage() {
   const isActionable = useIsActionable();
   const isPayable = useIsPayable();
   const areTaxRequirementsMet = useAreTaxRequirementsMet();
-  const [data] = trpc.invoices.list.useSuspenseQuery({
+  const { data, isLoading } = trpc.invoices.list.useQuery({
     companyId: company.id,
     contractorId: user.roles.administrator ? undefined : user.roles.worker?.id,
   });
+
+  if (isLoading || !data) {
+    return <InvoicesPageSkeleton />;
+  }
 
   const { canSubmitInvoices, hasLegalDetails, unsignedContractId } = useCanSubmitInvoices();
 
@@ -116,7 +124,7 @@ export default function InvoicesPage() {
           </div>
         ),
         meta: {
-          filterOptions: [...new Set(data.map((invoice) => statusNames[invoice.status]))],
+          filterOptions: Array.from(new Set(data.map((invoice) => statusNames[invoice.status]))),
         },
       }),
       columnHelper.accessor(isActionable, {
@@ -158,32 +166,39 @@ export default function InvoicesPage() {
   const selectedApprovableInvoices = selectedInvoices.filter(isActionable);
   const selectedPayableInvoices = selectedApprovableInvoices.filter(isPayable);
 
-  const workerNotice = !user.roles.worker ? null : !hasLegalDetails ? (
-    <>
-      Please{" "}
-      <Link className={linkClasses} href="/settings/tax">
-        provide your legal details
-      </Link>{" "}
-      before creating new invoices.
-    </>
-  ) : unsignedContractId ? (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-      <div>You have an unsigned contract. Please sign it before creating new invoices.</div>
-      <Button asChild variant="outline" size="small">
-        <Link href={`/documents?${new URLSearchParams({ sign: unsignedContractId.toString(), next: "/invoices" })}`}>
-          Review & sign
-        </Link>
-      </Button>
-    </div>
-  ) : !user.hasPayoutMethod ? (
-    <>
-      Please{" "}
-      <Link className={linkClasses} href="/settings/payouts">
-        provide a payout method
-      </Link>{" "}
-      for your invoices.
-    </>
-  ) : null;
+  let workerNotice = null;
+  if (user.roles.worker) {
+    if (!hasLegalDetails) {
+      workerNotice = (
+        <>
+          Please{" "}
+          <Link className={linkClasses} href="/settings/tax">
+            provide your legal details
+          </Link>{" "}
+          before creating new invoices.
+        </>
+      );
+    } else if (unsignedContractId) {
+      workerNotice = (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>You have an unsigned contract. Please sign it before creating new invoices.</div>
+          <Button asChild variant="outline" size="small">
+            <Link href="/documents">Review & sign</Link>
+          </Button>
+        </div>
+      );
+    } else if (!user.hasPayoutMethod) {
+      workerNotice = (
+        <>
+          Please{" "}
+          <Link className={linkClasses} href="/settings/payouts">
+            provide a payout method
+          </Link>{" "}
+          for your invoices.
+        </>
+      );
+    }
+  }
 
   return (
     <MainLayout
@@ -207,7 +222,9 @@ export default function InvoicesPage() {
           </Alert>
         ) : null}
 
-        <QuickInvoicesSection />
+        <Suspense fallback={<QuickInvoiceSkeleton />}>
+          <QuickInvoicesSection />
+        </Suspense>
         {data.length > 0 ? (
           <>
             {user.roles.administrator ? (
@@ -363,6 +380,78 @@ export default function InvoicesPage() {
   );
 }
 
+function InvoicesPageSkeleton() {
+  const user = useCurrentUser();
+
+  return (
+    <MainLayout
+      title="Invoices"
+      headerActions={
+        user.roles.worker ? (
+          <Button asChild variant="outline" size="small">
+            <Link href="/invoices/new">
+              <Plus className="size-4" />
+              New invoice
+            </Link>
+          </Button>
+        ) : null
+      }
+    >
+      <div className="grid gap-4">
+        <AlertSkeleton />
+
+        <QuickInvoiceSkeleton />
+
+        {user.roles.administrator ? (
+          <>
+            <AlertWithTitleSkeleton />
+            <AlertWithTitleSkeleton />
+            <AlertSkeleton />
+          </>
+        ) : null}
+
+        <div className="flex justify-between md:hidden">
+          <div className="bg-accent h-7 w-32 animate-pulse rounded-md" />
+          <div className="bg-accent h-5 w-20 animate-pulse rounded-md" />
+        </div>
+
+        <div className="grid gap-4">
+          <div className="grid gap-2 md:flex md:justify-between">
+            <div className="flex gap-2">
+              <div className="bg-accent h-10 w-60 animate-pulse rounded-md" />
+              <div className="bg-accent h-10 w-20 animate-pulse rounded-md" />
+            </div>
+            <div className="bg-accent h-10 w-32 animate-pulse rounded-md" />
+          </div>
+
+          <div className="rounded-md border">
+            <div className="border-b">
+              <div className="flex h-12 items-center gap-4 px-4">
+                <div className="bg-accent h-4 w-4 animate-pulse rounded" />
+                <div className="bg-accent h-4 w-24 animate-pulse rounded-md" />
+                <div className="bg-accent h-4 w-20 animate-pulse rounded-md" />
+                <div className="bg-accent h-4 w-16 animate-pulse rounded-md" />
+                <div className="bg-accent h-4 w-20 animate-pulse rounded-md" />
+                <div className="bg-accent h-4 w-16 animate-pulse rounded-md" />
+                <div className="bg-accent h-4 w-16 animate-pulse rounded-md" />
+              </div>
+            </div>
+            <InvoiceTableSkeleton rows={5} isAdministrator={!!user.roles.administrator} />
+          </div>
+        </div>
+      </div>
+    </MainLayout>
+  );
+}
+
+export default function InvoicesPage() {
+  return (
+    <Suspense fallback={<InvoicesPageSkeleton />}>
+      <InvoicesContent />
+    </Suspense>
+  );
+}
+
 const TasksModal = ({
   invoice,
   onClose,
@@ -490,7 +579,7 @@ const QuickInvoicesSection = () => {
     return `/invoices/new?${params.toString()}` as const;
   };
 
-  const [equityAllocation] = trpc.equityAllocations.get.useSuspenseQuery({
+  const { data: equityAllocation, isLoading: equityAllocationLoading } = trpc.equityAllocations.get.useQuery({
     companyId: company.id,
     year: date.year,
   });
@@ -501,6 +590,10 @@ const QuickInvoicesSection = () => {
     servicesInCents: totalAmountInCents,
     selectedPercentage: invoiceEquityPercent,
   });
+
+  if (equityAllocationLoading || !equityAllocation) {
+    return <QuickInvoiceSkeleton />;
+  }
   const equityAmountCents = equityCalculation?.amountInCents ?? 0;
   const cashAmountCents = totalAmountInCents - equityAmountCents;
 
@@ -529,7 +622,7 @@ const QuickInvoicesSection = () => {
   });
 
   const handleSubmit = form.handleSubmit(() => {
-    if (company.equityCompensationEnabled && !equityAllocation?.locked) {
+    if (company.equityCompensationEnabled && !equityAllocation.locked) {
       setLockModalOpen(true);
     } else {
       submit.mutate();
@@ -537,7 +630,7 @@ const QuickInvoicesSection = () => {
   });
 
   useEffect(() => {
-    if (equityAllocation?.equityPercentage) {
+    if (equityAllocation.equityPercentage) {
       form.setValue("invoiceEquityPercent", equityAllocation.equityPercentage);
     }
   }, [equityAllocation, form]);
@@ -672,7 +765,7 @@ const QuickInvoicesSection = () => {
                 >
                   Send for approval
                 </MutationStatusButton>
-                {company.equityCompensationEnabled && !equityAllocation?.locked ? (
+                {company.equityCompensationEnabled && !equityAllocation.locked ? (
                   <EquityPercentageLockModal
                     open={lockModalOpen}
                     onClose={() => setLockModalOpen(false)}
