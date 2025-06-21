@@ -281,7 +281,6 @@ test.describe("invoice creation", () => {
     await companyContractorsFactory.create({
       companyId: company.id,
       userId: userWithoutTax.id,
-      payRateType: PayRateType.Hourly,
       payRateInSubunits: 5000,
     });
 
