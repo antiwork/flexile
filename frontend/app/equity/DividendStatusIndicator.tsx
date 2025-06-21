@@ -4,9 +4,9 @@ import type { RouterOutput } from "@/trpc";
 
 type Dividend = RouterOutput["dividends"]["list"][number];
 
-const DividendStatusIndicator = ({ status }: { status: Dividend["status"] }) => {
+const DividendStatusIndicator = ({ dividend }: { dividend: Dividend }) => {
   const getVariant = () => {
-    switch (status) {
+    switch (dividend.status) {
       case "Retained":
         return "critical";
       case "Paid":
@@ -16,7 +16,7 @@ const DividendStatusIndicator = ({ status }: { status: Dividend["status"] }) => 
     }
   };
 
-  return <Status variant={getVariant()}>{status}</Status>;
+  return <Status variant={getVariant()}>{dividend.status}</Status>;
 };
 
 export default DividendStatusIndicator;

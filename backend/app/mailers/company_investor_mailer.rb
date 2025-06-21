@@ -12,7 +12,6 @@ class CompanyInvestorMailer < ApplicationMailer
     @user = @company_investor.user
     @company = @company_investor.company
     @gross_amount_in_cents = dividends.sum(:total_amount_in_cents)
-    @roi = @company_investor.dividends.sum(:total_amount_in_cents) / @company_investor.investment_amount_in_cents.to_d
 
     # Calculate ROI note based on dividend years
     dividend_years = @company_investor.dividends.map { |d| d.created_at.year }.uniq.sort
@@ -29,7 +28,6 @@ class CompanyInvestorMailer < ApplicationMailer
     @user = @company_investor.user
     @company = @company_investor.company
     @gross_amount_in_cents = dividends.sum(:total_amount_in_cents)
-    @roi = @company_investor.dividends.sum(:total_amount_in_cents) / @company_investor.investment_amount_in_cents.to_d
 
     # Calculate ROI note based on dividend years
     dividend_years = @company_investor.dividends.map { |d| d.created_at.year }.uniq.sort
