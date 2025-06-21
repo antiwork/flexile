@@ -14,7 +14,7 @@ export const companyInvestorsFactory = {
       .values({
         companyId,
         userId,
-        investmentAmountInCents: 0n,
+        investmentAmountInCents: BigInt(0),
         ...overrides,
       })
       .returning();
