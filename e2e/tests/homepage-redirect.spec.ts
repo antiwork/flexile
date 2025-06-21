@@ -8,7 +8,7 @@ test.describe("Homepage redirect", () => {
 
     await expect(page.getByText("Contractor payments")).toBeVisible();
     await expect(page.getByRole("link", { name: "Get started" }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: "Log in" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Login" })).toBeVisible();
   });
 
   test("authenticated user is redirected to dashboard", async ({ page }) => {
