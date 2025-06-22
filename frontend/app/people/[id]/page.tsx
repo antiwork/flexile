@@ -768,7 +768,7 @@ const dividendsColumns = [
     cell: (info) => (
       <Tooltip>
         <TooltipTrigger>
-          <DividendStatusIndicator status={info.getValue()} />
+          <DividendStatusIndicator dividend={info.row.original} />
         </TooltipTrigger>
         <TooltipContent>
           {info.row.original.status === "Retained"
