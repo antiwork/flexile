@@ -19,7 +19,6 @@ class InvoiceDashboard < Administrate::BaseDashboard
     attachments_blobs: Field::HasMany,
     id: Field::Number,
     invoice_date: Field::Date,
-    total_minutes: Field::Number,
     total_amount_in_usd_cents: Field::Number,
     status: Field::String,
     created_at: Field::DateTime,
@@ -50,7 +49,6 @@ class InvoiceDashboard < Administrate::BaseDashboard
     payments
     id
     invoice_date
-    total_minutes
     total_amount_in_usd_cents
     status
     created_at
@@ -67,7 +65,6 @@ class InvoiceDashboard < Administrate::BaseDashboard
     user
     payments
     invoice_date
-    total_minutes
     total_amount_in_usd_cents
     status
     invoice_number

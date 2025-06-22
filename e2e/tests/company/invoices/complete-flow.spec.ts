@@ -40,25 +40,25 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-1");
     await fillDatePicker(page, "Date", "11/01/2024");
-    await page.getByPlaceholder("HH:MM").first().fill("01:23");
-    await page.waitForTimeout(500); // TODO (dani) avoid this
     await page.getByPlaceholder("Description").fill("first item");
+    await page.waitForTimeout(500); // TODO (dani) avoid this
+    await page.getByLabel("Hours / Qty").first().fill("01:23");
+    await page.waitForTimeout(500); // TODO (dani) avoid this
     await page.getByRole("button", { name: "Add line item" }).click();
     await page.getByPlaceholder("Description").nth(1).fill("second item");
-    await page.getByPlaceholder("HH:MM").nth(1).fill("02:34");
+    await page.getByLabel("Hours / Qty").nth(1).fill("10");
     await page.getByPlaceholder("Enter notes about your").fill("A note in the invoice");
     await page.waitForTimeout(200); // TODO (dani) avoid this
     await page.getByRole("button", { name: "Send invoice" }).click();
 
     await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Nov 1, 2024");
-    await expect(page.locator("tbody")).toContainText("3:57");
-    await expect(page.locator("tbody")).toContainText("$237.01");
+    await expect(page.locator("tbody")).toContainText("$683");
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
 
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByPlaceholder("Description").fill("woops too little time");
-    await page.getByPlaceholder("HH:MM").fill("0:23");
+    await page.getByLabel("Hours / Qty").fill("0:23");
     await page.getByLabel("Invoice ID").fill("CUSTOM-2");
     await page.waitForTimeout(300); // TODO (dani) avoid this
     await fillDatePicker(page, "Date", "12/01/2024");
@@ -67,20 +67,19 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await expect(page.getByRole("cell", { name: "CUSTOM-2" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Dec 1, 2024");
-    await expect(page.locator("tbody")).toContainText("0:23");
     await expect(page.locator("tbody")).toContainText("$23");
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
 
     await page.getByRole("cell", { name: "CUSTOM-1" }).click();
     await page.getByRole("link", { name: "Edit invoice" }).click();
     await page.getByPlaceholder("Description").first().fill("first item updated");
-    const timeField = page.getByPlaceholder("HH:MM").first();
+    const timeField = page.getByLabel("Hours / Qty").first();
     await timeField.fill("04:30");
     await timeField.blur(); // work around a test-specific issue; this works fine in a real browser
     await page.waitForTimeout(1000); // TODO (dani) avoid this
     await page.getByRole("button", { name: "Re-submit invoice" }).click();
 
-    await expect(page.getByRole("cell", { name: "$424.01" })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "$870" })).toBeVisible();
     await expect(locateOpenInvoicesBadge(page)).not.toBeVisible();
 
     await clerk.signOut({ page });
@@ -88,7 +87,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByPlaceholder("Description").fill("line item");
-    await page.getByPlaceholder("HH:MM").fill("10:23");
+    await page.getByLabel("Hours / Qty").fill("10:23");
     await fillDatePicker(page, "Date", "11/20/2024");
     await page.waitForTimeout(200); // TODO (dani) avoid this
     await page.getByRole("button", { name: "Send invoice" }).click();
@@ -104,18 +103,15 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await expect(openInvoicesBadge).toContainText("3");
     await expect(firstRow).toContainText("Dec 1, 2024");
-    await expect(firstRow).toContainText("00:23");
     await expect(firstRow).toContainText("$23");
     await expect(firstRow).toContainText("Awaiting approval");
     await expect(firstRow.getByRole("button", { name: "Pay now" })).toBeVisible();
     await expect(secondRow).toContainText("Nov 20, 2024");
-    await expect(secondRow).toContainText("10:23");
     await expect(secondRow).toContainText("$623");
     await expect(secondRow).toContainText("Awaiting approval");
     await expect(secondRow.getByRole("button", { name: "Pay now" })).toBeVisible();
     await expect(thirdRow).toContainText("Nov 1, 2024");
-    await expect(thirdRow).toContainText("07:04");
-    await expect(thirdRow).toContainText("$424.01");
+    await expect(thirdRow).toContainText("$870");
     await expect(thirdRow).toContainText("Awaiting approval");
     await expect(thirdRow.getByRole("button", { name: "Pay now" })).toBeVisible();
 
@@ -183,7 +179,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await rejectedInvoiceRow.getByLabel("Edit").click();
     await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
-    await page.getByPlaceholder("HH:MM").fill("02:30");
+    await page.getByLabel("Hours / Qty").fill("02:30");
     await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
     await page.waitForTimeout(200); // TODO (dani) avoid this
     await page.getByRole("button", { name: "Re-submit invoice" }).click();

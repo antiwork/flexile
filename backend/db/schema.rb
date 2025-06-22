@@ -743,12 +743,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_20_155105) do
   create_table "invoice_line_items", force: :cascade do |t|
     t.bigint "invoice_id", null: false
     t.string "description", null: false
-    t.integer "minutes"
+    t.integer "quantity", null: false
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
-    t.bigint "total_amount_cents", null: false
-    t.integer "pay_rate_in_subunits"
+    t.integer "pay_rate_in_subunits", null: false
     t.string "pay_rate_currency", default: "usd", null: false
+    t.boolean "hourly", default: false, null: false
     t.index ["invoice_id"], name: "index_invoice_line_items_on_invoice_id"
   end
 
@@ -756,7 +756,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_20_155105) do
     t.bigint "user_id", null: false
     t.bigint "company_id", null: false
     t.date "invoice_date", null: false
-    t.integer "total_minutes"
     t.bigint "total_amount_in_usd_cents", null: false
     t.string "status", null: false
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false

@@ -809,13 +809,13 @@ export const invoiceLineItems = pgTable(
     id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
     invoiceId: bigint("invoice_id", { mode: "bigint" }).notNull(),
     description: varchar().notNull(),
-    minutes: integer(),
+    quantity: integer().notNull(),
+    hourly: boolean().default(false).notNull(),
     createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
       .notNull()
       .$onUpdate(() => new Date()),
-    totalAmountCents: bigint("total_amount_cents", { mode: "bigint" }).notNull(),
-    payRateInSubunits: integer("pay_rate_in_subunits"),
+    payRateInSubunits: integer("pay_rate_in_subunits").notNull(),
     payRateCurrency: varchar("pay_rate_currency").default("usd").notNull(),
   },
   (table) => [
@@ -832,7 +832,6 @@ export const invoices = pgTable(
     createdById: bigint("created_by_id", { mode: "bigint" }).notNull(),
     invoiceType: invoicesInvoiceType("invoice_type").default("services").notNull(),
     invoiceDate: date("invoice_date", { mode: "string" }).notNull(),
-    totalMinutes: integer("total_minutes"),
     totalAmountInUsdCents: bigint("total_amount_in_usd_cents", { mode: "bigint" }).notNull(),
     status: varchar({ enum: invoiceStatuses }).notNull(),
     createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
@@ -853,7 +852,6 @@ export const invoices = pgTable(
     equityAmountInCents: bigint("equity_amount_in_cents", { mode: "bigint" }).notNull(),
     equityAmountInOptions: integer("equity_amount_in_options").notNull(),
     cashAmountInCents: bigint("cash_amount_in_cents", { mode: "bigint" }).notNull(),
-
     companyContractorId: bigint("company_contractor_id", { mode: "bigint" }).notNull(),
     equityGrantId: bigint("equity_grant_id", { mode: "bigint" }),
     rejectedById: bigint("rejected_by_id", { mode: "bigint" }),

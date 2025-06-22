@@ -123,7 +123,6 @@ test.describe("New Contractor", () => {
     await page.getByRole("link", { name: "New invoice" }).first().click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-1");
     await fillDatePicker(page, "Date", "10/15/2024");
-    await page.getByPlaceholder("HH:MM").first().fill("05:30");
     await page.waitForTimeout(500); // TODO (techdebt): avoid this
     await page.getByPlaceholder("Description").fill("Software development work");
     await page.waitForTimeout(500); // TODO (techdebt): avoid this
@@ -131,7 +130,6 @@ test.describe("New Contractor", () => {
 
     await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Oct 15, 2024");
-    await expect(page.locator("tbody")).toContainText("05:30");
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
 
     await clerk.signOut({ page });
@@ -140,7 +138,6 @@ test.describe("New Contractor", () => {
     await page.getByRole("link", { name: "New invoice" }).first().click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-2");
     await fillDatePicker(page, "Date", "11/01/2024");
-    await page.getByLabel("Amount").fill("1000");
     await page.waitForTimeout(500); // TODO (techdebt): avoid this
     await page.getByPlaceholder("Description").fill("Promotional video production work");
     await page.waitForTimeout(500); // TODO (techdebt): avoid this

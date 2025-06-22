@@ -6,7 +6,7 @@ class InvoicePresenter
   delegate :user, :company, :invoice_approvals, :external_id, :invoice_number,
            :invoice_date, :payment_expected_by, :paid_at, :bill_from, :bill_to, :created_at,
            :contractor_role, :total_amount_in_usd, :cash_amount_in_cents, :equity_amount_in_cents,
-           :total_minutes, :description, :invoice_line_items, :invoice_expenses,
+           :description, :invoice_line_items, :invoice_expenses,
            :status, :rejected?, :rejected_by, :rejected_at, :attachment, :notes, :payable?, :user_id,
            :tax_requirements_met?, to: :invoice, allow_nil: true
 
@@ -15,7 +15,6 @@ class InvoicePresenter
   end
 
   def new_form_props(contractor:)
-    total_minutes = 0
     new_invoice_date = DefaultInvoiceDate.new(user, contractor.company).generate
     props = {
       user: user_props(contractor:),
@@ -24,14 +23,12 @@ class InvoicePresenter
         attachment: nil,
         bill_address: AddressPresenter.new(user).props,
         description: "",
-        total_minutes:,
         invoice_date: new_invoice_date,
         invoice_number: @invoice.recommended_invoice_number,
         notes: nil,
         status: nil,
         rejected_by: nil,
         rejection_reason: nil,
-        max_minutes: Invoice::MAX_MINUTES,
         equity_amount_in_cents: 0,
         line_items: [],
         expenses:,
@@ -58,14 +55,12 @@ class InvoicePresenter
           } : nil,
           bill_address: AddressPresenter.new(invoice).props,
           description:,
-          total_minutes:,
           invoice_date:,
           invoice_number:,
           notes:,
           status:,
           rejected_by: rejector_name,
           rejection_reason:,
-          max_minutes: Invoice::MAX_MINUTES,
           total_amount_in_usd:,
           equity_amount_in_cents:,
           line_items:,
@@ -112,7 +107,7 @@ class InvoicePresenter
 
     def line_items
       invoice_line_items.map do |line_item|
-        line_item.attributes.symbolize_keys!.slice(:id, :description, :minutes, :pay_rate_in_subunits, :total_amount_cents)
+        line_item.attributes.symbolize_keys!.slice(:id, :description, :hourly, :quantity, :pay_rate_in_subunits)
       end
     end
 

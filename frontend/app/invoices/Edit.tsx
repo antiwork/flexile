@@ -9,7 +9,6 @@ import { redirect, useParams, useRouter, useSearchParams } from "next/navigation
 import React, { useEffect, useId, useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
-import DurationInput from "@/components/DurationInput";
 import MainLayout from "@/components/layouts/Main";
 import NumberInput from "@/components/NumberInput";
 import { Button } from "@/components/ui/button";
@@ -35,7 +34,7 @@ import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import RangeInput from "@/components/RangeInput";
 import DatePicker from "@/components/DatePicker";
 import { type DateValue, parseDate } from "@internationalized/date";
-
+import QuantityInput from "./QuantityInput";
 const addressSchema = z.object({
   street_address: z.string(),
   city: z.string(),
@@ -64,18 +63,16 @@ const dataSchema = z.object({
     bill_address: addressSchema,
     invoice_date: z.string(),
     description: z.string().nullable(),
-    total_minutes: z.number().nullable(),
     invoice_number: z.string(),
     notes: z.string().nullable(),
     status: z.enum(["received", "approved", "processing", "payment_pending", "paid", "rejected", "failed"]).nullable(),
-    max_minutes: z.number(),
     line_items: z.array(
       z.object({
         id: z.number().optional(),
         description: z.string(),
-        minutes: z.number().nullable(),
+        quantity: z.number().nullable(),
+        hourly: z.boolean(),
         pay_rate_in_subunits: z.number(),
-        total_amount_cents: z.number(),
       }),
     ),
     equity_amount_in_cents: z.number(),
@@ -129,18 +126,12 @@ const Edit = () => {
   const [lineItems, setLineItems] = useState<List<InvoiceFormLineItem>>(() => {
     if (data.invoice.line_items.length) return List(data.invoice.line_items);
 
-    const quickInvoiceDuration = parseInt(searchParams.get("duration") ?? "", 10) || 0;
-    const quickInvoiceAmountUsd =
-      parseInt(searchParams.get("amount") ?? "", 10) || data.user.pay_rate_in_subunits / 100;
-
     return List([
       {
         description: "",
-        minutes: quickInvoiceDuration,
-        pay_rate_in_subunits: data.user.project_based ? 0 : data.user.pay_rate_in_subunits,
-        total_amount_cents: data.user.project_based
-          ? quickInvoiceAmountUsd * 100
-          : Math.ceil(data.user.pay_rate_in_subunits * (quickInvoiceDuration / 60)),
+        quantity: parseInt(searchParams.get("quantity") ?? "", 10) || (data.user.project_based ? 1 : 60),
+        hourly: searchParams.has("hourly") ? searchParams.get("hourly") === "true" : !data.user.project_based,
+        pay_rate_in_subunits: parseInt(searchParams.get("rate") ?? "", 10) || data.user.pay_rate_in_subunits,
       },
     ]);
   });
@@ -174,16 +165,14 @@ const Edit = () => {
       formData.append("invoice[invoice_number]", invoiceNumber);
       formData.append("invoice[invoice_date]", issueDate.toString());
       for (const lineItem of lineItems) {
-        if (!lineItem.description) continue;
+        if (!lineItem.description || !lineItem.quantity) continue;
         if (lineItem.id) {
           formData.append("invoice_line_items[][id]", lineItem.id.toString());
         }
         formData.append("invoice_line_items[][description]", lineItem.description);
-        if (data.user.project_based) {
-          formData.append("invoice_line_items[][total_amount_cents]", lineItem.total_amount_cents.toString());
-        } else if (lineItem.minutes) {
-          formData.append("invoice_line_items[][minutes]", lineItem.minutes.toString());
-        }
+        formData.append("invoice_line_items[][quantity]", lineItem.quantity.toString());
+        formData.append("invoice_line_items[][hourly]", lineItem.hourly.toString());
+        formData.append("invoice_line_items[][pay_rate_in_subunits]", lineItem.pay_rate_in_subunits.toString());
       }
       for (const expense of expenses) {
         if (expense.id) {
@@ -218,9 +207,9 @@ const Edit = () => {
     setLineItems((lineItems) =>
       lineItems.push({
         description: "",
-        minutes: 0,
-        pay_rate_in_subunits: data.user.project_based ? 0 : data.user.pay_rate_in_subunits,
-        total_amount_cents: 0,
+        quantity: data.user.project_based ? 1 : 60,
+        hourly: !data.user.project_based,
+        pay_rate_in_subunits: data.user.pay_rate_in_subunits,
       }),
     );
 
@@ -242,8 +231,10 @@ const Edit = () => {
     );
   };
 
+  const lineItemTotal = (lineItem: InvoiceFormLineItem) =>
+    Math.ceil(((lineItem.quantity ?? 0) / (lineItem.hourly ? 60 : 1)) * lineItem.pay_rate_in_subunits);
   const totalExpensesAmountInCents = expenses.reduce((acc, expense) => acc + expense.total_amount_in_cents, 0);
-  const totalServicesAmountInCents = lineItems.reduce((acc, lineItem) => acc + lineItem.total_amount_cents, 0);
+  const totalServicesAmountInCents = lineItems.reduce((acc, lineItem) => acc + lineItemTotal(lineItem), 0);
   const totalInvoiceAmountInCents = totalServicesAmountInCents + totalExpensesAmountInCents;
   const [equityCalculation] = trpc.equityCalculations.calculate.useSuspenseQuery({
     companyId: company.id,
@@ -257,12 +248,7 @@ const Edit = () => {
         const updated = { ...assertDefined(lineItem), ...update };
         updated.errors = [];
         if (updated.description.length === 0) updated.errors.push("description");
-        if (
-          !data.user.project_based &&
-          (!updated.minutes || updated.minutes <= 0 || updated.minutes > data.invoice.max_minutes)
-        ) {
-          updated.errors.push("minutes");
-        }
+        if (!updated.quantity || updated.quantity <= 0) updated.errors.push("quantity");
         return updated;
       }),
     );
@@ -371,13 +357,9 @@ const Edit = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{data.user.project_based ? "Project" : "Line item"}</TableHead>
-                {data.user.project_based ? null : (
-                  <>
-                    <TableHead>Hours</TableHead>
-                    <TableHead>Rate</TableHead>
-                  </>
-                )}
+                <TableHead className="w-[50%]">Line item</TableHead>
+                <TableHead>Hours / Qty</TableHead>
+                <TableHead>Rate</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead />
               </TableRow>
@@ -390,51 +372,35 @@ const Edit = () => {
                       value={item.description}
                       placeholder="Description"
                       aria-invalid={item.errors?.includes("description")}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        updateLineItem(rowIndex, { description: e.target.value })
+                      onChange={(e) => updateLineItem(rowIndex, { description: e.target.value })}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <QuantityInput
+                      value={item.quantity ? { quantity: item.quantity, hourly: item.hourly } : null}
+                      aria-label="Hours / Qty"
+                      aria-invalid={item.errors?.includes("quantity")}
+                      onChange={(value) =>
+                        updateLineItem(rowIndex, {
+                          quantity: value?.quantity ?? null,
+                          hourly: value?.hourly ?? false,
+                        })
                       }
                     />
                   </TableCell>
-                  {data.user.project_based ? null : (
-                    <>
-                      <TableCell>
-                        <div className="grid gap-2">
-                          <Label htmlFor={`hours-${rowIndex}`} className="sr-only">
-                            Hours
-                          </Label>
-                          <DurationInput
-                            id={`hours-${rowIndex}`}
-                            value={item.minutes}
-                            aria-label="Hours"
-                            aria-invalid={item.errors?.includes("minutes")}
-                            onChange={(value) =>
-                              updateLineItem(rowIndex, {
-                                minutes: value,
-                                total_amount_cents: Math.ceil(item.pay_rate_in_subunits * ((value ?? 0) / 60)),
-                              })
-                            }
-                          />
-                        </div>
-                      </TableCell>
-                      <TableCell>{`${formatMoneyFromCents(item.pay_rate_in_subunits)} / hour`}</TableCell>
-                    </>
-                  )}
                   <TableCell>
-                    {data.user.project_based ? (
-                      <NumberInput
-                        value={item.total_amount_cents / 100}
-                        onChange={(value: number | null) =>
-                          updateLineItem(rowIndex, { total_amount_cents: (value ?? 0) * 100 })
-                        }
-                        aria-label="Amount"
-                        placeholder="0"
-                        prefix="$"
-                        decimal
-                      />
-                    ) : (
-                      formatMoneyFromCents(item.total_amount_cents)
-                    )}
+                    <NumberInput
+                      value={item.pay_rate_in_subunits / 100}
+                      onChange={(value: number | null) =>
+                        updateLineItem(rowIndex, { pay_rate_in_subunits: (value ?? 0) * 100 })
+                      }
+                      aria-label="Rate"
+                      placeholder="0"
+                      prefix="$"
+                      decimal
+                    />
                   </TableCell>
+                  <TableCell>{formatMoneyFromCents(lineItemTotal(item))}</TableCell>
                   <TableCell>
                     <Button
                       variant="link"
@@ -449,7 +415,7 @@ const Edit = () => {
             </TableBody>
             <TableFooter>
               <TableRow>
-                <TableCell colSpan={data.user.project_based ? 3 : 5}>
+                <TableCell colSpan={5}>
                   <div className="flex gap-3">
                     <Button variant="link" onClick={addLineItem}>
                       <PlusIcon className="inline size-4" />

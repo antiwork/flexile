@@ -31,9 +31,9 @@ import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { pluralize } from "@/utils/pluralize";
 import { company_invoices_path, export_company_invoices_path } from "@/utils/routes";
-import { formatDate, formatDuration } from "@/utils/time";
+import { formatDate } from "@/utils/time";
 import NumberInput from "@/components/NumberInput";
-import DurationInput from "@/components/DurationInput";
+import QuantityInput from "./QuantityInput";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
@@ -101,7 +101,6 @@ export default function InvoicesPage() {
             ),
           }),
       columnHelper.simple("invoiceDate", "Sent on", (value) => (value ? formatDate(value) : "N/A")),
-      columnHelper.simple("totalMinutes", "Hours", (value) => (value ? formatDuration(value) : "N/A"), "numeric"),
       columnHelper.simple(
         "totalAmountInUsdCents",
         "Amount",
@@ -447,8 +446,8 @@ const TasksModal = ({
 };
 
 const quickInvoiceSchema = z.object({
-  amountUsd: z.number().min(0.01),
-  duration: z.number().min(0),
+  rate: z.number().min(0.01),
+  quantity: z.object({ quantity: z.number().min(1), hourly: z.boolean() }),
   date: z.instanceof(CalendarDate, { message: "This field is required." }),
   invoiceEquityPercent: z.number().min(0).max(100),
 });
@@ -458,15 +457,15 @@ const QuickInvoicesSection = () => {
   const company = useCurrentCompany();
   const trpcUtils = trpc.useUtils();
   if (!user.roles.worker) return null;
-  const isProjectBased = user.roles.worker.payRateType === "project_based";
   const payRateInSubunits = user.roles.worker.payRateInSubunits;
+  const isHourly = user.roles.worker.payRateType === "hourly";
 
   const { canSubmitInvoices } = useCanSubmitInvoices();
   const form = useForm({
     resolver: zodResolver(quickInvoiceSchema),
     defaultValues: {
-      amountUsd: payRateInSubunits ? payRateInSubunits / 100 : 0,
-      duration: 0,
+      rate: payRateInSubunits ? payRateInSubunits / 100 : 0,
+      quantity: { quantity: isHourly ? 60 : 1, hourly: isHourly },
       date: today(getLocalTimeZone()),
       invoiceEquityPercent: 0,
     },
@@ -475,18 +474,19 @@ const QuickInvoicesSection = () => {
 
   const [lockModalOpen, setLockModalOpen] = useState(false);
   const date = form.watch("date");
-  const duration = form.watch("duration");
-  const amountUsd = form.watch("amountUsd");
-  const totalAmountInCents = isProjectBased ? amountUsd * 100 : Math.ceil((duration / 60) * (payRateInSubunits ?? 0));
+  const quantity = form.watch("quantity").quantity;
+  const hourly = form.watch("quantity").hourly;
+  const rate = form.watch("rate") * 100;
+  const totalAmountInCents = Math.ceil((quantity / (hourly ? 60 : 1)) * rate);
   const invoiceEquityPercent = form.watch("invoiceEquityPercent");
-  const hourlyEquityRateCents =
-    totalAmountInCents > 0 ? Math.ceil((payRateInSubunits ?? 0) * (invoiceEquityPercent / 100)) : 0;
-  const hourlyRateCashCents =
-    totalAmountInCents > 0 ? Math.ceil((payRateInSubunits ?? 0) * (1 - invoiceEquityPercent / 100)) : 0;
   const newCompanyInvoiceRoute = () => {
-    const params = new URLSearchParams({ date: date.toString(), split: String(invoiceEquityPercent) });
-    if (isProjectBased) params.set("amount", String(amountUsd));
-    else params.set("duration", String(duration));
+    const params = new URLSearchParams({
+      date: date.toString(),
+      split: String(invoiceEquityPercent),
+      rate: rate.toString(),
+      quantity: quantity.toString(),
+      hourly: hourly.toString(),
+    });
     return `/invoices/new?${params.toString()}` as const;
   };
 
@@ -515,11 +515,7 @@ const QuickInvoicesSection = () => {
         accept: "json",
         jsonData: {
           invoice: { invoice_date: date.toString() },
-          invoice_line_items: [
-            isProjectBased
-              ? { description: "Project work", total_amount_cents: totalAmountInCents }
-              : { description: "Hours worked", minutes: duration },
-          ],
+          invoice_line_items: [{ description: "-", pay_rate_in_subunits: rate, quantity, hourly }],
         },
       });
 
@@ -551,103 +547,69 @@ const QuickInvoicesSection = () => {
             onSubmit={(e) => void handleSubmit(e)}
           >
             <div className="grid gap-6">
-              <div className="grid grid-cols-1 gap-6">
-                {isProjectBased ? (
-                  <div className="grid gap-2">
-                    <FormField
-                      control={form.control}
-                      name="amountUsd"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Amount to bill</FormLabel>
-                          <FormControl>
-                            <NumberInput {...field} min={0.01} step={0.01} prefix="$" />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                ) : (
-                  <FormField
-                    control={form.control}
-                    name="duration"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Hours worked</FormLabel>
-                        <FormControl>
-                          <DurationInput {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+              <FormField
+                control={form.control}
+                name="rate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Rate</FormLabel>
+                    <FormControl>
+                      <NumberInput {...field} min={0.01} step={0.01} prefix="$" />
+                    </FormControl>
+                  </FormItem>
                 )}
-                <FormField
-                  control={form.control}
-                  name="date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <DatePicker {...field} label="Invoice date" granularity="day" />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {company.equityCompensationEnabled ? (
-                <FormField
-                  control={form.control}
-                  name="invoiceEquityPercent"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>How much of your rate would you like to swap for equity?</FormLabel>
-                      <FormControl>
-                        <RangeInput
-                          {...field}
-                          min={0}
-                          max={MAX_EQUITY_PERCENTAGE}
-                          unit="%"
-                          disabled={!canSubmitInvoices}
-                          aria-label="Cash vs equity split"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              ) : null}
+              />
+              <FormField
+                control={form.control}
+                name="quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Hours / Qty</FormLabel>
+                    <FormControl>
+                      <QuantityInput {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <DatePicker {...field} label="Invoice date" granularity="day" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
             </div>
+
+            {company.equityCompensationEnabled ? (
+              <FormField
+                control={form.control}
+                name="invoiceEquityPercent"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>How much of your rate would you like to swap for equity?</FormLabel>
+                    <FormControl>
+                      <RangeInput
+                        {...field}
+                        min={0}
+                        max={MAX_EQUITY_PERCENTAGE}
+                        unit="%"
+                        disabled={!canSubmitInvoices}
+                        aria-label="Cash vs equity split"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            ) : null}
 
             <Separator orientation="horizontal" className="block w-full lg:hidden" />
             <Separator orientation="vertical" className="hidden lg:block" />
 
             <div className="grid gap-2">
-              {company.equityCompensationEnabled && !isProjectBased ? (
-                <>
-                  <div className="flex justify-between gap-2 text-sm">
-                    <span>Cash amount</span>
-                    <span>
-                      {formatMoneyFromCents(hourlyRateCashCents)} <span className="text-gray-500">/ hourly</span>
-                    </span>
-                  </div>
-                  <Separator className="m-0" />
-                  <div className="flex justify-between gap-2 text-sm">
-                    <span>Equity value</span>
-                    <span>
-                      {formatMoneyFromCents(hourlyEquityRateCents)} <span className="text-gray-500">/ hourly</span>
-                    </span>
-                  </div>
-                  <Separator className="m-0" />
-                  <div className="flex justify-between gap-2 text-sm">
-                    <span>Total rate</span>
-                    <span>
-                      {formatMoneyFromCents(hourlyRateCashCents + hourlyEquityRateCents)}{" "}
-                      <span className="text-gray-500">/ hourly</span>
-                    </span>
-                  </div>
-                  <Separator className="m-0" />
-                </>
-              ) : null}
-
               <div className="mt-2 mb-2 pt-2 text-right lg:mt-16 lg:mb-3 lg:pt-0">
                 <span className="text-sm text-gray-500">Total amount</span>
                 <div className="text-3xl font-bold">{formatMoneyFromCents(totalAmountInCents)}</div>

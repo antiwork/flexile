@@ -72,7 +72,6 @@ class SeedDataGeneratorFromTemplate
         create_dividend_rounds!(company, company_data)
         create_tender_offer!(company, company_data.fetch("tender_offer"))
         create_equity_buyback_rounds!(company, company_data)
-
         create_expense_categories!(company, company_data.fetch("expense_categories"))
         create_other_administrators!(company, company_data.fetch("other_administrators"))
         create_lawyers!(company, company_data.fetch("lawyers"))
@@ -328,8 +327,6 @@ class SeedDataGeneratorFromTemplate
         end
       end
     end
-
-
 
     def create_company_updates!(company, company_updates_data)
       print_message("Creating company updates")
@@ -639,25 +636,13 @@ class SeedDataGeneratorFromTemplate
       invoice_count = 0
       while invoice_datetime < current_time - 1.month
         break if ended_at && invoice_datetime >= ended_at
-
-        invoice_line_item = if company_worker.project_based?
-          {
-            description: "Project work",
-            total_amount_cents: company_worker.pay_rate_in_subunits,
-          }
-        else
-          {
-            description: "Consulting",
-            minutes: company_worker.hours_per_week * 60 * 4 + rand(-30..30),
-          }
-        end
         params = ActionController::Parameters.new(
           {
             invoice: {
               invoice_number: Invoice.new(user:, company:).recommended_invoice_number,
               invoice_date: invoice_datetime.end_of_month.to_date,
             },
-            invoice_line_items: [invoice_line_item],
+            invoice_line_items: [{ description: "Consulting", quantity: 10 * 60 * 4 + rand(-30..30), pay_rate_in_subunits: company_worker.pay_rate_in_subunits, hourly: true }],
           },
         )
         Timecop.travel(invoice_datetime) do
