@@ -30,7 +30,7 @@ const columns = [
     cell: (info) => (
       <Tooltip>
         <TooltipTrigger>
-          <DividendStatusIndicator status={info.getValue()} />
+          <DividendStatusIndicator dividend={info.row.original} />
         </TooltipTrigger>
         <TooltipContent>
           {info.getValue() === "Retained"
