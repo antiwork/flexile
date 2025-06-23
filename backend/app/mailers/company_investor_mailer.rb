@@ -7,8 +7,9 @@ class CompanyInvestorMailer < ApplicationMailer
 
   def return_of_capital_issued(investor_dividend_round_id:)
     investor_dividend_round = InvestorDividendRound.find(investor_dividend_round_id)
+    @dividend_round = investor_dividend_round.dividend_round
     @company_investor = investor_dividend_round.company_investor
-    dividends = investor_dividend_round.dividend_round.dividends.where(company_investor_id: @company_investor.id)
+    dividends = @dividend_round.dividends.where(company_investor_id: @company_investor.id)
     @user = @company_investor.user
     @company = @company_investor.company
     @gross_amount_in_cents = dividends.sum(:total_amount_in_cents)

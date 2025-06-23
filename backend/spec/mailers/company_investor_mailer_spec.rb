@@ -16,7 +16,9 @@ RSpec.describe CompanyInvestorMailer do
       expect(mail.to).to eq([user.email])
       expect(mail.subject).to eq("Upcoming distribution from #{company.name}")
       expect(plaintext).to include(company.name)
-      expect(plaintext).to include("you've been issued a return of capital amounting to $50.00. Investment amount $1,000.00 Cumulative ROI (2024 and 2025 Distributions) 10.0% Distribution amount $50.00 Taxes withheld $0.00 (Return of capital - no tax withholding applies) Total to be paid $50.00")
+      expect(plaintext).to include("You’re set to receive a $50.00 return of capital from your investment in #{company.name}.")
+      expect(plaintext).to include("Based on your total investment of $1,000.00, your total return so far is 10.0%.")
+      expect(plaintext).to include("We plan to send this payment to your payout method ending in 1234, with $0.00 expected to be withheld for taxes.")
     end
   end
 
@@ -34,20 +36,9 @@ RSpec.describe CompanyInvestorMailer do
 
       expect(mail.to).to eq([user.email])
       expect(mail.subject).to eq("Upcoming distribution from #{company.name}")
-      expect(plaintext).to include(company.name)
-      expect(plaintext).to include("Based on your investment of $1,000.00, you've received a distribution of $50.00. Investment amount $1,000.00 Cumulative ROI (2024 and 2025 Distributions) 10.0% Distribution amount $50.00 Taxes withheld $10.00 Total to be paid $40.00")
-    end
-
-    context "when there is only one dividend" do
-      it "does not include the years in the ROI" do
-        dividend1.destroy!
-        mail = described_class.dividend_issued(investor_dividend_round_id: investor_dividend_round.id)
-        plaintext = ActionView::Base.full_sanitizer.sanitize(mail.body.encoded).gsub("\r\n", " ").gsub(/\s+/, " ").strip
-
-        expect(mail.to).to eq([user.email])
-        expect(mail.subject).to eq("Upcoming distribution from #{company.name}")
-        expect(plaintext).to include("Cumulative ROI 5.0%")
-      end
+      expect(plaintext).to include("You’re set to receive a $50.00 distribution from your investment in #{company.name}.")
+      expect(plaintext).to include("Based on your total investment of $1,000.00, your total return so far is 10.0%.")
+      expect(plaintext).to include("We plan to send this payment to your payout method ending in 1234, with $10.00 expected to be withheld for taxes.")
     end
 
     context "when tax information is missing" do
@@ -62,7 +53,9 @@ RSpec.describe CompanyInvestorMailer do
         mail = described_class.dividend_issued(investor_dividend_round_id: investor_dividend_round.id)
         plaintext = ActionView::Base.full_sanitizer.sanitize(mail.body.encoded).gsub("\r\n", " ").gsub(/\s+/, " ").strip
 
-        expect(plaintext).to include("Distribution amount $50.00 Taxes withheld $10.00 Total to be paid $40.00")
+        expect(plaintext).to include("You’re set to receive a $50.00 distribution from your investment in #{company.name}.")
+        expect(plaintext).to include("Based on your total investment of $1,000.00, your total return so far is 10.0%.")
+        expect(plaintext).to include("We plan to send this payment to your payout method ending in 1234, with $10.00 expected to be withheld for taxes.")
       end
     end
   end
