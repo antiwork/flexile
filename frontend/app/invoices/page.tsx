@@ -606,6 +606,9 @@ const QuickInvoicesSection = () => {
               ) : null}
             </div>
 
+            <Separator orientation="horizontal" className="block w-full lg:hidden" />
+            <Separator orientation="vertical" className="hidden lg:block" />
+
             <div className="grid gap-2">
               <div className="mt-2 mb-2 pt-2 text-right lg:mt-16 lg:mb-3 lg:pt-0">
                 <span className="text-sm text-gray-500">Total amount</span>
