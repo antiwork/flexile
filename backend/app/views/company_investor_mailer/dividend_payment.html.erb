@@ -1,6 +1,6 @@
-<p>Hello <%= @user.name %>,</p>
+<p>Hello <%= @company_investor.user.name %>,</p>
 <p><strong>You’ve just been paid a <%= cents_format(@net_cents, no_cents_if_whole: false) %> distribution from your investment in <%= @company.display_name %>.</strong></p>
-<p>This distribution was paid on <%= @payment_date.to_fs(:long) %> to your account ending in <%= @dividend_payment.recipient_last4 %>. The gross amount was <%= cents_format(@gross_amount_in_cents, no_cents_if_whole: false) %>, with <%= cents_format(@tax_amount_in_cents, no_cents_if_whole: false) %> withheld for taxes, so you’ve received a total of <%= cents_format(@net_cents, no_cents_if_whole: false) %>.</p>
+<p>This distribution was paid on <%= @payment_date.to_fs(:long) %> to your account ending in <%= @dividend_payment.recipient_last4 %>. The gross amount was <%= cents_format(@total_cents, no_cents_if_whole: false) %>, with <%= cents_format(@tax_cents, no_cents_if_whole: false) %> withheld for taxes, so you’ve received a total of <%= cents_format(@net_cents, no_cents_if_whole: false) %>.</p>
 <p>If you have any questions, just reply to this email.</p>
 <p>Thanks,</p>
 <p><b>The Flexile team</b></p>

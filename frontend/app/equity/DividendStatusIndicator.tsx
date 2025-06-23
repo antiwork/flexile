@@ -7,7 +7,7 @@ import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 type Dividend = RouterOutput["dividends"]["list"][number];
 
 const DividendStatusIndicator = ({ dividend }: { dividend: Dividend }) => {
-  if (dividend.status === "Issued" && !dividend.signedReleaseAt && dividend.releaseDocument)
+  if (dividend.status === "Issued" && !dividend.signedReleaseAt && dividend.dividendRound.releaseDocument)
     return (
       <Status variant="primary" icon={<Signature className="size-4" />}>
         Signature required

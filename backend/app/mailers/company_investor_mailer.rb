@@ -34,7 +34,7 @@ class CompanyInvestorMailer < ApplicationMailer
     @dividends = @dividend_payment.dividends.includes(:dividend_round)
 
     first_dividend = @dividends.first
-    company_investor = first_dividend.company_investor
+    @company_investor = first_dividend.company_investor
 
     @net_cents, @tax_cents, @total_cents = @dividends.pluck(
       "SUM(net_amount_in_cents), SUM(withheld_tax_cents), SUM(dividends.total_amount_in_cents)"
@@ -44,7 +44,7 @@ class CompanyInvestorMailer < ApplicationMailer
     @withholding_percentage =
       @dividends.pluck(:withholding_percentage).uniq.size == 1 ? first_dividend.withholding_percentage : nil
 
-    mail(to: company_investor.user.email,
+    mail(to: @company_investor.user.email,
          reply_to: SUPPORT_EMAIL_WITH_NAME,
          subject: "You've got a distribution from #{@company.name}")
   end
