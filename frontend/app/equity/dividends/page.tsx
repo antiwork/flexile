@@ -114,13 +114,16 @@ export default function Dividends() {
   return (
     <EquityLayout>
       {!user.legalName ? (
-        <>
-          Please{" "}
-          <Link className={linkClasses} href="/settings/tax">
-            provide your legal details
-          </Link>{" "}
-          so we can pay you.
-        </>
+        <Alert>
+          <Info />
+          <AlertDescription>
+            Please{" "}
+            <Link className={linkClasses} href="/settings/tax">
+              provide your legal details
+            </Link>{" "}
+            so we can pay you.
+          </AlertDescription>
+        </Alert>
       ) : !user.hasPayoutMethodForDividends ? (
         <Alert>
           <Info />

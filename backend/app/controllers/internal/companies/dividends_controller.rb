@@ -2,6 +2,7 @@
 
 class Internal::Companies::DividendsController < Internal::Companies::BaseController
   include ActionView::Helpers::NumberHelper
+  include ActionView::Helpers::SanitizeHelper
   def show
     dividend = Current.company_investor.dividends.find(params[:id])
     authorize dividend

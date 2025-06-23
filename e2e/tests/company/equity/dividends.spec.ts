@@ -27,7 +27,7 @@ test.describe("Dividends", () => {
     const { dividendRound } = await dividendRoundsFactory.create({
       companyId: company.id,
       releaseDocument:
-        "This is a release agreement for {{investor}} for the amount of {{amount}}. By signing this document, you agree to the terms and conditions.",
+        "This is a release agreement for <strong>{{investor}}</strong> for the amount of {{amount}}. By signing this document, you agree to the terms and conditions.",
     });
 
     const { dividend } = await dividendsFactory.create({
