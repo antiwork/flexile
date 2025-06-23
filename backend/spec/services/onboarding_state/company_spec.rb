@@ -20,11 +20,11 @@ RSpec.describe OnboardingState::Company do
   end
 
   describe "#redirect_path" do
-    it "returns the path to the company details page if the company is missing required details" do
+    it "returns nil since company details are now collected in settings" do
       company.city = nil
       company.save(validate: false)
 
-      expect(described_class.new(company).redirect_path).to eq(spa_company_administrator_onboarding_details_path(company.external_id))
+      expect(described_class.new(company).redirect_path).to be_nil
     end
 
     it "returns nil if all onboarding data is present" do
