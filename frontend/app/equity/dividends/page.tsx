@@ -55,7 +55,7 @@ export default function Dividends() {
               cumulative_return: z.number(),
               withheld_tax_cents: z.number(),
               bank_account_last_4: z.string(),
-              release_agreement: z.string(),
+              release_document: z.string(),
             })
             .parse(await response.json());
         }
@@ -81,8 +81,13 @@ export default function Dividends() {
   const columns = useMemo(
     () => [
       columnHelper.simple("dividendRound.issuedAt", "Issue date", formatDate),
-      columnHelper.simple("numberOfShares", "Shares", (value) => value?.toLocaleString() ?? "N/A", "numeric"),
-      columnHelper.simple("totalAmountInCents", "Amount", (value) => formatMoneyFromCents(value), "numeric"),
+      columnHelper.simple("dividendRound.returnOfCapital", "Type", (value) =>
+        value ? "Return of capital" : "Dividend",
+      ),
+      columnHelper.simple("numberOfShares", "Shares held", (value) => value?.toLocaleString() ?? "N/A", "numeric"),
+      columnHelper.simple("totalAmountInCents", "Gross amount", (value) => formatMoneyFromCents(value), "numeric"),
+      columnHelper.simple("withheldTaxCents", "Withheld taxes", (value) => formatMoneyFromCents(value ?? 0), "numeric"),
+      columnHelper.simple("netAmountInCents", "Net amount", (value) => formatMoneyFromCents(value ?? 0), "numeric"),
       columnHelper.accessor("status", {
         header: "Status",
         cell: (info) => {
@@ -90,9 +95,13 @@ export default function Dividends() {
           return (
             <div className="flex justify-between gap-2">
               <DividendStatusIndicator dividend={info.row.original} />
-              {info.row.original.investor.user.id === user.id && (
+              {info.row.original.investor.user.id === user.id &&
+              user.hasPayoutMethodForDividends &&
+              user.legalName &&
+              info.row.original.dividendRound.releaseDocument &&
+              !info.row.original.signedReleaseAt ? (
                 <Button onClick={() => setSigningDividend({ id: info.row.original.id, state: "initial" })}>Sign</Button>
-              )}
+              ) : null}
             </div>
           );
         },
@@ -104,7 +113,15 @@ export default function Dividends() {
 
   return (
     <EquityLayout>
-      {user.hasPayoutMethod ? null : (
+      {!user.legalName ? (
+        <>
+          Please{" "}
+          <Link className={linkClasses} href="/settings/tax">
+            provide your legal details
+          </Link>{" "}
+          so we can pay you.
+        </>
+      ) : !user.hasPayoutMethodForDividends ? (
         <Alert>
           <Info />
           <AlertDescription>
@@ -115,7 +132,7 @@ export default function Dividends() {
             for your dividends.
           </AlertDescription>
         </Alert>
-      )}
+      ) : null}
       {data.length > 0 ? (
         <DataTable table={table} />
       ) : (
@@ -123,7 +140,7 @@ export default function Dividends() {
       )}
       <Dialog open={!!dividendData} onOpenChange={() => setSigningDividend(null)}>
         <DialogContent>
-          {dividendData && signingDividend ? (
+          {dividendData && signingDividend && user.legalName ? (
             signingDividend.state !== "initial" ? (
               <>
                 <DialogHeader>
@@ -131,31 +148,35 @@ export default function Dividends() {
                   Please review and sign this agreement to receive your payout. This document outlines the terms and
                   conditions for the return of capital.
                 </DialogHeader>
-                <div className="prose max-h-100 overflow-y-auto border">
+                <div className="max-h-100 overflow-y-auto border p-2">
                   <RichText
-                    content={dividendData.release_agreement
-                      .replaceAll("{{investor}}", user.name)
+                    content={dividendData.release_document
+                      .replaceAll("{{investor}}", user.legalName)
                       .replaceAll("{{amount}}", formatMoneyFromCents(dividendData.total_amount_in_cents))}
                   />
                 </div>
-                <div className="flex justify-between gap-2 py-2">
+                <div className="grid gap-2">
                   <h3 className="font-medium">Your signature</h3>
                   {signingDividend.state === "signing" ? (
-                    <>
-                      <Button className="w-full" variant="dashed">
-                        Add your signature
-                      </Button>
-                      <div className="text-muted-foreground text-xs">
-                        By clicking the button above, you agree to using an electronic representation of your signature
-                        for all purposes within Flexile, just the same as a pen-and-paper signature.
-                      </div>
-                    </>
+                    <Button
+                      className="w-full"
+                      variant="dashed"
+                      onClick={() => setSigningDividend({ ...signingDividend, state: "signed" })}
+                    >
+                      Add your signature
+                    </Button>
                   ) : (
-                    <div className="font-signature text-lg">{user.name}</div>
+                    <div className="font-signature border-b text-xl">{user.legalName}</div>
                   )}
+                  <div className="text-muted-foreground text-xs">
+                    By clicking the button above, you agree to using an electronic representation of your signature for
+                    all purposes within Flexile, just the same as a pen-and-paper signature.
+                  </div>
                 </div>
                 <DialogFooter>
-                  <MutationButton mutation={signDividend}>Accept funds</MutationButton>
+                  <MutationButton mutation={signDividend} disabled={signingDividend.state !== "signed"}>
+                    Accept funds
+                  </MutationButton>
                 </DialogFooter>
               </>
             ) : (
@@ -163,7 +184,7 @@ export default function Dividends() {
                 <DialogHeader>
                   <DialogTitle>Dividend details</DialogTitle>
                 </DialogHeader>
-                <Card className="mb-6">
+                <Card>
                   <CardContent className="flex items-center gap-4 p-4">
                     <Avatar className="bg-muted">
                       <AvatarImage asChild>
@@ -182,19 +203,21 @@ export default function Dividends() {
                     <div className="font-semibold">{formatMoneyFromCents(dividendData.total_amount_in_cents)}</div>
                   </CardContent>
                 </Card>
-                <div className="flex justify-between gap-2 py-2">
-                  <h3 className="font-medium">Cumulative return</h3>
-                  <span>{(dividendData.cumulative_return / 100).toLocaleString([], { style: "percent" })}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between gap-2 py-2">
-                  <h3 className="font-medium">Taxes withheld</h3>
-                  <span>{formatMoneyFromCents(dividendData.withheld_tax_cents)}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between gap-2 py-2">
-                  <h3 className="font-medium">Payout method</h3>
-                  <span>Account ending in {dividendData.bank_account_last_4}</span>
+                <div>
+                  <div className="flex justify-between gap-2">
+                    <h3 className="font-medium">Cumulative return</h3>
+                    <span>{(dividendData.cumulative_return / 100).toLocaleString([], { style: "percent" })}</span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between gap-2">
+                    <h3 className="font-medium">Taxes withheld</h3>
+                    <span>{formatMoneyFromCents(dividendData.withheld_tax_cents)}</span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between gap-2">
+                    <h3 className="font-medium">Payout method</h3>
+                    <span>Account ending in {dividendData.bank_account_last_4}</span>
+                  </div>
                 </div>
                 <DialogFooter>
                   <Button onClick={() => setSigningDividend({ id: signingDividend.id, state: "signing" })}>

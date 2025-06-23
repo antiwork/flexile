@@ -1,21 +1,29 @@
 # frozen_string_literal: true
 
-class Internal::DividendsController < Internal::Companies::BaseController
+class Internal::Companies::DividendsController < Internal::Companies::BaseController
+  include ActionView::Helpers::NumberHelper
   def show
     dividend = Current.company_investor.dividends.find(params[:id])
+    authorize dividend
     render json: DividendPresenter.new(dividend).props
   end
 
   def sign
-    dividend = Current.company_investor.dividends.where(release_signed_at: nil).where.not(dividend_round: { release_document: nil }).find(params[:id])
+    dividend = Current.company_investor.dividends.joins(:dividend_round).where(signed_release_at: nil).where.not(dividend_round: { release_document: nil }).find(params[:id])
     e404 unless dividend.present?
-    dividend.update!(release_signed_at: Time.current)
-    pdf = CreatePdf.new(body_html: dividend.dividend_round.release_document.replace("{{investor}}", Current.user.name).replace("{{amount}}", number_to_currency(dividend.total_amount_in_cents))).perform
-    document = Current.user.documents.create!()
-    document.attachments.attach(
-      io: StringIO.new(pdf),
-      filename: "Release agreement.pdf",
-      content_type: "application/pdf",
-    )
+    authorize dividend
+
+    ActiveRecord::Base.transaction do
+      dividend.update!(signed_release_at: Time.current)
+      html = dividend.dividend_round.release_document.gsub("{{investor}}", Current.user.legal_name).gsub!("{{amount}}", number_to_currency(dividend.total_amount_in_cents))
+      pdf = CreatePdf.new(body_html: sanitize(html)).perform
+      document = Document.release_agreement.create!(company: Current.company, name: "Release agreement", year: Date.today.year)
+      Current.user.document_signatures.create!(document:, title: "Signer")
+      document.attachments.attach(
+        io: StringIO.new(pdf),
+        filename: "Release agreement.pdf",
+        content_type: "application/pdf",
+      )
+    end
   end
 end

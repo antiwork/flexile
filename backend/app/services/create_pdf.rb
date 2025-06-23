@@ -18,7 +18,7 @@ class CreatePdf
                print_background: true,
                margin: { top: "2cm", left: "2cm", bottom: "2cm", right: "2cm" },
                launch_args: ["--disable-web-security", "--no-sandbox", "--disable-setuid-sandbox"],
-               executable_path: ENV["PUPPETEER_EXECUTABLE_PATH"]).to_pdf
+               executable_path: ENV["PUPPETEER_EXECUTABLE_PATH"]).to_pdf("test.pdf")
   end
 
   private
