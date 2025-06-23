@@ -275,12 +275,4 @@ dividend_round.investor_dividend_rounds.each do |investor_dividend_round|
 end; nil
 ```
 
-## Tax Documents
-
-Enable tax document generation:
-
-```ruby
-Company.find(1823).update(irs_tax_forms: true)
-```
-
 This is automated, so nothing more needs to be done.

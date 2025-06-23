@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_20_155105) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_23_190844) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -104,7 +104,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_20_155105) do
     t.boolean "is_gumroad", default: false, null: false
     t.boolean "dividends_allowed", default: false, null: false
     t.boolean "is_trusted", default: false, null: false
-    t.boolean "irs_tax_forms", default: false, null: false
     t.boolean "equity_grants_enabled", default: false, null: false
     t.boolean "show_analytics_to_contractors", default: false, null: false
     t.boolean "company_updates_enabled", default: false, null: false

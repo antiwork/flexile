@@ -6,12 +6,6 @@
 heroku run rails console -a flexile
 ```
 
-### Enable features
-
-```ruby
-Company.find(123).update!(dividends: true, irs_tax_forms: true)
-```
-
 ## Payments
 
 ### Check recent payments

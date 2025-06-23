@@ -15,12 +15,8 @@ import { approve_company_invoices_path, reject_company_invoices_path } from "@/u
 type Invoice = RouterOutput["invoices"]["list"][number] | RouterOutput["invoices"]["get"];
 export const EDITABLE_INVOICE_STATES: Invoice["status"][] = ["received", "rejected"];
 
-export const useAreTaxRequirementsMet = () => {
-  const company = useCurrentCompany();
-
-  return (invoice: Invoice) =>
-    !company.flags.includes("irs_tax_forms") || !!invoice.contractor.user.complianceInfo?.taxInformationConfirmedAt;
-};
+export const taxRequirementsMet = (invoice: Invoice) =>
+  !!invoice.contractor.user.complianceInfo?.taxInformationConfirmedAt;
 
 export const useCanSubmitInvoices = () => {
   const user = useCurrentUser();
@@ -136,7 +132,6 @@ export const ApproveButton = ({ invoice, onApprove }: { invoice: Invoice; onAppr
   const company = useCurrentCompany();
   const approveInvoices = useApproveInvoices(onApprove);
   const pay = useIsPayable()(invoice);
-  const taxRequirementsMet = useAreTaxRequirementsMet();
 
   return (
     <MutationButton
