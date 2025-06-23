@@ -6,7 +6,7 @@ class DividendPolicy < ApplicationPolicy
   end
 
   def show?
-    index?
+    index? && user.legal_name.present?
   end
 
   def sign?
