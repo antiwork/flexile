@@ -18,7 +18,7 @@ class InvestorDividendsPaymentJob
                                        .dividends
                                        .joins(:dividend_round)
                                        .where(status: [Dividend::ISSUED, Dividend::RETAINED])
-                                       .where(Dividend.not(signed_release_at: nil).or(dividend_round: { release_document: nil }))
+                                       .where(Dividend.where.not(signed_release_at: nil).or(dividend_round: { release_document: nil }))
     PayInvestorDividends.new(company_investor, dividends_eligible_for_payment).process
   end
 

@@ -52,7 +52,7 @@ export default function Dividends() {
           return z
             .object({
               total_amount_in_cents: z.number(),
-              cumulative_return: z.number(),
+              cumulative_return: z.number().nullable(),
               withheld_tax_cents: z.number(),
               bank_account_last_4: z.string(),
               release_document: z.string(),
@@ -90,21 +90,18 @@ export default function Dividends() {
       columnHelper.simple("netAmountInCents", "Net amount", (value) => formatMoneyFromCents(value ?? 0), "numeric"),
       columnHelper.accessor("status", {
         header: "Status",
-        cell: (info) => {
-          const user = useCurrentUser();
-          return (
-            <div className="flex justify-between gap-2">
-              <DividendStatusIndicator dividend={info.row.original} />
-              {info.row.original.investor.user.id === user.id &&
-              user.hasPayoutMethodForDividends &&
-              user.legalName &&
-              info.row.original.dividendRound.releaseDocument &&
-              !info.row.original.signedReleaseAt ? (
-                <Button onClick={() => setSigningDividend({ id: info.row.original.id, state: "initial" })}>Sign</Button>
-              ) : null}
-            </div>
-          );
-        },
+        cell: (info) => (
+          <div className="flex justify-between gap-2">
+            <DividendStatusIndicator dividend={info.row.original} />
+            {info.row.original.investor.user.id === user.id &&
+            user.hasPayoutMethodForDividends &&
+            user.legalName &&
+            info.row.original.dividendRound.releaseDocument &&
+            !info.row.original.signedReleaseAt ? (
+              <Button onClick={() => setSigningDividend({ id: info.row.original.id, state: "initial" })}>Sign</Button>
+            ) : null}
+          </div>
+        ),
       }),
     ],
     [],
@@ -177,7 +174,11 @@ export default function Dividends() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <MutationButton mutation={signDividend} disabled={signingDividend.state !== "signed"}>
+                  <MutationButton
+                    mutation={signDividend}
+                    disabled={signingDividend.state !== "signed"}
+                    errorText="Something went wrong. Please try again."
+                  >
                     Accept funds
                   </MutationButton>
                 </DialogFooter>
@@ -207,11 +208,15 @@ export default function Dividends() {
                   </CardContent>
                 </Card>
                 <div>
-                  <div className="flex justify-between gap-2">
-                    <h3 className="font-medium">Cumulative return</h3>
-                    <span>{(dividendData.cumulative_return / 100).toLocaleString([], { style: "percent" })}</span>
-                  </div>
-                  <Separator />
+                  {dividendData.cumulative_return ? (
+                    <>
+                      <div className="flex justify-between gap-2">
+                        <h3 className="font-medium">Cumulative return</h3>
+                        <span>{(dividendData.cumulative_return / 100).toLocaleString([], { style: "percent" })}</span>
+                      </div>
+                      <Separator />
+                    </>
+                  ) : null}
                   <div className="flex justify-between gap-2">
                     <h3 className="font-medium">Taxes withheld</h3>
                     <span>{formatMoneyFromCents(dividendData.withheld_tax_cents)}</span>

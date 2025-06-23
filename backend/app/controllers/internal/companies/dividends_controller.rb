@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 class Internal::Companies::DividendsController < Internal::Companies::BaseController
-  include ActionView::Helpers::NumberHelper
   include ActionView::Helpers::SanitizeHelper
+  include ApplicationHelper
+
   def show
     dividend = Current.company_investor.dividends.find(params[:id])
     authorize dividend
@@ -16,7 +17,7 @@ class Internal::Companies::DividendsController < Internal::Companies::BaseContro
 
     ActiveRecord::Base.transaction do
       dividend.update!(signed_release_at: Time.current)
-      html = dividend.dividend_round.release_document.gsub("{{investor}}", Current.user.legal_name).gsub("{{amount}}", number_to_currency(dividend.total_amount_in_cents / 100.0))
+      html = dividend.dividend_round.release_document.gsub("{{investor}}", Current.user.legal_name).gsub("{{amount}}", cents_format(dividend.total_amount_in_cents, no_cents_if_whole: false))
       pdf = CreatePdf.new(body_html: sanitize(html)).perform
       document = Document.release_agreement.create!(company: Current.company, name: "Release agreement", year: Date.today.year)
       Current.user.document_signatures.create!(document:, title: "Signer")
