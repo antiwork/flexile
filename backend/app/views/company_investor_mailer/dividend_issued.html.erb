@@ -1,11 +1,6 @@
-<p>Hello <%= @user.name %>,</p>
-You’re set to receive a $317.34 distribution from your investment in Acme.
-Based on your total investment of $3,173.40, your total return so far is 10.0%. We plan to send this payment to your payout method ending in 2507, with $0.00 expected to be withheld for taxes. You can view all your distributions anytime on your dividends page.
-If your Flexile balance is below your $10.00 minimum payout threshold, the distribution will remain in your account until it exceeds that threshold.
-To avoid any delays, please make sure your bank details and payout threshold are up to date within the next 10 days.
-If you have any questions, just reply to this email.
-Thanks,
-The Flexile team
+<h1>
+  Congratulations! Your investment in <%= @company.name %> has generated a distribution.
+</h1>
 
 <p>
   <%= @company.display_name %> is pleased to announce a distribution!
@@ -19,7 +14,7 @@ The Flexile team
 
   <dt>Cumulative ROI <%= @roi_note %></dt>
   <dd>
-    <%= (@company_investor.cumulative_dividends_roi * 100.0).round(2) %>%
+    <%= (@roi * 100.0).round(2) %>%
   </dd>
 
   <dt>Distribution amount</dt>
