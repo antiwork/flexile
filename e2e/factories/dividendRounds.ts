@@ -23,6 +23,6 @@ export const dividendRoundsFactory = {
       .returning();
     assert(insertedDividendRound != null);
 
-    return { dividendRound: insertedDividendRound };
+    return insertedDividendRound;
   },
 };

@@ -19,7 +19,7 @@ class Internal::Companies::DividendsController < Internal::Companies::BaseContro
       html = dividend.dividend_round.release_document.gsub("{{investor}}", Current.user.legal_name).gsub("{{amount}}", cents_format(dividend.total_amount_in_cents, no_cents_if_whole: false))
       pdf = CreatePdf.new(body_html: sanitize(html)).perform
       document = Document.release_agreement.create!(company: Current.company, name: "Release agreement", year: Date.today.year)
-      Current.user.document_signatures.create!(document:, title: "Signer")
+      Current.user.document_signatures.create!(document:, title: "Signer", signed_at: Time.current)
       document.attachments.attach(
         io: StringIO.new(pdf),
         filename: "Release agreement.pdf",

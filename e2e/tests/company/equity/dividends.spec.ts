@@ -18,23 +18,25 @@ test.describe("Dividends", () => {
     const { companyInvestor } = await companyInvestorsFactory.create({
       companyId: company.id,
       userId: investorUser.id,
+      investmentAmountInCents: 100000n,
     });
     const { wiseRecipient } = await wiseRecipientsFactory.create({
       userId: investorUser.id,
       usedForDividends: true,
     });
 
-    const { dividendRound } = await dividendRoundsFactory.create({
+    const dividendRound = await dividendRoundsFactory.create({
       companyId: company.id,
       releaseDocument:
         "This is a release agreement for <strong>{{investor}}</strong> for the amount of {{amount}}. By signing this document, you agree to the terms and conditions.",
     });
 
-    const { dividend } = await dividendsFactory.create({
+    const dividend = await dividendsFactory.create({
       companyId: company.id,
       companyInvestorId: companyInvestor.id,
       dividendRoundId: dividendRound.id,
       totalAmountInCents: 50000n,
+      withheldTaxCents: 5000n,
       numberOfShares: 500n,
       status: "Issued",
     });
@@ -51,7 +53,9 @@ test.describe("Dividends", () => {
       async (modal) => {
         await expect(modal.getByRole("heading", { name: "Dividend details" })).toBeVisible();
         await expect(modal.getByText("$500")).toBeVisible();
-        await expect(modal.getByText(`Account ending in ${wiseRecipient.lastFourDigits}`)).toBeVisible();
+        await expect(modal.getByText("Cumulative return50%")).toBeVisible();
+        await expect(modal.getByText("Taxes withheld$50")).toBeVisible();
+        await expect(modal.getByText(`Payout methodAccount ending in ${wiseRecipient.lastFourDigits}`)).toBeVisible();
         await modal.getByRole("button", { name: "Review and sign agreement" }).click();
 
         await expect(modal.getByRole("heading", { name: "Release agreement" })).toBeVisible();

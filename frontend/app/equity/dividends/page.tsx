@@ -212,7 +212,7 @@ export default function Dividends() {
                     <>
                       <div className="flex justify-between gap-2">
                         <h3 className="font-medium">Cumulative return</h3>
-                        <span>{(dividendData.cumulative_return / 100).toLocaleString([], { style: "percent" })}</span>
+                        <span>{dividendData.cumulative_return.toLocaleString([], { style: "percent" })}</span>
                       </div>
                       <Separator />
                     </>
