@@ -582,29 +582,29 @@ const QuickInvoicesSection = () => {
                   </FormItem>
                 )}
               />
-            </div>
 
-            {company.equityCompensationEnabled ? (
-              <FormField
-                control={form.control}
-                name="invoiceEquityPercent"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>How much of your rate would you like to swap for equity?</FormLabel>
-                    <FormControl>
-                      <RangeInput
-                        {...field}
-                        min={0}
-                        max={MAX_EQUITY_PERCENTAGE}
-                        unit="%"
-                        disabled={!canSubmitInvoices}
-                        aria-label="Cash vs equity split"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            ) : null}
+              {company.equityCompensationEnabled ? (
+                <FormField
+                  control={form.control}
+                  name="invoiceEquityPercent"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>How much of your rate would you like to swap for equity?</FormLabel>
+                      <FormControl>
+                        <RangeInput
+                          {...field}
+                          min={0}
+                          max={MAX_EQUITY_PERCENTAGE}
+                          unit="%"
+                          disabled={!canSubmitInvoices}
+                          aria-label="Cash vs equity split"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              ) : null}
+            </div>
 
             <Separator orientation="horizontal" className="block w-full lg:hidden" />
             <Separator orientation="vertical" className="hidden lg:block" />
