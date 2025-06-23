@@ -21,7 +21,6 @@ import NumberInput from "@/components/NumberInput";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
 import Tabs from "@/components/Tabs";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -765,22 +764,7 @@ const dividendsColumns = [
   dividendsColumnHelper.simple("totalAmountInCents", "Amount", formatMoneyFromCents, "numeric"),
   dividendsColumnHelper.accessor("status", {
     header: "Status",
-    cell: (info) => (
-      <Tooltip>
-        <TooltipTrigger>
-          <DividendStatusIndicator dividend={info.row.original} />
-        </TooltipTrigger>
-        <TooltipContent>
-          {info.row.original.status === "Retained"
-            ? info.row.original.retainedReason === "ofac_sanctioned_country"
-              ? "This dividend is retained due to US sanctions."
-              : info.row.original.retainedReason === "below_minimum_payment_threshold"
-                ? "This dividend didn't meet the payout threshold set."
-                : null
-            : null}
-        </TooltipContent>
-      </Tooltip>
-    ),
+    cell: (info) => <DividendStatusIndicator dividend={info.row.original} />,
   }),
 ];
 function DividendsTab({ investorId }: { investorId: string }) {

@@ -134,6 +134,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_20_155105) do
     t.bigint "user_id", null: false
     t.bigint "company_id", null: false
     t.datetime "started_at", null: false
+    t.integer "hours_per_week"
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.datetime "ended_at"
@@ -144,7 +145,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_20_155105) do
     t.string "pay_rate_currency", default: "usd", null: false
     t.string "role", null: false
     t.boolean "contract_signed_elsewhere", default: false, null: false
-    t.integer "hours_per_week"
     t.index ["company_id"], name: "index_company_contractors_on_company_id"
     t.index ["external_id"], name: "index_company_contractors_on_external_id", unique: true
     t.index ["user_id", "company_id"], name: "index_company_contractors_on_user_id_and_company_id", unique: true
