@@ -133,6 +133,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_23_190844) do
     t.bigint "user_id", null: false
     t.bigint "company_id", null: false
     t.datetime "started_at", null: false
+    t.integer "hours_per_week"
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.datetime "ended_at"
@@ -143,7 +144,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_23_190844) do
     t.string "pay_rate_currency", default: "usd", null: false
     t.string "role", null: false
     t.boolean "contract_signed_elsewhere", default: false, null: false
-    t.integer "hours_per_week"
     t.index ["company_id"], name: "index_company_contractors_on_company_id"
     t.index ["external_id"], name: "index_company_contractors_on_external_id", unique: true
     t.index ["user_id", "company_id"], name: "index_company_contractors_on_user_id_and_company_id", unique: true
@@ -399,7 +399,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_23_190844) do
     t.string "external_id", null: false
     t.boolean "return_of_capital", null: false
     t.boolean "ready_for_payment", default: false, null: false
-    t.text "release_document"
     t.index ["company_id"], name: "index_dividend_rounds_on_company_id"
     t.index ["external_id"], name: "index_dividend_rounds_on_external_id", unique: true
   end
@@ -420,7 +419,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_23_190844) do
     t.integer "withholding_percentage"
     t.bigint "user_compliance_info_id"
     t.bigint "qualified_amount_cents", null: false
-    t.datetime "signed_release_at"
     t.index ["company_id"], name: "index_dividends_on_company_id"
     t.index ["company_investor_id"], name: "index_dividends_on_company_investor_id"
     t.index ["dividend_round_id"], name: "index_dividends_on_dividend_round_id"
