@@ -543,7 +543,7 @@ const QuickInvoicesSection = () => {
       <CardContent className="p-8">
         <Form {...form}>
           <form
-            className="grid grid-cols-1 items-start gap-x-8 gap-y-6 lg:grid-cols-[1fr_auto_1fr]"
+            className="grid grid-cols-1 items-start gap-x-8 gap-y-6 lg:grid-cols-2"
             onSubmit={(e) => void handleSubmit(e)}
           >
             <div className="grid gap-6">
@@ -582,32 +582,29 @@ const QuickInvoicesSection = () => {
                   </FormItem>
                 )}
               />
+
+              {company.equityCompensationEnabled ? (
+                <FormField
+                  control={form.control}
+                  name="invoiceEquityPercent"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>How much of your rate would you like to swap for equity?</FormLabel>
+                      <FormControl>
+                        <RangeInput
+                          {...field}
+                          min={0}
+                          max={MAX_EQUITY_PERCENTAGE}
+                          unit="%"
+                          disabled={!canSubmitInvoices}
+                          aria-label="Cash vs equity split"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              ) : null}
             </div>
-
-            {company.equityCompensationEnabled ? (
-              <FormField
-                control={form.control}
-                name="invoiceEquityPercent"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>How much of your rate would you like to swap for equity?</FormLabel>
-                    <FormControl>
-                      <RangeInput
-                        {...field}
-                        min={0}
-                        max={MAX_EQUITY_PERCENTAGE}
-                        unit="%"
-                        disabled={!canSubmitInvoices}
-                        aria-label="Cash vs equity split"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            ) : null}
-
-            <Separator orientation="horizontal" className="block w-full lg:hidden" />
-            <Separator orientation="vertical" className="hidden lg:block" />
 
             <div className="grid gap-2">
               <div className="mt-2 mb-2 pt-2 text-right lg:mt-16 lg:mb-3 lg:pt-0">
