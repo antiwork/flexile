@@ -25,6 +25,7 @@ class Internal::Companies::DividendsController < Internal::Companies::BaseContro
         filename: "Release agreement.pdf",
         content_type: "application/pdf",
       )
+      head :no_content
     end
   end
 end
