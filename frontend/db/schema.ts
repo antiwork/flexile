@@ -1872,7 +1872,6 @@ export const companies = pgTable(
     countryCode: varchar("country_code"),
     isGumroad: boolean("is_gumroad").notNull().default(false),
     isTrusted: boolean("is_trusted").notNull().default(false),
-    irsTaxForms: boolean("irs_tax_forms").notNull().default(false),
     equityGrantsEnabled: boolean("equity_grants_enabled").notNull().default(false),
     showAnalyticsToContractors: boolean("show_analytics_to_contractors").notNull().default(false),
     companyUpdatesEnabled: boolean("company_updates_enabled").notNull().default(false),

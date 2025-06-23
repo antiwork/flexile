@@ -7,10 +7,10 @@ import React, { Fragment, useEffect, useMemo, useState } from "react";
 import StripeMicrodepositVerification from "@/app/administrator/settings/StripeMicrodepositVerification";
 import {
   ApproveButton,
+  taxRequirementsMet,
   EDITABLE_INVOICE_STATES,
   RejectModal,
   useApproveInvoices,
-  useAreTaxRequirementsMet,
   useIsActionable,
   useIsPayable,
 } from "@/app/invoices/index";
@@ -66,7 +66,6 @@ export default function InvoicesPage() {
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
   const isActionable = useIsActionable();
   const isPayable = useIsPayable();
-  const areTaxRequirementsMet = useAreTaxRequirementsMet();
   const [data] = trpc.invoices.list.useSuspenseQuery({
     companyId: company.id,
     contractorId: user.roles.administrator ? undefined : user.roles.worker?.id,
@@ -234,7 +233,7 @@ export default function InvoicesPage() {
                   </Alert>
                 ) : null}
 
-                {data.some((invoice) => !areTaxRequirementsMet(invoice)) && (
+                {!data.every(taxRequirementsMet) && (
                   <Alert variant="destructive">
                     <AlertTriangle className="size-5" />
                     <AlertTitle>Missing tax information.</AlertTitle>

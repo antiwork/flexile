@@ -22,7 +22,6 @@ The planned improvements include:
 5. **Compliance Dashboard**:
    - Company-specific view of tax form filing status
    - Download options for required tax reports
-   - Filtering by companies with the `irs_tax_forms` feature flag
 
 This dashboard will streamline the entire tax form filing process, reducing manual effort and ensuring timely compliance with IRS requirements.
 
@@ -266,7 +265,6 @@ The planned improvements include:
 6. **Compliance Dashboard**:
    - Company-specific view of tax form filing status
    - Download options for required tax reports
-   - Filtering by companies with the `irs_tax_forms` feature flag
 
 This dashboard will streamline the entire tax form filing process, reducing manual effort and ensuring timely compliance with IRS requirements.
 
