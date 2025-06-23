@@ -543,7 +543,7 @@ const QuickInvoicesSection = () => {
       <CardContent className="p-8">
         <Form {...form}>
           <form
-            className="grid grid-cols-1 items-start gap-x-8 gap-y-6 lg:grid-cols-2"
+            className="grid grid-cols-1 items-start gap-x-8 gap-y-6 lg:grid-cols-[1fr_auto_1fr]"
             onSubmit={(e) => void handleSubmit(e)}
           >
             <div className="grid gap-6">
