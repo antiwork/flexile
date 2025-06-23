@@ -12,7 +12,6 @@ class Internal::Companies::DividendsController < Internal::Companies::BaseContro
 
   def sign
     dividend = Current.company_investor.dividends.joins(:dividend_round).where(signed_release_at: nil).where.not(dividend_round: { release_document: nil }).find(params[:id])
-    e404 unless dividend.present?
     authorize dividend
 
     ActiveRecord::Base.transaction do

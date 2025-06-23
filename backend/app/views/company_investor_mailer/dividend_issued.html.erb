@@ -1,15 +1,19 @@
 <p>Hello <%= @user.name %>,</p>
-<p><strong>You’re set to receive a <%= cents_format(@gross_amount_in_cents, no_cents_if_whole: false) %> distribution from your investment in <%= @company.display_name %>.</strong></p>
+<p><strong>You’re set to receive a <%= cents_format(@gross_amount_in_cents, no_cents_if_whole: false) %> <%= @dividend_round.return_of_capital? ? "return of capital" : "distribution" %> from your investment in <%= @company.display_name %>.</strong></p>
 <% if @company_investor.investment_amount_in_cents.positive? %>
   <p>Based on your total investment of <%= cents_format(@company_investor.investment_amount_in_cents, no_cents_if_whole: false) %>, your total return so far is <%= (@company_investor.cumulative_dividends_roi * 100.0).round(2) %>%.</p>
 <% end %>
 <% if @dividend_round.release_document.present? %>
   <p>To receive your funds, please <%= link_to("review and sign the release agreement", "#{PROTOCOL}://#{DOMAIN}/equity/dividends") %>. This step is required before the payment can be processed.</p>
 <% end %>
-<p>
-  We plan to send this payment to your <strong>payout method ending in <%= @user.bank_account_for_dividends.last_four_digits %></strong>, with <%= cents_format(@tax_amount_in_cents, no_cents_if_whole: false) %> expected to be withheld for taxes.
-  You can view all your distributions anytime on your <%= link_to("dividends page", "#{PROTOCOL}://#{DOMAIN}/equity/dividends") %>.
-</p>
+
+<% if @user.bank_account_for_dividends.present? %>
+  <p>We plan to send this payment to your <strong>payout method ending in <%= @user.bank_account_for_dividends.last_four_digits %></strong>, with <%= cents_format(@tax_amount_in_cents, no_cents_if_whole: false) %> expected to be withheld for taxes.</p>
+<% else %>
+  <p><strong>You currently do not have a bank account set up for dividends.</strong></p>
+  <p>Once set up, we will send this payment to it, with <%= cents_format(@tax_amount_in_cents, no_cents_if_whole: false) %> expected to be withheld for taxes.</p>
+<% end %>
+<p>You can view all your distributions anytime on your <%= link_to("dividends page", "#{PROTOCOL}://#{DOMAIN}/equity/dividends") %>.</p>
 <p>If your Flexile balance is below your <%= cents_format(@user.minimum_dividend_payment_in_cents, no_cents_if_whole: false) %> minimum payout threshold, the distribution will remain in your account until it exceeds that threshold.</p>
 <p>To avoid any delays, please make sure your <%= link_to("bank details and payout threshold", "#{PROTOCOL}://#{DOMAIN}/settings/tax") %> are up to date within the next 10 days.</p>
 <p>If you have any questions, just reply to this email.</p>

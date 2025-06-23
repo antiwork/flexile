@@ -1,27 +1,6 @@
 # frozen_string_literal: true
 
 RSpec.describe CompanyInvestorMailer do
-  describe "#return_of_capital_issued" do
-    let(:user) { create(:user) }
-    let(:company) { create(:company) }
-    let(:company_investor) { create(:company_investor, user: user, company: company, investment_amount_in_cents: 100_000) }
-    let!(:dividend1) { create(:dividend, company_investor: company_investor, total_amount_in_cents: 5000, net_amount_in_cents: 4000, withheld_tax_cents: 1000, created_at: 1.year.ago) }
-    let!(:dividend2) { create(:dividend, company_investor: company_investor, total_amount_in_cents: 5000, net_amount_in_cents: 4000, withheld_tax_cents: 1000, created_at: Time.current) }
-    let!(:investor_dividend_round) { create(:investor_dividend_round, company_investor: company_investor, dividend_round: dividend2.dividend_round) }
-
-    it "sends return of capital email with correct attributes" do
-      mail = described_class.return_of_capital_issued(investor_dividend_round_id: investor_dividend_round.id)
-      plaintext = ActionView::Base.full_sanitizer.sanitize(mail.body.encoded).gsub("\r\n", " ").gsub(/\s+/, " ").strip
-
-      expect(mail.to).to eq([user.email])
-      expect(mail.subject).to eq("Upcoming distribution from #{company.name}")
-      expect(plaintext).to include(company.name)
-      expect(plaintext).to include("You’re set to receive a $50.00 return of capital from your investment in #{company.name}.")
-      expect(plaintext).to include("Based on your total investment of $1,000.00, your total return so far is 10.0%.")
-      expect(plaintext).to include("We plan to send this payment to your payout method ending in 1234, with $0.00 expected to be withheld for taxes.")
-    end
-  end
-
   describe "#dividend_issued" do
     let(:user) { create(:user) }
     let(:company) { create(:company) }
@@ -56,6 +35,20 @@ RSpec.describe CompanyInvestorMailer do
         expect(plaintext).to include("You’re set to receive a $50.00 distribution from your investment in #{company.name}.")
         expect(plaintext).to include("Based on your total investment of $1,000.00, your total return so far is 10.0%.")
         expect(plaintext).to include("We plan to send this payment to your payout method ending in 1234, with $10.00 expected to be withheld for taxes.")
+      end
+    end
+
+    context "when the user does not have a bank account set up for dividends" do
+      let(:user) { create(:user, without_bank_account: true) }
+
+      it "includes a message about setting up a bank account" do
+        mail = described_class.dividend_issued(investor_dividend_round_id: investor_dividend_round.id)
+        plaintext = ActionView::Base.full_sanitizer.sanitize(mail.body.encoded).gsub("\r\n", " ").gsub(/\s+/, " ").strip
+
+        expect(plaintext).to include("You’re set to receive a $50.00 distribution from your investment in #{company.name}.")
+        expect(plaintext).to include("Based on your total investment of $1,000.00, your total return so far is 10.0%.")
+        expect(plaintext).to include("You currently do not have a bank account set up for dividends.")
+        expect(plaintext).to include("Once set up, we will send this payment to it, with $10.00 expected to be withheld for taxes.")
       end
     end
   end

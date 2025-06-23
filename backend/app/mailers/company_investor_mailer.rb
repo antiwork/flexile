@@ -5,23 +5,6 @@ class CompanyInvestorMailer < ApplicationMailer
   include ActiveSupport::NumberHelper
   default from: SUPPORT_EMAIL_WITH_NAME
 
-  def return_of_capital_issued(investor_dividend_round_id:)
-    investor_dividend_round = InvestorDividendRound.find(investor_dividend_round_id)
-    @dividend_round = investor_dividend_round.dividend_round
-    @company_investor = investor_dividend_round.company_investor
-    dividends = @dividend_round.dividends.where(company_investor_id: @company_investor.id)
-    @user = @company_investor.user
-    @company = @company_investor.company
-    @gross_amount_in_cents = dividends.sum(:total_amount_in_cents)
-
-    # Calculate ROI note based on dividend years
-    dividend_years = @company_investor.dividends.map { |d| d.created_at.year }.uniq.sort
-    @roi_note = dividend_years.size > 1 ? " (#{dividend_years.first} and #{dividend_years.last} Distributions)" : ""
-
-    mail(to: @user.email,
-         subject: "Upcoming distribution from #{@company.name}")
-  end
-
   def dividend_issued(investor_dividend_round_id:)
     investor_dividend_round = InvestorDividendRound.find(investor_dividend_round_id)
     @dividend_round = investor_dividend_round.dividend_round
@@ -30,10 +13,6 @@ class CompanyInvestorMailer < ApplicationMailer
     @user = @company_investor.user
     @company = @company_investor.company
     @gross_amount_in_cents = dividends.sum(:total_amount_in_cents)
-
-    # Calculate ROI note based on dividend years
-    dividend_years = @company_investor.dividends.map { |d| d.created_at.year }.uniq.sort
-    @roi_note = dividend_years.size > 1 ? " (#{dividend_years.first} and #{dividend_years.last} Distributions)" : ""
 
     # If an investor is missing tax information, calculate the tax withholding and net amount
     if dividends.where(net_amount_in_cents: nil, withheld_tax_cents: nil).exists?
@@ -47,7 +26,7 @@ class CompanyInvestorMailer < ApplicationMailer
 
     mail(to: @user.email,
          reply_to: SUPPORT_EMAIL_WITH_NAME,
-         subject: "Upcoming distribution from #{@company.name}")
+         subject: "Upcoming #{@dividend_round.return_of_capital? ? "return of capital" : "distribution"} from #{@company.name}")
   end
 
   def dividend_payment(dividend_payment_id)
