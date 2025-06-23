@@ -1,47 +1,12 @@
-<h1>
-  Your distribution from <%= @company.name %> has been retained.
-</h1>
-<dl>
-  <dt>Distribution issued</dt>
-  <dd><%= cents_format(@dividend_amount_in_cents, no_cents_if_whole: false) %></dd>
-
-  <% if @withholding_percentage > 0 %>
-    <dt>Amount after taxes</dt>
-    <dd><%= cents_format(@net_amount_in_cents, no_cents_if_whole: false) %></dd>
-  <% end %>
-
-  <dt>Investment amount</dt>
-  <dd><%= cents_format(@company_investor.investment_amount_in_cents, no_cents_if_whole: false) %></dd>
-
-  <dt>Cumulative ROI</dt>
-  <dd><%= (@roi * 100.0).round(2) %>%</dd>
-</dl>
-<p>
-  <% if @withholding_percentage > 0 %>
-    Your
-    <%= cents_format(@company_investor.investment_amount_in_cents, no_cents_if_whole: false) %>
-    investment in
-    <%= @company.name %> has yielded
-    <%= cents_format(@dividend_amount_in_cents, no_cents_if_whole: false) %>
-    in dividends. However, due to IRS regulations, we must withhold
-    <%= @withholding_percentage %>% for US taxes.
-    Your dividends will continue to accrue until your total, net of taxes, reaches the
-    <%= cents_format(@user.minimum_dividend_payment_in_cents) %>
-    payout threshold set in your account. If you want to change this amount and receive the payment sooner,
-    please edit your settings.
-  <% else %>
-    Based on your investment of
-    <%= cents_format(@company_investor.investment_amount_in_cents, no_cents_if_whole: false) %>
-    in <%= @company.name %>, you've received dividends for
-    <%= cents_format(@dividend_amount_in_cents, no_cents_if_whole: false) %>.
-    However, this distribution will be retained until your accumulated dividends reaches your payout threshold,
-    currently set at
-    <%= cents_format(@user.minimum_dividend_payment_in_cents) %>.
-    If you want to change this amount and receive the payment sooner, please edit your settings.
-  <% end %>
-</p>
-<%= link_to("Change payout settings", "#{PROTOCOL}://#{DOMAIN}/settings/tax", class: "button outline") %>
-<p>
-  If you have any questions or need assistance regarding the dividend distribution process,
-  please reply to this email.
-</p>
+<p>Hello <%= @user.name %>,</p>
+<p><strong>Your <%= cents_format(@dividend_amount_in_cents, no_cents_if_whole: false) %> distribution from <%= @company.display_name %> is on hold.</strong></p>
+<% if @withholding_percentage > 0 %>
+  <p>Your investment has generated a <%= cents_format(@dividend_amount_in_cents, no_cents_if_whole: false) %> distribution. <strong>After <%= @withholding_percentage %>% U.S. tax withholding, your net amount is <%= cents_format(@net_amount_in_cents, no_cents_if_whole: false) %>.</strong></p>
+  <p>Since your current payout threshold is set to $10.00, we’ll keep your funds in your Flexile account until your total (after taxes) meets or exceeds that amount.</p>
+<% else %>
+  <p>You’ve earned <%= cents_format(@dividend_amount_in_cents, no_cents_if_whole: false) %> from your investment in <%= @company.display_name %>, but your current <strong>payout threshold is set to <%= cents_format(@user.minimum_dividend_payment_in_cents, no_cents_if_whole: false) %></strong>. Since your balance hasn’t reached that yet, we’ll hold the funds in your Flexile account.</p>
+<% end %>
+  <p>Want to receive your distribution sooner? You can <%= link_to("update your threshold", "#{PROTOCOL}://#{DOMAIN}/settings/payouts") %> anytime.</p>
+  <p>If you have any questions, just reply to this email.</p>
+<p>Thanks,</p>
+<p><b>The Flexile team</b></p>

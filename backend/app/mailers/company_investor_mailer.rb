@@ -46,7 +46,7 @@ class CompanyInvestorMailer < ApplicationMailer
 
     mail(to: company_investor.user.email,
          reply_to: SUPPORT_EMAIL_WITH_NAME,
-         subject: "💰 Distribution for your investment in #{@company.name}")
+         subject: "You've got a distribution from #{@company.name}")
   end
 
   def equity_buyback_payment(equity_buyback_payment_id:)
@@ -87,7 +87,7 @@ class CompanyInvestorMailer < ApplicationMailer
 
     mail(to: @user.email,
          reply_to: SUPPORT_EMAIL_WITH_NAME,
-         subject: "Important notice about your distribution")
+         subject: "Your distribution from #{@company.name} is on hold")
   end
 
   def sanctioned_dividends(company_investor_id, dividend_amount_in_cents:)
@@ -97,7 +97,7 @@ class CompanyInvestorMailer < ApplicationMailer
 
     mail(to: @company_investor.user.email,
          reply_to: SUPPORT_EMAIL_WITH_NAME,
-         subject: "Important notice about your distribution")
+         subject: "Your distribution from #{@company.name} has been retained due to international sanctions")
   end
 
   def stock_exercise_payment_instructions(company_investor_id, exercise_id:)
@@ -165,7 +165,7 @@ class CompanyInvestorMailer < ApplicationMailer
     @company = company_investor.company
 
     mail(to: @user.email,
-         subject: "🔴 Distribution payment failed: re-enter your bank details")
+         subject: "🔴 Action needed: Update your bank details to receive your distribution")
   end
 
   def equity_buyback_payment_failed_reenter_bank_details(equity_buyback_payment_id:, amount:,
