@@ -10,7 +10,7 @@ class DividendPresenter
   def props
     {
       total_amount_in_cents: @dividend.total_amount_in_cents,
-      cumulative_return: @company_investor.cumulative_dividends_roi.to_f,
+      cumulative_return: @company_investor.cumulative_dividends_roi&.to_f,
       withheld_tax_cents: @dividend.withheld_tax_cents,
       bank_account_last_4: @user.bank_account_for_dividends&.last_four_digits,
       release_document: @dividend.dividend_round.release_document,
