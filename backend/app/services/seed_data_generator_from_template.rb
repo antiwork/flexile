@@ -171,7 +171,7 @@ class SeedDataGeneratorFromTemplate
     end
 
     def create_bank_account!(company)
-      stripe_setup_intent = company.fetch_stripe_setup_intent
+      stripe_setup_intent = company.create_stripe_setup_intent
       # https://docs.stripe.com/testing#test-account-numbers
       test_bank_account = Stripe::PaymentMethod.create(
         {

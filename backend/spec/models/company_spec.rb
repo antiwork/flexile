@@ -464,7 +464,7 @@ RSpec.describe Company do
     end
   end
 
-  describe "#fetch_stripe_setup_intent" do
+  describe "#create_stripe_setup_intent" do
     let(:setup_intent_id) { "seti_#{SecureRandom.hex}" }
     let(:stripe_customer_id) { "cus_#{SecureRandom.hex}" }
     let(:setup_intent) { Stripe::SetupIntent.new(setup_intent_id) }
@@ -489,11 +489,11 @@ RSpec.describe Company do
       }).and_return(setup_intent)
     end
 
-    it "creates a new customer setup intent if one does not exist" do
+    it "creates a new customer setup intent" do
       company = create(:company, without_bank_account: true, stripe_customer_id: nil)
 
       expect do
-        result = company.fetch_stripe_setup_intent
+        result = company.create_stripe_setup_intent
 
         expect(result).to eq setup_intent
         company.reload
@@ -502,20 +502,6 @@ RSpec.describe Company do
         expect(Stripe::Customer).to have_received(:create).once
         expect(Stripe::SetupIntent).to have_received(:create).once
       end.to change { company.company_stripe_accounts.count }.from(0).to(1)
-    end
-
-    it "returns the setup intent if one already exists" do
-      company = create(:company, without_bank_account: true, stripe_customer_id:,
-                                 bank_account: build(:company_stripe_account, setup_intent_id:))
-
-      expect do
-        result = company.fetch_stripe_setup_intent
-        expect(result).to eq setup_intent
-
-        expect(Stripe::Customer).not_to have_received(:create)
-        expect(Stripe::SetupIntent).not_to have_received(:create)
-        expect(Stripe::SetupIntent).to have_received(:retrieve).once
-      end.not_to change { company.company_stripe_accounts.count }
     end
   end
 

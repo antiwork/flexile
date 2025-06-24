@@ -31,12 +31,30 @@ test.describe("Company administrator settings - payment details", () => {
     await bankFrame.getByRole("button", { name: "Connect account" }).click();
     await bankFrame.getByRole("button", { name: "Back to Flexile" }).click();
     await expect(page.getByRole("dialog")).not.toBeVisible();
+    await expect(page.getByText("USD bank account")).toBeVisible();
+    await expect(page.getByText("Ending in 6789")).toBeVisible();
 
-    // Verify bank account status
-    const companyStripeAccount = await db.query.companyStripeAccounts
+    let companyStripeAccount = await db.query.companyStripeAccounts
       .findFirst({ where: eq(companyStripeAccounts.companyId, company.id) })
       .then(takeOrThrow);
     expect(companyStripeAccount.status).toBe("processing");
+    expect(companyStripeAccount.bankAccountLastFour).toBe("6789");
+
+    await page.getByRole("button", { name: "Edit" }).click();
+    await stripeFrame.getByLabel("Test Institution").click();
+    await bankFrame.getByRole("button", { name: "Agree" }).click();
+    await bankFrame.getByRole("button", { name: "High Balance" }).click();
+    await bankFrame.getByRole("button", { name: "Connect account" }).click();
+    await bankFrame.getByRole("button", { name: "Back to Flexile" }).click();
+    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await expect(page.getByText("USD bank account")).toBeVisible();
+    await expect(page.getByText("Ending in 4321")).toBeVisible();
+
+    companyStripeAccount = await db.query.companyStripeAccounts
+      .findFirst({ where: eq(companyStripeAccounts.companyId, company.id) })
+      .then(takeOrThrow);
+    expect(companyStripeAccount.status).toBe("processing");
+    expect(companyStripeAccount.bankAccountLastFour).toBe("4321");
   });
 
   test("allows manually connecting a bank account with microdeposit verification", async ({ page }) => {

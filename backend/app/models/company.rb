@@ -136,24 +136,19 @@ class Company < ApplicationRecord
 
   def pending_invoice_cash_amount_in_cents = invoices.pending.sum(:cash_amount_in_cents)
 
-  def fetch_stripe_setup_intent
-    return bank_account.stripe_setup_intent if bank_account.present?
-
-    stripe_setup_intent =
-      Stripe::SetupIntent.create({
-        customer: fetch_or_create_stripe_customer_id!,
-        payment_method_types: ["us_bank_account"],
-        payment_method_options: {
-          us_bank_account: {
-            financial_connections: {
-              permissions: ["payment_method"],
-            },
+  def create_stripe_setup_intent
+    Stripe::SetupIntent.create({
+      customer: fetch_or_create_stripe_customer_id!,
+      payment_method_types: ["us_bank_account"],
+      payment_method_options: {
+        us_bank_account: {
+          financial_connections: {
+            permissions: ["payment_method"],
           },
         },
-        expand: ["payment_method"],
-      })
-    create_bank_account!(setup_intent_id: stripe_setup_intent.id)
-    stripe_setup_intent
+      },
+      expand: ["payment_method"],
+    })
   end
 
   def stripe_setup_intent_id = bank_account&.setup_intent_id
