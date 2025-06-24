@@ -14,7 +14,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
 import { linkClasses } from "@/components/Link";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
 import { request } from "@/utils/request";
 import { company_dividend_path, sign_company_dividend_path } from "@/utils/routes";
@@ -143,12 +150,14 @@ export default function Dividends() {
           {dividendData && signingDividend && user.legalName ? (
             signingDividend.state !== "initial" ? (
               <>
-                <DialogHeader>
+                <DialogHeader className="text-left">
                   <DialogTitle>Release agreement</DialogTitle>
-                  Please review and sign this agreement to receive your payout. This document outlines the terms and
-                  conditions for the return of capital.
+                  <DialogDescription>
+                    Please review and sign this agreement to receive your payout. This document outlines the terms and
+                    conditions for the return of capital.
+                  </DialogDescription>
                 </DialogHeader>
-                <div className="max-h-100 overflow-y-auto border p-2">
+                <div className="border-muted my-2 max-h-100 overflow-y-auto rounded-md border px-8 py-4">
                   <RichText
                     content={dividendData.release_document
                       .replaceAll("{{investor}}", user.legalName)
@@ -156,10 +165,10 @@ export default function Dividends() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <h3 className="font-medium">Your signature</h3>
+                  <h3>Your signature</h3>
                   {signingDividend.state === "signing" ? (
                     <Button
-                      className="w-full"
+                      className="border-muted w-full hover:border-current"
                       variant="dashed"
                       onClick={() => setSigningDividend({ ...signingDividend, state: "signed" })}
                     >
@@ -185,29 +194,26 @@ export default function Dividends() {
               </>
             ) : (
               <>
-                <DialogHeader>
+                <DialogHeader className="text-left">
                   <DialogTitle>Dividend details</DialogTitle>
                 </DialogHeader>
-                <Card>
+                <Card className="my-2 rounded-lg bg-gray-50/50">
                   <CardContent className="flex items-center gap-4 p-4">
-                    <Avatar className="bg-muted">
+                    <Avatar className="bg-muted size-12 rounded-lg">
                       <AvatarImage asChild>
-                        <Image
-                          src={company.logo_url ?? "/images/default-company-logo.svg"}
-                          alt=""
-                          width={40}
-                          height={40}
-                        />
+                        <Image src={company.logo_url ?? "/images/default-company-logo.svg"} alt="" />
                       </AvatarImage>
                     </Avatar>
                     <div className="flex-1">
-                      <div className="muted-foreground text-xs">{company.name}</div>
+                      <div className="text-muted-foreground text-sm font-medium">{company.name}</div>
                       <div className="font-semibold">Return of capital</div>
                     </div>
-                    <div className="font-semibold">{formatMoneyFromCents(dividendData.total_amount_in_cents)}</div>
+                    <div className="self-end pb-1 font-semibold">
+                      {formatMoneyFromCents(dividendData.total_amount_in_cents)}
+                    </div>
                   </CardContent>
                 </Card>
-                <div>
+                <div className="pb-4">
                   {dividendData.cumulative_return ? (
                     <>
                       <div className="flex justify-between gap-2">
