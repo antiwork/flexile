@@ -11,10 +11,9 @@ class Internal::Companies::DividendsController < Internal::Companies::BaseContro
   end
 
   def sign
-    dividend = Current.company_investor.dividends.joins(:dividend_round).where(signed_release_at: nil).where.not(dividend_round: { release_document: nil }).find(params[:id])
-    authorize dividend
-
     ActiveRecord::Base.transaction do
+      dividend = Current.company_investor.dividends.joins(:dividend_round).where(signed_release_at: nil).where.not(dividend_round: { release_document: nil }).find(params[:id])
+      authorize dividend
       dividend.update!(signed_release_at: Time.current)
       html = dividend.dividend_round.release_document.gsub("{{investor}}", Current.user.legal_name).gsub("{{amount}}", cents_format(dividend.total_amount_in_cents, no_cents_if_whole: false))
       pdf = CreatePdf.new(body_html: sanitize(html)).perform
