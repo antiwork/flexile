@@ -35,6 +35,7 @@ class CompanyInvestorMailer < ApplicationMailer
 
     first_dividend = @dividends.first
     @company_investor = first_dividend.company_investor
+    @dividend_round = first_dividend.dividend_round
 
     @net_cents, @tax_cents, @total_cents = @dividends.pluck(
       "SUM(net_amount_in_cents), SUM(withheld_tax_cents), SUM(dividends.total_amount_in_cents)"
@@ -46,7 +47,7 @@ class CompanyInvestorMailer < ApplicationMailer
 
     mail(to: @company_investor.user.email,
          reply_to: SUPPORT_EMAIL_WITH_NAME,
-         subject: "You've got a distribution from #{@company.name}")
+         subject: "You've got a #{@dividend_round.return_of_capital? ? "return of capital" : "distribution"} from #{@company.name}")
   end
 
   def equity_buyback_payment(equity_buyback_payment_id:)
