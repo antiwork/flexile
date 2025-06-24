@@ -29,7 +29,6 @@ import { z } from "zod";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import Image from "next/image";
 import RichText from "@/components/RichText";
 import MutationButton from "@/components/MutationButton";
 
@@ -98,14 +97,16 @@ export default function Dividends() {
       columnHelper.accessor("status", {
         header: "Status",
         cell: (info) => (
-          <div className="flex justify-between gap-2">
+          <div className="flex min-h-8 justify-between gap-2">
             <DividendStatusIndicator dividend={info.row.original} />
             {info.row.original.investor.user.id === user.id &&
             user.hasPayoutMethodForDividends &&
             user.legalName &&
             info.row.original.dividendRound.releaseDocument &&
             !info.row.original.signedReleaseAt ? (
-              <Button onClick={() => setSigningDividend({ id: info.row.original.id, state: "initial" })}>Sign</Button>
+              <Button size="small" onClick={() => setSigningDividend({ id: info.row.original.id, state: "initial" })}>
+                Sign
+              </Button>
             ) : null}
           </div>
         ),
@@ -200,9 +201,7 @@ export default function Dividends() {
                 <Card className="my-2 rounded-lg bg-gray-50/50">
                   <CardContent className="flex items-center gap-4 p-4">
                     <Avatar className="bg-muted size-12 rounded-lg">
-                      <AvatarImage asChild>
-                        <Image src={company.logo_url ?? "/images/default-company-logo.svg"} alt="" />
-                      </AvatarImage>
+                      <AvatarImage src={company.logo_url ?? "/images/default-company-logo.svg"} />
                     </Avatar>
                     <div className="flex-1">
                       <div className="text-muted-foreground text-sm font-medium">{company.name}</div>
