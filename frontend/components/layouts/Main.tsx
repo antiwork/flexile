@@ -77,8 +77,8 @@ type CheckListItem = {
 const checkListItems: CheckListItem[] = [
   { label: "Add company details", dataKey: "company_details", link: "/administrator/settings/details" },
   { label: "Add bank account", dataKey: "add_bank_account", link: "/administrator/settings/billing" },
-  { label: "Invite a contractor", dataKey: "invite_contractor", link: "/administrator/settings" },
-  { label: "Send your first payment", dataKey: "send_first_payment", link: "/equity/shares" },
+  { label: "Invite a contractor", dataKey: "invite_contractor", link: "/people" },
+  { label: "Send your first payment", dataKey: "send_first_payment", link: "/settings/payouts" },
 ];
 
 function CheckListProgress({
