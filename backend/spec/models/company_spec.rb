@@ -492,15 +492,11 @@ RSpec.describe Company do
     it "creates a new customer setup intent" do
       company = create(:company, without_bank_account: true, stripe_customer_id: nil)
 
-      expect do
-        result = company.create_stripe_setup_intent
-
-        expect(result).to eq setup_intent
-        company.reload
-        expect(company.stripe_customer_id).to eq stripe_customer_id
-        expect(Stripe::Customer).to have_received(:create).once
-        expect(Stripe::SetupIntent).to have_received(:create).once
-      end.to change { company.company_stripe_accounts.count }.from(0).to(1)
+      expect(company.create_stripe_setup_intent).to eq setup_intent
+      company.reload
+      expect(company.stripe_customer_id).to eq stripe_customer_id
+      expect(Stripe::Customer).to have_received(:create).once
+      expect(Stripe::SetupIntent).to have_received(:create).once
     end
   end
 

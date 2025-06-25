@@ -5,7 +5,7 @@ import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { and, eq, isNull } from "drizzle-orm";
 import { companyStripeAccounts, users } from "@/db/schema";
-// Failed to remove the existing associated bank_account. The record failed to save after its foreign key was set to nil.
+
 test.describe("Company administrator settings - payment details", () => {
   test("allows connecting a bank account", async ({ page }) => {
     const { company } = await companiesFactory.create({ stripeCustomerId: null }, { withoutBankAccount: true });

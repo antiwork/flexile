@@ -136,7 +136,7 @@ export default function Billing() {
         </p>
       </hgroup>
 
-      {stripeData ? (
+      {stripeData ? ( // Re-render Stripe Elements provider when data changes as it considers its options immutable
         <>
           {stripeData.bank_account_last4 ? (
             <Card>
