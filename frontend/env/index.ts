@@ -29,6 +29,8 @@ const env = z
     VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
     WISE_PROFILE_ID: z.string(),
     WISE_API_KEY: z.string(),
+    HELPER_WIDGET_HOST: z.string().optional(),
+    HELPER_HMAC_SECRET: z.string().optional(),
   })
   .parse(process.env);
 

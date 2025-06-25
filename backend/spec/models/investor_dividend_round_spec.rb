@@ -91,16 +91,6 @@ RSpec.describe InvestorDividendRound do
                  .with(investor_dividend_round_id: investor_dividend_round.id)
            .and change { investor_dividend_round.reload.dividend_issued_email_sent }.from(false).to(true)
       end
-
-      it "sends the email and sets the relevant flag for return of capital distributions" do
-        dividend_round.update!(return_of_capital: true)
-
-        expect do
-          investor_dividend_round.send_dividend_issued_email
-        end.to have_enqueued_mail(CompanyInvestorMailer, :return_of_capital_issued)
-                 .with(investor_dividend_round_id: investor_dividend_round.id)
-                 .and change { investor_dividend_round.reload.dividend_issued_email_sent }.from(false).to(true)
-      end
     end
   end
 end

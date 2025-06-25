@@ -102,6 +102,8 @@ Rails.application.routes.draw do
 
   scope as: :spa do
     with_options to: spa_controller_action do
+      resource :settings, only: :show, to: "application#main_vue"
+      resources :invoices, only: :index, to: "application#main_vue"
       resource :onboarding, only: :show, to: "application#main_vue" do
         resource :legal, only: :show, to: "application#main_vue"
         resource :bank_account, only: :show, to: "application#main_vue"
@@ -141,6 +143,7 @@ Rails.application.routes.draw do
         end
 
         resources :expenses, only: :index, to: "application#main_vue"
+        resources :invoices, only: :index, to: "application#main_vue"
       end
     end
   end

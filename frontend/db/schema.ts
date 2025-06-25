@@ -384,7 +384,6 @@ export const dividendPayments = pgTable(
   {
     id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
     status: varchar().notNull(),
-    gumroadUserId: varchar("gumroad_user_id"),
     processorUuid: varchar("processor_uuid"),
     wiseQuoteId: varchar("wise_quote_id"),
     transferId: varchar("transfer_id"),
@@ -452,6 +451,7 @@ export const dividendRounds = pgTable(
     externalId: varchar("external_id").$default(nanoid).notNull(),
     returnOfCapital: boolean("return_of_capital").notNull(),
     readyForPayment: boolean("ready_for_payment").notNull().default(false),
+    releaseDocument: text("release_document"),
   },
   (table) => [
     index("index_dividend_rounds_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
@@ -483,6 +483,7 @@ export const dividends = pgTable(
     withholdingPercentage: integer("withholding_percentage"),
     userComplianceInfoId: bigint("user_compliance_info_id", { mode: "bigint" }),
     qualifiedAmountCents: bigint("qualified_amount_cents", { mode: "bigint" }).notNull(),
+    signedReleaseAt: timestamp("signed_release_at", { precision: 6, mode: "date" }),
   },
   (table) => [
     index("index_dividends_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
@@ -1721,6 +1722,7 @@ export const companyContractors = pgTable(
     sentEquityPercentSelectionEmail: boolean("sent_equity_percent_selection_email").notNull().default(false),
     payRateInSubunits: integer("pay_rate_in_subunits"),
     payRateCurrency: varchar("pay_rate_currency").default("usd").notNull(),
+    contractSignedElsewhere: boolean("contract_signed_elsewhere").notNull().default(false),
   },
   (table) => [
     index("index_company_contractors_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
@@ -1871,7 +1873,6 @@ export const companies = pgTable(
     countryCode: varchar("country_code"),
     isGumroad: boolean("is_gumroad").notNull().default(false),
     isTrusted: boolean("is_trusted").notNull().default(false),
-    irsTaxForms: boolean("irs_tax_forms").notNull().default(false),
     equityGrantsEnabled: boolean("equity_grants_enabled").notNull().default(false),
     showAnalyticsToContractors: boolean("show_analytics_to_contractors").notNull().default(false),
     companyUpdatesEnabled: boolean("company_updates_enabled").notNull().default(false),

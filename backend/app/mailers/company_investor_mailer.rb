@@ -5,35 +5,14 @@ class CompanyInvestorMailer < ApplicationMailer
   include ActiveSupport::NumberHelper
   default from: SUPPORT_EMAIL_WITH_NAME
 
-  def return_of_capital_issued(investor_dividend_round_id:)
-    investor_dividend_round = InvestorDividendRound.find(investor_dividend_round_id)
-    @company_investor = investor_dividend_round.company_investor
-    dividends = investor_dividend_round.dividend_round.dividends.where(company_investor_id: @company_investor.id)
-    @user = @company_investor.user
-    @company = @company_investor.company
-    @gross_amount_in_cents = dividends.sum(:total_amount_in_cents)
-    @roi = @company_investor.dividends.sum(:total_amount_in_cents) / @company_investor.investment_amount_in_cents.to_d
-
-    # Calculate ROI note based on dividend years
-    dividend_years = @company_investor.dividends.map { |d| d.created_at.year }.uniq.sort
-    @roi_note = dividend_years.size > 1 ? " (#{dividend_years.first} and #{dividend_years.last} Distributions)" : ""
-
-    mail(to: @user.email,
-         subject: "Upcoming distribution from #{@company.name}")
-  end
-
   def dividend_issued(investor_dividend_round_id:)
     investor_dividend_round = InvestorDividendRound.find(investor_dividend_round_id)
+    @dividend_round = investor_dividend_round.dividend_round
     @company_investor = investor_dividend_round.company_investor
-    dividends = investor_dividend_round.dividend_round.dividends.where(company_investor_id: @company_investor.id)
+    dividends = @dividend_round.dividends.where(company_investor_id: @company_investor.id)
     @user = @company_investor.user
     @company = @company_investor.company
     @gross_amount_in_cents = dividends.sum(:total_amount_in_cents)
-    @roi = @company_investor.dividends.sum(:total_amount_in_cents) / @company_investor.investment_amount_in_cents.to_d
-
-    # Calculate ROI note based on dividend years
-    dividend_years = @company_investor.dividends.map { |d| d.created_at.year }.uniq.sort
-    @roi_note = dividend_years.size > 1 ? " (#{dividend_years.first} and #{dividend_years.last} Distributions)" : ""
 
     # If an investor is missing tax information, calculate the tax withholding and net amount
     if dividends.where(net_amount_in_cents: nil, withheld_tax_cents: nil).exists?
@@ -47,7 +26,7 @@ class CompanyInvestorMailer < ApplicationMailer
 
     mail(to: @user.email,
          reply_to: SUPPORT_EMAIL_WITH_NAME,
-         subject: "Upcoming distribution from #{@company.name}")
+         subject: "Upcoming #{@dividend_round.return_of_capital? ? "return of capital" : "distribution"} from #{@company.name}")
   end
 
   def dividend_payment(dividend_payment_id)
@@ -55,7 +34,8 @@ class CompanyInvestorMailer < ApplicationMailer
     @dividends = @dividend_payment.dividends.includes(:dividend_round)
 
     first_dividend = @dividends.first
-    company_investor = first_dividend.company_investor
+    @company_investor = first_dividend.company_investor
+    @dividend_round = first_dividend.dividend_round
 
     @net_cents, @tax_cents, @total_cents = @dividends.pluck(
       "SUM(net_amount_in_cents), SUM(withheld_tax_cents), SUM(dividends.total_amount_in_cents)"
@@ -65,9 +45,9 @@ class CompanyInvestorMailer < ApplicationMailer
     @withholding_percentage =
       @dividends.pluck(:withholding_percentage).uniq.size == 1 ? first_dividend.withholding_percentage : nil
 
-    mail(to: company_investor.user.email,
+    mail(to: @company_investor.user.email,
          reply_to: SUPPORT_EMAIL_WITH_NAME,
-         subject: "💰 Distribution for your investment in #{@company.name}")
+         subject: "You've got a #{@dividend_round.return_of_capital? ? "return of capital" : "distribution"} from #{@company.name}")
   end
 
   def equity_buyback_payment(equity_buyback_payment_id:)
@@ -108,7 +88,7 @@ class CompanyInvestorMailer < ApplicationMailer
 
     mail(to: @user.email,
          reply_to: SUPPORT_EMAIL_WITH_NAME,
-         subject: "Important notice about your distribution")
+         subject: "Your distribution from #{@company.name} is on hold")
   end
 
   def sanctioned_dividends(company_investor_id, dividend_amount_in_cents:)
@@ -118,7 +98,7 @@ class CompanyInvestorMailer < ApplicationMailer
 
     mail(to: @company_investor.user.email,
          reply_to: SUPPORT_EMAIL_WITH_NAME,
-         subject: "Important notice about your distribution")
+         subject: "Your distribution from #{@company.name} has been retained due to international sanctions")
   end
 
   def stock_exercise_payment_instructions(company_investor_id, exercise_id:)
@@ -186,7 +166,7 @@ class CompanyInvestorMailer < ApplicationMailer
     @company = company_investor.company
 
     mail(to: @user.email,
-         subject: "🔴 Distribution payment failed: re-enter your bank details")
+         subject: "🔴 Action needed: Update your bank details to receive your distribution")
   end
 
   def equity_buyback_payment_failed_reenter_bank_details(equity_buyback_payment_id:, amount:,

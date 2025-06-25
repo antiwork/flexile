@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_15_204642) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_23_190844) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -104,7 +104,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_15_204642) do
     t.boolean "is_gumroad", default: false, null: false
     t.boolean "dividends_allowed", default: false, null: false
     t.boolean "is_trusted", default: false, null: false
-    t.boolean "irs_tax_forms", default: false, null: false
     t.boolean "equity_grants_enabled", default: false, null: false
     t.boolean "show_analytics_to_contractors", default: false, null: false
     t.boolean "company_updates_enabled", default: false, null: false
@@ -369,7 +368,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_15_204642) do
 
   create_table "dividend_payments", force: :cascade do |t|
     t.string "status", null: false
-    t.string "gumroad_user_id"
     t.string "processor_uuid"
     t.string "wise_quote_id"
     t.string "transfer_id"
@@ -401,6 +399,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_15_204642) do
     t.string "external_id", null: false
     t.boolean "return_of_capital", null: false
     t.boolean "ready_for_payment", default: false, null: false
+    t.text "release_document"
     t.index ["company_id"], name: "index_dividend_rounds_on_company_id"
     t.index ["external_id"], name: "index_dividend_rounds_on_external_id", unique: true
   end
@@ -421,6 +420,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_15_204642) do
     t.integer "withholding_percentage"
     t.bigint "user_compliance_info_id"
     t.bigint "qualified_amount_cents", null: false
+    t.datetime "signed_release_at"
     t.index ["company_id"], name: "index_dividends_on_company_id"
     t.index ["company_investor_id"], name: "index_dividends_on_company_investor_id"
     t.index ["dividend_round_id"], name: "index_dividends_on_dividend_round_id"

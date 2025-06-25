@@ -44,7 +44,9 @@ export const currentUserSchema = z.object({
   preferredName: z.string().nullable(),
   legalName: z.string().nullable(),
   billingEntityName: z.string().nullable(),
-  hasPayoutMethod: z.boolean(),
+  hasPayoutMethodForInvoices: z.boolean(),
+  hasPayoutMethodForDividends: z.boolean(),
+  taxInformationConfirmedAt: z.string().nullable(),
   roles: z.object({
     administrator: z.object({ id: z.string(), isInvited: z.boolean() }).optional(),
     lawyer: z.object({ id: z.string() }).optional(),

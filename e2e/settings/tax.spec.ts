@@ -19,7 +19,7 @@ test.describe("Tax settings", () => {
   let user: typeof users.$inferSelect;
 
   test.beforeEach(async ({ page, next }) => {
-    ({ company, adminUser } = await companiesFactory.createCompletedOnboarding({ irsTaxForms: true }));
+    ({ company, adminUser } = await companiesFactory.createCompletedOnboarding());
 
     user = (
       await usersFactory.create(

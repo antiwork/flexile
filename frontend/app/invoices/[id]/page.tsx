@@ -27,7 +27,7 @@ import {
   EDITABLE_INVOICE_STATES,
   LegacyAddress,
   RejectModal,
-  useAreTaxRequirementsMet,
+  taxRequirementsMet,
   useIsActionable,
 } from "..";
 import InvoiceStatus, { StatusDetails } from "../Status";
@@ -36,7 +36,6 @@ export default function InvoicePage() {
   const { id } = useParams<{ id: string }>();
   const user = useCurrentUser();
   const company = useCurrentCompany();
-  const taxRequirementsMet = useAreTaxRequirementsMet();
   const [invoice, { refetch }] = trpc.invoices.get.useSuspenseQuery({ companyId: company.id, id });
   const complianceInfo = invoice.contractor.user.complianceInfo;
   const [expenseCategories] = trpc.expenseCategories.list.useSuspenseQuery({ companyId: company.id });

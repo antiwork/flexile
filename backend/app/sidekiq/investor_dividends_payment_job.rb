@@ -14,7 +14,11 @@ class InvestorDividendsPaymentJob
 
     update_dividend_tax_info
 
-    dividends_eligible_for_payment = company_investor.dividends.where(status: [Dividend::ISSUED, Dividend::RETAINED])
+    dividends_eligible_for_payment = company_investor
+                                       .dividends
+                                       .joins(:dividend_round)
+                                       .where(status: [Dividend::ISSUED, Dividend::RETAINED])
+                                       .where("dividends.signed_release_at IS NOT NULL OR dividend_rounds.release_document IS NULL")
     PayInvestorDividends.new(company_investor, dividends_eligible_for_payment).process
   end
 

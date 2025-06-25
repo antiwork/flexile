@@ -1,18 +1,7 @@
-<h1>
-  Your distribution from <%= @company.display_name %> has been retained due to international sanctions.
-</h1>
-<p>
-  Based on your investment of
-  <%= cents_format(@company_investor.investment_amount_in_cents, no_cents_if_whole: false) %>
-  in <%= @company.name %>, you've received dividends for
-  <%= cents_format(@dividend_amount_in_cents, no_cents_if_whole: false) %>.
-  However, we're unable to process the payment at this time due to sanctions imposed on your residence country.
-</p>
-<p>
-  We totally understand how important these payments are to you, and we're sorry for any inconvenience this may cause.
-  We will keep you updated on any progress or changes. Unfortunately, there are no available actions to be taken at
-  this time.
-</p>
-<p>
-  If you have any questions or need assistance regarding the dividend distribution process, please reply to this email.
-</p>
+<p>Hello <%= @company_investor.user.name %>,</p>
+<p><strong>Your <%= cents_format(@dividend_amount_in_cents, no_cents_if_whole: false) %> distribution from <%= @company.display_name %> is on hold.</strong></p>
+<p>Your investment in <%= @company.display_name %> has generated a <%= cents_format(@dividend_amount_in_cents, no_cents_if_whole: false) %> distribution. However, we’re currently unable to send this payment due to international sanctions related to your country of residence.</p>
+<p>We understand this is frustrating, and we’re sorry for the inconvenience. Unfortunately, we cannot process the payment at this time or provide a workaround. If this changes, we’ll notify you right away.</p>
+<p>If you have any questions, just reply to this email.</p>
+<p>Thanks,</p>
+<p><b>The Flexile team</b></p>

@@ -11,9 +11,7 @@ class OnboardingState::Company
   end
 
   def redirect_path
-    if !has_company_details?
-      spa_company_administrator_onboarding_details_path(company.external_id)
-    end
+    nil
   end
 
   def redirect_path_from_onboarding_details
@@ -25,14 +23,14 @@ class OnboardingState::Company
   end
 
   def complete?
-    has_company_details?
+    true
   end
 
   private
     attr_reader :company
 
     def has_company_details?
-      [name, street_address, city, state, zip_code].all?(&:present?)
+      true
     end
 
     def needs_contract_details?

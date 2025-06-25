@@ -366,9 +366,7 @@ export default function DocumentsPage() {
             </AlertDescription>
           </Alert>
         )}
-        {company.flags.includes("irs_tax_forms") &&
-        user.roles.administrator &&
-        new Date() <= filingDueDateFor1099DIV ? (
+        {user.roles.administrator && new Date() <= filingDueDateFor1099DIV ? (
           <Alert className="mb-4">
             <AlertTitle>Upcoming filing dates for 1099-NEC, 1099-DIV, and 1042-S</AlertTitle>
             <AlertDescription>

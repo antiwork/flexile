@@ -38,7 +38,7 @@ RSpec.describe EquityAllocation do
         expect(equity_allocation.errors[:equity_percentage]).to eq(["cannot be unset once set"])
       end
 
-      it "disallows changing the equity percentage value when locked" do
+      it "allows changing the equity percentage value when locked" do
         equity_allocation = create(:equity_allocation)
         equity_allocation.update(equity_percentage: 10)
         expect(equity_allocation.errors[:equity_percentage]).to be_empty
@@ -46,7 +46,8 @@ RSpec.describe EquityAllocation do
         equity_allocation.update!(locked: true)
         expect(equity_allocation).to be_valid
         equity_allocation.update(equity_percentage: 20)
-        expect(equity_allocation.errors[:equity_percentage]).to eq(["cannot be changed once locked"])
+        expect(equity_allocation.errors[:equity_percentage]).to be_empty
+        expect(equity_allocation.equity_percentage).to eq(20)
       end
 
       it "allows setting the lock and an equity percentage on creation" do

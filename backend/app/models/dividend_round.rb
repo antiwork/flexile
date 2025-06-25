@@ -15,4 +15,14 @@ class DividendRound < ApplicationRecord
   validates :ready_for_payment, inclusion: { in: [true, false] }
 
   scope :ready_for_payment, -> { where(ready_for_payment: true) }
+
+  def send_dividend_emails
+    company.company_investors.joins(:dividends)
+      .where(dividends: { dividend_round_id: id })
+      .group(:id)
+      .each do |investor|
+        investor_dividend_round = investor.investor_dividend_rounds.find_or_create_by!(dividend_round_id: id)
+        investor_dividend_round.send_dividend_issued_email
+      end
+  end
 end

@@ -7,10 +7,10 @@ import React, { Fragment, useEffect, useMemo, useState } from "react";
 import StripeMicrodepositVerification from "@/app/administrator/settings/StripeMicrodepositVerification";
 import {
   ApproveButton,
+  taxRequirementsMet,
   EDITABLE_INVOICE_STATES,
   RejectModal,
   useApproveInvoices,
-  useAreTaxRequirementsMet,
   useIsActionable,
   useIsPayable,
 } from "@/app/invoices/index";
@@ -66,15 +66,10 @@ export default function InvoicesPage() {
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
   const isActionable = useIsActionable();
   const isPayable = useIsPayable();
-  const areTaxRequirementsMet = useAreTaxRequirementsMet();
   const [data] = trpc.invoices.list.useSuspenseQuery({
     companyId: company.id,
     contractorId: user.roles.administrator ? undefined : user.roles.worker?.id,
   });
-  const { data: equityAllocation } = trpc.equityAllocations.get.useQuery(
-    { companyId: company.id, year: new Date().getFullYear() },
-    { enabled: !!user.roles.worker },
-  );
 
   const { canSubmitInvoices, hasLegalDetails, unsignedContractId } = useCanSubmitInvoices();
 
@@ -178,7 +173,7 @@ export default function InvoicesPage() {
         </Link>
       </Button>
     </div>
-  ) : !user.hasPayoutMethod ? (
+  ) : !user.hasPayoutMethodForInvoices ? (
     <>
       Please{" "}
       <Link className={linkClasses} href="/settings/payouts">
@@ -186,8 +181,6 @@ export default function InvoicesPage() {
       </Link>{" "}
       for your invoices.
     </>
-  ) : equityAllocation?.locked ? (
-    `You'll be able to select a new allocation for ${new Date().getFullYear() + 1} later this year.`
   ) : null;
 
   return (
@@ -240,7 +233,7 @@ export default function InvoicesPage() {
                   </Alert>
                 ) : null}
 
-                {data.some((invoice) => !areTaxRequirementsMet(invoice)) && (
+                {!data.every(taxRequirementsMet) && (
                   <Alert variant="destructive">
                     <AlertTriangle className="size-5" />
                     <AlertTitle>Missing tax information.</AlertTitle>
@@ -588,29 +581,29 @@ const QuickInvoicesSection = () => {
                   </FormItem>
                 )}
               />
-            </div>
 
-            {company.equityCompensationEnabled ? (
-              <FormField
-                control={form.control}
-                name="invoiceEquityPercent"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>How much of your rate would you like to swap for equity?</FormLabel>
-                    <FormControl>
-                      <RangeInput
-                        {...field}
-                        min={0}
-                        max={MAX_EQUITY_PERCENTAGE}
-                        unit="%"
-                        disabled={!canSubmitInvoices || !!equityAllocation?.locked}
-                        aria-label="Cash vs equity split"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            ) : null}
+              {company.equityCompensationEnabled ? (
+                <FormField
+                  control={form.control}
+                  name="invoiceEquityPercent"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>How much of your rate would you like to swap for equity?</FormLabel>
+                      <FormControl>
+                        <RangeInput
+                          {...field}
+                          min={0}
+                          max={MAX_EQUITY_PERCENTAGE}
+                          unit="%"
+                          disabled={!canSubmitInvoices}
+                          aria-label="Cash vs equity split"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              ) : null}
+            </div>
 
             <Separator orientation="horizontal" className="block w-full lg:hidden" />
             <Separator orientation="vertical" className="hidden lg:block" />
