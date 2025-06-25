@@ -71,7 +71,7 @@ export const GettingStarted = () => {
       }
     });
     return subscription;
-  }, []);
+  }, [company.id]);
 
   return (
     <SidebarMenuItem className="border-t border-gray-200">
