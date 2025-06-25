@@ -22,8 +22,12 @@ module SetCurrent
         if user
           user.update!(clerk_id: clerk.user_id)
         else
-          user = User.create!(clerk_id: clerk.user_id, email:)
-          user.tos_agreements.create!(ip_address: request.remote_ip)
+          result = SignUpCompany.new(user_attributes: {
+            email:,
+            clerk_id: clerk.user_id,
+          },
+                                     ip_address: request.remote_ip).perform
+          user = result[:user]
         end
       end
 
@@ -45,36 +49,35 @@ module SetCurrent
     context
   end
 
-
   private
-    def company_from_param
-      # TODO: Remove params[:companyId] once all URLs are updated
-      company_id = params[:company_id] || params[:companyId] || cookies[current_user_selected_company_cookie_name]
-      return if company_id.blank? || company_id == Company::PLACEHOLDER_COMPANY_ID
+  def company_from_param
+    # TODO: Remove params[:companyId] once all URLs are updated
+    company_id = params[:company_id] || params[:companyId] || cookies[current_user_selected_company_cookie_name]
+    return if company_id.blank? || company_id == Company::PLACEHOLDER_COMPANY_ID
 
-      company = Current.user.all_companies.find { _1.external_id == company_id }
-      # Ensures the URL contains a valid company ID that the user can access
-      return e404 if company.blank?
+    company = Current.user.all_companies.find { _1.external_id == company_id }
+    # Ensures the URL contains a valid company ID that the user can access
+    return e404 if company.blank?
 
-      company
+    company
+  end
+
+  def company_from_user
+    Company::ACCESS_ROLES.each do |access_role, model_class|
+      next unless Current.user.public_send(:"#{access_role}?")
+
+      return model_class.where(user_id: Current.user.id).first!.company
     end
 
-    def company_from_user
-      Company::ACCESS_ROLES.each do |access_role, model_class|
-        next unless Current.user.public_send(:"#{access_role}?")
+    nil
+  end
 
-        return model_class.where(user_id: Current.user.id).first!.company
-      end
+  def reset_current
+    @current_context = nil
+    current_context
+  end
 
-      nil
-    end
-
-    def reset_current
-      @current_context = nil
-      current_context
-    end
-
-    def current_user_selected_company_cookie_name
-      [Current.user.external_id, "selected_company"].join("_")
-    end
+  def current_user_selected_company_cookie_name
+    [Current.user.external_id, "selected_company"].join("_")
+  end
 end

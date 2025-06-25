@@ -19,7 +19,7 @@ class OnboardingState::User
     elsif user.company_investor_for?(company)
       OnboardingState::Investor.new(user:, company:).redirect_path
     else
-      spa_company_administrator_onboarding_details_path("_")
+      spa_invoices_path
     end
   end
 end

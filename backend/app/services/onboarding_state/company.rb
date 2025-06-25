@@ -30,7 +30,7 @@ class OnboardingState::Company
     attr_reader :company
 
     def has_company_details?
-      true
+      [name, street_address, city, state, zip_code].all?(&:present?)
     end
 
     def needs_contract_details?

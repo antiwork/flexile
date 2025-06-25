@@ -11,12 +11,16 @@ import {
   CircleDollarSign,
   LogOut,
   ChevronRight,
+  Check,
+  Circle,
+  X,
+  ChevronDown,
 } from "lucide-react";
-import { skipToken, useQueryClient } from "@tanstack/react-query";
+import { skipToken, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React from "react";
+import React, { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -40,15 +44,158 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+
 import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
 import defaultCompanyLogo from "@/images/default-company-logo.svg";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
-import { company_switch_path } from "@/utils/routes";
+import { company_switch_path, details_onboarding_url } from "@/utils/routes";
 import type { Route } from "next";
 import { useIsActionable } from "@/app/invoices";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { navLinks as equityNavLinks } from "@/app/equity";
+import { cn } from "@/utils";
+import { z } from "zod";
+import { CircleProgress } from "@/components/ui/progress";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
+
+const onboardingDataSchema = z.object({
+  invite_contractor: z.boolean(),
+  add_bank_account: z.boolean(),
+  send_first_payment: z.boolean(),
+  company_details: z.boolean(),
+});
+
+type CheckListData = z.infer<typeof onboardingDataSchema>;
+
+type CheckListItem = {
+  label: string;
+  dataKey: keyof CheckListData;
+  link: Route;
+};
+const checkListItems: CheckListItem[] = [
+  { label: "Add company details", dataKey: "company_details", link: "/administrator/settings/details" },
+  { label: "Add bank account", dataKey: "add_bank_account", link: "/administrator/settings/billing" },
+  { label: "Invite a contractor", dataKey: "invite_contractor", link: "/administrator/settings" },
+  { label: "Send your first payment", dataKey: "send_first_payment", link: "/equity/shares" },
+];
+
+function CheckListProgress({
+  percentage,
+  ...props
+}: { percentage: number } & React.ComponentProps<typeof SidebarMenuButton>) {
+  const isCompleted = percentage === 100;
+  return (
+    <SidebarMenuButton className="flex items-center justify-between gap-2 py-2" {...props}>
+      <div className="flex items-center gap-2">
+        {isCompleted ? (
+          <Check className="size-4 rounded-full bg-blue-500 p-[3px] text-white" strokeWidth={2} />
+        ) : (
+          <CircleProgress value={percentage} maxValue={100} size={15} color="stroke-blue-500" />
+        )}
+        <span className="text-sm"> Getting Started</span>
+      </div>
+      <span className="text-sm">{percentage}%</span>
+    </SidebarMenuButton>
+  );
+}
+
+function CheckListItem({ item, completed }: { item: CheckListItem; completed: boolean }) {
+  const { label, link } = item;
+  return (
+    <Link href={link} className="flex items-center gap-2 py-2.5 hover:underline">
+      {completed ? (
+        <Check className="size-4 rounded-full bg-blue-500 p-[3px] text-white" strokeWidth={2} />
+      ) : (
+        <Circle className="size-4 text-gray-100" />
+      )}
+      <span className={cn("text-sm/5", completed ? "text-gray-500 line-through" : "")}>{label}</span>
+    </Link>
+  );
+}
+
+function Checklist({ onboardingData, onDismiss }: { onboardingData: CheckListData; onDismiss: () => void }) {
+  return (
+    <div className="mb-3 rounded-lg border border-gray-100 bg-white shadow-xs">
+      <div
+        className="flex cursor-pointer items-center justify-between rounded-md p-2 hover:bg-gray-50"
+        onClick={onDismiss}
+      >
+        <span className="text-sm/5 font-medium">Getting Started</span>
+        <ChevronDown className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+      </div>
+
+      <div className="p-2">
+        {checkListItems.map((item) => (
+          <CheckListItem key={item.label} item={item} completed={onboardingData[item.dataKey]} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CompletedBanner({ onDismiss }: { onDismiss: () => void }) {
+  return (
+    <div className="mb-3 rounded-lg border border-gray-100 bg-white p-2 px-3 shadow-sm">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-sm/5 font-medium">Getting Started</span>
+        <button className="rounded-md p-1 hover:bg-gray-50" onClick={onDismiss}>
+          <X className="size-4" />
+        </button>
+      </div>
+      <p className="text-sm/5">Everything is in place. Time to flex.</p>
+    </div>
+  );
+}
+
+function OnBoarding({ currentCompanyId }: { currentCompanyId: string }) {
+  const [isOpen, setIsOpen] = React.useState(() => localStorage.getItem("onboarding-menu-state") === "open");
+
+  const { data: onboardingData } = useSuspenseQuery({
+    queryKey: ["companyOnboarding", currentCompanyId],
+    queryFn: async () => {
+      const response = await request({
+        method: "GET",
+        url: details_onboarding_url(),
+        accept: "json",
+        assertOk: true,
+      });
+      return onboardingDataSchema.parse(await response.json());
+    },
+  });
+
+  const percentage = useMemo(() => {
+    const completed = Object.values(onboardingData).filter(Boolean).length;
+    const total = checkListItems.length;
+    return Math.round((completed / total) * 100);
+  }, [onboardingData]);
+  const isCompleted = percentage === 100;
+
+  const onDismiss = () => {
+    setIsOpen(false);
+    localStorage.setItem("onboarding-menu-state", "closed");
+  };
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <CheckListProgress percentage={percentage} />
+      </PopoverTrigger>
+      <PopoverContent
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        className="border-none p-0 shadow-xs"
+        style={{ width: "var(--radix-popover-trigger-width)" }}
+      >
+        {isCompleted ? (
+          <CompletedBanner onDismiss={onDismiss} />
+        ) : (
+          <Checklist onboardingData={onboardingData} onDismiss={onDismiss} />
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export default function MainLayout({
   children,
@@ -146,6 +293,10 @@ export default function MainLayout({
                   </SignOutButton>
                 </SidebarMenuItem>
               </SidebarMenu>
+              <Separator className="my-2" />
+              {user.currentCompanyId && user.roles.administrator ? (
+                <OnBoarding currentCompanyId={user.currentCompanyId} />
+              ) : null}
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>

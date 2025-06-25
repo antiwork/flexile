@@ -9,6 +9,10 @@ class OnboardingPolicy < ApplicationPolicy
     show?
   end
 
+  def details?
+    company_administrator.present?
+  end
+
   def legal?
     show?
   end

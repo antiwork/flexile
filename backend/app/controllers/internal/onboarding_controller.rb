@@ -18,6 +18,11 @@ class Internal::OnboardingController < Internal::BaseController
     render json: UserPresenter.new(current_context: pundit_user).personal_details_props
   end
 
+  def details
+    authorize :onboarding
+    render json: ::CompanyOnboardingPresenter.new(Current.company).props
+  end
+
   def update
     authorize :onboarding
 

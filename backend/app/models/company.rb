@@ -162,6 +162,14 @@ class Company < ApplicationRecord
 
   def bank_account_ready? = !!bank_account&.ready?
 
+  def contractor_added = contractors.first(company_id: id).present?
+
+  def payment_sent? = invoices.paid.exists?
+
+  def has_company_details?
+    [name, street_address, city, state, zip_code].all?(&:present?)
+  end
+
   def completed_onboarding?
     OnboardingState::Company.new(self).complete?
   end

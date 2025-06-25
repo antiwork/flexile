@@ -110,6 +110,7 @@ Rails.application.routes.draw do
       resources :companies, only: [] do
         # Accessible by company administrator
         namespace :administrator, module: nil do
+          resources :invoices, only: :index, to: "application#main_vue"
           namespace :onboarding, module: nil do
             resource :invitation, only: :show, to: "application#main_vue"
             resource :details, only: :show, to: "application#main_vue"

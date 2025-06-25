@@ -18,4 +18,62 @@ function Progress({ className, value, ...props }: React.ComponentProps<typeof Pr
   );
 }
 
-export { Progress };
+export interface CircleProgressProps extends React.HtmlHTMLAttributes<HTMLDivElement> {
+  value: number;
+  maxValue: number;
+  size?: number;
+  strokeWidth?: number;
+  color?: string;
+  className?: string;
+}
+
+const CircleProgress = ({
+  value,
+  maxValue,
+  size = 40,
+  strokeWidth = 3,
+  color,
+  className,
+  ...props
+}: CircleProgressProps) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const fillPercentage = Math.min(value / maxValue, 1);
+  const strokeDashoffset = circumference * (1 - fillPercentage);
+
+  const currentColor = color ?? "stroke-emerald-500";
+
+  return (
+    <div
+      className={cn(className)}
+      role="progressbar"
+      aria-valuenow={value}
+      aria-valuemin={0}
+      aria-valuemax={maxValue}
+      {...props}
+    >
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className={cn("duration-300")}>
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          className="fill-transparent stroke-gray-200 dark:stroke-gray-700"
+          strokeWidth={strokeWidth}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          className={cn("fill-transparent transition-colors", currentColor)}
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          strokeLinecap="round"
+        />
+      </svg>
+    </div>
+  );
+};
+
+export { Progress, CircleProgress };
