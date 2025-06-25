@@ -49,6 +49,7 @@ import type { Route } from "next";
 import { useIsActionable } from "@/app/invoices";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { navLinks as equityNavLinks } from "@/app/equity";
+import { GettingStarted } from "@/components/GettingStarted";
 
 export default function MainLayout({
   children,
@@ -145,6 +146,7 @@ export default function MainLayout({
                     </SidebarMenuButton>
                   </SignOutButton>
                 </SidebarMenuItem>
+                <GettingStarted />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

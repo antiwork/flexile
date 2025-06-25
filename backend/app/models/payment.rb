@@ -14,6 +14,7 @@ class Payment < ApplicationRecord
 
   after_save :update_invoice_pg_search_document
   after_update_commit :sync_with_quickbooks
+  after_update_commit :update_first_payment_checklist, if: :saved_change_to_status?
 
   validates :net_amount_in_cents, numericality: { greater_than_or_equal_to: 1, only_integer: true }, presence: true
   validates :transfer_fee_in_cents, numericality: { greater_than_or_equal_to: 0, only_integer: true }, allow_nil: true
@@ -33,5 +34,11 @@ class Payment < ApplicationRecord
       if previous_changes.key?(:status) && previous_changes[:status].last == SUCCEEDED
         QuickbooksDataSyncJob.perform_async(invoice.company_id, self.class.name, id)
       end
+    end
+
+    def update_first_payment_checklist
+      return unless status == SUCCEEDED
+
+      company.update_checklist_item!("send_first_payment")
     end
 end

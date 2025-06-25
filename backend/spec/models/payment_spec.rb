@@ -50,6 +50,20 @@ RSpec.describe Payment do
     end
   end
 
+  describe "checklist integration" do
+    let(:company) { create(:company) }
+    let(:invoice) { create(:invoice, company: company) }
+    let(:payment) { create(:payment, invoice: invoice, status: "processing") }
+
+    it "updates first payment checklist when payment succeeds" do
+      expect {
+        payment.update!(status: "succeeded")
+      }.to change {
+        company.reload.json_data.dig("checklist", "send_first_payment")
+      }.from(nil).to(true)
+    end
+  end
+
   describe "callbacks" do
     describe "#update_invoice_pg_search_document" do
       let(:payment) { create(:payment) }

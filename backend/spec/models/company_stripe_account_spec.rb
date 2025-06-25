@@ -183,4 +183,39 @@ RSpec.describe CompanyStripeAccount do
       end
     end
   end
+
+  describe "checklist integration" do
+    let(:company) { create(:company) }
+    let(:stripe_account) { create(:company_stripe_account, company: company, status: "processing") }
+
+    it "updates bank account checklist when status becomes ready" do
+      expect {
+        stripe_account.update!(status: "ready")
+      }.to change {
+        company.reload.json_data.dig("checklist", "add_bank_account")
+      }.from(nil).to(true)
+    end
+  end
+
+  describe "callbacks" do
+    describe "#delete_older_records!" do
+      let(:company) { create(:company) }
+
+      it "deletes older records when a new one is created" do
+        older_account = create(:company_stripe_account, company:, created_at: 1.hour.ago)
+        expect(older_account.reload.deleted_at).to be_nil
+
+        create(:company_stripe_account, company:)
+        expect(older_account.reload.deleted_at).to be_present
+      end
+
+      it "does not delete older records when creating a deleted account" do
+        older_account = create(:company_stripe_account, company:, created_at: 1.hour.ago)
+        expect(older_account.reload.deleted_at).to be_nil
+
+        create(:company_stripe_account, company:, deleted_at: Time.current)
+        expect(older_account.reload.deleted_at).to be_nil
+      end
+    end
+  end
 end

@@ -48,6 +48,12 @@ RSpec.describe InviteWorker do
     expect(contract.signatories).to match_array([user, company_administrator.user])
   end
 
+  it "updates the checklist when a contractor is successfully invited" do
+    expect do
+      invite_contractor
+    end.to change { company.reload.json_data.dig("checklist", "invite_contractor") }.from(nil).to(true)
+  end
+
   context "when a user with the same email address already exists" do
     let(:user) { create(:user, email:) }
 
@@ -60,6 +66,12 @@ RSpec.describe InviteWorker do
         end.to change { User.count }.by(0)
           .and change { CompanyWorker.count }.by(0)
           .and change { Document.count }.by(0)
+      end
+
+      it "does not update the checklist when invitation fails" do
+        expect do
+          invite_contractor
+        end.not_to change { company.reload.json_data }
       end
 
       context "when the worker hasn't completed onboarding" do
@@ -108,6 +120,12 @@ RSpec.describe InviteWorker do
         expect(contractor.pay_rate_in_subunits).to eq(50_00)
         expect(contractor.role).to eq("Role")
       end
+
+      it "updates the checklist when existing user is invited to new company" do
+        expect do
+          invite_contractor
+        end.to change { company.reload.json_data.dig("checklist", "invite_contractor") }.from(nil).to(true)
+      end
     end
 
     it "reactivates the alumnus contractor record of the user for the same company" do
@@ -135,6 +153,21 @@ RSpec.describe InviteWorker do
       expect(company_worker.pay_rate_in_subunits).to eq(50_00)
       expect(company_worker.role).to eq("Role")
     end
+
+    it "updates checklist when reactivating alumnus contractor" do
+      create(
+        :company_worker,
+        user:,
+        company:,
+        ended_at: 3.months.ago,
+        hours_per_week: 25,
+        pay_rate_in_subunits: 100_00
+      )
+
+      expect do
+        invite_contractor
+      end.to change { company.reload.json_data.dig("checklist", "invite_contractor") }.from(nil).to(true)
+    end
   end
 
   context "when contractor details are invalid" do
@@ -154,6 +187,12 @@ RSpec.describe InviteWorker do
       end.to change { User.count }.by(0)
          .and change { CompanyWorker.count }.by(0)
          .and change { Document.count }.by(0)
+    end
+
+    it "does not update checklist when invitation fails due to validation errors" do
+      expect do
+        invite_contractor
+      end.not_to change { company.reload.json_data }
     end
   end
 end

@@ -58,6 +58,70 @@ RSpec.describe Company do
     end
   end
 
+  describe "checklist functionality" do
+    let(:company) { create(:company) }
+
+    describe "#checklist_items" do
+      it "returns all checklist items with completion status" do
+        items = company.checklist_items
+
+        expect(items).to have_attributes(size: 3)
+        expect(items.map { |item| item[:key] }).to contain_exactly(
+          "add_bank_account", "invite_contractor", "send_first_payment"
+        )
+        expect(items.all? { |item| item[:completed] == false }).to be true
+      end
+
+      it "shows completed items when checklist data exists" do
+        company.update_checklist_item!("add_bank_account")
+
+        items = company.checklist_items
+        bank_account_item = items.find { |item| item[:key] == "add_bank_account" }
+
+        expect(bank_account_item[:completed]).to be true
+        expect(items.select { |item| item[:completed] }.size).to eq(1)
+      end
+    end
+
+    describe "#checklist_completion_percentage" do
+      it "returns 0 when no items are completed" do
+        expect(company.checklist_completion_percentage).to eq(0)
+      end
+
+      it "returns correct percentage when some items are completed" do
+        company.update_checklist_item!("add_bank_account")
+        expect(company.checklist_completion_percentage).to eq(33)
+      end
+
+      it "returns 100 when all items are completed" do
+        company.update_checklist_item!("add_bank_account")
+        company.update_checklist_item!("invite_contractor")
+        company.update_checklist_item!("send_first_payment")
+
+        expect(company.checklist_completion_percentage).to eq(100)
+      end
+    end
+
+    describe "#update_checklist_item!" do
+      it "updates checklist item in json_data" do
+        company.update_checklist_item!("add_bank_account")
+
+        expect(company.json_data["checklist"]["add_bank_account"]).to be true
+      end
+
+      it "ignores invalid checklist keys" do
+        expect { company.update_checklist_item!("invalid_key") }.not_to change { company.json_data }
+      end
+    end
+
+    describe "initialization" do
+      it "initializes empty checklist on creation" do
+        new_company = create(:company)
+        expect(new_company.json_data["checklist"]).to eq({})
+      end
+    end
+  end
+
   describe "validations" do
     it { is_expected.to validate_presence_of(:email) }
     it { is_expected.to validate_presence_of(:country_code) }

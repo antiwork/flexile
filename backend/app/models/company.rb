@@ -26,6 +26,12 @@ class Company < ApplicationRecord
     self.const_set("ACCESS_ROLE_#{access_role.upcase}", access_role)
   end
 
+  CHECKLIST_ITEMS = [
+    { key: "add_bank_account", title: "Add bank account", description: "Connect your bank account to enable payments" },
+    { key: "invite_contractor", title: "Invite a contractor", description: "Add your first team member" },
+    { key: "send_first_payment", title: "Send your first payment", description: "Process your first contractor payment" }
+  ].freeze
+
   has_many :company_administrators
   has_many :administrators, through: :company_administrators, source: :user
   has_many :company_lawyers
@@ -94,9 +100,8 @@ class Company < ApplicationRecord
   scope :is_gumroad, -> { where(is_gumroad: true) }
   scope :is_trusted, -> { where(is_trusted: true) }
 
-  after_create_commit :create_balance!
+  after_create_commit :create_balance!, :initialize_checklist!
   after_update_commit :update_convertible_implied_shares, if: :saved_change_to_fully_diluted_shares?
-
 
   accepts_nested_attributes_for :expense_categories
 
@@ -198,6 +203,31 @@ class Company < ApplicationRecord
     json_data&.dig("flags")&.include?(flag)
   end
 
+  def checklist_items
+    checklist_data = json_data&.dig("checklist") || {}
+    CHECKLIST_ITEMS.map do |item|
+      item.merge(completed: checklist_data[item[:key]] == true)
+    end
+  end
+
+  def checklist_completion_percentage
+    completed_count = checklist_items.count { |item| item[:completed] }
+    return 0 if CHECKLIST_ITEMS.empty?
+
+    (completed_count.to_f / CHECKLIST_ITEMS.size * 100).round
+  end
+
+  def update_checklist_item!(key)
+    return unless CHECKLIST_ITEMS.any? { |item| item[:key] == key.to_s }
+
+    checklist_data = json_data&.dig("checklist") || {}
+    checklist_data[key.to_s] = true
+
+    updated_json_data = json_data || {}
+    updated_json_data["checklist"] = checklist_data
+    update!(json_data: updated_json_data)
+  end
+
   private
     def update_convertible_implied_shares
       convertible_investments.each do |investment|
@@ -218,5 +248,9 @@ class Company < ApplicationRecord
       )
       update!(stripe_customer_id: stripe_customer.id)
       stripe_customer_id
+    end
+
+    def initialize_checklist!
+      update_column(:json_data, (json_data || {}).merge("checklist" => {}))
     end
 end

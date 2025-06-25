@@ -17,6 +17,7 @@ class CompanyStripeAccount < ApplicationRecord
   validates :setup_intent_id, presence: true
 
   after_create_commit :delete_older_records!, unless: :deleted?
+  after_update_commit :update_bank_account_checklist, if: :saved_change_to_status?
 
   def ready? = status == READY
 
@@ -49,5 +50,10 @@ class CompanyStripeAccount < ApplicationRecord
   private
     def delete_older_records!
       company.company_stripe_accounts.alive.where.not(id:).each(&:mark_deleted!)
+    end
+
+    def update_bank_account_checklist
+      return unless ready?
+      company.update_checklist_item!("add_bank_account")
     end
 end
