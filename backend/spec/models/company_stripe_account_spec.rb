@@ -185,15 +185,21 @@ RSpec.describe CompanyStripeAccount do
   end
 
   describe "checklist integration" do
-    let(:company) { create(:company) }
-    let(:stripe_account) { create(:company_stripe_account, company: company, status: "processing") }
+    let(:company) { create(:company, :without_bank_account) }
 
-    it "updates bank account checklist when status becomes ready" do
-      expect do
-        stripe_account.update!(status: "ready")
-      end.to change {
-        company.reload.json_data.dig("checklist", "add_bank_account")
-      }.from(nil).to(true)
+    it "computes bank account checklist when status becomes ready" do
+      checklist_item = company.checklist_items.find { |item| item[:key] == "add_bank_account" }
+      expect(checklist_item[:completed]).to be false
+
+      stripe_account = create(:company_stripe_account, company: company, status: "processing")
+
+      checklist_item = company.reload.checklist_items.find { |item| item[:key] == "add_bank_account" }
+      expect(checklist_item[:completed]).to be false
+
+      stripe_account.update!(status: "ready")
+
+      checklist_item = company.reload.checklist_items.find { |item| item[:key] == "add_bank_account" }
+      expect(checklist_item[:completed]).to be true
     end
   end
 

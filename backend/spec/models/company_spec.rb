@@ -72,8 +72,8 @@ RSpec.describe Company do
         expect(items.all? { |item| item[:completed] == false }).to be true
       end
 
-      it "shows completed items when checklist data exists" do
-        company.update_checklist_item!("add_bank_account")
+      it "shows completed items when conditions are met" do
+        create(:company_stripe_account, company: company, status: "ready")
 
         items = company.checklist_items
         bank_account_item = items.find { |item| item[:key] == "add_bank_account" }
@@ -89,28 +89,17 @@ RSpec.describe Company do
       end
 
       it "returns correct percentage when some items are completed" do
-        company.update_checklist_item!("add_bank_account")
+        create(:company_stripe_account, company: company, status: "ready")
         expect(company.checklist_completion_percentage).to eq(33)
       end
 
       it "returns 100 when all items are completed" do
-        company.update_checklist_item!("add_bank_account")
-        company.update_checklist_item!("invite_contractor")
-        company.update_checklist_item!("send_first_payment")
+        create(:company_stripe_account, company: company, status: "ready")
+        contractor = create(:company_worker, company: company)
+        invoice = create(:invoice, company: company, user: contractor.user)
+        create(:payment, invoice: invoice, status: "succeeded")
 
         expect(company.checklist_completion_percentage).to eq(100)
-      end
-    end
-
-    describe "#update_checklist_item!" do
-      it "updates checklist item in json_data" do
-        company.update_checklist_item!("add_bank_account")
-
-        expect(company.json_data["checklist"]["add_bank_account"]).to be true
-      end
-
-      it "ignores invalid checklist keys" do
-        expect { company.update_checklist_item!("invalid_key") }.not_to change { company.json_data }
       end
     end
 

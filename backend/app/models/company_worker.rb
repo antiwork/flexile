@@ -82,7 +82,6 @@ class CompanyWorker < ApplicationRecord
   end
 
   after_commit :notify_rate_updated, on: :update, if: -> { saved_change_to_pay_rate_in_subunits? && hourly? }
-  after_create_commit :update_contractor_checklist
 
   def equity_allocation_for(year)
     equity_allocations.find_by(year:)
@@ -148,9 +147,5 @@ class CompanyWorker < ApplicationRecord
 
     def sync_with_quickbooks
       QuickbooksDataSyncJob.perform_async(company_id, self.class.name, id)
-    end
-
-    def update_contractor_checklist
-      company.update_checklist_item!("invite_contractor")
     end
 end

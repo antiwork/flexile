@@ -565,12 +565,14 @@ RSpec.describe CompanyWorker do
     let(:company) { create(:company) }
     let(:user) { create(:user) }
 
-    it "updates contractor checklist when worker is created" do
-      expect do
-        create(:company_worker, company: company, user: user)
-      end.to change {
-        company.reload.json_data.dig("checklist", "invite_contractor")
-      }.from(nil).to(true)
+    it "computes contractor checklist when worker is created" do
+      checklist_item = company.checklist_items.find { |item| item[:key] == "invite_contractor" }
+      expect(checklist_item[:completed]).to be false
+
+      create(:company_worker, company: company, user: user)
+
+      checklist_item = company.reload.checklist_items.find { |item| item[:key] == "invite_contractor" }
+      expect(checklist_item[:completed]).to be true
     end
   end
 end

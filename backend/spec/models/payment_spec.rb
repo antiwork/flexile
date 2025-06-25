@@ -55,12 +55,14 @@ RSpec.describe Payment do
     let(:invoice) { create(:invoice, company: company) }
     let(:payment) { create(:payment, invoice: invoice, status: "initial") }
 
-    it "updates first payment checklist when payment succeeds" do
-      expect do
-        payment.update!(status: "succeeded")
-      end.to change {
-        company.reload.json_data.dig("checklist", "send_first_payment")
-      }.from(nil).to(true)
+    it "computes first payment checklist when payment succeeds" do
+      checklist_item = company.checklist_items.find { |item| item[:key] == "send_first_payment" }
+      expect(checklist_item[:completed]).to be false
+
+      payment.update!(status: "succeeded")
+
+      checklist_item = company.reload.checklist_items.find { |item| item[:key] == "send_first_payment" }
+      expect(checklist_item[:completed]).to be true
     end
   end
 

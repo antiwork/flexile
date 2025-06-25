@@ -204,9 +204,8 @@ class Company < ApplicationRecord
   end
 
   def checklist_items
-    checklist_data = json_data&.dig("checklist") || {}
     CHECKLIST_ITEMS.map do |item|
-      item.merge(completed: checklist_data[item[:key]] == true)
+      item.merge(completed: checklist_item_completed?(item[:key]))
     end
   end
 
@@ -215,17 +214,6 @@ class Company < ApplicationRecord
     return 0 if CHECKLIST_ITEMS.empty?
 
     (completed_count.to_f / CHECKLIST_ITEMS.size * 100).round
-  end
-
-  def update_checklist_item!(key)
-    return unless CHECKLIST_ITEMS.any? { |item| item[:key] == key.to_s }
-
-    checklist_data = json_data&.dig("checklist") || {}
-    checklist_data[key.to_s] = true
-
-    updated_json_data = json_data || {}
-    updated_json_data["checklist"] = checklist_data
-    update!(json_data: updated_json_data)
   end
 
   private
@@ -252,5 +240,18 @@ class Company < ApplicationRecord
 
     def initialize_checklist!
       update_column(:json_data, (json_data || {}).merge("checklist" => {}))
+    end
+
+    def checklist_item_completed?(key)
+      case key
+      when "add_bank_account"
+        bank_account_ready?
+      when "invite_contractor"
+        company_workers.active.exists?
+      when "send_first_payment"
+        invoices.joins(:payments).where(payments: { status: Payments::Status::SUCCEEDED }).exists?
+      else
+        false
+      end
     end
 end
