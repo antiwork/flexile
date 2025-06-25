@@ -9,6 +9,7 @@ import { investorEntitiesRouter } from "@/trpc/routes/investorEntities";
 import { companyUpdatesRouter } from "./routes/companyUpdates";
 import { consolidatedInvoicesRouter } from "./routes/consolidatedInvoices";
 import { contractorsRouter } from "./routes/contractors";
+import { contractorInviteLinksRouter } from "./routes/contractor-invite-links";
 import { convertibleSecuritiesRouter } from "./routes/convertibleSecurities";
 import { dividendRoundsRouter } from "./routes/dividendRounds";
 import { dividendsRouter } from "./routes/dividends";
@@ -32,6 +33,7 @@ import { createCallerFactory, createRouter } from "./";
 export const appRouter = createRouter({
   users: usersRouter,
   contractors: contractorsRouter,
+  contractorInviteLinks: contractorInviteLinksRouter,
   quickbooks: quickbooksRouter,
   invoices: invoicesRouter,
   consolidatedInvoices: consolidatedInvoicesRouter,

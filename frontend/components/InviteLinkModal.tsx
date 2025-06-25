@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { X, Copy } from "lucide-react";
+import { trpc } from "@/trpc/client";
+import { useCurrentCompany } from "@/global";
 
 interface InviteLinkModalProps {
   open: boolean;
@@ -12,22 +14,32 @@ interface InviteLinkModalProps {
 }
 
 export default function InviteLinkModal({ open, onOpenChange }: InviteLinkModalProps) {
-  const [inviteLink, setInviteLink] = useState("https://flexile.com/join/a8TlLsMXST");
   const [copied, setCopied] = useState(false);
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
 
-  const handleCopy = () => {
-    navigator.clipboard
-      .writeText(inviteLink)
-      .then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      })
-      .catch((err: unknown) => {
-        if (err instanceof Error) {
-          // TODO (techdebt): Replace with proper error handling
-        }
-      });
+  const company = useCurrentCompany();
+  const { data: inviteLinkData, refetch } = trpc.contractorInviteLinks.get.useQuery({ companyId: company.id });
+
+  const resetMutation = trpc.contractorInviteLinks.reset.useMutation({
+    onSuccess: () => {
+      void refetch();
+      setShowResetConfirmation(false);
+      setCopied(false);
+    },
+  });
+
+  const inviteLink = inviteLinkData?.url ?? "";
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        // TODO (techdebt): Replace with proper error handling
+      }
+    }
   };
 
   const handleResetClick = () => {
@@ -35,10 +47,7 @@ export default function InviteLinkModal({ open, onOpenChange }: InviteLinkModalP
   };
 
   const handleResetConfirm = () => {
-    const newLinkId = Math.random().toString(36).substring(2, 16);
-    setInviteLink(`https://flexile.com/join/${newLinkId}`);
-    setCopied(false);
-    setShowResetConfirmation(false);
+    resetMutation.mutate({ companyId: company.id });
   };
 
   const handleResetCancel = () => {
@@ -99,7 +108,7 @@ export default function InviteLinkModal({ open, onOpenChange }: InviteLinkModalP
                         disabled
                         className="disabled:opacity-100"
                       />
-                      <Button onClick={handleCopy} size="small" variant={copied ? "success" : "default"}>
+                      <Button onClick={() => void handleCopy()} size="small" variant={copied ? "success" : "default"}>
                         {copied ? (
                           "Copied!"
                         ) : (
