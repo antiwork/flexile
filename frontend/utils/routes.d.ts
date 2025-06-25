@@ -2292,6 +2292,30 @@ export const people_new_path: ((
 
 /**
  * Generates rails route to
+ * /internal/join/:uuid(.:format)
+ * @param {any} uuid
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const public_contractor_invite_link_url: ((
+  uuid: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/join/:uuid(.:format)
+ * @param {any} uuid
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const public_contractor_invite_link_path: ((
+  uuid: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /admin/consolidated_payments/:id/refund(.:format)
  * @param {any} id
  * @param {object | undefined} options

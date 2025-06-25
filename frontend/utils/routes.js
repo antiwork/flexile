@@ -2237,6 +2237,24 @@ export const people_new_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[
 
 /**
  * Generates rails route to
+ * /internal/join/:uuid(.:format)
+ * @param {any} uuid
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const public_contractor_invite_link_url = /*#__PURE__*/ __jsr.r({"uuid":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"join"],[2,[7,"/"],[2,[3,"uuid"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/join/:uuid(.:format)
+ * @param {any} uuid
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const public_contractor_invite_link_path = /*#__PURE__*/ __jsr.r({"uuid":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"join"],[2,[7,"/"],[2,[3,"uuid"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
+
+/**
+ * Generates rails route to
  * /admin/consolidated_payments/:id/refund(.:format)
  * @param {any} id
  * @param {object | undefined} options

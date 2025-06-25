@@ -82,4 +82,7 @@ scope path: :internal, module: :internal do
 
   resources :wise_account_requirements, only: :create
   resources :company_invitations, only: [:create]
+  
+  # Public contractor invite route  
+  get "join/:uuid", to: "/public/contractor_invite_links#show", as: :public_contractor_invite_link
 end
