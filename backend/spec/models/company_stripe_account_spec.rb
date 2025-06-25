@@ -189,9 +189,9 @@ RSpec.describe CompanyStripeAccount do
     let(:stripe_account) { create(:company_stripe_account, company: company, status: "processing") }
 
     it "updates bank account checklist when status becomes ready" do
-      expect {
+      expect do
         stripe_account.update!(status: "ready")
-      }.to change {
+      end.to change {
         company.reload.json_data.dig("checklist", "add_bank_account")
       }.from(nil).to(true)
     end

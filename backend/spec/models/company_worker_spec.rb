@@ -566,9 +566,9 @@ RSpec.describe CompanyWorker do
     let(:user) { create(:user) }
 
     it "updates contractor checklist when worker is created" do
-      expect {
+      expect do
         create(:company_worker, company: company, user: user)
-      }.to change {
+      end.to change {
         company.reload.json_data.dig("checklist", "invite_contractor")
       }.from(nil).to(true)
     end

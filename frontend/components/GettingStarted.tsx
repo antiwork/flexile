@@ -4,6 +4,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/r
 import { SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { cn } from "@/utils";
 import { useCurrentCompany } from "@/global";
+import type { Route } from "next";
 
 const CircularProgress = ({ progress }: { progress: number }) => {
   const circumference = 50.27; // 2π * radius (radius = 8)
@@ -36,7 +37,7 @@ const CheckIcon = () => (
   </svg>
 );
 
-const getItemHref = (key: string): string | null => {
+const getItemHref = (key: string): Route => {
   switch (key) {
     case "add_bank_account":
       return "/settings/payouts";
@@ -45,7 +46,7 @@ const getItemHref = (key: string): string | null => {
     case "send_first_payment":
       return "/invoices";
     default:
-      return null;
+      return "/";
   }
 };
 
@@ -53,7 +54,7 @@ export const GettingStarted = () => {
   const company = useCurrentCompany();
   const [isExpanded, setIsExpanded] = useState(false);
 
-  if (!company || company.checklistCompletionPercentage === 100) {
+  if (company.checklistCompletionPercentage === 100) {
     return null;
   }
 
@@ -80,16 +81,14 @@ export const GettingStarted = () => {
                       item.completed ? "border-blue-500 bg-blue-500" : "border-gray-300 bg-white",
                     )}
                   >
-                    {item.completed && <CheckIcon />}
+                    {item.completed ? <CheckIcon /> : null}
                   </div>
-                  {getItemHref(item.key) && !item.completed ? (
-                    <Link href={getItemHref(item.key) as any} className="text-gray-900 hover:underline">
+                  {!item.completed ? (
+                    <Link href={getItemHref(item.key)} className="text-gray-900 hover:underline">
                       {item.title}
                     </Link>
                   ) : (
-                    <span className={cn(item.completed ? "text-gray-400 line-through" : "text-gray-900")}>
-                      {item.title}
-                    </span>
+                    <span className="text-gray-400 line-through">{item.title}</span>
                   )}
                 </div>
               ))}

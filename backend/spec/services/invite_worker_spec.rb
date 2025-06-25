@@ -164,9 +164,9 @@ RSpec.describe InviteWorker do
         pay_rate_in_subunits: 100_00
       )
 
-      expect do
-        invite_contractor
-      end.to change { company.reload.json_data.dig("checklist", "invite_contractor") }.from(nil).to(true)
+      invite_contractor
+
+      expect(company.reload.json_data.dig("checklist", "invite_contractor")).to be true
     end
   end
 
