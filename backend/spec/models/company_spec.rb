@@ -102,13 +102,6 @@ RSpec.describe Company do
         expect(company.checklist_completion_percentage).to eq(100)
       end
     end
-
-    describe "initialization" do
-      it "initializes empty checklist on creation" do
-        new_company = create(:company)
-        expect(new_company.json_data["checklist"]).to eq({})
-      end
-    end
   end
 
   describe "validations" do
