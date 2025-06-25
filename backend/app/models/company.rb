@@ -162,7 +162,7 @@ class Company < ApplicationRecord
 
   def bank_account_ready? = !!bank_account&.ready?
 
-  def contractor_added = contractors.first(company_id: id).present?
+  def contractor_added = contractors.exists?
 
   def payment_sent? = invoices.paid.exists?
 
