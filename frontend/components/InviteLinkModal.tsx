@@ -57,7 +57,7 @@ export default function InviteLinkModal({ open, onOpenChange }: InviteLinkModalP
       <DialogContent>
         <DialogHeader className="flex flex-row items-center justify-between">
           <DialogTitle className="text-xl font-semibold">
-            {showResetConfirmation ? "Reset invite link?" : "Invite link"}
+            {showResetConfirmation ? "Reset invite link?" : "Invite link"}{" "}
           </DialogTitle>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             <X />
@@ -68,17 +68,15 @@ export default function InviteLinkModal({ open, onOpenChange }: InviteLinkModalP
           {showResetConfirmation ? (
             <>
               <p className="text-base leading-[1.6875] text-gray-700">
-                Resetting the link will deactivate the current invite. If you've already shared it, others
-                may no longer be able to join your workspace.
+                Resetting the link will deactivate the current invite. If you've already shared it, others may no longer
+                be able to join your workspace.
               </p>
 
               <div className="flex justify-end gap-3">
                 <Button variant="outline" onClick={handleResetCancel}>
                   Cancel
                 </Button>
-                <Button onClick={handleResetConfirm} >
-                  Reset link
-                </Button>
+                <Button onClick={handleResetConfirm}>Reset link</Button>
               </div>
             </>
           ) : (
@@ -94,7 +92,13 @@ export default function InviteLinkModal({ open, onOpenChange }: InviteLinkModalP
                   </label>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Input id="invite-link" type="text" value={inviteLink} readOnly />
+                      <Input
+                        id="invite-link"
+                        type="text"
+                        value={inviteLink}
+                        disabled
+                        className="disabled:opacity-100"
+                      />
                       <Button onClick={handleCopy} size="small" variant={copied ? "success" : "default"}>
                         {copied ? (
                           "Copied!"
