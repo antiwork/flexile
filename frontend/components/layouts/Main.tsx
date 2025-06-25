@@ -146,7 +146,7 @@ export default function MainLayout({
                     </SidebarMenuButton>
                   </SignOutButton>
                 </SidebarMenuItem>
-                <GettingStarted />
+                {user.currentCompanyId ? <GettingStarted /> : null}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
