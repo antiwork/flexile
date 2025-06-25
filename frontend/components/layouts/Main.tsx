@@ -283,7 +283,7 @@ const NavLinks = () => {
         >
           <SidebarMenuItem>
             <CollapsibleTrigger asChild>
-              <SidebarMenuButton>
+              <SidebarMenuButton closeOnMobileClick={false}>
                 <ChartPie />
                 <span>Equity</span>
                 <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
