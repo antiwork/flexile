@@ -54,11 +54,8 @@ export const GettingStarted = () => {
     progressPercentage === 100 ? "dismissed" : "collapsed",
   );
 
-  if (status === "dismissed") {
-    return null;
-  }
-
   useEffect(() => {
+    if (status === "dismissed") return;
     const subscription = useUserStore.subscribe((state, prev) => {
       const currentPercentage =
         state.user?.companies.find((c) => c.id === company.id)?.checklistCompletionPercentage || 0;
@@ -72,6 +69,10 @@ export const GettingStarted = () => {
     });
     return subscription;
   }, [company.id]);
+
+  if (status === "dismissed") {
+    return null;
+  }
 
   return (
     <SidebarMenuItem className="border-t border-gray-200">
