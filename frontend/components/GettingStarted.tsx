@@ -37,18 +37,13 @@ const CheckIcon = () => (
   </svg>
 );
 
-const getItemHref = (key: string): Route => {
-  switch (key) {
-    case "add_bank_account":
-      return "/settings/payouts";
-    case "invite_contractor":
-      return "/people";
-    case "send_first_payment":
-      return "/invoices";
-    default:
-      return "/";
-  }
-};
+const CHECKLIST_ROUTES: Record<string, Route> = {
+  add_bank_account: "/settings/payouts",
+  invite_contractor: "/people",
+  send_first_payment: "/invoices",
+} as const;
+
+const getItemHref = (key: string): Route => CHECKLIST_ROUTES[key] || "/";
 
 export const GettingStarted = () => {
   const company = useCurrentCompany();

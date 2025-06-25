@@ -100,7 +100,7 @@ class Company < ApplicationRecord
   scope :is_gumroad, -> { where(is_gumroad: true) }
   scope :is_trusted, -> { where(is_trusted: true) }
 
-  after_create_commit :create_balance!, :initialize_checklist!
+  after_create_commit :create_balance!
   after_update_commit :update_convertible_implied_shares, if: :saved_change_to_fully_diluted_shares?
 
   accepts_nested_attributes_for :expense_categories
@@ -236,10 +236,6 @@ class Company < ApplicationRecord
       )
       update!(stripe_customer_id: stripe_customer.id)
       stripe_customer_id
-    end
-
-    def initialize_checklist!
-      update_column(:json_data, (json_data || {}).merge("checklist" => {}))
     end
 
     def checklist_item_completed?(key)
