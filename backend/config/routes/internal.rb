@@ -48,6 +48,9 @@ scope path: :internal, module: :internal do
       post :send_test_email, on: :member
     end
     resources :workers, only: [:create]
+    resource :contractor_invite_link, only: [:show], controller: 'contractor_invite_link' do
+      post :reset, on: :member
+    end
     resources :lawyers, only: [:create]
     resources :equity_grant_exercises, only: :create do
       member do

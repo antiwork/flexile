@@ -1,39 +1,72 @@
 import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 import { companyProcedure, createRouter } from "@/trpc";
+import { company_contractor_invite_link_url, reset_company_contractor_invite_link_url } from "@/utils/routes";
 
 export const contractorInviteLinksRouter = createRouter({
-  get: companyProcedure.query(({ ctx }) => {
+  get: companyProcedure.query(async ({ ctx }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-    // TODO: Replace with actual database call
-    // For now, return mock data that matches the expected structure
-    const mockInviteLink = {
-      id: "mock-invite-link-1",
-      uuid: "a8TlLsMXST",
-      url: "https://flexile.com/join/a8TlLsMXST",
-      createdAt: new Date(),
-      userId: ctx.companyAdministrator.userId,
-      companyId: ctx.company.id,
-    };
+    const frontendHost = `${ctx.headers["x-forwarded-proto"] || "https"}://${ctx.host}`;
 
-    return mockInviteLink;
+    const response = await fetch(company_contractor_invite_link_url(ctx.company.externalId, { host: ctx.host }), {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Frontend-Host": frontendHost,
+        ...ctx.headers,
+      },
+    });
+
+    if (!response.ok) {
+      const json = z.object({ error: z.string() }).parse(await response.json());
+      throw new TRPCError({ code: "BAD_REQUEST", message: json.error });
+    }
+
+    const data = z
+      .object({
+        id: z.string(),
+        uuid: z.string(),
+        url: z.string(),
+        created_at: z.string(),
+        user_id: z.string(),
+        company_id: z.string(),
+      })
+      .parse(await response.json());
+
+    return { ...data, createdAt: new Date(data.created_at) };
   }),
 
-  reset: companyProcedure.mutation(({ ctx }) => {
+  reset: companyProcedure.mutation(async ({ ctx }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-    // TODO: Replace with actual database call to create new UUID
-    // For now, return mock data with a new UUID
-    const newUuid = Math.random().toString(36).substring(2, 16);
-    const newInviteLink = {
-      id: "mock-invite-link-1",
-      uuid: newUuid,
-      url: `https://flexile.com/join/${newUuid}`,
-      createdAt: new Date(),
-      userId: ctx.companyAdministrator.userId,
-      companyId: ctx.company.id,
-    };
+    const frontendHost = `${ctx.headers["x-forwarded-proto"] || "https"}://${ctx.host}`;
 
-    return newInviteLink;
+    const response = await fetch(reset_company_contractor_invite_link_url(ctx.company.externalId, { host: ctx.host }), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Frontend-Host": frontendHost,
+        ...ctx.headers,
+      },
+    });
+
+    if (!response.ok) {
+      const json = z.object({ error: z.string() }).parse(await response.json());
+      throw new TRPCError({ code: "BAD_REQUEST", message: json.error });
+    }
+
+    const data = z
+      .object({
+        id: z.string(),
+        uuid: z.string(),
+        url: z.string(),
+        created_at: z.string(),
+        user_id: z.string(),
+        company_id: z.string(),
+      })
+      .parse(await response.json());
+
+    return { ...data, createdAt: new Date(data.created_at) };
   }),
 });
