@@ -3,9 +3,9 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { companyStripeAccounts, users } from "@/db/schema";
-
+// Failed to remove the existing associated bank_account. The record failed to save after its foreign key was set to nil.
 test.describe("Company administrator settings - payment details", () => {
   test("allows connecting a bank account", async ({ page }) => {
     const { company } = await companiesFactory.create({ stripeCustomerId: null }, { withoutBankAccount: true });
@@ -35,7 +35,9 @@ test.describe("Company administrator settings - payment details", () => {
     await expect(page.getByText("Ending in 6789")).toBeVisible();
 
     let companyStripeAccount = await db.query.companyStripeAccounts
-      .findFirst({ where: eq(companyStripeAccounts.companyId, company.id) })
+      .findFirst({
+        where: and(eq(companyStripeAccounts.companyId, company.id), isNull(companyStripeAccounts.deletedAt)),
+      })
       .then(takeOrThrow);
     expect(companyStripeAccount.status).toBe("processing");
     expect(companyStripeAccount.bankAccountLastFour).toBe("6789");
@@ -51,7 +53,9 @@ test.describe("Company administrator settings - payment details", () => {
     await expect(page.getByText("Ending in 4321")).toBeVisible();
 
     companyStripeAccount = await db.query.companyStripeAccounts
-      .findFirst({ where: eq(companyStripeAccounts.companyId, company.id) })
+      .findFirst({
+        where: and(eq(companyStripeAccounts.companyId, company.id), isNull(companyStripeAccounts.deletedAt)),
+      })
       .then(takeOrThrow);
     expect(companyStripeAccount.status).toBe("processing");
     expect(companyStripeAccount.bankAccountLastFour).toBe("4321");

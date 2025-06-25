@@ -214,7 +214,7 @@ class SeedDataGeneratorFromTemplate
       Stripe::PaymentMethod.attach(
         test_bank_account.id, { customer: stripe_setup_intent.customer }
       )
-      company.bank_account.update!(
+      company.create_bank_account!(
         status: CompanyStripeAccount::READY,
         setup_intent_id: stripe_setup_intent.id,
         bank_account_last_four: test_bank_account.us_bank_account.last4,

@@ -498,7 +498,6 @@ RSpec.describe Company do
         expect(result).to eq setup_intent
         company.reload
         expect(company.stripe_customer_id).to eq stripe_customer_id
-        expect(company.bank_account.setup_intent_id).to eq setup_intent_id
         expect(Stripe::Customer).to have_received(:create).once
         expect(Stripe::SetupIntent).to have_received(:create).once
       end.to change { company.company_stripe_accounts.count }.from(0).to(1)

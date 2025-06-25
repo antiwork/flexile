@@ -13,7 +13,7 @@ class Internal::Companies::Administrator::Settings::BankAccountsController < Int
 
   def create
     authorize Current.company, :show?
-    bank_account = Current.company.build_bank_account(setup_intent_id: params[:setup_intent_id], status: CompanyStripeAccount::PROCESSING)
+    bank_account = Current.company.bank_accounts.create!(setup_intent_id: params[:setup_intent_id], status: CompanyStripeAccount::PROCESSING)
     bank_account.bank_account_last_four = bank_account.fetch_stripe_bank_account_last_four
     bank_account.save!
   end
