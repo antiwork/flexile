@@ -91,4 +91,13 @@ class CompanyMailer < ApplicationMailer
 
     mail(to: administrator.email, subject: "New Flexile pricing: 1.5% + $0.50, capped at $15/payment")
   end
+
+  def contractor_signup_completed(admin_id:, contractor_user_id:)
+    administrator = CompanyAdministrator.find(admin_id)
+    @company = administrator.company
+    @contractor = User.find(contractor_user_id)
+    @company_worker = @company.company_workers.find_by(user: @contractor)
+
+    mail(to: administrator.email, subject: "#{@contractor.preferred_name} just joined your workspace")
+  end
 end

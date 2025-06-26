@@ -1,0 +1,28 @@
+<p>Hello <%= @company.display_name %>,</p>
+
+<p>
+  <%= @contractor.preferred_name %> has accepted your invite and completed their onboarding with <%= @company.display_name %>.
+</p>
+
+<% if @company_worker.present? %>
+<p>
+  They've added a role of <%= @company_worker.role %>,
+  <% if @company_worker.pay_rate_in_subunits.present? %>
+    set their rate at $<%= number_with_precision(@company_worker.pay_rate_in_subunits / 100.0, precision: 0) %>/hour,
+  <% end %>
+  <% if @company_worker.started_at.present? %>
+    and selected a start date of <%= @company_worker.started_at.strftime("%B %d, %Y") %>.
+  <% end %>
+  Their contract is ready for you to review.
+</p>
+<% end %>
+
+<p>
+  You can view their <%= link_to "profile and contract",
+    "#{PROTOCOL}://#{DOMAIN}/people/#{@contractor.external_id}" %> anytime.
+</p>
+
+<p>
+  Thanks,<br>
+  The Flexile team
+</p>

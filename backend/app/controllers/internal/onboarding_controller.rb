@@ -21,9 +21,16 @@ class Internal::OnboardingController < Internal::BaseController
   def update
     authorize :onboarding
 
+    # Check if onboarding was incomplete before update
+    was_onboarding_incomplete = Current.user.worker? && Current.company.present? && !onboarding_service.complete?
+
     update_params = params_for_update
     error_message = UpdateUser.new(user: Current.user, update_params:).process
     if error_message.blank?
+      # Send admin notification if contractor just completed onboarding
+      if was_onboarding_incomplete && onboarding_service.complete?
+        notify_admins_of_contractor_completion
+      end
       render json: { success: true }
     else
       render json: { success: false, error_message: Current.user.errors.full_messages.join(". ") }
@@ -84,6 +91,15 @@ class Internal::OnboardingController < Internal::BaseController
         OnboardingState::Worker.new(user: Current.user, company: Current.company)
       else
         OnboardingState::Investor.new(user: Current.user, company: Current.company)
+      end
+    end
+
+    def notify_admins_of_contractor_completion
+      Current.company.company_administrators.each do |admin|
+        CompanyMailer.contractor_signup_completed(
+          admin_id: admin.id,
+          contractor_user_id: Current.user.id
+        ).deliver_later
       end
     end
 end
