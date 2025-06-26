@@ -80,6 +80,7 @@ class UserPresenter
         endedAt: worker.ended_at,
         role: worker.role,
         payRateInSubunits: worker.pay_rate_in_subunits,
+        unitOfWork: worker.unit_of_work,
       }
     end
 
