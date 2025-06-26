@@ -20,17 +20,4 @@ class OnboardingState::User
       nil
     end
   end
-
-  private
-    def create_company_for_user
-      ApplicationRecord.transaction do
-        company = Company.create!(
-          email: user.email,
-          country_code: user.country_code || "US",
-          default_currency: "USD"
-        )
-        user.company_administrators.create!(company: company)
-        company
-      end
-    end
 end

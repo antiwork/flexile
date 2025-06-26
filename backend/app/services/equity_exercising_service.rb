@@ -61,10 +61,8 @@ class EquityExercisingService
       document.signatures.build(user: company_investor.user, title: "Signer", signed_at: current_time)
       document.save!
       CompanyInvestorMailer.stock_exercise_payment_instructions(company_investor.id, exercise_id: exercise.id).deliver_later
-      if company.completed_onboarding?
-        company.company_administrators.ids.each do
-          CompanyMailer.confirm_option_exercise_payment(admin_id: _1, exercise_id: exercise.id).deliver_later
-        end
+      company.company_administrators.ids.each do
+        CompanyMailer.confirm_option_exercise_payment(admin_id: _1, exercise_id: exercise.id).deliver_later
       end
     rescue ActiveRecord::RecordInvalid => e
       return { success: false, error: e.record.errors.full_messages.to_sentence }

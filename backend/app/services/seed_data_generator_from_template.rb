@@ -166,7 +166,7 @@ class SeedDataGeneratorFromTemplate
           )
         end
       end
-      print_message("Created company #{company.name}#{company.completed_onboarding? ? " (completed onboarding)" : nil}")
+      print_message("Created company #{company.name}")
       company
     end
 

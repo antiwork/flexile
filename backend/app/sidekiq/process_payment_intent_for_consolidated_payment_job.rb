@@ -43,12 +43,10 @@ class ProcessPaymentIntentForConsolidatedPaymentJob
         bank_account_last_four:
       )
 
-      if company.completed_onboarding?
-        CreateConsolidatedInvoiceReceiptJob.perform_async(
-          consolidated_payment.id,
-          Time.at(charge["created"]).utc.to_fs(:long_date),
-        )
-      end
+      CreateConsolidatedInvoiceReceiptJob.perform_async(
+        consolidated_payment.id,
+        Time.at(charge["created"]).utc.to_fs(:long_date),
+      )
     end
 
     def process_as_failed!(consolidated_payment, payment_intent)
