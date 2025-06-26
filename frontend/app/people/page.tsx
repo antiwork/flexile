@@ -22,9 +22,10 @@ import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
 import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
-import { UserPlus, Users } from "lucide-react";
+import { UserPlus, Users, Link as LinkIcon } from "lucide-react";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import FormFields from "./FormFields";
+import InviteLinkModal from "./InviteLinkModal";
 import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
 import { Switch } from "@/components/ui/switch";
 
@@ -44,6 +45,9 @@ export default function PeoplePage() {
   const router = useRouter();
   const [workers, { refetch }] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id });
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showInviteLinkModal, setShowInviteLinkModal] = useState(false);
+  const [showResetLinkModal, setShowResetLinkModal] = useState(false);
+
   const lastContractor = workers[0];
 
   const form = useForm({
@@ -75,6 +79,17 @@ export default function PeoplePage() {
       startedAt: formatISO(values.startDate.toDate(getLocalTimeZone())),
     });
   });
+
+  const resetInviteLinkMutation = trpc.companyInviteLinks.reset.useMutation({
+    onSuccess: async () => {
+      await trpcUtils.companyInviteLinks.get.invalidate({ companyId: company.id });
+      setShowResetLinkModal(false);
+      setShowInviteLinkModal(true);
+    },
+  });
+  const resetInviteLink = () => {
+    resetInviteLinkMutation.mutateAsync({ companyId: company.id });
+  };
 
   const columnHelper = createColumnHelper<(typeof workers)[number]>();
   const columns = useMemo(
@@ -131,10 +146,16 @@ export default function PeoplePage() {
       title="People"
       headerActions={
         workers.length === 0 ? (
-          <Button size="small" variant="outline" onClick={() => setShowInviteModal(true)}>
-            <UserPlus className="size-4" />
-            Invite contractor
-          </Button>
+          <div className="flex gap-2">
+            <Button size="small" variant="outline" onClick={() => setShowInviteLinkModal(true)}>
+              <LinkIcon className="size-4" />
+              Invite link
+            </Button>
+            <Button size="small" variant="outline" onClick={() => setShowInviteModal(true)}>
+              <UserPlus className="size-4" />
+              Invite contractor
+            </Button>
+          </div>
         ) : null
       }
     >
@@ -143,10 +164,16 @@ export default function PeoplePage() {
           table={table}
           searchColumn="user_name"
           actions={
-            <Button size="small" variant="outline" onClick={() => setShowInviteModal(true)}>
-              <UserPlus className="size-4" />
-              Invite contractor
-            </Button>
+            <div className="flex gap-2">
+              <Button size="small" variant="outline" onClick={() => setShowInviteLinkModal(true)}>
+                <LinkIcon className="size-4" />
+                Invite link
+              </Button>
+              <Button size="small" variant="outline" onClick={() => setShowInviteModal(true)}>
+                <UserPlus className="size-4" />
+                Invite contractor
+              </Button>
+            </div>
           }
         />
       ) : (
@@ -219,6 +246,37 @@ export default function PeoplePage() {
               </div>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+      <InviteLinkModal
+        open={showInviteLinkModal}
+        onOpenChange={setShowInviteLinkModal}
+        showResetModal={setShowResetLinkModal}
+      />
+      <Dialog open={showResetLinkModal} onOpenChange={setShowResetLinkModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset Invite Link</DialogTitle>
+          </DialogHeader>
+          <div className="text-muted-foreground">
+            <span>
+              Resetting the link will deactivate the current invite. If you have already shared it, others may not be
+              able to join.
+            </span>
+          </div>
+          <div className="flex flex-col">
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowResetLinkModal(false)}>
+                Cancel
+              </Button>
+              <MutationStatusButton mutation={resetInviteLinkMutation} type="button" onClick={resetInviteLink}>
+                Reset
+              </MutationStatusButton>
+            </div>
+            {resetInviteLinkMutation.isError ? (
+              <div className="text-red text-sm">{resetInviteLinkMutation.error.message}</div>
+            ) : null}
+          </div>
         </DialogContent>
       </Dialog>
     </MainLayout>
