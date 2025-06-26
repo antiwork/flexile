@@ -30,7 +30,6 @@ import {
   optionGrantIssueDateRelationships,
   optionGrantTypes,
   optionGrantVestingTriggers,
-  PayRateType,
   TaxClassification,
 } from "./enums";
 import type { QuickbooksIntegrationConfiguration } from "./json";
@@ -1716,9 +1715,8 @@ export const companyContractors = pgTable(
       .$onUpdate(() => new Date()),
     endedAt: timestamp("ended_at", { precision: 6, mode: "date" }),
     role: varchar("role").notNull(),
-    unitOfWork: varchar("unit_of_work"),
+    unitOfWork: varchar("unit_of_work").default("hour").notNull(),
     externalId: varchar("external_id").$default(nanoid).notNull(),
-    payRateType: integer("pay_rate_type").$type<PayRateType>().default(PayRateType.Hourly).notNull(),
     sentEquityPercentSelectionEmail: boolean("sent_equity_percent_selection_email").notNull().default(false),
     payRateInSubunits: integer("pay_rate_in_subunits"),
     payRateCurrency: varchar("pay_rate_currency").default("usd").notNull(),

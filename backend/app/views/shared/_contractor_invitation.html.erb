@@ -19,11 +19,7 @@
   <dt>Compensation</dt>
   <dd>
     <b>
-      <% if contractor.hourly? %>
-        <%= "#{money_format(contractor.pay_rate_in_subunits / 100.0)} per hour" %>
-      <% else %>
-        <%= "#{money_format(contractor.pay_rate_in_subunits / 100.0)} per #{contractor.unit_of_work}" %>
-      <% end %>
+      <%= "#{money_format(contractor.pay_rate_in_subunits / 100.0)} per #{contractor.unit_of_work}" %>
     </b>
   </dd>
 </dl>

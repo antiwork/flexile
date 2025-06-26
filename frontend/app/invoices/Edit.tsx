@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { useCurrentCompany } from "@/global";
+import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
@@ -50,7 +50,6 @@ const dataSchema = z.object({
     business_entity: z.boolean(),
     billing_entity_name: z.string(),
     pay_rate_in_subunits: z.number(),
-    hourly: z.boolean(),
   }),
   company: z.object({
     id: z.string(),
@@ -94,15 +93,17 @@ type InvoiceFormLineItem = Data["invoice"]["line_items"][number] & { errors?: st
 type InvoiceFormExpense = Data["invoice"]["expenses"][number] & { errors?: string[] | null; blob?: File | null };
 
 const Edit = () => {
+  const user = useCurrentUser();
   const company = useCurrentCompany();
   const { canSubmitInvoices } = useCanSubmitInvoices();
   const uid = useId();
-  if (!canSubmitInvoices) throw redirect("/invoices");
+  if (!user.roles.worker || !canSubmitInvoices) throw redirect("/invoices");
   const { id } = useParams<{ id: string }>();
   const searchParams = useSearchParams();
   const [errorField, setErrorField] = useState<string | null>(null);
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
+  const isHourly = user.roles.worker.unitOfWork === "hour";
 
   const { data } = useSuspenseQuery({
     queryKey: ["invoice", id],
@@ -129,8 +130,8 @@ const Edit = () => {
     return List([
       {
         description: "",
-        quantity: parseInt(searchParams.get("quantity") ?? "", 10) || (data.user.hourly ? 60 : 1),
-        hourly: searchParams.has("hourly") ? searchParams.get("hourly") === "true" : data.user.hourly,
+        quantity: parseInt(searchParams.get("quantity") ?? "", 10) || (isHourly ? 60 : 1),
+        hourly: searchParams.has("hourly") ? searchParams.get("hourly") === "true" : isHourly,
         pay_rate_in_subunits: parseInt(searchParams.get("rate") ?? "", 10) || data.user.pay_rate_in_subunits,
       },
     ]);
@@ -207,8 +208,8 @@ const Edit = () => {
     setLineItems((lineItems) =>
       lineItems.push({
         description: "",
-        quantity: data.user.hourly ? 60 : 1,
-        hourly: data.user.hourly,
+        quantity: isHourly ? 60 : 1,
+        hourly: isHourly,
         pay_rate_in_subunits: data.user.pay_rate_in_subunits,
       }),
     );

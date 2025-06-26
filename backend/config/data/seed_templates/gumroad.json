@@ -453,7 +453,7 @@
               "started_at": "2024-06-01",
               "pay_rate_in_subunits": 50000,
               "role": "Project-based engineer",
-              "pay_rate_type": "custom"
+              "unit_of_work": "project"
             }
           }
         },

@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { PayRateType, trpc } from "@/trpc/client";
+import { trpc } from "@/trpc/client";
 import { useFormContext } from "react-hook-form";
 import RadioButtons from "@/components/RadioButtons";
 import NumberInput from "@/components/NumberInput";
@@ -14,16 +14,20 @@ import { Switch } from "@/components/ui/switch";
 import { z } from "zod";
 
 export const schema = z.object({
-  payRateType: z.nativeEnum(PayRateType),
+  payRateType: z.enum(["hourly", "custom"]),
   payRateInSubunits: z.number().nullable(),
   role: z.string(),
   specifyDefaultAmount: z.boolean().optional(),
-  unitOfWork: z.string().nullish(),
+  unitOfWork: z.string(),
 });
 
 export default function FormFields() {
   const form = useFormContext<z.infer<typeof schema>>();
+  useEffect(() => form.setValue("payRateType", form.getValues("unitOfWork") === "hourly" ? "hourly" : "custom"), []);
   const payRateType = form.watch("payRateType");
+  useEffect(() => {
+    if (payRateType === "hourly") form.setValue("unitOfWork", "hour");
+  }, [payRateType]);
   const companyId = useUserStore((state) => state.user?.currentCompanyId);
   const { data: workers } = trpc.contractors.list.useQuery(companyId ? { companyId, excludeAlumni: true } : skipToken);
 
@@ -77,8 +81,8 @@ export default function FormFields() {
               <RadioButtons
                 {...field}
                 options={[
-                  { label: "Hourly", value: PayRateType.Hourly } as const,
-                  { label: "Custom", value: PayRateType.Custom } as const,
+                  { label: "Hourly", value: "hourly" },
+                  { label: "Custom", value: "custom" },
                 ]}
               />
             </FormControl>
@@ -117,7 +121,7 @@ export default function FormFields() {
                   onChange={(value) => field.onChange(value == null ? null : value * 100)}
                   placeholder="0"
                   prefix="$"
-                  suffix={payRateType === PayRateType.Custom ? "/ project" : "/ hour"}
+                  suffix={payRateType === "custom" ? "/ project" : "/ hour"}
                   decimal
                 />
               </FormControl>
@@ -127,7 +131,7 @@ export default function FormFields() {
         />
       )}
 
-      {payRateType === PayRateType.Custom && (
+      {payRateType === "custom" && (
         <FormField
           control={form.control}
           name="unitOfWork"

@@ -16,11 +16,6 @@ class CompanyWorker < ApplicationRecord
   MAX_EQUITY_PERCENTAGE = 100
   MIN_COMPENSATION_AMOUNT_FOR_1099_NEC = 600_00
 
-  enum :pay_rate_type, {
-    hourly: 0,
-    custom: 1,
-  }, validate: true
-
   validates :user_id, uniqueness: { scope: :company_id }
   validates :role, presence: true
   validates :started_at, presence: true
