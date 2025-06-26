@@ -13,6 +13,7 @@ import { assertDefined } from "@/utils/assert";
 import { settings_tax_url } from "@/utils/routes";
 import { latestUserComplianceInfo, userDisplayEmail, userDisplayName, withRoles } from "./helpers";
 import TaxSettingsChanged from "./TaxSettingsChanged";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 
 export type User = typeof users.$inferSelect;
 export const usersRouter = createRouter({
@@ -85,6 +86,21 @@ export const usersRouter = createRouter({
         });
       }
 
+      const { userId } = await auth();
+      if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
+      const clerk = await clerkClient();
+
+      const clerkUser = await clerk.users.getUser(userId);
+      const oldPrimaryEmailId = clerkUser.primaryEmailAddressId;
+
+      // Create new email address as primary
+      await clerk.emailAddresses.createEmailAddress({
+        userId,
+        emailAddress: input.email,
+        primary: true,
+        verified: true, // needed to be able to login with the new email
+      });
+
       await db
         .update(users)
         .set({
@@ -92,6 +108,13 @@ export const usersRouter = createRouter({
           preferredName: input.preferredName,
         })
         .where(eq(users.id, BigInt(ctx.userId)));
+
+      // delete the old primary email address
+      if (oldPrimaryEmailId) {
+        await clerk.emailAddresses.deleteEmailAddress(oldPrimaryEmailId).catch(() => {
+          // fail silently
+        });
+      }
     }),
 
   updateTaxSettings: protectedProcedure.input(z.object({ data: z.unknown() })).mutation(async ({ ctx, input }) => {
