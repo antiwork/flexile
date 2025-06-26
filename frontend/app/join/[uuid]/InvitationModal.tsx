@@ -9,9 +9,10 @@ interface InvitationModalProps {
   companyName: string;
   companyLogo?: string | undefined;
   inviterName: string;
+  inviteUuid: string;
 }
 
-export function InvitationModal({ companyName, companyLogo, inviterName }: InvitationModalProps) {
+export function InvitationModal({ companyName, companyLogo, inviterName, inviteUuid }: InvitationModalProps) {
   return (
     <Dialog open>
       <DialogContent>
@@ -29,7 +30,7 @@ export function InvitationModal({ companyName, companyLogo, inviterName }: Invit
           </DialogDescription>
         </DialogHeader>
 
-        <Link href="/signup">
+        <Link href={`/signup?invite=${inviteUuid}`}>
           <Button className="w-full">Accept invitation</Button>
         </Link>
       </DialogContent>

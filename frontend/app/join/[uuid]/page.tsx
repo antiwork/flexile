@@ -79,6 +79,7 @@ export default function JoinPage() {
         companyName={inviteData.company.name}
         companyLogo={inviteData.company.logo_url || undefined}
         inviterName={inviteData.user.display_name}
+        inviteUuid={uuid}
       />
     </div>
   );
