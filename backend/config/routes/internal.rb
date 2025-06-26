@@ -70,6 +70,14 @@ scope path: :internal, module: :internal do
       end
     end
     resources :roles, only: [:index, :create, :update, :destroy]
+
+    resources :invite_links, only: [] do
+      collection do
+        post :accept
+        get :show
+        patch :reset
+      end
+    end
   end
 
   resources :wise_account_requirements, only: :create
