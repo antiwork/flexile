@@ -281,6 +281,36 @@ export const contractorsRouter = createRouter({
         .set({ endedAt: new Date(input.endDate) })
         .where(eq(companyContractors.id, activeContractor.id));
     }),
+
+  updateWorkDetails: companyProcedure
+    .input(
+      z.object({
+        role: z.string().min(1),
+        pay_rate_type: z.enum(["hourly", "project_based"]),
+        pay_rate_in_subunits: z.number().min(1),
+        hours_per_week: z.number().min(1).optional(),
+        started_at: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.companyContractor) throw new TRPCError({ code: "FORBIDDEN" });
+
+      // Only allow updating if this is a contractor invite user (has placeholder values)
+      if (ctx.companyContractor.payRateInSubunits !== 1 || ctx.companyContractor.role !== "Contractor") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Work details already set" });
+      }
+
+      await db
+        .update(companyContractors)
+        .set({
+          role: input.role,
+          payRateType: input.pay_rate_type === "hourly" ? PayRateType.Hourly : PayRateType.ProjectBased,
+          payRateInSubunits: input.pay_rate_in_subunits,
+          hoursPerWeek: input.hours_per_week,
+          startedAt: new Date(input.started_at),
+        })
+        .where(eq(companyContractors.id, ctx.companyContractor.id));
+    }),
 });
 
 export const isActive = (contractor: CompanyContractor | undefined): contractor is CompanyContractor =>

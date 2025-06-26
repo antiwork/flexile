@@ -33,7 +33,7 @@ module SetCurrent
     end
     Current.user = user
 
-    company = Current.user.present? ? company_from_param || company_from_user : nil
+    company = Current.user.present? ? company_from_param || company_from_contractor_invite || company_from_user : nil
     Current.company = company
     cookies.permanent[current_user_selected_company_cookie_name] = company.external_id if company.present?
 
@@ -53,10 +53,51 @@ module SetCurrent
       return if company_id.blank? || company_id == Company::PLACEHOLDER_COMPANY_ID
 
       company = Current.user.all_companies.find { _1.external_id == company_id }
-      # Ensures the URL contains a valid company ID that the user can access
-      return e404 if company.blank?
+      
+      # Don't throw 404 if company not found - let contractor invite logic try first
+      # Only enforce access control if company_id came from URL params (not cookies)
+      if company.blank? && (params[:company_id] || params[:companyId])
+        return e404
+      end
 
       company
+    end
+
+    def company_from_contractor_invite
+      return unless Current.user.clerk_id.present?
+      
+      begin
+        clerk_client = Clerk::SDK.new
+        clerk_user = clerk_client.users.get_user(Current.user.clerk_id)
+        contractor_invite_uuid = clerk_user.unsafe_metadata&.dig("contractorInviteUuid")
+        
+        if contractor_invite_uuid.present?
+          contractor_invite_link = ContractorInviteLink.find_by(uuid: contractor_invite_uuid)
+          
+          if contractor_invite_link&.company
+            company = contractor_invite_link.company
+            
+            # Create draft CompanyWorker if it doesn't exist
+            existing_worker = company.company_workers.find_by(user: Current.user)
+            unless existing_worker
+              company.company_workers.create!(
+                user: Current.user,
+                role: "Contractor",
+                started_at: Date.current,
+                pay_rate_type: :hourly,
+                pay_rate_in_subunits: 1, # Placeholder - will be updated during onboarding
+                hours_per_week: CompanyWorker::DEFAULT_HOURS_PER_WEEK
+              )
+            end
+            
+            return company
+          end
+        end
+      rescue => e
+        Rails.logger.error "Failed to fetch contractor invite company from Clerk: #{e.message}"
+      end
+
+      nil
     end
 
     def company_from_user
