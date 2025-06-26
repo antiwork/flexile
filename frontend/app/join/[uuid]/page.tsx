@@ -43,7 +43,6 @@ export default function JoinPage() {
       const response = await request({
         method: "GET",
         accept: "json",
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
         url: public_contractor_invite_link_url(uuid),
         assertOk: true,
       });

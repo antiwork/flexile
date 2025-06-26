@@ -8,8 +8,7 @@ class ContractorInviteLinkPolicy < ApplicationPolicy
   end
 
   private
-
-  def company_administrator
-    Current.company_administrator
-  end
+    def company_administrator
+      Current.company_administrator
+    end
 end

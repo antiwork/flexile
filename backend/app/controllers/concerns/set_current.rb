@@ -53,7 +53,7 @@ module SetCurrent
       return if company_id.blank? || company_id == Company::PLACEHOLDER_COMPANY_ID
 
       company = Current.user.all_companies.find { _1.external_id == company_id }
-      
+
       # Don't throw 404 if company not found - let contractor invite logic try first
       # Only enforce access control if company_id came from URL params (not cookies)
       if company.blank? && (params[:company_id] || params[:companyId])
@@ -65,18 +65,18 @@ module SetCurrent
 
     def company_from_contractor_invite
       return unless Current.user.clerk_id.present?
-      
+
       begin
         clerk_client = Clerk::SDK.new
         clerk_user = clerk_client.users.get_user(Current.user.clerk_id)
         contractor_invite_uuid = clerk_user.unsafe_metadata&.dig("contractorInviteUuid")
-        
+
         if contractor_invite_uuid.present?
           contractor_invite_link = ContractorInviteLink.find_by(uuid: contractor_invite_uuid)
-          
+
           if contractor_invite_link&.company
             company = contractor_invite_link.company
-            
+
             # Create draft CompanyWorker if it doesn't exist
             existing_worker = company.company_workers.find_by(user: Current.user)
             unless existing_worker
@@ -89,7 +89,7 @@ module SetCurrent
                 hours_per_week: CompanyWorker::DEFAULT_HOURS_PER_WEEK
               )
             end
-            
+
             return company
           end
         end

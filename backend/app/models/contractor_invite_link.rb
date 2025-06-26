@@ -17,8 +17,7 @@ class ContractorInviteLink < ApplicationRecord
   end
 
   private
-
-  def generate_uuid
-    self.uuid ||= SecureRandom.alphanumeric(14)
-  end
+    def generate_uuid
+      self.uuid ||= SecureRandom.alphanumeric(14)
+    end
 end

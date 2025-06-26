@@ -48,7 +48,7 @@ scope path: :internal, module: :internal do
       post :send_test_email, on: :member
     end
     resources :workers, only: [:create]
-    resource :contractor_invite_link, only: [:show], controller: 'contractor_invite_link' do
+    resource :contractor_invite_link, only: [:show], controller: "contractor_invite_link" do
       post :reset, on: :member
     end
     resources :lawyers, only: [:create]
@@ -82,7 +82,7 @@ scope path: :internal, module: :internal do
 
   resources :wise_account_requirements, only: :create
   resources :company_invitations, only: [:create]
-  
-  # Public contractor invite route  
+
+  # Public contractor invite route
   get "join/:uuid", to: "/public/contractor_invite_links#show", as: :public_contractor_invite_link
 end
