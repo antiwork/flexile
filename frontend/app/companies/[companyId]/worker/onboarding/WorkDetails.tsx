@@ -14,13 +14,18 @@ import DatePicker from "@/components/DatePicker";
 import { PayRateType, trpc } from "@/trpc/client";
 import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
 
-const formSchema = z.object({
-  role: z.string().min(1, "Role is required"),
-  payRateType: z.nativeEnum(PayRateType),
-  payRateInSubunits: z.number().min(1, "Pay rate must be greater than 0"),
-  hoursPerWeek: z.number().min(1, "Hours per week must be greater than 0").optional(),
-  startDate: z.instanceof(CalendarDate),
-});
+const formSchema = z
+  .object({
+    role: z.string().min(1, "Role is required"),
+    payRateType: z.nativeEnum(PayRateType),
+    payRateInSubunits: z.number().min(1, "Pay rate must be greater than 0"),
+    hoursPerWeek: z.number().min(1, "Hours per week must be greater than 0").optional(),
+    startDate: z.instanceof(CalendarDate),
+  })
+  .refine((data) => data.payRateType !== PayRateType.Hourly || data.hoursPerWeek !== undefined, {
+    message: "Hours per week is required for hourly workers",
+    path: ["hoursPerWeek"],
+  });
 
 type FormData = z.infer<typeof formSchema>;
 
@@ -83,7 +88,6 @@ export default function WorkDetails({ onComplete }: WorkDetailsProps) {
           name="startDate"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Start date</FormLabel>
               <FormControl>
                 <DatePicker {...field} label="Start date" granularity="day" />
               </FormControl>
