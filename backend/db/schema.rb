@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_23_190844) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_25_204538) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -183,6 +183,18 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_23_190844) do
     t.index ["external_id"], name: "index_company_investors_on_external_id", unique: true
     t.index ["user_id", "company_id"], name: "index_company_investors_on_user_id_and_company_id", unique: true
     t.index ["user_id"], name: "index_company_investors_on_user_id"
+  end
+
+  create_table "company_invite_links", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.bigint "inviter_id", null: false
+    t.string "token", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id", "inviter_id"], name: "index_company_invite_links_on_company_id_and_inviter_id", unique: true
+    t.index ["company_id"], name: "index_company_invite_links_on_company_id"
+    t.index ["inviter_id"], name: "index_company_invite_links_on_inviter_id"
+    t.index ["token"], name: "index_company_invite_links_on_token", unique: true
   end
 
   create_table "company_lawyers", force: :cascade do |t|
@@ -1106,4 +1118,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_23_190844) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "company_invite_links", "companies"
+  add_foreign_key "company_invite_links", "users", column: "inviter_id"
 end
