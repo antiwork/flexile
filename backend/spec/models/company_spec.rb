@@ -314,20 +314,6 @@ RSpec.describe Company do
     end
   end
 
-  describe "#completed_onboarding?" do
-    let(:company) { create(:company_administrator).company }
-
-    it "returns true if onboarding requirements are met" do
-      allow_any_instance_of(OnboardingState::Company).to receive(:complete?).and_return(true)
-      expect(company.completed_onboarding?).to eq true
-    end
-
-    it "returns false if onboarding requirements are not met" do
-      allow_any_instance_of(OnboardingState::Company).to receive(:complete?).and_return(false)
-      expect(company.completed_onboarding?).to eq false
-    end
-  end
-
   describe "#contractor_payment_processing_time_in_days" do
     let(:company) { create(:company, is_trusted:) }
 

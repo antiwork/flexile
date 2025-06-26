@@ -162,10 +162,6 @@ class Company < ApplicationRecord
 
   def bank_account_ready? = !!bank_account&.ready?
 
-  def completed_onboarding?
-    OnboardingState::Company.new(self).complete?
-  end
-
   def contractor_payment_processing_time_in_days
     is_trusted? ? 2 : 10 # estimated max number of business days for a contractor to receive payment after a consolidated invoice is charged
   end
