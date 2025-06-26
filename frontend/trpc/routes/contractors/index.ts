@@ -210,8 +210,8 @@ export const contractorsRouter = createRouter({
               },
             ]);
           }
-          return { documentId };
         }
+        return { documentId };
       }),
     ),
   cancelContractEnd: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
