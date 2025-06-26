@@ -40,6 +40,7 @@ class Company < ApplicationRecord
     end
   end
   has_many :company_investors
+  has_many :company_invite_links, dependent: :destroy
 
   has_many :investors, through: :company_investors, source: :user
   has_many :company_updates
