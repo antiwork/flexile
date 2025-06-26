@@ -98,6 +98,8 @@ class CompanyMailer < ApplicationMailer
     @contractor = User.find(contractor_user_id)
     @company_worker = @company.company_workers.find_by(user: @contractor)
 
+    return unless @contractor.present? && @company_worker.present?
+
     mail(to: administrator.email, subject: "#{@contractor.preferred_name} just joined your workspace")
   end
 end
