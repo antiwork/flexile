@@ -138,7 +138,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_23_190844) do
     t.datetime "ended_at"
     t.string "external_id", null: false
     t.boolean "sent_equity_percent_selection_email", default: false, null: false
-    t.integer "pay_rate_in_subunits", null: false
+    t.integer "pay_rate_in_subunits"
     t.string "pay_rate_currency", default: "usd", null: false
     t.string "role", null: false
     t.boolean "contract_signed_elsewhere", default: false, null: false

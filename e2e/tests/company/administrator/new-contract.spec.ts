@@ -126,6 +126,7 @@ test.describe("New Contractor", () => {
     await page.getByLabel("Specify a default amount").check({ force: true });
     await page.getByRole("radio", { name: "Custom" }).click({ force: true });
     await page.getByLabel("Rate").fill("1000");
+    await page.getByLabel("Unit of work").fill("project");
 
     await page.getByRole("button", { name: "Send invite" }).click();
     await withinModal(

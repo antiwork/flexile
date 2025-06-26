@@ -27,6 +27,7 @@ export default function FormFields() {
   const payRateType = form.watch("payRateType");
   useEffect(() => {
     if (payRateType === "hourly") form.setValue("unitOfWork", "hour");
+    else if (form.getValues("unitOfWork") === "hour") form.setValue("unitOfWork", "project");
   }, [payRateType]);
   const companyId = useUserStore((state) => state.user?.currentCompanyId);
   const { data: workers } = trpc.contractors.list.useQuery(companyId ? { companyId, excludeAlumni: true } : skipToken);
