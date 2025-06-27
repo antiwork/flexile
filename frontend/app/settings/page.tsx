@@ -31,6 +31,8 @@ const DetailsSection = () => {
     onSuccess: () => setTimeout(() => saveMutation.reset(), 2000),
     onError: () => {
       form.setValue("email", user.email);
+      form.setValue("preferredName", user.preferredName || "");
+      // Consider adding user feedback here, e.g., toast notification
     },
   });
   const submit = form.handleSubmit((values) => saveMutation.mutate(values));
