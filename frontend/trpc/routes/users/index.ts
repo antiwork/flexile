@@ -1,3 +1,4 @@
+import Bugsnag from "@bugsnag/js";
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq, inArray, isNull, or } from "drizzle-orm";
 import { z } from "zod";
@@ -112,7 +113,7 @@ export const usersRouter = createRouter({
       // delete the old primary email address
       if (oldPrimaryEmailId) {
         await clerk.emailAddresses.deleteEmailAddress(oldPrimaryEmailId).catch(() => {
-          // fail silently
+          Bugsnag.notify(`Clerk failed to delete old primary email address with id ${oldPrimaryEmailId}`);
         });
       }
     }),
