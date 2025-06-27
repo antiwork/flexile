@@ -3004,6 +3004,26 @@ export const update_rails_disk_service_path: ((
 
 /**
  * Generates rails route to
+ * /internal/invite_links/verify(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const verify_invite_links_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/invite_links/verify(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const verify_invite_links_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /webhooks/quickbooks(.:format)
  * @param {object | undefined} options
  * @returns {string} route path

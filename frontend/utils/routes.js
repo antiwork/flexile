@@ -2779,6 +2779,22 @@ export const update_rails_disk_service_path = /*#__PURE__*/ __jsr.r({"encoded_to
 
 /**
  * Generates rails route to
+ * /internal/invite_links/verify(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const verify_invite_links_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"invite_links"],[2,[7,"/"],[2,[6,"verify"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/invite_links/verify(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const verify_invite_links_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"invite_links"],[2,[7,"/"],[2,[6,"verify"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
+
+/**
+ * Generates rails route to
  * /webhooks/quickbooks(.:format)
  * @param {object | undefined} options
  * @returns {string} route path

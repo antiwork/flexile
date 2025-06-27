@@ -82,4 +82,8 @@ scope path: :internal, module: :internal do
 
   resources :wise_account_requirements, only: :create
   resources :company_invitations, only: [:create]
+
+  resources :invite_links, only: [] do
+    post :verify, on: :collection
+  end
 end
