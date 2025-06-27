@@ -243,6 +243,31 @@ RSpec.describe CompanyWorker do
     end
   end
 
+  describe "sentinel rate value" do
+    context "when pay_rate_in_subunits is 1 (rate to be determined)" do
+      let(:company_worker) { build(:company_worker, pay_rate_in_subunits: 1) }
+
+      it "is valid with the sentinel value" do
+        expect(company_worker).to be_valid
+        expect(company_worker.pay_rate_in_subunits).to eq(1)
+      end
+
+      it "passes the greater_than validation" do
+        expect(company_worker.errors[:pay_rate_in_subunits]).to be_empty
+      end
+
+      context "when calculating yearly USD" do
+        let(:company_worker) { build(:company_worker, hours_per_week: 40, pay_rate_in_subunits: 1) }
+
+        it "returns minimal yearly amount" do
+          yearly_rate_in_usd = company_worker.avg_yearly_usd
+          # 1 / 100 = 0 in integer division, so 0 * 40 * 44 = 0
+          expect(yearly_rate_in_usd).to eq(0)
+        end
+      end
+    end
+  end
+
   describe "#alumni?" do
     subject(:alumni?) { company_worker.alumni? }
 

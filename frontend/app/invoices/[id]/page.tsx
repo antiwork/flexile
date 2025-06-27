@@ -2,6 +2,7 @@
 
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { InformationCircleIcon, PaperClipIcon, PencilIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { ExclamationCircleIcon } from "@heroicons/react/24/solid";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -76,6 +77,17 @@ export default function InvoicePage() {
   const details = StatusDetails(invoice);
   const cashFactor = 1 - invoice.equityPercentage / 100;
 
+  // Rate warning logic
+  const hasRatesAboveDefault = invoice.lineItems.some(item =>
+    item.payRateInSubunits > invoice.contractor.payRateInSubunits
+  );
+
+  const formatDefaultRate = () => {
+    const rate = invoice.contractor.payRateInSubunits / 100;
+    const rateType = invoice.contractor.payRateType === 0 ? '/hour' : '/project';
+    return `$${rate}${rateType}`;
+  };
+
   assert(!!invoice.invoiceDate); // must be defined due to model checks in rails
 
   return (
@@ -120,6 +132,19 @@ export default function InvoicePage() {
         </div>
       }
     >
+      {hasRatesAboveDefault && (
+        <Alert className="mb-4 border-amber-200 bg-amber-50 text-black">
+          <AlertDescription>
+            <div className="flex items-center gap-3 w-full">
+              <ExclamationCircleIcon className="inline size-5 text-amber-500" />
+              <span className="text-black">
+                This invoice includes rates above the default of {formatDefaultRate()}.
+              </span>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {invoice.requiresAcceptanceByPayee && user.id === invoice.userId ? (
         <Dialog open={acceptPaymentModalOpen} onOpenChange={setAcceptPaymentModalOpen}>
           <DialogContent>

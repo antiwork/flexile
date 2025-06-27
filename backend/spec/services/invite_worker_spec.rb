@@ -156,4 +156,48 @@ RSpec.describe InviteWorker do
          .and change { Document.count }.by(0)
     end
   end
+
+  context "when pay rate is the sentinel value (rate to be determined)" do
+    let(:worker_params) do
+      {
+        email:,
+        started_at: yesterday,
+        hours_per_week: 10,
+        role: "Role",
+        pay_rate_in_subunits: 1, # Sentinel value for "rate to be determined"
+      }
+    end
+
+    it "successfully creates the contractor with sentinel pay rate" do
+      expect do
+        result = invite_contractor
+        expect(result[:success]).to be true
+        expect(result[:company_worker]).to be_a(CompanyWorker)
+        expect(result[:document]).to be_a(Document)
+      end.to change { User.count }.by(1)
+         .and change { CompanyWorker.count }.by(1)
+         .and change { Document.count }.by(1)
+
+      contractor = CompanyWorker.last
+      expect(contractor.pay_rate_in_subunits).to eq(1)
+      expect(contractor.started_at).to eq(yesterday)
+      expect(contractor.hours_per_week).to eq(10)
+      expect(contractor.role).to eq("Role")
+    end
+
+    context "when inviting an existing user with sentinel rate" do
+      let!(:user) { create(:user, email:) }
+
+      it "creates a new contractor record with sentinel rate" do
+        expect do
+          result = invite_contractor
+          expect(result[:success]).to be true
+        end.to change { CompanyWorker.count }.by(1)
+
+        contractor = CompanyWorker.last
+        expect(contractor.user).to eq(user)
+        expect(contractor.pay_rate_in_subunits).to eq(1)
+      end
+    end
+  end
 end

@@ -19,13 +19,17 @@
   <dt>Compensation</dt>
   <dd>
     <b>
-      <% if contractor.hourly? %>
-        <%= "$#{contractor.pay_rate_in_subunits / 100.0}/hr, " \
-            "$#{number_to_human(contractor.avg_yearly_usd, format: "%n%u", precision: 0,
-                                                           units: { thousand: "K", million: "M" })}" \
-            "/yr" %>
+      <% if contractor.pay_rate_in_subunits > 1 %>
+        <% if contractor.hourly? %>
+          <%= "$#{contractor.pay_rate_in_subunits / 100.0}/hr, " \
+              "$#{number_to_human(contractor.avg_yearly_usd, format: "%n%u", precision: 0,
+                                                             units: { thousand: "K", million: "M" })}" \
+              "/yr" %>
+        <% else %>
+          <%= "#{money_format(contractor.pay_rate_in_subunits / 100.0)} per project" %>
+        <% end %>
       <% else %>
-        <%= "#{money_format(contractor.pay_rate_in_subunits / 100.0)} per project" %>
+        Rate to be determined
       <% end %>
     </b>
   </dd>

@@ -1,7 +1,8 @@
 "use client";
 
 import { ArrowUpTrayIcon, PlusIcon } from "@heroicons/react/16/solid";
-import { PaperAirplaneIcon, PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { PaperAirplaneIcon, PaperClipIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { ExclamationCircleIcon } from "@heroicons/react/24/solid";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
 import Link from "next/link";
@@ -30,6 +31,7 @@ import {
 } from "@/utils/routes";
 import { LegacyAddress as Address, useCanSubmitInvoices } from ".";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import RangeInput from "@/components/RangeInput";
 import DatePicker from "@/components/DatePicker";
@@ -131,7 +133,7 @@ const Edit = () => {
         description: "",
         quantity: parseInt(searchParams.get("quantity") ?? "", 10) || (data.user.project_based ? 1 : 60),
         hourly: searchParams.has("hourly") ? searchParams.get("hourly") === "true" : !data.user.project_based,
-        pay_rate_in_subunits: parseInt(searchParams.get("rate") ?? "", 10) || data.user.pay_rate_in_subunits,
+        pay_rate_in_subunits: parseInt(searchParams.get("rate") ?? "", 10) || (data.user.pay_rate_in_subunits > 1 ? data.user.pay_rate_in_subunits : 1),
       },
     ]);
   });
@@ -147,6 +149,7 @@ const Edit = () => {
   const [equityPercentage, setEquityPercent] = useState(
     parseInt(searchParams.get("split") ?? "", 10) || equityAllocation?.equityPercentage || 0,
   );
+  const [showRateWarning, setShowRateWarning] = useState(true);
 
   const equityPercentageMutation = trpc.equityAllocations.update.useMutation();
   const validate = () => {
@@ -209,7 +212,7 @@ const Edit = () => {
         description: "",
         quantity: data.user.project_based ? 1 : 60,
         hourly: !data.user.project_based,
-        pay_rate_in_subunits: data.user.pay_rate_in_subunits,
+        pay_rate_in_subunits: data.user.pay_rate_in_subunits > 1 ? data.user.pay_rate_in_subunits : 1,
       }),
     );
 
@@ -236,6 +239,17 @@ const Edit = () => {
   const totalExpensesAmountInCents = expenses.reduce((acc, expense) => acc + expense.total_amount_in_cents, 0);
   const totalServicesAmountInCents = lineItems.reduce((acc, lineItem) => acc + lineItemTotal(lineItem), 0);
   const totalInvoiceAmountInCents = totalServicesAmountInCents + totalExpensesAmountInCents;
+
+  // Rate warning logic
+  const hasRatesAboveDefault = lineItems.some(item =>
+    item.pay_rate_in_subunits > data.user.pay_rate_in_subunits
+  );
+
+  const formatDefaultRate = () => {
+    const rate = data.user.pay_rate_in_subunits / 100;
+    const rateType = data.user.project_based ? '/project' : '/hour';
+    return `$${rate}${rateType}`;
+  };
   const [equityCalculation] = trpc.equityCalculations.calculate.useSuspenseQuery({
     companyId: company.id,
     servicesInCents: totalServicesAmountInCents,
@@ -287,6 +301,28 @@ const Edit = () => {
         </>
       }
     >
+      {hasRatesAboveDefault && showRateWarning && (
+        <Alert className="mb-2 border-amber-200 bg-amber-50 text-black">
+          <AlertDescription>
+            <div className="flex items-center gap-3 w-full">
+              <ExclamationCircleIcon className="inline size-5 text-amber-500" />
+              <div className="flex items-center justify-between w-full">
+                <span className="text-black">
+                  This invoice includes rates above your default of {formatDefaultRate()}. Please check before submitting.
+                </span>
+                <button
+                  className="ml-4 text-amber-600 hover:text-amber-800 transition-colors flex-shrink-0"
+                  onClick={() => setShowRateWarning(false)}
+                  aria-label="Dismiss warning"
+                >
+                  <XMarkIcon className="inline size-5 text-black" />
+                </button>
+              </div>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {company.equityCompensationEnabled ? (
         <section className="mb-6">
           <Card>

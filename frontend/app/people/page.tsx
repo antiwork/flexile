@@ -31,7 +31,7 @@ import { Switch } from "@/components/ui/switch";
 const schema = z.object({
   email: z.string().email(),
   payRateType: z.nativeEnum(PayRateType),
-  payRateInSubunits: z.number(),
+  payRateInSubunits: z.number().min(0).optional().default(1),
   hoursPerWeek: z.number().nullable(),
   role: z.string(),
   startDate: z.instanceof(CalendarDate),
@@ -48,7 +48,7 @@ export default function PeoplePage() {
 
   const form = useForm({
     defaultValues: {
-      ...(lastContractor ? { payRateInSubunits: lastContractor.payRateInSubunits, role: lastContractor.role } : {}),
+      ...(lastContractor && lastContractor.payRateInSubunits > 1 ? { payRateInSubunits: lastContractor.payRateInSubunits, role: lastContractor.role } : { payRateInSubunits: 1, role: "" }),
       payRateType: lastContractor?.payRateType ?? PayRateType.Hourly,
       hoursPerWeek: lastContractor?.hoursPerWeek ?? DEFAULT_WORKING_HOURS_PER_WEEK,
       startDate: today(getLocalTimeZone()),

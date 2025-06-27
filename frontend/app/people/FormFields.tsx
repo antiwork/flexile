@@ -88,9 +88,9 @@ export default function FormFields() {
               <FormLabel>Rate</FormLabel>
               <FormControl>
                 <NumberInput
-                  value={field.value == null ? null : field.value / 100}
-                  onChange={(value) => field.onChange(value == null ? null : value * 100)}
-                  placeholder="0"
+                  value={field.value == null || field.value === 1 ? null : field.value / 100}
+                  onChange={(value) => field.onChange(value == null || value === 0 ? 1 : value * 100)}
+                  placeholder="Rate to be determined"
                   prefix="$"
                   suffix={payRateType === PayRateType.ProjectBased ? "/ project" : "/ hour"}
                   decimal

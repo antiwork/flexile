@@ -30,6 +30,12 @@ RSpec.describe InvoiceLineItem do
         expect(invoice_line_item).to be_invalid
         expect(invoice_line_item.errors[:pay_rate_in_subunits]).to include("must be an integer")
       end
+
+      it "allows pay_rate_in_subunits to be 1 (sentinel value for rate to be determined)" do
+        invoice_line_item.pay_rate_in_subunits = 1
+        expect(invoice_line_item).to be_valid
+        expect(invoice_line_item.errors[:pay_rate_in_subunits]).to be_empty
+      end
     end
   end
 

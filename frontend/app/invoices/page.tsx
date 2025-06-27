@@ -1,6 +1,7 @@
 "use client";
 
 import { Download, AlertTriangle, CircleCheck, Info, Pencil, Plus } from "lucide-react";
+import { ExclamationCircleIcon } from "@heroicons/react/24/solid";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import Link from "next/link";
 import React, { Fragment, useEffect, useMemo, useState } from "react";
@@ -370,7 +371,25 @@ const TasksModal = ({
   onClose: () => void;
   onReject: () => void;
 }) => {
+  const company = useCurrentCompany();
   const isActionable = useIsActionable();
+
+    // Fetch detailed invoice data for rate warning
+  const [detailedInvoice] = trpc.invoices.get.useSuspenseQuery({
+    companyId: company.id,
+    id: invoice.id
+  });
+
+  // Rate warning logic
+  const hasRatesAboveDefault = detailedInvoice.lineItems.some(item =>
+    item.payRateInSubunits > detailedInvoice.contractor.payRateInSubunits
+  );
+
+  const formatDefaultRate = () => {
+    const rate = detailedInvoice.contractor.payRateInSubunits / 100;
+    const rateType = detailedInvoice.contractor.payRateType === 0 ? '/hour' : '/project';
+    return `$${rate}${rateType}`;
+  };
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -398,6 +417,20 @@ const TasksModal = ({
               </AlertDescription>
             </Alert>
           ) : null}
+
+          {hasRatesAboveDefault && (
+            <Alert className="border-amber-200 bg-amber-50 text-black">
+              <AlertDescription>
+                <div className="flex items-center gap-3 w-full">
+                  <ExclamationCircleIcon className="inline size-5 text-amber-500" />
+                  <span className="text-black">
+                    This invoice includes rates above the default of {formatDefaultRate()}.
+                  </span>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+
           <section>
             <header className="flex items-center justify-between gap-4 text-gray-600">
               <h3 className="text-md uppercase">Invoice details</h3>

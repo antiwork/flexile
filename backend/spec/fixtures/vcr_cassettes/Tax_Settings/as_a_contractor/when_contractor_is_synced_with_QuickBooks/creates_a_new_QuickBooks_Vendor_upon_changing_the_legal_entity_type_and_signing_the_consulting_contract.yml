@@ -1,0 +1,195 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://sandbox-quickbooks.api.intuit.com/v3/company/4620816365264855310/query?minorversion=75&query=select%20*%20from%20Vendor%20startposition%201%20maxresults%201000
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Content-Type:
+      - application/json
+      Accept:
+      - application/json
+      Authorization:
+      - Bearer eyJlbmSAMPLELUhTMjU2IiwiYWxnIjoiZGlyIn0..lwGAESS-8jyltYyF74KB6g.n3AE424o2dQbhoZ53n_t3kaSZz3yQIDrVJqNUmdJF4Ade4d_TRS55uNEoUCQkFQtuTKBA6OaXnW3PZk4qN94n2Zje4opWn1qiMOd8-cs1ZfXywje8rttIxsQPqdBHTkWMKWnt3ZmThWKLiRkXUY6bycE8o1n_QNwLb1dIOnaB7nAPy-hGD1maonRdt_-Ssw4BbdR1fyllz-5r2fYJMtIF35ITlcMT_YIpvtbmeJ8MW37wsvA-GqhGrVL9uihRaknp2LapgQLnQV51K4BK5BLMwcfemgSAObDqWYqO4etjbTiVWY6VPbk6pil9Z0CBX2_Q911WjKu8OA9FvpDwX2ZTHIZe7voCFmD6V_rtcLqNXno05As7H0zT8sjFktxWhxvMDY8KcvNvnAvCBJf21aDElOrNVuRtKsKOU95HKEFHQnSSl4NDVlf7FT4HB3Wp3p2PGlfoeMgKXr6SR3SU25PAu30_64bmDIKCKP5XL3F7gRQwPHF9qiqgfGqSwI6tyoSnIvN6LWccK_g4ouZV4LWd_Xp_0slQqa5bp6OltV18wbTH2-mdSbIrC9-FHISChQOoH65i2T6fy46r0dMPv_hv7T6GecTnNs6DtIx0f5CmpcaL1NG56JKBjz0LaWvvvLpyb2SzzfKd9O3SGnsg6ksVmaIksR4fjzzkwGlrW8GCWk7foghpfeMKbCL2SAMPLEkOrfKu4W9avYJwbKQlNhaaeiqeMvXoJGX14IzEkzWVMJv3-OQXkGny-TO0l6dG4ge.wkffVC8gVg775iIyTZ-hPQ
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 401
+      message: Unauthorized
+    headers:
+      Date:
+      - Fri, 27 Jun 2025 01:32:25 GMT
+      Content-Type:
+      - application/json
+      Content-Length:
+      - '397'
+      Connection:
+      - keep-alive
+      Www-Authenticate:
+      - Bearer realm="Intuit", error="invalid_token"
+      X-Envoy-Upstream-Service-Time:
+      - '1'
+      Strict-Transport-Security:
+      - max-age=31536000
+      Intuit-Tid:
+      - 1-685df4a9-7a4c266b6ba7d03430cfc8ba
+      X-Request-Id:
+      - 1-685df4a9-7a4c266b6ba7d03430cfc8ba
+      Server:
+      - istio-envoy
+    body:
+      encoding: UTF-8
+      string: '{"warnings":null,"intuitObject":null,"fault":{"error":[{"message":"message=AuthenticationFailed;
+        errorCode=003200; statusCode=401","detail":"Could not decrypt JWT.","code":"3200","element":null}],"type":"AUTHENTICATION"},"report":null,"queryResponse":null,"batchItemResponse":[],"attachableResponse":[],"syncErrorResponse":null,"requestId":null,"time":1750987945618,"status":null,"cdcresponse":[]}'
+  recorded_at: Fri, 27 Jun 2025 01:32:24 GMT
+- request:
+    method: get
+    uri: https://sandbox-quickbooks.api.intuit.com/v3/company/4620816365264855310/query?minorversion=75&query=select%20*%20from%20Vendor%20startposition%201%20maxresults%201000
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Content-Type:
+      - application/json
+      Accept:
+      - application/json
+      Authorization:
+      - Bearer eyJlbmSAMPLELUhTMjU2IiwiYWxnIjoiZGlyIn0..lwGAESS-8jyltYyF74KB6g.n3AE424o2dQbhoZ53n_t3kaSZz3yQIDrVJqNUmdJF4Ade4d_TRS55uNEoUCQkFQtuTKBA6OaXnW3PZk4qN94n2Zje4opWn1qiMOd8-cs1ZfXywje8rttIxsQPqdBHTkWMKWnt3ZmThWKLiRkXUY6bycE8o1n_QNwLb1dIOnaB7nAPy-hGD1maonRdt_-Ssw4BbdR1fyllz-5r2fYJMtIF35ITlcMT_YIpvtbmeJ8MW37wsvA-GqhGrVL9uihRaknp2LapgQLnQV51K4BK5BLMwcfemgSAObDqWYqO4etjbTiVWY6VPbk6pil9Z0CBX2_Q911WjKu8OA9FvpDwX2ZTHIZe7voCFmD6V_rtcLqNXno05As7H0zT8sjFktxWhxvMDY8KcvNvnAvCBJf21aDElOrNVuRtKsKOU95HKEFHQnSSl4NDVlf7FT4HB3Wp3p2PGlfoeMgKXr6SR3SU25PAu30_64bmDIKCKP5XL3F7gRQwPHF9qiqgfGqSwI6tyoSnIvN6LWccK_g4ouZV4LWd_Xp_0slQqa5bp6OltV18wbTH2-mdSbIrC9-FHISChQOoH65i2T6fy46r0dMPv_hv7T6GecTnNs6DtIx0f5CmpcaL1NG56JKBjz0LaWvvvLpyb2SzzfKd9O3SGnsg6ksVmaIksR4fjzzkwGlrW8GCWk7foghpfeMKbCL2SAMPLEkOrfKu4W9avYJwbKQlNhaaeiqeMvXoJGX14IzEkzWVMJv3-OQXkGny-TO0l6dG4ge.wkffVC8gVg775iIyTZ-hPQ
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 401
+      message: Unauthorized
+    headers:
+      Date:
+      - Fri, 27 Jun 2025 01:32:25 GMT
+      Content-Type:
+      - application/json
+      Content-Length:
+      - '397'
+      Connection:
+      - keep-alive
+      Www-Authenticate:
+      - Bearer realm="Intuit", error="invalid_token"
+      X-Envoy-Upstream-Service-Time:
+      - '2'
+      Strict-Transport-Security:
+      - max-age=31536000
+      Intuit-Tid:
+      - 1-685df4a9-35a887fa731629870f0dc004
+      X-Request-Id:
+      - 1-685df4a9-35a887fa731629870f0dc004
+      Server:
+      - istio-envoy
+    body:
+      encoding: UTF-8
+      string: '{"warnings":null,"intuitObject":null,"fault":{"error":[{"message":"message=AuthenticationFailed;
+        errorCode=003200; statusCode=401","detail":"Could not decrypt JWT.","code":"3200","element":null}],"type":"AUTHENTICATION"},"report":null,"queryResponse":null,"batchItemResponse":[],"attachableResponse":[],"syncErrorResponse":null,"requestId":null,"time":1750987945997,"status":null,"cdcresponse":[]}'
+  recorded_at: Fri, 27 Jun 2025 01:32:24 GMT
+- request:
+    method: post
+    uri: https://sandbox-quickbooks.api.intuit.com/v3/company/4620816365264855310/vendor?minorversion=75
+    body:
+      encoding: UTF-8
+      string: '{"Active":true,"BillAddr":{"City":"New York","Line1":"1st Street","PostalCode":"10004","Country":"United
+        States","CountrySubDivisionCode":"NY"},"BillRate":60.0,"GivenName":"Caro Example","DisplayName":"Caro
+        Example","PrimaryEmailAddr":{"Address":"caro@example.com"},"Vendor1099":false,"TaxIdentifier":"123451212"}'
+    headers:
+      Content-Type:
+      - application/json
+      Accept:
+      - application/json
+      Authorization:
+      - Bearer eyJlbmSAMPLELUhTMjU2IiwiYWxnIjoiZGlyIn0..lwGAESS-8jyltYyF74KB6g.n3AE424o2dQbhoZ53n_t3kaSZz3yQIDrVJqNUmdJF4Ade4d_TRS55uNEoUCQkFQtuTKBA6OaXnW3PZk4qN94n2Zje4opWn1qiMOd8-cs1ZfXywje8rttIxsQPqdBHTkWMKWnt3ZmThWKLiRkXUY6bycE8o1n_QNwLb1dIOnaB7nAPy-hGD1maonRdt_-Ssw4BbdR1fyllz-5r2fYJMtIF35ITlcMT_YIpvtbmeJ8MW37wsvA-GqhGrVL9uihRaknp2LapgQLnQV51K4BK5BLMwcfemgSAObDqWYqO4etjbTiVWY6VPbk6pil9Z0CBX2_Q911WjKu8OA9FvpDwX2ZTHIZe7voCFmD6V_rtcLqNXno05As7H0zT8sjFktxWhxvMDY8KcvNvnAvCBJf21aDElOrNVuRtKsKOU95HKEFHQnSSl4NDVlf7FT4HB3Wp3p2PGlfoeMgKXr6SR3SU25PAu30_64bmDIKCKP5XL3F7gRQwPHF9qiqgfGqSwI6tyoSnIvN6LWccK_g4ouZV4LWd_Xp_0slQqa5bp6OltV18wbTH2-mdSbIrC9-FHISChQOoH65i2T6fy46r0dMPv_hv7T6GecTnNs6DtIx0f5CmpcaL1NG56JKBjz0LaWvvvLpyb2SzzfKd9O3SGnsg6ksVmaIksR4fjzzkwGlrW8GCWk7foghpfeMKbCL2SAMPLEkOrfKu4W9avYJwbKQlNhaaeiqeMvXoJGX14IzEkzWVMJv3-OQXkGny-TO0l6dG4ge.wkffVC8gVg775iIyTZ-hPQ
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 401
+      message: Unauthorized
+    headers:
+      Date:
+      - Fri, 27 Jun 2025 01:32:26 GMT
+      Content-Type:
+      - application/json
+      Content-Length:
+      - '397'
+      Connection:
+      - keep-alive
+      Www-Authenticate:
+      - Bearer realm="Intuit", error="invalid_token"
+      X-Envoy-Upstream-Service-Time:
+      - '1'
+      Strict-Transport-Security:
+      - max-age=31536000
+      Intuit-Tid:
+      - 1-685df4aa-0a7e2dd73d181cd0001675b3
+      X-Request-Id:
+      - 1-685df4aa-0a7e2dd73d181cd0001675b3
+      Server:
+      - istio-envoy
+    body:
+      encoding: UTF-8
+      string: '{"warnings":null,"intuitObject":null,"fault":{"error":[{"message":"message=AuthenticationFailed;
+        errorCode=003200; statusCode=401","detail":"Could not decrypt JWT.","code":"3200","element":null}],"type":"AUTHENTICATION"},"report":null,"queryResponse":null,"batchItemResponse":[],"attachableResponse":[],"syncErrorResponse":null,"requestId":null,"time":1750987946380,"status":null,"cdcresponse":[]}'
+  recorded_at: Fri, 27 Jun 2025 01:32:24 GMT
+- request:
+    method: post
+    uri: https://sandbox-quickbooks.api.intuit.com/v3/company/4620816365264855310/vendor?minorversion=75
+    body:
+      encoding: UTF-8
+      string: '{"Active":true,"BillAddr":{"City":"New York","Line1":"1st Street","PostalCode":"10004","Country":"United
+        States","CountrySubDivisionCode":"NY"},"BillRate":60.0,"GivenName":"Caro Example","DisplayName":"Caro
+        Example","PrimaryEmailAddr":{"Address":"caro@example.com"},"Vendor1099":false,"TaxIdentifier":"123451212"}'
+    headers:
+      Content-Type:
+      - application/json
+      Accept:
+      - application/json
+      Authorization:
+      - Bearer eyJlbmSAMPLELUhTMjU2IiwiYWxnIjoiZGlyIn0..lwGAESS-8jyltYyF74KB6g.n3AE424o2dQbhoZ53n_t3kaSZz3yQIDrVJqNUmdJF4Ade4d_TRS55uNEoUCQkFQtuTKBA6OaXnW3PZk4qN94n2Zje4opWn1qiMOd8-cs1ZfXywje8rttIxsQPqdBHTkWMKWnt3ZmThWKLiRkXUY6bycE8o1n_QNwLb1dIOnaB7nAPy-hGD1maonRdt_-Ssw4BbdR1fyllz-5r2fYJMtIF35ITlcMT_YIpvtbmeJ8MW37wsvA-GqhGrVL9uihRaknp2LapgQLnQV51K4BK5BLMwcfemgSAObDqWYqO4etjbTiVWY6VPbk6pil9Z0CBX2_Q911WjKu8OA9FvpDwX2ZTHIZe7voCFmD6V_rtcLqNXno05As7H0zT8sjFktxWhxvMDY8KcvNvnAvCBJf21aDElOrNVuRtKsKOU95HKEFHQnSSl4NDVlf7FT4HB3Wp3p2PGlfoeMgKXr6SR3SU25PAu30_64bmDIKCKP5XL3F7gRQwPHF9qiqgfGqSwI6tyoSnIvN6LWccK_g4ouZV4LWd_Xp_0slQqa5bp6OltV18wbTH2-mdSbIrC9-FHISChQOoH65i2T6fy46r0dMPv_hv7T6GecTnNs6DtIx0f5CmpcaL1NG56JKBjz0LaWvvvLpyb2SzzfKd9O3SGnsg6ksVmaIksR4fjzzkwGlrW8GCWk7foghpfeMKbCL2SAMPLEkOrfKu4W9avYJwbKQlNhaaeiqeMvXoJGX14IzEkzWVMJv3-OQXkGny-TO0l6dG4ge.wkffVC8gVg775iIyTZ-hPQ
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 401
+      message: Unauthorized
+    headers:
+      Date:
+      - Fri, 27 Jun 2025 01:32:26 GMT
+      Content-Type:
+      - application/json
+      Content-Length:
+      - '397'
+      Connection:
+      - keep-alive
+      Www-Authenticate:
+      - Bearer realm="Intuit", error="invalid_token"
+      X-Envoy-Upstream-Service-Time:
+      - '1'
+      Strict-Transport-Security:
+      - max-age=31536000
+      Intuit-Tid:
+      - 1-685df4aa-711befa35a2837ef1fa01a3b
+      X-Request-Id:
+      - 1-685df4aa-711befa35a2837ef1fa01a3b
+      Server:
+      - istio-envoy
+    body:
+      encoding: UTF-8
+      string: '{"warnings":null,"intuitObject":null,"fault":{"error":[{"message":"message=AuthenticationFailed;
+        errorCode=003200; statusCode=401","detail":"Could not decrypt JWT.","code":"3200","element":null}],"type":"AUTHENTICATION"},"report":null,"queryResponse":null,"batchItemResponse":[],"attachableResponse":[],"syncErrorResponse":null,"requestId":null,"time":1750987946760,"status":null,"cdcresponse":[]}'
+  recorded_at: Fri, 27 Jun 2025 01:32:24 GMT
+recorded_with: VCR 6.3.1
