@@ -129,7 +129,7 @@ export default function Billing() {
     <div className="grid gap-4">
       <h2 className="mb-8 text-xl font-medium">Billing</h2>
       <hgroup>
-        <h3 className="mb-4 text-lg font-medium">Payout method</h3>
+        <h3 className="mb-1 text-base font-medium">Payout method</h3>
         <p className="text-muted-foreground text-sm">
           Each month, the selected bank account will be debited for the combined total of approved invoices and Flexile
           fees.
@@ -172,6 +172,7 @@ export default function Billing() {
         </>
       ) : null}
       <StripeMicrodepositVerification />
+      <h3 className="mt-4 text-base font-medium">Billing history</h3>
       <Alert>
         <InformationCircleIcon />
         <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
