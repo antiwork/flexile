@@ -94,12 +94,11 @@ export const usersRouter = createRouter({
       const clerkUser = await clerk.users.getUser(userId);
       const oldPrimaryEmailId = clerkUser.primaryEmailAddressId;
 
-      // Create new email address as primary
       await clerk.emailAddresses.createEmailAddress({
         userId,
         emailAddress: input.email,
         primary: true,
-        verified: true, // needed to be able to login with the new email
+        verified: true,
       });
 
       await db
@@ -110,7 +109,6 @@ export const usersRouter = createRouter({
         })
         .where(eq(users.id, BigInt(ctx.userId)));
 
-      // delete the old primary email address
       if (oldPrimaryEmailId) {
         await clerk.emailAddresses.deleteEmailAddress(oldPrimaryEmailId).catch(() => {
           Bugsnag.notify(`Clerk failed to delete old primary email address with id ${oldPrimaryEmailId}`);
