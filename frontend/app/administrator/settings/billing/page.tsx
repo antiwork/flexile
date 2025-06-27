@@ -88,11 +88,11 @@ const stripeAppearance = {
   rules: {
     ".Link:hover": { textDecoration: "underline" },
     ".Label": { color: "rgba(83, 87, 83, 0.9)" },
-    ".Input": { border: "1px solid rgba(83, 87, 83, 0.9)" },
+    ".Input": { border: "1px solid rgb(214, 214, 214)", boxShadow: "none" },
     ".Input:hover": { borderColor: "rgba(4, 5, 0, 0.9)" },
     ".Input:focus": { borderColor: "rgba(4, 5, 0, 0.9)", outline: "2px rgba(214, 233, 255, 1)" },
     ".Input--invalid": { borderColor: "var(--colorDanger)" },
-    ".PickerItem": { border: "1px solid rgba(83, 87, 83, 0.9)", padding: "var(--fontSize2Xl)" },
+    ".PickerItem": { border: "1px solid rgb(214, 214, 214)", boxShadow: "none", padding: "var(--fontSize2Xl)" },
     ".MenuIcon:hover": { backgroundColor: "rgba(240, 247, 255, 1)" },
     ".MenuAction": { backgroundColor: "#f7f9fa" },
     ".MenuAction:hover": { backgroundColor: "rgba(240, 247, 255, 1)" },
@@ -100,6 +100,8 @@ const stripeAppearance = {
     ".DropdownItem": { padding: "var(--fontSizeLg)" },
     ".DropdownItem--highlight": { backgroundColor: "rgba(240, 247, 255, 1)" },
     ".TermsText": { fontSize: "var(--fontSizeBase)" },
+    ".p-AccordionPanelContents": { padding: "0" },
+    ".AccordionItem": { border: "none", padding: "2px", boxShadow: "none" },
   },
 };
 
