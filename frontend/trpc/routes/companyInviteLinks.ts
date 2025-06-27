@@ -1,11 +1,20 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { companyProcedure, createRouter } from "@/trpc";
+import { baseProcedure, companyProcedure, createRouter, protectedProcedure } from "@/trpc";
 import {
   company_invite_links_url,
   reset_company_invite_links_url,
   accept_company_invite_links_url,
+  verify_invite_links_url,
 } from "@/utils/routes";
+
+type VerifyInviteLinkResult = {
+  valid: boolean;
+  inviter_name?: string;
+  company_name?: string;
+  company_id?: string;
+  error?: string;
+};
 
 export const companyInviteLinksRouter = createRouter({
   get: companyProcedure.query(async ({ ctx }) => {
@@ -20,7 +29,7 @@ export const companyInviteLinksRouter = createRouter({
     }
     const data = await response.json();
 
-    return { invite_link: data.invite_link };
+    return { invite_link: `${ctx.host}/invite/${data.invite_link}` };
   }),
 
   accept: companyProcedure.input(z.object({ token: z.string() })).mutation(async ({ ctx, input }) => {
@@ -51,22 +60,24 @@ export const companyInviteLinksRouter = createRouter({
     }
     const data = await response.json();
 
-    return { invite_link: data.invite_link };
+    return { invite_link: `${ctx.host}/invite/${data.invite_link}` };
   }),
 
-  verify: companyProcedure.input(z.object({ token: z.string() })).query(async ({ ctx, input }) => {
-    const response = await fetch(
-      company_invite_links_url(ctx.company.externalId, { host: ctx.host }) +
-        `/verify?token=${encodeURIComponent(input.token)}`,
-      {
-        method: "GET",
-        headers: { ...ctx.headers },
-      },
-    );
+  verify: baseProcedure.input(z.object({ token: z.string() })).query(async ({ ctx, input }) => {
+    const url = verify_invite_links_url({ host: ctx.host });
+
+    const response = await fetch(url, {
+      method: "POST",
+      body: JSON.stringify({ token: input.token }),
+      headers: { "Content-Type": "application/json", ...ctx.headers },
+    });
+
     if (!response.ok) {
-      throw new TRPCError({ code: "BAD_REQUEST", message: "Failed to verify invite link" });
+      return { valid: false } as VerifyInviteLinkResult;
     }
-    const data = await response.json();
-    return data; // { valid: boolean, ... }
+
+    const result = await response.json();
+
+    return result as VerifyInviteLinkResult;
   }),
 });
