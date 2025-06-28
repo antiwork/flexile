@@ -37,12 +37,15 @@ module SetCurrent
       company = company_from_param || company_from_user
       if company.nil?
         ApplicationRecord.transaction do
-          company = Company.create!(
-            email: user.email,
-            country_code: user.country_code || "US",
-            default_currency: "USD"
-          )
-          user.company_administrators.create!(company: company)
+          company = user.all_companies.first
+          if company.nil?
+            company = Company.create!(
+              email: user.email,
+              country_code: user.country_code || "US",
+              default_currency: "USD"
+            )
+            user.company_administrators.create!(company: company)
+          end
         end
       end
       cookies.permanent[current_user_selected_company_cookie_name] = company.external_id if company.present?
