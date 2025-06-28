@@ -11,8 +11,13 @@ class OnboardingState::Worker < OnboardingState::BaseUser
     end
   end
 
-  def after_complete_onboarding_path
-    # Rely on the front-end logic to redirect to the role-specific page.
-    "/dashboard"
-  end
+  private
+    def company_worker
+      @company_worker ||= user.company_worker_for(company)
+    end
+
+    def after_complete_onboarding_path
+      # Rely on the front-end logic to redirect to the role-specific page.
+      "/dashboard"
+    end
 end

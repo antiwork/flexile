@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_23_190844) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_25_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -285,6 +285,20 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_23_190844) do
     t.string "status", default: "initial", null: false
     t.string "bank_account_last_four"
     t.index ["consolidated_invoice_id"], name: "index_consolidated_payments_on_consolidated_invoice_id"
+  end
+
+  create_table "contractor_invite_links", force: :cascade do |t|
+    t.string "external_id", null: false
+    t.string "uuid", null: false
+    t.bigint "company_id", null: false
+    t.bigint "user_id", null: false
+    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "updated_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.index ["company_id", "user_id"], name: "index_contractor_invite_links_on_company_id_and_user_id", unique: true
+    t.index ["company_id"], name: "index_contractor_invite_links_on_company_id"
+    t.index ["external_id"], name: "index_contractor_invite_links_on_external_id", unique: true
+    t.index ["user_id"], name: "index_contractor_invite_links_on_user_id"
+    t.index ["uuid"], name: "index_contractor_invite_links_on_uuid", unique: true
   end
 
   create_table "contracts", force: :cascade do |t|
@@ -1108,4 +1122,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_23_190844) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "contractor_invite_links", "companies"
+  add_foreign_key "contractor_invite_links", "users"
 end

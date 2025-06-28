@@ -892,6 +892,30 @@ export const company_company_updates_path: ((
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/contractor_invite_link(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_contractor_invite_link_url: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/contractor_invite_link(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_contractor_invite_link_path: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /company/details(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
@@ -2268,6 +2292,30 @@ export const people_new_path: ((
 
 /**
  * Generates rails route to
+ * /internal/join/:uuid(.:format)
+ * @param {any} uuid
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const public_contractor_invite_link_url: ((
+  uuid: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/join/:uuid(.:format)
+ * @param {any} uuid
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const public_contractor_invite_link_path: ((
+  uuid: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /admin/consolidated_payments/:id/refund(.:format)
  * @param {any} id
  * @param {object | undefined} options
@@ -2339,6 +2387,30 @@ export const resend_company_equity_grant_exercise_url: ((
 export const resend_company_equity_grant_exercise_path: ((
   company_id: RequiredRouteParameter,
   id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/contractor_invite_link/reset(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const reset_company_contractor_invite_link_url: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/contractor_invite_link/reset(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const reset_company_contractor_invite_link_path: ((
+  company_id: RequiredRouteParameter,
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
