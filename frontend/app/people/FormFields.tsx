@@ -23,7 +23,7 @@ export const schema = z.object({
 
 export default function FormFields() {
   const form = useFormContext<z.infer<typeof schema>>();
-  useEffect(() => form.setValue("payRateType", form.getValues("unitOfWork") === "hourly" ? "hourly" : "custom"), []);
+  useEffect(() => form.setValue("payRateType", form.getValues("unitOfWork") === "hour" ? "hourly" : "custom"), []);
   const payRateType = form.watch("payRateType");
   useEffect(() => {
     if (payRateType === "hourly") form.setValue("unitOfWork", "hour");
