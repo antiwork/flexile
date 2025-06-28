@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-class ApproveManyInvoices
-  def initialize(company:, approver:, invoice_ids:)
+class DeleteManyInvoices
+  def initialize(company:, deleted_by:, invoice_ids:)
     @company = company
-    @approver = approver
+    @deleted_by = deleted_by
     @invoice_ids = invoice_ids
   end
 
@@ -12,10 +12,10 @@ class ApproveManyInvoices
     raise ActiveRecord::RecordNotFound if invoices.size != invoice_ids.size
 
     invoices.each do |invoice|
-      ApproveInvoice.new(invoice:, approver:).perform
+      DeleteInvoice.new(invoice:, deleted_by:).perform
     end
   end
 
-  private
-    attr_reader :company, :approver, :invoice_ids
+    private
+      attr_reader :company, :deleted_by, :invoice_ids
 end

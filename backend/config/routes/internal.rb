@@ -57,6 +57,7 @@ scope path: :internal, module: :internal do
         patch :reject
         get :export
         get :microdeposit_verification_details
+        delete :destroy
       end
     end
     resources :quickbooks, only: :update do

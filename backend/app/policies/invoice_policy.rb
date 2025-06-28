@@ -40,4 +40,8 @@ class InvoicePolicy < ApplicationPolicy
   def reject?
     approve?
   end
+
+  def destroy?
+    company_worker.present?
+  end
 end

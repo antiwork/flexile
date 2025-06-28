@@ -3,7 +3,7 @@ import { ClockIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import { addDays, isWeekend, nextMonday } from "date-fns";
 import React from "react";
 import Status, { type Variant } from "@/components/Status";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
+import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from "@/components/Tooltip";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -104,7 +104,9 @@ export const StatusWithTooltip = ({ invoice }: { invoice: Invoice }) => {
       <TooltipTrigger>
         <InvoiceStatus invoice={invoice} />
       </TooltipTrigger>
-      <TooltipContent>{details}</TooltipContent>
+      <TooltipPortal>
+        <TooltipContent className="max-w-xs break-words">{details}</TooltipContent>
+      </TooltipPortal>
     </Tooltip>
   );
 };

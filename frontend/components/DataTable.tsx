@@ -1,22 +1,7 @@
-import { ChevronDown, ChevronUp, ListFilterIcon, SearchIcon } from "lucide-react";
-import {
-  type AccessorKeyColumnDef,
-  type Column,
-  createColumnHelper as originalCreateColumnHelper,
-  type DeepKeys,
-  type DeepValue,
-  flexRender,
-  getCoreRowModel,
-  type RowData,
-  type Table,
-  type TableOptions,
-  useReactTable,
-} from "@tanstack/react-table";
-import React, { useMemo } from "react";
-import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -40,6 +25,25 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/utils";
+import {
+  type AccessorKeyColumnDef,
+  type Column,
+  type DeepKeys,
+  type DeepValue,
+  flexRender,
+  getCoreRowModel,
+  createColumnHelper as originalCreateColumnHelper,
+  type RowData,
+  type Table,
+  type TableOptions,
+  useReactTable,
+} from "@tanstack/react-table";
+import { ChevronDown, ChevronUp, ListFilterIcon, SearchIcon, X } from "lucide-react";
+import React, { useMemo } from "react";
+import { z } from "zod";
+import { ContextMenuActions } from "./actions/ContextMenuActions";
+import { SelectionActions } from "./actions/SelectionActions";
+import type { ActionConfig, ActionContext } from "./actions/types";
 
 declare module "@tanstack/react-table" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -85,6 +89,13 @@ interface TableProps<T> {
   onRowClicked?: ((row: T) => void) | undefined;
   actions?: React.ReactNode;
   searchColumn?: string | undefined;
+  contextMenuContent?: (context: { row: T; isSelected: boolean; selectedCount: number }) => React.ReactNode;
+  selectionActions?: (selectedRows: T[]) => React.ReactNode;
+  // NEW: Optional entity-based actions
+  entityActionConfig?: ActionConfig<T>;
+  entityActionContext?: ActionContext;
+  onEntityAction?: (actionId: string, items: T[]) => void;
+  useEntityContextMenu?: boolean;
 }
 
 export default function DataTable<T extends RowData>({
@@ -93,7 +104,25 @@ export default function DataTable<T extends RowData>({
   onRowClicked,
   actions,
   searchColumn: searchColumnName,
+  contextMenuContent,
+  selectionActions,
+  // Add new props
+  entityActionConfig,
+  entityActionContext,
+  onEntityAction,
+  useEntityContextMenu = false,
 }: TableProps<T>) {
+  React.useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        table.toggleAllRowsSelected(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [table]);
+
   const data = useMemo(
     () => ({
       headers: table
@@ -134,6 +163,21 @@ export default function DataTable<T extends RowData>({
   const searchColumn = searchColumnName ? table.getColumn(searchColumnName) : null;
   const getColumnName = (column: Column<T>) =>
     typeof column.columnDef.header === "string" ? column.columnDef.header : "";
+  const selectedRows = table.getSelectedRowModel().rows.map((row) => row.original);
+  const selectedRowCount = selectedRows.length;
+
+  const handleSelectAllChange = () => {
+    const isAllSelected = table.getIsAllRowsSelected();
+    const isSomeSelected = table.getIsSomeRowsSelected();
+
+    if (!isSomeSelected && !isAllSelected) {
+      table.toggleAllRowsSelected(true);
+    } else if (isSomeSelected && !isAllSelected) {
+      table.toggleAllRowsSelected(true);
+    } else if (isAllSelected) {
+      table.toggleAllRowsSelected(false);
+    }
+  };
 
   return (
     <div className="grid gap-4">
@@ -227,10 +271,43 @@ export default function DataTable<T extends RowData>({
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : null}
+
+            {selectable ? (
+              <div className={cn("flex gap-2", selectedRowCount === 0 && "pointer-events-none opacity-0")}>
+                <div className="bg-accent border-muted flex h-9 items-center justify-center rounded-md border border-dashed px-2 font-medium">
+                  <span className="text-sm whitespace-nowrap">
+                    <span className="inline-block w-4 text-center tabular-nums">{selectedRowCount}</span> selected
+                  </span>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="-mr-1 size-6 p-0 hover:bg-transparent"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      table.toggleAllRowsSelected(false);
+                    }}
+                  >
+                    <X className="size-4 shrink-0" aria-hidden="true" />
+                  </Button>
+                </div>
+                {entityActionConfig && entityActionContext && onEntityAction ? (
+                  <SelectionActions
+                    selectedItems={selectedRows}
+                    config={entityActionConfig}
+                    actionContext={entityActionContext}
+                    onAction={onEntityAction}
+                  />
+                ) : (
+                  selectionActions?.(selectedRows)
+                )}
+              </div>
+            ) : null}
           </div>
           <div className="flex justify-between md:justify-end md:gap-2">{actions}</div>
         </div>
       ) : null}
+
       <ShadcnTable className="caption-top not-print:max-md:grid">
         {caption ? (
           <TableCaption className="mb-2 text-left text-lg font-bold text-black">{caption}</TableCaption>
@@ -243,7 +320,8 @@ export default function DataTable<T extends RowData>({
                   <Checkbox
                     checked={table.getIsAllRowsSelected()}
                     aria-label="Select all"
-                    onCheckedChange={(checked) => table.toggleAllRowsSelected(checked === true)}
+                    onCheckedChange={handleSelectAllChange}
+                    indeterminate={table.getIsSomeRowsSelected() && !table.getIsAllRowsSelected()}
                   />
                 </TableHead>
               ) : null}
@@ -271,40 +349,71 @@ export default function DataTable<T extends RowData>({
         </TableHeader>
         <TableBody className="not-print:max-md:contents">
           {data.rows.length > 0 ? (
-            data.rows.map((row) => (
-              <TableRow
-                key={row.id}
-                className={rowClasses}
-                data-state={row.getIsSelected() ? "selected" : undefined}
-                onClick={() => onRowClicked?.(row.original)}
-              >
-                {selectable ? (
-                  <TableCell className={cellClasses(null)} onClick={(e) => e.stopPropagation()}>
-                    <Checkbox
-                      checked={row.getIsSelected()}
-                      aria-label="Select row"
-                      disabled={!row.getCanSelect()}
-                      onCheckedChange={row.getToggleSelectedHandler()}
-                      className="relative z-1"
-                    />
-                  </TableCell>
-                ) : null}
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell
-                    key={cell.id}
-                    className={`${cellClasses(cell.column)} ${cell.column.id === "actions" ? "relative z-1 md:text-right print:hidden" : ""}`}
-                    onClick={(e) => cell.column.id === "actions" && e.stopPropagation()}
-                  >
-                    {typeof cell.column.columnDef.header === "string" && (
-                      <div className="text-gray-500 md:hidden print:hidden" aria-hidden>
-                        {cell.column.columnDef.header}
-                      </div>
-                    )}
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
+            data.rows.map((row) => {
+              const isSelected = row.getIsSelected();
+              const rowContent = (
+                <TableRow
+                  key={row.id}
+                  className={rowClasses}
+                  data-state={isSelected ? "selected" : undefined}
+                  onClick={() => onRowClicked?.(row.original)}
+                >
+                  {selectable ? (
+                    <TableCell className={cellClasses(null)} onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={isSelected}
+                        aria-label="Select row"
+                        disabled={!row.getCanSelect()}
+                        onCheckedChange={row.getToggleSelectedHandler()}
+                        className="relative z-1"
+                      />
+                    </TableCell>
+                  ) : null}
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className={`${cellClasses(cell.column)} ${cell.column.id === "actions" ? "relative z-1 md:text-right print:hidden" : ""}`}
+                      onClick={(e) => cell.column.id === "actions" && e.stopPropagation()}
+                    >
+                      {typeof cell.column.columnDef.header === "string" && (
+                        <div className="text-gray-500 md:hidden print:hidden" aria-hidden>
+                          {cell.column.columnDef.header}
+                        </div>
+                      )}
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+
+              const menuContent =
+                useEntityContextMenu && entityActionConfig && entityActionContext && onEntityAction ? (
+                  <ContextMenuActions
+                    key={`context-menu-${row.id}`}
+                    item={row.original}
+                    selectedItems={selectedRows}
+                    config={entityActionConfig}
+                    actionContext={entityActionContext}
+                    onAction={onEntityAction}
+                    onClearSelection={() => table.toggleAllRowsSelected(false)}
+                  />
+                ) : (
+                  contextMenuContent?.({
+                    row: row.original,
+                    isSelected,
+                    selectedCount: selectedRowCount,
+                  })
+                );
+
+              return menuContent ? (
+                <ContextMenu key={row.id} modal={false}>
+                  <ContextMenuTrigger asChild>{rowContent}</ContextMenuTrigger>
+                  {menuContent}
+                </ContextMenu>
+              ) : (
+                rowContent
+              );
+            })
           ) : (
             <TableRow className="h-24">
               <TableCell colSpan={table.getAllColumns().length} className="text-center align-middle">

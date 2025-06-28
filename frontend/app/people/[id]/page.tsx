@@ -158,6 +158,7 @@ export default function ContractorPage() {
         assertOk: true,
       });
       await trpcUtils.invoices.list.invalidate({ companyId: company.id });
+      await trpcUtils.invoices.get.invalidate({ companyId: company.id, id: invoice.externalId });
       closeIssuePaymentModal();
     },
     onError: (error) => {

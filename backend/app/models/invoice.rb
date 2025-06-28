@@ -3,7 +3,7 @@
 class Invoice < ApplicationRecord
   has_paper_trail
 
-  include QuickbooksIntegratable, Searchable, Serializable, Status, ExternalId
+  include QuickbooksIntegratable, Searchable, Serializable, Status, ExternalId, Deletable
 
   belongs_to :company
   belongs_to :company_worker, foreign_key: :company_contractor_id
@@ -26,6 +26,7 @@ class Invoice < ApplicationRecord
   OPEN_STATES = [RECEIVED, FAILED, REJECTED, APPROVED]
   COMPANY_PENDING_STATES = [RECEIVED, PROCESSING, APPROVED, FAILED]
   PAID_OR_PAYING_STATES = [PAYMENT_PENDING, PROCESSING, PAID]
+  DELETABLE_STATES = [RECEIVED, APPROVED]
   ALL_STATES = READ_ONLY_STATES + EDITABLE_STATES
 
   BASE_FLEXILE_FEE_CENTS = 50
@@ -87,43 +88,44 @@ class Invoice < ApplicationRecord
   validate :total_must_be_a_sum_of_cash_and_equity
   validate :min_equity_less_than_max_equity
 
-  scope :pending, -> { where(status: COMPANY_PENDING_STATES) }
-  scope :processing, -> { where(status: PROCESSING) }
-  scope :mid_payment, -> { where(status: [PROCESSING, PAYMENT_PENDING]) }
+  # Note: .alive calls are explicit safety filters, not redundant - any invoice status could technically be deleted
+  scope :pending, -> { alive.where(status: COMPANY_PENDING_STATES) }
+  scope :processing, -> { alive.where(status: PROCESSING) }
+  scope :mid_payment, -> { alive.where(status: [PROCESSING, PAYMENT_PENDING]) }
   scope :approved, lambda {
-    where(status: APPROVED).
+    alive.where(status: APPROVED).
       joins(:company).
       where("invoice_approvals_count >= companies.required_invoice_approval_count")
   }
   scope :partially_approved, lambda {
-    where(status: APPROVED).
+    alive.where(status: APPROVED).
       joins(:company).
       where("invoice_approvals_count < companies.required_invoice_approval_count")
   }
-  scope :paid, -> { where(status: PAID) }
-  scope :received, -> { where(status: RECEIVED) }
+  scope :paid, -> { alive.where(status: PAID) }
+  scope :received, -> { alive.where(status: RECEIVED) }
   scope :not_pending_acceptance, -> do
-    created_by_user = where("created_by_id = user_id")
-    already_accepted = where("accepted_at IS NOT NULL")
+    created_by_user = alive.where("created_by_id = user_id")
+    already_accepted = alive.where("accepted_at IS NOT NULL")
     created_by_user.or(already_accepted)
   end
   scope :for_next_consolidated_invoice, -> do
     fully_approved_or_failed =
-      where(status: [APPROVED, FAILED]).joins(:company).
+      alive.where(status: [APPROVED, FAILED]).joins(:company).
       where("invoice_approvals_count >= companies.required_invoice_approval_count")
     fully_approved_or_failed.or(paid_or_mid_payment).
       not_pending_acceptance.
       where.missing(:consolidated_invoices_invoices)
   end
   scope :for_tax_year, ->(tax_year) {
-    paid.joins(:company).
+    alive.paid.joins(:company).
       where("invoice_approvals_count >= companies.required_invoice_approval_count").
       where("EXTRACT(year from invoices.paid_at) = ?", tax_year)
   }
   scope :paid_or_mid_payment, -> {
-    where(status: PAID_OR_PAYING_STATES)
+    alive.where(status: PAID_OR_PAYING_STATES)
   }
-  scope :unique_contractors_count, -> { select(:user_id).distinct.count }
+  scope :unique_contractors_count, -> { alive.select(:user_id).distinct.count }
 
   after_initialize :populate_bill_data
   before_validation :populate_bill_data, on: :create
@@ -178,7 +180,7 @@ class Invoice < ApplicationRecord
 
   DEFAULT_INVOICE_NUMBER = "1"
   def recommended_invoice_number
-    preceding_invoice = Invoice.where(company_id:, user_id:).order(invoice_date: :desc, created_at: :desc).where(invoice_date: (..invoice_date)).where.not(status: REJECTED).where(invoice_type: "services").where.not(id:).first
+    preceding_invoice = Invoice.alive.where(company_id:, user_id:).order(invoice_date: :desc, created_at: :desc).where(invoice_date: (..invoice_date)).where.not(status: REJECTED).where(invoice_type: "services").where.not(id:).first
 
     return DEFAULT_INVOICE_NUMBER unless preceding_invoice
 

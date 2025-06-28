@@ -26,7 +26,7 @@ class Irs::Form1099necDataGenerator < Irs::BaseFormDataGenerator
     def total_cash_amount_for_tax_year_by_user_id
       sql = company.company_workers
                    .with_required_tax_info_for(tax_year:)
-                   .joins(:invoices).merge(Invoice.for_tax_year(tax_year))
+                   .joins(:invoices).merge(Invoice.alive.for_tax_year(tax_year))
                    .select("invoices.user_id, SUM(invoices.cash_amount_in_cents) AS total_cash_amount_in_cents")
                    .where("user_compliance_infos.tax_information_confirmed_at IS NOT NULL")
                    .group("invoices.user_id")

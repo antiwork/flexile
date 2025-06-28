@@ -9,7 +9,7 @@ class RejectManyInvoices
   end
 
   def perform
-    invoices = company.invoices.where(external_id: invoice_ids)
+    invoices = company.invoices.alive.where(external_id: invoice_ids)
     raise ActiveRecord::RecordNotFound if invoices.size != invoice_ids.size
 
     invoices.each do |invoice|

@@ -48,7 +48,7 @@ class ConsolidatedInvoiceCreation
     def invoices
       return @_invoices if defined?(@_invoices)
 
-      @_invoices = company.invoices.for_next_consolidated_invoice
+      @_invoices = company.invoices.alive.for_next_consolidated_invoice
       @_invoices = @_invoices.where(id: invoice_ids) if invoice_ids.present?
       @_invoices = @_invoices.order(invoice_date: :asc)
     end

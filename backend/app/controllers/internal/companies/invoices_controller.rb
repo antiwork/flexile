@@ -4,6 +4,7 @@ class Internal::Companies::InvoicesController < Internal::Companies::BaseControl
   before_action :load_invoice!, only: [:edit, :update]
   before_action :authorize_invoices_for_rejection, only: [:reject]
   before_action :authorize_invoices_for_approval_and_pay, only: [:approve]
+  before_action :authorize_invoices_for_deletion, only: [:destroy]
 
   def new
     authorize Invoice
@@ -64,7 +65,7 @@ class Internal::Companies::InvoicesController < Internal::Companies::BaseControl
   def export
     authorize Invoice
 
-    body = InvoiceCsv.new(Current.company.invoices.order(created_at: :asc)).generate
+    body = InvoiceCsv.new(Current.company.invoices.alive.order(created_at: :asc)).generate
     response.headers["Content-Disposition"] = "attachment; filename=invoices-#{Time.current.strftime("%Y-%m-%d_%H%M%S")}.csv"
     render body:, content_type: "text/csv"
   end
@@ -99,14 +100,24 @@ class Internal::Companies::InvoicesController < Internal::Companies::BaseControl
     ).perform
   end
 
+  def destroy
+    authorize Invoice
+
+    DeleteManyInvoices.new(
+      company: Current.company,
+      deleted_by: Current.user,
+      invoice_ids: invoice_external_ids_for_deletion,
+    ).perform
+  end
+
   private
     def load_invoice!
-      @invoice = Current.user.invoices.find_by!(external_id: params[:id])
+      @invoice = Current.user.invoices.alive.find_by!(external_id: params[:id])
     end
 
     def authorize_invoices_for_rejection
       all_invoices_belong_to_company = invoice_external_ids_for_rejection.all? do |invoice_external_id|
-        Current.company.invoices.exists?(external_id: invoice_external_id)
+        Current.company.invoices.alive.exists?(external_id: invoice_external_id)
       end
 
       unless all_invoices_belong_to_company
@@ -117,12 +128,26 @@ class Internal::Companies::InvoicesController < Internal::Companies::BaseControl
     def authorize_invoices_for_approval_and_pay
       ids = invoice_external_ids_for_approval + invoice_external_ids_for_payment
       all_invoices_belong_to_company = ids.all? do |invoice_id|
-        Current.company.invoices.exists?(external_id: invoice_id)
+        Current.company.invoices.alive.exists?(external_id: invoice_id)
       end
 
       unless all_invoices_belong_to_company
         e404
       end
+    end
+
+    def authorize_invoices_for_deletion
+      all_invoices_belong_to_user = invoice_external_ids_for_deletion.all? do |invoice_external_id|
+        Current.user.invoices.alive.exists?(external_id: invoice_external_id)
+      end
+
+      unless all_invoices_belong_to_user
+        e404
+      end
+    end
+
+    def invoice_external_ids_for_deletion
+      params.require(:ids)
     end
 
     def invoice_external_ids_for_rejection
