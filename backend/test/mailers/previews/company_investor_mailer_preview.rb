@@ -1,10 +1,6 @@
 # frozen_string_literal: true
 
 class CompanyInvestorMailerPreview < ActionMailer::Preview
-  def return_of_capital_issued
-    CompanyInvestorMailer.return_of_capital_issued(investor_dividend_round_id: InvestorDividendRound.first.id)
-  end
-
   def dividend_issued
     CompanyInvestorMailer.dividend_issued(investor_dividend_round_id: InvestorDividendRound.first.id)
   end

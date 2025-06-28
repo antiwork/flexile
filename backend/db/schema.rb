@@ -411,6 +411,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_25_204538) do
     t.string "external_id", null: false
     t.boolean "return_of_capital", null: false
     t.boolean "ready_for_payment", default: false, null: false
+    t.text "release_document"
     t.index ["company_id"], name: "index_dividend_rounds_on_company_id"
     t.index ["external_id"], name: "index_dividend_rounds_on_external_id", unique: true
   end
@@ -431,6 +432,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_25_204538) do
     t.integer "withholding_percentage"
     t.bigint "user_compliance_info_id"
     t.bigint "qualified_amount_cents", null: false
+    t.datetime "signed_release_at"
     t.index ["company_id"], name: "index_dividends_on_company_id"
     t.index ["company_investor_id"], name: "index_dividends_on_company_investor_id"
     t.index ["dividend_round_id"], name: "index_dividends_on_dividend_round_id"

@@ -24,7 +24,7 @@ export default clerkMiddleware((_, req) => {
     worker-src 'self' blob:;
     font-src 'self';
     base-uri 'self';
-    frame-ancestors 'none';
+    frame-ancestors ${NODE_ENV === "production" ? "'none'" : "'self'"};
     frame-src 'self' https://challenges.cloudflare.com https://js.stripe.com ${helperHost};
     form-action 'self';
     upgrade-insecure-requests;

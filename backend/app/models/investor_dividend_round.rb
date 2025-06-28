@@ -29,11 +29,7 @@ class InvestorDividendRound < ApplicationRecord
   def send_dividend_issued_email
     return if dividend_issued_email_sent?
 
-    if dividend_round.return_of_capital?
-      CompanyInvestorMailer.return_of_capital_issued(investor_dividend_round_id: id).deliver_later
-    else
-      CompanyInvestorMailer.dividend_issued(investor_dividend_round_id: id).deliver_later
-    end
+    CompanyInvestorMailer.dividend_issued(investor_dividend_round_id: id).deliver_later
 
     update!(dividend_issued_email_sent: true)
   end

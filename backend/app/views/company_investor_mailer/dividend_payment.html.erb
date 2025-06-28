@@ -1,50 +1,6 @@
-<h1>
-  <%= @company.display_name %> has sent you <%= cents_format(@net_cents, no_cents_if_whole: false) %>!
-</h1>
-<% if @dividend_payment.wise_transfer_estimate.present? %>
-  <p>The money will be in your account by <%= @dividend_payment.wise_transfer_estimate.strftime("%A, %B %-d") %>.</p>
-<% end %>
-<dl>
-  <dt>Payment date</dt>
-  <dd>
-    <%= @payment_date.to_fs(:long) %>
-  </dd>
-
-  <dt>Payment method</dt>
-  <dd>
-    Account ending in ****<%= @dividend_payment.recipient_last4 %>
-  </dd>
-
-  <dt>Issuer</dt>
-  <dd>
-    <%= @company.name %>
-  </dd>
-
-  <% @dividends.each do |dividend| %>
-    <dt>Distribution issued on <%= dividend.dividend_round.issued_at.to_date.to_fs(:medium) %></dt>
-    <dd>
-      <%= cents_format(dividend.total_amount_in_cents, no_cents_if_whole: false) %>
-    </dd>
-  <% end %>
-
-  <dt>U.S. taxes withheld</dt>
-  <dd>
-    <%= cents_format(@tax_cents, no_cents_if_whole: false) %>
-    <% if @withholding_percentage.present? %>
-      (<%= @withholding_percentage %>%)
-    <% end %>
-  </dd>
-</dl>
-<hr>
-<dl>
-  <dt>Total payment</dt>
-  <dd>
-    <%= cents_format(@net_cents, no_cents_if_whole: false) %>
-    <% if @dividend_payment.conversion_rate.present? && @dividend_payment.conversion_rate != 1 %>
-      <%= "(#{Money.from_amount(@dividend_payment.transfer_amount, @dividend_payment.transfer_currency).format(with_currency: true, symbol: false, no_cents_if_whole: false)})" %>
-    <% end %>
-  </dd>
-</dl>
-<p>
-  If you have any questions or need assistance regarding the distribution process, please reply to this email.
-</p>
+<p>Hello <%= @company_investor.user.name %>,</p>
+<p><strong>You’ve just been paid a <%= cents_format(@net_cents, no_cents_if_whole: false) %> <%= @dividend_round.return_of_capital? ? "return of capital" : "distribution" %> from your investment in <%= @company.display_name %>.</strong></p>
+<p>This distribution was paid on <%= @payment_date.to_fs(:long) %> to your account ending in <%= @dividend_payment.recipient_last4 %>. The gross amount was <%= cents_format(@total_cents, no_cents_if_whole: false) %>, with <%= cents_format(@tax_cents, no_cents_if_whole: false) %> withheld for taxes, so you’ve received a total of <%= cents_format(@net_cents, no_cents_if_whole: false) %>.</p>
+<p>If you have any questions, just reply to this email.</p>
+<p>Thanks,</p>
+<p><b>The Flexile team</b></p>

@@ -61,7 +61,7 @@ test.describe("Investor onboarding - personal details", () => {
     await page.getByRole("button", { name: "Continue" }).click();
 
     await expect(page.getByRole("heading").getByText("Equity")).toBeVisible();
-    await expect(page.getByText("Please provide a payout method for your dividends.")).toBeVisible();
+    await expect(page.getByText("Please provide your legal details so we can pay you.")).toBeVisible();
 
     const updatedUser = await db.query.users.findFirst({
       where: eq(users.id, onboardingUser.id),

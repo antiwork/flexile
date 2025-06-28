@@ -5,7 +5,6 @@ import React from "react";
 import DividendStatusIndicator from "@/app/equity/DividendStatusIndicator";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -27,22 +26,7 @@ const columns = [
   columnHelper.simple("totalAmountInCents", "Amount", formatMoneyFromCents, "numeric"),
   columnHelper.accessor("status", {
     header: "Status",
-    cell: (info) => (
-      <Tooltip>
-        <TooltipTrigger>
-          <DividendStatusIndicator status={info.getValue()} />
-        </TooltipTrigger>
-        <TooltipContent>
-          {info.getValue() === "Retained"
-            ? info.row.original.retainedReason === "ofac_sanctioned_country"
-              ? "This dividend is retained due to sanctions imposed on the investor's residence country."
-              : info.row.original.retainedReason === "below_minimum_payment_threshold"
-                ? "This dividend doesn't meet the payout threshold set by the investor."
-                : null
-            : null}
-        </TooltipContent>
-      </Tooltip>
-    ),
+    cell: (info) => <DividendStatusIndicator dividend={info.row.original} />,
   }),
 ];
 

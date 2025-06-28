@@ -19,7 +19,22 @@ class OnboardingState::User
     elsif user.company_investor_for?(company)
       OnboardingState::Investor.new(user:, company:).redirect_path
     else
-      spa_company_administrator_onboarding_details_path("_")
+      # User has no company roles - create a company and make them administrator
+      create_company_for_user
+      "/people"
     end
   end
+
+  private
+    def create_company_for_user
+      ApplicationRecord.transaction do
+        company = Company.create!(
+          email: user.email,
+          country_code: user.country_code || "US",
+          default_currency: "USD"
+        )
+        user.company_administrators.create!(company: company)
+        company
+      end
+    end
 end

@@ -75,6 +75,8 @@ jobs:
       - name: Build setup
         uses: ./.github/common/
 
+      - run: pnpm puppeteer browsers install chrome
+
       - run: node docker/createCertificate.js
 
       - name: Cache Next build

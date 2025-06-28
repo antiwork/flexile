@@ -78,6 +78,12 @@ scope path: :internal, module: :internal do
         patch :reset
       end
     end
+
+    resources :dividends, only: [:show] do
+      member do
+        post :sign
+      end
+    end
   end
 
   resources :wise_account_requirements, only: :create
