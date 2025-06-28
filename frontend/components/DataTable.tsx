@@ -219,7 +219,7 @@ export default function DataTable<T extends RowData>({
                   {activeFilterCount > 0 && (
                     <>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem variant="destructive" onSelect={() => table.resetColumnFilters()}>
+                      <DropdownMenuItem variant="destructive" onSelect={() => table.resetColumnFilters(true)}>
                         Clear all filters
                       </DropdownMenuItem>
                     </>
