@@ -1,0 +1,14 @@
+Hello <%= @inviter.name %>,
+
+<strong><%= @company_worker.user.name %> has accepted your invite and completed their onboarding with <%= @company_worker.company.name %>.</strong>
+
+<p>
+  They’ve added a role of <strong><%= @company_worker.role %></strong>, set their rate at <strong><%= @company_worker.pay_rate_in_subunits %></strong>, and selected a start date of <strong><%= @company_worker.started_at %></strong>. Their contract is ready for you to review.
+</p>
+
+<p>
+  You can view their <a href="<%= "#{PROTOCOL}://#{DOMAIN}/people/#{@company_worker.user.external_id}" %>">profile</a> anytime.
+</p>
+
+Thanks,<br>
+<strong>The Flexile team</strong>

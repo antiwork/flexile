@@ -7,23 +7,35 @@ class AcceptCompanyInviteLink
   end
 
   def perform
-    invite_link = CompanyInviteLink.find_by(token: token)
+    invite_link = CompanyInviteLink.find_by(token: @token)
     return { success: false, error: "Invalid invite link" } unless invite_link
 
     company = invite_link.company
-
-    if user.company_worker_for?(company)
+    company_worker = @user.company_workers.find_or_initialize_by(company:)
+    if company_worker.persisted?
       return { success: false, error: "You are already a worker for this company" }
     end
 
-    company_worker = company.company_workers.create(user: user)
-    if company_worker.persisted?
-      inviter = invite_link.inviter
-      CompanyWorkerMailer.notify_invite_accepted(inviter, user).deliver_later if inviter
+    company_worker.assign_attributes(
+      role: CompanyWorker::PLACEHOLDER_ROLE,
+      pay_rate_type: 0,
+      pay_rate_in_subunits: 1,
+      hours_per_week: 1,
+      started_at: Time.current,
+      ended_at: nil
+    )
+    @user.invited_by = invite_link.inviter
+    @user.save && company_worker.save
 
+    if @user.errors.blank? && company_worker.errors.blank?
       { success: true, company_worker: company_worker }
     else
-      { success: false, error: company_worker.errors.full_messages.to_sentence }
+      error_object = if company_worker.errors.any?
+        company_worker
+      else
+        @user
+      end
+      { success: false, error: error_object.errors.full_messages.to_sentence }
     end
   end
 end
