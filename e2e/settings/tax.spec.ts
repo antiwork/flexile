@@ -434,6 +434,7 @@ test.describe("Tax settings", () => {
     });
 
     test("allows legal names with two spaces", async ({ page, sentEmails: _ }) => {
+      await login(page, user);
       await page.goto("/settings/tax");
 
       await page.getByLabel("Full legal name (must match your ID)").fill("John Middle Doe");
