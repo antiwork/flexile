@@ -58,6 +58,52 @@ RSpec.describe Company do
     end
   end
 
+  describe "checklist functionality" do
+    let(:company) { create(:company) }
+
+    describe "#checklist_items" do
+      it "returns all checklist items with completion status" do
+        items = company.checklist_items
+
+        expect(items).to have_attributes(size: 3)
+        expect(items.map { |item| item[:key] }).to contain_exactly(
+          "add_bank_account", "invite_contractor", "send_first_payment"
+        )
+        expect(items.all? { |item| item[:completed] == false }).to be true
+      end
+
+      it "shows completed items when conditions are met" do
+        create(:company_stripe_account, company: company, status: "ready")
+
+        items = company.checklist_items
+        bank_account_item = items.find { |item| item[:key] == "add_bank_account" }
+
+        expect(bank_account_item[:completed]).to be true
+        expect(items.select { |item| item[:completed] }.size).to eq(1)
+      end
+    end
+
+    describe "#checklist_completion_percentage" do
+      it "returns 0 when no items are completed" do
+        expect(company.checklist_completion_percentage).to eq(0)
+      end
+
+      it "returns correct percentage when some items are completed" do
+        create(:company_stripe_account, company: company, status: "ready")
+        expect(company.checklist_completion_percentage).to eq(33)
+      end
+
+      it "returns 100 when all items are completed" do
+        create(:company_stripe_account, company: company, status: "ready")
+        contractor = create(:company_worker, company: company)
+        invoice = create(:invoice, company: company, user: contractor.user)
+        create(:payment, invoice: invoice, status: "succeeded")
+
+        expect(company.checklist_completion_percentage).to eq(100)
+      end
+    end
+  end
+
   describe "validations" do
     it { is_expected.to validate_presence_of(:email) }
     it { is_expected.to validate_presence_of(:country_code) }

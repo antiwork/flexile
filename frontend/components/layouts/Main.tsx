@@ -49,6 +49,7 @@ import type { Route } from "next";
 import { useIsActionable } from "@/app/invoices";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { navLinks as equityNavLinks } from "@/app/equity";
+import { GettingStarted } from "@/components/GettingStarted";
 
 export default function MainLayout({
   children,
@@ -145,6 +146,7 @@ export default function MainLayout({
                     </SidebarMenuButton>
                   </SignOutButton>
                 </SidebarMenuItem>
+                {user.currentCompanyId ? <GettingStarted /> : null}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -281,7 +283,7 @@ const NavLinks = () => {
         >
           <SidebarMenuItem>
             <CollapsibleTrigger asChild>
-              <SidebarMenuButton>
+              <SidebarMenuButton closeOnMobileClick={false}>
                 <ChartPie />
                 <span>Equity</span>
                 <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />

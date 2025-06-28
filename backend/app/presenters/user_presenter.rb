@@ -126,6 +126,8 @@ class UserPresenter
           primaryAdminName: company.primary_admin.user.name,
           completedPaymentMethodSetup: company.bank_account_ready?,
           isTrusted: company.is_trusted,
+          checklistItems: company.checklist_items,
+          checklistCompletionPercentage: company.checklist_completion_percentage,
         }
       end,
       id: user.external_id,

@@ -39,7 +39,7 @@ import { useForm } from "react-hook-form";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import RangeInput from "@/components/RangeInput";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { request } from "@/utils/request";
 import EquityPercentageLockModal from "./EquityPercentageLockModal";
 import { useCanSubmitInvoices } from ".";
@@ -455,6 +455,8 @@ const QuickInvoicesSection = () => {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const trpcUtils = trpc.useUtils();
+  const queryClient = useQueryClient();
+
   if (!user.roles.worker) return null;
   const payRateInSubunits = user.roles.worker.payRateInSubunits;
   const isHourly = user.roles.worker.payRateType === "hourly";
@@ -519,6 +521,7 @@ const QuickInvoicesSection = () => {
       });
 
       form.reset();
+      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
       await trpcUtils.invoices.list.invalidate();
     },
   });

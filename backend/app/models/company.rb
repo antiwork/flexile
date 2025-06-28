@@ -26,6 +26,12 @@ class Company < ApplicationRecord
     self.const_set("ACCESS_ROLE_#{access_role.upcase}", access_role)
   end
 
+  CHECKLIST_ITEMS = [
+    { key: "add_bank_account", title: "Add bank account", description: "Connect your bank account to enable payments" },
+    { key: "invite_contractor", title: "Invite a contractor", description: "Add your first team member" },
+    { key: "send_first_payment", title: "Send your first payment", description: "Process your first contractor payment" }
+  ].freeze
+
   has_many :company_administrators
   has_many :administrators, through: :company_administrators, source: :user
   has_many :company_lawyers
@@ -97,7 +103,6 @@ class Company < ApplicationRecord
 
   after_create_commit :create_balance!
   after_update_commit :update_convertible_implied_shares, if: :saved_change_to_fully_diluted_shares?
-
 
   accepts_nested_attributes_for :expense_categories
 
@@ -190,6 +195,19 @@ class Company < ApplicationRecord
     json_data&.dig("flags")&.include?(flag)
   end
 
+  def checklist_items
+    CHECKLIST_ITEMS.map do |item|
+      item.merge(completed: checklist_item_completed?(item[:key]))
+    end
+  end
+
+  def checklist_completion_percentage
+    completed_count = checklist_items.count { |item| item[:completed] }
+    return 0 if CHECKLIST_ITEMS.empty?
+
+    (completed_count.to_f / CHECKLIST_ITEMS.size * 100).round
+  end
+
   private
     def update_convertible_implied_shares
       convertible_investments.each do |investment|
@@ -210,5 +228,18 @@ class Company < ApplicationRecord
       )
       update!(stripe_customer_id: stripe_customer.id)
       stripe_customer_id
+    end
+
+    def checklist_item_completed?(key)
+      case key
+      when "add_bank_account"
+        bank_account_ready?
+      when "invite_contractor"
+        company_workers.active.exists?
+      when "send_first_payment"
+        invoices.joins(:payments).where(payments: { status: Payments::Status::SUCCEEDED }).exists?
+      else
+        false
+      end
     end
 end
