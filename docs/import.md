@@ -83,7 +83,6 @@ workers.each do |worker|
     email: worker[:email],
     started_at: worker[:start_date],
     pay_rate_in_subunits: (worker[:pay_rate] * 100).to_i,
-    pay_rate_type: worker[:pay_type].downcase,
     role: worker[:role]
   }
 
@@ -170,7 +169,6 @@ workers.each do |worker|
     email: worker[:email],
     started_at: worker[:start_date],
     pay_rate_in_subunits: (worker[:pay_rate] * 100).to_i,
-    pay_rate_type: worker[:pay_type].downcase,
     role: worker[:role]
   }
 

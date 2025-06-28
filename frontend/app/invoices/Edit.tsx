@@ -49,7 +49,7 @@ const dataSchema = z.object({
     legal_name: z.string(),
     business_entity: z.boolean(),
     billing_entity_name: z.string(),
-    pay_rate_in_subunits: z.number(),
+    pay_rate_in_subunits: z.number().nullable(),
   }),
   company: z.object({
     id: z.string(),
@@ -132,7 +132,7 @@ const Edit = () => {
         description: "",
         quantity: parseInt(searchParams.get("quantity") ?? "", 10) || (isHourly ? 60 : 1),
         hourly: searchParams.has("hourly") ? searchParams.get("hourly") === "true" : isHourly,
-        pay_rate_in_subunits: parseInt(searchParams.get("rate") ?? "", 10) || data.user.pay_rate_in_subunits,
+        pay_rate_in_subunits: parseInt(searchParams.get("rate") ?? "", 10) || (data.user.pay_rate_in_subunits ?? 0),
       },
     ]);
   });
@@ -210,7 +210,7 @@ const Edit = () => {
         description: "",
         quantity: isHourly ? 60 : 1,
         hourly: isHourly,
-        pay_rate_in_subunits: data.user.pay_rate_in_subunits,
+        pay_rate_in_subunits: data.user.pay_rate_in_subunits ?? 0,
       }),
     );
 

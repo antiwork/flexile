@@ -16,12 +16,14 @@
   <dt>Start date</dt>
   <dd><b><%= contractor.started_at.strftime("%B %d, %Y") %></b></dd>
 
-  <dt>Compensation</dt>
-  <dd>
-    <b>
-      <%= "#{money_format(contractor.pay_rate_in_subunits / 100.0)} per #{contractor.unit_of_work}" %>
-    </b>
-  </dd>
+  <% if pay_rate_in_subunits.present? %>
+    <dt>Compensation</dt>
+    <dd>
+      <b>
+        <%= "#{money_format(contractor.pay_rate_in_subunits / 100.0)} per #{contractor.unit_of_work}" %>
+      </b>
+    </dd>
+  <% end %>
 </dl>
 
 <%= link_to(contractor.contract_signed_elsewhere ? "Set up your payment info" : "Review and sign your contract", url || (contractor.contract_signed_elsewhere ? "#{PROTOCOL}://#{DOMAIN}/invoices" : "#{PROTOCOL}://#{DOMAIN}/documents?sign=#{user.documents.unsigned.where(docuseal_submission_id: nil).first&.id}"), class: "button") %>
