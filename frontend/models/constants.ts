@@ -192,6 +192,10 @@ export const DAY_MS = 86400_000;
 
 export const GOOGLE_AUTH_LIB_URL = "https://accounts.google.com/gsi/client";
 
+export const INVITATION_TOKEN_COOKIE_NAME = "invitation_token";
+export const INVITATION_TOKEN_COOKIE_MAX_AGE = 60 * 60 * 24 * 1;
+export const COMPANY_WORKER_ROLE_PLACEHOLDER = "UNASSIGNED";
+
 export const countries = new Map<string, string>(
   Object.entries(c).map(([countryCode, info]) => [countryCode, info.countryName]),
 );
