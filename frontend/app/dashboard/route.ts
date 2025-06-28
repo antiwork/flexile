@@ -10,7 +10,6 @@ export async function GET(req: Request) {
   const invitationTokenMatch = cookies.match(/invitation_token=([^;]+)/);
   if (invitationTokenMatch) {
     const token = invitationTokenMatch[1];
-    // return redirect(`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/invite/${token}`);
     return redirect(`/invite/${token}?accepted=true`);
   }
   const response = await fetch(internal_current_user_data_url({ host }), {
@@ -23,7 +22,6 @@ export async function GET(req: Request) {
   if (!response.ok) return redirect("/login");
   const user = currentUserSchema.parse(await response.json());
   if (user.onboardingPath) return redirect(user.onboardingPath);
-  console.log(">>>>>>> user", user.onboardingPath);
   if (!user.currentCompanyId) {
     return redirect("/settings");
   }
