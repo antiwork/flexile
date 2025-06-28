@@ -316,6 +316,15 @@ RSpec.describe CompanyWorker do
     end
   end
 
+  context "when pay_rate_in_subunits is nil" do
+    let(:contractor) { create(:company_worker, pay_rate_in_subunits: nil) }
+
+    it "excludes BillRate from serialized object" do
+      serialized = JSON.parse(contractor.serialize(namespace: "Quickbooks"))
+      expect(serialized).to_not have_key("BillRate")
+    end
+  end
+
   describe "#fetch_existing_quickbooks_entity", :vcr do
     let(:company) { create(:company) }
     let!(:integration) { create(:quickbooks_integration, company:) }
