@@ -31,7 +31,6 @@ test.describe("Tax settings", () => {
         { withoutComplianceInfo: true },
       )
     ).user;
-    await login(page, user);
     const { mockForm } = mockDocuseal(next, {
       submitters: () => ({ "Company Representative": adminUser, Signer: user }),
     });
@@ -44,6 +43,7 @@ test.describe("Tax settings", () => {
     });
 
     test("allows editing tax information", async ({ page, sentEmails }) => {
+      await login(page, user);
       await page.goto("/settings/tax");
       await expect(
         page.getByText("These details will be included in your invoices and applicable tax forms."),
@@ -150,6 +150,7 @@ test.describe("Tax settings", () => {
 
     test("allows confirming tax information", async ({ page }) => {
       await userComplianceInfosFactory.create({ userId: user.id });
+      await login(page, user);
       await page.goto("/settings/tax");
 
       await expect(page.getByText("Confirm your tax information")).toBeVisible();
@@ -186,6 +187,7 @@ test.describe("Tax settings", () => {
       test.describe("for US residents", () => {
         test("shows pending status", async ({ page }) => {
           await userComplianceInfosFactory.create({ userId: user.id });
+          await login(page, user);
           await page.goto("/settings/tax");
 
           await expect(page.getByText("VERIFYING")).toBeVisible();
@@ -195,6 +197,7 @@ test.describe("Tax settings", () => {
         test("shows verified status", async ({ page }) => {
           await userComplianceInfosFactory.create({ userId: user.id, taxIdStatus: "verified" });
 
+          await login(page, user);
           await page.goto("/settings/tax");
 
           await expect(page.getByText("VERIFIED")).toBeVisible();
@@ -204,6 +207,7 @@ test.describe("Tax settings", () => {
         test("shows invalid status", async ({ page }) => {
           await userComplianceInfosFactory.create({ userId: user.id, taxIdStatus: "invalid" });
 
+          await login(page, user);
           await page.goto("/settings/tax");
 
           await expect(page.getByText("INVALID")).toBeVisible();
@@ -213,6 +217,7 @@ test.describe("Tax settings", () => {
         test("hides status when tax ID input changes", async ({ page }) => {
           await userComplianceInfosFactory.create({ userId: user.id, taxIdStatus: "verified" });
 
+          await login(page, user);
           await page.goto("/settings/tax");
 
           await expect(page.getByText("VERIFIED")).toBeVisible();
@@ -226,6 +231,7 @@ test.describe("Tax settings", () => {
       test("does not show the TIN status for investors outside of the US", async ({ page }) => {
         await db.update(users).set({ countryCode: "AT", citizenshipCountryCode: "AT" }).where(eq(users.id, user.id));
 
+        await login(page, user);
         await page.goto("/settings/tax");
 
         await expect(page.getByText("Foreign tax ID")).toBeVisible();
@@ -236,6 +242,7 @@ test.describe("Tax settings", () => {
       test("only requires setting a business type for US citizens", async ({ page, sentEmails: _ }) => {
         await db.update(users).set({ countryCode: "GB", citizenshipCountryCode: "GB" }).where(eq(users.id, user.id));
 
+        await login(page, user);
         await page.goto("/settings/tax");
 
         await page.locator("label").filter({ hasText: "Business" }).click();
@@ -265,6 +272,7 @@ test.describe("Tax settings", () => {
       test("allows US citizen in Australia to set a 4-digit postal code", async ({ page, sentEmails }) => {
         await db.update(users).set({ countryCode: "AU", citizenshipCountryCode: "US" }).where(eq(users.id, user.id));
 
+        await login(page, user);
         await page.goto("/settings/tax");
 
         await page.getByLabel("Full legal name (must match your ID)").fill("John Smith");
@@ -316,6 +324,7 @@ test.describe("Tax settings", () => {
     });
 
     test("does not show the TIN verification status with none set", async ({ page }) => {
+      await login(page, user);
       await page.goto("/settings/tax");
 
       await expect(page.getByLabel("Tax ID (SSN or ITIN)")).toHaveValue("");
@@ -324,6 +333,7 @@ test.describe("Tax settings", () => {
     test("preserves foreign tax ID format", async ({ page, sentEmails }) => {
       await db.update(users).set({ countryCode: "DE", citizenshipCountryCode: "DE" }).where(eq(users.id, user.id));
 
+      await login(page, user);
       await page.goto("/settings/tax");
 
       await expect(page.getByText("Foreign tax ID")).toBeVisible();
@@ -365,6 +375,7 @@ test.describe("Tax settings", () => {
     test("formats US tax IDs correctly", async ({ page }) => {
       await db.update(users).set({ countryCode: "US", citizenshipCountryCode: "US" }).where(eq(users.id, user.id));
 
+      await login(page, user);
       await page.goto("/settings/tax");
 
       await expect(page.getByLabel("Individual")).toBeChecked();
@@ -398,6 +409,7 @@ test.describe("Tax settings", () => {
     test("handles country change correctly for tax ID formatting", async ({ page }) => {
       await db.update(users).set({ countryCode: "US", citizenshipCountryCode: "US" }).where(eq(users.id, user.id));
 
+      await login(page, user);
       await page.goto("/settings/tax");
 
       await page.getByLabel("Tax ID (SSN or ITIN)").fill("123456789");
@@ -422,6 +434,7 @@ test.describe("Tax settings", () => {
     });
 
     test("allows legal names with two spaces", async ({ page, sentEmails: _ }) => {
+      await login(page, user);
       await page.goto("/settings/tax");
 
       await page.getByLabel("Full legal name (must match your ID)").fill("John Middle Doe");
@@ -442,6 +455,7 @@ test.describe("Tax settings", () => {
     });
 
     test("shows the correct text", async ({ page }) => {
+      await login(page, user);
       await page.goto("/settings/tax");
 
       await expect(page.getByText("These details will be included in your applicable tax forms.")).toBeVisible();
