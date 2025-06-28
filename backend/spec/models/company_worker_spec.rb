@@ -303,13 +303,13 @@ RSpec.describe CompanyWorker do
             Country: contractor.user.display_country,
             CountrySubDivisionCode: contractor.user.state,
           },
-          BillRate: 60.0,
           GivenName: contractor.user.legal_name,
           DisplayName: contractor.user.billing_entity_name,
           PrimaryEmailAddr: {
             Address: contractor.user.display_email,
           },
           Vendor1099: false,
+          BillRate: 60.0,
           TaxIdentifier: "000000000",
         }.to_json
       )

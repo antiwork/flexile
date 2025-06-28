@@ -16,7 +16,7 @@
   <dt>Start date</dt>
   <dd><b><%= contractor.started_at.strftime("%B %d, %Y") %></b></dd>
 
-  <% if pay_rate_in_subunits.present? %>
+  <% if contractor.pay_rate_in_subunits.present? %>
     <dt>Compensation</dt>
     <dd>
       <b>
