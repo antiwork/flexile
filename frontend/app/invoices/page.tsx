@@ -47,6 +47,7 @@ import { linkClasses } from "@/components/Link";
 import DatePicker from "@/components/DatePicker";
 import { CalendarDate, today, getLocalTimeZone } from "@internationalized/date";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { invoiceStatuses } from "@/db/enums";
 
 const statusNames = {
   received: "Awaiting approval",
@@ -58,6 +59,10 @@ const statusNames = {
   failed: "Failed",
 };
 
+const invoiceStatusFilterSchema = z.object({
+  status: z.array(z.enum(invoiceStatuses)).optional(),
+});
+
 type Invoice = RouterOutput["invoices"]["list"][number];
 export default function InvoicesPage() {
   const user = useCurrentUser();
@@ -66,10 +71,44 @@ export default function InvoicesPage() {
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
   const isActionable = useIsActionable();
   const isPayable = useIsPayable();
+
+  const getDefaultStatusFilter = (): (typeof invoiceStatuses)[number][] => [
+    "received",
+    "approved",
+    "payment_pending",
+    "rejected",
+  ];
+
+  const getStoredStatusFilter = () => {
+    try {
+      const stored = localStorage.getItem("invoicesStatusFilter");
+      if (!stored) return { success: true, data: { status: getDefaultStatusFilter() } };
+      return invoiceStatusFilterSchema.safeParse(JSON.parse(stored));
+    } catch (_error) {
+      return { success: false, data: undefined };
+    }
+  };
+
+  const storedStatusFilter = getStoredStatusFilter();
+  const [statusFilter, setStatusFilter] = useState<(typeof invoiceStatuses)[number][]>(
+    storedStatusFilter.success
+      ? (storedStatusFilter.data?.status ?? getDefaultStatusFilter())
+      : getDefaultStatusFilter(),
+  );
+
   const [data] = trpc.invoices.list.useSuspenseQuery({
     companyId: company.id,
     contractorId: user.roles.administrator ? undefined : user.roles.worker?.id,
+    status: statusFilter.length > 0 ? statusFilter : undefined,
   });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("invoicesStatusFilter", JSON.stringify({ status: statusFilter }));
+    } catch (_error) {
+      // localStorage not available (e.g., in test environments) - silently ignore
+    }
+  }, [statusFilter]);
 
   const { canSubmitInvoices, hasLegalDetails, unsignedContractId } = useCanSubmitInvoices();
 
@@ -77,6 +116,14 @@ export default function InvoicesPage() {
     setOpenModal(null);
     table.resetRowSelection();
   });
+
+  const toggleFilter = () => {
+    if (statusFilter.length === 0) {
+      setStatusFilter(["received", "approved", "payment_pending", "rejected"]);
+    } else {
+      setStatusFilter([]);
+    }
+  };
 
   const columnHelper = createColumnHelper<(typeof data)[number]>();
   const columns = useMemo(
@@ -114,7 +161,7 @@ export default function InvoicesPage() {
           </div>
         ),
         meta: {
-          filterOptions: [...new Set(data.map((invoice) => statusNames[invoice.status]))],
+          filterOptions: Array.from(new Set(data.map((invoice) => statusNames[invoice.status]))),
         },
       }),
       columnHelper.accessor(isActionable, {
@@ -279,12 +326,17 @@ export default function InvoicesPage() {
               searchColumn={user.roles.administrator ? "billFrom" : undefined}
               actions={
                 user.roles.administrator ? (
-                  <Button variant="outline" size="small" asChild>
-                    <a href={export_company_invoices_path(company.id)}>
-                      <Download className="size-4" />
-                      Download CSV
-                    </a>
-                  </Button>
+                  <>
+                    <Button variant="outline" size="small" onClick={toggleFilter} className="mr-2">
+                      {statusFilter.length === 0 ? "Show pending invoices only" : "Show all invoices"}
+                    </Button>
+                    <Button variant="outline" size="small" asChild>
+                      <a href={export_company_invoices_path(company.id)}>
+                        <Download className="size-4" />
+                        Download CSV
+                      </a>
+                    </Button>
+                  </>
                 ) : null
               }
             />

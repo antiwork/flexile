@@ -5,6 +5,7 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyStripeAccountsFactory } from "@test/factories/companyStripeAccounts";
 import { invoiceApprovalsFactory } from "@test/factories/invoiceApprovals";
 import { invoicesFactory } from "@test/factories/invoices";
+import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { format } from "date-fns";
@@ -222,14 +223,14 @@ test.describe("Invoices admin flow", () => {
         await invoicesFactory.create({ companyId: company.id });
         const { invoice } = await invoicesFactory.create({
           companyId: company.id,
-          totalAmountInUsdCents: 75_00n,
+          totalAmountInUsdCents: BigInt(7500),
         });
         await invoiceApprovalsFactory.create({ invoiceId: invoice.id });
         await db.update(invoices).set({ status: "approved" }).where(eq(invoices.id, invoice.id));
 
         const { invoice: invoice2 } = await invoicesFactory.create({
           companyId: company.id,
-          totalAmountInUsdCents: 75_00n,
+          totalAmountInUsdCents: BigInt(7500),
         });
         await invoiceApprovalsFactory.create({ invoiceId: invoice2.id });
         await db.update(invoices).set({ status: "approved" }).where(eq(invoices.id, invoice2.id));
@@ -320,6 +321,117 @@ test.describe("Invoices admin flow", () => {
           (invoice) => invoice.status === "rejected" && invoice.rejectionReason === "Invoice issue date mismatch",
         ),
       ).toBe(true);
+    });
+  });
+
+  test.describe("invoice filtering functionality", () => {
+    test("shows default filtered invoices (received, approved, payment_pending, rejected) by default", async ({ page }) => {
+      const { company, user } = await setupCompany();
+      
+      await invoicesFactory.create({ companyId: company.id, status: "received" });
+      await invoicesFactory.create({ companyId: company.id, status: "approved" });
+      await invoicesFactory.create({ companyId: company.id, status: "payment_pending" });
+      await invoicesFactory.create({ companyId: company.id, status: "rejected" });
+      await invoicesFactory.create({ companyId: company.id, status: "paid" });
+      await invoicesFactory.create({ companyId: company.id, status: "failed" });
+      
+      await login(page, user);
+      
+      await expect(page.locator("tbody tr")).toHaveCount(4);
+      await expect(page.getByText("Awaiting approval").first()).toBeVisible();
+      await expect(page.getByText("Payment scheduled")).toBeVisible();
+      await expect(page.getByText("Rejected")).toBeVisible();
+      
+      await expect(page.getByText("Paid")).not.toBeVisible();
+      await expect(page.getByText("Failed")).not.toBeVisible();
+    });
+
+    test("toggle button switches between filtered and all invoices", async ({ page }) => {
+      const { company, user } = await setupCompany();
+      
+      await invoicesFactory.create({ companyId: company.id, status: "received" });
+      await invoicesFactory.create({ companyId: company.id, status: "paid" });
+      await invoicesFactory.create({ companyId: company.id, status: "failed" });
+      
+      await login(page, user);
+      
+      await expect(page.locator("tbody tr")).toHaveCount(1);
+      await expect(page.getByRole("button", { name: "Show all invoices" })).toBeVisible();
+      
+      await page.getByRole("button", { name: "Show all invoices" }).click();
+      
+      await expect(page.locator("tbody tr")).toHaveCount(3);
+      await expect(page.getByRole("button", { name: "Show pending invoices only" })).toBeVisible();
+      await expect(page.getByText("Paid")).toBeVisible();
+      await expect(page.getByText("Failed")).toBeVisible();
+      
+      await page.getByRole("button", { name: "Show pending invoices only" }).click();
+      
+      await expect(page.locator("tbody tr")).toHaveCount(1);
+      await expect(page.getByRole("button", { name: "Show all invoices" })).toBeVisible();
+    });
+
+    test("localStorage persists filter preferences across page refreshes", async ({ page }) => {
+      const { company, user } = await setupCompany();
+      
+      await invoicesFactory.create({ companyId: company.id, status: "received" });
+      await invoicesFactory.create({ companyId: company.id, status: "paid" });
+      
+      await login(page, user);
+      
+      await expect(page.getByRole("button", { name: "Show all invoices" })).toBeVisible();
+      
+      await page.getByRole("button", { name: "Show all invoices" }).click();
+      await expect(page.locator("tbody tr")).toHaveCount(2);
+      
+      const storedFilter = await page.evaluate(() => {
+        const stored = localStorage.getItem("invoicesStatusFilter") ?? "{}";
+        try {
+          const parsed = JSON.parse(stored) as Record<string, unknown>;
+          return parsed && typeof parsed === 'object' && Array.isArray(parsed.status) ? { status: parsed.status as string[] } : null;
+        } catch {
+          return null;
+        }
+      });
+      expect(storedFilter).toEqual({ status: [] });
+      
+      await page.reload();
+      
+      await expect(page.locator("tbody tr")).toHaveCount(2);
+      await expect(page.getByRole("button", { name: "Show pending invoices only" })).toBeVisible();
+      
+      await page.getByRole("button", { name: "Show pending invoices only" }).click();
+      
+      const newStoredFilter = await page.evaluate(() => {
+        const stored = localStorage.getItem("invoicesStatusFilter") ?? "{}";
+        try {
+          const parsed = JSON.parse(stored) as Record<string, unknown>;
+          return parsed && typeof parsed === 'object' && Array.isArray(parsed.status) ? { status: parsed.status as string[] } : null;
+        } catch {
+          return null;
+        }
+      });
+      expect(newStoredFilter?.status).toEqual([]);
+      
+      await page.reload();
+      await expect(page.locator("tbody tr")).toHaveCount(1);
+      await expect(page.getByRole("button", { name: "Show all invoices" })).toBeVisible();
+    });
+
+    test("toggle button only visible for administrators", async ({ page }) => {
+      const contractorUser = (await usersFactory.create()).user;
+      const { company: contractorCompany } = await companiesFactory.create();
+      await companyContractorsFactory.create({
+        companyId: contractorCompany.id,
+        userId: contractorUser.id,
+      });
+      
+      await invoicesFactory.create({ companyId: contractorCompany.id, userId: contractorUser.id });
+      
+      await login(page, contractorUser);
+      
+      await expect(page.getByRole("button", { name: "Show all invoices" })).not.toBeVisible();
+      await expect(page.getByRole("button", { name: "Show pending invoices only" })).not.toBeVisible();
     });
   });
 });
