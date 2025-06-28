@@ -20,6 +20,7 @@ class CompanyWorker < ApplicationRecord
   validates :role, presence: true
   validates :started_at, presence: true
   validates :pay_rate_in_subunits, numericality: { only_integer: true, greater_than: 0, allow_nil: true }
+  validates :unit_of_work, presence: true
 
   scope :active, -> { where(ended_at: nil) }
   scope :active_as_of, ->(date) { active.or(where("ended_at > ?", date)) }
