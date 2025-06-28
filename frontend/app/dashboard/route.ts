@@ -16,9 +16,6 @@ export async function GET(req: Request) {
   if (!response.ok) return redirect("/login");
   const user = currentUserSchema.parse(await response.json());
   if (user.onboardingPath) return redirect(user.onboardingPath);
-  if (!user.currentCompanyId) {
-    return redirect("/settings");
-  }
   if (user.roles.administrator) {
     return redirect("/invoices");
   }

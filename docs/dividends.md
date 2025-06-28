@@ -193,7 +193,7 @@ fees.sum / 100.0 # 5490.21
 
 ```ruby
 company = Company.find(1823)
-stripe_setup_intent = company.fetch_stripe_setup_intent
+stripe_setup_intent = company.bank_account.stripe_setup_intent
 intent = Stripe::PaymentIntent.create({
   payment_method_types: ["us_bank_account"],
   payment_method: stripe_setup_intent.payment_method,

@@ -22,10 +22,6 @@ scope path: :internal, module: :internal do
   resources :companies, only: [], module: :companies do
     # Accessible by company administrator
     namespace :administrator do
-      resource :onboarding, only: [:update], controller: "onboarding" do
-        get :details
-      end
-
       namespace :settings do
         resource :equity, only: [:show, :update], controller: "equity"
         resource :bank_accounts, only: [:show, :create], controller: "bank_accounts"

@@ -67,6 +67,7 @@ class Company < ApplicationRecord
   has_many :tax_documents
   has_many :tender_offers
   has_many :company_stripe_accounts
+  has_many :bank_accounts, class_name: "CompanyStripeAccount"
   has_one :bank_account, -> { alive.order(created_at: :desc) }, class_name: "CompanyStripeAccount"
   has_one_attached :logo, service: (Rails.env.test? ? :test_public : :amazon_public)
   has_one_attached :full_logo
@@ -136,24 +137,19 @@ class Company < ApplicationRecord
 
   def pending_invoice_cash_amount_in_cents = invoices.pending.sum(:cash_amount_in_cents)
 
-  def fetch_stripe_setup_intent
-    return bank_account.stripe_setup_intent if bank_account.present?
-
-    stripe_setup_intent =
-      Stripe::SetupIntent.create({
-        customer: fetch_or_create_stripe_customer_id!,
-        payment_method_types: ["us_bank_account"],
-        payment_method_options: {
-          us_bank_account: {
-            financial_connections: {
-              permissions: ["payment_method"],
-            },
+  def create_stripe_setup_intent
+    Stripe::SetupIntent.create({
+      customer: fetch_or_create_stripe_customer_id!,
+      payment_method_types: ["us_bank_account"],
+      payment_method_options: {
+        us_bank_account: {
+          financial_connections: {
+            permissions: ["payment_method"],
           },
         },
-        expand: ["payment_method"],
-      })
-    create_bank_account!(setup_intent_id: stripe_setup_intent.id)
-    stripe_setup_intent
+      },
+      expand: ["payment_method"],
+    })
   end
 
   def stripe_setup_intent_id = bank_account&.setup_intent_id
@@ -161,10 +157,6 @@ class Company < ApplicationRecord
   def bank_account_added? = !!bank_account&.initial_setup_completed?
 
   def bank_account_ready? = !!bank_account&.ready?
-
-  def completed_onboarding?
-    OnboardingState::Company.new(self).complete?
-  end
 
   def contractor_payment_processing_time_in_days
     is_trusted? ? 2 : 10 # estimated max number of business days for a contractor to receive payment after a consolidated invoice is charged
