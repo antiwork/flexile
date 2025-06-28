@@ -56,7 +56,6 @@ RSpec.describe GrantStockOptions do
       let(:investor) { create(:company_investor, company:, user:) }
       let(:board_approval_date) { "2024-01-01" }
       let(:option_grant_type) { :iso }
-      let(:number_of_shares) { 500 }
       let(:issue_date_relationship) { :employee }
 
       it "creates an equity grant with the correct attributes" do
