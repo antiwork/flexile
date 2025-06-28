@@ -41,7 +41,7 @@ export const tenderOffersBidsRouter = createRouter({
         orderBy: desc(tenderOfferBids.createdAt),
       });
       return bidsQuery.map((bid) => ({
-        ...pick(bid, ["sharePriceCents", "shareClass", "numberOfShares"]),
+        ...pick(bid, ["sharePriceCents", "shareClass", "numberOfShares", "acceptedShares"]),
         id: bid.externalId,
         companyInvestor: { user: simpleUser(bid.companyInvestor.user) },
       }));

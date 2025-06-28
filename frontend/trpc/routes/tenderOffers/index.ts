@@ -1,10 +1,10 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq, sql, sum } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
-import { activeStorageAttachments, activeStorageBlobs, companies, tenderOffers } from "@/db/schema";
+import { activeStorageAttachments, activeStorageBlobs, companies, tenderOfferBids, tenderOffers } from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 import { tenderOffersBidsRouter } from "./bids";
 
@@ -50,14 +50,22 @@ export const tenderOffersRouter = createRouter({
     if (!ctx.company.tenderOffersEnabled || (!ctx.companyAdministrator && !ctx.companyInvestor))
       throw new TRPCError({ code: "FORBIDDEN" });
 
+    const currentUserInvestorId = ctx.companyInvestor?.id;
+
     return await db
       .select({
-        ...pick(tenderOffers, "startsAt", "endsAt", "minimumValuation"),
+        ...pick(tenderOffers, "startsAt", "endsAt", "minimumValuation", "acceptedPriceCents"),
         id: tenderOffers.externalId,
+        bidCount: count(tenderOfferBids.id),
+        participation: currentUserInvestorId
+          ? sql<number>`COALESCE(SUM(CASE WHEN ${tenderOfferBids.companyInvestorId} = ${currentUserInvestorId} THEN ${tenderOfferBids.acceptedShares} * ${tenderOffers.acceptedPriceCents} ELSE 0 END), 0)`
+          : sql<number>`0`,
       })
       .from(tenderOffers)
       .innerJoin(companies, eq(tenderOffers.companyId, companies.id))
+      .leftJoin(tenderOfferBids, eq(tenderOfferBids.tenderOfferId, tenderOffers.id))
       .where(eq(companies.id, ctx.company.id))
+      .groupBy(tenderOffers.id)
       .orderBy(desc(tenderOffers.createdAt));
   }),
 
@@ -66,7 +74,7 @@ export const tenderOffersRouter = createRouter({
       throw new TRPCError({ code: "FORBIDDEN" });
 
     const tenderOffer = await db.query.tenderOffers.findFirst({
-      columns: { id: true, startsAt: true, endsAt: true, minimumValuation: true },
+      columns: { id: true, startsAt: true, endsAt: true, minimumValuation: true, acceptedPriceCents: true },
       where: and(eq(tenderOffers.externalId, input.id), eq(tenderOffers.companyId, ctx.company.id)),
     });
 
@@ -81,7 +89,7 @@ export const tenderOffersRouter = createRouter({
     });
 
     return {
-      ...pick(tenderOffer, ["startsAt", "endsAt", "minimumValuation"]),
+      ...pick(tenderOffer, ["startsAt", "endsAt", "minimumValuation", "acceptedPriceCents"]),
       attachment: attachment?.blob,
     };
   }),
