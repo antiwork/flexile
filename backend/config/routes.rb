@@ -109,6 +109,8 @@ Rails.application.routes.draw do
         resource :bank_account, only: :show, to: "application#main_vue"
       end
 
+      resource :documents, only: :show, to: "application#main_vue"
+
       resources :companies, only: [] do
         # Accessible by company administrator
         namespace :administrator, module: nil do

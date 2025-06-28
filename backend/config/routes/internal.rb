@@ -73,7 +73,7 @@ scope path: :internal, module: :internal do
 
     resources :invite_links, only: [] do
       collection do
-        post :accept
+        post :complete_onboarding
         get :show
         patch :reset
       end
@@ -91,5 +91,6 @@ scope path: :internal, module: :internal do
 
   resources :invite_links, only: [] do
     post :verify, on: :collection
+    post :accept, on: :collection
   end
 end
