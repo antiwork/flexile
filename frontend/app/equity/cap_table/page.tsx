@@ -1,10 +1,12 @@
 "use client";
 import { CircleCheck } from "lucide-react";
+import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import { useSearchParams } from "next/navigation";
 import React, { useMemo } from "react";
 import CopyButton from "@/components/CopyButton";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
+import MainLayout from "@/components/layouts/Main";
 import Placeholder from "@/components/Placeholder";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -18,7 +20,6 @@ import {
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatOwnershipPercentage } from "@/utils/numbers";
-import EquityLayout from "../Layout";
 
 type Data = RouterOutput["capTable"]["show"];
 
@@ -66,6 +67,9 @@ export default function CapTable() {
           );
         },
         footer: "Total",
+        meta: {
+          filterOptions: data.shareClasses.map((shareClass) => shareClass.name),
+        },
       }),
       investorColumnHelper.accessor((row) => (isInvestor(row) ? row.outstandingShares : undefined), {
         header: "Outstanding shares",
@@ -98,7 +102,7 @@ export default function CapTable() {
 
       investorColumnHelper.simple("notes", "Notes"),
     ],
-    [],
+    [data.shareClasses],
   );
 
   const investorsData = useMemo(
@@ -116,6 +120,9 @@ export default function CapTable() {
     data: investorsData,
     columns: investorsColumns,
     enableRowSelection: canViewInvestor ? (row) => isInvestor(row.original) : false,
+    getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    enableGlobalFilter: true,
   });
 
   const selectedInvestors = investorsTable.getSelectedRowModel().rows.map((row) => row.original);
@@ -124,42 +131,8 @@ export default function CapTable() {
     .filter((email): email is string => !!email)
     .join(", ");
 
-  const shareClassColumnHelper = createColumnHelper<Data["shareClasses"][number]>();
-  const shareClassesColumns = useMemo(
-    () => [
-      shareClassColumnHelper.simple("name", "Series"),
-      shareClassColumnHelper.simple("outstandingShares", "Outstanding shares", (v) => v.toLocaleString(), "numeric"),
-      shareClassColumnHelper.accessor((row) => row.outstandingShares, {
-        header: "Outstanding ownership",
-        cell: (info) => formatOwnershipPercentage(info.getValue() / Number(data.outstandingShares)),
-        meta: { numeric: true },
-      }),
-      shareClassColumnHelper.simple("fullyDilutedShares", "Fully diluted shares", (v) => v.toLocaleString(), "numeric"),
-      shareClassColumnHelper.accessor((row) => row.fullyDilutedShares, {
-        header: "Fully diluted ownership",
-        cell: (info) => formatOwnershipPercentage(info.getValue() / Number(data.fullyDilutedShares)),
-        meta: { numeric: true },
-      }),
-    ],
-    [data],
-  );
-
-  const shareClassesData = useMemo(
-    () => [
-      ...data.shareClasses,
-      ...data.optionPools.map((pool) => ({
-        name: `Options available (${pool.name})`,
-        outstandingShares: 0,
-        fullyDilutedShares: Number(pool.availableShares),
-      })),
-    ],
-    [data.shareClasses, data.optionPools],
-  );
-
-  const shareClassesTable = useTable({ data: shareClassesData, columns: shareClassesColumns });
-
   return (
-    <EquityLayout>
+    <MainLayout title="Cap table">
       {selectedInvestors.length > 0 && (
         <Alert className="mb-4">
           <AlertDescription className="flex items-center justify-between">
@@ -173,17 +146,11 @@ export default function CapTable() {
 
       {data.investors.length > 0 ? (
         <div className="overflow-x-auto">
-          <DataTable table={investorsTable} caption="Investors" />
+          <DataTable table={investorsTable} searchColumn="name" />
         </div>
       ) : (
         <Placeholder icon={CircleCheck}>There are no active investors right now.</Placeholder>
       )}
-
-      {data.investors.length > 0 && data.shareClasses.length > 0 && (
-        <div className="overflow-x-auto">
-          <DataTable table={shareClassesTable} caption="Share Classes" />
-        </div>
-      )}
-    </EquityLayout>
+    </MainLayout>
   );
 }

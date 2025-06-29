@@ -32,7 +32,7 @@ export const usersFactory = {
         citizenshipCountryCode: "US",
         zipCode: "10004",
         birthDate: new Date("1980-07-15").toISOString(),
-        minimumDividendPaymentInCents: 1000n,
+        minimumDividendPaymentInCents: BigInt(1000),
         invitedByType: overrides.invitedById ? "User" : null,
         ...overrides,
       })
