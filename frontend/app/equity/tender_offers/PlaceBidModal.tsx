@@ -2,21 +2,23 @@ import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatServerDate } from "@/utils/time";
 import LetterOfTransmittalModal from "./LetterOfTransmittalModal";
 import PlaceBidFormModal from "./PlaceBidFormModal";
+import { Download } from "lucide-react";
 
 type TenderOffer = {
   id: string;
   startsAt: Date;
   endsAt: Date;
   minimumValuation: bigint;
-  attachment?: {
-    key: string;
-    filename: string;
-  };
+  attachment:
+    | {
+        key: string;
+        filename: string;
+      }
+    | undefined;
 };
 
 type PlaceBidModalProps = {
@@ -62,29 +64,30 @@ const PlaceBidModal = ({ isOpen, onClose, tenderOffer }: PlaceBidModalProps) => 
           <DialogHeader>
             <DialogTitle>Buyback details</DialogTitle>
           </DialogHeader>
-          <p className="mb-4 text-sm text-gray-600">
-            Review the buyback terms below and continue to confirm your participation.
-          </p>
 
-          <div className="grid gap-4">
-            <div>
-              <Label className="text-sm font-medium text-gray-500">Start date</Label>
-              <p className="text-sm">{formatServerDate(tenderOffer.startsAt)}</p>
+          <p className="mb-4 text-sm">Review the buyback terms below and continue to confirm your participation.</p>
+
+          <div className="space-y-0">
+            <div className="flex justify-between border-b border-gray-200 py-4">
+              <span className="font-medium">Start date</span>
+              <span>{formatServerDate(tenderOffer.startsAt)}</span>
             </div>
-            <div>
-              <Label className="text-sm font-medium text-gray-500">End date</Label>
-              <p className="text-sm">{formatServerDate(tenderOffer.endsAt)}</p>
+
+            <div className="flex justify-between border-b border-gray-200 py-4">
+              <span className="font-medium">End date</span>
+              <span>{formatServerDate(tenderOffer.endsAt)}</span>
             </div>
-            <div>
-              <Label className="text-sm font-medium text-gray-500">Starting valuation</Label>
-              <p className="text-sm font-medium">{formatMoney(tenderOffer.minimumValuation)}</p>
+
+            <div className="flex justify-between border-b border-gray-200 py-4">
+              <span className="font-medium">Starting valuation</span>
+              <span>{formatMoney(tenderOffer.minimumValuation)}</span>
             </div>
             {tenderOffer.attachment ? (
-              <div>
-                <Label className="text-sm font-medium text-gray-500">Buyback documents</Label>
-                <Button asChild variant="outline" size="small" className="mt-1 h-auto justify-start px-3 py-2">
+              <div className="flex justify-between border-b border-gray-200 py-4">
+                <span className="font-medium">Buyback documents</span>
+                <Button asChild variant="outline" size="small">
                   <Link href={`/download/${tenderOffer.attachment.key}/${tenderOffer.attachment.filename}`}>
-                    <span className="mr-2">📄</span>
+                    <Download className="size-4" />
                     Download
                   </Link>
                 </Button>
@@ -92,8 +95,8 @@ const PlaceBidModal = ({ isOpen, onClose, tenderOffer }: PlaceBidModalProps) => 
             ) : null}
           </div>
 
-          <DialogFooter className="mt-6">
-            <Button onClick={handleContinueFromDetails} className="w-full">
+          <DialogFooter className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-0">
+            <Button onClick={handleContinueFromDetails} className="w-full sm:w-auto">
               Continue
             </Button>
           </DialogFooter>

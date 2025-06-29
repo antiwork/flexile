@@ -36,42 +36,39 @@ const FinalizeBuybackModal = ({ isOpen, onClose, onNext, tenderOffer, bids }: Fi
 
         <p className="mb-4 text-sm text-gray-600">Review the buyback details before finalizing the settlement.</p>
 
-        <div className="space-y-4">
-          <div className="flex justify-between">
+        <div className="space-y-0">
+          <div className="flex justify-between border-b border-gray-200 py-4">
             <span className="font-medium">Buyback name</span>
-            <span>{tenderOffer.name || "Q2 2025 Buyback"}</span>
+            <span>{tenderOffer.name}</span>
           </div>
 
-          <div className="flex justify-between">
+          <div className="flex justify-between border-b border-gray-200 py-4">
             <span className="font-medium">Accepted investors</span>
             <span>{acceptedBids.length}</span>
           </div>
 
-          <div className="flex justify-between">
+          <div className="flex justify-between border-b border-gray-200 py-4">
             <span className="font-medium">Implied valuation</span>
             <span>{formatMoneyFromCents(impliedValuation)}</span>
           </div>
 
-          <div className="flex justify-between">
+          <div className="flex justify-between border-b border-gray-200 py-4">
             <span className="font-medium">Clearing price per share</span>
             <span>{formatMoneyFromCents(clearingPrice)}</span>
           </div>
 
-          <div className="flex justify-between">
+          <div className="flex justify-between border-b border-gray-200 py-4">
             <span className="font-medium">Accepted shares</span>
             <span>{totalAcceptedShares.toLocaleString()}</span>
           </div>
 
-          <div className="flex justify-between border-t pt-4">
+          <div className="flex justify-between py-4">
             <span className="font-medium">Total Payout</span>
             <span className="font-bold">{formatMoneyFromCents(totalPayout)}</span>
           </div>
         </div>
 
-        <DialogFooter className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between sm:gap-0">
-          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
-            Cancel
-          </Button>
+        <DialogFooter className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-0">
           <Button onClick={onNext} className="w-full sm:w-auto">
             Continue
           </Button>

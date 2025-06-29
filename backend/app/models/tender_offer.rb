@@ -10,6 +10,7 @@ class TenderOffer < ApplicationRecord
   has_many :equity_buyback_rounds
   has_one_attached :attachment
 
+  validates :name, presence: true
   validates :attachment, presence: true
   validates :starts_at, presence: true
   validates :ends_at, presence: true

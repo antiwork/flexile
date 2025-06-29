@@ -63,7 +63,7 @@ const CreateLetterOfTransmittalModal = ({
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden">
-          <p className="mb-4 text-sm text-gray-600">
+          <p className="mb-4 text-sm">
             Add the Letter of Transmittal to explain the buyback terms. Investors will see it during confirmation.
           </p>
 

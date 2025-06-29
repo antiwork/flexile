@@ -1,7 +1,6 @@
 "use client";
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { TrashIcon } from "@heroicons/react/24/outline";
-import { isFuture, isPast } from "date-fns";
+import { isFuture } from "date-fns";
 import { utc } from "@date-fns/utc";
 import { useParams } from "next/navigation";
 import React, { useMemo, useState } from "react";
@@ -14,6 +13,7 @@ import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
+import { download } from "@/utils";
 
 import Link from "next/link";
 import PlaceBidModal from "@/app/equity/tender_offers/PlaceBidModal";
@@ -21,10 +21,10 @@ import FinalizeBuybackModal from "@/app/equity/tender_offers/FinalizeBuybackModa
 import ReviewInvestorsModal from "@/app/equity/tender_offers/ReviewInvestorsModal";
 import ConfirmPaymentModal from "@/app/equity/tender_offers/ConfirmPaymentModal";
 import Placeholder from "@/components/Placeholder";
-import { Download, InboxIcon, InfoIcon, LucideCircleDollarSign } from "lucide-react";
+import { Download, InboxIcon, InfoIcon, LucideCircleDollarSign, Trash2 } from "lucide-react";
 import EquityLayout from "../../Layout";
 import Status from "@/components/Status";
-import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
+import { getFilteredRowModel, getSortedRowModel, type Table } from "@tanstack/react-table";
 import { useMutation } from "@tanstack/react-query";
 
 type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
@@ -36,32 +36,32 @@ type BuybackActionsProps = {
   bids: Bid[];
   isOpen: boolean;
   onSetActiveModal: (modal: "place" | "summary" | "review" | "confirm" | null) => void;
+  table?: Table<Bid>;
 };
 
-const BuybackActions = ({ data, user, bids, isOpen, onSetActiveModal }: BuybackActionsProps) => {
+const BuybackActions = ({ data, user, bids, isOpen, onSetActiveModal, table }: BuybackActionsProps) => {
   const handleDownloadCSV = () => {
-    try {
-      const csvHeader = "Investor,Share Class,Shares,Bid Price,Total\n";
-      const csvRows = bids
-        .map(
-          (bid) =>
-            `"${bid.companyInvestor.user.name}","${bid.shareClass}",${Number(bid.numberOfShares)},"${formatMoneyFromCents(bid.sharePriceCents)}","${formatMoneyFromCents(Number(bid.numberOfShares) * bid.sharePriceCents)}"`,
-        )
-        .join("\n");
+    if (!table) return;
 
-      const csvContent = csvHeader + csvRows;
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "buyback-bids.csv";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Failed to download CSV:", error);
-    }
+    const headers = table
+      .getVisibleLeafColumns()
+      .filter((col) => col.id !== "actions")
+      .map((col) => (typeof col.columnDef.header === "string" ? col.columnDef.header : col.id));
+
+    const rows = table.getFilteredRowModel().rows.map((row) =>
+      table
+        .getVisibleLeafColumns()
+        .filter((col) => col.id !== "actions")
+        .map((col) => {
+          const cell = row.getVisibleCells().find((cell) => cell.column.id === col.id);
+          const cellValue = cell?.renderValue() ?? cell?.getValue();
+          return typeof cellValue === "string" ? cellValue : "";
+        }),
+    );
+
+    const csvContent = [headers, ...rows].map((row) => row.map((cell) => `"${cell}"`).join(",")).join("\n");
+
+    download("text/csv", "Bids.csv", csvContent);
   };
 
   return (
@@ -80,7 +80,7 @@ const BuybackActions = ({ data, user, bids, isOpen, onSetActiveModal }: BuybackA
           Download CSV
         </Button>
       ) : null}
-      {user.roles.administrator && !isOpen && bids.some((bid) => Number(bid.acceptedShares) > 0) ? (
+      {user.roles.administrator && !isOpen && bids.length ? (
         <Button size="small" onClick={() => onSetActiveModal("summary")}>
           Finalize buyback
         </Button>
@@ -99,7 +99,7 @@ export default function BuybackView() {
   const company = useCurrentCompany();
   const user = useCurrentUser();
   const [data] = trpc.tenderOffers.get.useSuspenseQuery({ companyId: company.id, id });
-  const isOpen = isPast(utc(data.startsAt)) && isFuture(utc(data.endsAt));
+  const isOpen = !data.acceptedPriceCents && isFuture(utc(data.endsAt));
   const investorId = user.roles.investor?.id;
   const [bids, { refetch: refetchBids }] = trpc.tenderOffers.bids.list.useSuspenseQuery({
     companyId: company.id,
@@ -119,7 +119,6 @@ export default function BuybackView() {
 
   const finalizeMutation = useMutation({
     mutationFn: async () => {
-      console.log("Finalizing buyback...");
       await new Promise((resolve) => setTimeout(resolve, 2000));
     },
     onSuccess: () => {
@@ -139,7 +138,7 @@ export default function BuybackView() {
             })
           : null,
         columnHelper.simple("shareClass", "Share class"),
-        user.roles.administrator || data.buyback?.status === "Paid"
+        user.roles.administrator || data.acceptedPriceCents
           ? columnHelper.display({
               id: "acceptedShares",
               header: "Accepted",
@@ -147,17 +146,24 @@ export default function BuybackView() {
             })
           : null,
         columnHelper.simple("numberOfShares", "Shares", (value) => value.toLocaleString()),
-        user.roles.administrator || data.buyback?.status === "Paid"
-          ? columnHelper.simple("clearingPrice", "Clearing price", formatMoneyFromCents)
+        user.roles.administrator || data.acceptedPriceCents
+          ? columnHelper.display({
+              id: "clearingPrice",
+              header: "Clearing Price",
+              cell: (info) =>
+                info.row.original.acceptedShares && data.acceptedPriceCents
+                  ? formatMoneyFromCents(data.acceptedPriceCents)
+                  : "-",
+            })
           : null,
         columnHelper.simple("sharePriceCents", "Bid price", formatMoneyFromCents),
         columnHelper.display({
           id: "total",
           header: "Total",
           cell: (info) =>
-            formatMoneyFromCents(Number(info.row.original.numberOfShares) * info.row.original.sharePriceCents),
+            formatMoneyFromCents(Number(info.row.original.numberOfShares) * info.row.original.sharePriceCents), // TODO confirm this calculation
         }),
-        !user.roles.administrator || data.buyback?.status === "Paid"
+        !user.roles.administrator || data.acceptedPriceCents
           ? columnHelper.accessor(
               (row) =>
                 Number(row.acceptedShares) === Number(row.numberOfShares)
@@ -182,7 +188,7 @@ export default function BuybackView() {
               cell: (info) =>
                 info.row.original.companyInvestor.user.id === user.id ? (
                   <Button size="icon" variant="outline" onClick={() => setCancelingBid(info.row.original)}>
-                    <TrashIcon className="size-4" />
+                    <Trash2 className="size-4" />
                   </Button>
                 ) : null,
             })
@@ -194,18 +200,15 @@ export default function BuybackView() {
   const bidsTable = useTable({
     data: bids,
     columns,
-    initialState: {
-      sorting: [{ id: "Status", desc: false }],
-    },
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
+    getFilteredRowModel: user.roles.administrator ? getFilteredRowModel() : undefined!,
   });
 
   return (
     <EquityLayout
-      pageTitle=""
+      pageTitle={data.name}
       headerActions={
-        !bids.length ? (
+        !bids.length || !user.roles.administrator ? (
           <BuybackActions data={data} user={user} bids={bids} isOpen={isOpen} onSetActiveModal={setActiveModal} />
         ) : null
       }
@@ -219,7 +222,9 @@ export default function BuybackView() {
           </AlertDescription>
         </Alert>
       ) : null}
-      {data.buyback?.status === "Processing" ? (
+      {!user.roles.administrator &&
+      data.acceptedPriceCents &&
+      (!data.equityBuybackRounds.length || data.equityBuybackRounds.some((round) => round.status !== "Paid")) ? (
         <Alert>
           <InfoIcon />
           <AlertDescription>
@@ -228,12 +233,15 @@ export default function BuybackView() {
         </Alert>
       ) : null}
 
-      {data.buyback?.status === "Paid" ? (
+      {!user.roles.administrator &&
+      data.acceptedPriceCents &&
+      data.equityBuybackRounds.length &&
+      data.equityBuybackRounds.every((round) => round.status === "Paid") ? (
         <Alert>
           <InfoIcon />
           <AlertDescription>
-            This buyback has been settled. All accepted bids cleared at{" "}
-            {formatMoneyFromCents(data.buyback?.exercisePriceCents)} per share, and payouts have been processed.
+            This buyback has been settled. All accepted bids cleared at {formatMoneyFromCents(data.acceptedPriceCents)}
+            per share, and payouts have been processed.
           </AlertDescription>
         </Alert>
       ) : null}
@@ -241,9 +249,18 @@ export default function BuybackView() {
       {bids.length > 0 ? (
         <DataTable
           table={bidsTable}
-          searchColumn="investor"
+          searchColumn={user.roles.administrator ? "investor" : undefined}
           actions={
-            <BuybackActions data={data} user={user} bids={bids} isOpen={isOpen} onSetActiveModal={setActiveModal} />
+            user.roles.administrator ? (
+              <BuybackActions
+                data={data}
+                user={user}
+                bids={bids}
+                isOpen={isOpen}
+                onSetActiveModal={setActiveModal}
+                table={bidsTable}
+              />
+            ) : null
           }
         />
       ) : user.roles.administrator ? (

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_23_190844) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_27_180005) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -922,6 +922,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_23_190844) do
   create_table "tender_offers", force: :cascade do |t|
     t.bigint "company_id", null: false
     t.string "external_id", null: false
+    t.string "name"
     t.datetime "starts_at", null: false
     t.datetime "ends_at", null: false
     t.bigint "minimum_valuation", null: false

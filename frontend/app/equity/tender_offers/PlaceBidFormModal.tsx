@@ -18,10 +18,12 @@ type TenderOffer = {
   startsAt: Date;
   endsAt: Date;
   minimumValuation: bigint;
-  attachment?: {
-    key: string;
-    filename: string;
-  };
+  attachment:
+    | {
+        key: string;
+        filename: string;
+      }
+    | undefined;
 };
 
 type PlaceBidFormModalProps = {
@@ -106,9 +108,7 @@ const PlaceBidFormModal = ({ isOpen, onClose, onBack, tenderOffer }: PlaceBidFor
         </DialogHeader>
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <p className="mb-4 shrink-0 text-sm text-gray-600">
-            Submit an offer to sell your shares in this buyback event.
-          </p>
+          <p className="mb-4 shrink-0 text-sm">Submit an offer to sell your shares in this buyback event.</p>
 
           <Form {...form}>
             <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-1 flex-col gap-4">
@@ -165,11 +165,11 @@ const PlaceBidFormModal = ({ isOpen, onClose, onBack, tenderOffer }: PlaceBidFor
 
               <div className="mt-4 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>Implied company valuation</span>
-                  <span className="font-medium">{formatMoney(impliedValuation)}</span>
+                  <span className="font-medium">Implied company valuation</span>
+                  <span>{formatMoney(impliedValuation)}</span>
                 </div>
-                <div className="flex justify-between text-sm font-medium">
-                  <span>Total amount</span>
+                <div className="flex justify-between text-sm">
+                  <span className="font-medium">Total amount</span>
                   <span>{formatMoney(totalAmount)}</span>
                 </div>
               </div>

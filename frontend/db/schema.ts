@@ -1274,6 +1274,7 @@ export const tenderOffers = pgTable(
     id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
     companyId: bigint("company_id", { mode: "bigint" }).notNull(),
     externalId: varchar("external_id").$default(nanoid).notNull(),
+    name: varchar(),
     startsAt: timestamp("starts_at", { precision: 6, mode: "date" }).notNull(),
     endsAt: timestamp("ends_at", { precision: 6, mode: "date" }).notNull(),
     minimumValuation: bigint("minimum_valuation", { mode: "bigint" }).notNull(),
@@ -2391,6 +2392,7 @@ export const tenderOffersRelations = relations(tenderOffers, ({ one, many }) => 
     references: [companies.id],
   }),
   bids: many(tenderOfferBids),
+  equityBuybackRounds: many(equityBuybackRounds),
 }));
 
 export const tosAgreementsRelations = relations(tosAgreements, ({ one }) => ({
@@ -2495,6 +2497,18 @@ export const equityBuybackPaymentsRelations = relations(equityBuybackPayments, (
   }),
 }));
 
+export const equityBuybackRoundsRelations = relations(equityBuybackRounds, ({ one, many }) => ({
+  company: one(companies, {
+    fields: [equityBuybackRounds.companyId],
+    references: [companies.id],
+  }),
+  tenderOffer: one(tenderOffers, {
+    fields: [equityBuybackRounds.tenderOfferId],
+    references: [tenderOffers.id],
+  }),
+  equityBuybacks: many(equityBuybacks),
+}));
+
 export const equityBuybacksRelations = relations(equityBuybacks, ({ one, many }) => ({
   company: one(companies, {
     fields: [equityBuybacks.companyId],
@@ -2503,6 +2517,10 @@ export const equityBuybacksRelations = relations(equityBuybacks, ({ one, many })
   companyInvestor: one(companyInvestors, {
     fields: [equityBuybacks.companyInvestorId],
     references: [companyInvestors.id],
+  }),
+  equityBuybackRound: one(equityBuybackRounds, {
+    fields: [equityBuybacks.equityBuybackRoundId],
+    references: [equityBuybackRounds.id],
   }),
   equityBuybacksEquityBuybackPayments: many(equityBuybacksEquityBuybackPayments),
 }));

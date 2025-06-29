@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import type { RouterOutput } from "@/trpc";
+import { download } from "@/utils";
 
 type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
 
@@ -21,28 +22,15 @@ const ReviewInvestorsModal = ({ isOpen, onClose, onNext, onBack, bids }: ReviewI
   const totalPayout = acceptedBids.reduce((sum, bid) => sum + Number(bid.acceptedShares) * bid.sharePriceCents, 0);
 
   const handleDownloadCSV = () => {
-    try {
-      const csvHeader = "Investor,Shares,Total\n";
-      const csvRows = acceptedBids
-        .map(
-          (bid) =>
-            `"${bid.companyInvestor.user.name}",${Number(bid.acceptedShares)},"${formatMoneyFromCents(Number(bid.acceptedShares) * bid.sharePriceCents)}"`,
-        )
-        .join("\n");
+    const csvHeader = "Investor,Shares,Total\n";
+    const csvRows = acceptedBids
+      .map(
+        (bid) =>
+          `"${bid.companyInvestor.user.name}",${Number(bid.acceptedShares)},"${formatMoneyFromCents(Number(bid.acceptedShares) * bid.sharePriceCents)}"`,
+      )
+      .join("\n");
 
-      const csvContent = csvHeader + csvRows;
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "investor-bids.csv";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Failed to download CSV:", error);
-    }
+    download("text/csv", "InvestorBids.csv", csvHeader + csvRows);
   };
 
   return (

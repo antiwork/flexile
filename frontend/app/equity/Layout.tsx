@@ -18,7 +18,7 @@ const Layout = ({
 }: {
   children: React.ReactNode;
   headerActions?: React.ReactNode;
-  pageTitle?: string;
+  pageTitle?: string | null;
 }) => {
   const pathname = usePathname();
   const user = useCurrentUser();

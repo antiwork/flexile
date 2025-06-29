@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, count, desc, eq, sql, sum } from "drizzle-orm";
+import { and, count, desc, eq, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
@@ -10,6 +10,7 @@ import { tenderOffersBidsRouter } from "./bids";
 
 const dataSchema = createInsertSchema(tenderOffers)
   .pick({
+    name: true,
     startsAt: true,
     endsAt: true,
     minimumValuation: true,
@@ -31,6 +32,7 @@ export const tenderOffersRouter = createRouter({
         .insert(tenderOffers)
         .values({
           companyId: ctx.company.id,
+          name: input.name,
           startsAt: input.startsAt,
           endsAt: input.endsAt,
           minimumValuation: input.minimumValuation,
@@ -54,7 +56,7 @@ export const tenderOffersRouter = createRouter({
 
     return await db
       .select({
-        ...pick(tenderOffers, "startsAt", "endsAt", "minimumValuation", "acceptedPriceCents"),
+        ...pick(tenderOffers, "name", "startsAt", "endsAt", "minimumValuation", "acceptedPriceCents"),
         id: tenderOffers.externalId,
         bidCount: count(tenderOfferBids.id),
         participation: currentUserInvestorId
@@ -74,7 +76,21 @@ export const tenderOffersRouter = createRouter({
       throw new TRPCError({ code: "FORBIDDEN" });
 
     const tenderOffer = await db.query.tenderOffers.findFirst({
-      columns: { id: true, startsAt: true, endsAt: true, minimumValuation: true, acceptedPriceCents: true },
+      columns: {
+        id: true,
+        name: true,
+        startsAt: true,
+        endsAt: true,
+        minimumValuation: true,
+        acceptedPriceCents: true,
+      },
+      with: {
+        equityBuybackRounds: {
+          columns: {
+            status: true,
+          },
+        },
+      },
       where: and(eq(tenderOffers.externalId, input.id), eq(tenderOffers.companyId, ctx.company.id)),
     });
 
@@ -89,7 +105,14 @@ export const tenderOffersRouter = createRouter({
     });
 
     return {
-      ...pick(tenderOffer, ["startsAt", "endsAt", "minimumValuation", "acceptedPriceCents"]),
+      ...pick(tenderOffer, [
+        "name",
+        "startsAt",
+        "endsAt",
+        "minimumValuation",
+        "acceptedPriceCents",
+        "equityBuybackRounds",
+      ]),
       attachment: attachment?.blob,
     };
   }),

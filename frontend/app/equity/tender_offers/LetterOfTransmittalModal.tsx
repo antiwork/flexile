@@ -24,8 +24,8 @@ const LetterOfTransmittalModal = ({ isOpen, onClose, onBack, onNext }: LetterOfT
     }
   };
 
-  const handleReviewedChange = (checked: boolean | "indeterminate") => {
-    setHasReviewed(checked === true);
+  const handleReviewedChange = (checked: boolean) => {
+    setHasReviewed(checked);
   };
 
   const canContinue = hasReviewed && hasSigned;
@@ -38,7 +38,7 @@ const LetterOfTransmittalModal = ({ isOpen, onClose, onBack, onNext }: LetterOfT
         </DialogHeader>
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <p className="mb-4 shrink-0 text-sm text-gray-600">
+          <p className="mb-4 shrink-0 text-sm">
             Review and sign the Letter of Transmittal to confirm your participation in this buyback.
           </p>
 
@@ -58,7 +58,7 @@ const LetterOfTransmittalModal = ({ isOpen, onClose, onBack, onNext }: LetterOfT
                 id="reviewed"
                 checked={hasReviewed}
                 onCheckedChange={handleReviewedChange}
-                className="mt-0.5 shrink-0"
+                className="shrink-0"
               />
               <label htmlFor="reviewed" className="cursor-pointer text-sm leading-tight font-medium">
                 I've reviewed the{" "}

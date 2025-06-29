@@ -89,7 +89,7 @@ const SelectInvestorsModal = ({ isOpen, onClose, onBack, onNext, mutation, data 
           <DialogTitle>Select who can join this buyback</DialogTitle>
         </DialogHeader>
 
-        <p className="mb-4 text-sm text-gray-600">
+        <p className="mb-4 text-sm">
           Choose investors who should be allowed to place bids. Only selected investors will see and participate in this
           buyback.
         </p>

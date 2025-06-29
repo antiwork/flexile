@@ -73,3 +73,8 @@ process_scheduled_vesting_for_equity_grants_job:
   cron: "0 1 * * *" # Every day at UTC 01:00
   class: ProcessScheduledVestingForEquityGrantsJob
   description: Processes scheduled vesting events for active equity grants
+
+process_tender_offer_equilibrium_price_job:
+  cron: "0 2 * * *" # Every day at UTC 02:00
+  class: ProcessTenderOfferEquilibriumPriceJob
+  description: Calculates equilibrium prices for ended tender offers

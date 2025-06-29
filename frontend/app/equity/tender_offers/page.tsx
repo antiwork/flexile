@@ -1,5 +1,5 @@
 "use client";
-import { CircleCheck, Plus } from "lucide-react";
+import { Circle, CircleCheck, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
@@ -15,7 +15,6 @@ import { trpc } from "@/trpc/client";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 import EquityLayout from "../Layout";
-import Status from "@/components/Status";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import { isFuture, isPast } from "date-fns";
 import { utc } from "@date-fns/utc";
@@ -61,7 +60,7 @@ export default function Buybacks() {
         id: "name",
         header: "Name",
         cell: (info) => {
-          const content = "";
+          const content = info.row.original.name;
           return (
             <Link href={`/equity/tender_offers/${info.row.original.id}`} className="after:absolute after:inset-0">
               {content}
@@ -74,7 +73,7 @@ export default function Buybacks() {
       columnHelper.display({
         id: "impliedValuation",
         header: "Implied valuation",
-        cell: (info) =>
+        cell: () =>
           // TODO: Need to store fullyDilutedShares at tender offer creation time
           // Using current fullyDilutedShares gives incorrect historical valuations
           // See backend TODO in company_investor_mailer/tender_offer_closed.html.erb
@@ -93,32 +92,69 @@ export default function Buybacks() {
         cell: (info) => info.getValue(),
       }),
 
-      columnHelper.accessor((row) => (row.endsAt > new Date() ? "Settled" : "Open"), {
-        header: "Status",
-        meta: { filterOptions: ["Open", "Settled"] },
-        cell: (info) =>
-          info.row.original.endsAt > new Date() ? (
-            <Status variant="success">{info.getValue()}</Status>
-          ) : (
-            <Status variant="primary">{info.getValue()}</Status>
-          ),
-      }),
+      columnHelper.accessor(
+        (row) =>
+          row.acceptedPriceCents // TODO
+            ? "Settled"
+            : isFuture(utc(row.endsAt))
+              ? "Open"
+              : user.roles.administrator
+                ? "Closed"
+                : "Reviewing",
+        {
+          id: "status",
+          header: "Status",
+          meta: { filterOptions: ["Open", "Settled", "Reviewing"] },
+          cell: (info) =>
+            info.getValue() === "Open" ? (
+              <span className="inline-flex items-center gap-2">
+                <Circle className="fill-green text-green h-4 w-4" />
+                {info.getValue()}
+              </span>
+            ) : ["Reviewing", "Closed"].includes(info.getValue()) ? (
+              <span className="inline-flex items-center gap-2">
+                <Circle className="h-4 w-4 fill-gray-300 text-gray-300" />
+                {info.getValue()}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-2">
+                <Circle className="h-4 w-4 fill-blue-600 text-blue-600" />
+                {info.getValue()}
+              </span>
+            ),
+        },
+      ),
 
       columnHelper.display({
         id: "actions",
-        cell: (info) =>
-          isPast(utc(info.row.original.startsAt)) && isFuture(utc(info.row.original.endsAt)) ? (
-            <Button
-              size="small"
-              variant="outline"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedTenderOffer(info.row.original);
-              }}
-            >
-              Place bid
-            </Button>
-          ) : null,
+        cell: (info) => (
+          <>
+            {isFuture(utc(info.row.original.endsAt)) ? (
+              <Button
+                size="small"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedTenderOffer(info.row.original);
+                }}
+              >
+                Place bid
+              </Button>
+            ) : null}
+            {user.roles.administrator && isPast(utc(info.row.original.endsAt)) ? (
+              <Button
+                size="small"
+                className="fill-black"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/equity/tender_offers/${info.row.original.id}`);
+                }}
+              >
+                Review
+              </Button>
+            ) : null}
+          </>
+        ),
       }),
     ],
     [company.fullyDilutedShares],
@@ -127,11 +163,8 @@ export default function Buybacks() {
   const table = useTable({
     columns,
     data,
-    initialState: {
-      sorting: [{ id: "Status", desc: false }],
-    },
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
+    getFilteredRowModel: user.roles.administrator ? getFilteredRowModel() : undefined!,
   });
 
   const handleBuybackDetailsNext = (data: BuybackData) => {
@@ -165,10 +198,6 @@ export default function Buybacks() {
     setInvestorsData([]);
   };
 
-  const handleFlowCancel = () => {
-    resetFlow();
-  };
-
   const createBuybackMutation = useMutation({
     mutationFn: async () => {
       if (!buybackData) {
@@ -197,15 +226,12 @@ export default function Buybacks() {
 
       await createTenderOffer.mutateAsync({
         companyId: company.id,
+        name: buybackData.name,
         startsAt: startDate,
         endsAt: endDate,
         minimumValuation: BigInt(startingValuation),
         attachmentKey: key,
       });
-
-      // TODO Save letter content and selected investors
-      console.log("Letter data:", letterData);
-      console.log("Selected investors:", investorsData);
     },
     onSuccess: () => {
       resetFlow();
@@ -216,7 +242,7 @@ export default function Buybacks() {
   return (
     <EquityLayout
       headerActions={
-        user.roles.administrator ? (
+        user.roles.administrator && !data.length ? (
           <Button size="small" variant="outline" onClick={() => setActiveModal("buyback-details")}>
             <Plus className="size-4" />
             New buyback
@@ -229,6 +255,14 @@ export default function Buybacks() {
           searchColumn={user.roles.administrator ? "name" : undefined}
           table={table}
           onRowClicked={(row) => router.push(`/equity/tender_offers/${row.id}`)}
+          actions={
+            user.roles.administrator ? (
+              <Button size="small" variant="outline" onClick={() => setActiveModal("buyback-details")}>
+                <Plus className="size-4" />
+                New buyback
+              </Button>
+            ) : null
+          }
         />
       ) : (
         <Placeholder icon={CircleCheck}>There are no buybacks yet.</Placeholder>
@@ -237,18 +271,19 @@ export default function Buybacks() {
       <PlaceBidModal
         isOpen={!!selectedTenderOffer}
         onClose={() => setSelectedTenderOffer(null)}
+        // fetch single tender offer data
         tenderOffer={selectedTenderOffer}
       />
 
       <NewBuybackModal
         isOpen={activeModal === "buyback-details"}
-        onClose={handleFlowCancel}
+        onClose={resetFlow}
         onNext={handleBuybackDetailsNext}
       />
 
       <CreateLetterOfTransmittalModal
         isOpen={activeModal === "letter-of-transmittal"}
-        onClose={handleFlowCancel}
+        onClose={resetFlow}
         onNext={handleLetterNext}
         onBack={handleLetterBack}
         data={letterData}
@@ -256,7 +291,7 @@ export default function Buybacks() {
 
       <SelectInvestorsModal
         isOpen={activeModal === "select-investors"}
-        onClose={handleFlowCancel}
+        onClose={resetFlow}
         onBack={handleInvestorsBack}
         onNext={handleInvestorsNext}
         mutation={createBuybackMutation}

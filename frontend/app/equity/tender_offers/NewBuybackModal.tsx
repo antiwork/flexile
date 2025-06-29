@@ -9,17 +9,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import NumberInput from "@/components/NumberInput";
 import DatePicker from "@/components/DatePicker";
-import { Upload } from "lucide-react";
+import { CloudUpload, Trash2, Upload } from "lucide-react";
 
-const formSchema = z.object({
-  buybackType: z.enum(["single", "tender"]),
-  name: z.string().min(1, "Buyback name is required"),
-  startDate: z.instanceof(CalendarDate, { message: "Start date is required" }),
-  endDate: z.instanceof(CalendarDate, { message: "End date is required" }),
-  startingValuation: z.number().min(0, "Starting valuation must be positive"),
-  targetBuybackValue: z.number().min(0, "Target buyback value must be positive"),
-  attachment: z.instanceof(File, { message: "Buyback documents are required" }),
-});
+const formSchema = z
+  .object({
+    buybackType: z.enum(["single", "tender"]),
+    name: z.string().min(1, "Buyback name is required"),
+    startDate: z.instanceof(CalendarDate, { message: "Start date is required" }),
+    endDate: z.instanceof(CalendarDate, { message: "End date is required" }),
+    startingValuation: z.number().min(0, "Starting valuation must be positive"),
+    targetBuybackValue: z.number().min(0, "Target buyback value must be positive"),
+    attachment: z.instanceof(File, { message: "Buyback documents are required" }),
+  })
+  .refine((data) => data.startDate.compare(data.endDate) < 0, {
+    message: "End date must be after start date",
+    path: ["endDate"],
+  });
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -90,7 +95,7 @@ const NewBuybackModal = ({ isOpen, onClose, onNext, data }: NewBuybackModalProps
           <DialogTitle>Start a new buyback</DialogTitle>
         </DialogHeader>
 
-        <p className="mb-4 text-sm text-gray-600">
+        <p className="mb-4 text-sm">
           Set the timeline, valuation, and upload your buyback terms to begin collecting investor bids.
         </p>
 
@@ -106,7 +111,7 @@ const NewBuybackModal = ({ isOpen, onClose, onNext, data }: NewBuybackModalProps
                     <button
                       type="button"
                       onClick={() => field.onChange("single")}
-                      className={`rounded-lg border p-3 text-left text-sm transition-colors ${
+                      className={`rounded-sm border p-3 text-left text-sm transition-colors ${
                         field.value === "single"
                           ? "border-blue-500 bg-blue-50 text-blue-900"
                           : "border-gray-200 hover:border-gray-300"
@@ -117,7 +122,7 @@ const NewBuybackModal = ({ isOpen, onClose, onNext, data }: NewBuybackModalProps
                     <button
                       type="button"
                       onClick={() => field.onChange("tender")}
-                      className={`rounded-lg border p-3 text-left text-sm transition-colors ${
+                      className={`rounded-sm border p-3 text-left text-sm transition-colors ${
                         field.value === "tender"
                           ? "border-blue-500 bg-blue-50 text-blue-900"
                           : "border-gray-200 hover:border-gray-300"
@@ -138,7 +143,7 @@ const NewBuybackModal = ({ isOpen, onClose, onNext, data }: NewBuybackModalProps
                 <FormItem>
                   <FormLabel>Buyback name</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="" />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -206,11 +211,11 @@ const NewBuybackModal = ({ isOpen, onClose, onNext, data }: NewBuybackModalProps
             <FormField
               control={form.control}
               name="attachment"
-              render={({ field }) => (
+              render={() => (
                 <FormItem>
                   <FormLabel>Buyback documents</FormLabel>
                   <FormControl>
-                    {watchedFile ? (
+                    {watchedFile instanceof File ? (
                       <div className="rounded-lg border border-gray-200 p-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
@@ -229,19 +234,13 @@ const NewBuybackModal = ({ isOpen, onClose, onNext, data }: NewBuybackModalProps
                             }}
                             className="text-gray-400 hover:text-gray-600"
                           >
-                            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                              <path
-                                fillRule="evenodd"
-                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
+                            <Trash2 className="size-4" />
                           </button>
                         </div>
                       </div>
                     ) : (
                       <div
-                        className={`rounded-lg border-2 border-dashed p-4 text-center transition-colors ${
+                        className={`rounded-lg border border-dashed p-4 text-center transition-colors ${
                           dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-gray-400"
                         }`}
                         onDragEnter={handleDrag}
@@ -249,9 +248,9 @@ const NewBuybackModal = ({ isOpen, onClose, onNext, data }: NewBuybackModalProps
                         onDragOver={handleDrag}
                         onDrop={handleDrop}
                       >
-                        <Upload className="mx-auto mb-2 h-8 w-8 text-gray-400" />
-                        <div className="text-sm text-gray-600">
-                          <span className="font-medium">Drag and drop</span> or{" "}
+                        <CloudUpload className="mx-auto mb-2 h-6 w-6 text-gray-400" />
+                        <div className="text-sm font-medium">
+                          <span>Drag and drop</span> or{" "}
                           <label className="cursor-pointer text-blue-600 hover:text-blue-500">
                             <span>click to browse</span>
                             <input
