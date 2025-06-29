@@ -1,11 +1,8 @@
 # frozen_string_literal: true
 
 class GrantStockOptions
-  MAX_HOURS_PER_WEEK = 35
-  private_constant :MAX_HOURS_PER_WEEK
-
   def initialize(company_worker, option_pool:, board_approval_date:, vesting_commencement_date:,
-                number_of_shares: :calculate, issue_date_relationship:, option_grant_type:, option_expiry_months:,
+                number_of_shares:, issue_date_relationship:, option_grant_type:, option_expiry_months:,
                 vesting_trigger:, vesting_schedule_params:, voluntary_termination_exercise_months:,
                 involuntary_termination_exercise_months:, termination_with_cause_exercise_months:,
                 death_exercise_months:, disability_exercise_months:, retirement_exercise_months:)
@@ -32,7 +29,6 @@ class GrantStockOptions
     user = company_worker.user
 
     return { success: false, error: "Cannot grant stock options for #{user.display_name} because they are an alum" } if company_worker.alumni?
-    return { success: false, error: "Please set the pay rate for #{user.display_name} first" } if company_worker.pay_rate_in_subunits.nil?
     return { success: false, error: "Please set the company's conversion share price first" } if company.conversion_share_price_usd.nil?
     return { success: false, error: "Please set the company's current FMV (409A valuation) first" } if company.fmv_per_share_in_usd.nil?
     return { success: false, error: "Equity contract not appropriate for #{user.display_name} from country #{ISO3166::Country[user.country_code]}" } unless EquityContractCountrySupport.new(user).supported?
@@ -59,10 +55,8 @@ class GrantStockOptions
     exercise_price_usd = company.fmv_per_share_in_usd
     share_price_usd = company.conversion_share_price_usd
 
-    number_of_shares = @number_of_shares == :calculate ? calculate_number_of_shares(period_started_at, period_ended_at) : @number_of_shares
-
     equity_grant_creation_result = EquityGrantCreation.new(company_investor:, option_pool:, option_grant_type:, share_price_usd:,
-                                                           exercise_price_usd:, number_of_shares:,
+                                                           exercise_price_usd:, number_of_shares: @number_of_shares,
                                                            vested_shares: 0, period_started_at:, period_ended_at:,
                                                            issue_date_relationship:, option_expiry_months:,
                                                            board_approval_date:, vesting_trigger:, vesting_schedule:,
@@ -97,11 +91,4 @@ class GrantStockOptions
                 :voluntary_termination_exercise_months, :involuntary_termination_exercise_months,
                 :termination_with_cause_exercise_months, :death_exercise_months, :disability_exercise_months,
                 :retirement_exercise_months
-
-    def calculate_number_of_shares(period_started_at, period_ended_at)
-      days_in_period = (period_ended_at.to_date - period_started_at.to_date).to_i + 1
-      weeks_in_period = days_in_period / 7.to_d
-      max_bill_in_usd = weeks_in_period * MAX_HOURS_PER_WEEK * company_worker.pay_rate_in_subunits / 100.to_d
-      (max_bill_in_usd / company.conversion_share_price_usd).ceil
-    end
 end

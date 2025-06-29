@@ -4,7 +4,6 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test, type Page } from "@test/index";
-import { PayRateType } from "@/db/enums";
 
 test.describe("Role autocomplete", () => {
   const role1 = "Developer";
@@ -22,26 +21,22 @@ test.describe("Role autocomplete", () => {
     await companyContractorsFactory.create({
       companyId: company.id,
       role: role1,
-      payRateType: PayRateType.Hourly,
     });
 
     await companyContractorsFactory.create({
       companyId: company.id,
       role: role2,
-      payRateType: PayRateType.Hourly,
     });
 
     await companyContractorsFactory.create({
       companyId: company.id,
       role: "Alumni Role",
       endedAt: new Date(),
-      payRateType: PayRateType.Hourly,
     });
 
     await companyContractorsFactory.create({
       companyId: company.id,
       role: role3,
-      payRateType: PayRateType.Hourly,
     });
     return { company, admin };
   };

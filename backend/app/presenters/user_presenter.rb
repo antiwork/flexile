@@ -78,10 +78,9 @@ class UserPresenter
         id: worker.external_id,
         hasDocuments: has_documents,
         endedAt: worker.ended_at,
-        payRateType: worker.pay_rate_type,
         role: worker.role,
         payRateInSubunits: worker.pay_rate_in_subunits,
-        hoursPerWeek: worker.hours_per_week,
+        unitOfWork: worker.unit_of_work,
       }
     end
 
@@ -163,9 +162,7 @@ class UserPresenter
       result[:has_documents] = documents.not_consulting_contract.or(documents.unsigned).exists?
       if company_worker.present?
         if company_worker.active?
-          result[:flags][:equity] = true if company_worker.hourly?
           result[:flags][:cap_table] = true if company.is_gumroad? && company.cap_table_enabled?
-
         end
       end
       if company_investor.present?

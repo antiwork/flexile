@@ -30,7 +30,6 @@ import {
   optionGrantIssueDateRelationships,
   optionGrantTypes,
   optionGrantVestingTriggers,
-  PayRateType,
   TaxClassification,
 } from "./enums";
 import type { QuickbooksIntegrationConfiguration } from "./json";
@@ -1710,18 +1709,16 @@ export const companyContractors = pgTable(
     userId: bigint("user_id", { mode: "bigint" }).notNull(),
     companyId: bigint("company_id", { mode: "bigint" }).notNull(),
     startedAt: timestamp("started_at", { precision: 6, mode: "date" }).notNull(),
-    hoursPerWeek: integer("hours_per_week"),
     createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
       .notNull()
       .$onUpdate(() => new Date()),
     endedAt: timestamp("ended_at", { precision: 6, mode: "date" }),
     role: varchar("role").notNull(),
-
+    unitOfWork: varchar("unit_of_work").default("hour").notNull(),
     externalId: varchar("external_id").$default(nanoid).notNull(),
-    payRateType: integer("pay_rate_type").$type<PayRateType>().default(PayRateType.Hourly).notNull(),
     sentEquityPercentSelectionEmail: boolean("sent_equity_percent_selection_email").notNull().default(false),
-    payRateInSubunits: integer("pay_rate_in_subunits").notNull(),
+    payRateInSubunits: integer("pay_rate_in_subunits"),
     payRateCurrency: varchar("pay_rate_currency").default("usd").notNull(),
     contractSignedElsewhere: boolean("contract_signed_elsewhere").notNull().default(false),
   },

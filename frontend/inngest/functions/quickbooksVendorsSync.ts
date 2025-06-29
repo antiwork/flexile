@@ -84,7 +84,7 @@ export default inngest.createFunction(
               Address: worker.user.email,
             },
             ...billingAddress,
-            BillRate: worker.payRateInSubunits / 100,
+            ...(worker.payRateInSubunits && { BillRate: worker.payRateInSubunits / 100 }),
             Vendor1099: false,
             Active: true,
           });

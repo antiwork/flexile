@@ -1,8 +1,3 @@
-export enum PayRateType {
-  Hourly = 0,
-  ProjectBased,
-}
-
 export enum DocumentType {
   ConsultingContract = 0,
   EquityPlanContract,

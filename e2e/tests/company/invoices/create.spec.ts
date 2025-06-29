@@ -132,9 +132,9 @@ test.describe("invoice creation", () => {
     await expect(page.getByText("Swapped for equity")).not.toBeVisible();
     await expect(page.getByText("Net amount in cash")).not.toBeVisible();
 
-    await page.waitForTimeout(100);
+    await page.waitForTimeout(300);
     await page.getByLabel("Hours / Qty").fill("100:00");
-    await page.waitForTimeout(100);
+    await page.waitForTimeout(300);
     await page.getByPlaceholder("Description").fill("I worked on invoices");
 
     await expect(page.getByText("Total services$6,000")).toBeVisible();
