@@ -14,7 +14,7 @@ import MainLayout from "@/components/layouts/Main";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { MutationStatusButton } from "@/components/MutationButton";
@@ -254,16 +254,14 @@ export default function PeoplePage() {
         showResetModal={setShowResetLinkModal}
       />
       <Dialog open={showResetLinkModal} onOpenChange={setShowResetLinkModal}>
-        <DialogContent>
+        <DialogContent className="md:mb-80">
           <DialogHeader>
             <DialogTitle>Reset Invite Link</DialogTitle>
-          </DialogHeader>
-          <div className="text-muted-foreground">
-            <span>
+            <DialogDescription className="text-muted-foreground">
               Resetting the link will deactivate the current invite. If you have already shared it, others may not be
               able to join.
-            </span>
-          </div>
+            </DialogDescription>
+          </DialogHeader>
           <div className="flex flex-col">
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setShowResetLinkModal(false)}>

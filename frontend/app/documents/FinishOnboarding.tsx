@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { getLocalTimeZone, today, CalendarDate } from "@internationalized/date";
 
 import { PayRateType, trpc } from "@/trpc/client";
-import { useCurrentCompany, useCurrentUser } from "@/global";
+import { useCurrentCompany } from "@/global";
 import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
 
 import DatePicker from "@/components/DatePicker";
