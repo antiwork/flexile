@@ -78,19 +78,6 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
           <form onSubmit={(e) => void submit(e)} className="space-y-4">
             <FormField
               control={form.control}
-              name="startedAt"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <DatePicker {...field} label="Start date" granularity="day" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="role"
               render={({ field }) => (
                 <FormItem>
@@ -119,6 +106,19 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
                       </PopoverContent>
                     </Popover>
                   </Command>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="startedAt"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <DatePicker {...field} label="Start date" granularity="day" />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -228,11 +228,11 @@ const onboardingSteps: Array<React.ComponentType<OnboardingStepProps>> = [
   OnboardingCompleteModal,
 ];
 
-type OnboardingFormProps = {
+type FinishOnboardingProps = {
   handleComplete: () => void;
 };
 
-export const OnboardingForm: React.FC<OnboardingFormProps> = ({ handleComplete }) => {
+export const FinishOnboarding: React.FC<FinishOnboardingProps> = ({ handleComplete }) => {
   const [currentStep, setCurrentStep] = useState(0);
 
   const goToNextStep = () => {

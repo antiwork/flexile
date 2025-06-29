@@ -37,7 +37,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { OnboardingForm } from "@/app/documents/OnboardingForm";
+import { FinishOnboarding } from "@/app/documents/FinishOnboarding";
 import { COMPANY_WORKER_ROLE_PLACEHOLDER } from "@/models/constants";
 
 type Document = RouterOutput["documents"]["list"][number];
@@ -432,7 +432,7 @@ export default function DocumentsPage() {
           </Form>
         </DialogContent>
       </Dialog>
-      {forceWorkerOnboarding && <OnboardingForm handleComplete={() => setForceWorkerOnboarding(false)} />}
+      {forceWorkerOnboarding && <FinishOnboarding handleComplete={() => setForceWorkerOnboarding(false)} />}
     </MainLayout>
   );
 }
