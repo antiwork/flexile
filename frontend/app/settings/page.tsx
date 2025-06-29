@@ -29,6 +29,10 @@ const DetailsSection = () => {
 
   const saveMutation = trpc.users.update.useMutation({
     onSuccess: () => setTimeout(() => saveMutation.reset(), 2000),
+    onError: () => {
+      form.setValue("email", user.email);
+      form.setValue("preferredName", user.preferredName || "");
+    },
   });
   const submit = form.handleSubmit((values) => saveMutation.mutate(values));
 
