@@ -23,12 +23,9 @@ export const schema = z.object({
 
 export default function FormFields() {
   const form = useFormContext<z.infer<typeof schema>>();
-  useEffect(() => form.setValue("payRateType", form.getValues("unitOfWork") === "hour" ? "hourly" : "custom"), []);
+  const unitOfWork = form.watch("unitOfWork");
   const payRateType = form.watch("payRateType");
-  useEffect(() => {
-    if (payRateType === "hourly") form.setValue("unitOfWork", "hour");
-    else if (form.getValues("unitOfWork") === "hour") form.setValue("unitOfWork", "project");
-  }, [payRateType]);
+  useEffect(() => form.setValue("payRateType", unitOfWork === "hour" ? "hourly" : "custom"), []);
   const companyId = useUserStore((state) => state.user?.currentCompanyId);
   const { data: workers } = trpc.contractors.list.useQuery(companyId ? { companyId, excludeAlumni: true } : skipToken);
 
@@ -81,6 +78,11 @@ export default function FormFields() {
             <FormControl>
               <RadioButtons
                 {...field}
+                onChange={(value) => {
+                  field.onChange(value);
+                  if (value === "hourly") form.setValue("unitOfWork", "hour");
+                  else form.setValue("unitOfWork", "project");
+                }}
                 options={[
                   { label: "Hourly", value: "hourly" },
                   { label: "Custom", value: "custom" },
@@ -122,7 +124,7 @@ export default function FormFields() {
                   onChange={(value) => field.onChange(value == null ? null : value * 100)}
                   placeholder="0"
                   prefix="$"
-                  suffix={payRateType === "custom" ? "/ project" : "/ hour"}
+                  suffix={`/ ${unitOfWork}`}
                   decimal
                 />
               </FormControl>
