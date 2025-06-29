@@ -11,6 +11,7 @@ import {
   CircleDollarSign,
   LogOut,
   ChevronRight,
+  MessageSquare,
 } from "lucide-react";
 import { skipToken, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
@@ -268,6 +269,11 @@ const NavLinks = () => {
       {routes.has("Roles") && (
         <NavLink href="/roles" icon={BookUser} active={pathname.startsWith("/roles")}>
           Roles
+        </NavLink>
+      )}
+      {routes.has("Support") && (
+        <NavLink href="/support" icon={MessageSquare} active={pathname.startsWith("/support")}>
+          Support
         </NavLink>
       )}
       {routes.has("Equity") && equityLinks.length > 0 && (
