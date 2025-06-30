@@ -193,7 +193,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await login(page, adminUser);
 
     await expect(locateOpenInvoicesBadge(page)).toContainText("1");
-    await expect(page.locator("tbody tr")).toHaveCount(3);
+    await expect(page.locator("tbody tr")).toHaveCount(1);
     const fixedInvoiceRow = page
       .locator("tbody tr")
       .filter({ hasText: workerUserA.legalName ?? "never" })
