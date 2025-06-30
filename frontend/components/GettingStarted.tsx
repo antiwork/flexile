@@ -3,9 +3,11 @@ import React, { useEffect, useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { cn } from "@/utils";
-import { useCurrentCompany, useUserStore } from "@/global";
+import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
 import type { Route } from "next";
 import { ChevronDown, X } from "lucide-react";
+import { storageKeys } from "@/models/constants";
+import { usePathname, useRouter } from "next/navigation";
 
 const CircularProgress = ({ progress }: { progress: number }) => {
   const circumference = 50.27; // 2π * radius (radius = 8)
@@ -42,17 +44,34 @@ const CHECKLIST_ROUTES: Record<string, Route> = {
   add_bank_account: "/administrator/settings/billing",
   invite_contractor: "/people",
   send_first_payment: "/invoices",
+  fill_tax_information: "/settings/tax",
+  add_payout_information: "/settings/payouts",
+  sign_contract: "/documents",
 } as const;
 
 const getItemHref = (key: string): Route => CHECKLIST_ROUTES[key] || "/";
 
+type Status = "expanded" | "dismissed" | "collapsed" | "completed";
+
+const isValidStatus = (status: string | null): status is Status =>
+  status !== null && ["expanded", "dismissed", "collapsed", "completed"].includes(status);
+
 export const GettingStarted = () => {
   const company = useCurrentCompany();
+  const user = useCurrentUser();
+
+  const router = useRouter();
+  const pathname = usePathname();
+
   const progressPercentage = company.checklistCompletionPercentage;
 
-  const [status, setStatus] = useState<"expanded" | "dismissed" | "collapsed" | "completed">(
-    progressPercentage === 100 ? "dismissed" : "collapsed",
-  );
+  const [status, setStatus] = useState<Status>(() => {
+    if (progressPercentage === 100) return "dismissed";
+
+    const savedStatus = localStorage.getItem(storageKeys.GETTING_STARTED_STATUS);
+
+    return isValidStatus(savedStatus) ? savedStatus : "collapsed";
+  });
 
   useEffect(() => {
     if (status === "dismissed") return;
@@ -70,21 +89,29 @@ export const GettingStarted = () => {
     return subscription;
   }, [company.id]);
 
+  useEffect(() => {
+    if (status === "dismissed") {
+      localStorage.removeItem(storageKeys.GETTING_STARTED_STATUS);
+    } else {
+      localStorage.setItem(storageKeys.GETTING_STARTED_STATUS, status);
+    }
+  }, [status]);
+
   if (status === "dismissed") {
     return null;
   }
 
   return (
-    <SidebarMenuItem className="border-t border-gray-200">
+    <SidebarMenuItem className="h-12 border-t border-gray-200">
       <Collapsible
         open={status === "expanded" || status === "completed"}
         onOpenChange={(expanded) => setStatus(expanded ? "expanded" : "collapsed")}
-        className="flex flex-col-reverse"
+        className="flex h-full flex-col-reverse"
       >
         <CollapsibleTrigger asChild>
           <SidebarMenuButton
-            className="cursor-pointer transition-colors duration-200 hover:bg-gray-50"
             closeOnMobileClick={false}
+            className="h-full items-center justify-between rounded-none px-5"
           >
             {status === "completed" ? (
               <div className="h-4 w-4 items-center justify-center rounded-full border-2 border-blue-500 bg-blue-500">
@@ -97,14 +124,11 @@ export const GettingStarted = () => {
             <span className="ml-auto text-gray-500">{progressPercentage}%</span>
           </SidebarMenuButton>
         </CollapsibleTrigger>
-        <CollapsibleContent className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 absolute mb-10 w-full overflow-hidden data-[state=closed]:duration-300 data-[state=open]:duration-200">
+        <CollapsibleContent className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 absolute mb-12 w-full overflow-hidden p-3 data-[state=closed]:duration-300 data-[state=open]:duration-200">
           {status === "completed" ? (
-            <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className="font-medium text-gray-900">You are all set!</h3>
-                  <p className="mt-1 text-sm text-gray-600">Everything is in place. Time to flex.</p>
-                </div>
+            <div className="rounded-lg border border-gray-200 bg-white pb-4 shadow-sm">
+              <div className="mr-2 ml-4 flex h-11 items-center justify-between">
+                <span className="font-medium text-gray-900">You are all set!</span>
                 <button
                   onClick={() => setStatus("dismissed")}
                   className="ml-4 text-gray-400 transition-colors hover:text-gray-600"
@@ -112,11 +136,18 @@ export const GettingStarted = () => {
                   <X className="h-4 w-4" />
                 </button>
               </div>
+              <div className="mx-4">
+                <p className="text-sm text-gray-600">
+                  {user.roles.administrator
+                    ? "Everything is in place. Time to flex."
+                    : "You are ready to send your first invoice."}
+                </p>
+              </div>
             </div>
           ) : (
-            <div className="mt-2 rounded-lg border border-gray-200 bg-white shadow-sm">
+            <div className="mt-2 rounded-lg border border-gray-200 bg-white px-1 pb-4 shadow-sm">
               <CollapsibleTrigger asChild>
-                <div className="flex cursor-pointer items-center justify-between p-4 transition-colors duration-200 hover:bg-gray-50">
+                <div className="mx-3 flex h-11 cursor-pointer items-center justify-between">
                   <span className="font-medium text-gray-900">Getting started</span>
                   <ChevronDown
                     className={cn(
@@ -126,28 +157,31 @@ export const GettingStarted = () => {
                   />
                 </div>
               </CollapsibleTrigger>
-              <div className="space-y-3 p-4">
+              <div>
                 {company.checklistItems.map((item) => (
-                  <div key={item.key} className="flex items-center space-x-1 text-sm">
+                  <SidebarMenuButton
+                    key={item.key}
+                    className="flex h-9 items-center space-x-1 text-sm"
+                    onClick={() => {
+                      if (!item.completed && pathname !== getItemHref(item.key)) {
+                        router.push(getItemHref(item.key));
+                      }
+                    }}
+                  >
                     <div
                       className={cn(
-                        "flex h-4 w-4 items-center justify-center rounded-full border-2 transition-colors duration-200",
+                        "flex h-4 w-4 items-center justify-center rounded-full border-2",
                         item.completed ? "border-blue-500 bg-blue-500" : "border-gray-300 bg-white",
                       )}
                     >
                       {item.completed ? <CheckIcon /> : null}
                     </div>
                     {!item.completed ? (
-                      <Link
-                        href={getItemHref(item.key)}
-                        className="text-gray-900 transition-colors duration-200 hover:text-blue-600 hover:underline"
-                      >
-                        {item.title}
-                      </Link>
+                      <span className="text-left text-gray-900 hover:text-blue-600">{item.title}</span>
                     ) : (
                       <span className="text-gray-400 line-through">{item.title}</span>
                     )}
-                  </div>
+                  </SidebarMenuButton>
                 ))}
               </div>
             </div>

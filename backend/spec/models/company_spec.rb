@@ -59,47 +59,149 @@ RSpec.describe Company do
   end
 
   describe "checklist functionality" do
-    let(:company) { create(:company) }
+    let(:company) { create(:company, :without_bank_account) }
 
     describe "#checklist_items" do
-      it "returns all checklist items with completion status" do
-        items = company.checklist_items
+      context "for company administrators" do
+        let(:admin) { create(:company_administrator, company: company) }
 
-        expect(items).to have_attributes(size: 3)
-        expect(items.map { |item| item[:key] }).to contain_exactly(
-          "add_bank_account", "invite_contractor", "send_first_payment"
-        )
-        expect(items.all? { |item| item[:completed] == false }).to be true
+        it "returns admin checklist items with completion status" do
+          items = company.checklist_items(admin)
+
+          expect(items).to have_attributes(size: 3)
+          expect(items.map { |item| item[:key] }).to contain_exactly(
+            "add_bank_account", "invite_contractor", "send_first_payment"
+          )
+          expect(items.all? { |item| item[:completed] == false }).to be true
+        end
+
+        it "shows completed items when conditions are met" do
+          create(:company_stripe_account, company: company, status: "ready")
+          company.reload
+
+          items = company.checklist_items(admin)
+          bank_account_item = items.find { |item| item[:key] == "add_bank_account" }
+
+          expect(bank_account_item[:completed]).to be true
+          expect(items.select { |item| item[:completed] }.size).to eq(1)
+        end
+
+        it "marks all admin items as completed when conditions are met" do
+          create(:company_stripe_account, company: company, status: "ready")
+          contractor = create(:company_worker, company: company)
+          invoice = create(:invoice, company: company, user: contractor.user)
+          create(:payment, invoice: invoice, status: "succeeded")
+          company.reload
+
+          items = company.checklist_items(admin)
+          expect(items.all? { |item| item[:completed] }).to be true
+        end
       end
 
-      it "shows completed items when conditions are met" do
-        create(:company_stripe_account, company: company, status: "ready")
+      context "for company workers" do
+        let(:worker) { create(:company_worker, without_contract: true, company: company, user: create(:user, without_bank_account: true)) }
 
-        items = company.checklist_items
-        bank_account_item = items.find { |item| item[:key] == "add_bank_account" }
+        it "returns worker checklist items with completion status" do
+          items = company.checklist_items(worker)
 
-        expect(bank_account_item[:completed]).to be true
-        expect(items.select { |item| item[:completed] }.size).to eq(1)
+          expect(items).to have_attributes(size: 3)
+          expect(items.map { |item| item[:key] }).to contain_exactly(
+            "fill_tax_information", "add_payout_information", "sign_contract"
+          )
+          expect(items.all? { |item| item[:completed] == false }).to be true
+        end
+
+        it "marks tax information as completed when confirmed" do
+          worker.user.compliance_info.update!(tax_information_confirmed_at: Time.current)
+
+          items = company.checklist_items(worker)
+          tax_item = items.find { |item| item[:key] == "fill_tax_information" }
+
+          expect(tax_item[:completed]).to be true
+        end
+
+        it "marks payout information as completed when bank account is present" do
+          create(:wise_recipient, user: worker.user, used_for_invoices: true)
+
+          items = company.checklist_items(worker)
+          payout_item = items.find { |item| item[:key] == "add_payout_information" }
+
+          expect(payout_item[:completed]).to be true
+        end
+
+        it "marks contract as completed when signed" do
+          create(:document, company: company, document_type: :consulting_contract, signatories: [worker.user])
+
+          items = company.checklist_items(worker)
+          contract_item = items.find { |item| item[:key] == "sign_contract" }
+
+          expect(contract_item[:completed]).to be true
+        end
+      end
+
+      context "for other user types" do
+        let(:other_user) { create(:user) }
+
+        it "returns empty array for non-company users" do
+          items = company.checklist_items(other_user)
+          expect(items).to be_empty
+        end
       end
     end
 
     describe "#checklist_completion_percentage" do
-      it "returns 0 when no items are completed" do
-        expect(company.checklist_completion_percentage).to eq(0)
+      context "for company administrators" do
+        let(:admin) { create(:company_administrator, company: company) }
+
+        it "returns 0 when no items are completed" do
+          expect(company.checklist_completion_percentage(admin)).to eq(0)
+        end
+
+        it "returns correct percentage when some items are completed" do
+          create(:company_stripe_account, company: company, status: "ready")
+          company.reload
+          expect(company.checklist_completion_percentage(admin)).to eq(33)
+        end
+
+        it "returns 100 when all items are completed" do
+          create(:company_stripe_account, company: company, status: "ready")
+          contractor = create(:company_worker, company: company)
+          invoice = create(:invoice, company: company, user: contractor.user)
+          create(:payment, invoice: invoice, status: "succeeded")
+          company.reload
+
+          expect(company.checklist_completion_percentage(admin)).to eq(100)
+        end
       end
 
-      it "returns correct percentage when some items are completed" do
-        create(:company_stripe_account, company: company, status: "ready")
-        expect(company.checklist_completion_percentage).to eq(33)
+      context "for company workers" do
+        let(:worker) { create(:company_worker, without_contract: true, company: company, user: create(:user, without_bank_account: true)) }
+
+        it "returns 0 when no items are completed" do
+          expect(company.checklist_completion_percentage(worker)).to eq(0)
+        end
+
+        it "returns correct percentage when some items are completed" do
+          worker.user.compliance_info.update!(tax_information_confirmed_at: Time.current)
+
+          expect(company.checklist_completion_percentage(worker)).to eq(33)
+        end
+
+        it "returns 100 when all worker items are completed" do
+          worker.user.compliance_info.update!(tax_information_confirmed_at: Time.current)
+          create(:wise_recipient, user: worker.user, used_for_invoices: true)
+          create(:document, company: company, document_type: :consulting_contract, signatories: [worker.user])
+
+          expect(company.checklist_completion_percentage(worker)).to eq(100)
+        end
       end
 
-      it "returns 100 when all items are completed" do
-        create(:company_stripe_account, company: company, status: "ready")
-        contractor = create(:company_worker, company: company)
-        invoice = create(:invoice, company: company, user: contractor.user)
-        create(:payment, invoice: invoice, status: "succeeded")
+      context "for other user types" do
+        let(:other_user) { create(:user) }
 
-        expect(company.checklist_completion_percentage).to eq(100)
+        it "returns 0 for non-company users" do
+          expect(company.checklist_completion_percentage(other_user)).to eq(0)
+        end
       end
     end
   end

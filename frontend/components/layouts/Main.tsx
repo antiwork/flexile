@@ -50,6 +50,7 @@ import { useIsActionable } from "@/app/invoices";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { navLinks as equityNavLinks } from "@/app/equity";
 import { GettingStarted } from "@/components/GettingStarted";
+import { storageKeys } from "@/models/constants";
 
 export default function MainLayout({
   children,
@@ -146,11 +147,17 @@ export default function MainLayout({
                     </SidebarMenuButton>
                   </SignOutButton>
                 </SidebarMenuItem>
-                {user.currentCompanyId ? <GettingStarted /> : null}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
+        <SidebarGroup className="mt-auto px-0 py-0">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {user.currentCompanyId && (user.roles.administrator || user.roles.worker) ? <GettingStarted /> : null}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </Sidebar>
       <SidebarInset>
         <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
@@ -220,7 +227,7 @@ const NavLinks = () => {
   const updatesPath = company.routes.find((route) => route.label === "Updates")?.name;
   const equityLinks = equityNavLinks(user, company);
 
-  const [isOpen, setIsOpen] = React.useState(() => localStorage.getItem("equity-menu-state") === "open");
+  const [isOpen, setIsOpen] = React.useState(() => localStorage.getItem(storageKeys.EQUITY_MENU_STATE) === "open");
 
   return (
     <SidebarMenu>
@@ -277,7 +284,7 @@ const NavLinks = () => {
           open={isOpen}
           onOpenChange={(state) => {
             setIsOpen(state);
-            localStorage.setItem("equity-menu-state", state ? "open" : "closed");
+            localStorage.setItem(storageKeys.EQUITY_MENU_STATE, state ? "open" : "closed");
           }}
           className="group/collapsible"
         >
