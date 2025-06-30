@@ -287,6 +287,8 @@ test.describe("Invoices admin flow", () => {
       await page.getByRole("button", { name: "Reject selected" }).click();
 
       await page.getByRole("button", { name: "Yes, reject" }).click();
+      await page.getByRole("button", { name: "Filter" }).click();
+      await page.getByRole("menuitem", { name: "Clear all filters" }).click();
       await expect(page.getByText("Rejected")).toHaveCount(2);
 
       const updatedInvoices = await db.query.invoices.findMany({ where: eq(invoices.companyId, company.id) });
@@ -311,6 +313,8 @@ test.describe("Invoices admin flow", () => {
         .getByLabel("Explain why the invoice was rejected and how to fix it (optional)")
         .fill("Invoice issue date mismatch");
       await page.getByRole("button", { name: "Yes, reject" }).click();
+      await page.getByRole("button", { name: "Filter" }).click();
+      await page.getByRole("menuitem", { name: "Clear all filters" }).click();
       await expect(page.getByText("Rejected")).toHaveCount(2);
 
       const updatedInvoices = await db.query.invoices.findMany({ where: eq(invoices.companyId, company.id) });

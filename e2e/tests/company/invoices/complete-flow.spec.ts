@@ -115,6 +115,9 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(thirdRow).toContainText("Awaiting approval");
     await expect(thirdRow.getByRole("button", { name: "Pay now" })).toBeVisible();
 
+    await expect(thirdRow).not.toBeVisible();
+    await page.getByRole("button", { name: "Filter" }).click();
+    await page.getByRole("menuitem", { name: "Clear all filters" }).click();
     await thirdRow.getByRole("button", { name: "Pay now" }).click();
     await expect(thirdRow).toContainText("Payment scheduled");
     await expect(openInvoicesBadge).toContainText("2");
