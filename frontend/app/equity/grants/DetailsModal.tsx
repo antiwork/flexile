@@ -10,7 +10,7 @@ import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatDate, humanizeMonths } from "@/utils/time";
-import { relationshipDisplayNames } from ".";
+import { optionGrantTypeDisplayNames, relationshipDisplayNames } from ".";
 
 type EquityGrant = RouterOutput["equityGrants"]["list"][number];
 
@@ -44,10 +44,23 @@ const DetailsModal = ({
           <SheetTitle>{`${equityGrant.periodEndedAt.getFullYear()} Stock option grant`}</SheetTitle>
         </SheetHeader>
         <div className="grid gap-4 p-4 pt-0 not-print:overflow-y-auto">
-          <Item label="Total options granted" value={equityGrant.numberOfShares.toLocaleString()} />
-          <Item label="Vested" value={equityGrant.vestedShares.toLocaleString()} />
+          <Item
+            label="Total options granted"
+            value={`${equityGrant.numberOfShares.toLocaleString()} (${optionGrantTypeDisplayNames[equityGrant.optionGrantType]})`}
+          />
           <Item label="Unvested" value={equityGrant.unvestedShares.toLocaleString()} />
-          <Item label="Forfeits if unvested on" value={formatDate(equityGrant.periodEndedAt)} />
+          {equityGrant.exercisedShares > 0 ? (
+            <Item label="Options exercised" value={equityGrant.exercisedShares.toLocaleString()} />
+          ) : null}
+          {equityGrant.forfeitedShares > 0 ? (
+            <Item label="Options forfeited" value={equityGrant.forfeitedShares.toLocaleString()} />
+          ) : null}
+          {equityGrant.vestedShares > 0 ? (
+            <Item label="Vested" value={equityGrant.vestedShares.toLocaleString()} />
+          ) : null}
+          {equityGrant.unvestedShares > 0 ? (
+            <Item label="Forfeits if unvested on" value={formatDate(equityGrant.periodEndedAt)} />
+          ) : null}
           <Item
             label="Status"
             value={
@@ -76,12 +89,14 @@ const DetailsModal = ({
             value={`${formatMoney(equityGrant.exercisePriceUsd, { precise: true })} per share`}
           />
           <Item label="Vested options" value={equityGrant.vestedShares.toLocaleString()} />
-          <Item
-            label="Exercise cost"
-            value={formatMoney(new Decimal(equityGrant.exercisePriceUsd).mul(equityGrant.vestedShares), {
-              precise: true,
-            })}
-          />
+          {equityGrant.vestedShares > 0 ? (
+            <Item
+              label="Exercise cost"
+              value={formatMoney(new Decimal(equityGrant.exercisePriceUsd).mul(equityGrant.vestedShares), {
+                precise: true,
+              })}
+            />
+          ) : null}
           <Separator />
 
           <h3 className="text-md font-medium">Post-termination exercise windows</h3>
