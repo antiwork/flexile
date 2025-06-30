@@ -87,9 +87,10 @@ export const companyInviteLinksRouter = createRouter({
       body: JSON.stringify({ token: input.token }),
       headers: { "Content-Type": "application/json", ...ctx.headers },
     });
+
     if (!response.ok) {
-      const json = z.object({ error: z.string() }).parse(await response.json());
-      throw new TRPCError({ code: "BAD_REQUEST", message: json.error });
+      const { error_message } = z.object({ error_message: z.string() }).parse(await response.json());
+      throw new TRPCError({ code: "BAD_REQUEST", message: error_message });
     }
 
     const data = await response.json();

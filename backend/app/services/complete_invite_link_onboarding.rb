@@ -19,7 +19,7 @@ class CompleteInviteLinkOnboarding
     if company_worker.errors.blank?
       CompanyWorkerMailer.notify_invite_accepted(@user.invited_by_id, company_worker.id).deliver_later
     else
-      error = company_worker.errors.full_messages.any? ? company_worker.errors.full_messages.join(". "): "Error saving information"
+      error = company_worker.errors.full_messages.any? ? company_worker.errors.full_messages.join(". ") : "Error saving information"
     end
     puts "Error after updating company worker: ###>> #{error}" if error.present?
 
