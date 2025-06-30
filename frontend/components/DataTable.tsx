@@ -77,6 +77,14 @@ export const useTable = <T extends RowData>(
     autoResetPageIndex: false, // work around https://github.com/TanStack/table/issues/5026
     ...options,
     getCoreRowModel: getCoreRowModel(),
+    defaultColumn: {
+      filterFn: (row, columnId, filterValue, addMeta) => {
+        const fn = row._getAllCellsByColumnId()[columnId]?.column.getAutoFilterFn();
+        if (!fn) return true;
+        const filter = (value: unknown) => fn(row, columnId, value, addMeta);
+        return Array.isArray(filterValue) ? filterValue.some(filter) : filter(filterValue);
+      },
+    },
   });
 
 interface TableProps<T> {
