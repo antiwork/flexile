@@ -151,13 +151,15 @@ export default function MainLayout({
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
-        <SidebarGroup className="mt-auto px-0 py-0">
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {user.currentCompanyId && (user.roles.administrator || user.roles.worker) ? <GettingStarted /> : null}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {user.currentCompanyId && (user.roles.administrator || user.roles.worker) ? (
+          <SidebarGroup className="mt-auto px-0 py-0">
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <GettingStarted />
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ) : null}
       </Sidebar>
       <SidebarInset>
         <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
