@@ -15,7 +15,7 @@ import { optionGrantTypeDisplayNames, relationshipDisplayNames } from ".";
 type EquityGrant = RouterOutput["equityGrants"]["list"][number];
 
 const Item = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex justify-between gap-4">
+  <div className="flex justify-between gap-4 px-6">
     <div className="text-muted-foreground text-sm">{label}</div>
     <div className="text-right text-sm">{value}</div>
   </div>
@@ -43,7 +43,7 @@ const DetailsModal = ({
         <SheetHeader>
           <SheetTitle>{`${equityGrant.periodEndedAt.getFullYear()} Stock option grant`}</SheetTitle>
         </SheetHeader>
-        <div className="grid gap-4 p-4 pt-0 not-print:overflow-y-auto">
+        <div className="grid gap-4 pb-6 not-print:overflow-y-auto">
           <Item
             label="Total options granted"
             value={`${equityGrant.numberOfShares.toLocaleString()} (${optionGrantTypeDisplayNames[equityGrant.optionGrantType]})`}
@@ -77,13 +77,13 @@ const DetailsModal = ({
           />
           <Separator />
 
-          <h3 className="text-md font-medium">Exercise key dates</h3>
+          <h3 className="text-md px-6 font-medium">Exercise key dates</h3>
           <Item label="Grant date" value={formatDate(equityGrant.issuedAt)} />
           <Item label="Accepted on" value={equityGrant.acceptedAt ? formatDate(equityGrant.acceptedAt) : "N/A"} />
           <Item label="Expires on" value={formatDate(equityGrant.expiresAt)} />
           <Separator />
 
-          <h3 className="text-md font-medium">Exercise details</h3>
+          <h3 className="text-md px-6 font-medium">Exercise details</h3>
           <Item
             label="Exercise price"
             value={`${formatMoney(equityGrant.exercisePriceUsd, { precise: true })} per share`}
@@ -99,7 +99,7 @@ const DetailsModal = ({
           ) : null}
           <Separator />
 
-          <h3 className="text-md font-medium">Post-termination exercise windows</h3>
+          <h3 className="text-md px-6 font-medium">Post-termination exercise windows</h3>
           <Item label="Voluntary" value={humanizeMonths(equityGrant.voluntaryTerminationExerciseMonths)} />
           <Item label="Involuntary" value={humanizeMonths(equityGrant.involuntaryTerminationExerciseMonths)} />
           <Item label="With cause" value={humanizeMonths(equityGrant.terminationWithCauseExerciseMonths)} />
@@ -108,7 +108,7 @@ const DetailsModal = ({
           <Item label="Retirement" value={humanizeMonths(equityGrant.retirementExerciseMonths)} />
           <Separator />
 
-          <h3 className="text-md font-medium">Compliance details</h3>
+          <h3 className="text-md px-6 font-medium">Compliance details</h3>
           <Item
             label="Board approved on"
             value={equityGrant.boardApprovalDate ? formatDate(equityGrant.boardApprovalDate) : "N/A"}
