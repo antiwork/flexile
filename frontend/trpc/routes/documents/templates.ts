@@ -8,7 +8,7 @@ import jwt from "jsonwebtoken";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
-import { DocumentTemplateType, DocumentType } from "@/db/enums";
+import { DocumentTemplateType, DocumentType, PayRateType } from "@/db/enums";
 import { companyContractors, documents, documentTemplates, equityAllocations, users } from "@/db/schema";
 import env from "@/env";
 import { countries } from "@/models/constants";
@@ -160,7 +160,7 @@ export const templatesRouter = createRouter({
         __startDate: startDate.toLocaleString(),
         __electionYear: startDate.getFullYear().toString(),
         __payRate: contractor.payRateInSubunits
-          ? `${(contractor.payRateInSubunits / 100).toLocaleString()} per ${contractor.unitOfWork}`
+          ? `${(contractor.payRateInSubunits / 100).toLocaleString()} per ${contractor.payRateType === PayRateType.Hourly ? "hour" : "project"}`
           : "",
       });
       if (equityPercentage) values.__signerEquityPercentage = equityPercentage.toString();

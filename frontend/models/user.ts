@@ -65,7 +65,7 @@ export const currentUserSchema = z.object({
         id: z.string(),
         hasDocuments: z.boolean(),
         endedAt: z.string().nullable(),
-        unitOfWork: z.string(),
+        payRateType: z.enum(["hourly", "project_based"]),
         role: z.string(),
         payRateInSubunits: z.number().nullable(),
       })

@@ -83,7 +83,6 @@ test.describe("New Contractor", () => {
     });
     const { email } = await fillForm(page);
     await page.getByLabel("Role").fill("Hourly Role 1");
-    await page.getByLabel("Specify a default amount").check({ force: true });
     await page.getByLabel("Rate").fill("99");
 
     await mockForm(page);
@@ -123,10 +122,8 @@ test.describe("New Contractor", () => {
     await mockForm(page);
     const { email } = await fillForm(page);
     await page.getByLabel("Role").fill("Project-based Role");
-    await page.getByLabel("Specify a default amount").check({ force: true });
     await page.getByRole("radio", { name: "Custom" }).click({ force: true });
     await page.getByLabel("Rate").fill("1000");
-    await page.getByLabel("Unit of work").fill("project");
 
     await page.getByRole("button", { name: "Send invite" }).click();
     await withinModal(

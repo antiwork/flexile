@@ -103,7 +103,7 @@ const Edit = () => {
   const [errorField, setErrorField] = useState<string | null>(null);
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
-  const isHourly = user.roles.worker.unitOfWork === "hour";
+  const isHourly = user.roles.worker.payRateType === "hourly";
 
   const { data } = useSuspenseQuery({
     queryKey: ["invoice", id],

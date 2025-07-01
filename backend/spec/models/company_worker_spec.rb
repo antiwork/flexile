@@ -17,6 +17,7 @@ RSpec.describe CompanyWorker do
     it { is_expected.to validate_uniqueness_of(:user_id).scoped_to(:company_id) }
     it { is_expected.to validate_presence_of(:started_at) }
     it { is_expected.to validate_numericality_of(:pay_rate_in_subunits).is_greater_than(0).only_integer }
+    it { is_expected.to validate_inclusion_of(:pay_rate_type).in_array(described_class.pay_rate_types.values) }
   end
 
   describe "scopes" do
@@ -131,11 +132,14 @@ RSpec.describe CompanyWorker do
         user = create(:user, country_code: "AR", citizenship_country_code: "AR")
         company_worker_7 = create(:company_worker, company:, user:)
         create(:invoice, :paid, company_worker: company_worker_7, company:, total_amount_in_usd_cents: 1000_00)
+
+        # Project-based worker that should be included now that salary exclusion is removed
+        create(:invoice, :paid, company_worker: company_worker_8, company:, total_amount_in_usd_cents: 1000_00)
       end
 
       it "returns the list of company_workers who are eligible for 1099-NEC" do
         expect(described_class.with_required_tax_info_for(tax_year:)).to match_array(
-          [company_worker_1, company_worker_2]
+          [company_worker_1, company_worker_2, company_worker_8]
         )
       end
     end

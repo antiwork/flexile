@@ -1,9 +1,9 @@
 <h1 class="text-3xl leading-9 font-bold">
   <% inviter = url ? user.invited_by.name : company.name %>
   <% if contractor.contract_signed_elsewhere %>
-    <%= "#{inviter} has invited you to join Flexile to get set up for payment." %>
+    <%= "#{inviter} has invited you to join Flexile to get set up for payment#{contractor.hourly? ? " and track your hours" : nil}." %>
   <% else %>
-    <%= "#{inviter} has invited you to join Flexile to sign your contract and get paid." %>
+    <%= "#{inviter} has invited you to join Flexile to sign your contract#{contractor.hourly? ? ", track your hours," : nil} and get paid." %>
   <% end %>
 </h1>
 <p class="mb-4">
@@ -20,7 +20,7 @@
     <dt>Compensation</dt>
     <dd>
       <b>
-        <%= "#{money_format(contractor.pay_rate_in_subunits / 100.0)} per #{contractor.unit_of_work}" %>
+        <%= "#{money_format(contractor.pay_rate_in_subunits / 100.0)} per #{contractor.hourly? ? "hour" : "project"}" %>
       </b>
     </dd>
   <% end %>

@@ -78,9 +78,9 @@ class UserPresenter
         id: worker.external_id,
         hasDocuments: has_documents,
         endedAt: worker.ended_at,
+        payRateType: worker.pay_rate_type,
         role: worker.role,
         payRateInSubunits: worker.pay_rate_in_subunits,
-        unitOfWork: worker.unit_of_work,
       }
     end
 

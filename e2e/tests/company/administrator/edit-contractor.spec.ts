@@ -76,7 +76,6 @@ test.describe("Edit contractor", () => {
     await expect(page.getByLabel("Legal name")).toBeDisabled();
 
     await page.getByLabel("Role").fill("Stuff-doer");
-    await page.getByLabel("Specify a default amount").check({ force: true });
     await page.getByLabel("Rate").fill("107");
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByRole("button", { name: "Sign now" })).toBeVisible();
@@ -115,9 +114,7 @@ test.describe("Edit contractor", () => {
 
     await page.getByLabel("Role").fill("Stuff-doer");
     await page.getByRole("radio", { name: "Custom" }).click({ force: true });
-    await page.getByLabel("Specify a default amount").check({ force: true });
     await page.getByLabel("Rate").fill("2000");
-    await page.getByLabel("Unit of work").fill("Thing");
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByRole("button", { name: "Sign now" })).toBeVisible();
 
@@ -127,6 +124,5 @@ test.describe("Edit contractor", () => {
     assert(updatedContractor !== undefined);
     expect(updatedContractor.role).toBe("Stuff-doer");
     expect(updatedContractor.payRateInSubunits).toBe(200000);
-    expect(updatedContractor.unitOfWork).toBe("Thing");
   });
 });

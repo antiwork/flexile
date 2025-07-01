@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { MutationStatusButton } from "@/components/MutationButton";
 import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
-import { DocumentTemplateType, trpc } from "@/trpc/client";
+import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
 import { UserPlus, Users } from "lucide-react";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
@@ -44,8 +44,8 @@ export default function PeoplePage() {
   const form = useForm({
     defaultValues: {
       ...(lastContractor ? { role: lastContractor.role } : {}),
+      payRateType: lastContractor?.payRateType ?? PayRateType.Hourly,
       payRateInSubunits: lastContractor?.payRateInSubunits ?? null,
-      unitOfWork: lastContractor?.unitOfWork ?? "hour",
       startDate: today(getLocalTimeZone()),
       contractSignedElsewhere: false,
     },

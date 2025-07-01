@@ -457,7 +457,7 @@ const QuickInvoicesSection = () => {
   const trpcUtils = trpc.useUtils();
   if (!user.roles.worker) return null;
   const payRateInSubunits = user.roles.worker.payRateInSubunits;
-  const isHourly = user.roles.worker.unitOfWork === "hour";
+  const isHourly = user.roles.worker.payRateType === "hourly";
 
   const { canSubmitInvoices } = useCanSubmitInvoices();
   const form = useForm({

@@ -5,7 +5,7 @@ import { createUpdateSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
-import { DocumentTemplateType, DocumentType } from "@/db/enums";
+import { DocumentTemplateType, DocumentType, PayRateType } from "@/db/enums";
 import {
   companyContractors,
   documents,
@@ -46,7 +46,7 @@ export const contractorsRouter = createRouter({
         limit: input.limit,
       });
       const workers = rows.map((worker) => ({
-        ...pick(worker, ["startedAt", "payRateInSubunits", "endedAt", "role", "unitOfWork"]),
+        ...pick(worker, ["startedAt", "payRateInSubunits", "endedAt", "role", "payRateType"]),
         id: worker.externalId,
         user: {
           ...simpleUser(worker.user),
@@ -69,7 +69,7 @@ export const contractorsRouter = createRouter({
     });
     if (!contractor) throw new TRPCError({ code: "NOT_FOUND" });
     return {
-      ...pick(contractor, ["payRateInSubunits", "endedAt", "role", "unitOfWork"]),
+      ...pick(contractor, ["payRateInSubunits", "endedAt", "role", "payRateType"]),
       id: contractor.externalId,
       equityPercentage: contractor.equityAllocations[0]?.equityPercentage ?? 0,
     };
@@ -80,7 +80,7 @@ export const contractorsRouter = createRouter({
         email: z.string(),
         startedAt: z.string(),
         payRateInSubunits: z.number().nullable(),
-        unitOfWork: z.string(),
+        payRateType: z.nativeEnum(PayRateType),
         role: z.string(),
         documentTemplateId: z.string(),
         contractSignedElsewhere: z.boolean().default(false),
@@ -109,7 +109,7 @@ export const contractorsRouter = createRouter({
             email: input.email,
             started_at: input.startedAt,
             pay_rate_in_subunits: input.payRateInSubunits,
-            unit_of_work: input.unitOfWork,
+            pay_rate_type: input.payRateType === PayRateType.Hourly ? "hourly" : "project_based",
             role: input.role,
             contract_signed_elsewhere: input.contractSignedElsewhere,
           },
@@ -135,8 +135,8 @@ export const contractorsRouter = createRouter({
   update: companyProcedure
     .input(
       createUpdateSchema(companyContractors)
-        .pick({ payRateInSubunits: true, role: true, unitOfWork: true })
-        .extend({ id: z.string() }),
+        .pick({ payRateInSubunits: true, role: true, payRateType: true })
+        .extend({ id: z.string(), payRateType: z.nativeEnum(PayRateType).optional() }),
     )
     .mutation(async ({ ctx, input }) =>
       db.transaction(async (tx) => {
@@ -148,7 +148,7 @@ export const contractorsRouter = createRouter({
         if (!contractor) throw new TRPCError({ code: "NOT_FOUND" });
         await tx
           .update(companyContractors)
-          .set(pick(input, ["payRateInSubunits", "role", "unitOfWork"]))
+          .set(pick(input, ["payRateInSubunits", "role", "payRateType"]))
           .where(eq(companyContractors.id, contractor.id));
         let documentId: bigint | null = null;
         if (input.payRateInSubunits != null && input.payRateInSubunits !== contractor.payRateInSubunits) {

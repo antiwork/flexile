@@ -8,6 +8,7 @@ FactoryBot.define do
     role { "Role" }
     started_at { Date.today }
     pay_rate_in_subunits { 60_00 }
+    pay_rate_type { CompanyWorker.pay_rate_types[:hourly] }
 
     trait :inactive do
       ended_at { 1.day.ago }
@@ -15,7 +16,7 @@ FactoryBot.define do
 
     trait :project_based do
       pay_rate_in_subunits { 1_000_00 }
-      unit_of_work { "project" }
+      pay_rate_type { CompanyWorker.pay_rate_types[:project_based] }
     end
 
     transient do
