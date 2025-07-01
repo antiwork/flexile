@@ -22,6 +22,10 @@ class CreateInvestorsAndDividends
   private
     attr_reader :company, :csv_data, :dividend_date, :is_first_round, :is_return_of_capital
 
+    def clean_currency(value)
+      value&.gsub(/[^0-9.]/, "")&.to_d
+    end
+
     def process_sheet
       @data = {}
       puts "Processing CSV data"
@@ -50,8 +54,8 @@ class CreateInvestorsAndDividends
           investment: {
             round: 1,
             date: row["investment_date"],
-            amount: row["investment_amount"]&.to_d,
-            dividend_amount: row["dividend_amount"]&.to_d,
+            amount: clean_currency(row["investment_amount"]),
+            dividend_amount: clean_currency(row["dividend_amount"]),
           },
         }
       end
@@ -65,7 +69,7 @@ class CreateInvestorsAndDividends
 
       @data.each do |email, info|
         puts "Creating investor #{email}"
-        investment_amount_in_cents = (info[:investment][:amount] * 100.to_d).to_i
+        investment_amount_in_cents = (info.dig(:investment, :amount).to_d * 100.to_d).to_i
 
         if User.where(email:).exists?
           if User.find_by(email:).company_investors.where(company:).exists?

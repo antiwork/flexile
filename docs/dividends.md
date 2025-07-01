@@ -48,6 +48,8 @@ service = CreateInvestorsAndDividends.new(
   company_id: 1823,
   csv_data: data,
   dividend_date: Date.new(2025, 6, 4),
+  is_first_round: true, # defaults to false
+  is_return_of_capital: true # defaults to false
 )
 service.process
 ```
@@ -192,14 +194,14 @@ fees.sum / 100.0 # 5490.21
 #### Pull Funds via ACH using Stripe
 
 ```ruby
-company = Company.find(1823)
+company = Company.find(2699)
 stripe_setup_intent = company.bank_account.stripe_setup_intent
 intent = Stripe::PaymentIntent.create({
   payment_method_types: ["us_bank_account"],
   payment_method: stripe_setup_intent.payment_method,
   customer: stripe_setup_intent.customer,
   confirm: true,
-  amount: 292_356_93, # set manually
+  amount: 695_009_30, # set manually
   currency: "USD",
   expand: ["latest_charge"],
   capture_method: "automatic",
@@ -207,6 +209,8 @@ intent = Stripe::PaymentIntent.create({
 ```
 
 #### Move Money from Stripe to Wise
+
+Once the money is in our Stripe account, pull into our Wise account.
 
 ```ruby
 payout = Stripe::Payout.create({

@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { TooltipProvider } from "@/components/Tooltip";
 import { TRPCProvider } from "@/trpc/client";
 import { HelperWrapper } from "@/components/HelperWrapper";
 
@@ -72,9 +71,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         >
           <HelperWrapper>
             <TRPCProvider>
-              <NuqsAdapter>
-                <TooltipProvider delayDuration={0}>{children}</TooltipProvider>
-              </NuqsAdapter>
+              <NuqsAdapter>{children}</NuqsAdapter>
             </TRPCProvider>
           </HelperWrapper>
         </ClerkProvider>
