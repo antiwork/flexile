@@ -1,26 +1,25 @@
 "use client";
 
-import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useParams, useRouter } from "next/navigation";
 
 import { Building2Icon } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { useUserStore } from "@/global";
 import { MutationStatusButton } from "@/components/MutationButton";
-import { INVITATION_TOKEN_COOKIE_MAX_AGE, INVITATION_TOKEN_COOKIE_NAME } from "@/models/constants";
-import { trpc } from "@/trpc/client";
 import SimpleLayout from "@/components/layouts/Simple";
+import { trpc } from "@/trpc/client";
+import { request } from "@/utils/request";
+import { company_switch_path } from "@/utils/routes";
+
+import { INVITATION_TOKEN_COOKIE_MAX_AGE, INVITATION_TOKEN_COOKIE_NAME } from "@/models/constants";
 
 export default function AcceptInvitationPage() {
   const { token } = useParams();
-  const searchParams = useSearchParams();
   const router = useRouter();
 
-  const user = useUserStore((state) => state.user);
-  const hasAcceptedRef = useRef(false);
+  const { user, pending } = useUserStore();
   const safeToken = typeof token === "string" ? token : "";
-
   const {
     data: inviteData,
     isLoading,
@@ -31,12 +30,21 @@ export default function AcceptInvitationPage() {
 
   const queryClient = useQueryClient();
 
+  const switchCompany = async (companyId: string) => {
+    useUserStore.setState((state) => ({ ...state, pending: true }));
+    await request({
+      method: "POST",
+      url: company_switch_path(companyId),
+      accept: "json",
+    });
+    await queryClient.resetQueries({ queryKey: ["currentUser"] });
+    useUserStore.setState((state) => ({ ...state, pending: false }));
+  };
+
   const acceptInviteMutation = trpc.companyInviteLinks.accept.useMutation({
     onSuccess: async () => {
       document.cookie = `${INVITATION_TOKEN_COOKIE_NAME}=; path=/; max-age=0`;
-      await queryClient.resetQueries({ queryKey: ["currentUser"] });
-      useUserStore.setState((state) => ({ ...state, pending: false }));
-
+      switchCompany(inviteData?.company_id || "");
       router.push("/dashboard");
     },
   });
@@ -55,17 +63,6 @@ export default function AcceptInvitationPage() {
 
     acceptInviteMutation.mutate({ token: safeToken });
   };
-
-  useEffect(() => {
-    const shouldAccept =
-      searchParams?.get("accepted") === "true" && user && inviteData?.valid && !hasAcceptedRef.current;
-
-    if (shouldAccept) {
-      hasAcceptedRef.current = true;
-      handleAcceptClick();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, user, inviteData]);
 
   if (isLoading) {
     return (
@@ -116,10 +113,17 @@ export default function AcceptInvitationPage() {
             type="submit"
             mutation={acceptInviteMutation}
             loadingText="Accepting..."
+            disabled={pending}
           >
             Accept Invitation
           </MutationStatusButton>
         </form>
+        {pending && (
+          <div className="mt-4 flex items-center justify-center">
+            <div className="mr-2 h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-black" />
+            <span className="text-sm text-gray-700">Switching company...</span>
+          </div>
+        )}
         {acceptInviteMutation.isError && (
           <div className="mt-2 text-sm text-red-600">{acceptInviteMutation.error?.message}</div>
         )}

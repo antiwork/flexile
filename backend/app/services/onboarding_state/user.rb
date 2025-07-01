@@ -18,6 +18,10 @@ class OnboardingState::User
       OnboardingState::Worker.new(user:, company:).redirect_path
     elsif user.company_investor_for?(company)
       OnboardingState::Investor.new(user:, company:).redirect_path
+    elsif user.company_worker_invitation_for?(company)
+      accept_result = accept_company_invite_link
+      return OnboardingState::Worker.new(user:, company:).redirect_path if accept_result[:success]
+      "/invite/#{user.signup_invite_link.token}"
     else
       # User has no company roles - create a company and make them administrator
       create_company_for_user
@@ -36,5 +40,9 @@ class OnboardingState::User
         user.company_administrators.create!(company: company)
         company
       end
+    end
+
+    def accept_company_invite_link
+      AcceptCompanyInviteLink.new(user:, token: user.signup_invite_link.token).perform
     end
 end

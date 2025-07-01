@@ -188,11 +188,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_25_204538) do
   create_table "company_invite_links", force: :cascade do |t|
     t.bigint "company_id", null: false
     t.bigint "inviter_id", null: false
+    t.bigint "document_template_id"
     t.string "token", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["company_id", "inviter_id"], name: "index_company_invite_links_on_company_id_and_inviter_id", unique: true
+    t.index ["company_id", "inviter_id", "document_template_id"], name: "idx_on_company_id_inviter_id_document_template_id_ea816812b4"
     t.index ["company_id"], name: "index_company_invite_links_on_company_id"
+    t.index ["document_template_id"], name: "index_company_invite_links_on_document_template_id"
     t.index ["inviter_id"], name: "index_company_invite_links_on_inviter_id"
     t.index ["token"], name: "index_company_invite_links_on_token", unique: true
   end
@@ -1041,6 +1043,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_25_204538) do
     t.boolean "team_member", default: false, null: false
     t.boolean "sent_invalid_tax_id_email", default: false, null: false
     t.string "clerk_id"
+    t.bigint "signup_invite_link_id"
     t.index ["clerk_id"], name: "index_users_on_clerk_id", unique: true
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
@@ -1049,6 +1052,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_25_204538) do
     t.index ["invited_by_id"], name: "index_users_on_invited_by_id"
     t.index ["invited_by_type", "invited_by_id"], name: "index_users_on_invited_by"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.index ["signup_invite_link_id"], name: "index_users_on_signup_invite_link_id"
   end
 
   create_table "versions", force: :cascade do |t|
@@ -1121,5 +1125,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_25_204538) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "company_invite_links", "companies"
+  add_foreign_key "company_invite_links", "document_templates"
   add_foreign_key "company_invite_links", "users", column: "inviter_id"
+  add_foreign_key "users", "company_invite_links", column: "signup_invite_link_id"
 end

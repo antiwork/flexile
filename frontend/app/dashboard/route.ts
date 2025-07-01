@@ -6,12 +6,6 @@ import { internal_current_user_data_url } from "@/utils/routes";
 
 export async function GET(req: Request) {
   const host = assertDefined(req.headers.get("Host"));
-  const cookies = req.headers.get("cookie") ?? "";
-  const invitationTokenMatch = cookies.match(/invitation_token=([^;]+)/);
-  if (invitationTokenMatch) {
-    const token = invitationTokenMatch[1];
-    return redirect(`/invite/${token}?accepted=true`);
-  }
   const response = await fetch(internal_current_user_data_url({ host }), {
     headers: {
       cookie: req.headers.get("cookie") ?? "",

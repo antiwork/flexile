@@ -22,6 +22,7 @@ class AcceptCompanyInviteLink
       pay_rate_in_subunits: 1,
       hours_per_week: 1,
       started_at: Time.current,
+      contract_signed_elsewhere: invite_link.document_template_id.nil?,
       ended_at: nil
     )
     @user.invited_by = invite_link.inviter

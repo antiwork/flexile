@@ -14,7 +14,7 @@ import MainLayout from "@/components/layouts/Main";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { MutationStatusButton } from "@/components/MutationButton";
@@ -46,7 +46,6 @@ export default function PeoplePage() {
   const [workers, { refetch }] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id });
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showInviteLinkModal, setShowInviteLinkModal] = useState(false);
-  const [showResetLinkModal, setShowResetLinkModal] = useState(false);
 
   const lastContractor = workers[0];
 
@@ -79,17 +78,6 @@ export default function PeoplePage() {
       startedAt: formatISO(values.startDate.toDate(getLocalTimeZone())),
     });
   });
-
-  const resetInviteLinkMutation = trpc.companyInviteLinks.reset.useMutation({
-    onSuccess: async () => {
-      await trpcUtils.companyInviteLinks.get.invalidate({ companyId: company.id });
-      setShowResetLinkModal(false);
-      setShowInviteLinkModal(true);
-    },
-  });
-  const resetInviteLink = () => {
-    resetInviteLinkMutation.mutateAsync({ companyId: company.id });
-  };
 
   const columnHelper = createColumnHelper<(typeof workers)[number]>();
   const columns = useMemo(
@@ -248,35 +236,7 @@ export default function PeoplePage() {
           </Form>
         </DialogContent>
       </Dialog>
-      <InviteLinkModal
-        open={showInviteLinkModal}
-        onOpenChange={setShowInviteLinkModal}
-        showResetModal={setShowResetLinkModal}
-      />
-      <Dialog open={showResetLinkModal} onOpenChange={setShowResetLinkModal}>
-        <DialogContent className="md:mb-80">
-          <DialogHeader>
-            <DialogTitle>Reset Invite Link</DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              Resetting the link will deactivate the current invite. If you have already shared it, others may not be
-              able to join.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col">
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowResetLinkModal(false)}>
-                Cancel
-              </Button>
-              <MutationStatusButton mutation={resetInviteLinkMutation} type="button" onClick={resetInviteLink}>
-                Reset
-              </MutationStatusButton>
-            </div>
-            {resetInviteLinkMutation.isError ? (
-              <div className="text-red text-sm">{resetInviteLinkMutation.error.message}</div>
-            ) : null}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <InviteLinkModal open={showInviteLinkModal} onOpenChange={setShowInviteLinkModal} />
     </MainLayout>
   );
 }
