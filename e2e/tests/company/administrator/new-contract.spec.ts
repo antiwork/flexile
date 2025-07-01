@@ -114,7 +114,7 @@ test.describe("New Contractor", () => {
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
   });
 
-  test("allows inviting a contractor with a custom rate", async ({ page, next }) => {
+  test("allows inviting a project-based contractor", async ({ page, next }) => {
     const { mockForm } = mockDocuseal(next, {
       __payRate: "1,000 per project",
       __role: "Project-based Role",

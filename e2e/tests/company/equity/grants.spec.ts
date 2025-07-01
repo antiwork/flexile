@@ -37,9 +37,9 @@ test.describe("New Contractor", () => {
       equityPercentage: 50,
       locked: true,
     });
-    await companyContractorsFactory.createProjectBased({ companyId: company.id });
+    await companyContractorsFactory.createCustom({ companyId: company.id });
     const { user: projectBasedUser } = await usersFactory.create();
-    const { companyContractor: projectBasedContractor } = await companyContractorsFactory.createProjectBased({
+    const { companyContractor: projectBasedContractor } = await companyContractorsFactory.createCustom({
       companyId: company.id,
       userId: projectBasedUser.id,
     });

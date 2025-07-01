@@ -88,7 +88,7 @@ test.describe("Edit contractor", () => {
     expect(updatedContractor.payRateInSubunits).toBe(10700);
   });
 
-  test("allows specifying a custom rate", async ({ page, next }) => {
+  test("allows editing details of contractors with a custom rate", async ({ page, next }) => {
     const { company } = await companiesFactory.create();
     const { user: admin } = await usersFactory.create();
     await companyAdministratorsFactory.create({
@@ -113,7 +113,6 @@ test.describe("Edit contractor", () => {
     await page.getByRole("heading", { name: user.preferredName }).click();
 
     await page.getByLabel("Role").fill("Stuff-doer");
-    await page.getByRole("radio", { name: "Custom" }).click({ force: true });
     await page.getByLabel("Rate").fill("2000");
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByRole("button", { name: "Sign now" })).toBeVisible();
@@ -122,6 +121,7 @@ test.describe("Edit contractor", () => {
       where: eq(users.id, companyContractor.id),
     });
     assert(updatedContractor !== undefined);
+    expect(updatedContractor.payRateType).toBe(PayRateType.Custom);
     expect(updatedContractor.role).toBe("Stuff-doer");
     expect(updatedContractor.payRateInSubunits).toBe(200000);
   });

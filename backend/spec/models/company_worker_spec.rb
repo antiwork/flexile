@@ -101,6 +101,11 @@ RSpec.describe CompanyWorker do
         create(:user_compliance_info, user:, tax_information_confirmed_at: nil)
         create(:company_worker, company:, user:)
       end
+      let(:company_worker_8) do
+        user = create(:user, :without_compliance_info, country_code: "US")
+        create(:user_compliance_info, :confirmed, user:)
+        create(:company_worker, :project_based, company:, user:)
+      end
 
       before do
         create(:invoice, :paid, company_worker: company_worker_1, company:, total_amount_in_usd_cents: 1000_00)
