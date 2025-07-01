@@ -4,16 +4,17 @@ class Internal::Companies::Administrator::Settings::BankAccountsController < Int
   def show
     authorize Current.company
 
-    intent = Current.company.fetch_stripe_setup_intent
+    intent = Current.company.create_stripe_setup_intent
     render json: {
       client_secret: intent.client_secret,
-      setup_intent_status: intent.status,
+      bank_account_last4: Current.company.bank_account&.bank_account_last_four,
     }
   end
 
   def create
     authorize Current.company, :show?
-
-    render json: { success: Current.company.bank_account.update(status: CompanyStripeAccount::PROCESSING) }
+    bank_account = Current.company.bank_accounts.create!(setup_intent_id: params[:setup_intent_id], status: CompanyStripeAccount::PROCESSING)
+    bank_account.bank_account_last_four = bank_account.fetch_stripe_bank_account_last_four
+    bank_account.save!
   end
 end

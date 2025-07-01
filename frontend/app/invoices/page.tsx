@@ -144,6 +144,7 @@ export default function InvoicesPage() {
     getRowId: (invoice) => invoice.id,
     initialState: {
       sorting: [{ id: user.roles.administrator ? "actions" : "invoiceDate", desc: true }],
+      columnFilters: user.roles.administrator ? [{ id: "Status", value: ["Awaiting approval", "Failed"] }] : [],
     },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -275,7 +276,7 @@ export default function InvoicesPage() {
 
             <DataTable
               table={table}
-              onRowClicked={setDetailInvoice}
+              onRowClicked={user.roles.administrator ? setDetailInvoice : undefined}
               searchColumn={user.roles.administrator ? "billFrom" : undefined}
               actions={
                 user.roles.administrator ? (
