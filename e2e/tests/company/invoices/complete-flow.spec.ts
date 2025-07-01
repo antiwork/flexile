@@ -113,9 +113,11 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(thirdRow).toContainText("Nov 1, 2024");
     await expect(thirdRow).toContainText("$870");
     await expect(thirdRow).toContainText("Awaiting approval");
-    await expect(thirdRow.getByRole("button", { name: "Pay now" })).toBeVisible();
-
     await thirdRow.getByRole("button", { name: "Pay now" }).click();
+
+    await expect(thirdRow).not.toBeVisible();
+    await page.getByRole("button", { name: "Filter" }).click();
+    await page.getByRole("menuitem", { name: "Clear all filters" }).click();
     await expect(thirdRow).toContainText("Payment scheduled");
     await expect(openInvoicesBadge).toContainText("2");
 
@@ -191,7 +193,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await login(page, adminUser);
 
     await expect(locateOpenInvoicesBadge(page)).toContainText("1");
-    await expect(page.locator("tbody tr")).toHaveCount(3);
+    await expect(page.locator("tbody tr")).toHaveCount(1);
     const fixedInvoiceRow = page
       .locator("tbody tr")
       .filter({ hasText: workerUserA.legalName ?? "never" })

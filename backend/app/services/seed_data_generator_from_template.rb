@@ -166,12 +166,12 @@ class SeedDataGeneratorFromTemplate
           )
         end
       end
-      print_message("Created company #{company.name}#{company.completed_onboarding? ? " (completed onboarding)" : nil}")
+      print_message("Created company #{company.name}")
       company
     end
 
     def create_bank_account!(company)
-      stripe_setup_intent = company.fetch_stripe_setup_intent
+      stripe_setup_intent = company.create_stripe_setup_intent
       # https://docs.stripe.com/testing#test-account-numbers
       test_bank_account = Stripe::PaymentMethod.create(
         {
@@ -214,7 +214,7 @@ class SeedDataGeneratorFromTemplate
       Stripe::PaymentMethod.attach(
         test_bank_account.id, { customer: stripe_setup_intent.customer }
       )
-      company.bank_account.update!(
+      company.create_bank_account!(
         status: CompanyStripeAccount::READY,
         setup_intent_id: stripe_setup_intent.id,
         bank_account_last_four: test_bank_account.us_bank_account.last4,

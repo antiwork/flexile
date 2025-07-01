@@ -59,7 +59,7 @@ export default function Dividends() {
             .object({
               total_amount_in_cents: z.number(),
               cumulative_return: z.number().nullable(),
-              withheld_tax_cents: z.number(),
+              withheld_tax_cents: z.number().nullable(),
               bank_account_last_4: z.string(),
               release_document: z.string(),
             })
@@ -224,7 +224,7 @@ export default function Dividends() {
                   ) : null}
                   <div className="flex justify-between gap-2">
                     <h3 className="font-medium">Taxes withheld</h3>
-                    <span>{formatMoneyFromCents(dividendData.withheld_tax_cents)}</span>
+                    <span>{formatMoneyFromCents(dividendData.withheld_tax_cents ?? 0)}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between gap-2">

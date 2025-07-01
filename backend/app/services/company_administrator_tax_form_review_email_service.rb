@@ -8,7 +8,6 @@ class CompanyAdministratorTaxFormReviewEmailService
 
   def process
     return unless company.active?
-    return unless company.completed_onboarding?
 
     company.company_administrators.ids.each do
       CompanyMailer.tax_form_review_reminder(company_administrator_id: _1, tax_year:).deliver_later

@@ -11,7 +11,7 @@ class ChargeConsolidatedInvoice
     raise "Company does not have a bank account set up" unless company.bank_account_ready?
 
     begin
-      stripe_setup_intent = company.fetch_stripe_setup_intent
+      stripe_setup_intent = company.bank_account.stripe_setup_intent
       intent = Stripe::PaymentIntent.create({
         payment_method_types: ["us_bank_account"],
         payment_method: stripe_setup_intent.payment_method,

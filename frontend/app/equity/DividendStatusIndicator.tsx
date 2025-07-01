@@ -15,9 +15,7 @@ const DividendStatusIndicator = ({ dividend }: { dividend: Dividend }) => {
     );
   if (dividend.status === "Retained") {
     if (dividend.retainedReason === "below_minimum_payment_threshold")
-      return (
-        <Status icon={<ExclamationTriangleIcon className="text-yellow size-4" />}>Retained — Threshold not met</Status>
-      );
+      return <Status icon={<ExclamationTriangleIcon className="text-yellow" />}>Retained — Threshold not met</Status>;
     return (
       <Status variant="critical">
         Retained{dividend.retainedReason === "ofac_sanctioned_country" && " — Country restrictions"}
