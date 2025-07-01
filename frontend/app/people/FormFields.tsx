@@ -100,7 +100,7 @@ export default function FormFields() {
                 decimal
               />
             </FormControl>
-            <FormMessage />
+            <FormMessage>Leave blank to skip setting a rate.</FormMessage>
           </FormItem>
         )}
       />
