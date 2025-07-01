@@ -232,7 +232,7 @@ type FinishOnboardingProps = {
   handleComplete: () => void;
 };
 
-export const FinishOnboarding: React.FC<FinishOnboardingProps> = ({ handleComplete }) => {
+export const FinishOnboarding = ({ handleComplete }: FinishOnboardingProps) => {
   const [currentStep, setCurrentStep] = useState(0);
 
   const goToNextStep = () => {

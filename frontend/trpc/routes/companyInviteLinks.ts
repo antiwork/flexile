@@ -61,7 +61,7 @@ export const companyInviteLinksRouter = createRouter({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-      const payload: { [key: string]: any } = {};
+      const payload: { document_template_id?: string } = {};
       if (input.documentTemplateId && input.documentTemplateId.length > 0) {
         const template = await db.query.documentTemplates.findFirst({
           where: and(
