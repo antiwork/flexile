@@ -96,7 +96,7 @@ export default function FormFields() {
                 onChange={(value) => field.onChange(value == null ? null : value * 100)}
                 placeholder="0"
                 prefix="$"
-                suffix={`/ ${payRateType === PayRateType.Custom ? "/ project" : "/ hour"}`}
+                suffix={`/ ${payRateType === PayRateType.Custom ? "project" : "hour"}`}
                 decimal
               />
             </FormControl>
