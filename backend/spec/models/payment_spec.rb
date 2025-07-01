@@ -50,21 +50,7 @@ RSpec.describe Payment do
     end
   end
 
-  describe "checklist integration" do
-    let(:company) { create(:company) }
-    let(:invoice) { create(:invoice, company: company) }
-    let(:payment) { create(:payment, invoice: invoice, status: "initial") }
 
-    it "computes first payment checklist when payment succeeds" do
-      checklist_item = company.checklist_items.find { |item| item[:key] == "send_first_payment" }
-      expect(checklist_item[:completed]).to be false
-
-      payment.update!(status: "succeeded")
-
-      checklist_item = company.reload.checklist_items.find { |item| item[:key] == "send_first_payment" }
-      expect(checklist_item[:completed]).to be true
-    end
-  end
 
   describe "callbacks" do
     describe "#update_invoice_pg_search_document" do

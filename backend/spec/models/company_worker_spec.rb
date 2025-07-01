@@ -560,19 +560,4 @@ RSpec.describe CompanyWorker do
       end
     end
   end
-
-  describe "checklist integration" do
-    let(:company) { create(:company) }
-    let(:user) { create(:user) }
-
-    it "computes contractor checklist when worker is created" do
-      checklist_item = company.checklist_items.find { |item| item[:key] == "invite_contractor" }
-      expect(checklist_item[:completed]).to be false
-
-      create(:company_worker, company: company, user: user)
-
-      checklist_item = company.reload.checklist_items.find { |item| item[:key] == "invite_contractor" }
-      expect(checklist_item[:completed]).to be true
-    end
-  end
 end
