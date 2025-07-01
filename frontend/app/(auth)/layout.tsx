@@ -12,7 +12,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     if (user) {
       const redirectUrl = searchParams.get("redirect_url");
-      const targetUrl = (redirectUrl && (isValidRedirectUrl(redirectUrl) ? redirectUrl : "/dashboard")) || "/dashboard";
+      const targetUrl = redirectUrl && isValidRedirectUrl(redirectUrl) ? redirectUrl : "/dashboard";
       throw redirect(targetUrl, RedirectType.replace);
     }
   }, [user, searchParams]);
