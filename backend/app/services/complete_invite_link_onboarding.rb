@@ -32,8 +32,9 @@ class CompleteInviteLinkOnboarding
 
   private
     def send_invite_accepted_email(company_worker)
+      return unless @user.invited_by_id.present?
       CompanyWorkerMailer.notify_invite_accepted(@user.invited_by_id, company_worker.id).deliver_later
-    rescue => e
+    rescue StandardError => e
       Rails.logger.error("Failed to send invite accepted email: #{e.message}")
     end
 

@@ -26,7 +26,8 @@ class AcceptCompanyInviteLink
       ended_at: nil
     )
     @user.invited_by = invite_link.inviter
-    @user.save && company_worker.save
+    @user.save
+    company_worker.save if @user.errors.blank?
 
     if @user.errors.blank? && company_worker.errors.blank?
       { success: true, company_worker: company_worker }

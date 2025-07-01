@@ -31,6 +31,7 @@ module SetCurrent
         user.update!(current_sign_in_at: Time.zone.at(clerk.session_claims["iat"]))
       end
 
+      invited_company = nil
       if cookies["invitation_token"].present?
         invite_link = CompanyInviteLink.find_by(token: cookies["invitation_token"])
         invited_company = invite_link&.company

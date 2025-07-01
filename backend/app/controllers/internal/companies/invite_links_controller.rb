@@ -34,7 +34,7 @@ class Internal::Companies::InviteLinksController < Internal::BaseController
     if result[:success]
       render json: { success: true, document_id: result[:document]&.id,  template_id: result[:template_id] }, status: :ok
     else
-      render json: { success: false, error_message: error_message }, status: :unprocessable_entity
+      render json: { success: false, error_message: result[:error] }, status: :unprocessable_entity
     end
   end
 
