@@ -46,27 +46,27 @@ const ConfirmPaymentModal = ({ isOpen, onClose, onBack, tenderOffer, bids, mutat
           <DialogTitle>Confirm and process payment</DialogTitle>
         </DialogHeader>
 
-        <p className="mb-4 text-sm text-gray-600">
+        <p className="mb-4 text-sm">
           Please confirm all details are accurate. Payments will be issued and the buyback finalized once you hit next.
         </p>
 
-        <div className="space-y-4">
-          <div className="flex justify-between">
+        <div>
+          <div className="flex justify-between pb-4">
             <span className="font-medium">Accepted investors</span>
             <span>{acceptedBids.length}</span>
           </div>
 
-          <div className="flex justify-between">
+          <div className="flex justify-between border-t border-gray-200 py-4">
             <span className="font-medium">Clearing price per share</span>
             <span>{formatMoneyFromCents(clearingPrice)}</span>
           </div>
 
-          <div className="flex justify-between">
+          <div className="flex justify-between border-t border-gray-200 py-4">
             <span className="font-medium">Accepted shares</span>
             <span>{totalShares.toLocaleString()}</span>
           </div>
 
-          <div className="flex justify-between border-t pt-4">
+          <div className="flex justify-between border-t border-gray-200 pt-4">
             <span className="font-medium">Total payout</span>
             <span className="font-bold">{formatMoneyFromCents(totalPayout)}</span>
           </div>
@@ -84,8 +84,8 @@ const ConfirmPaymentModal = ({ isOpen, onClose, onBack, tenderOffer, bids, mutat
           </label>
         </div>
 
-        <DialogFooter className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between sm:gap-0">
-          <Button variant="outline" onClick={onBack} className="w-full sm:w-auto">
+        <DialogFooter className="flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-2">
+          <Button variant="outline" onClick={onBack} className="w-full sm:w-24">
             Back
           </Button>
           <MutationStatusButton

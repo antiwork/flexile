@@ -40,7 +40,7 @@ const ReviewInvestorsModal = ({ isOpen, onClose, onNext, onBack, bids }: ReviewI
           <DialogTitle>Review investors</DialogTitle>
         </DialogHeader>
 
-        <p className="mb-4 text-sm text-gray-600">
+        <p className="mb-4 text-sm">
           Please review the list of investors and verify all information is correct before proceeding with settlement.
         </p>
 
@@ -52,41 +52,45 @@ const ReviewInvestorsModal = ({ isOpen, onClose, onNext, onBack, bids }: ReviewI
           </Button>
         </div>
 
-        <div className="max-h-64 overflow-y-auto">
-          <div className="space-y-2">
-            <div className="grid grid-cols-3 gap-4 border-b pb-2 text-sm font-medium text-gray-600">
-              <span>Investor</span>
-              <span>Shares</span>
-              <span>Total</span>
-            </div>
-
-            {acceptedBids.length > 0 ? (
-              acceptedBids.map((bid) => (
-                <div key={bid.id} className="grid grid-cols-3 gap-4 py-2 text-sm">
-                  <span className="font-medium">{bid.companyInvestor.user.name}</span>
-                  <span>{Number(bid.acceptedShares).toLocaleString()}</span>
-                  <span>{formatMoneyFromCents(Number(bid.acceptedShares) * bid.sharePriceCents)}</span>
-                </div>
-              ))
-            ) : (
-              <div className="py-8 text-center text-sm text-gray-500">No accepted bids found</div>
-            )}
-
-            {acceptedBids.length > 0 ? (
-              <div className="grid grid-cols-3 gap-4 border-t pt-2 text-sm font-bold">
-                <span>Total payout</span>
-                <span>{totalShares.toLocaleString()}</span>
-                <span>{formatMoneyFromCents(totalPayout)}</span>
+        <div>
+          <div className="max-h-64 overflow-y-auto">
+            <div className="space-y-2">
+              <div className="grid grid-cols-3 gap-4 pb-2 text-sm font-medium text-gray-600">
+                <span>Investor</span>
+                <span className="text-right">Shares</span>
+                <span className="text-right">Total</span>
               </div>
-            ) : null}
+
+              {acceptedBids.length > 0 ? (
+                acceptedBids.map((bid) => (
+                  <div key={bid.id} className="grid grid-cols-3 gap-4 border-t border-gray-200 px-2 py-3 text-sm">
+                    <span className="font-medium">{bid.companyInvestor.user.name}</span>
+                    <span className="text-right">{Number(bid.acceptedShares).toLocaleString()}</span>
+                    <span className="text-right">
+                      {formatMoneyFromCents(Number(bid.acceptedShares) * bid.sharePriceCents)}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="py-8 text-center text-sm text-gray-500">No accepted bids found</div>
+              )}
+            </div>
           </div>
+
+          {acceptedBids.length > 0 ? (
+            <div className="grid grid-cols-3 gap-4 border-t border-gray-200 bg-gray-50 px-2 py-3 text-sm font-bold">
+              <span>Total payout</span>
+              <span className="text-right">{totalShares.toLocaleString()}</span>
+              <span className="text-right">{formatMoneyFromCents(totalPayout)}</span>
+            </div>
+          ) : null}
         </div>
 
-        <DialogFooter className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between sm:gap-0">
-          <Button variant="outline" onClick={onBack} className="w-full sm:w-auto">
+        <DialogFooter className="flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-2">
+          <Button variant="outline" onClick={onBack} className="w-full sm:w-24">
             Back
           </Button>
-          <Button onClick={onNext} disabled={acceptedBids.length === 0} className="w-full sm:w-auto">
+          <Button onClick={onNext} disabled={acceptedBids.length === 0} className="w-full sm:w-24">
             Continue
           </Button>
         </DialogFooter>

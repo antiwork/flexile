@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Form, FormField, FormItem, FormControl, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Link, PenTool } from "lucide-react";
+import { Link, Link2, PencilLine, PenLine, PenTool } from "lucide-react";
 
 const formSchema = z.object({
   content: z.string().min(1, "Letter content is required"),
@@ -53,8 +53,6 @@ const CreateLetterOfTransmittalModal = ({
     });
   };
 
-  const defaultLetterContent = `Place or type your letter of transmittal here...`;
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-lg flex-col overflow-hidden p-4 sm:p-6">
@@ -62,58 +60,58 @@ const CreateLetterOfTransmittalModal = ({
           <DialogTitle>Letter of transmittal</DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden">
+        <div className="flex flex-1 flex-col overflow-hidden">
           <p className="mb-4 text-sm">
             Add the Letter of Transmittal to explain the buyback terms. Investors will see it during confirmation.
           </p>
 
-          <div className="mb-4 flex space-x-1 rounded-lg bg-gray-100 p-1">
+          <div className="mb-3 flex space-x-1 rounded-md bg-gray-50 p-1">
             <button
               type="button"
               onClick={() => setActiveTab("link")}
-              className={`flex flex-1 items-center justify-center space-x-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+              className={`flex flex-1 items-center justify-center space-x-2 rounded-sm px-3 py-2 text-sm font-medium transition-colors ${
                 activeTab === "link" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
               }`}
             >
-              <Link className="h-4 w-4" />
+              <Link2 className="h-4 w-4" />
               <span>Link</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("create")}
-              className={`flex flex-1 items-center justify-center space-x-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+              className={`flex flex-1 items-center justify-center space-x-2 rounded-sm px-3 py-2 text-sm font-medium transition-colors ${
                 activeTab === "create" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
               }`}
             >
-              <PenTool className="h-4 w-4" />
+              <PencilLine className="h-4 w-4" />
               <span>Create</span>
             </button>
           </div>
 
-          <div className="flex-1 overflow-hidden">
+          <div className="flex flex-1 flex-col overflow-auto">
             {activeTab === "link" ? (
-              <div className="py-8 text-center">
+              <div className="text-center">
                 <input
                   type="url"
                   placeholder="Paste https://..."
                   value={linkValue}
                   onChange={(e) => setLinkValue(e.target.value)}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                  className="w-full rounded-sm border border-gray-300 px-3 py-2 text-sm"
                 />
               </div>
             ) : (
               <Form {...form}>
-                <form onSubmit={(e) => void handleSubmit(e)} className="flex h-full flex-col">
+                <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col">
                   <FormField
                     control={form.control}
                     name="content"
                     render={({ field }) => (
-                      <FormItem className="flex flex-1 flex-col">
-                        <FormControl className="flex-1">
+                      <FormItem className="flex flex-col">
+                        <FormControl>
                           <Textarea
                             {...field}
-                            placeholder={defaultLetterContent}
-                            className="min-h-[300px] resize-none"
+                            placeholder="Place or type your letter of transmittal here..."
+                            className="min-h-100 resize-none"
                           />
                         </FormControl>
                         <FormMessage />
@@ -129,8 +127,8 @@ const CreateLetterOfTransmittalModal = ({
           </div>
         </div>
 
-        <DialogFooter className="flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-between sm:gap-0">
-          <Button variant="outline" onClick={onBack} className="w-full sm:w-auto">
+        <DialogFooter className="flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-2">
+          <Button variant="outline" onClick={onBack} className="w-full sm:w-24">
             Back
           </Button>
           <Button
@@ -141,7 +139,7 @@ const CreateLetterOfTransmittalModal = ({
                 handleContinue();
               }
             }}
-            className="w-full sm:w-auto"
+            className="w-full sm:w-24"
           >
             Continue
           </Button>

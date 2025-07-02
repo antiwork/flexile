@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import NumberInput from "@/components/NumberInput";
 import DatePicker from "@/components/DatePicker";
-import { CloudUpload, Trash2, Upload } from "lucide-react";
+import { CloudUpload, Trash2 } from "lucide-react";
 
 const formSchema = z
   .object({

@@ -135,6 +135,7 @@ export default function BuybackView() {
               id: "investor",
               header: "Investor",
               cell: (info) => info.getValue(),
+              footer: data.acceptedPriceCents ? "Total payout" : "",
             })
           : null,
         columnHelper.simple("shareClass", "Share class"),
@@ -143,6 +144,9 @@ export default function BuybackView() {
               id: "acceptedShares",
               header: "Accepted",
               cell: (info) => Number(info.row.original.acceptedShares || 0).toLocaleString(),
+              footer: data.acceptedPriceCents
+                ? bids.reduce((sum, bid) => sum + Number(bid.acceptedShares), 0).toLocaleString()
+                : "",
             })
           : null,
         columnHelper.simple("numberOfShares", "Shares", (value) => value.toLocaleString()),
@@ -154,6 +158,7 @@ export default function BuybackView() {
                 info.row.original.acceptedShares && data.acceptedPriceCents
                   ? formatMoneyFromCents(data.acceptedPriceCents)
                   : "-",
+              footer: data.acceptedPriceCents ? formatMoneyFromCents(data.acceptedPriceCents) : "",
             })
           : null,
         columnHelper.simple("sharePriceCents", "Bid price", formatMoneyFromCents),
@@ -162,6 +167,11 @@ export default function BuybackView() {
           header: "Total",
           cell: (info) =>
             formatMoneyFromCents(Number(info.row.original.numberOfShares) * info.row.original.sharePriceCents), // TODO confirm this calculation
+          footer: data.acceptedPriceCents
+            ? formatMoneyFromCents(
+                bids.reduce((sum, bid) => sum + Number(bid.acceptedShares || 0) * (data.acceptedPriceCents || 0), 0),
+              )
+            : "",
         }),
         !user.roles.administrator || data.acceptedPriceCents
           ? columnHelper.accessor(
@@ -194,14 +204,14 @@ export default function BuybackView() {
             })
           : null,
       ].filter((column) => !!column),
-    [user.roles.administrator, user.id, isOpen],
+    [user.roles.administrator, user.id, isOpen, data.acceptedPriceCents, bids],
   );
 
   const bidsTable = useTable({
     data: bids,
     columns,
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: user.roles.administrator ? getFilteredRowModel() : undefined!,
+    ...(user.roles.administrator && { getFilteredRowModel: getFilteredRowModel() }),
   });
 
   return (

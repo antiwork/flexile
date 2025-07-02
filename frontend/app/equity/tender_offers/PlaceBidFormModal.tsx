@@ -177,8 +177,8 @@ const PlaceBidFormModal = ({ isOpen, onClose, onBack, tenderOffer }: PlaceBidFor
           </Form>
         </div>
 
-        <DialogFooter className="mt-4 flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-between sm:gap-0">
-          <Button variant="outline" onClick={onBack} className="w-full sm:w-auto">
+        <DialogFooter className="mt-4 flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-2">
+          <Button variant="outline" onClick={onBack} className="w-full sm:w-24">
             Back
           </Button>
           <MutationStatusButton

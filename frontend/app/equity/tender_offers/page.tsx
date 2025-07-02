@@ -164,7 +164,7 @@ export default function Buybacks() {
     columns,
     data,
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: user.roles.administrator ? getFilteredRowModel() : undefined!,
+    ...(user.roles.administrator && { getFilteredRowModel: getFilteredRowModel() }),
   });
 
   const handleBuybackDetailsNext = (data: BuybackData) => {

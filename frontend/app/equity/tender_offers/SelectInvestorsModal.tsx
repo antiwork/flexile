@@ -4,11 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MutationStatusButton } from "@/components/MutationButton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Search, ChevronDown } from "lucide-react";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { fetchInvestorEmail, isInvestor } from "@/models/investor";
 import type { UseMutationResult } from "@tanstack/react-query";
+import { cn } from "@/utils";
 
 type SelectInvestorsModalProps = {
   isOpen: boolean;
@@ -23,7 +30,6 @@ const SelectInvestorsModal = ({ isOpen, onClose, onBack, onNext, mutation, data 
   const company = useCurrentCompany();
   const [searchTerm, setSearchTerm] = useState("");
   const [shareClassFilter, setShareClassFilter] = useState("All share classes");
-  const [showDropdown, setShowDropdown] = useState(false);
   const [selectedInvestors, setSelectedInvestors] = useState<Set<string>>(new Set());
   const [allSelected, setAllSelected] = useState(true);
 
@@ -49,11 +55,8 @@ const SelectInvestorsModal = ({ isOpen, onClose, onBack, onNext, mutation, data 
   useEffect(() => {
     if (data && data.length > 0) {
       setSelectedInvestors(new Set(data));
-    } else if (investors.length > 0 && selectedInvestors.size === 0) {
-      const allIds = new Set(investors.map((inv) => inv.id));
-      setSelectedInvestors(allIds);
     }
-  }, [investors, data, selectedInvestors.size]);
+  }, [data]);
 
   useEffect(() => {
     setAllSelected(selectedInvestors.size === filteredInvestors.length && filteredInvestors.length > 0);
@@ -94,74 +97,62 @@ const SelectInvestorsModal = ({ isOpen, onClose, onBack, onNext, mutation, data 
           buyback.
         </p>
 
-        <div className="mb-4 flex space-x-3">
+        <div className="mb-4 flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3">
           <div className="relative flex-1">
-            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             <Input
               placeholder="Search name or email"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9"
+              className="h-9 pl-9"
             />
           </div>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setShowDropdown(!showDropdown)}
-              className="flex w-48 items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-            >
-              <span>{shareClassFilter}</span>
-              <ChevronDown className="h-4 w-4 text-gray-400" />
-            </button>
-            {showDropdown ? (
-              <div className="absolute top-full left-0 z-10 mt-1 w-48 rounded-md border border-gray-300 bg-white shadow-lg">
-                {allShareClasses.map((shareClass) => (
-                  <button
-                    key={shareClass}
-                    type="button"
-                    onClick={() => {
-                      setShareClassFilter(shareClass);
-                      setShowDropdown(false);
-                    }}
-                    className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
-                  >
-                    {shareClass}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="h-9 w-full justify-between sm:w-48">
+                <span>{shareClassFilter}</span>
+                <ChevronDown className="h-4 w-4 text-gray-400" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              {allShareClasses.map((shareClass) => (
+                <DropdownMenuItem key={shareClass} onSelect={() => setShareClassFilter(shareClass)}>
+                  {shareClass}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
-        <div className="mb-3">
-          <div className="flex items-center space-x-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
+        <div className="mb-3 max-h-64 overflow-y-auto">
+          <div className="flex items-center space-x-3 p-3">
             <Checkbox
               id="all-investors"
               checked={allSelected}
               onCheckedChange={handleAllToggle}
               className="data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600"
             />
-            <label htmlFor="all-investors" className="text-sm font-medium text-blue-900">
-              All investors selected
+            <label htmlFor="all-investors" className="text-sm font-medium">
+              {allSelected ? "All" : selectedInvestors.size} investors selected
             </label>
           </div>
-        </div>
-
-        <div className="max-h-64 overflow-y-auto">
-          <div className="space-y-1">
+          <div>
             {filteredInvestors.map((investor) => (
               <div
                 key={investor.id}
-                className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3"
+                className={cn(
+                  "flex items-center justify-between border-t border-gray-200 p-3",
+                  selectedInvestors.has(investor.id) && "bg-blue-50",
+                )}
               >
                 <div className="flex items-center space-x-3">
                   <Checkbox
                     id={investor.id}
                     checked={selectedInvestors.has(investor.id)}
                     onCheckedChange={() => handleInvestorToggle(investor.id)}
-                    className="data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600"
+                    className="h-4 w-4 data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600"
                   />
-                  <label htmlFor={investor.id} className="cursor-pointer text-sm font-medium text-gray-900">
+                  <label htmlFor={investor.id} className="cursor-pointer text-sm">
                     {investor.name}
                   </label>
                 </div>
@@ -171,8 +162,8 @@ const SelectInvestorsModal = ({ isOpen, onClose, onBack, onNext, mutation, data 
           </div>
         </div>
 
-        <DialogFooter className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between sm:gap-0">
-          <Button variant="outline" onClick={onBack} className="w-full sm:w-auto">
+        <DialogFooter className="flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-2">
+          <Button variant="outline" onClick={onBack} className="w-full sm:w-24">
             Back
           </Button>
           <MutationStatusButton

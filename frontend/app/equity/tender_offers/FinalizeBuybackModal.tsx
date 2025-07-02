@@ -34,16 +34,17 @@ const FinalizeBuybackModal = ({ isOpen, onClose, onNext, tenderOffer, bids }: Fi
           <DialogTitle>Tender offer summary</DialogTitle>
         </DialogHeader>
 
-        <p className="mb-4 text-sm text-gray-600">Review the buyback details before finalizing the settlement.</p>
+        <p className="mb-4 text-sm">Review the buyback details before finalizing the settlement.</p>
 
         <div className="space-y-0">
-          <div className="flex justify-between border-b border-gray-200 py-4">
+          <div className="flex justify-between border-b border-gray-200 pb-4">
             <span className="font-medium">Buyback name</span>
             <span>{tenderOffer.name}</span>
           </div>
 
           <div className="flex justify-between border-b border-gray-200 py-4">
             <span className="font-medium">Accepted investors</span>
+            {/* TODO this isn't correct, we need to show the number of unique investors */}
             <span>{acceptedBids.length}</span>
           </div>
 

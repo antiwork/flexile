@@ -88,14 +88,14 @@ const LetterOfTransmittalModal = ({ isOpen, onClose, onBack, onNext }: LetterOfT
           </div>
         </div>
 
-        <DialogFooter className="mt-4 flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-between sm:gap-0">
-          <Button variant="outline" onClick={onBack} className="w-full sm:w-auto">
+        <DialogFooter className="mt-4 flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-2">
+          <Button variant="outline" onClick={onBack} className="w-full sm:w-24">
             Back
           </Button>
           <Button
             onClick={handleContinue}
             disabled={!canContinue}
-            className={`w-full sm:w-auto ${!canContinue ? "cursor-not-allowed opacity-50" : ""}`}
+            className={`w-full sm:w-24 ${!canContinue ? "cursor-not-allowed opacity-50" : ""}`}
           >
             Continue
           </Button>
