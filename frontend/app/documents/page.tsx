@@ -15,7 +15,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import DocusealForm, { customCss } from "@/app/documents/DocusealForm";
 import DataTable, { createColumnHelper, filterValueSchema, useTable } from "@/components/DataTable";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { storageKeys } from "@/models/constants";
+import DocumentTableSkeleton from "@/components/DocumentTableSkeleton";
 
 type Document = RouterOutput["documents"]["list"][number];
 type SignableDocument = Document & { docusealSubmissionId: number };
@@ -376,20 +377,22 @@ export default function DocumentsPage() {
             </AlertDescription>
           </Alert>
         ) : null}
-        {documents.length > 0 ? (
-          <>
-            <DataTable
-              table={table}
-              actions={isCompanyRepresentative ? <EditTemplates /> : undefined}
-              {...(isCompanyRepresentative && { searchColumn: "Signer" })}
-            />
-            {signDocument ? (
-              <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} />
-            ) : null}
-          </>
-        ) : (
-          <Placeholder icon={CircleCheck}>No documents yet.</Placeholder>
-        )}
+        <Suspense fallback={<DocumentTableSkeleton />}>
+          {documents.length > 0 ? (
+            <>
+              <DataTable
+                table={table}
+                actions={isCompanyRepresentative ? <EditTemplates /> : undefined}
+                {...(isCompanyRepresentative && { searchColumn: "Signer" })}
+              />
+              {signDocument ? (
+                <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} />
+              ) : null}
+            </>
+          ) : (
+            <Placeholder icon={CircleCheck}>No documents yet.</Placeholder>
+          )}
+        </Suspense>
       </div>
       <Dialog open={showInviteModal} onOpenChange={setShowInviteModal}>
         <DialogContent>
