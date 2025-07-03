@@ -1,7 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 
-export default function DocumentTableSkeleton() {
+export default function TableSkeleton() {
   return (
     <div className="bg-white">
       <Table className="caption-top not-print:max-md:grid">
