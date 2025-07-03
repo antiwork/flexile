@@ -126,17 +126,17 @@ export const GettingStarted = () => {
         <CollapsibleContent className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 absolute mb-12 w-full overflow-hidden p-3 data-[state=closed]:duration-300 data-[state=open]:duration-200">
           {status === "completed" ? (
             <div className="rounded-lg border border-gray-200 bg-white pb-4 shadow-sm">
-              <div className="mr-2 ml-4 flex h-11 items-center justify-between">
-                <span className="font-medium text-gray-900">You are all set!</span>
+              <div className="mr-3 ml-4 flex h-11 items-center justify-between">
+                <span className="font-medium">You are all set!</span>
                 <button
                   onClick={() => setStatus("dismissed")}
-                  className="ml-4 text-gray-400 transition-colors hover:text-gray-600"
+                  className="ml-4 cursor-pointer transition-colors hover:text-black/80"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
               <div className="mx-4">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm">
                   {user.roles.administrator
                     ? "Everything is in place. Time to flex."
                     : "You are ready to send your first invoice."}
