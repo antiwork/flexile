@@ -706,6 +706,30 @@ function ExercisesTab({ investorId }: { investorId: string }) {
       columnHelper.simple("requestedAt", "Request date", formatDate),
       columnHelper.simple("numberOfOptions", "Number of shares", (value) => value.toLocaleString(), "numeric"),
       columnHelper.simple("totalCostCents", "Cost", formatMoneyFromCents, "numeric"),
+      columnHelper.accessor("exerciseRequests", {
+        header: "Option grant ID",
+        cell: (info) => {
+          const requests = info.getValue();
+          return (
+            requests
+              .map((req) => req.equityGrant.name)
+              .filter(Boolean)
+              .join(", ") || "—"
+          );
+        },
+      }),
+      columnHelper.accessor("exerciseRequests", {
+        header: "Stock certificate ID",
+        cell: (info) => {
+          const requests = info.getValue();
+          return (
+            requests
+              .map((req) => req.shareHolding?.name)
+              .filter(Boolean)
+              .join(", ") || "—"
+          );
+        },
+      }),
       columnHelper.accessor("status", {
         header: "Status",
         cell: (info) => <EquityGrantExerciseStatusIndicator status={info.getValue()} />,
