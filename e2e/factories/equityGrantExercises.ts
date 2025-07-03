@@ -1,8 +1,9 @@
 import { db, takeOrThrow } from "@test/db";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
+import { shareClassesFactory } from "@test/factories/shareClasses";
 import { eq } from "drizzle-orm";
-import { companyInvestors, equityGrantExercises, equityGrantExerciseRequests } from "@/db/schema";
+import { companyInvestors, equityGrantExercises, equityGrantExerciseRequests, shareHoldings } from "@/db/schema";
 import { assert } from "@/utils/assert";
 
 let exerciseCounter = 0;
@@ -51,10 +52,26 @@ export const equityGrantExercisesFactory = {
 
     let shareHolding = null;
     if (options.withShareHoldings) {
-      shareHolding = {
-        id: BigInt(exerciseCounter),
-        name: `C2-${exerciseCounter}`,
-      };
+      const { shareClass } = await shareClassesFactory.create({
+        companyId: investor.companyId,
+      });
+
+      const [createdShareHolding] = await db
+        .insert(shareHoldings)
+        .values({
+          companyInvestorId: investor.id,
+          companyInvestorEntityId: null,
+          shareClassId: shareClass.id,
+          name: `C2-${exerciseCounter}`,
+          issuedAt: new Date(),
+          originallyAcquiredAt: new Date(),
+          numberOfShares: 100,
+          sharePriceUsd: "10.00",
+          totalAmountInCents: BigInt(10000),
+          shareHolderName: "Test Holder",
+        })
+        .returning();
+      shareHolding = createdShareHolding;
     }
 
     await db.insert(equityGrantExerciseRequests).values({
