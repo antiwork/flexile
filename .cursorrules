@@ -38,4 +38,4 @@
 - Tech debt:
   - Add a `TODO (techdebt)` comment to document refactors that should be made in the future
 
-- UNDER ANY CIRCUMSTANCES, DO NOT ADD COMMENTS TO THE CODE
+- No explanatory comments please
