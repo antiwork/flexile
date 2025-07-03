@@ -26,15 +26,18 @@ test.describe("People - Exercises Table", () => {
       userId: contractorUser.id,
     });
 
-    const { equityGrant, shareHolding } = await equityGrantExercisesFactory.create({
-      companyInvestorId: companyInvestor.id,
-      status: "signed",
-    }, { withShareHoldings: true });
+    const { equityGrant, shareHolding } = await equityGrantExercisesFactory.create(
+      {
+        companyInvestorId: companyInvestor.id,
+        status: "signed",
+      },
+      { withShareHoldings: true },
+    );
 
     await login(page, admin);
     await page.getByRole("link", { name: "People" }).click();
     await page.getByRole("link", { name: contractorUser.preferredName ?? "" }).click();
-    
+
     await page.goto(`/people/${contractorUser.externalId}?tab=exercises`);
 
     await expect(page.getByRole("table")).toBeVisible();
@@ -42,13 +45,13 @@ test.describe("People - Exercises Table", () => {
     await expect(rows).toHaveCount(2);
 
     const dataRow = rows.nth(1);
-    
+
     await expect(dataRow).toContainText(equityGrant.name);
-    
+
     if (shareHolding) {
       await expect(dataRow).toContainText(shareHolding.name);
     }
-    
+
     await expect(dataRow).toContainText("100");
     await expect(dataRow).toContainText("$50.00");
     await expect(dataRow).toContainText("Signed");
@@ -72,23 +75,26 @@ test.describe("People - Exercises Table", () => {
       userId: contractorUser.id,
     });
 
-    const { equityGrant } = await equityGrantExercisesFactory.create({
-      companyInvestorId: companyInvestor.id,
-      status: "signed",
-    }, { withShareHoldings: false });
+    const { equityGrant } = await equityGrantExercisesFactory.create(
+      {
+        companyInvestorId: companyInvestor.id,
+        status: "signed",
+      },
+      { withShareHoldings: false },
+    );
 
     await login(page, admin);
     await page.getByRole("link", { name: "People" }).click();
     await page.getByRole("link", { name: contractorUser.preferredName ?? "" }).click();
-    
+
     await page.goto(`/people/${contractorUser.externalId}?tab=exercises`);
 
     await expect(page.getByRole("table")).toBeVisible();
     const rows = page.getByRole("table").getByRole("row");
     const dataRow = rows.nth(1);
-    
+
     await expect(dataRow).toContainText(equityGrant.name);
-    
+
     await expect(dataRow).toContainText("—");
   });
 });
