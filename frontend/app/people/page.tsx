@@ -60,10 +60,10 @@ export default function PeoplePage() {
   const trpcUtils = trpc.useUtils();
   const saveMutation = trpc.contractors.create.useMutation({
     onSuccess: async (data) => {
-      await refetch();
+      const refetchResult = await refetch();
       await trpcUtils.documents.list.invalidate();
       setShowInviteModal(false);
-      const updatedLastContractor = workers[0];
+      const updatedLastContractor = refetchResult.data?.[0];
       form.reset({
         ...(updatedLastContractor
           ? { payRateInSubunits: updatedLastContractor.payRateInSubunits, role: updatedLastContractor.role }
