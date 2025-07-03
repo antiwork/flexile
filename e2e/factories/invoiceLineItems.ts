@@ -24,7 +24,7 @@ export const invoiceLineItemsFactory = {
       .values({
         invoiceId: invoice.id,
         description: faker.company.buzzPhrase(),
-        payRateInSubunits: contractor.payRateInSubunits ?? 0,
+        payRateInSubunits: contractor.payRateInSubunits ?? 1000,
         payRateCurrency: contractor.payRateCurrency,
         quantity: 1,
         ...overrides,
