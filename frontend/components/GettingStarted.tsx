@@ -113,7 +113,7 @@ export const GettingStarted = () => {
             className="h-full items-center justify-between rounded-none px-5"
           >
             {status === "completed" ? (
-              <div className="h-4 w-4 items-center justify-center rounded-full border-2 border-blue-500 bg-blue-500">
+              <div className="flex h-4 w-4 items-center justify-center rounded-full border-2 border-blue-500 bg-blue-500">
                 <CheckIcon />
               </div>
             ) : (
