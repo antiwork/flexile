@@ -14,13 +14,13 @@ export const equityGrantExercisesRouter = createRouter({
         exerciseRequests: {
           with: {
             equityGrant: {
-              columns: { name: true }
+              columns: { name: true },
             },
             shareHolding: {
-              columns: { name: true }
-            }
-          }
-        }
+              columns: { name: true },
+            },
+          },
+        },
       },
       where: and(
         eq(equityGrantExercises.companyId, ctx.company.id),
