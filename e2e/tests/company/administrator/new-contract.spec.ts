@@ -181,6 +181,21 @@ test.describe("New Contractor", () => {
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
   });
 
+  test("pre-fills form with last contractor's contract signed elsewhere value", async ({ page }) => {
+    await fillForm(page);
+    await page.getByLabel("Role").fill("First Contractor Role");
+    await page.getByLabel("Rate").fill("100");
+    await page.getByLabel("Already signed contract elsewhere").check({ force: true });
+    await page.getByRole("button", { name: "Send invite" }).click();
+    
+    await expect(page.getByText("Who's joining?")).not.toBeVisible();
+    
+    await page.getByRole("button", { name: "Invite contractor" }).click();
+    await expect(page.getByText("Who's joining?")).toBeVisible();
+    
+    await expect(page.getByLabel("Already signed contract elsewhere")).toBeChecked();
+  });
+
   // TODO: write these tests after the most important tests are done
   // TODO: write test - allows reactivating an alumni contractor
   // TODO: write test - excludes equity paragraphs when equity compensation is disabled
