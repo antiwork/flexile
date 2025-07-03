@@ -147,20 +147,15 @@ export const GettingStarted = () => {
             <div className="mt-2 rounded-lg border border-gray-200 bg-white px-1 pb-4 shadow-sm">
               <CollapsibleTrigger asChild>
                 <div className="mx-3 flex h-11 cursor-pointer items-center justify-between">
-                  <span className="font-medium text-gray-900">Getting started</span>
-                  <ChevronDown
-                    className={cn(
-                      "h-4 w-4 text-gray-500 transition-transform duration-300 ease-in-out",
-                      status !== "expanded" && "rotate-180",
-                    )}
-                  />
+                  <span className="font-medium">Getting started</span>
+                  <ChevronDown className={cn("h-4 w-4")} />
                 </div>
               </CollapsibleTrigger>
-              <div>
+              <div className="space-y-1">
                 {company.checklistItems.map((item) => (
                   <SidebarMenuButton
                     key={item.key}
-                    className="flex h-9 items-center space-x-1 text-sm"
+                    className="flex h-8 items-center space-x-1 text-sm"
                     onClick={() => {
                       if (!item.completed && pathname !== getItemHref(item.key)) {
                         router.push(getItemHref(item.key));
@@ -169,14 +164,14 @@ export const GettingStarted = () => {
                   >
                     <div
                       className={cn(
-                        "flex h-4 w-4 items-center justify-center rounded-full border-2",
+                        "flex h-4 w-4 items-center justify-center rounded-full border-1",
                         item.completed ? "border-blue-500 bg-blue-500" : "border-gray-300 bg-white",
                       )}
                     >
                       {item.completed ? <CheckIcon /> : null}
                     </div>
                     {!item.completed ? (
-                      <span className="text-left text-gray-900 hover:text-blue-600">{item.title}</span>
+                      <span className="text-left">{item.title}</span>
                     ) : (
                       <span className="text-gray-400 line-through">{item.title}</span>
                     )}
