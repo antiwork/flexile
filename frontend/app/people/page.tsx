@@ -1,7 +1,7 @@
 "use client";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import Link from "next/link";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -56,6 +56,16 @@ export default function PeoplePage() {
     },
     resolver: zodResolver(schema),
   });
+
+  useEffect(() => {
+    form.reset({
+      ...(lastContractor ? { payRateInSubunits: lastContractor.payRateInSubunits, role: lastContractor.role } : {}),
+      payRateType: lastContractor?.payRateType ?? PayRateType.Hourly,
+      hoursPerWeek: lastContractor?.hoursPerWeek ?? DEFAULT_WORKING_HOURS_PER_WEEK,
+      startDate: today(getLocalTimeZone()),
+      contractSignedElsewhere: lastContractor?.contractSignedElsewhere ?? false,
+    });
+  }, [lastContractor, form]);
 
   const trpcUtils = trpc.useUtils();
   const saveMutation = trpc.contractors.create.useMutation({
