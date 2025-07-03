@@ -65,7 +65,9 @@ export default function PeoplePage() {
       setShowInviteModal(false);
       const updatedLastContractor = workers[0];
       form.reset({
-        ...(updatedLastContractor ? { payRateInSubunits: updatedLastContractor.payRateInSubunits, role: updatedLastContractor.role } : {}),
+        ...(updatedLastContractor
+          ? { payRateInSubunits: updatedLastContractor.payRateInSubunits, role: updatedLastContractor.role }
+          : {}),
         payRateType: updatedLastContractor?.payRateType ?? PayRateType.Hourly,
         hoursPerWeek: updatedLastContractor?.hoursPerWeek ?? DEFAULT_WORKING_HOURS_PER_WEEK,
         startDate: today(getLocalTimeZone()),
