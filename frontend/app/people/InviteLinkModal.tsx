@@ -114,6 +114,7 @@ const InviteLinkModal = ({ open, onOpenChange }: InviteLinkModalProps) => {
                 className="text-foreground text-sm"
                 readOnly
                 value={invite?.invite_link}
+                aria-label="Link"
               />
 
               <Button
