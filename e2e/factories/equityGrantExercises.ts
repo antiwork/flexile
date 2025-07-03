@@ -18,7 +18,7 @@ export const equityGrantExercisesFactory = {
       totalCostCents: bigint;
       status: string;
     }> = {},
-    options: { withShareHoldings?: boolean } = {}
+    options: { withShareHoldings?: boolean } = {},
   ) => {
     const investor = overrides.companyInvestorId
       ? await db.query.companyInvestors
