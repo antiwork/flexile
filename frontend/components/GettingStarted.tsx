@@ -164,7 +164,7 @@ export const GettingStarted = () => {
                   >
                     <div
                       className={cn(
-                        "flex h-4 w-4 items-center justify-center rounded-full border-1",
+                        "flex h-4 w-4 items-center justify-center rounded-full border",
                         item.completed ? "border-blue-500 bg-blue-500" : "border-gray-300 bg-white",
                       )}
                     >
