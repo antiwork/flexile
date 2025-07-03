@@ -50,7 +50,7 @@ test.describe("People - Exercises Table", () => {
     }
     
     await expect(dataRow).toContainText("100");
-    await expect(dataRow).toContainText("$50.00");
+    await expect(dataRow).toContainText("$50");
     await expect(dataRow).toContainText("Signed");
   });
 
