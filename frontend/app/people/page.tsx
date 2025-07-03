@@ -63,7 +63,14 @@ export default function PeoplePage() {
       await refetch();
       await trpcUtils.documents.list.invalidate();
       setShowInviteModal(false);
-      form.reset();
+      const updatedLastContractor = workers[0];
+      form.reset({
+        ...(updatedLastContractor ? { payRateInSubunits: updatedLastContractor.payRateInSubunits, role: updatedLastContractor.role } : {}),
+        payRateType: updatedLastContractor?.payRateType ?? PayRateType.Hourly,
+        hoursPerWeek: updatedLastContractor?.hoursPerWeek ?? DEFAULT_WORKING_HOURS_PER_WEEK,
+        startDate: today(getLocalTimeZone()),
+        contractSignedElsewhere: updatedLastContractor?.contractSignedElsewhere ?? false,
+      });
       if (data.documentId)
         router.push(`/documents?${new URLSearchParams({ sign: data.documentId.toString(), next: "/people" })}`);
     },
