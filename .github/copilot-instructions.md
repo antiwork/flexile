@@ -9,6 +9,7 @@
   - Add any components to `frontend/components/**/*.tsx`
   - Add tRPC API routes to `frontend/trpc/routes/**/index.ts` and then add those to `frontend/trpc/server.ts`
   - Create API handlers using tRPC API routes that follow REST principles
+  - Forms for adding new objects to the database should inherit values from the last object added to the table (e.g., contractor forms should default to the last contractor's values like contractSignedElsewhere, payRateInSubunits, role, etc.)
 
 - For writing end-to-end tests:
   - Use Playwright tests in `e2e/**/*.spec.ts`
