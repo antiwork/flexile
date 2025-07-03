@@ -187,12 +187,12 @@ test.describe("New Contractor", () => {
     await page.getByLabel("Rate").fill("100");
     await page.getByLabel("Already signed contract elsewhere").check({ force: true });
     await page.getByRole("button", { name: "Send invite" }).click();
-    
+
     await expect(page.getByText("Who's joining?")).not.toBeVisible();
-    
+
     await page.getByRole("button", { name: "Invite contractor" }).click();
     await expect(page.getByText("Who's joining?")).toBeVisible();
-    
+
     await expect(page.getByLabel("Already signed contract elsewhere")).toBeChecked();
   });
 
