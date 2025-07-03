@@ -37,7 +37,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import DocumentTableSkeleton from "@/components/DocumentTableSkeleton";
+import TableSkeleton from "@/components/TableSkeleton";
 
 type Document = RouterOutput["documents"]["list"][number];
 type SignableDocument = Document & { docusealSubmissionId: number };
@@ -376,7 +376,7 @@ export default function DocumentsPage() {
             </AlertDescription>
           </Alert>
         ) : null}
-        <Suspense fallback={<DocumentTableSkeleton />}>
+        <Suspense fallback={<TableSkeleton />}>
           {documents.length > 0 ? (
             <>
               <DataTable
