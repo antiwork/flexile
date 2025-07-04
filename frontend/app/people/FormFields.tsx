@@ -13,6 +13,7 @@ import { skipToken } from "@tanstack/react-query";
 
 export default function FormFields() {
   const form = useFormContext();
+  const [rolePopoverOpen, setRolePopoverOpen] = React.useState(false);
   const payRateType: unknown = form.watch("payRateType");
   const companyId = useUserStore((state) => state.user?.currentCompanyId);
   const { data: workers } = trpc.contractors.list.useQuery(companyId ? { companyId, excludeAlumni: true } : skipToken);
@@ -29,7 +30,7 @@ export default function FormFields() {
           <FormItem>
             <FormLabel>Role</FormLabel>
             <Command shouldFilter={false} value={uniqueRoles.find((role) => roleRegex.test(role)) ?? ""}>
-              <Popover>
+              <Popover open={rolePopoverOpen} onOpenChange={setRolePopoverOpen}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Input {...field} type="text" />
@@ -43,7 +44,14 @@ export default function FormFields() {
                   <CommandList>
                     <CommandGroup>
                       {uniqueRoles.map((option) => (
-                        <CommandItem key={option} value={option} onSelect={(e) => field.onChange(e)}>
+                        <CommandItem
+                          key={option}
+                          value={option}
+                          onSelect={(e) => {
+                            field.onChange(e);
+                            setRolePopoverOpen;
+                          }}
+                        >
                           {option}
                         </CommandItem>
                       ))}

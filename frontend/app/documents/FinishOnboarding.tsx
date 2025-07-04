@@ -31,6 +31,7 @@ type OnboardingStepProps = {
 const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
   const company = useCurrentCompany();
   const defaultRoles = ["Software Engineer", "Designer", "Product Manager", "Data Analyst"];
+  const [rolePopoverOpen, setRolePopoverOpen] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(
@@ -82,7 +83,7 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
                 <FormItem>
                   <FormLabel>Role</FormLabel>
                   <Command shouldFilter={false} value={defaultRoles.find((role) => roleRegex.test(role)) ?? ""}>
-                    <Popover>
+                    <Popover open={rolePopoverOpen} onOpenChange={setRolePopoverOpen}>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Input {...field} type="text" />
@@ -96,7 +97,14 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
                         <CommandList>
                           <CommandGroup>
                             {defaultRoles.map((option) => (
-                              <CommandItem key={option} value={option} onSelect={(e) => field.onChange(e)}>
+                              <CommandItem
+                                key={option}
+                                value={option}
+                                onSelect={(e) => {
+                                  field.onChange(e);
+                                  setRolePopoverOpen(false);
+                                }}
+                              >
                                 {option}
                               </CommandItem>
                             ))}
@@ -214,7 +222,7 @@ const OnboardingCompleteModal = ({ open, onNext }: OnboardingStepProps) => {
           </div>
           <div className="flex w-full flex-col items-end space-y-2">
             <Button
-              size="sm"
+              size="small"
               onClick={() => {
                 onNext();
               }}
