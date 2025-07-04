@@ -5,8 +5,6 @@ class CompanyInviteLink < ApplicationRecord
   belongs_to :inviter, class_name: "User"
   belongs_to :document_template, optional: true
 
-  has_many :invited_users, class_name: "User", foreign_key: "invite_link_id"
-
   before_validation :generate_token, on: :create
 
   validates :company_id, :inviter_id, :token, presence: true
