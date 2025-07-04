@@ -30,9 +30,18 @@ export const dividendsRouter = createRouter({
         input.dividendRoundId ? eq(dividends.dividendRoundId, BigInt(input.dividendRoundId)) : undefined,
       );
       const rows = await db.query.dividends.findMany({
-        columns: { numberOfShares: true, totalAmountInCents: true, retainedReason: true, status: true },
+        columns: {
+          id: true,
+          numberOfShares: true,
+          totalAmountInCents: true,
+          retainedReason: true,
+          status: true,
+          withheldTaxCents: true,
+          netAmountInCents: true,
+          signedReleaseAt: true,
+        },
         with: {
-          dividendRound: { columns: { issuedAt: true } },
+          dividendRound: { columns: { issuedAt: true, releaseDocument: true, returnOfCapital: true } },
           investor: { with: { user: { columns: simpleUser.columns } } },
         },
         where,

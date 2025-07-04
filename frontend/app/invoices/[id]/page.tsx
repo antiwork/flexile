@@ -73,7 +73,6 @@ export default function InvoicePage() {
 
   const lineItemTotal = (lineItem: (typeof invoice.lineItems)[number]) =>
     Math.ceil((lineItem.quantity / (lineItem.hourly ? 60 : 1)) * lineItem.payRateInSubunits);
-  const details = StatusDetails(invoice);
   const cashFactor = 1 - invoice.equityPercentage / 100;
 
   assert(!!invoice.invoiceDate); // must be defined due to model checks in rails
@@ -201,11 +200,7 @@ export default function InvoicePage() {
           </Alert>
         )}
 
-        {details ? (
-          <Alert variant={invoice.status === "rejected" ? "destructive" : undefined}>
-            <AlertDescription>{details}</AlertDescription>
-          </Alert>
-        ) : null}
+        <StatusDetails invoice={invoice} />
       </div>
 
       {invoice.equityAmountInCents > 0 ? (

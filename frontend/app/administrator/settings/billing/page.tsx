@@ -14,15 +14,16 @@ import Link from "next/link";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { request } from "@/utils/request";
 import { loadStripe } from "@stripe/stripe-js";
 import env from "@/env/client";
 import { z } from "zod";
 import { company_administrator_settings_bank_accounts_path } from "@/utils/routes";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useState } from "react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import React, { useState } from "react";
 import StripeMicrodepositVerification from "@/app/administrator/settings/StripeMicrodepositVerification";
+import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const columnHelper = createColumnHelper<RouterOutput["consolidatedInvoices"]["list"][number]>();
 const columns = [
@@ -87,11 +88,11 @@ const stripeAppearance = {
   rules: {
     ".Link:hover": { textDecoration: "underline" },
     ".Label": { color: "rgba(83, 87, 83, 0.9)" },
-    ".Input": { border: "1px solid rgba(83, 87, 83, 0.9)" },
+    ".Input": { border: "1px solid rgb(214, 214, 214)", boxShadow: "none" },
     ".Input:hover": { borderColor: "rgba(4, 5, 0, 0.9)" },
     ".Input:focus": { borderColor: "rgba(4, 5, 0, 0.9)", outline: "2px rgba(214, 233, 255, 1)" },
     ".Input--invalid": { borderColor: "var(--colorDanger)" },
-    ".PickerItem": { border: "1px solid rgba(83, 87, 83, 0.9)", padding: "var(--fontSize2Xl)" },
+    ".PickerItem": { border: "1px solid rgb(214, 214, 214)", boxShadow: "none", padding: "var(--fontSize2Xl)" },
     ".MenuIcon:hover": { backgroundColor: "rgba(240, 247, 255, 1)" },
     ".MenuAction": { backgroundColor: "#f7f9fa" },
     ".MenuAction:hover": { backgroundColor: "rgba(240, 247, 255, 1)" },
@@ -99,13 +100,16 @@ const stripeAppearance = {
     ".DropdownItem": { padding: "var(--fontSizeLg)" },
     ".DropdownItem--highlight": { backgroundColor: "rgba(240, 247, 255, 1)" },
     ".TermsText": { fontSize: "var(--fontSizeBase)" },
+    ".p-AccordionPanelContents": { padding: "0" },
+    ".AccordionItem": { border: "none", padding: "2px", boxShadow: "none" },
   },
 };
 
 const stripePromise = loadStripe(env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 export default function Billing() {
   const company = useCurrentCompany();
-  const { data: stripeData } = useSuspenseQuery({
+  const [addingBankAccount, setAddingBankAccount] = useState(false);
+  const { data: stripeData } = useQuery({
     queryKey: ["administratorBankAccount", company.id],
     queryFn: async () => {
       const response = await request({
@@ -114,7 +118,9 @@ export default function Billing() {
         accept: "json",
         assertOk: true,
       });
-      return z.object({ client_secret: z.string(), setup_intent_status: z.string() }).parse(await response.json());
+      return z
+        .object({ client_secret: z.string(), bank_account_last4: z.string().nullable() })
+        .parse(await response.json());
     },
   });
   const [data] = trpc.consolidatedInvoices.list.useSuspenseQuery({ companyId: company.id });
@@ -124,15 +130,51 @@ export default function Billing() {
   return (
     <div className="grid gap-4">
       <h2 className="mb-8 text-xl font-medium">Billing</h2>
-      {stripeData.setup_intent_status === "succeeded" ? null : (
-        <Elements
-          stripe={stripePromise}
-          options={{ appearance: stripeAppearance, clientSecret: stripeData.client_secret }}
-        >
-          <AddBankAccount />
-        </Elements>
-      )}
+      <hgroup>
+        <h3 className="mb-1 text-base font-medium">Payout method</h3>
+        <p className="text-muted-foreground text-sm">
+          Each month, the selected bank account will be debited for the combined total of approved invoices and Flexile
+          fees.
+        </p>
+      </hgroup>
+
+      {stripeData ? ( // Re-render Stripe Elements provider when data changes as it considers its options immutable
+        <>
+          {stripeData.bank_account_last4 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>USD bank account</CardTitle>
+                <CardDescription>Ending in {stripeData.bank_account_last4}</CardDescription>
+                <CardAction>
+                  <Button variant="outline" onClick={() => setAddingBankAccount(true)}>
+                    Edit
+                  </Button>
+                </CardAction>
+              </CardHeader>
+            </Card>
+          ) : (
+            <Alert>
+              <InformationCircleIcon />
+              <AlertTitle>You currently do not have a bank account linked.</AlertTitle>
+              <AlertDescription className="flex items-center justify-between">
+                <div>
+                  <p>We'll use this account to debit contractor payments and our monthly fee.</p>
+                  <p>You won't be charged until the first payment.</p>
+                </div>
+                <Button onClick={() => setAddingBankAccount(true)}>Link your bank account</Button>
+              </AlertDescription>
+            </Alert>
+          )}
+          <Elements
+            stripe={stripePromise}
+            options={{ appearance: stripeAppearance, clientSecret: stripeData.client_secret }}
+          >
+            <AddBankAccount open={addingBankAccount} onOpenChange={setAddingBankAccount} />
+          </Elements>
+        </>
+      ) : null}
       <StripeMicrodepositVerification />
+      <h3 className="mt-4 text-base font-medium">Billing history</h3>
       <Alert>
         <InformationCircleIcon />
         <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
@@ -150,19 +192,18 @@ export default function Billing() {
   );
 }
 
-const AddBankAccount = () => {
+const AddBankAccount = (props: React.ComponentProps<typeof Dialog>) => {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const stripe = useStripe();
   const elements = useElements();
   const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
   const trpcUtils = trpc.useUtils();
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!stripe || !elements) return;
-      const { error } = await stripe.confirmSetup({
+      const { setupIntent, error } = await stripe.confirmSetup({
         elements,
         redirect: "if_required",
         confirmParams: {
@@ -176,30 +217,18 @@ const AddBankAccount = () => {
       await request({
         method: "POST",
         url: company_administrator_settings_bank_accounts_path(company.id),
+        jsonData: { setup_intent_id: setupIntent.id },
         accept: "json",
         assertOk: true,
       });
-      await queryClient.invalidateQueries({ queryKey: ["administratorBankAccount", company.id] });
+      await queryClient.resetQueries({ queryKey: ["administratorBankAccount", company.id] });
       await trpcUtils.companies.microdepositVerificationDetails.invalidate();
-      setOpen(false);
+      props.onOpenChange?.(false);
     },
   });
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <Alert>
-        <InformationCircleIcon />
-        <AlertTitle>You currently do not have a bank account linked.</AlertTitle>
-        <AlertDescription className="flex items-center justify-between">
-          <div>
-            <p>We'll use this account to debit contractor payments and our monthly fee.</p>
-            <p>You won't be charged until the first payment.</p>
-          </div>
-          <DialogTrigger asChild>
-            <Button>Link your bank account</Button>
-          </DialogTrigger>
-        </AlertDescription>
-      </Alert>
+    <Dialog {...props}>
       <DialogContent>
         <DialogTitle>Link your bank account</DialogTitle>
         <PaymentElement

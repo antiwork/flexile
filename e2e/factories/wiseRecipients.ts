@@ -1,6 +1,7 @@
 import { db } from "@test/db";
 import { usersFactory } from "@test/factories/users";
 import { wiseRecipients } from "@/db/schema";
+import { assert } from "@/utils/assert";
 
 export const wiseRecipientsFactory = {
   create: async (overrides: Partial<typeof wiseRecipients.$inferInsert> = {}) => {
@@ -18,6 +19,7 @@ export const wiseRecipientsFactory = {
         ...overrides,
       })
       .returning();
+    assert(wiseRecipient != null);
 
     return { wiseRecipient };
   },

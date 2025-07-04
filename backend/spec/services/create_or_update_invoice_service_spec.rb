@@ -63,7 +63,7 @@ RSpec.describe CreateOrUpdateInvoiceService do
       params[:invoice_line_items][0][:description] = ""
       expect do
         result = invoice_service.process
-        expect(result[:error_message]).to eq("Please input all values")
+        expect(result[:error_message]).to eq("Invoice line items description can't be blank")
       end.to_not change { user.invoices.count }
     end
   end

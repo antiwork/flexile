@@ -505,20 +505,6 @@ RSpec.describe Company do
     end
   end
 
-  describe "#completed_onboarding?" do
-    let(:company) { create(:company_administrator).company }
-
-    it "returns true if onboarding requirements are met" do
-      allow_any_instance_of(OnboardingState::Company).to receive(:complete?).and_return(true)
-      expect(company.completed_onboarding?).to eq true
-    end
-
-    it "returns false if onboarding requirements are not met" do
-      allow_any_instance_of(OnboardingState::Company).to receive(:complete?).and_return(false)
-      expect(company.completed_onboarding?).to eq false
-    end
-  end
-
   describe "#contractor_payment_processing_time_in_days" do
     let(:company) { create(:company, is_trusted:) }
 
@@ -655,7 +641,7 @@ RSpec.describe Company do
     end
   end
 
-  describe "#fetch_stripe_setup_intent" do
+  describe "#create_stripe_setup_intent" do
     let(:setup_intent_id) { "seti_#{SecureRandom.hex}" }
     let(:stripe_customer_id) { "cus_#{SecureRandom.hex}" }
     let(:setup_intent) { Stripe::SetupIntent.new(setup_intent_id) }
@@ -680,33 +666,14 @@ RSpec.describe Company do
       }).and_return(setup_intent)
     end
 
-    it "creates a new customer setup intent if one does not exist" do
+    it "creates a new customer setup intent" do
       company = create(:company, without_bank_account: true, stripe_customer_id: nil)
 
-      expect do
-        result = company.fetch_stripe_setup_intent
-
-        expect(result).to eq setup_intent
-        company.reload
-        expect(company.stripe_customer_id).to eq stripe_customer_id
-        expect(company.bank_account.setup_intent_id).to eq setup_intent_id
-        expect(Stripe::Customer).to have_received(:create).once
-        expect(Stripe::SetupIntent).to have_received(:create).once
-      end.to change { company.company_stripe_accounts.count }.from(0).to(1)
-    end
-
-    it "returns the setup intent if one already exists" do
-      company = create(:company, without_bank_account: true, stripe_customer_id:,
-                                 bank_account: build(:company_stripe_account, setup_intent_id:))
-
-      expect do
-        result = company.fetch_stripe_setup_intent
-        expect(result).to eq setup_intent
-
-        expect(Stripe::Customer).not_to have_received(:create)
-        expect(Stripe::SetupIntent).not_to have_received(:create)
-        expect(Stripe::SetupIntent).to have_received(:retrieve).once
-      end.not_to change { company.company_stripe_accounts.count }
+      expect(company.create_stripe_setup_intent).to eq setup_intent
+      company.reload
+      expect(company.stripe_customer_id).to eq stripe_customer_id
+      expect(Stripe::Customer).to have_received(:create).once
+      expect(Stripe::SetupIntent).to have_received(:create).once
     end
   end
 

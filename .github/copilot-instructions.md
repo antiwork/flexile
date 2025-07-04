@@ -40,3 +40,5 @@
   - Add a `TODO (techdebt)` comment to document refactors that should be made in the future
 
 - No explanatory comments please
+
+- When adding new rules: Always update both `.cursorrules` and `.github/copilot-instructions.md` to keep them synchronized

@@ -22,7 +22,7 @@ RSpec.describe ChargeConsolidatedInvoice do
   end
 
   it "charges the customer and makes a record of it in the DB", :vcr do
-    stripe_setup_intent = company.fetch_stripe_setup_intent
+    stripe_setup_intent = company.bank_account.stripe_setup_intent
 
     expect_any_instance_of(ConsolidatedInvoice).not_to receive(:trigger_payments)
     expect(Stripe::PaymentIntent).to receive(:create).with({

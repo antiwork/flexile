@@ -23,12 +23,8 @@ RSpec.describe OnboardingState::User do
       let(:user) { company_administrator.user }
       let(:company) { company_administrator.company }
 
-      it "calls `OnboardingState::Company#redirect_path`" do
-        service = described_class.new(user:, company:)
-
-        expect_any_instance_of(OnboardingState::Company).to receive(:redirect_path)
-
-        service.redirect_path
+      it "returns nil" do
+        expect(described_class.new(user:, company:).redirect_path).to be_nil
       end
     end
 
@@ -60,10 +56,10 @@ RSpec.describe OnboardingState::User do
       end
     end
 
-    it "returns admin onboarding for a user with an unknown role" do
-      user = create(:user)
+    it "returns nil for a user with an unknown role" do
+      user = create(:user, email: "test@example.com", country_code: "US")
 
-      expect(described_class.new(user:, company: nil).redirect_path).to eq spa_company_administrator_onboarding_details_path("_")
+      expect(described_class.new(user:, company: nil).redirect_path).to be_nil
     end
   end
 end

@@ -13,13 +13,6 @@ class CreateOrUpdateInvoiceService
   def process
     error = nil
     ApplicationRecord.transaction do
-      all_values_present = invoice_line_items_params.all? { |item| item.values.all?(&:present?) }
-
-      unless all_values_present
-        error = "Please input all values"
-        raise ActiveRecord::Rollback
-      end
-
       existing_line_items = invoice.invoice_line_items.to_a
       line_items_to_keep = []
       invoice.assign_attributes(status: Invoice::RECEIVED, invoice_date: Date.current,

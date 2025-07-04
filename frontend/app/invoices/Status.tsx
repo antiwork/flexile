@@ -3,11 +3,11 @@ import { ClockIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import { addDays, isWeekend, nextMonday } from "date-fns";
 import React from "react";
 import Status, { type Variant } from "@/components/Status";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/Tooltip";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type Invoice = Pick<
   RouterOutput["invoices"]["list"][number],
@@ -15,35 +15,43 @@ type Invoice = Pick<
 >;
 const MID_PAYMENT_INVOICE_STATES: Invoice["status"][] = ["payment_pending", "processing"];
 
-export function StatusDetails(invoice: Invoice) {
+export function StatusDetails({ invoice }: { invoice: Invoice }) {
   const company = useCurrentCompany();
   const user = useCurrentUser();
   const [{ invoice: consolidatedInvoice }] = trpc.consolidatedInvoices.last.useSuspenseQuery({ companyId: company.id });
-  if (invoice.status === "approved" && invoice.approvals.length > 0) {
-    return (
-      <ul className="list-disc pl-5">
-        {invoice.approvals.map((approval, index) => (
-          <li key={index}>
-            Approved by {approval.approver.id === user.id ? "you" : approval.approver.name} on{" "}
-            {formatDate(approval.approvedAt, { time: true })}
-          </li>
-        ))}
-      </ul>
-    );
-  }
-  if (invoice.status === "rejected") {
-    let text = "Rejected";
-    if (invoice.rejector) text += ` by ${invoice.rejector.name}`;
-    if (invoice.rejectedAt) text += ` on ${formatDate(invoice.rejectedAt)}`;
-    if (invoice.rejectionReason) text += `: "${invoice.rejectionReason}"`;
-    return text;
-  }
-  if (MID_PAYMENT_INVOICE_STATES.includes(invoice.status) && consolidatedInvoice) {
-    let paymentExpectedBy = addDays(consolidatedInvoice.createdAt, company.paymentProcessingDays);
-    if (isWeekend(paymentExpectedBy)) paymentExpectedBy = nextMonday(paymentExpectedBy);
-    return `Your payment should arrive by ${formatDate(paymentExpectedBy)}`;
-  }
-  return null;
+  const details = (() => {
+    if (invoice.status === "approved" && invoice.approvals.length > 0) {
+      return (
+        <ul className="list-disc pl-5">
+          {invoice.approvals.map((approval, index) => (
+            <li key={index}>
+              Approved by {approval.approver.id === user.id ? "you" : approval.approver.name} on{" "}
+              {formatDate(approval.approvedAt, { time: true })}
+            </li>
+          ))}
+        </ul>
+      );
+    }
+    if (invoice.status === "rejected") {
+      let text = "Rejected";
+      if (invoice.rejector) text += ` by ${invoice.rejector.name}`;
+      if (invoice.rejectedAt) text += ` on ${formatDate(invoice.rejectedAt)}`;
+      if (invoice.rejectionReason) text += `: "${invoice.rejectionReason}"`;
+      return text;
+    }
+    if (MID_PAYMENT_INVOICE_STATES.includes(invoice.status) && consolidatedInvoice) {
+      let paymentExpectedBy = addDays(consolidatedInvoice.createdAt, company.paymentProcessingDays);
+      if (isWeekend(paymentExpectedBy)) paymentExpectedBy = nextMonday(paymentExpectedBy);
+      return `Your payment should arrive by ${formatDate(paymentExpectedBy)}`;
+    }
+    return null;
+  })();
+
+  return details ? (
+    <Alert variant={invoice.status === "rejected" ? "destructive" : undefined}>
+      <AlertDescription>{details}</AlertDescription>
+    </Alert>
+  ) : null;
 }
 
 export default function InvoiceStatus({ invoice, className }: { invoice: Invoice; className?: string }) {
@@ -95,16 +103,3 @@ export default function InvoiceStatus({ invoice, className }: { invoice: Invoice
     </Status>
   );
 }
-
-export const StatusWithTooltip = ({ invoice }: { invoice: Invoice }) => {
-  const details = StatusDetails(invoice);
-
-  return (
-    <Tooltip>
-      <TooltipTrigger>
-        <InvoiceStatus invoice={invoice} />
-      </TooltipTrigger>
-      <TooltipContent>{details}</TooltipContent>
-    </Tooltip>
-  );
-};

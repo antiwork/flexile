@@ -54,25 +54,6 @@ export const expect = baseExpect.extend({
       message: () => `expected element to be ${this.isNot ? "invalid" : "valid"}: ${error}`,
     };
   },
-
-  async toHaveTooltip(locator: Locator, expectedText: string, { exact = false }: { exact?: boolean } = {}) {
-    // `force: true` allows hovering over disabled elements.
-    await locator.hover({ force: true });
-
-    let pass = true;
-    try {
-      await expect(locator.page().getByRole("tooltip", { name: expectedText, exact })).toBeVisible({
-        visible: !this.isNot,
-      });
-    } catch {
-      pass = !pass;
-    }
-
-    return {
-      message: () => `expected element to ${this.isNot ? "not " : ""}have tooltip with text "${expectedText}"`,
-      pass,
-    };
-  },
 });
 
 export const withinModal = async (

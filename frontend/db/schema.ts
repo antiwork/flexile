@@ -451,6 +451,7 @@ export const dividendRounds = pgTable(
     externalId: varchar("external_id").$default(nanoid).notNull(),
     returnOfCapital: boolean("return_of_capital").notNull(),
     readyForPayment: boolean("ready_for_payment").notNull().default(false),
+    releaseDocument: text("release_document"),
   },
   (table) => [
     index("index_dividend_rounds_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
@@ -482,6 +483,7 @@ export const dividends = pgTable(
     withholdingPercentage: integer("withholding_percentage"),
     userComplianceInfoId: bigint("user_compliance_info_id", { mode: "bigint" }),
     qualifiedAmountCents: bigint("qualified_amount_cents", { mode: "bigint" }).notNull(),
+    signedReleaseAt: timestamp("signed_release_at", { precision: 6, mode: "date" }),
   },
   (table) => [
     index("index_dividends_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),

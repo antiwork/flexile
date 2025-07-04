@@ -45,7 +45,7 @@ class Stripe::EventHandler
 
       next_action = stripe_event.data.object.respond_to?(:next_action) ? stripe_event.data.object.next_action : nil
       company = stripe_account.company.reload
-      if next_action.present? && next_action.type == "verify_with_microdeposits" && company.completed_onboarding?
+      if next_action.present? && next_action.type == "verify_with_microdeposits"
         company.company_administrators.ids.each do
           CompanyMailer.verify_stripe_microdeposits(admin_id: _1).deliver_later
         end

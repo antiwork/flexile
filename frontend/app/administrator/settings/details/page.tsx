@@ -184,7 +184,7 @@ export default function Details() {
               name="zipCode"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Postal code</FormLabel>
+                  <FormLabel>ZIP code</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -194,20 +194,7 @@ export default function Details() {
             />
           </div>
 
-          <FormField
-            name="country"
-            render={() => (
-              <FormItem>
-                <FormLabel>Country</FormLabel>
-                <FormControl>
-                  <ComboBox value="" onChange={(value) => value} placeholder="United States" options={[]} disabled />
-                </FormControl>
-                <FormMessage>
-                  Flexile is currently available only to companies incorporated in the United States.
-                </FormMessage>
-              </FormItem>
-            )}
-          />
+          <div className="text-xs">Flexile is only available for companies based in the United States.</div>
         </div>
         <MutationStatusButton
           mutation={updateSettings}
