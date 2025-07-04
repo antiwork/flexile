@@ -14,7 +14,9 @@ const TemplateSelector = ({
   const company = useCurrentCompany();
   const uid = useId();
   const [templates] = trpc.documents.templates.list.useSuspenseQuery({ companyId: company.id, type, signable: true });
-  const filteredTemplates = templates;
+  const filteredTemplates = templates.filter(
+    (template) => !template.generic || !templates.some((t) => !t.generic && t.type === template.type),
+  );
   useEffect(() => {
     if (!filteredTemplates.some((t) => t.id === props.value)) props.onChange(filteredTemplates[0]?.id ?? "");
   }, [filteredTemplates]);

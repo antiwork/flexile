@@ -4,6 +4,8 @@ import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { companies, users } from "@/db/schema";
+import { DocumentTemplateType } from "@/db/enums";
+import { documentTemplatesFactory } from "@test/factories/documentTemplates";
 
 test.describe("Contractor Invite Link", () => {
   let company: typeof companies.$inferSelect;
@@ -23,10 +25,12 @@ test.describe("Contractor Invite Link", () => {
   test("shows invite link modal and allows copying invite link", async ({ page }) => {
     await login(page, admin);
     await page.getByRole("link", { name: "People" }).click();
+    await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
+
     await page.getByRole("button", { name: "Invite link" }).click();
     await expect(page.getByRole("heading", { name: "Invite Link" })).toBeVisible();
 
-    await page.waitForTimeout(100);
+    await expect(page.getByRole("button", { name: "Copy" })).toBeEnabled();
     const inviteLink = await page.getByRole("textbox", { name: "Link" }).inputValue();
     expect(inviteLink).toBeTruthy();
 
@@ -46,26 +50,33 @@ test.describe("Contractor Invite Link", () => {
   test("shows different invite links for different templates and contract signed elsewhere switch", async ({
     page,
   }) => {
+    await documentTemplatesFactory.create({
+      companyId: company.id,
+      type: DocumentTemplateType.ConsultingContract,
+    });
+
     await login(page, admin);
     await page.getByRole("link", { name: "People" }).click();
     await page.getByRole("button", { name: "Invite link" }).click();
 
+    await expect(page.getByRole("button", { name: "Copy" })).toBeEnabled();
     const defaultInviteLink = await page.getByRole("textbox", { name: "Link" }).inputValue();
     expect(defaultInviteLink).toBeTruthy();
 
-    const switchButton = page.getByRole("switch", { name: "Already signed contract elsewhere" });
-    await expect(switchButton).toBeChecked();
+    const switchButton = page.getByLabel("Already signed contract elsewhere");
+    await expect(switchButton).toHaveAttribute("aria-checked", "true");
 
     await switchButton.click({ force: true });
-    await page.waitForTimeout(300);
+    await expect(switchButton).not.toHaveAttribute("aria-checked", "true");
 
+    await expect(page.getByRole("button", { name: "Copy" })).toBeEnabled();
     const newInviteLink = await page.getByRole("textbox", { name: "Link" }).inputValue();
     expect(newInviteLink).not.toBe(defaultInviteLink);
 
-    await switchButton.click({ force: true });
-    await page.waitForTimeout(300);
-    await expect(switchButton).toBeChecked();
+    await switchButton.check({ force: true });
+    await expect(switchButton).toHaveAttribute("aria-checked", "true");
 
+    await expect(page.getByRole("button", { name: "Copy" })).toBeEnabled();
     const checkedInviteLink = await page.getByRole("textbox", { name: "Link" }).inputValue();
     expect(checkedInviteLink).toBe(defaultInviteLink);
   });
@@ -75,6 +86,7 @@ test.describe("Contractor Invite Link", () => {
     await page.getByRole("link", { name: "People" }).click();
     await page.getByRole("button", { name: "Invite link" }).click();
 
+    await expect(page.getByRole("button", { name: "Copy" })).toBeEnabled();
     const originalInviteLink = await page.getByRole("textbox", { name: "Link" }).inputValue();
     expect(originalInviteLink).toBeTruthy();
 
@@ -82,6 +94,7 @@ test.describe("Contractor Invite Link", () => {
     await expect(page.getByText("Reset Invite Link")).toBeVisible();
     await page.getByRole("button", { name: "Reset" }).click();
 
+    await expect(page.getByRole("button", { name: "Copy" })).toBeEnabled();
     await expect(page.getByText("Reset Invite Link")).not.toBeVisible();
     const newInviteLink = await page.getByRole("textbox", { name: "Link" }).inputValue();
     expect(newInviteLink).not.toBe(originalInviteLink);
