@@ -26,6 +26,18 @@ class Company < ApplicationRecord
     self.const_set("ACCESS_ROLE_#{access_role.upcase}", access_role)
   end
 
+  ADMIN_CHECKLIST_ITEMS = [
+    { key: "add_bank_account", title: "Add bank account", description: "Connect your bank account to enable payments" },
+    { key: "invite_contractor", title: "Invite a contractor", description: "Add your first team member" },
+    { key: "send_first_payment", title: "Send your first payment", description: "Process your first contractor payment" }
+  ].freeze
+
+  WORKER_CHECKLIST_ITEMS = [
+    { key: "fill_tax_information", title: "Fill tax information", description: "Complete your tax details" },
+    { key: "add_payout_information", title: "Add payout information", description: "Set up your payment method" },
+    { key: "sign_contract", title: "Sign contract", description: "Review and sign your contractor agreement" }
+  ].freeze
+
   has_many :company_administrators
   has_many :administrators, through: :company_administrators, source: :user
   has_many :company_lawyers
@@ -97,7 +109,6 @@ class Company < ApplicationRecord
 
   after_create_commit :create_balance!
   after_update_commit :update_convertible_implied_shares, if: :saved_change_to_fully_diluted_shares?
-
 
   accepts_nested_attributes_for :expense_categories
 
@@ -190,6 +201,28 @@ class Company < ApplicationRecord
     json_data&.dig("flags")&.include?(flag)
   end
 
+  def checklist_items(user)
+    case user
+    when CompanyAdministrator
+      ADMIN_CHECKLIST_ITEMS.map do |item|
+        item.merge(completed: checklist_item_completed?(item[:key], user))
+      end
+    when CompanyWorker
+      WORKER_CHECKLIST_ITEMS.map do |item|
+        item.merge(completed: checklist_item_completed?(item[:key], user))
+      end
+    else
+      []
+    end
+  end
+
+  def checklist_completion_percentage(user)
+    completed_count = checklist_items(user).count { |item| item[:completed] }
+    return 0 if checklist_items(user).empty?
+
+    (completed_count.to_f / checklist_items(user).size * 100).round
+  end
+
   private
     def update_convertible_implied_shares
       convertible_investments.each do |investment|
@@ -210,5 +243,28 @@ class Company < ApplicationRecord
       )
       update!(stripe_customer_id: stripe_customer.id)
       stripe_customer_id
+    end
+
+    def checklist_item_completed?(key, user)
+      case key
+      when "add_bank_account"
+        bank_account_ready?
+      when "invite_contractor"
+        company_workers.active.exists?
+      when "send_first_payment"
+        invoices.joins(:payments).where(payments: { status: Payments::Status::SUCCEEDED }).exists?
+      when "fill_tax_information"
+        user.user.compliance_info&.tax_information_confirmed_at.present?
+      when "add_payout_information"
+        user.user.bank_account.present?
+      when "sign_contract"
+        user.user.documents.joins(:signatures)
+                  .where(documents: { document_type: Document.document_types[:consulting_contract], deleted_at: nil, company: self })
+                  .where.not(document_signatures: { signed_at: nil })
+                  .where(document_signatures: { user_id: user.user.id })
+                  .exists?
+      else
+        false
+      end
     end
 end

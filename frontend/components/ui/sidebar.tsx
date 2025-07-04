@@ -465,17 +465,19 @@ function SidebarMenuButton({
   size = "default",
   className,
   onClick,
+  closeOnMobileClick = true,
   ...props
 }: React.ComponentProps<"button"> & {
   asChild?: boolean;
   isActive?: boolean;
+  closeOnMobileClick?: boolean;
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const Comp = asChild ? Slot : "button";
   const { isMobile, setOpenMobile } = useSidebar();
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     onClick?.(event);
-    if (isMobile) {
+    if (isMobile && closeOnMobileClick) {
       setOpenMobile(false);
     }
   };

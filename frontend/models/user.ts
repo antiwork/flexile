@@ -31,6 +31,15 @@ const companySchema = z.object({
   investorCount: z.number().nullable(),
   primaryAdminName: z.string().nullable(),
   isTrusted: z.boolean(),
+  checklistItems: z.array(
+    z.object({
+      key: z.string(),
+      title: z.string(),
+      description: z.string(),
+      completed: z.boolean(),
+    }),
+  ),
+  checklistCompletionPercentage: z.number(),
 });
 
 export const currentUserSchema = z.object({

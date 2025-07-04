@@ -37,6 +37,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { storageKeys } from "@/models/constants";
 
 type Document = RouterOutput["documents"]["list"][number];
 type SignableDocument = Document & { docusealSubmissionId: number };
@@ -316,7 +317,7 @@ export default function DocumentsPage() {
     [userId],
   );
   const storedColumnFilters = columnFiltersSchema.safeParse(
-    JSON.parse(localStorage.getItem("documentsColumnFilters") ?? "{}"),
+    JSON.parse(localStorage.getItem(storageKeys.DOCUMENTS_COLUMN_FILTERS) ?? "{}"),
   );
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
     storedColumnFilters.data ?? [{ id: "Status", value: ["Signature required"] }],
@@ -331,7 +332,7 @@ export default function DocumentsPage() {
     onColumnFiltersChange: (columnFilters) =>
       setColumnFilters((old) => {
         const value = typeof columnFilters === "function" ? columnFilters(old) : columnFilters;
-        localStorage.setItem("documentsColumnFilters", JSON.stringify(value));
+        localStorage.setItem(storageKeys.DOCUMENTS_COLUMN_FILTERS, JSON.stringify(value));
         return value;
       }),
   });
