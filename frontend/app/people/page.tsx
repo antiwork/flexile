@@ -1,7 +1,7 @@
 "use client";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import Link from "next/link";
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -57,32 +57,13 @@ export default function PeoplePage() {
     resolver: zodResolver(schema),
   });
 
-  useEffect(() => {
-    form.reset({
-      ...(lastContractor ? { payRateInSubunits: lastContractor.payRateInSubunits, role: lastContractor.role } : {}),
-      payRateType: lastContractor?.payRateType ?? PayRateType.Hourly,
-      hoursPerWeek: lastContractor?.hoursPerWeek ?? DEFAULT_WORKING_HOURS_PER_WEEK,
-      startDate: today(getLocalTimeZone()),
-      contractSignedElsewhere: lastContractor?.contractSignedElsewhere ?? false,
-    });
-  }, [lastContractor, form]);
-
   const trpcUtils = trpc.useUtils();
   const saveMutation = trpc.contractors.create.useMutation({
     onSuccess: async (data) => {
-      const refetchResult = await refetch();
+      await refetch();
       await trpcUtils.documents.list.invalidate();
       setShowInviteModal(false);
-      const updatedLastContractor = refetchResult.data?.[0];
-      form.reset({
-        ...(updatedLastContractor
-          ? { payRateInSubunits: updatedLastContractor.payRateInSubunits, role: updatedLastContractor.role }
-          : {}),
-        payRateType: updatedLastContractor?.payRateType ?? PayRateType.Hourly,
-        hoursPerWeek: updatedLastContractor?.hoursPerWeek ?? DEFAULT_WORKING_HOURS_PER_WEEK,
-        startDate: today(getLocalTimeZone()),
-        contractSignedElsewhere: updatedLastContractor?.contractSignedElsewhere ?? false,
-      });
+      form.reset();
       if (data.documentId)
         router.push(`/documents?${new URLSearchParams({ sign: data.documentId.toString(), next: "/people" })}`);
     },
