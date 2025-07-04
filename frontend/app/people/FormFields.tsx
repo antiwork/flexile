@@ -49,7 +49,7 @@ export default function FormFields() {
                           value={option}
                           onSelect={(e) => {
                             field.onChange(e);
-                            setRolePopoverOpen;
+                            setRolePopoverOpen(false);
                           }}
                         >
                           {option}

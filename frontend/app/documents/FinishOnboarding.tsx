@@ -66,7 +66,7 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
   });
 
   return (
-    <Dialog open={open} onOpenChange={() => {}}>
+    <Dialog open={open} onOpenChange={() => {}} /* Prevent dismissal during onboarding */>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>What will you be doing at {company.name}?</DialogTitle>
@@ -210,7 +210,7 @@ const OnboardingCompleteModal = ({ open, onNext }: OnboardingStepProps) => {
   const company = useCurrentCompany();
 
   return (
-    <Dialog open={open} onOpenChange={() => {}}>
+    <Dialog open={open} onOpenChange={() => {}} /* Prevent dismissal during onboarding */>
       <DialogHeader className="sr-only">
         <DialogTitle>Onboarding Complete</DialogTitle>
       </DialogHeader>
