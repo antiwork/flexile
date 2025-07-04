@@ -86,6 +86,8 @@ export const tenderOffersBidsRouter = createRouter({
         if (!count || count.count < input.numberOfShares) throw new TRPCError({ code: "BAD_REQUEST" });
       }
 
+      // TODO confirm that the implied valuation is greater than the minimum valuation
+
       await db.insert(tenderOfferBids).values({
         tenderOfferId: tenderOffer.id,
         companyInvestorId: ctx.companyInvestor.id,

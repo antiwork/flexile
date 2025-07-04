@@ -58,10 +58,12 @@ export const tenderOffersRouter = createRouter({
       .select({
         ...pick(tenderOffers, "name", "startsAt", "endsAt", "minimumValuation", "acceptedPriceCents"),
         id: tenderOffers.externalId,
-        bidCount: count(tenderOfferBids.id),
-        participation: currentUserInvestorId
-          ? sql<number>`COALESCE(SUM(CASE WHEN ${tenderOfferBids.companyInvestorId} = ${currentUserInvestorId} THEN ${tenderOfferBids.acceptedShares} * ${tenderOffers.acceptedPriceCents} ELSE 0 END), 0)`
-          : sql<number>`0`,
+        bidCount: ctx.companyAdministrator
+          ? count(tenderOfferBids.id)
+          : sql<number>`COUNT(CASE WHEN ${tenderOfferBids.companyInvestorId} = ${currentUserInvestorId} THEN 1 END)`,
+        participation: ctx.companyAdministrator
+          ? sql<number>`COALESCE(SUM(${tenderOfferBids.acceptedShares} * ${tenderOffers.acceptedPriceCents}), 0)`
+          : sql<number>`COALESCE(SUM(CASE WHEN ${tenderOfferBids.companyInvestorId} = ${currentUserInvestorId} THEN ${tenderOfferBids.acceptedShares} * ${tenderOffers.acceptedPriceCents} ELSE 0 END), 0)`,
       })
       .from(tenderOffers)
       .innerJoin(companies, eq(tenderOffers.companyId, companies.id))

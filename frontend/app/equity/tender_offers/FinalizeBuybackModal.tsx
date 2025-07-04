@@ -50,6 +50,7 @@ const FinalizeBuybackModal = ({ isOpen, onClose, onNext, tenderOffer, bids }: Fi
 
           <div className="flex justify-between border-b border-gray-200 py-4">
             <span className="font-medium">Implied valuation</span>
+            {/* TODO is this correct? */}
             <span>{formatMoneyFromCents(impliedValuation)}</span>
           </div>
 

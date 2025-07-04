@@ -88,7 +88,7 @@ export default function Buybacks() {
         },
       }),
       columnHelper.accessor("bidCount", {
-        header: "Your bids",
+        header: user.roles.administrator ? "Investors" : "Your bids",
         cell: (info) => info.getValue(),
       }),
 
