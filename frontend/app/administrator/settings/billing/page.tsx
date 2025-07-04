@@ -24,6 +24,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import React, { useState } from "react";
 import StripeMicrodepositVerification from "@/app/administrator/settings/StripeMicrodepositVerification";
 import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import BankAccountCardSkeleton from "@/components/BankAccountSkeleton";
 
 const columnHelper = createColumnHelper<RouterOutput["consolidatedInvoices"]["list"][number]>();
 const columns = [
@@ -138,7 +139,10 @@ export default function Billing() {
         </p>
       </hgroup>
 
-      {stripeData ? ( // Re-render Stripe Elements provider when data changes as it considers its options immutable
+      {stripeData === undefined ? (
+        <BankAccountCardSkeleton />
+      ) : (
+        // Re-render Stripe Elements provider when data changes as it considers its options immutable
         <>
           {stripeData.bank_account_last4 ? (
             <Card>
@@ -172,7 +176,7 @@ export default function Billing() {
             <AddBankAccount open={addingBankAccount} onOpenChange={setAddingBankAccount} />
           </Elements>
         </>
-      ) : null}
+      )}
       <StripeMicrodepositVerification />
       <h3 className="mt-4 text-base font-medium">Billing history</h3>
       <Alert>
