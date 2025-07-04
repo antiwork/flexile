@@ -192,7 +192,7 @@ export default function PeoplePage() {
                       <Switch
                         checked={field.value}
                         onCheckedChange={field.onChange}
-                        label="Already signed contract elsewhere"
+                        label="Already signed contract elsewhere."
                       />
                     </FormControl>
                   </FormItem>
