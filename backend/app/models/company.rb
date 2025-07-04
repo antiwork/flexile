@@ -252,7 +252,7 @@ class Company < ApplicationRecord
       when "invite_contractor"
         company_workers.active.exists?
       when "send_first_payment"
-        invoices.joins(:payments).where(payments: { status: Payments::Status::SUCCEEDED }).exists?
+        invoices.joins(:payments).exists?
       when "fill_tax_information"
         user.user.compliance_info&.tax_information_confirmed_at.present?
       when "add_payout_information"

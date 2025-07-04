@@ -7,27 +7,7 @@ import type { Route } from "next";
 import { ChevronDown, X } from "lucide-react";
 import { storageKeys } from "@/models/constants";
 import { usePathname, useRouter } from "next/navigation";
-
-const CircularProgress = ({ progress }: { progress: number }) => {
-  const circumference = 50.27; // 2π * radius (radius = 8)
-  const strokeDasharray = `${(progress / 100) * circumference} ${circumference}`;
-
-  return (
-    <svg className="h-4 w-4 -rotate-90" viewBox="0 0 20 20">
-      <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2" fill="none" className="text-gray-300" />
-      <circle
-        cx="10"
-        cy="10"
-        r="8"
-        stroke="currentColor"
-        strokeWidth="2"
-        fill="none"
-        strokeDasharray={strokeDasharray}
-        className="text-blue-500"
-      />
-    </svg>
-  );
-};
+import CircularProgress from "@/components/CircularProgress";
 
 const CheckIcon = () => (
   <svg className="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -69,7 +49,7 @@ export const GettingStarted = () => {
 
     const savedStatus = localStorage.getItem(storageKeys.GETTING_STARTED_STATUS);
 
-    return isValidStatus(savedStatus) ? savedStatus : "collapsed";
+    return isValidStatus(savedStatus) ? savedStatus : "expanded";
   });
 
   useEffect(() => {
@@ -86,7 +66,7 @@ export const GettingStarted = () => {
       }
     });
     return subscription;
-  }, [company.id]);
+  }, [company.id, status]);
 
   useEffect(() => {
     if (status === "dismissed") {
@@ -97,6 +77,10 @@ export const GettingStarted = () => {
   }, [status]);
 
   if (status === "dismissed") {
+    return null;
+  }
+
+  if (!company.checklistItems.length) {
     return null;
   }
 
