@@ -1,10 +1,16 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany } from "@/global";
 import { DocumentTemplateType, trpc } from "@/trpc/client";
-import { Label } from "@/components/ui/label";
 import { Form, FormField, FormItem, FormControl } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,6 +18,7 @@ import { z } from "zod";
 import { Switch } from "@/components/ui/switch";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import { MutationStatusButton } from "@/components/MutationButton";
+import { Check, Copy } from "lucide-react";
 
 interface InviteLinkModalProps {
   open: boolean;
@@ -76,80 +83,84 @@ const InviteLinkModal = ({ open, onOpenChange }: InviteLinkModalProps) => {
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="md:mb-80">
           <DialogHeader>
-            <DialogTitle>Invite Link</DialogTitle>
-            <DialogDescription className="text-muted-foreground">
+            <DialogTitle>Invite link</DialogTitle>
+            <DialogDescription>
               Share a link so contractors can add their details, set a rate, and sign their own contract.
             </DialogDescription>
           </DialogHeader>
-          <Form {...form}>
-            <FormField
-              control={form.control}
-              name="contractSignedElsewhere"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      label="Already signed contract elsewhere"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
+          <div className="flex flex-col gap-2">
+            <Input
+              id="contractor-invite-link"
+              className="text-foreground text-sm"
+              readOnly
+              value={invite?.invite_link}
+              aria-label="Link"
             />
-            {!form.watch("contractSignedElsewhere") && (
+            <Form {...form}>
               <FormField
                 control={form.control}
-                name="documentTemplateId"
-                render={({ field }) => <TemplateSelector type={DocumentTemplateType.ConsultingContract} {...field} />}
+                name="contractSignedElsewhere"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        label={<span className="text-sm">Already signed contract elsewhere.</span>}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
               />
-            )}
-          </Form>
-
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="invoice-id">Link</Label>
-            <div className="ml-auto flex w-full items-center gap-2">
-              <Input
-                id="contractor-invite-link"
-                className="text-foreground text-sm"
-                readOnly
-                value={invite?.invite_link}
-                aria-label="Link"
-              />
-
-              <Button
-                type="button"
-                size="small"
-                variant={copied ? "success" : "outline"}
-                disabled={!invite?.invite_link}
-                onClick={async () => {
-                  await navigator.clipboard.writeText(invite?.invite_link || "");
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 3000);
-                }}
-              >
-                {copied ? "Copied!" : "Copy"}
-              </Button>
-            </div>
-            <div className="mb-2 flex items-center gap-2 text-xs">
-              <span className="text-muted-foreground">Anyone with this link can join your workspace.</span>
-              <Button
-                variant="link"
-                size="small"
-                onClick={() => {
-                  setShowResetLinkModal(true);
-                }}
-              >
-                Reset link
-              </Button>
-            </div>
+              {!form.watch("contractSignedElsewhere") && (
+                <FormField
+                  control={form.control}
+                  name="documentTemplateId"
+                  render={({ field }) => <TemplateSelector type={DocumentTemplateType.ConsultingContract} {...field} />}
+                />
+              )}
+            </Form>
           </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              size="default"
+              onClick={() => {
+                setShowResetLinkModal(true);
+              }}
+            >
+              Reset link
+            </Button>
+            <Button
+              type="button"
+              size="default"
+              variant={copied ? "success" : "default"}
+              disabled={!invite?.invite_link}
+              onClick={async () => {
+                await navigator.clipboard.writeText(invite?.invite_link || "");
+                setCopied(true);
+                setTimeout(() => setCopied(false), 3000);
+              }}
+            >
+              {copied ? (
+                <div className="flex items-center">
+                  <Check className="mr-2 h-4 w-4" />
+                  <span>Copied!</span>
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  <Copy className="mr-2 h-4 w-4" />
+                  <span>Copy link</span>
+                </div>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
       <Dialog open={showResetLinkModal} onOpenChange={setShowResetLinkModal}>
         <DialogContent className="md:mb-80">
           <DialogHeader>
-            <DialogTitle>Reset Invite Link</DialogTitle>
+            <DialogTitle>Reset invite link?</DialogTitle>
             <DialogDescription className="text-muted-foreground">
               Resetting the link will deactivate the current invite. If you have already shared it, others may not be
               able to join.
@@ -161,7 +172,7 @@ const InviteLinkModal = ({ open, onOpenChange }: InviteLinkModalProps) => {
                 Cancel
               </Button>
               <MutationStatusButton mutation={resetInviteLinkMutation} type="button" onClick={resetInviteLink}>
-                Reset
+                Reset link
               </MutationStatusButton>
             </div>
             {resetInviteLinkMutation.isError ? (

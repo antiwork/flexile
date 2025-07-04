@@ -20,7 +20,6 @@ import { PopoverTrigger } from "@radix-ui/react-popover";
 import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { z } from "zod";
-import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type OnboardingStepProps = {
@@ -52,7 +51,7 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
     },
   });
   const payRateType: unknown = form.watch("payRateType");
-  const roleRegex = new RegExp(`${form.watch("role")}`, "iu");
+  const roleRegex = new RegExp(form.watch("role"), "iu");
 
   const trpcUtils = trpc.useUtils();
   const updateContractor = trpc.companyInviteLinks.completeOnboarding.useMutation({
@@ -208,14 +207,20 @@ const OnboardingCompleteModal = ({ open, onNext }: OnboardingStepProps) => {
         <DialogTitle>Onboarding Complete</DialogTitle>
       </DialogHeader>
       <DialogContent className="w-full max-w-md text-center">
-        <div className="flex flex-col items-center justify-center p-4">
-          <CheckCircle2 className="mb-4 h-10 w-10 text-black" strokeWidth={1.5} />
-          <div className="mb-2 font-semibold">You're all set!</div>
-          <div className="text-muted-foreground mb-4 text-base text-sm">
-            Your details and contract have been submitted. {company.name} will be in touch if anything else is needed.
+        <div className="flex flex-col items-center justify-center">
+          <div className="mb-2 w-full text-left text-base font-semibold">You're all set!</div>
+          <div className="mb-4 w-full text-left text-base">
+            Your details have been submitted. {company.name} will be in touch if anything else is needed.
           </div>
-          <div className="flex flex-col items-end space-y-2">
-            <Button onClick={onNext}>Close </Button>
+          <div className="flex w-full flex-col items-end space-y-2">
+            <Button
+              size="sm"
+              onClick={() => {
+                onNext();
+              }}
+            >
+              Close
+            </Button>
           </div>
         </div>
       </DialogContent>
@@ -223,10 +228,7 @@ const OnboardingCompleteModal = ({ open, onNext }: OnboardingStepProps) => {
   );
 };
 
-const onboardingSteps: Array<React.ComponentType<OnboardingStepProps>> = [
-  WorkerOnboardingModal,
-  OnboardingCompleteModal,
-];
+const onboardingSteps: React.ComponentType<OnboardingStepProps>[] = [WorkerOnboardingModal, OnboardingCompleteModal];
 
 type FinishOnboardingProps = {
   handleComplete: () => void;

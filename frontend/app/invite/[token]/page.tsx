@@ -92,14 +92,14 @@ export default function AcceptInvitationPage() {
 
   return (
     <SimpleLayout>
-      <div className="items-left flex flex-col rounded-xl bg-white p-8 shadow-lg">
+      <div className="items-left flex flex-col rounded-lg bg-white p-8 shadow-lg">
         <div className="bg-muted mb-4 flex h-12 w-12 rounded-lg">
           <Building2Icon className="m-auto h-12 w-12 text-gray-700" />
         </div>
-        <div className="text-md mb-2 font-semibold">
+        <div className="mb-2 text-base font-semibold">
           {inviteData.inviter_name || "Someone"} invited you to join {inviteData.company_name || "a company"}.
         </div>
-        <div className="text-muted-foreground mb-6 text-sm">
+        <div className="mb-6 text-sm">
           As a contractor, you’ll define your role, set your rate, and upload your contract. Let’s get started!
         </div>
         <form
@@ -109,24 +109,24 @@ export default function AcceptInvitationPage() {
           }}
         >
           <MutationStatusButton
-            className="w-full rounded-lg bg-black py-3 text-base font-medium text-white transition hover:bg-gray-900"
+            className="w-full rounded-lg bg-black py-2 text-base text-white transition hover:bg-gray-900"
             type="submit"
             mutation={acceptInviteMutation}
             loadingText="Accepting..."
             disabled={pending}
           >
-            Accept Invitation
+            Accept invitation
           </MutationStatusButton>
         </form>
-        {pending && (
+        {pending ? (
           <div className="mt-4 flex items-center justify-center">
             <div className="mr-2 h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-black" />
             <span className="text-sm text-gray-700">Switching company...</span>
           </div>
-        )}
-        {acceptInviteMutation.isError && (
-          <div className="mt-2 text-sm text-red-600">{acceptInviteMutation.error?.message}</div>
-        )}
+        ) : null}
+        {acceptInviteMutation.isError ? (
+          <div className="mt-2 text-sm text-red-600">{acceptInviteMutation.error.message}</div>
+        ) : null}
       </div>
     </SimpleLayout>
   );
