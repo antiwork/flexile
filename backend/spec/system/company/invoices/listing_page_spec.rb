@@ -98,7 +98,7 @@ RSpec.describe "Invoice listing page" do
       create(:invoice, :approved, company:, user: contractor_user) # payable invoice
       visit spa_company_invoices_path(company.external_id)
 
-      invoices = contractor_user.invoices
+      invoices = contractor_user.invoices.alive
       invoices.each do |invoice|
         within(:table_row, { "Invoice ID" => invoice.invoice_number, "Status" => human_status(invoice) }) do
           expect(page).to have_link(href: invoice_action_path(invoice))
@@ -172,6 +172,16 @@ RSpec.describe "Invoice listing page" do
         expect(page).to have_selector("h1", text: "Invoicing")
       end
     end
+
+    it "does not show soft-deleted invoices" do
+      active_invoice = create(:invoice, company:, user: contractor_user)
+      deleted_invoice = create(:invoice, :deleted, company:, user: contractor_user)
+
+      visit spa_company_invoices_path(company.external_id)
+
+      expect(page).to have_text(active_invoice.invoice_number)
+      expect(page).not_to have_text(deleted_invoice.invoice_number)
+    end
   end
 
   context "when logged in as a company admin" do
@@ -188,7 +198,7 @@ RSpec.describe "Invoice listing page" do
       [
         create(:invoice, company:, invoice_date: Date.parse("Dec 1, 2023")),
         create(:invoice, company:, invoice_date: Date.parse("Nov 1, 2023")),
-        create(:invoice, :project_based, company_worker: create(:company_worker, :project_based, company:), invoice_date: Date.parse("Nov 1, 2023")),
+        create(:invoice, company_worker: create(:company_worker, :project_based, company:), invoice_date: Date.parse("Nov 1, 2023")),
       ]
     end
     let!(:partially_approved_invoices) do
@@ -429,6 +439,46 @@ RSpec.describe "Invoice listing page" do
 
       include_examples "verifying Stripe microdeposits" do
         let(:path) { spa_company_invoices_path(company.external_id) }
+      end
+    end
+
+    context "when there are soft-deleted invoices" do
+      let!(:active_invoice) { create(:invoice, company:, user: contractor_user) }
+      let!(:deleted_invoice) { create(:invoice, :deleted, company:, user: contractor_user) }
+
+      it "does not show soft-deleted invoices in any tab" do
+        visit spa_company_invoices_path(company.external_id)
+
+        # Open tab (default)
+        expect(page).to have_text(active_invoice.invoice_number)
+        expect(page).not_to have_text(deleted_invoice.invoice_number)
+
+        # Approved tab
+        select_tab "Approved"
+        expect(page).not_to have_text(deleted_invoice.invoice_number)
+
+        # Rejected tab
+        select_tab "Rejected"
+        expect(page).not_to have_text(deleted_invoice.invoice_number)
+
+        # History tab
+        visit spa_company_invoices_path(company.external_id, tab: "history")
+        expect(page).not_to have_text(deleted_invoice.invoice_number)
+      end
+
+      it "excludes soft-deleted invoices from counts" do
+        # Create some test data with mixed statuses
+        deleted_received = create(:invoice, :deleted, company:, status: Invoice::RECEIVED)
+        deleted_approved = create(:invoice, :deleted, :fully_approved, company:)
+        deleted_rejected = create(:invoice, :deleted, company:, status: Invoice::REJECTED)
+
+        visit spa_company_invoices_path(company.external_id)
+
+        # The counts should not include the deleted invoices
+        # This test ensures the UI queries use .alive scope
+        expect(page).not_to have_text(deleted_received.invoice_number)
+        expect(page).not_to have_text(deleted_approved.invoice_number)
+        expect(page).not_to have_text(deleted_rejected.invoice_number)
       end
     end
   end

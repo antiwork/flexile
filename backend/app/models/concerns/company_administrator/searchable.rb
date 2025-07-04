@@ -9,7 +9,7 @@ module CompanyAdministrator::Searchable
 
   def records_for_search
     {
-      invoices: company.invoices,
+      invoices: company.invoices.alive,
       company_workers: company.company_workers,
       company_investors: company.company_investors,
     }

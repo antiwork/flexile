@@ -36,7 +36,7 @@ class ConsolidatedInvoiceCsv
           ci.status,
           payments.pluck(:stripe_payment_intent_id).reject(&:blank?).join(";"),
         ]
-        ci.invoices.each do |invoice|
+        ci.invoices.alive.each do |invoice|
           status = invoice.status
           status = "open" if status == Invoice::RECEIVED
           payments = invoice.payments

@@ -59,7 +59,7 @@ RSpec.describe "Invoice update flow" do
       expect(page).to_not have_text("Rejected")
       expect(page).to have_text("Awaiting approval (0/2)")
 
-      invoice = Invoice.last
+      invoice = Invoice.alive.last
       invoice_line_item = invoice.invoice_line_items.last
       expect(invoice.invoice_number).to eq("INV-1")
       expect(invoice.invoice_date.strftime("%Y-%m-%d")).to eq("2025-08-08")
@@ -93,7 +93,7 @@ RSpec.describe "Invoice update flow" do
       click_on "Re-submit"
       wait_for_ajax
 
-      invoice = Invoice.last
+      invoice = Invoice.alive.last
       expect(invoice.total_amount_in_usd_cents).to eq(1_560_00)
 
       invoice_expense.reload
@@ -161,7 +161,7 @@ RSpec.describe "Invoice update flow" do
         click_on "Re-submit"
         wait_for_ajax
 
-        invoice = Invoice.last
+        invoice = Invoice.alive.last
         expect(invoice.total_amount_in_usd_cents).to eq(2_560_00)
 
         invoice_expense.reload
@@ -227,7 +227,7 @@ RSpec.describe "Invoice update flow" do
       expect(page).to_not have_text("Rejected")
       expect(page).to have_text("Awaiting approval (0/2)")
 
-      invoice = Invoice.last
+      invoice = Invoice.alive.last
       expect(invoice.total_amount_in_usd_cents).to eq(205_00)
       expect(invoice.cash_amount_in_cents).to eq(123_00)
       expect(invoice.equity_amount_in_cents).to eq(82_00)

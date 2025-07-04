@@ -7,10 +7,15 @@ class PayInvoice
   delegate :company, to: :invoice, private: true
 
   def initialize(invoice_id)
-    @invoice = Invoice.find(invoice_id)
+    @invoice = Invoice.alive.find_by(id: invoice_id)
   end
 
   def process
+    if invoice.nil?
+      Rails.logger.warn "PayInvoice skipped: Invoice was deleted between approval and job execution"
+      return
+    end
+
     raise "Payout method not set up for company #{company.id}" unless company.bank_account_ready?
     raise "Not enough account balance to pay out for company #{company.id}" unless company.has_sufficient_balance?(invoice.cash_amount_in_usd)
     raise "Invoice not immediately payable for company #{company.id}" unless invoice.immediately_payable?

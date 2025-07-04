@@ -40,14 +40,17 @@ class CompanyWorkerMailer < ApplicationMailer
 
   def invoice_rejected(invoice_id:, reason: nil)
     @reason = reason
-    @invoice = Invoice.find(invoice_id)
+    # Invoice is in REJECTED state (non-deletable) when mailer is called, so exceptions indicate bugs/infrastructure issues.
+    @invoice = Invoice.alive.find(invoice_id)
     return unless @invoice.rejected?
     mail(to: @invoice.user.email, reply_to: @invoice.company.email,
          subject: "Action required: Invoice #{@invoice.invoice_number}")
   end
 
   def invoice_approved(invoice_id:)
-    @invoice = Invoice.find(invoice_id)
+    # Silently skip email if invoice deleted between job scheduling and execution
+    @invoice = Invoice.alive.find_by(id: invoice_id)
+    return if @invoice.nil?
     @company = @invoice.company
     @user = @invoice.user
     @bank_account = @user.bank_account

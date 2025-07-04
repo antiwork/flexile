@@ -51,10 +51,12 @@ RSpec.describe PayInvoice, :vcr do
     end
   end
 
-  it "fails initialization if the invoice is not found" do
-    expect do
-      described_class.new("abc")
-    end.to raise_error(ActiveRecord::RecordNotFound)
+  it "handles gracefully when the invoice is not found" do
+    service = described_class.new("abc")
+    expect(service.invoice).to be_nil
+
+    expect(Rails.logger).to receive(:warn).with("PayInvoice skipped: Invoice was deleted between approval and job execution")
+    expect(service.process).to be_nil
   end
 
   context "when payment method setup is incomplete for the company" do

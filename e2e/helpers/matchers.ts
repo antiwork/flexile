@@ -11,7 +11,8 @@ export const findTableRow = async (page: Page, columnValues: Record<string, stri
       const columnIndex = await headerCell.evaluate((el) => Array.from(el.parentElement?.children || []).indexOf(el));
 
       const cellText = await row.getByRole("cell").nth(columnIndex).textContent();
-      if (!cellText?.includes(expectedValue)) {
+      const expectedStr = String(expectedValue);
+      if (!cellText?.includes(expectedStr)) {
         matchesAll = false;
         break;
       }
