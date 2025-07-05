@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { pick } from "lodash-es";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import ColorPicker from "@/components/ColorPicker";
@@ -19,6 +19,7 @@ import { md5Checksum } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import QuickbooksIntegration from "./QuickbooksIntegration";
 import StripeMicrodepositVerification from "./StripeMicrodepositVerification";
+import WorkspaceSettingSkeleton from "@/components/WorkspaceSettingSkeleton";
 
 const formSchema = z.object({
   website: z.string().url(),
@@ -85,11 +86,12 @@ export default function SettingsPage() {
 
   return (
     <div className="grid gap-8">
-      <hgroup>
-        <h2 className="mb-1 text-xl font-bold">Workspace settings</h2>
-        <p className="text-muted-foreground text-base">
-          Set your workspace identity with your company's branding details.
-        </p>
+      <Suspense fallback={<WorkspaceSettingSkeleton />}>
+        <hgroup>
+          <h2 className="mb-1 text-xl font-bold">Workspace settings</h2>
+          <p className="text-muted-foreground text-base">
+            Set your workspace identity with your company's branding details.
+          </p>
       </hgroup>
       <Form {...form}>
         <form className="grid gap-4" onSubmit={(e) => void submit(e)}>
@@ -178,6 +180,7 @@ export default function SettingsPage() {
           <CardContent>{company.flags.includes("quickbooks") ? <QuickbooksIntegration /> : null}</CardContent>
         </Card>
       ) : null}
+    </Suspense>
     </div>
   );
 }
