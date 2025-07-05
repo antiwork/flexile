@@ -112,7 +112,7 @@ export const usersRouter = createRouter({
     if (!response.ok) throw new TRPCError({ code: "BAD_REQUEST", message: await response.text() });
     const { documentIds } = z.object({ documentIds: z.array(z.number()) }).parse(await response.json());
 
-    if (contractor?.contractSignedElsewhere) {
+    if (contractor?.contractSignedElsewhere || ctx.companyContractor?.contractSignedElsewhere) {
       return { documentId: null };
     }
 
