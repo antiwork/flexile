@@ -27,6 +27,7 @@ import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import FormFields from "./FormFields";
 import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
 import { Switch } from "@/components/ui/switch";
+import TableSkeleton from "@/components/TableSkeleton";
 
 const schema = z.object({
   email: z.string().email(),
@@ -44,7 +45,7 @@ const removeMailtoPrefix = (email: string) => email.replace(/^mailto:/iu, "");
 export default function PeoplePage() {
   const company = useCurrentCompany();
   const router = useRouter();
-  const [workers, { refetch }] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id });
+  const { data: workers = [], isLoading, refetch } = trpc.contractors.list.useQuery({ companyId: company.id });
   const [showInviteModal, setShowInviteModal] = useState(false);
   const lastContractor = workers[0];
 
@@ -140,7 +141,9 @@ export default function PeoplePage() {
         ) : null
       }
     >
-      {workers.length > 0 ? (
+      {isLoading ? (
+        <TableSkeleton />
+      ) : workers.length > 0 ? (
         <DataTable
           table={table}
           searchColumn="user_name"
