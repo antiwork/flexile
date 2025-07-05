@@ -47,6 +47,7 @@ import { linkClasses } from "@/components/Link";
 import DatePicker from "@/components/DatePicker";
 import { CalendarDate, today, getLocalTimeZone } from "@internationalized/date";
 import { zodResolver } from "@hookform/resolvers/zod";
+import InvoicesTableSkeleton from "@/components/InvoicesSkeleton";
 
 const statusNames = {
   received: "Awaiting approval",
@@ -66,7 +67,7 @@ export default function InvoicesPage() {
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
   const isActionable = useIsActionable();
   const isPayable = useIsPayable();
-  const [data] = trpc.invoices.list.useSuspenseQuery({
+  const { data = [], isLoading } = trpc.invoices.list.useQuery({
     companyId: company.id,
     contractorId: user.roles.administrator ? undefined : user.roles.worker?.id,
   });
@@ -207,7 +208,9 @@ export default function InvoicesPage() {
         ) : null}
 
         <QuickInvoicesSection />
-        {data.length > 0 ? (
+        {isLoading ? (
+          <InvoicesTableSkeleton />
+        ) : data.length > 0 ? (
           <>
             {user.roles.administrator ? (
               <>
