@@ -39,6 +39,8 @@ const schema = z.object({
   contractSignedElsewhere: z.boolean().default(false),
 });
 
+const removeMailtoPrefix = (email: string) => email.replace(/^mailto:/iu, "");
+
 export default function PeoplePage() {
   const company = useCurrentCompany();
   const router = useRouter();
@@ -166,7 +168,12 @@ export default function PeoplePage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input {...field} type="email" placeholder="Contractor's email" />
+                      <Input
+                        {...field}
+                        type="email"
+                        placeholder="Contractor's email"
+                        onChange={(e) => field.onChange(removeMailtoPrefix(e.target.value))}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
