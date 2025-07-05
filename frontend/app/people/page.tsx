@@ -22,9 +22,10 @@ import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
 import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
-import { UserPlus, Users } from "lucide-react";
+import { UserPlus, Users, Link as LinkIcon } from "lucide-react";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import FormFields from "./FormFields";
+import InviteLinkModal from "./InviteLinkModal";
 import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
 import { Switch } from "@/components/ui/switch";
 
@@ -46,6 +47,8 @@ export default function PeoplePage() {
   const router = useRouter();
   const [workers, { refetch }] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id });
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showInviteLinkModal, setShowInviteLinkModal] = useState(false);
+
   const lastContractor = workers[0];
 
   const form = useForm({
@@ -133,10 +136,16 @@ export default function PeoplePage() {
       title="People"
       headerActions={
         workers.length === 0 ? (
-          <Button size="small" variant="outline" onClick={() => setShowInviteModal(true)}>
-            <UserPlus className="size-4" />
-            Invite contractor
-          </Button>
+          <div className="flex gap-2">
+            <Button size="small" variant="outline" onClick={() => setShowInviteLinkModal(true)}>
+              <LinkIcon className="size-4" />
+              Invite link
+            </Button>
+            <Button size="small" variant="outline" onClick={() => setShowInviteModal(true)}>
+              <UserPlus className="size-4" />
+              Invite contractor
+            </Button>
+          </div>
         ) : null
       }
     >
@@ -145,10 +154,16 @@ export default function PeoplePage() {
           table={table}
           searchColumn="user_name"
           actions={
-            <Button size="small" variant="outline" onClick={() => setShowInviteModal(true)}>
-              <UserPlus className="size-4" />
-              Invite contractor
-            </Button>
+            <div className="flex gap-2">
+              <Button size="small" variant="outline" onClick={() => setShowInviteLinkModal(true)}>
+                <LinkIcon className="size-4" />
+                Invite link
+              </Button>
+              <Button size="small" variant="outline" onClick={() => setShowInviteModal(true)}>
+                <UserPlus className="size-4" />
+                Invite contractor
+              </Button>
+            </div>
           }
         />
       ) : (
@@ -228,6 +243,7 @@ export default function PeoplePage() {
           </Form>
         </DialogContent>
       </Dialog>
+      <InviteLinkModal open={showInviteLinkModal} onOpenChange={setShowInviteLinkModal} />
     </MainLayout>
   );
 }

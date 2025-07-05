@@ -16,6 +16,14 @@ class CompanyWorkerMailer < ApplicationMailer
     mail(to: @user.email, reply_to: @company.email, subject: subject)
   end
 
+  def notify_invite_accepted(inviter_id, company_worker_id)
+    @inviter = User.find(inviter_id)
+    @company_worker = CompanyWorker.find(company_worker_id)
+    subject = "#{@company_worker.user.name} just joined your workspace"
+
+    mail(to: @inviter.email, reply_to: @company_worker.company.email, subject: subject)
+  end
+
   def equity_grant_issued(equity_grant_id)
     @equity_grant = EquityGrant.find(equity_grant_id)
     @company = @equity_grant.option_pool.company
