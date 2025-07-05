@@ -15,7 +15,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
-import React, { Suspense, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import DocusealForm, { customCss } from "@/app/documents/DocusealForm";
 import DataTable, { createColumnHelper, filterValueSchema, useTable } from "@/components/DataTable";
 import { Input } from "@/components/ui/input";
@@ -211,7 +211,7 @@ export default function DocumentsPage() {
   const canSign = user.address.street_address || isCompanyRepresentative;
 
   const currentYear = new Date().getFullYear();
-  const [documents] = trpc.documents.list.useSuspenseQuery({ companyId: company.id, userId });
+  const { data: documents = [], isLoading } = trpc.documents.list.useQuery({ companyId: company.id, userId });
 
   const inviteLawyerForm = useForm({ resolver: zodResolver(inviteLawyerSchema) });
   const inviteLawyer = trpc.lawyers.invite.useMutation({
@@ -377,22 +377,22 @@ export default function DocumentsPage() {
             </AlertDescription>
           </Alert>
         ) : null}
-        <Suspense fallback={<TableSkeleton />}>
-          {documents.length > 0 ? (
-            <>
-              <DataTable
-                table={table}
-                actions={isCompanyRepresentative ? <EditTemplates /> : undefined}
-                {...(isCompanyRepresentative && { searchColumn: "Signer" })}
-              />
-              {signDocument ? (
-                <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} />
-              ) : null}
-            </>
-          ) : (
-            <Placeholder icon={CircleCheck}>No documents yet.</Placeholder>
-          )}
-        </Suspense>
+        {isLoading ? (
+          <TableSkeleton />
+        ) : documents.length > 0 ? (
+          <>
+            <DataTable
+              table={table}
+              actions={isCompanyRepresentative ? <EditTemplates /> : undefined}
+              {...(isCompanyRepresentative && { searchColumn: "Signer" })}
+            />
+            {signDocument ? (
+              <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} />
+            ) : null}
+          </>
+        ) : (
+          <Placeholder icon={CircleCheck}>No documents yet.</Placeholder>
+        )}
       </div>
       <Dialog open={showInviteModal} onOpenChange={setShowInviteModal}>
         <DialogContent>
