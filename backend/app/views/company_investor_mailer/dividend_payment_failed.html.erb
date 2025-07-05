@@ -1,0 +1,19 @@
+<%# backend/app/views/company_investor_mailer/dividend_payment_failed.html.erb %>
+
+<h1>Hi <%= @user.name %>,</h1>
+<p>
+  We're writing to inform you that we were unable to process a recent dividend payment from <%= @company.name %>. This means the funds have been returned to us.
+</p>
+<p>
+  The reason provided by the payment processor was: <strong><%= @reason %></strong>
+</p>
+<p>
+  To ensure you receive your payment, please log in to your account to add a new, valid bank account. Your payment will be re-attempted in the next payout cycle once your details are updated.
+</p>
+<p>
+  <a href="<%= @bank_account_settings_url %>">Update Bank Account Details</a>
+</p>
+<p>
+  If you have any questions, please feel free to reply to this email.
+</p>
+<p>Thanks,<br>The Flexile Team</p>

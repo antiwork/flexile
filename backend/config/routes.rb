@@ -55,6 +55,7 @@ Rails.application.routes.draw do
       collection do
         post :transfer_state_change
         post :balance_credit
+        post :transfer_refund
       end
     end
 

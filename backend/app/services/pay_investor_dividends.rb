@@ -35,7 +35,7 @@ class PayInvestorDividends
       return
     end
 
-    dividends.update!(status: Dividend::ISSUED, retained_reason: nil)
+    dividends.each { |d| d.update!(status: Dividend::ISSUED, retained_reason: nil) }
 
     dividend_payment = DividendPayment.create!(dividends:,
                                                status: Payment::INITIAL,
@@ -84,7 +84,7 @@ class PayInvestorDividends
     transfer_id = transfer["id"]
     raise WiseError, "Creating transfer failed for dividend payment #{dividend_payment.id}" unless transfer_id.present?
 
-    dividends.update!(status: Dividend::PROCESSING)
+    dividends.each { |d| d.update!(status: Dividend::PROCESSING) }
     dividend_payment.update!(transfer_id:, conversion_rate: transfer["rate"],
                              recipient_last4: bank_account.last_four_digits)
     response = payout_service.fund_transfer(transfer_id:)
@@ -95,7 +95,7 @@ class PayInvestorDividends
       raise WiseError, "Funding transfer failed for dividend payment #{dividend_payment.id}"
     end
   rescue WiseError => e
-    dividend_payment.update!(status: Payment::FAILED)
+    dividend_payment&.update!(status: Payment::FAILED)
     raise e
   end
 
@@ -107,7 +107,7 @@ class PayInvestorDividends
     end
 
     def net_amount_in_cents
-      @_net_amount_in_cents ||= dividends.sum(:net_amount_in_cents)
+      @_net_amount_in_cents ||= dividends.sum(&:net_amount_in_cents)
     end
 
     def net_amount_in_usd

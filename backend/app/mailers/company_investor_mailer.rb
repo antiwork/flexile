@@ -184,4 +184,16 @@ class CompanyInvestorMailer < ApplicationMailer
     mail(to: user.email,
          subject: "🔴 Equity buyback payment failed: re-enter your bank details")
   end
+
+  def dividend_payment_failed
+    @investor = params[:company_investor]
+    @user = @investor.user
+    @company = @investor.company
+    @reason = params[:reason] || "your bank has declined the payment."
+    @bank_account_settings_url = internal_settings_bank_accounts_url
+    mail(
+      to: @user.email,
+      subject: "Important: A dividend payment from #{@company.name} has failed"
+    )
+  end
 end
