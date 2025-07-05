@@ -23,7 +23,7 @@ The easiest way to set up the development environment is to use the [`bin/setup`
 
 You can start the local app using the [`bin/dev` script](bin/dev) - or feel free to run the commands contained in it yourself.
 
-Once the local services are up and running, the application will be available at `https://flexile.dev`
+Once the local services are up and running, the application will be available at `https://localhost:3001`
 
 Check [the seeds](backend/config/data/seed_templates/gumroad.json) for default data created during setup.
 

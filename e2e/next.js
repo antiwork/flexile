@@ -7,7 +7,7 @@ import { createSelfSignedCertificate } from "next/dist/lib/mkcert.js";
 const app = next({ dir: "frontend" });
 const handle = app.getRequestHandler();
 await app.prepare();
-await createSelfSignedCertificate("test.flexile.dev");
+await createSelfSignedCertificate("localhost");
 const options = {
   key: fs.readFileSync("./certificates/localhost-key.pem"),
   cert: fs.readFileSync("./certificates/localhost.pem"),

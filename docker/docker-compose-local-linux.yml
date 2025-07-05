@@ -20,17 +20,5 @@ services:
     volumes:
       - ./tmp/redis:/data
 
-  nginx:
-    image: openresty/openresty:alpine-fat
-    network_mode: host
-    volumes:
-      - ./flexile_dev.conf:/etc/nginx/conf.d/default.conf
-      - ../certificates:/etc/ssl/certs/
-    extra_hosts:
-      - "host.docker.internal:127.0.0.1"
-    command: >
-      sh -c "/usr/local/openresty/luajit/bin/luarocks install lua-resty-http &&
-            openresty -g 'daemon off;'"
-
 volumes:
   flexilepgdata:
