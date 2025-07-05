@@ -3,14 +3,14 @@
 RSpec.describe "List Contractors" do
   let(:admin_user) { create(:user, :company_admin) }
   let(:company) { admin_user.company_administrators.first!.company }
-  let!(:contractor1) do create(:company_worker, company:, hours_per_week: 10, equity_percentage: 80,
+  let!(:contractor1) do create(:company_worker, company:, equity_percentage: 80,
                                                 pay_rate_usd: 100, created_at: 5.days.ago,
                                                 user: create(:user)) end
-  let!(:contractor2) do create(:company_worker, company:, hours_per_week: 5,
+  let!(:contractor2) do create(:company_worker, company:,
                                                 pay_rate_usd: 50,
                                                 user: create(:user, country_code: "IN")) end
   let!(:contractor3) { create(:company_worker, :project_based, company:, user: create(:user)) }
-  let!(:future_contractor) do create(:company_worker, company:, hours_per_week: 10,
+  let!(:future_contractor) do create(:company_worker, company:,
                                                       pay_rate_usd: 40, created_at: 5.days.ago, started_at: 1.day.from_now,
                                                       user: create(:user, country_code: "AU")) end
 

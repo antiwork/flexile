@@ -16,23 +16,13 @@
   <dt>Start date</dt>
   <dd><b><%= contractor.started_at.strftime("%B %d, %Y") %></b></dd>
 
-  <dt>Compensation</dt>
-  <dd>
-    <b>
-      <% if contractor.hourly? %>
-        <%= "$#{contractor.pay_rate_in_subunits / 100.0}/hr, " \
-            "$#{number_to_human(contractor.avg_yearly_usd, format: "%n%u", precision: 0,
-                                                           units: { thousand: "K", million: "M" })}" \
-            "/yr" %>
-      <% else %>
-        <%= "#{money_format(contractor.pay_rate_in_subunits / 100.0)} per project" %>
-      <% end %>
-    </b>
-  </dd>
-
-  <% if contractor.hourly? %>
-    <dt>Average hours</dt>
-    <dd><b><%= "#{contractor.hours_per_week}/week" %></b></dd>
+  <% if contractor.pay_rate_in_subunits.present? %>
+    <dt>Compensation</dt>
+    <dd>
+      <b>
+        <%= "#{money_format(contractor.pay_rate_in_subunits / 100.0)} per #{contractor.hourly? ? "hour" : "project"}" %>
+      </b>
+    </dd>
   <% end %>
 </dl>
 

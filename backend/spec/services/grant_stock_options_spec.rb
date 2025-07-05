@@ -8,7 +8,7 @@ RSpec.describe GrantStockOptions do
   let!(:administrator) { create(:company_administrator, company:) }
   let(:board_approval_date) { "2020-08-01" }
   let(:vesting_commencement_date) { "2020-01-01" }
-  let(:number_of_shares) { :calculate }
+  let(:number_of_shares) { 500 }
   let(:issue_date_relationship) { :consultant }
   let(:option_grant_type) { :nso }
   let(:option_expiry_months) { nil }
@@ -39,12 +39,6 @@ RSpec.describe GrantStockOptions do
         expect(result).to eq(success: false, error: "Cannot grant stock options for #{user.display_name} because they are an alum")
       end
 
-      it "returns an error if pay_rate_in_subunits is nil" do
-        company_worker.pay_rate_in_subunits = nil
-        result = service.process
-        expect(result).to eq(success: false, error: "Please set the pay rate for #{user.display_name} first")
-      end
-
       it "returns an error if fmv_per_share_in_usd is nil" do
         company.fmv_per_share_in_usd = nil
         result = service.process
@@ -68,10 +62,6 @@ RSpec.describe GrantStockOptions do
         company_worker.update!(started_at: "1 Jan 2021")
         travel_to("12 May 2023")
 
-        # weeks in period (2023) = 52.142857142857142857142857142857142857 (365 days)
-        # max_bill_in_usd = 35 (max hours) * <weeks in period> * 193 (hourly rate)
-        # number_of_shares = (max_bill_in_usd / company.conversion_share_price_usd).ceil
-        number_of_shares = 45_863
         args_for_new = {
           company_investor: investor,
           option_pool:,
@@ -134,15 +124,6 @@ RSpec.describe GrantStockOptions do
         expect(contract.signatures.last.user).to eq(administrator.user)
         expect(contract.signatures.last.title).to eq("Company Representative")
       end
-
-      context "when number of shares is provided" do
-        let(:number_of_shares) { 500 }
-
-        it "grants the provided number of shares" do
-          expect { service.process }.to change { EquityGrant.count }.by(1)
-          expect(EquityGrant.last.number_of_shares).to eq(500)
-        end
-      end
     end
 
     context "when company_investor does not exist" do
@@ -152,10 +133,6 @@ RSpec.describe GrantStockOptions do
 
         travel_to("12 May 2024")
 
-        # weeks in period (2024) = 52.285714285714285714285714285714285714 (leap year: 366 days)
-        # max_bill_in_usd = 35 (max hours) * <weeks in period> * 193 (hourly rate)
-        # number_of_shares = (max_bill_in_usd / company.conversion_share_price_usd).ceil
-        number_of_shares = 45_989
         args_for_new = {
           company_investor: an_instance_of(CompanyInvestor),
           option_pool:,
@@ -223,39 +200,6 @@ RSpec.describe GrantStockOptions do
            .and change { EquityGrant.count }.by(0)
            .and change { Contract.count }.by(0)
       end
-    end
-
-    it "calculates the options to grant correctly if the contractor joins mid-year" do
-      company_worker.update!(started_at: "7 April 2023")
-      travel_to("12 May 2023")
-
-      # weeks in period (7-Apr-23 to 31-Dec-23) = 38.428571428571428571428571428571428571
-      # max_bill_in_usd = 35 (max hours) * <weeks in period> * 193 (hourly rate)
-      # number_of_shares = (max_bill_in_usd / company.conversion_share_price_usd).ceil
-      number_of_shares = 33_801
-      args_for_new = {
-        period_started_at: DateTime.parse("7 April 2023"),
-        period_ended_at: DateTime.parse("7 April 2023").end_of_year,
-        number_of_shares:,
-        issue_date_relationship: :consultant,
-        option_grant_type: :nso,
-      }
-      expect(EquityGrantCreation).to receive(:new).with(hash_including(args_for_new)).and_call_original
-
-      expect do
-        service.process
-      end.to change { CompanyInvestor.count }.by(1)
-         .and change { EquityGrant.count }.by(1)
-                .and have_enqueued_mail(CompanyWorkerMailer, :equity_grant_issued)
-
-      investor = CompanyInvestor.last
-      expect(investor.company).to eq(company)
-      expect(investor.user).to eq(user)
-      expect(investor.investment_amount_in_cents).to eq(0)
-      equity_grant = EquityGrant.last
-      expect(equity_grant.company_investor).to eq(investor)
-      expect(equity_grant.issue_date_relationship_consultant?).to be(true)
-      expect(equity_grant.option_grant_type_nso?).to be(true)
     end
 
     context "when vesting_trigger is scheduled" do

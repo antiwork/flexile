@@ -24,16 +24,11 @@ import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
 import { UserPlus, Users } from "lucide-react";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
-import FormFields from "./FormFields";
-import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
+import FormFields, { schema as formSchema } from "./FormFields";
 import { Switch } from "@/components/ui/switch";
 
-const schema = z.object({
+const schema = formSchema.extend({
   email: z.string().email(),
-  payRateType: z.nativeEnum(PayRateType),
-  payRateInSubunits: z.number(),
-  hoursPerWeek: z.number().nullable(),
-  role: z.string(),
   startDate: z.instanceof(CalendarDate),
   documentTemplateId: z.string(),
   contractSignedElsewhere: z.boolean().default(false),
@@ -50,9 +45,9 @@ export default function PeoplePage() {
 
   const form = useForm({
     defaultValues: {
-      ...(lastContractor ? { payRateInSubunits: lastContractor.payRateInSubunits, role: lastContractor.role } : {}),
+      ...(lastContractor ? { role: lastContractor.role } : {}),
       payRateType: lastContractor?.payRateType ?? PayRateType.Hourly,
-      hoursPerWeek: lastContractor?.hoursPerWeek ?? DEFAULT_WORKING_HOURS_PER_WEEK,
+      payRateInSubunits: lastContractor?.payRateInSubunits ?? null,
       startDate: today(getLocalTimeZone()),
       contractSignedElsewhere: false,
     },
@@ -204,7 +199,7 @@ export default function PeoplePage() {
                       <Switch
                         checked={field.value}
                         onCheckedChange={field.onChange}
-                        label="Already signed contract elsewhere"
+                        label="Already signed contract elsewhere."
                       />
                     </FormControl>
                   </FormItem>

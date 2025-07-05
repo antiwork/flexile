@@ -24,7 +24,6 @@ export const companyContractorsFactory = {
         companyId,
         userId,
         startedAt: new Date(),
-        hoursPerWeek: 40,
         payRateInSubunits: 6000,
         payRateType: PayRateType.Hourly,
         role: "Role",
@@ -73,7 +72,6 @@ export const companyContractorsFactory = {
   createHourly: async (overrides: Partial<typeof companyContractors.$inferInsert> = {}, options: CreateOptions = {}) =>
     companyContractorsFactory.create(
       {
-        hoursPerWeek: 40,
         payRateInSubunits: 6000,
         payRateType: PayRateType.Hourly,
         ...overrides,
@@ -81,15 +79,11 @@ export const companyContractorsFactory = {
       options,
     ),
 
-  createProjectBased: async (
-    overrides: Partial<typeof companyContractors.$inferInsert> = {},
-    options: CreateOptions = {},
-  ) =>
+  createCustom: async (overrides: Partial<typeof companyContractors.$inferInsert> = {}, options: CreateOptions = {}) =>
     companyContractorsFactory.create(
       {
-        hoursPerWeek: null,
         payRateInSubunits: 100000,
-        payRateType: PayRateType.ProjectBased,
+        payRateType: PayRateType.Custom,
         ...overrides,
       },
       options,
