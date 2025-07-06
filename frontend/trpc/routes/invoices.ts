@@ -455,6 +455,7 @@ export const invoicesRouter = createRouter({
       })),
       rejector: invoice.rejector && simpleUser(invoice.rejector),
       contractor: {
+        ...pick(invoice.contractor, "payRateInSubunits", "payRateType"),
         user: { complianceInfo: invoice.contractor.user.userComplianceInfos[0] },
       },
     };

@@ -27,7 +27,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
-import { trpc } from "@/trpc/client";
+import { PayRateType, trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { pluralize } from "@/utils/pluralize";
 import { company_invoices_path, export_company_invoices_path } from "@/utils/routes";
@@ -371,6 +371,9 @@ const TasksModal = ({
   onClose: () => void;
   onReject: () => void;
 }) => {
+  const company = useCurrentCompany();
+  const [invoiceData] = trpc.invoices.get.useSuspenseQuery({ companyId: company.id, id: invoice.id });
+  const payRateInSubunits = invoiceData.contractor.payRateInSubunits;
   const isActionable = useIsActionable();
 
   return (
@@ -411,6 +414,16 @@ const TasksModal = ({
               </CardContent>
             </Card>
           </section>
+          {payRateInSubunits &&
+          invoiceData.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
+            <Alert>
+              <Info />
+              <AlertDescription>
+                This invoice includes rates above the default of {formatMoneyFromCents(payRateInSubunits)}/
+                {invoiceData.contractor.payRateType === PayRateType.Custom ? "project" : "hour"}.
+              </AlertDescription>
+            </Alert>
+          ) : null}
         </div>
         {isActionable(invoice) ? (
           <DialogFooter>
