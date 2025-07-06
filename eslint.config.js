@@ -15,7 +15,7 @@ nextIgnores.ignores = nextIgnores.ignores.map((file) => `frontend/${file}`);
 export default [
   includeIgnoreFile(fileURLToPath(import.meta.resolve("./.gitignore"))),
   nextIgnores,
-  { ignores: ["frontend/utils/routes.*", "backend"] },
+  { ignores: ["frontend/utils/routes.*", "backend", ".github"] },
   prettierRecommended,
   js.configs.recommended,
   {
