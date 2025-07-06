@@ -260,7 +260,7 @@ class Company < ApplicationRecord
         user.user.compliance_info&.tax_information_confirmed_at.present?
       when "add_payout_information"
         user.user.bank_account.present?
-            when "sign_contract"
+      when "sign_contract"
         user.contract_signed?
       else
         false
