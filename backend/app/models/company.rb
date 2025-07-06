@@ -260,13 +260,8 @@ class Company < ApplicationRecord
         user.user.compliance_info&.tax_information_confirmed_at.present?
       when "add_payout_information"
         user.user.bank_account.present?
-      when "sign_contract"
-        user.contract_signed_elsewhere ||
-          user.user.documents.joins(:signatures)
-                    .where(documents: { document_type: Document.document_types[:consulting_contract], deleted_at: nil, company: self })
-                    .where.not(document_signatures: { signed_at: nil })
-                    .where(document_signatures: { user_id: user.user.id })
-                    .exists?
+            when "sign_contract"
+        user.contract_signed?
       else
         false
       end

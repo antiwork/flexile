@@ -50,8 +50,6 @@ RSpec.describe Payment do
     end
   end
 
-
-
   describe "callbacks" do
     describe "#update_invoice_pg_search_document" do
       let(:payment) { create(:payment) }
