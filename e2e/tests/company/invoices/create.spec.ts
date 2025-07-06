@@ -289,4 +289,28 @@ test.describe("invoice creation", () => {
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
     await expect(page.getByText("Please provide your legal details before creating new invoices.")).toBeVisible();
   });
+
+  test("shows alert when billing above default pay rate", async ({ page }) => {
+    await login(page, contractorUser);
+    await page.goto("/invoices/new");
+
+    await page.getByLabel("Hours").fill("2:00");
+    await page.getByPlaceholder("Description").fill("Premium work");
+    await expect(page.getByText("This invoice includes rates above your default")).not.toBeVisible();
+
+    await page.getByLabel("Rate").fill("75");
+    await expect(
+      page.getByText("This invoice includes rates above your default of $60/hour. Please check before submitting."),
+    ).toBeVisible();
+
+    await page.getByLabel("Rate").fill("60");
+    await expect(page.getByText("This invoice includes rates above your default")).not.toBeVisible();
+
+    await db
+      .update(companyContractors)
+      .set({ payRateInSubunits: null })
+      .where(eq(companyContractors.id, companyContractor.id));
+    await page.reload();
+    await expect(page.getByText("This invoice includes rates above your default")).not.toBeVisible();
+  });
 });

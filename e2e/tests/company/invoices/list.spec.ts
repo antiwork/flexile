@@ -8,7 +8,7 @@ import { invoicesFactory } from "@test/factories/invoices";
 import { login } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { and, eq, not } from "drizzle-orm";
-import { companies, consolidatedInvoices, invoiceApprovals, invoices, users } from "@/db/schema";
+import { companies, consolidatedInvoices, invoiceApprovals, invoices, users, companyContractors } from "@/db/schema";
 import { assert } from "@/utils/assert";
 
 test.describe("Invoices admin flow", () => {
@@ -319,5 +319,39 @@ test.describe("Invoices admin flow", () => {
         ),
       ).toBe(true);
     });
+  });
+
+  test("shows alert when viewing invoice with rates above default pay rate", async ({ page }) => {
+    const { company, user: adminUser } = await setupCompany();
+    const { companyContractor } = await companyContractorsFactory.create({ companyId: company.id });
+
+    await invoicesFactory.create({
+      companyId: company.id,
+      companyContractorId: companyContractor.id,
+    });
+
+    await login(page, adminUser);
+    await page.getByRole("link", { name: "Invoices" }).click();
+    await page.locator("tbody tr").click();
+
+    await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).toBeVisible();
+
+    await db
+      .update(companyContractors)
+      .set({ payRateInSubunits: null })
+      .where(eq(companyContractors.id, companyContractor.id));
+    await page.reload();
+    await page.locator("tbody tr").click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).not.toBeVisible();
+
+    await db
+      .update(companyContractors)
+      .set({ payRateInSubunits: 60000 })
+      .where(eq(companyContractors.id, companyContractor.id));
+    await page.reload();
+    await page.locator("tbody tr").click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).not.toBeVisible();
   });
 });
