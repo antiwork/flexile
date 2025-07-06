@@ -13,12 +13,8 @@ export const equityGrantExercisesRouter = createRouter({
       with: {
         exerciseRequests: {
           with: {
-            equityGrant: {
-              columns: { name: true },
-            },
-            shareHolding: {
-              columns: { name: true },
-            },
+            equityGrant: { columns: { name: true } },
+            shareHolding: { columns: { name: true } },
           },
         },
       },
