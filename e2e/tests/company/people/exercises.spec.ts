@@ -1,100 +1,88 @@
 import { companiesFactory } from "@test/factories/companies";
-import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
-import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
+import { equityGrantExerciseRequestsFactory } from "@test/factories/equityGrantExerciseRequests";
 import { equityGrantExercisesFactory } from "@test/factories/equityGrantExercises";
+import { equityGrantsFactory } from "@test/factories/equityGrants";
+import { shareHoldingsFactory } from "@test/factories/shareHoldings";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
+import { format } from "date-fns";
 
 test.describe("People - Exercises Table", () => {
   test("displays option grant IDs and stock certificate IDs in exercises table", async ({ page }) => {
-    const { company } = await companiesFactory.create();
-    const { user: admin } = await usersFactory.create();
-    await companyAdministratorsFactory.create({
-      companyId: company.id,
-      userId: admin.id,
-    });
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
 
-    const { user: contractorUser } = await usersFactory.create();
-    await companyContractorsFactory.create({
-      companyId: company.id,
-      userId: contractorUser.id,
-    });
+    const { user: investorUser } = await usersFactory.create();
     const { companyInvestor } = await companyInvestorsFactory.create({
       companyId: company.id,
-      userId: contractorUser.id,
+      userId: investorUser.id,
     });
 
-    const { equityGrant, shareHolding } = await equityGrantExercisesFactory.create(
-      {
-        companyInvestorId: companyInvestor.id,
-        status: "signed",
-      },
-      { withShareHoldings: true },
+    const equityGrantExercise = await equityGrantExercisesFactory.create({ companyInvestorId: companyInvestor.id });
+
+    await login(page, adminUser);
+    await page.goto(`/people/${investorUser.externalId}?tab=exercises`);
+
+    await expect(page.locator("tbody")).toContainText(
+      [
+        "Request date",
+        format(equityGrantExercise.requestedAt, "MMM d, yyyy"),
+        "Number of shares",
+        "100",
+        "Cost",
+        "$50",
+        "Option grant ID",
+        "—",
+        "Stock certificate ID",
+        "—",
+        "Status",
+        "Signed",
+      ].join(""),
     );
 
-    await login(page, admin);
-    await page.getByRole("link", { name: "People" }).click();
-    await page.getByRole("link", { name: contractorUser.preferredName ?? "" }).click();
-
-    await page.goto(`/people/${contractorUser.externalId}?tab=exercises`);
-
-    await expect(page.getByRole("table")).toBeVisible();
-    const rows = page.getByRole("table").getByRole("row");
-    await expect(rows).toHaveCount(2);
-
-    const dataRow = rows.nth(1);
-
-    await expect(dataRow).toContainText(equityGrant.name);
-
-    if (shareHolding) {
-      await expect(dataRow).toContainText(shareHolding.name);
-    }
-
-    await expect(dataRow).toContainText("100");
-    await expect(dataRow).toContainText("$50");
-    await expect(dataRow).toContainText("Signed");
-  });
-
-  test("displays '—' for stock certificate ID when share holding doesn't exist", async ({ page }) => {
-    const { company } = await companiesFactory.create();
-    const { user: admin } = await usersFactory.create();
-    await companyAdministratorsFactory.create({
-      companyId: company.id,
-      userId: admin.id,
+    const { equityGrant } = await equityGrantsFactory.create({
+      companyInvestorId: companyInvestor.id,
+      name: "GUM-1",
     });
-
-    const { user: contractorUser } = await usersFactory.create();
-    await companyContractorsFactory.create({
-      companyId: company.id,
-      userId: contractorUser.id,
+    const shareHolding = await shareHoldingsFactory.create({
+      companyInvestorId: companyInvestor.id,
+      name: "SH-1",
     });
-    const { companyInvestor } = await companyInvestorsFactory.create({
-      companyId: company.id,
-      userId: contractorUser.id,
+    await equityGrantExerciseRequestsFactory.create({
+      equityGrantId: equityGrant.id,
+      equityGrantExerciseId: equityGrantExercise.id,
+      shareHoldingId: shareHolding.id,
     });
-
-    const { equityGrant } = await equityGrantExercisesFactory.create(
-      {
-        companyInvestorId: companyInvestor.id,
-        status: "signed",
-      },
-      { withShareHoldings: false },
+    const { equityGrant: equityGrant2 } = await equityGrantsFactory.create({
+      companyInvestorId: companyInvestor.id,
+      name: "GUM-2",
+    });
+    const shareHolding2 = await shareHoldingsFactory.create({
+      companyInvestorId: companyInvestor.id,
+      name: "SH-2",
+    });
+    await equityGrantExerciseRequestsFactory.create({
+      equityGrantId: equityGrant2.id,
+      equityGrantExerciseId: equityGrantExercise.id,
+      shareHoldingId: shareHolding2.id,
+    });
+    await page.reload();
+    await expect(page.locator("tbody")).toContainText(
+      [
+        "Request date",
+        format(equityGrantExercise.requestedAt, "MMM d, yyyy"),
+        "Number of shares",
+        "100",
+        "Cost",
+        "$50",
+        "Option grant ID",
+        "GUM-1, GUM-2",
+        "Stock certificate ID",
+        "SH-1, SH-2",
+        "Status",
+        "Signed",
+      ].join(""),
     );
-
-    await login(page, admin);
-    await page.getByRole("link", { name: "People" }).click();
-    await page.getByRole("link", { name: contractorUser.preferredName ?? "" }).click();
-
-    await page.goto(`/people/${contractorUser.externalId}?tab=exercises`);
-
-    await expect(page.getByRole("table")).toBeVisible();
-    const rows = page.getByRole("table").getByRole("row");
-    const dataRow = rows.nth(1);
-
-    await expect(dataRow).toContainText(equityGrant.name);
-
-    await expect(dataRow).toContainText("—");
   });
 });
