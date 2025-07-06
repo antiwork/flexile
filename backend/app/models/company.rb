@@ -27,6 +27,7 @@ class Company < ApplicationRecord
   end
 
   ADMIN_CHECKLIST_ITEMS = [
+    { key: "add_company_details", title: "Add company details", description: "Add your company name and basic information" },
     { key: "add_bank_account", title: "Add bank account", description: "Connect your bank account to enable payments" },
     { key: "invite_contractor", title: "Invite a contractor", description: "Add your first team member" },
     { key: "send_first_payment", title: "Send your first payment", description: "Process your first contractor payment" }
@@ -247,22 +248,25 @@ class Company < ApplicationRecord
 
     def checklist_item_completed?(key, user)
       case key
+      when "add_company_details"
+        name.present?
       when "add_bank_account"
         bank_account_ready?
       when "invite_contractor"
         company_workers.active.exists?
       when "send_first_payment"
-        invoices.joins(:payments).exists?
+        invoices.where(status: Invoice::PAID_OR_PAYING_STATES).exists?
       when "fill_tax_information"
         user.user.compliance_info&.tax_information_confirmed_at.present?
       when "add_payout_information"
         user.user.bank_account.present?
       when "sign_contract"
-        user.user.documents.joins(:signatures)
-                  .where(documents: { document_type: Document.document_types[:consulting_contract], deleted_at: nil, company: self })
-                  .where.not(document_signatures: { signed_at: nil })
-                  .where(document_signatures: { user_id: user.user.id })
-                  .exists?
+        user.contract_signed_elsewhere ||
+          user.user.documents.joins(:signatures)
+                    .where(documents: { document_type: Document.document_types[:consulting_contract], deleted_at: nil, company: self })
+                    .where.not(document_signatures: { signed_at: nil })
+                    .where(document_signatures: { user_id: user.user.id })
+                    .exists?
       else
         false
       end

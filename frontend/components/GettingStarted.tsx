@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { cn } from "@/utils";
-import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
+import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { Route } from "next";
 import { ChevronDown, X } from "lucide-react";
 import { storageKeys } from "@/models/constants";
@@ -26,6 +26,7 @@ const CHECKLIST_ROUTES: Record<string, Route> = {
   fill_tax_information: "/settings/tax",
   add_payout_information: "/settings/payouts",
   sign_contract: "/documents",
+  add_company_details: "/administrator/settings/details",
 } as const;
 
 const getItemHref = (key: string): Route => CHECKLIST_ROUTES[key] || "/";
@@ -45,28 +46,22 @@ export const GettingStarted = () => {
   const progressPercentage = company.checklistCompletionPercentage;
 
   const [status, setStatus] = useState<Status>(() => {
-    if (progressPercentage === 100) return "dismissed";
-
     const savedStatus = localStorage.getItem(storageKeys.GETTING_STARTED_STATUS);
-
+    if (!savedStatus && progressPercentage === 100) {
+      return "dismissed";
+    }
+    if (savedStatus === "completed" && progressPercentage < 100) {
+      return "expanded";
+    }
     return isValidStatus(savedStatus) ? savedStatus : "expanded";
   });
 
   useEffect(() => {
     if (status === "dismissed") return;
-    const subscription = useUserStore.subscribe((state, prev) => {
-      const currentPercentage =
-        state.user?.companies.find((c) => c.id === company.id)?.checklistCompletionPercentage || 0;
-      if (currentPercentage === 100) {
-        const previousPercentage =
-          prev.user?.companies.find((c) => c.id === company.id)?.checklistCompletionPercentage || 0;
-        if (previousPercentage < 100) {
-          setStatus("completed");
-        }
-      }
-    });
-    return subscription;
-  }, [company.id, status]);
+    if (company.checklistCompletionPercentage === 100) {
+      setStatus("completed");
+    }
+  }, [company, status]);
 
   useEffect(() => {
     if (status === "dismissed") {

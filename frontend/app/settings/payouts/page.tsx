@@ -303,6 +303,7 @@ const BankAccountsSection = () => {
                             onComplete={(result) => {
                               Object.assign(editingBankAccount, result);
                               setEditingBankAccount(null);
+                              void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
                             }}
                           />
                         ) : null}
@@ -334,6 +335,7 @@ const BankAccountsSection = () => {
             onComplete={(result) => {
               setBankAccounts((prev) => [...prev, result]);
               setAddingBankAccount(false);
+              void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
             }}
           />
         ) : null}

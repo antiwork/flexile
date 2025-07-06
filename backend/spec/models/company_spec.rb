@@ -63,16 +63,28 @@ RSpec.describe Company do
 
     describe "#checklist_items" do
       context "for company administrators" do
+        let(:company) { create(:company, :pre_onboarding) }
         let(:admin) { create(:company_administrator, company: company) }
 
         it "returns admin checklist items with completion status" do
           items = company.checklist_items(admin)
 
-          expect(items).to have_attributes(size: 3)
+          expect(items).to have_attributes(size: 4)
           expect(items.map { |item| item[:key] }).to contain_exactly(
-            "add_bank_account", "invite_contractor", "send_first_payment"
+            "add_company_details", "add_bank_account", "invite_contractor", "send_first_payment"
           )
           expect(items.all? { |item| item[:completed] == false }).to be true
+        end
+
+        it "completes company details item when company name is present" do
+          items = company.checklist_items(admin)
+          company_details_item = items.find { |item| item[:key] == "add_company_details" }
+          expect(company_details_item[:completed]).to be false
+
+          company.update!(name: "Test Company")
+          items = company.reload.checklist_items(admin)
+          company_details_item = items.find { |item| item[:key] == "add_company_details" }
+          expect(company_details_item[:completed]).to be true
         end
 
         it "completes bank account item when stripe account becomes ready" do
@@ -107,23 +119,25 @@ RSpec.describe Company do
           payment_item = items.find { |item| item[:key] == "send_first_payment" }
           expect(payment_item[:completed]).to be false
 
-          invoice = create(:invoice, company: company)
-          payment = create(:payment, invoice: invoice, status: "initial")
+          contractor = create(:company_worker, company: company)
+          company.update!(name: "Test Company")
+          invoice = create(:invoice, company: company, company_worker: contractor, user: contractor.user)
           items = company.reload.checklist_items(admin)
           payment_item = items.find { |item| item[:key] == "send_first_payment" }
           expect(payment_item[:completed]).to be false
 
-          payment.update!(status: "succeeded")
+          invoice.update!(status: Invoice::PAID)
           items = company.reload.checklist_items(admin)
           payment_item = items.find { |item| item[:key] == "send_first_payment" }
           expect(payment_item[:completed]).to be true
         end
 
         it "marks all admin items as completed when conditions are met" do
+          company.update!(name: "Test Company")
           create(:company_stripe_account, company: company, status: "ready")
           contractor = create(:company_worker, company: company)
-          invoice = create(:invoice, company: company, user: contractor.user)
-          create(:payment, invoice: invoice, status: "succeeded")
+          invoice = create(:invoice, company: company, company_worker: contractor, user: contractor.user)
+          invoice.update!(status: Invoice::PAID)
           company.reload
 
           items = company.checklist_items(admin)
@@ -194,6 +208,7 @@ RSpec.describe Company do
 
     describe "#checklist_completion_percentage" do
       context "for company administrators" do
+        let(:company) { create(:company, :pre_onboarding) }
         let(:admin) { create(:company_administrator, company: company) }
 
         it "returns 0 when no items are completed" do
@@ -203,14 +218,15 @@ RSpec.describe Company do
         it "returns correct percentage when some items are completed" do
           create(:company_stripe_account, company: company, status: "ready")
           company.reload
-          expect(company.checklist_completion_percentage(admin)).to eq(33)
+          expect(company.checklist_completion_percentage(admin)).to eq(25)
         end
 
         it "returns 100 when all items are completed" do
+          company.update!(name: "Test Company")
           create(:company_stripe_account, company: company, status: "ready")
           contractor = create(:company_worker, company: company)
           invoice = create(:invoice, company: company, user: contractor.user)
-          create(:payment, invoice: invoice, status: "succeeded")
+          invoice.update!(status: Invoice::PAID)
           company.reload
 
           expect(company.checklist_completion_percentage(admin)).to eq(100)

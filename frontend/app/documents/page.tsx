@@ -9,7 +9,7 @@ import {
   PercentIcon,
   SendHorizontal,
 } from "lucide-react";
-import { skipToken } from "@tanstack/react-query";
+import { skipToken, useQueryClient } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel, type ColumnFiltersState } from "@tanstack/react-table";
 import type { Route } from "next";
 import Link from "next/link";
@@ -438,11 +438,13 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
     companyId: company.id,
   });
   const trpcUtils = trpc.useUtils();
+  const queryClient = useQueryClient();
 
   const signDocument = trpc.documents.sign.useMutation({
     onSuccess: async () => {
       router.replace("/documents");
       await trpcUtils.documents.list.refetch();
+      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- not ideal, but there's no good way to assert this right now
       if (redirectUrl) router.push(redirectUrl as Route);
       else onClose();
