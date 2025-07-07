@@ -185,13 +185,6 @@ export const currencyByCountryCode = new Map<string, Currency>([
   ["ZW", "USD"],
 ]);
 
-export const MAX_WORKING_HOURS_PER_WEEK = 35;
-export const WORKING_WEEKS_PER_YEAR = 44;
-export const WEEKS_PER_YEAR = 52;
-export const DAY_MS = 86400_000;
-
-export const GOOGLE_AUTH_LIB_URL = "https://accounts.google.com/gsi/client";
-
 export const INVITATION_TOKEN_COOKIE_NAME = "invitation_token";
 export const INVITATION_TOKEN_COOKIE_MAX_AGE = 60 * 60 * 24 * 1;
 export const COMPANY_WORKER_ROLE_PLACEHOLDER = "UNASSIGNED";

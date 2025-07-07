@@ -13,8 +13,6 @@ class CompanyWorker < ApplicationRecord
   has_many :invoices, foreign_key: :company_contractor_id
   has_many :integration_records, as: :integratable
 
-  DEFAULT_HOURS_PER_WEEK = 20
-  WORKING_WEEKS_PER_YEAR = 44
   MAX_EQUITY_PERCENTAGE = 100
   MIN_COMPENSATION_AMOUNT_FOR_1099_NEC = 600_00
 
@@ -28,10 +26,7 @@ class CompanyWorker < ApplicationRecord
   validates :user_id, uniqueness: { scope: :company_id }
   validates :role, presence: true
   validates :started_at, presence: true
-  validates :hours_per_week, presence: true,
-                             numericality: { only_integer: true, greater_than: 0 },
-                             if: :hourly?
-  validates :pay_rate_in_subunits, presence: true, numericality: { only_integer: true, greater_than: 0 }
+  validates :pay_rate_in_subunits, numericality: { only_integer: true, greater_than: 0, allow_nil: true }
 
   scope :active, -> { where(ended_at: nil) }
   scope :active_as_of, ->(date) { active.or(where("ended_at > ?", date)) }
@@ -83,7 +78,7 @@ class CompanyWorker < ApplicationRecord
       .where(id: invoices_subquery)
   end
 
-  after_commit :notify_rate_updated, on: :update, if: -> { saved_change_to_pay_rate_in_subunits? && hourly? }
+  after_commit :notify_rate_updated, on: :update, if: -> { saved_change_to_pay_rate_in_subunits? }
 
   def equity_allocation_for(year)
     equity_allocations.find_by(year:)
@@ -94,10 +89,6 @@ class CompanyWorker < ApplicationRecord
   end
 
   def active? = ended_at.nil?
-
-  def avg_yearly_usd
-    (pay_rate_in_subunits / 100) * hours_per_week * WORKING_WEEKS_PER_YEAR
-  end
 
   def alumni?
     ended_at?

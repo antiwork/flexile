@@ -133,14 +133,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_25_204538) do
     t.bigint "user_id", null: false
     t.bigint "company_id", null: false
     t.datetime "started_at", null: false
-    t.integer "hours_per_week"
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.datetime "ended_at"
     t.string "external_id", null: false
     t.integer "pay_rate_type", default: 0, null: false
     t.boolean "sent_equity_percent_selection_email", default: false, null: false
-    t.integer "pay_rate_in_subunits", null: false
+    t.integer "pay_rate_in_subunits"
     t.string "pay_rate_currency", default: "usd", null: false
     t.string "role", null: false
     t.boolean "contract_signed_elsewhere", default: false, null: false

@@ -14,14 +14,11 @@ import {
   equityAllocations,
   users,
 } from "@/db/schema";
-import env from "@/env";
 import { companyProcedure, createRouter } from "@/trpc";
-import { sendEmail } from "@/trpc/email";
 import { createSubmission } from "@/trpc/routes/documents/templates";
 import { assertDefined } from "@/utils/assert";
 import { company_workers_url } from "@/utils/routes";
 import { latestUserComplianceInfo, simpleUser } from "../users";
-import RateUpdated from "./RateUpdated";
 import { COMPANY_WORKER_ROLE_PLACEHOLDER } from "@/models/constants";
 
 type CompanyContractor = typeof companyContractors.$inferSelect;
@@ -50,7 +47,14 @@ export const contractorsRouter = createRouter({
         limit: input.limit,
       });
       const workers = rows.map((worker) => ({
-        ...pick(worker, ["startedAt", "payRateInSubunits", "hoursPerWeek", "endedAt", "role", "payRateType"]),
+        ...pick(worker, [
+          "startedAt",
+          "payRateInSubunits",
+          "endedAt",
+          "role",
+          "payRateType",
+          "contractSignedElsewhere",
+        ]),
         id: worker.externalId,
         user: {
           ...simpleUser(worker.user),
@@ -73,9 +77,8 @@ export const contractorsRouter = createRouter({
     });
     if (!contractor) throw new TRPCError({ code: "NOT_FOUND" });
     return {
-      ...pick(contractor, ["payRateInSubunits", "hoursPerWeek", "endedAt", "role"]),
+      ...pick(contractor, ["payRateInSubunits", "endedAt", "role", "payRateType"]),
       id: contractor.externalId,
-      payRateType: contractor.payRateType,
       equityPercentage: contractor.equityAllocations[0]?.equityPercentage ?? 0,
     };
   }),
@@ -84,9 +87,8 @@ export const contractorsRouter = createRouter({
       z.object({
         email: z.string(),
         startedAt: z.string(),
-        payRateInSubunits: z.number(),
+        payRateInSubunits: z.number().nullable(),
         payRateType: z.nativeEnum(PayRateType),
-        hoursPerWeek: z.number().nullable(),
         role: z.string(),
         documentTemplateId: z.string(),
         contractSignedElsewhere: z.boolean().default(false),
@@ -118,7 +120,6 @@ export const contractorsRouter = createRouter({
             pay_rate_type: input.payRateType === PayRateType.Hourly ? "hourly" : "project_based",
             role: input.role,
             contract_signed_elsewhere: input.contractSignedElsewhere,
-            ...(input.payRateType === PayRateType.Hourly && { hours_per_week: input.hoursPerWeek }),
           },
         }),
       });
@@ -142,7 +143,7 @@ export const contractorsRouter = createRouter({
   update: companyProcedure
     .input(
       createUpdateSchema(companyContractors)
-        .pick({ payRateInSubunits: true, payRateType: true, hoursPerWeek: true, role: true })
+        .pick({ payRateInSubunits: true, role: true, payRateType: true })
         .extend({ id: z.string(), payRateType: z.nativeEnum(PayRateType).optional() }),
     )
     .mutation(async ({ ctx, input }) =>
@@ -155,12 +156,10 @@ export const contractorsRouter = createRouter({
         if (!contractor) throw new TRPCError({ code: "NOT_FOUND" });
         await tx
           .update(companyContractors)
-          .set(pick(input, ["payRateInSubunits", "payRateType", "hoursPerWeek", "role"]))
+          .set(pick(input, ["payRateInSubunits", "role", "payRateType"]))
           .where(eq(companyContractors.id, contractor.id));
         let documentId: bigint | null = null;
         if (input.payRateInSubunits != null && input.payRateInSubunits !== contractor.payRateInSubunits) {
-          const payRateType = input.payRateType ?? contractor.payRateType;
-
           if (!contractor.contractSignedElsewhere) {
             await tx.delete(documents).where(
               and(
@@ -217,21 +216,6 @@ export const contractorsRouter = createRouter({
                 title: "Signer",
               },
             ]);
-          }
-
-          if (payRateType === PayRateType.Hourly) {
-            await sendEmail({
-              from: `Flexile <support@${env.DOMAIN}>`,
-              to: contractor.user.email,
-              replyTo: ctx.company.email,
-              subject: `Your rate has changed!`,
-              react: RateUpdated({
-                host: ctx.host,
-                oldRate: contractor.payRateInSubunits,
-                newRate: input.payRateInSubunits,
-                documentId,
-              }),
-            });
           }
         }
         return { documentId };

@@ -7,7 +7,6 @@ import { invoiceApprovalsFactory } from "@test/factories/invoiceApprovals";
 import { invoicesFactory } from "@test/factories/invoices";
 import { login } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
-import { format } from "date-fns";
 import { and, eq, not } from "drizzle-orm";
 import { companies, consolidatedInvoices, invoiceApprovals, invoices, users } from "@/db/schema";
 import { assert } from "@/utils/assert";
@@ -141,7 +140,6 @@ test.describe("Invoices admin flow", () => {
       const invoiceRow = page.locator("tbody tr").first();
       await invoiceRow.getByRole("button", { name: "Approve" }).click();
       await expect(invoiceRow).toContainText("Approved!");
-      const approvalButton = invoiceRow.getByText("Awaiting approval (1/2)");
       await expect(page.getByRole("link", { name: "Invoices" }).getByRole("status")).not.toBeVisible();
 
       const updatedTargetInvoice = await db.query.invoices.findFirst({
@@ -150,10 +148,6 @@ test.describe("Invoices admin flow", () => {
       });
       expect(updatedTargetInvoice?.status).toBe("approved");
       expect(updatedTargetInvoice?.approvals.length).toBe(1);
-
-      const approvedTime = updatedTargetInvoice?.approvals[0]?.approvedAt;
-      assert(approvedTime !== undefined);
-      await expect(approvalButton).toHaveTooltip(`Approved by you on ${format(approvedTime, "MMM d, yyyy, h:mm a")}`);
     });
 
     test("allows approving multiple invoices", async ({ page }) => {

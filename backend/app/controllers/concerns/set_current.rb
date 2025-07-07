@@ -56,6 +56,8 @@ module SetCurrent
               default_currency: "USD"
             )
             user.company_administrators.create!(company: company)
+            user.company_administrators.reload
+            user.companies.reload
           end
         end
       end
