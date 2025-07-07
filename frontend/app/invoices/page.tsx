@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, AlertTriangle, CircleCheck, Info, Pencil, Plus } from "lucide-react";
+import { Download, AlertTriangle, CircleCheck, Info, Pencil, Plus, CircleAlert } from "lucide-react";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import Link from "next/link";
 import React, { Fragment, useEffect, useMemo, useState } from "react";
@@ -378,53 +378,52 @@ const TasksModal = ({
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="w-110 p-3">
+      <DialogContent className="w-110 p-6">
         <DialogHeader>
           <DialogTitle>{invoice.billFrom}</DialogTitle>
         </DialogHeader>
-        <div className="mt-4 grid gap-8">
+        <section>
           <StatusDetails invoice={invoice} />
-          <section>
-            <header className="flex items-center justify-between gap-4 text-gray-600">
-              <h3 className="text-md uppercase">Invoice details</h3>
-              <Button variant="link" asChild>
-                <Link href={`/invoices/${invoice.id}`}>View invoice</Link>
-              </Button>
-            </header>
-            <Card className="mt-3">
-              <CardContent>
-                <div className="flex justify-between gap-2">
-                  <div>Net amount in cash</div>
-                  <div>{formatMoneyFromCents(invoice.cashAmountInCents)}</div>
-                </div>
-                <Separator />
-                {invoice.equityAmountInCents ? (
-                  <>
-                    <div className="flex justify-between gap-2">
-                      <div>Swapped for equity ({invoice.equityPercentage}%)</div>
-                      <div>{formatMoneyFromCents(invoice.equityAmountInCents)}</div>
-                    </div>
-                    <Separator />
-                  </>
-                ) : null}
-                <div className="flex justify-between gap-2 font-bold">
-                  <div>Payout total</div>
-                  <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
-                </div>
-              </CardContent>
-            </Card>
-          </section>
           {payRateInSubunits &&
           invoiceData.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
-            <Alert>
-              <Info />
+            <Alert variant="warning">
+              <CircleAlert />
               <AlertDescription>
                 This invoice includes rates above the default of {formatMoneyFromCents(payRateInSubunits)}/
                 {invoiceData.contractor.payRateType === PayRateType.Custom ? "project" : "hour"}.
               </AlertDescription>
             </Alert>
           ) : null}
-        </div>
+          <header className="flex items-center justify-between gap-4 pt-4">
+            <h3>Invoice details</h3>
+            <Button variant="outline" size="small" asChild>
+              <Link href={`/invoices/${invoice.id}`}>View invoice</Link>
+            </Button>
+          </header>
+          <Separator />
+          <Card className="border-none">
+            <CardContent className="p-0">
+              <div className="flex justify-between gap-2">
+                <div>Net amount in cash</div>
+                <div>{formatMoneyFromCents(invoice.cashAmountInCents)}</div>
+              </div>
+              <Separator />
+              {invoice.equityAmountInCents ? (
+                <>
+                  <div className="flex justify-between gap-2">
+                    <div>Swapped for equity ({invoice.equityPercentage}%)</div>
+                    <div>{formatMoneyFromCents(invoice.equityAmountInCents)}</div>
+                  </div>
+                  <Separator />
+                </>
+              ) : null}
+              <div className="flex justify-between gap-2 pb-4 font-medium">
+                <div>Payout total</div>
+                <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
         {isActionable(invoice) ? (
           <DialogFooter>
             <div className="grid grid-cols-2 gap-4">

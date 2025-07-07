@@ -31,7 +31,7 @@ import {
   useIsActionable,
 } from "..";
 import InvoiceStatus, { StatusDetails } from "../Status";
-import { Info } from "lucide-react";
+import { CircleAlert } from "lucide-react";
 
 export default function InvoicePage() {
   const { id } = useParams<{ id: string }>();
@@ -204,8 +204,8 @@ export default function InvoicePage() {
       <StatusDetails invoice={invoice} />
 
       {payRateInSubunits && invoice.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
-        <Alert>
-          <Info />
+        <Alert variant="warning">
+          <CircleAlert />
           <AlertDescription>
             This invoice includes rates above the default of {formatMoneyFromCents(payRateInSubunits)}/
             {invoice.contractor.payRateType === PayRateType.Custom ? "project" : "hour"}.
