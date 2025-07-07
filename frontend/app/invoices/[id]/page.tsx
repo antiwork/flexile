@@ -271,7 +271,7 @@ export default function InvoicePage() {
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
                         {lineItem.payRateInSubunits
-                          ? `${formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)} / hour`
+                          ? `${formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)}${lineItem.hourly ? " / hour" : ""}`
                           : ""}
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
