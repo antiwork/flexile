@@ -36,7 +36,7 @@ import DatePicker from "@/components/DatePicker";
 import { type DateValue, parseDate } from "@internationalized/date";
 import QuantityInput from "./QuantityInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info } from "lucide-react";
+import { CircleAlert } from "lucide-react";
 
 const addressSchema = z.object({
   street_address: z.string(),
@@ -291,6 +291,16 @@ const Edit = () => {
         </>
       }
     >
+      {payRateInSubunits && lineItems.some((lineItem) => lineItem.pay_rate_in_subunits > payRateInSubunits) ? (
+        <Alert variant="warning">
+          <CircleAlert />
+          <AlertDescription>
+            This invoice includes rates above your default of {formatMoneyFromCents(payRateInSubunits)}/
+            {data.user.project_based ? "project" : "hour"}. Please check before submitting.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       {company.equityCompensationEnabled ? (
         <section className="mb-6">
           <Card>
@@ -316,16 +326,6 @@ const Edit = () => {
             </CardContent>
           </Card>
         </section>
-      ) : null}
-
-      {payRateInSubunits && lineItems.some((lineItem) => lineItem.pay_rate_in_subunits > payRateInSubunits) ? (
-        <Alert>
-          <Info />
-          <AlertDescription>
-            This invoice includes rates above your default of {formatMoneyFromCents(payRateInSubunits)}/
-            {data.user.project_based ? "project" : "hour"}. Please check before submitting.
-          </AlertDescription>
-        </Alert>
       ) : null}
 
       <section>
