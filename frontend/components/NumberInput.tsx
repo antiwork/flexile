@@ -13,7 +13,6 @@ const NumberInput = ({
   decimal = false,
   maximumFractionDigits = MAXIMUM_FRACTION_DIGITS_ALLOWED_BY_SPEC,
   minimumFractionDigits,
-  className,
   id,
   ...props
 }: {

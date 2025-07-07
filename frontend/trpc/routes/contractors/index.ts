@@ -85,7 +85,6 @@ export const contractorsRouter = createRouter({
         startedAt: z.string(),
         payRateInSubunits: z.number(),
         payRateType: z.nativeEnum(PayRateType),
-        hoursPerWeek: z.number().nullable(),
         role: z.string(),
         documentTemplateId: z.string(),
         contractSignedElsewhere: z.boolean().default(false),

@@ -24,7 +24,7 @@ echo "🚀 Setting up development environment..."
 if install_if_missing "brew" "Homebrew" "curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | bash"; then
   brew install postgresql
   brew services start postgresql
-  psql -c "CREATE USER username WITH LOGIN SUPERUSER PASSWORD 'password';" || true
+  psql postgres -c "CREATE USER username WITH LOGIN SUPERUSER PASSWORD 'password';" || true
 else
   read -p "Please make sure PostgreSQL headers are installed before continuing."
 fi

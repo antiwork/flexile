@@ -1,6 +1,13 @@
 export enum PayRateType {
   Hourly = 0,
   ProjectBased,
+  FullTime,
+  Custom,
+}
+
+export enum InviteModalStep {
+  Email = "email",
+  Contract = "contract",
 }
 
 export enum DocumentType {

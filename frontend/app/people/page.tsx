@@ -20,19 +20,15 @@ import { Input } from "@/components/ui/input";
 import { MutationStatusButton } from "@/components/MutationButton";
 import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
-import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
+import { InviteModalStep, PayRateType, trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
 import { UserPlus, Users } from "lucide-react";
-import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import FormFields from "./FormFields";
-import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
-import { Switch } from "@/components/ui/switch";
 
 const schema = z.object({
   email: z.string().email(),
   payRateType: z.nativeEnum(PayRateType),
   payRateInSubunits: z.number(),
-  hoursPerWeek: z.number().nullable(),
   role: z.string(),
   startDate: z.instanceof(CalendarDate),
   documentTemplateId: z.string(),
@@ -44,13 +40,13 @@ export default function PeoplePage() {
   const router = useRouter();
   const [workers, { refetch }] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id });
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteModalStep, setInviteModalStep] = useState<InviteModalStep>(InviteModalStep.Email);
   const lastContractor = workers[0];
 
   const form = useForm({
     defaultValues: {
       ...(lastContractor ? { payRateInSubunits: lastContractor.payRateInSubunits, role: lastContractor.role } : {}),
       payRateType: lastContractor?.payRateType ?? PayRateType.Hourly,
-      hoursPerWeek: lastContractor?.hoursPerWeek ?? DEFAULT_WORKING_HOURS_PER_WEEK,
       startDate: today(getLocalTimeZone()),
       contractSignedElsewhere: false,
     },
@@ -153,73 +149,61 @@ export default function PeoplePage() {
         <Placeholder icon={Users}>Contractors will show up here.</Placeholder>
       )}
       <Dialog open={showInviteModal} onOpenChange={setShowInviteModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Who's joining?</DialogTitle>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={(e) => void submit(e)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="email" placeholder="Contractor's email" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="startDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <DatePicker {...field} label="Start date" granularity="day" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormFields />
-
-              <FormField
-                control={form.control}
-                name="contractSignedElsewhere"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        label="Already signed contract elsewhere"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              {!form.watch("contractSignedElsewhere") && (
+        {inviteModalStep === InviteModalStep.Email && (
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Who's joining?</DialogTitle>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={(e) => void submit(e)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="documentTemplateId"
-                  render={({ field }) => <TemplateSelector type={DocumentTemplateType.ConsultingContract} {...field} />}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="email" placeholder="Contractor's email" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              )}
-              <div className="flex flex-col items-end space-y-2">
-                <MutationStatusButton mutation={saveMutation} type="submit">
-                  Send invite
-                </MutationStatusButton>
-                {saveMutation.isError ? <div className="text-red text-sm">{saveMutation.error.message}</div> : null}
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
+
+                <FormField
+                  control={form.control}
+                  name="startDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <DatePicker {...field} label="Start date" granularity="day" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormFields />
+                <div className="flex flex-col items-end space-y-2">
+                  <Button variant="outline" onClick={() => setInviteModalStep(InviteModalStep.Contract)}>
+                    Continue
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        )}
+        {inviteModalStep === InviteModalStep.Contract && (
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add a Contract</DialogTitle>
+              <MutationStatusButton mutation={saveMutation} type="submit">
+                Continue
+              </MutationStatusButton>
+              {saveMutation.isError ? <div className="text-red text-sm">{saveMutation.error.message}</div> : null}
+            </DialogHeader>
+          </DialogContent>
+        )}
       </Dialog>
     </MainLayout>
   );
