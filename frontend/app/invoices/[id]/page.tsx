@@ -5,7 +5,7 @@ import { InformationCircleIcon, PaperClipIcon, PencilIcon, XMarkIcon } from "@he
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Fragment, useMemo, useState } from "react";
+import React, { Fragment, useMemo, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import MainLayout from "@/components/layouts/Main";
 import { linkClasses } from "@/components/Link";
@@ -17,7 +17,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
-import { trpc } from "@/trpc/client";
+import { PayRateType, trpc } from "@/trpc/client";
 import { assert } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate, formatDuration } from "@/utils/time";
@@ -31,12 +31,14 @@ import {
   useIsActionable,
 } from "..";
 import InvoiceStatus, { StatusDetails } from "../Status";
+import { CircleAlert } from "lucide-react";
 
 export default function InvoicePage() {
   const { id } = useParams<{ id: string }>();
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const [invoice, { refetch }] = trpc.invoices.get.useSuspenseQuery({ companyId: company.id, id });
+  const payRateInSubunits = invoice.contractor.payRateInSubunits;
   const complianceInfo = invoice.contractor.user.complianceInfo;
   const [expenseCategories] = trpc.expenseCategories.list.useSuspenseQuery({ companyId: company.id });
 
@@ -191,17 +193,25 @@ export default function InvoicePage() {
           </DialogContent>
         </Dialog>
       ) : null}
-      <div className="flex flex-col gap-4">
-        {!taxRequirementsMet(invoice) && (
-          <Alert variant="destructive">
-            <ExclamationTriangleIcon />
-            <AlertTitle>Missing tax information.</AlertTitle>
-            <AlertDescription>Invoice is not payable until contractor provides tax information.</AlertDescription>
-          </Alert>
-        )}
+      {!taxRequirementsMet(invoice) && (
+        <Alert variant="destructive">
+          <ExclamationTriangleIcon />
+          <AlertTitle>Missing tax information.</AlertTitle>
+          <AlertDescription>Invoice is not payable until contractor provides tax information.</AlertDescription>
+        </Alert>
+      )}
 
-        <StatusDetails invoice={invoice} />
-      </div>
+      <StatusDetails invoice={invoice} />
+
+      {payRateInSubunits && invoice.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
+        <Alert variant="warning">
+          <CircleAlert />
+          <AlertDescription>
+            This invoice includes rates above the default of {formatMoneyFromCents(payRateInSubunits)}/
+            {invoice.contractor.payRateType === PayRateType.Custom ? "project" : "hour"}.
+          </AlertDescription>
+        </Alert>
+      ) : null}
 
       {invoice.equityAmountInCents > 0 ? (
         <Alert className="print:hidden">
@@ -271,7 +281,7 @@ export default function InvoicePage() {
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
                         {lineItem.payRateInSubunits
-                          ? `${formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)} / hour`
+                          ? `${formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)}${lineItem.hourly ? " / hour" : ""}`
                           : ""}
                       </TableCell>
                       <TableCell className="text-right tabular-nums">

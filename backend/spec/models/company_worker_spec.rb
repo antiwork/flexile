@@ -16,24 +16,8 @@ RSpec.describe CompanyWorker do
 
     it { is_expected.to validate_uniqueness_of(:user_id).scoped_to(:company_id) }
     it { is_expected.to validate_presence_of(:started_at) }
-    it { is_expected.to validate_presence_of(:pay_rate_in_subunits) }
     it { is_expected.to validate_numericality_of(:pay_rate_in_subunits).is_greater_than(0).only_integer }
     it { is_expected.to validate_inclusion_of(:pay_rate_type).in_array(described_class.pay_rate_types.values) }
-
-    context "when pay_rate_type is 'hourly'" do
-      subject(:company_worker) { create(:company_worker, pay_rate_type: :hourly) }
-
-      it { is_expected.to validate_presence_of(:hours_per_week) }
-      it { is_expected.to validate_numericality_of(:hours_per_week).is_greater_than(0).only_integer }
-    end
-
-    context "when pay_rate_type is 'project_based'" do
-      subject(:company_worker) { build(:company_worker, pay_rate_type: :project_based, hours_per_week: nil) }
-
-      it "does not validate presence of hours_per_week" do
-        expect(company_worker.valid?).to eq(true)
-      end
-    end
   end
 
   describe "scopes" do
@@ -168,55 +152,28 @@ RSpec.describe CompanyWorker do
 
   describe "callbacks" do
     describe "#notify_rate_updated" do
-      context "when company worker has an hourly-based role" do
-        let!(:company_worker) { create(:company_worker, started_at: 1.day.ago) }
-        let(:old_pay_rate_in_subunits) { company_worker.pay_rate_in_subunits }
+      let!(:company_worker) { create(:company_worker, started_at: 1.day.ago) }
+      let(:old_pay_rate_in_subunits) { company_worker.pay_rate_in_subunits }
 
-        context "when rate is unchanged" do
-          let(:new_pay_rate_in_subunits) { old_pay_rate_in_subunits }
+      context "when rate is unchanged" do
+        let(:new_pay_rate_in_subunits) { old_pay_rate_in_subunits }
 
-          it "does not schedule a QuickBooks data sync job" do
-            expect do
-              company_worker.update!(pay_rate_in_subunits: new_pay_rate_in_subunits)
-            end.to_not change { QuickbooksDataSyncJob.jobs.size }
-          end
-        end
-
-        context "when rate changes" do
-          let(:new_pay_rate_in_subunits) { old_pay_rate_in_subunits + 1 }
-
-          it "schedules a QuickBooks data sync job" do
-            expect do
-              company_worker.update!(pay_rate_in_subunits: new_pay_rate_in_subunits)
-            end.to change { QuickbooksDataSyncJob.jobs.size }.by(1)
-
-            expect(QuickbooksDataSyncJob).to have_enqueued_sidekiq_job(company_worker.company_id, "CompanyWorker", company_worker.id)
-          end
+        it "does not schedule a QuickBooks data sync job" do
+          expect do
+            company_worker.update!(pay_rate_in_subunits: new_pay_rate_in_subunits)
+          end.to_not change { QuickbooksDataSyncJob.jobs.size }
         end
       end
 
-      context "when company worker has a project-based role" do
-        let!(:company_worker) { create(:company_worker, :project_based, started_at: 1.day.ago) }
-        let(:old_pay_rate_in_subunits) { company_worker.pay_rate_in_subunits }
+      context "when rate changes" do
+        let(:new_pay_rate_in_subunits) { old_pay_rate_in_subunits + 1 }
 
-        context "when rate is unchanged" do
-          let(:new_pay_rate_in_subunits) { old_pay_rate_in_subunits }
+        it "schedules a QuickBooks data sync job" do
+          expect do
+            company_worker.update!(pay_rate_in_subunits: new_pay_rate_in_subunits)
+          end.to change { QuickbooksDataSyncJob.jobs.size }.by(1)
 
-          it "does not schedule a QuickBooks data sync job" do
-            expect do
-              company_worker.update!(pay_rate_in_subunits: new_pay_rate_in_subunits)
-            end.to_not change { QuickbooksDataSyncJob.jobs.size }
-          end
-        end
-
-        context "when rate changes" do
-          let(:new_pay_rate_in_subunits) { old_pay_rate_in_subunits + 1 }
-
-          it "does not schedule a QuickBooks data sync job" do
-            expect do
-              company_worker.update!(pay_rate_in_subunits: new_pay_rate_in_subunits)
-            end.to_not change { QuickbooksDataSyncJob.jobs.size }
-          end
+          expect(QuickbooksDataSyncJob).to have_enqueued_sidekiq_job(company_worker.company_id, "CompanyWorker", company_worker.id)
         end
       end
     end
@@ -231,15 +188,6 @@ RSpec.describe CompanyWorker do
     it "return `true` when the contract hasn't ended" do
       expect(build(:company_worker, ended_at: Date.current).active?).to eq(false)
       expect(build(:company_worker).active?).to eq(true)
-    end
-  end
-
-  describe "#avg_yearly_usd" do
-    it "calculates and returns the average pay in USD for a year" do
-      company_worker = build(:company_worker, hours_per_week: 40, pay_rate_in_subunits: 30_00)
-
-      yearly_rate_in_usd = company_worker.avg_yearly_usd
-      expect(yearly_rate_in_usd).to eq(52_800)
     end
   end
 
@@ -364,16 +312,25 @@ RSpec.describe CompanyWorker do
             Country: contractor.user.display_country,
             CountrySubDivisionCode: contractor.user.state,
           },
-          BillRate: 60.0,
           GivenName: contractor.user.legal_name,
           DisplayName: contractor.user.billing_entity_name,
           PrimaryEmailAddr: {
             Address: contractor.user.display_email,
           },
           Vendor1099: false,
+          BillRate: 60.0,
           TaxIdentifier: "000000000",
         }.to_json
       )
+    end
+  end
+
+  context "when pay_rate_in_subunits is nil" do
+    let(:contractor) { create(:company_worker, pay_rate_in_subunits: nil) }
+
+    it "excludes BillRate from serialized object" do
+      serialized = JSON.parse(contractor.serialize(namespace: "Quickbooks"))
+      expect(serialized).to_not have_key("BillRate")
     end
   end
 

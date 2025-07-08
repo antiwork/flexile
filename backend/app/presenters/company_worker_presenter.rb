@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class CompanyWorkerPresenter
-  delegate :external_id, :pay_rate_in_subunits, :hours_per_week, :started_at, :ended_at, :role,
+  delegate :external_id, :pay_rate_in_subunits, :started_at, :ended_at, :role,
            to: :company_worker, allow_nil: true
   delegate :preferred_name, :billing_entity_name, :display_name, :display_email,
            :street_address, :city, :zip_code, :legal_name, to: :user, allow_nil: true

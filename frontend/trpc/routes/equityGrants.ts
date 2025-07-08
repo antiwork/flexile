@@ -276,7 +276,6 @@ export const equityGrantsRouter = createRouter({
     const workers = await db.query.companyContractors.findMany({
       columns: {
         externalId: true,
-        payRateType: true,
       },
       with: {
         user: {

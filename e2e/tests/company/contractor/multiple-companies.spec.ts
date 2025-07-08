@@ -32,8 +32,6 @@ test.describe("Contractor for multiple companies", () => {
 
     await page.getByLabel("Email").fill(contractorUser.email);
     await fillDatePicker(page, "Start date", "08/08/2025");
-    await page.getByLabel("Average hours").fill("25");
-    await page.getByLabel("Rate").fill("110");
     await page.getByLabel("Role").fill("Role");
     await page.getByRole("button", { name: "Send invite" }).click();
     await withinModal(
