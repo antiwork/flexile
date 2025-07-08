@@ -2,6 +2,7 @@
 
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { InformationCircleIcon, PaperClipIcon, PencilIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { Trash2, CircleAlert } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -28,10 +29,11 @@ import {
   LegacyAddress,
   RejectModal,
   taxRequirementsMet,
+  DeleteModal,
   useIsActionable,
+  useIsDeletable,
 } from "..";
 import InvoiceStatus, { StatusDetails } from "../Status";
-import { CircleAlert } from "lucide-react";
 
 export default function InvoicePage() {
   const { id } = useParams<{ id: string }>();
@@ -43,8 +45,10 @@ export default function InvoicePage() {
   const [expenseCategories] = trpc.expenseCategories.list.useSuspenseQuery({ companyId: company.id });
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const router = useRouter();
   const isActionable = useIsActionable();
+  const isDeletable = useIsDeletable();
 
   const searchParams = useSearchParams();
   const [acceptPaymentModalOpen, setAcceptPaymentModalOpen] = useState(
@@ -84,11 +88,7 @@ export default function InvoicePage() {
       title={`Invoice ${invoice.invoiceNumber}`}
       headerActions={
         <div className="flex gap-2">
-          {invoice.requiresAcceptanceByPayee && user.id === invoice.userId ? (
-            <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
-          ) : null}
           <InvoiceStatus aria-label="Status" invoice={invoice} />
-
           {user.roles.administrator && isActionable(invoice) ? (
             <>
               <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
@@ -106,17 +106,36 @@ export default function InvoicePage() {
               <ApproveButton invoice={invoice} onApprove={() => router.push(`/invoices`)} />
             </>
           ) : null}
-          {EDITABLE_INVOICE_STATES.includes(invoice.status) && user.id === invoice.userId ? (
-            invoice.requiresAcceptanceByPayee ? (
-              <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
-            ) : (
-              <Button variant="outline" asChild>
-                <Link href={`/invoices/${invoice.id}/edit`}>
-                  {invoice.status !== "rejected" && <PencilIcon className="h-4 w-4" />}
-                  {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
-                </Link>
-              </Button>
-            )
+          {user.id === invoice.userId ? (
+            <>
+              {EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
+                invoice.requiresAcceptanceByPayee ? (
+                  <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
+                ) : (
+                  <Button variant="default" asChild>
+                    <Link href={`/invoices/${invoice.id}/edit`}>
+                      {invoice.status !== "rejected" && <PencilIcon className="h-4 w-4" />}
+                      {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
+                    </Link>
+                  </Button>
+                )
+              ) : null}
+
+              {isDeletable(invoice) ? (
+                <>
+                  <Button variant="outline" onClick={() => setDeleteModalOpen(true)} className="hover:text-destructive">
+                    <Trash2 className="size-4" />
+                    <span>Delete</span>
+                  </Button>
+                  <DeleteModal
+                    open={deleteModalOpen}
+                    onClose={() => setDeleteModalOpen(false)}
+                    onDelete={() => router.push(`/invoices`)}
+                    invoices={[invoice]}
+                  />
+                </>
+              ) : null}
+            </>
           ) : null}
         </div>
       }

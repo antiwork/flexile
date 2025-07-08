@@ -67,7 +67,7 @@ class CompanyWorker < ApplicationRecord
       .distinct
   end
   scope :with_required_tax_info_for, -> (tax_year:) do
-    invoices_subquery = Invoice.select("company_contractor_id")
+    invoices_subquery = Invoice.alive.select("company_contractor_id")
                                .for_tax_year(tax_year)
                                .group("company_contractor_id")
                                .having("SUM(cash_amount_in_cents) >= ?", MIN_COMPENSATION_AMOUNT_FOR_1099_NEC)

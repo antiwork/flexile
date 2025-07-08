@@ -39,7 +39,7 @@ end
 
 ### Usage:
 =begin
-invoices = Invoice.where("invoice_date >= ? AND invoice_date <= ?", Date.parse("1 May 2022"), Date.parse("31 May 2022")).includes(user: :company_workers).order(created_at: :asc)
+invoices = Invoice.alive.where("invoice_date >= ? AND invoice_date <= ?", Date.parse("1 May 2022"), Date.parse("31 May 2022")).includes(user: :company_workers).order(created_at: :asc)
 attached = { "Invoices.csv" => InvoiceCsv.new(invoices).generate }
 AdminMailer.custom(to: ["raul@gumroad.com", "olson_steven@yahoo.com"], subject: "Gumroad Invoices CSV", body: "Attached", attached:).deliver_now
 =end
