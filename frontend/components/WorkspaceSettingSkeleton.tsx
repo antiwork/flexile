@@ -1,37 +1,28 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-const WorkspaceSettingSkeleton = () => {
-  return (
-    <div className="space-y-6 max-w-screen mx-auto">
-      <div className="space-y-2">
-        <Skeleton className="h-6 w-96" />
-        <Skeleton className="h-4 w-128" />
+const WorkspaceSettingSkeleton = () => (
+  <div className="grid gap-8">
+    <Skeleton className="h-8 w-80" />
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="space-y-4">
+        <Skeleton className="h-6 w-16" />
+        <Skeleton className="h-14 w-14 rounded-full" />
       </div>
-
-      <div className="flex items-center space-x-12">
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-72" />
-          <Skeleton className="h-14 w-64 rounded-md" />
-        </div>
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-84" />
-          <Skeleton className="h-14 w-14 rounded-full" />
-        </div>
+      <div className="space-y-4">
+        <Skeleton className="h-6 w-16" />
+        <Skeleton className="h-14 w-14 rounded-full" />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-96" />
-          <Skeleton className="h-10 w-full rounded-md" />
-        </div>
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-96" />
-          <Skeleton className="h-10 w-full rounded-md" />
-        </div>
+      <div className="space-y-4">
+        <Skeleton className="h-6 w-32" />
+        <Skeleton className="h-8 w-full" />
       </div>
-      <Skeleton className="h-10 w-36 rounded-md" />
+      <div className="space-y-4">
+        <Skeleton className="h-6 w-32" />
+        <Skeleton className="h-8 w-full" />
+      </div>
+      <Skeleton className="h-10 w-30" />
     </div>
-  );
-};
+  </div>
+);
 
 export default WorkspaceSettingSkeleton;
-
