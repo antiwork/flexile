@@ -5,6 +5,7 @@ import "./globals.css";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { TRPCProvider } from "@/trpc/client";
 import { HelperWrapper } from "@/components/HelperWrapper";
+import AuthSessionProvider from "@/components/SessionProvider";
 
 const abcWhyte = localFont({
   src: [
@@ -69,11 +70,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             },
           }}
         >
-          <HelperWrapper>
-            <TRPCProvider>
-              <NuqsAdapter>{children}</NuqsAdapter>
-            </TRPCProvider>
-          </HelperWrapper>
+          <AuthSessionProvider>
+            <HelperWrapper>
+              <TRPCProvider>
+                <NuqsAdapter>{children}</NuqsAdapter>
+              </TRPCProvider>
+            </HelperWrapper>
+          </AuthSessionProvider>
         </ClerkProvider>
       </body>
     </html>

@@ -3,7 +3,11 @@
     "noEmit": true,
     "moduleResolution": "bundler",
     "target": "es2024",
-    "lib": ["dom", "dom.iterable", "es2024"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "es2024"
+    ],
     "module": "esnext",
     "strict": true,
     "allowUnreachableCode": false,
@@ -14,9 +18,15 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "forceConsistentCasingInFileNames": true,
-    "plugins": [{ "name": "next" }],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": [
+        "./*"
+      ]
     },
     "resolveJsonModule": true,
     "verbatimModuleSyntax": true,
@@ -38,7 +48,10 @@
     "trpc/**/*.ts",
     ".next/types/**/*.ts",
     "types.d.ts",
+    "types/**/*.d.ts",
     "middleware.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }
