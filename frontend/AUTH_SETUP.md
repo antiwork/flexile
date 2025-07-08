@@ -7,8 +7,12 @@ This project now includes a parallel authentication flow using Auth.js with OTP 
 Add these environment variables to your `.env` file:
 
 ```bash
+# Auth.js secret (server-side only)
 AUTH_SECRET=your-auth-secret-here
-API_SECRET_TOKEN=your-api-secret-token-here
+
+# API configuration (client-side accessible)
+NEXT_PUBLIC_API_SECRET_TOKEN=your-api-secret-token-here
+NEXT_PUBLIC_API_URL=http://localhost:3000  # Optional - defaults to localhost:3000 in dev
 ```
 
 ### AUTH_SECRET
@@ -17,8 +21,14 @@ Generate a random secret for Auth.js:
 npx auth secret
 ```
 
-### API_SECRET_TOKEN
-This should match the API token configured in your backend for accessing the OTP endpoints.
+### NEXT_PUBLIC_API_SECRET_TOKEN
+This should match the API token configured in your backend for accessing the OTP endpoints. Uses `NEXT_PUBLIC_` prefix to make it available in client-side code.
+
+### NEXT_PUBLIC_API_URL (Optional)
+Override the default API URL. If not set, it will auto-detect based on environment:
+- Development: `http://localhost:3000`
+- Production: `https://api.flexile.com`
+- Preview: Auto-generated Heroku URL
 
 ## How it Works
 

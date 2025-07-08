@@ -2,12 +2,6 @@
 
 set -e
 
-if [ -f ".vercel/project.json" ]; then
-    pnpx vercel env pull .env
-elif [ ! -f ".env" ]; then
-    echo ".env file not found. Please run bin/setup first."
-fi
-
 pnpm install
 cd backend
 bundle install

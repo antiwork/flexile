@@ -1,21 +1,27 @@
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import { z } from "zod"
-import env from "@/env"
+import clientEnv from "@/env/client"
 
 // Define the API base URL based on environment
 const API_BASE_URL = (() => {
-  switch (env.VERCEL_ENV) {
+  // If NEXT_PUBLIC_API_URL is set, use it
+  if (clientEnv.NEXT_PUBLIC_API_URL) {
+    return clientEnv.NEXT_PUBLIC_API_URL
+  }
+
+  // Otherwise, determine based on environment
+  switch (clientEnv.VERCEL_ENV) {
     case "production":
       return "https://api.flexile.com"
     case "preview":
-      return `https://flexile-pipeline-pr-${process.env.VERCEL_GIT_PULL_REQUEST_ID}.herokuapp.com`
+      return `https://flexile-pipeline-pr-${clientEnv.VERCEL_GIT_PULL_REQUEST_ID || 'unknown'}.herokuapp.com`
     default:
       return "http://localhost:3000"
   }
 })()
 
-const API_TOKEN = env.API_SECRET_TOKEN
+const API_TOKEN = clientEnv.NEXT_PUBLIC_API_SECRET_TOKEN || process.env.API_SECRET_TOKEN || "your-api-token"
 
 // Schema for OTP login
 const otpLoginSchema = z.object({
@@ -29,7 +35,7 @@ const sendOtpSchema = z.object({
 })
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  secret: env.AUTH_SECRET,
+  secret: process.env.AUTH_SECRET || "fallback-secret-for-development",
   providers: [
     Credentials({
       id: "otp",
@@ -86,7 +92,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) {
+      if (user && user.jwt) {
         token.jwt = user.jwt
       }
       return token
