@@ -390,7 +390,7 @@ test.describe("One-off payments", () => {
 
     test("shows 'Pay again' button for failed payments", async ({ page }) => {
       await login(page, adminUser);
-      
+
       await page.goto(`/people/${workerUser.externalId}?tab=invoices`);
       await page.getByRole("button", { name: "Issue payment" }).click();
 
@@ -407,7 +407,7 @@ test.describe("One-off payments", () => {
       await clerk.signOut({ page });
       await login(page, workerUser);
       await page.getByRole("link", { name: "Invoices" }).click();
-      
+
       const invoiceRow = await findRequiredTableRow(page, {
         "Invoice ID": "O-0002",
         Amount: "$500.00",
@@ -424,17 +424,17 @@ test.describe("One-off payments", () => {
       await clerk.signOut({ page });
       await login(page, adminUser);
       await page.goto("/invoices");
-      
+
       const invoice = await db.query.invoices.findFirst({
         where: and(eq(invoices.invoiceNumber, "O-0002"), eq(invoices.companyId, company.id)),
       });
       if (invoice) {
         await db.update(invoices).set({ status: "failed" }).where(eq(invoices.id, invoice.id));
       }
-      
+
       await page.reload();
       await expect(page.locator("tbody")).toBeVisible();
-      
+
       const failedInvoiceRow = await findRequiredTableRow(page, {
         "Invoice ID": "O-0002",
         Amount: "$500.00",
@@ -445,7 +445,7 @@ test.describe("One-off payments", () => {
 
     test("shows 'Payment initiated' success message when paying", async ({ page }) => {
       await login(page, adminUser);
-      
+
       await page.goto(`/people/${workerUser.externalId}?tab=invoices`);
       await page.getByRole("button", { name: "Issue payment" }).click();
 
@@ -462,7 +462,7 @@ test.describe("One-off payments", () => {
       await clerk.signOut({ page });
       await login(page, workerUser);
       await page.getByRole("link", { name: "Invoices" }).click();
-      
+
       const invoiceRow = await findRequiredTableRow(page, {
         "Invoice ID": "O-0003",
         Amount: "$300.00",
@@ -479,9 +479,9 @@ test.describe("One-off payments", () => {
       await clerk.signOut({ page });
       await login(page, adminUser);
       await page.goto("/invoices");
-      
+
       await expect(page.locator("tbody")).toBeVisible();
-      
+
       const payableInvoiceRow = await findRequiredTableRow(page, {
         "Invoice ID": "O-0003",
         Amount: "$300.00",
