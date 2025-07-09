@@ -19,7 +19,6 @@ import { createSubmission } from "@/trpc/routes/documents/templates";
 import { assertDefined } from "@/utils/assert";
 import { company_workers_url } from "@/utils/routes";
 import { latestUserComplianceInfo, simpleUser } from "../users";
-import { COMPANY_WORKER_ROLE_PLACEHOLDER } from "@/models/constants";
 
 type CompanyContractor = typeof companyContractors.$inferSelect;
 type DocumentTemplate = typeof documentTemplates.$inferSelect;
@@ -62,7 +61,7 @@ export const contractorsRouter = createRouter({
           onboardingCompleted: worker.user.legalName && worker.user.preferredName && worker.user.countryCode,
         } as const,
       }));
-      return workers.filter((worker) => worker.role !== COMPANY_WORKER_ROLE_PLACEHOLDER);
+      return workers.filter((worker) => worker.role);
     }),
   get: companyProcedure.input(z.object({ userId: z.string() })).query(async ({ ctx, input }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });

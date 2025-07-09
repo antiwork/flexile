@@ -16,15 +16,13 @@ class CompanyWorker < ApplicationRecord
   MAX_EQUITY_PERCENTAGE = 100
   MIN_COMPENSATION_AMOUNT_FOR_1099_NEC = 600_00
 
-  PLACEHOLDER_ROLE = "UNASSIGNED"
-
   enum :pay_rate_type, {
     hourly: 0,
     project_based: 1,
   }, validate: true
 
   validates :user_id, uniqueness: { scope: :company_id }
-  validates :role, presence: true
+  validates :role, presence: true, on: :update
   validates :started_at, presence: true
   validates :pay_rate_in_subunits, numericality: { only_integer: true, greater_than: 0, allow_nil: true }
 
@@ -132,11 +130,6 @@ class CompanyWorker < ApplicationRecord
     CompanyWorkerMailer.equity_percent_selection(id).deliver_later
     equity_allocation.update!(sent_equity_percent_selection_email: true)
   end
-
-  def complete?
-    role != PLACEHOLDER_ROLE
-  end
-
 
   private
     def notify_rate_updated

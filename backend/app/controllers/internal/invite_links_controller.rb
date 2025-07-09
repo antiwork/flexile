@@ -13,7 +13,6 @@ class Internal::InviteLinksController < ApplicationController
     if invite_link
       render json: {
         valid: true,
-        inviter_name: invite_link.inviter.display_name,
         company_name: invite_link.company.display_name,
         company_id: invite_link.company.external_id,
       }

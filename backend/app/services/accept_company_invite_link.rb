@@ -17,17 +17,12 @@ class AcceptCompanyInviteLink
     end
 
     company_worker.assign_attributes(
-      role: CompanyWorker::PLACEHOLDER_ROLE,
       pay_rate_type: 0,
-      pay_rate_in_subunits: 1,
-      hours_per_week: 1,
       started_at: Time.current,
       contract_signed_elsewhere: invite_link.document_template_id.nil?,
       ended_at: nil
     )
-    @user.invited_by = invite_link.inviter
-    @user.save
-    company_worker.save if @user.errors.blank?
+    company_worker.save
 
     if @user.errors.blank? && company_worker.errors.blank?
       { success: true, company_worker: company_worker }

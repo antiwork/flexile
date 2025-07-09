@@ -10,8 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-
-ActiveRecord::Schema[8.0].define(version: 2025_06_24_011111) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_25_204538) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -142,7 +141,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_24_011111) do
     t.boolean "sent_equity_percent_selection_email", default: false, null: false
     t.integer "pay_rate_in_subunits"
     t.string "pay_rate_currency", default: "usd", null: false
-    t.string "role", null: false
+    t.string "role"
     t.boolean "contract_signed_elsewhere", default: false, null: false
     t.index ["company_id"], name: "index_company_contractors_on_company_id"
     t.index ["external_id"], name: "index_company_contractors_on_external_id", unique: true
@@ -187,15 +186,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_24_011111) do
 
   create_table "company_invite_links", force: :cascade do |t|
     t.bigint "company_id", null: false
-    t.bigint "inviter_id", null: false
     t.bigint "document_template_id"
     t.string "token", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["company_id", "inviter_id", "document_template_id"], name: "idx_on_company_id_inviter_id_document_template_id_ea816812b4"
+    t.index ["company_id", "document_template_id"], name: "idx_on_company_id_document_template_id_57bbad7c26"
     t.index ["company_id"], name: "index_company_invite_links_on_company_id"
     t.index ["document_template_id"], name: "index_company_invite_links_on_document_template_id"
-    t.index ["inviter_id"], name: "index_company_invite_links_on_inviter_id"
     t.index ["token"], name: "index_company_invite_links_on_token", unique: true
   end
 
@@ -1125,8 +1122,4 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_24_011111) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "company_invite_links", "companies"
-  add_foreign_key "company_invite_links", "document_templates"
-  add_foreign_key "company_invite_links", "users", column: "inviter_id"
-  add_foreign_key "users", "company_invite_links", column: "signup_invite_link_id"
 end

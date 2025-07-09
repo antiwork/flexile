@@ -18,6 +18,8 @@ export const schema = z.object({
   role: z.string(),
 });
 
+const defaultRoles = ["Software Engineer", "Designer", "Product Manager", "Data Analyst"];
+
 export default function FormFields() {
   const form = useFormContext<z.infer<typeof schema>>();
   const [rolePopoverOpen, setRolePopoverOpen] = React.useState(false);
@@ -25,7 +27,7 @@ export default function FormFields() {
   const companyId = useUserStore((state) => state.user?.currentCompanyId);
   const { data: workers } = trpc.contractors.list.useQuery(companyId ? { companyId, excludeAlumni: true } : skipToken);
 
-  const uniqueRoles = workers ? [...new Set(workers.map((worker) => worker.role))].sort() : [];
+  const uniqueRoles = workers ? [...new Set(workers.map((worker) => worker.role))].sort() : defaultRoles;
   const roleRegex = new RegExp(form.watch("role"), "iu");
 
   return (

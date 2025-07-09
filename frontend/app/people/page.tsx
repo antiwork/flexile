@@ -26,7 +26,6 @@ import { UserPlus, Users, Link as LinkIcon } from "lucide-react";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import FormFields, { schema as formSchema } from "./FormFields";
 import InviteLinkModal from "./InviteLinkModal";
-import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
 import { Switch } from "@/components/ui/switch";
 
 const schema = formSchema.extend({

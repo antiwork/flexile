@@ -7,7 +7,7 @@ class Internal::Companies::InviteLinksController < Internal::BaseController
     authorize CompanyAdministrator
 
     document_template_id = params[:document_template_id] || nil
-    invite_link = CompanyInviteLink.find_or_create_by(company: Current.company, inviter: Current.user, document_template_id:)
+    invite_link = CompanyInviteLink.find_or_create_by(company: Current.company, document_template_id:)
     if invite_link.persisted?
       render json: { success: true, invite_link: invite_link.token }, status: :ok
     else
@@ -19,7 +19,7 @@ class Internal::Companies::InviteLinksController < Internal::BaseController
     authorize CompanyAdministrator
 
     document_template_id = params[:document_template_id] || nil
-    invite_link = CompanyInviteLink.find_by(company: Current.company, inviter: Current.user, document_template_id:)
+    invite_link = CompanyInviteLink.find_by(company: Current.company, document_template_id:)
     if invite_link
       invite_link.reset!
       render json: { success: true, invite_link: invite_link.token }, status: :ok
@@ -39,6 +39,6 @@ class Internal::Companies::InviteLinksController < Internal::BaseController
   end
 
   def params_for_update
-    params.permit(:started_at, :role, :pay_rate_type, :pay_rate_in_subunits, :hours_per_week)
+    params.permit(:started_at, :role, :pay_rate_type, :pay_rate_in_subunits)
   end
 end

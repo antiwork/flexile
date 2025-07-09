@@ -40,11 +40,10 @@ class CompleteInviteLinkOnboarding
 
     def create_contract_document(company_worker, invite_link)
       template_id = invite_link.document_template_id
-      company_admin = invite_link.inviter.company_administrator_for(@company)
 
       document = CreateConsultingContract.new(
         company_worker: company_worker,
-        company_administrator: company_admin,
+        company_administrator: @company.primary_admin,
         current_user: @user
       ).perform!
 

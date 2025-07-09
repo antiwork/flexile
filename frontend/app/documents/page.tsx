@@ -38,7 +38,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { FinishOnboarding } from "@/app/documents/FinishOnboarding";
-import { COMPANY_WORKER_ROLE_PLACEHOLDER } from "@/models/constants";
 
 type Document = RouterOutput["documents"]["list"][number];
 type SignableDocument = Document & { docusealSubmissionId: number };
@@ -210,9 +209,7 @@ export default function DocumentsPage() {
   const userId = isCompanyRepresentative ? null : user.id;
   const canSign = user.address.street_address || isCompanyRepresentative;
 
-  const [forceWorkerOnboarding, setForceWorkerOnboarding] = useState<boolean>(
-    user.roles.worker?.role === COMPANY_WORKER_ROLE_PLACEHOLDER,
-  );
+  const [forceWorkerOnboarding, setForceWorkerOnboarding] = useState<boolean>(!user.roles.worker?.role);
 
   const currentYear = new Date().getFullYear();
   const [documents] = trpc.documents.list.useSuspenseQuery({ companyId: company.id, userId });

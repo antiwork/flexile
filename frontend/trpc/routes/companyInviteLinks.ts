@@ -18,7 +18,6 @@ import { assertDefined } from "@/utils/assert";
 
 type VerifyInviteLinkResult = {
   valid: boolean;
-  inviter_name?: string;
   company_name?: string;
   company_id?: string;
   error?: string;
@@ -52,7 +51,7 @@ export const companyInviteLinksRouter = createRouter({
     if (!response.ok) {
       throw new TRPCError({ code: "BAD_REQUEST", message: "Failed to get invite link" });
     }
-    const data = z.object({ invite_link: z.string() }).parse(await response.json());
+    const data = z.object({ invite_link: z.string(), success: z.boolean() }).parse(await response.json());
     return { invite_link: `${ctx.host}/invite/${data.invite_link}` };
   }),
 
@@ -84,7 +83,7 @@ export const companyInviteLinksRouter = createRouter({
       if (!response.ok) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Failed to reset invite link" });
       }
-      const data = z.object({ invite_link: z.string() }).parse(await response.json());
+      const data = z.object({ invite_link: z.string(), success: z.boolean() }).parse(await response.json());
       return { invite_link: `${ctx.host}/invite/${data.invite_link}` };
     }),
 
@@ -94,7 +93,6 @@ export const companyInviteLinksRouter = createRouter({
         startedAt: z.string(),
         payRateInSubunits: z.number(),
         payRateType: z.nativeEnum(PayRateType),
-        hoursPerWeek: z.number().nullable(),
         role: z.string(),
       }),
     )
@@ -107,7 +105,6 @@ export const companyInviteLinksRouter = createRouter({
           started_at: input.startedAt,
           pay_rate_in_subunits: input.payRateInSubunits,
           pay_rate_type: input.payRateType,
-          hours_per_week: input.hoursPerWeek,
           role: input.role,
         }),
         headers: { "Content-Type": "application/json", ...ctx.headers },
@@ -154,9 +151,6 @@ export const companyInviteLinksRouter = createRouter({
       const { error_message } = z.object({ error_message: z.string() }).parse(await response.json());
       throw new TRPCError({ code: "BAD_REQUEST", message: error_message });
     }
-
-    const data = z.object({ company_worker_id: z.string() }).parse(await response.json());
-    return data.company_worker_id;
   }),
 
   verify: baseProcedure.input(z.object({ token: z.string() })).query(async ({ ctx, input }) => {
@@ -176,7 +170,6 @@ export const companyInviteLinksRouter = createRouter({
     const parsedResult = z
       .object({
         valid: z.boolean(),
-        inviter_name: z.string().optional(),
         company_name: z.string().optional(),
         company_id: z.string().optional(),
         error: z.string().optional(),

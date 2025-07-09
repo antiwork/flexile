@@ -32,13 +32,11 @@ const InviteLinkModal = ({ open, onOpenChange }: InviteLinkModalProps) => {
 
   const form = useForm({
     defaultValues: {
-      companyId: company.id,
       contractSignedElsewhere: true,
       documentTemplateId: "",
     },
     resolver: zodResolver(
       z.object({
-        companyId: z.string().uuid(),
         contractSignedElsewhere: z.boolean(),
         documentTemplateId: z.string().nullable().optional(),
       }),
@@ -125,7 +123,7 @@ const InviteLinkModal = ({ open, onOpenChange }: InviteLinkModalProps) => {
             >
               Reset link
             </Button>
-            <CopyButton variant="link" aria-label="Copy Invite" copyText={invite?.invite_link || ""}>
+            <CopyButton aria-label="Copy Invite" copyText={invite?.invite_link || ""}>
               <Copy className="size-4" />
               <span>Copy link</span>
             </CopyButton>
@@ -150,9 +148,6 @@ const InviteLinkModal = ({ open, onOpenChange }: InviteLinkModalProps) => {
                 Reset link
               </MutationStatusButton>
             </div>
-            {resetInviteLinkMutation.isError ? (
-              <div className="text-red text-sm">{resetInviteLinkMutation.error.message}</div>
-            ) : null}
           </div>
         </DialogContent>
       </Dialog>
