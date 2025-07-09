@@ -392,14 +392,18 @@ test.describe("One-off payments", () => {
       const { invoice } = await invoicesFactory.create({
         companyId: company.id,
         companyContractorId: companyContractor.id,
-        status: "failed",
+        status: "approved",
         totalAmountInUsdCents: BigInt(50000),
         invoiceNumber: "O-0002",
       });
 
+      await db.update(invoices).set({ status: "failed" }).where(eq(invoices.id, invoice.id));
+
       await login(page, adminUser);
       await page.goto("/invoices");
-
+      
+      await expect(page.locator("tbody")).toBeVisible();
+      
       const invoiceRow = await findRequiredTableRow(page, {
         "Invoice ID": "O-0002",
         Amount: "$500.00",
@@ -419,7 +423,9 @@ test.describe("One-off payments", () => {
 
       await login(page, adminUser);
       await page.goto("/invoices");
-
+      
+      await expect(page.locator("tbody")).toBeVisible();
+      
       const invoiceRow = await findRequiredTableRow(page, {
         "Invoice ID": "O-0003",
         Amount: "$500.00",
