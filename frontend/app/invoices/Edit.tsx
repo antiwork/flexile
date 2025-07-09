@@ -35,6 +35,9 @@ import RangeInput from "@/components/RangeInput";
 import DatePicker from "@/components/DatePicker";
 import { type DateValue, parseDate } from "@internationalized/date";
 import QuantityInput from "./QuantityInput";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CircleAlert } from "lucide-react";
+
 const addressSchema = z.object({
   street_address: z.string(),
   city: z.string(),
@@ -49,7 +52,7 @@ const dataSchema = z.object({
     legal_name: z.string(),
     business_entity: z.boolean(),
     billing_entity_name: z.string(),
-    pay_rate_in_subunits: z.number(),
+    pay_rate_in_subunits: z.number().nullable(),
     project_based: z.boolean(),
   }),
   company: z.object({
@@ -116,6 +119,7 @@ const Edit = () => {
       return dataSchema.parse(await response.json());
     },
   });
+  const payRateInSubunits = data.user.pay_rate_in_subunits;
 
   const [invoiceNumber, setInvoiceNumber] = useState(data.invoice.invoice_number);
   const [issueDate, setIssueDate] = useState<DateValue>(() =>
@@ -131,7 +135,7 @@ const Edit = () => {
         description: "",
         quantity: parseInt(searchParams.get("quantity") ?? "", 10) || (data.user.project_based ? 1 : 60),
         hourly: searchParams.has("hourly") ? searchParams.get("hourly") === "true" : !data.user.project_based,
-        pay_rate_in_subunits: parseInt(searchParams.get("rate") ?? "", 10) || data.user.pay_rate_in_subunits,
+        pay_rate_in_subunits: parseInt(searchParams.get("rate") ?? "", 10) || (payRateInSubunits ?? 0),
       },
     ]);
   });
@@ -209,7 +213,7 @@ const Edit = () => {
         description: "",
         quantity: data.user.project_based ? 1 : 60,
         hourly: !data.user.project_based,
-        pay_rate_in_subunits: data.user.pay_rate_in_subunits,
+        pay_rate_in_subunits: payRateInSubunits ?? 0,
       }),
     );
 
@@ -287,6 +291,16 @@ const Edit = () => {
         </>
       }
     >
+      {payRateInSubunits && lineItems.some((lineItem) => lineItem.pay_rate_in_subunits > payRateInSubunits) ? (
+        <Alert variant="warning">
+          <CircleAlert />
+          <AlertDescription>
+            This invoice includes rates above your default of {formatMoneyFromCents(payRateInSubunits)}/
+            {data.user.project_based ? "project" : "hour"}. Please check before submitting.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       {company.equityCompensationEnabled ? (
         <section className="mb-6">
           <Card>

@@ -10,7 +10,8 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_25_204538) do
+
+ActiveRecord::Schema[8.0].define(version: 2025_06_24_011111) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -804,6 +805,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_25_204538) do
     t.integer "min_allowed_equity_percentage"
     t.integer "max_allowed_equity_percentage"
     t.datetime "accepted_at"
+    t.datetime "deleted_at"
     t.index ["company_contractor_id"], name: "index_invoices_on_company_contractor_id"
     t.index ["company_id"], name: "index_invoices_on_company_id"
     t.index ["created_by_id"], name: "index_invoices_on_created_by_id"

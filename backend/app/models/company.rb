@@ -136,7 +136,7 @@ class Company < ApplicationRecord
     account_balance >= (is_trusted? ? 0 : usd_amount)
   end
 
-  def pending_invoice_cash_amount_in_cents = invoices.pending.sum(:cash_amount_in_cents)
+  def pending_invoice_cash_amount_in_cents = invoices.alive.pending.sum(:cash_amount_in_cents)
 
   def create_stripe_setup_intent
     Stripe::SetupIntent.create({

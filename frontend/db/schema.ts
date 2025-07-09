@@ -865,6 +865,7 @@ export const invoices = pgTable(
     flexileFeeCents: bigint("flexile_fee_cents", { mode: "bigint" }),
     countryCode: varchar("country_code"),
     acceptedAt: timestamp("accepted_at", { precision: 6, mode: "date" }),
+    deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
   },
   (table) => [
     index("index_invoices_on_company_contractor_id").using(

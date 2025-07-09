@@ -124,13 +124,13 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.locator("tbody tr").first().getByLabel("Select row").check();
 
     await expect(page.getByText("1 selected")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Reject selected" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Approve selected" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Reject selected invoices" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Approve selected invoices" })).toBeVisible();
 
     await page.locator("tbody tr").nth(1).getByLabel("Select row").check();
     await expect(page.getByText("2 selected")).toBeVisible();
 
-    await page.getByRole("button", { name: "Approve selected" }).click();
+    await page.getByRole("button", { name: "Approve selected invoices" }).click();
 
     await withinModal(
       async (modal) => {
@@ -155,7 +155,7 @@ test.describe("Invoice submission, approval and rejection", () => {
       .filter({ hasText: "$23" })
       .getByLabel("Select row")
       .check();
-    await page.getByRole("button", { name: "Reject selected" }).click();
+    await page.getByRole("button", { name: "Reject selected invoices" }).click();
     await page.getByLabel("Explain why the invoice was").fill("Too little time");
 
     await page.getByRole("button", { name: "Yes, reject" }).click();

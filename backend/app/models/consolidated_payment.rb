@@ -29,7 +29,7 @@ class ConsolidatedPayment < ApplicationRecord
   end
 
   def refundable?
-    status.in?(REFUNDABLE_STATUSES) && consolidated_invoice.invoices.paid_or_mid_payment.none?
+    status.in?(REFUNDABLE_STATUSES) && consolidated_invoice.invoices.alive.paid_or_mid_payment.none?
   end
 
   def mark_as_refunded!

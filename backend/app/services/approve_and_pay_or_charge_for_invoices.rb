@@ -10,7 +10,7 @@ class ApproveAndPayOrChargeForInvoices
   def perform
     chargeable_invoice_ids = []
     invoice_ids.each do |external_id|
-      invoice = company.invoices.find_by!(external_id:)
+      invoice = company.invoices.alive.find_by!(external_id:)
       ApproveInvoice.new(invoice:, approver: user).perform
       if invoice.reload.immediately_payable? # for example, invoice payment failed
         EnqueueInvoicePayment.new(invoice:).perform

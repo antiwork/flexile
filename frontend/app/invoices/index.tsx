@@ -10,10 +10,11 @@ import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
-import { approve_company_invoices_path, reject_company_invoices_path } from "@/utils/routes";
+import { approve_company_invoices_path, reject_company_invoices_path, company_invoice_path } from "@/utils/routes";
 
 type Invoice = RouterOutput["invoices"]["list"][number] | RouterOutput["invoices"]["get"];
 export const EDITABLE_INVOICE_STATES: Invoice["status"][] = ["received", "rejected"];
+export const DELETABLE_INVOICE_STATES: Invoice["status"][] = ["received", "approved"];
 
 export const taxRequirementsMet = (invoice: Invoice) =>
   !!invoice.contractor.user.complianceInfo?.taxInformationConfirmedAt;
@@ -105,6 +106,15 @@ export function useIsPayable() {
       company.requiredInvoiceApprovals - invoice.approvals.length <= (isApprovedByCurrentUser(invoice) ? 0 : 1));
 }
 
+export function useIsDeletable() {
+  const user = useCurrentUser();
+
+  return (invoice: Invoice) =>
+    DELETABLE_INVOICE_STATES.includes(invoice.status) &&
+    !invoice.requiresAcceptanceByPayee &&
+    user.id === invoice.contractor.user.id;
+}
+
 export const useApproveInvoices = (onSuccess?: () => void) => {
   const utils = trpc.useUtils();
   const company = useCurrentCompany();
@@ -191,10 +201,12 @@ export const RejectModal = ({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Reject invoice?</DialogTitle>
+          <DialogTitle>Reject {ids.length > 1 ? `${ids.length} invoices` : "invoice"}?</DialogTitle>
         </DialogHeader>
         <div className="grid gap-2">
-          <Label htmlFor="reject-reason">Explain why the invoice was rejected and how to fix it (optional)</Label>
+          <Label htmlFor="reject-reason">
+            Explain why the {ids.length > 1 ? "invoices were" : "invoice was"} rejected and how to fix it (optional)
+          </Label>
           <Textarea
             id="reject-reason"
             value={reason}
@@ -207,6 +219,69 @@ export const RejectModal = ({
           </Button>
           <MutationButton mutation={rejectInvoices} param={{ ids, reason }} loadingText="Rejecting...">
             Yes, reject
+          </MutationButton>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export const DeleteModal = ({
+  open,
+  invoices,
+  onClose,
+  onDelete,
+}: {
+  open: boolean;
+  invoices: Invoice[];
+  onClose: () => void;
+  onDelete?: () => void;
+}) => {
+  const company = useCurrentCompany();
+  const utils = trpc.useUtils();
+  const ids = invoices.map((invoice) => invoice.id);
+
+  const deleteInvoices = useMutation({
+    mutationFn: async (params: { ids: string[] }) => {
+      await Promise.all(
+        params.ids.map(async (invoiceId) => {
+          await request({
+            method: "DELETE",
+            url: company_invoice_path(company.id, invoiceId),
+            accept: "json",
+            assertOk: true,
+          });
+        }),
+      );
+    },
+    onSuccess: () => {
+      void utils.invoices.list.invalidate({ companyId: company.id });
+      onDelete?.();
+      onClose();
+    },
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            Delete {invoices.length > 1 ? `${invoices.length} invoices` : `invoice "${invoices[0]?.invoiceNumber}"`}?
+          </DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-2">
+          <p className="text-sm">
+            {invoices.length > 1
+              ? "These invoices will be cancelled and permanently deleted. They won't be payable or recoverable."
+              : `This invoice will be cancelled and permanently deleted. It won't be payable or recoverable.`}
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <MutationButton idleVariant="critical" mutation={deleteInvoices} param={{ ids }} loadingText="Deleting...">
+            Delete
           </MutationButton>
         </DialogFooter>
       </DialogContent>

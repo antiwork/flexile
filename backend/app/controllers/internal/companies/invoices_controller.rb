@@ -64,7 +64,7 @@ class Internal::Companies::InvoicesController < Internal::Companies::BaseControl
   def export
     authorize Invoice
 
-    body = InvoiceCsv.new(Current.company.invoices.order(created_at: :asc)).generate
+    body = InvoiceCsv.new(Current.company.invoices.alive.order(created_at: :asc)).generate
     response.headers["Content-Disposition"] = "attachment; filename=invoices-#{Time.current.strftime("%Y-%m-%d_%H%M%S")}.csv"
     render body:, content_type: "text/csv"
   end
@@ -99,14 +99,22 @@ class Internal::Companies::InvoicesController < Internal::Companies::BaseControl
     ).perform
   end
 
+  def destroy
+    invoice = Current.user.invoices.alive.find_by!(external_id: params[:id])
+    authorize invoice
+    invoice.mark_deleted!
+
+    head :no_content
+  end
+
   private
     def load_invoice!
-      @invoice = Current.user.invoices.find_by!(external_id: params[:id])
+      @invoice = Current.user.invoices.alive.find_by!(external_id: params[:id])
     end
 
     def authorize_invoices_for_rejection
       all_invoices_belong_to_company = invoice_external_ids_for_rejection.all? do |invoice_external_id|
-        Current.company.invoices.exists?(external_id: invoice_external_id)
+        Current.company.invoices.alive.exists?(external_id: invoice_external_id)
       end
 
       unless all_invoices_belong_to_company
@@ -117,7 +125,7 @@ class Internal::Companies::InvoicesController < Internal::Companies::BaseControl
     def authorize_invoices_for_approval_and_pay
       ids = invoice_external_ids_for_approval + invoice_external_ids_for_payment
       all_invoices_belong_to_company = ids.all? do |invoice_id|
-        Current.company.invoices.exists?(external_id: invoice_id)
+        Current.company.invoices.alive.exists?(external_id: invoice_id)
       end
 
       unless all_invoices_belong_to_company
