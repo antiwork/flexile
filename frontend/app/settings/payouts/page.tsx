@@ -13,7 +13,6 @@ import { useCurrentUser } from "@/global";
 import { currencyCodes, sanctionedCountries } from "@/models/constants";
 import { request } from "@/utils/request";
 import { settings_bank_account_path, settings_bank_accounts_path, settings_dividend_path } from "@/utils/routes";
-import SettingsLayout from "@/app/settings/Layout";
 import BankAccountModal, { type BankAccount, bankAccountSchema } from "./BankAccountModal";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,13 +23,13 @@ export default function PayoutsPage() {
   const user = useCurrentUser();
 
   return (
-    <SettingsLayout>
+    <>
       <h2 className="mb-8 text-xl font-medium">Payouts</h2>
       <div className="grid gap-8">
         {user.roles.investor ? <DividendSection /> : null}
         <BankAccountsSection />
       </div>
-    </SettingsLayout>
+    </>
   );
 }
 

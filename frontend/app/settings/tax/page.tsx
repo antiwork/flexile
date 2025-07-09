@@ -23,7 +23,6 @@ import { trpc } from "@/trpc/client";
 import { getTinName } from "@/utils/legal";
 import { request } from "@/utils/request";
 import { settings_tax_path } from "@/utils/routes";
-import SettingsLayout from "@/app/settings/Layout";
 import ComboBox from "@/components/ComboBox";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -178,7 +177,7 @@ export default function TaxPage() {
   });
 
   return (
-    <SettingsLayout>
+    <>
       <Form {...form}>
         <form onSubmit={(e) => void submit(e)} className="grid gap-8">
           <hgroup>
@@ -506,7 +505,7 @@ export default function TaxPage() {
         isBusiness={formValues.business_entity}
         mutation={saveMutation}
       />
-    </SettingsLayout>
+    </>
   );
 }
 
