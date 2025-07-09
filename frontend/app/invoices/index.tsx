@@ -1,5 +1,5 @@
 import { CurrencyDollarIcon } from "@heroicons/react/20/solid";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 import MutationButton from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
@@ -118,6 +118,7 @@ export function useIsDeletable() {
 export const useApproveInvoices = (onSuccess?: () => void) => {
   const utils = trpc.useUtils();
   const company = useCurrentCompany();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ approve_ids, pay_ids }: { approve_ids?: string[]; pay_ids?: string[] }) => {
@@ -132,6 +133,7 @@ export const useApproveInvoices = (onSuccess?: () => void) => {
     onSuccess: () => {
       setTimeout(() => {
         void utils.invoices.list.invalidate({ companyId: company.id });
+        void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
         onSuccess?.();
       }, 500);
     },
