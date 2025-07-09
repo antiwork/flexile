@@ -27,6 +27,7 @@ import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import FormFields, { schema as formSchema } from "./FormFields";
 import InviteLinkModal from "./InviteLinkModal";
 import { Switch } from "@/components/ui/switch";
+import { useQueryClient } from "@tanstack/react-query";
 
 const schema = formSchema.extend({
   email: z.string().email(),
@@ -39,6 +40,7 @@ const removeMailtoPrefix = (email: string) => email.replace(/^mailto:/iu, "");
 
 export default function PeoplePage() {
   const company = useCurrentCompany();
+  const queryClient = useQueryClient();
   const router = useRouter();
   const [workers, { refetch }] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id });
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -64,6 +66,8 @@ export default function PeoplePage() {
       await trpcUtils.documents.list.invalidate();
       setShowInviteModal(false);
       form.reset();
+      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+
       if (data.documentId)
         router.push(`/documents?${new URLSearchParams({ sign: data.documentId.toString(), next: "/people" })}`);
     },

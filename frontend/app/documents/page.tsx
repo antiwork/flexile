@@ -9,7 +9,7 @@ import {
   PercentIcon,
   SendHorizontal,
 } from "lucide-react";
-import { skipToken } from "@tanstack/react-query";
+import { skipToken, useQueryClient } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel, type ColumnFiltersState } from "@tanstack/react-table";
 import type { Route } from "next";
 import Link from "next/link";
@@ -37,6 +37,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { storageKeys } from "@/models/constants";
 import { FinishOnboarding } from "@/app/documents/FinishOnboarding";
 
 type Document = RouterOutput["documents"]["list"][number];
@@ -319,7 +320,7 @@ export default function DocumentsPage() {
     [userId],
   );
   const storedColumnFilters = columnFiltersSchema.safeParse(
-    JSON.parse(localStorage.getItem("documentsColumnFilters") ?? "{}"),
+    JSON.parse(localStorage.getItem(storageKeys.DOCUMENTS_COLUMN_FILTERS) ?? "{}"),
   );
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
     storedColumnFilters.data ?? [{ id: "Status", value: ["Signature required"] }],
@@ -334,7 +335,7 @@ export default function DocumentsPage() {
     onColumnFiltersChange: (columnFilters) =>
       setColumnFilters((old) => {
         const value = typeof columnFilters === "function" ? columnFilters(old) : columnFilters;
-        localStorage.setItem("documentsColumnFilters", JSON.stringify(value));
+        localStorage.setItem(storageKeys.DOCUMENTS_COLUMN_FILTERS, JSON.stringify(value));
         return value;
       }),
   });
@@ -441,11 +442,13 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
     companyId: company.id,
   });
   const trpcUtils = trpc.useUtils();
+  const queryClient = useQueryClient();
 
   const signDocument = trpc.documents.sign.useMutation({
     onSuccess: async () => {
       router.replace("/documents");
       await trpcUtils.documents.list.refetch();
+      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- not ideal, but there's no good way to assert this right now
       if (redirectUrl) router.push(redirectUrl as Route);
       else onClose();

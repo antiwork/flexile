@@ -222,6 +222,7 @@ const AddBankAccount = (props: React.ComponentProps<typeof Dialog>) => {
         assertOk: true,
       });
       await queryClient.resetQueries({ queryKey: ["administratorBankAccount", company.id] });
+      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
       await trpcUtils.companies.microdepositVerificationDetails.invalidate();
       props.onOpenChange?.(false);
     },
