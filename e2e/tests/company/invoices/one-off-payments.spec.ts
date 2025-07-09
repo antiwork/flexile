@@ -394,13 +394,14 @@ test.describe("One-off payments", () => {
         companyContractorId: companyContractor.id,
         status: "failed",
         totalAmountInUsdCents: BigInt(50000),
+        invoiceNumber: "O-0002",
       });
 
       await login(page, adminUser);
       await page.goto("/invoices");
       
       const invoiceRow = await findRequiredTableRow(page, {
-        "Invoice ID": invoice.invoiceNumber,
+        "Invoice ID": "O-0002",
         Amount: "$500.00",
       });
       await expect(invoiceRow.getByRole("button", { name: "Pay again" })).toBeVisible();
@@ -413,13 +414,14 @@ test.describe("One-off payments", () => {
         companyContractorId: companyContractor.id,
         status: "approved",
         totalAmountInUsdCents: BigInt(50000),
+        invoiceNumber: "O-0003",
       });
 
       await login(page, adminUser);
       await page.goto("/invoices");
       
       const invoiceRow = await findRequiredTableRow(page, {
-        "Invoice ID": invoice.invoiceNumber,
+        "Invoice ID": "O-0003",
         Amount: "$500.00",
       });
       await invoiceRow.getByRole("button", { name: "Pay now" }).click();
