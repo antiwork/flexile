@@ -406,6 +406,32 @@ test.describe("Tax settings", () => {
       await expect(page.getByLabel("Tax ID (EIN)")).toHaveValue("12-3456");
     });
 
+    test("allows searching for countries by name", async ({ page }) => {
+      await login(page, user);
+      await page.goto("/settings/tax");
+
+      // Test case-insensitive search
+      await page.getByRole("combobox", { name: "Country of citizenship" }).click();
+      await page.getByPlaceholder("Search...").fill("CANADA");
+      await expect(page.getByRole("option", { name: "Canada" })).toBeVisible();
+      await page.getByRole("option", { name: "Canada" }).click();
+      await expect(page.getByRole("combobox", { name: "Country of citizenship" })).toHaveText("Canada");
+
+      // Test country code search
+      await page.getByRole("combobox", { name: "Country of residence" }).click();
+      await page.getByPlaceholder("Search...").fill("GB");
+      await expect(page.getByRole("option", { name: "United Kingdom" })).toBeVisible();
+      await page.getByRole("option", { name: "United Kingdom" }).click();
+      await expect(page.getByRole("combobox", { name: "Country of residence" })).toHaveText("United Kingdom");
+
+      // Test partial country name search
+      await page.getByRole("combobox", { name: "Country of residence" }).click();
+      await page.getByPlaceholder("Search...").fill("Polan");
+      await expect(page.getByRole("option", { name: "Poland" })).toBeVisible();
+      await page.getByRole("option", { name: "Poland" }).click();
+      await expect(page.getByRole("combobox", { name: "Country of residence" })).toHaveText("Poland");
+    });
+
     test("handles country change correctly for tax ID formatting", async ({ page }) => {
       await db.update(users).set({ countryCode: "US", citizenshipCountryCode: "US" }).where(eq(users.id, user.id));
 
