@@ -50,7 +50,6 @@ const ComboBox = ({
                 <CommandItem
                   key={option.value}
                   value={option.value}
-                  keywords={[option.label]}
                   onSelect={(currentValue) => {
                     if (multiple) {
                       onChange(
