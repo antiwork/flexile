@@ -1,7 +1,6 @@
 name: autofix.ci
 
 on:
-  push:
   pull_request:
     types: [opened, synchronize, reopened]
 permissions:
