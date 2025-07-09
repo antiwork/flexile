@@ -399,7 +399,7 @@ test.describe("One-off payments", () => {
 
       await login(page, adminUser);
       await page.goto("/invoices");
-      
+
       const invoiceRow = await findRequiredTableRow(page, {
         "Invoice ID": "O-0002",
         Amount: "$500.00",
@@ -419,7 +419,7 @@ test.describe("One-off payments", () => {
 
       await login(page, adminUser);
       await page.goto("/invoices");
-      
+
       const invoiceRow = await findRequiredTableRow(page, {
         "Invoice ID": "O-0003",
         Amount: "$500.00",
