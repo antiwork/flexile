@@ -15,8 +15,6 @@ class CompleteInviteLinkOnboarding
       return failure(error: company_worker.errors.full_messages.presence || ["Error saving information"])
     end
 
-    send_invite_accepted_email(company_worker)
-
     if company_worker.contract_signed_elsewhere || @user.signup_invite_link_id.blank?
       return success(company_worker: company_worker)
     end
@@ -31,12 +29,6 @@ class CompleteInviteLinkOnboarding
   end
 
   private
-    def send_invite_accepted_email(company_worker)
-      CompanyWorkerMailer.notify_invite_accepted(company_worker.id).deliver_later
-    rescue StandardError => e
-      Rails.logger.error("Failed to send invite accepted email: #{e.message}")
-    end
-
     def create_contract_document(company_worker, invite_link)
       template_id = invite_link.document_template_id
 

@@ -89,15 +89,5 @@ RSpec.describe CompleteInviteLinkOnboarding do
         expect(result[:error]).to match(/Invite link not found/)
       end
     end
-
-    context "when invite_accepted email is sent" do
-      before { company_worker.update!(contract_signed_elsewhere: true) }
-
-      it "sends the invite accepted email" do
-        expect do
-          described_class.new(user: user, company: company, update_params: update_params).process
-        end.to have_enqueued_mail(CompanyWorkerMailer, :notify_invite_accepted).with(company_worker.id)
-      end
-    end
   end
 end
