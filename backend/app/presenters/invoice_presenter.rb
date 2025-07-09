@@ -6,7 +6,7 @@ class InvoicePresenter
   delegate :user, :company, :invoice_approvals, :external_id, :invoice_number,
            :invoice_date, :payment_expected_by, :paid_at, :bill_from, :bill_to, :created_at,
            :contractor_role, :total_amount_in_usd, :cash_amount_in_cents, :equity_amount_in_cents,
-           :description, :invoice_line_items, :invoice_expenses,
+           :description, :invoice_line_items, :invoice_expenses, :equity_percentage,
            :status, :rejected?, :rejected_by, :rejected_at, :attachment, :notes, :payable?, :user_id,
            :tax_requirements_met?, to: :invoice, allow_nil: true
 
@@ -16,7 +16,7 @@ class InvoicePresenter
 
   def new_form_props(contractor:)
     new_invoice_date = DefaultInvoiceDate.new(user, contractor.company).generate
-    props = {
+    {
       user: user_props(contractor:),
       company: InvoicePresenter.company_props(company),
       invoice: {
@@ -30,22 +30,15 @@ class InvoicePresenter
         rejected_by: nil,
         rejection_reason: nil,
         equity_amount_in_cents: 0,
+        equity_percentage: contractor.invoices.last.equity_percentage,
         line_items: [],
         expenses:,
       },
     }
-    if company.equity_compensation_enabled?
-      equity_allocation = contractor.equity_allocation_for(new_invoice_date.year)
-      props[:equity_allocation] = {
-        percentage: equity_allocation&.equity_percentage,
-        is_locked: equity_allocation&.locked?,
-      }
-    end
-    props
   end
 
   def edit_form_props(contractor:)
-    props = new_form_props(contractor:).merge(
+    new_form_props(contractor:).merge(
       {
         invoice: {
           id: external_id,
@@ -62,20 +55,13 @@ class InvoicePresenter
           rejected_by: rejector_name,
           rejection_reason:,
           total_amount_in_usd:,
+          equity_percentage:,
           equity_amount_in_cents:,
           line_items:,
           expenses:,
         },
       }
     )
-    if props[:equity_allocation]
-      equity_allocation = contractor.equity_allocation_for(invoice_date.year)
-      props[:equity_allocation] = {
-        percentage: equity_allocation&.equity_percentage,
-        is_locked: equity_allocation&.locked?,
-      }
-    end
-    props
   end
 
   private

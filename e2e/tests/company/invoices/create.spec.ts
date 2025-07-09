@@ -2,22 +2,13 @@ import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
-import { equityAllocationsFactory } from "@test/factories/equityAllocations";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { subDays } from "date-fns";
 import { desc, eq } from "drizzle-orm";
-import {
-  companies,
-  companyContractors,
-  equityAllocations,
-  expenseCategories,
-  invoiceExpenses,
-  invoices,
-  users,
-} from "@/db/schema";
+import { companies, companyContractors, expenseCategories, invoiceExpenses, invoices, users } from "@/db/schema";
 import { fillDatePicker } from "@test/helpers";
 
 test.describe("invoice creation", () => {
@@ -46,11 +37,6 @@ test.describe("invoice creation", () => {
         payRateInSubunits: 6000,
       })
     ).companyContractor;
-    await equityAllocationsFactory.create({
-      companyContractorId: companyContractor.id,
-      equityPercentage: 20,
-      year: 2023,
-    });
   });
 
   test("creates an invoice with an equity component", async ({ page }) => {
@@ -89,15 +75,6 @@ test.describe("invoice creation", () => {
     expect(invoice.cashAmountInCents).toBe(10250n);
     expect(invoice.equityAmountInCents).toBe(10250n);
     expect(invoice.equityPercentage).toBe(50);
-
-    const equityAllocation = await db.query.equityAllocations
-      .findFirst({
-        where: eq(equityAllocations.companyContractorId, companyContractor.id),
-        orderBy: desc(equityAllocations.year),
-      })
-      .then(takeOrThrow);
-    expect(equityAllocation.equityPercentage).toBe(50);
-    expect(equityAllocation.locked).toBe(true);
   });
 
   test("considers the invoice year when calculating equity", async ({ page }) => {
@@ -110,12 +87,6 @@ test.describe("invoice creation", () => {
       },
       { year: 2021 },
     );
-    await equityAllocationsFactory.create({
-      companyContractorId: companyContractor.id,
-      equityPercentage: 20,
-      year: 2021,
-      locked: true,
-    });
 
     await login(page, contractorUser);
     await page.goto("/invoices/new");

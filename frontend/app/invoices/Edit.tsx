@@ -6,7 +6,7 @@ import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
 import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useId, useRef, useState } from "react";
+import React, { useId, useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import MainLayout from "@/components/layouts/Main";
@@ -17,9 +17,9 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { useCurrentCompany } from "@/global";
+import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
-import { assertDefined } from "@/utils/assert";
+import { assert, assertDefined } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import {
@@ -69,6 +69,7 @@ const dataSchema = z.object({
     invoice_number: z.string(),
     notes: z.string().nullable(),
     status: z.enum(["received", "approved", "processing", "payment_pending", "paid", "rejected", "failed"]).nullable(),
+    equity_percentage: z.number(),
     line_items: z.array(
       z.object({
         id: z.number().optional(),
@@ -89,7 +90,6 @@ const dataSchema = z.object({
       }),
     ),
   }),
-  equity_allocation: z.object({ percentage: z.number().nullable(), is_locked: z.boolean().nullable() }).optional(),
 });
 type Data = z.infer<typeof dataSchema>;
 
@@ -97,6 +97,7 @@ type InvoiceFormLineItem = Data["invoice"]["line_items"][number] & { errors?: st
 type InvoiceFormExpense = Data["invoice"]["expenses"][number] & { errors?: string[] | null; blob?: File | null };
 
 const Edit = () => {
+  const user = useCurrentUser();
   const company = useCurrentCompany();
   const { canSubmitInvoices } = useCanSubmitInvoices();
   const uid = useId();
@@ -106,6 +107,8 @@ const Edit = () => {
   const [errorField, setErrorField] = useState<string | null>(null);
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
+  const worker = user.roles.worker;
+  assert(worker != null);
 
   const { data } = useSuspenseQuery({
     queryKey: ["invoice", id],
@@ -144,15 +147,8 @@ const Edit = () => {
   const [expenses, setExpenses] = useState(List<InvoiceFormExpense>(data.invoice.expenses));
   const showExpensesTable = showExpenses || expenses.size > 0;
 
-  const [equityAllocation, { refetch: refetchEquityAllocation }] = trpc.equityAllocations.get.useSuspenseQuery({
-    companyId: company.id,
-    year: invoiceYear,
-  });
-  const [equityPercentage, setEquityPercent] = useState(
-    parseInt(searchParams.get("split") ?? "", 10) || equityAllocation?.equityPercentage || 0,
-  );
+  const [equityPercentage, setEquityPercent] = useState(data.invoice.equity_percentage);
 
-  const equityPercentageMutation = trpc.equityAllocations.update.useMutation();
   const validate = () => {
     setErrorField(null);
     if (invoiceNumber.length === 0) setErrorField("invoiceNumber");
@@ -191,9 +187,6 @@ const Edit = () => {
       }
       if (notes.length) formData.append("invoice[notes]", notes);
 
-      if (equityPercentage !== data.equity_allocation?.percentage) {
-        await equityPercentageMutation.mutateAsync({ companyId: company.id, equityPercentage, year: invoiceYear });
-      }
       await request({
         method: id ? "PATCH" : "POST",
         url: id ? company_invoice_path(company.id, id) : company_invoices_path(company.id),
@@ -267,10 +260,6 @@ const Edit = () => {
         return updated;
       }),
     );
-
-  useEffect(() => {
-    setEquityPercent(equityAllocation?.equityPercentage ?? 0);
-  }, [equityAllocation]);
 
   return (
     <MainLayout
@@ -359,7 +348,6 @@ const Edit = () => {
                 value={issueDate}
                 onChange={(date) => {
                   if (date) setIssueDate(date);
-                  void refetchEquityAllocation();
                 }}
                 aria-invalid={errorField === "issueDate"}
                 label="Invoice date"
@@ -542,7 +530,7 @@ const Edit = () => {
               className="w-full lg:w-96"
             />
             <div className="flex flex-col gap-2 md:self-start lg:items-end">
-              {showExpensesTable || equityCalculation.amountInCents > 0 ? (
+              {showExpensesTable || equityCalculation.equityCents > 0 ? (
                 <div className="flex flex-col items-end">
                   <span>Total services</span>
                   <span className="numeric text-xl">{formatMoneyFromCents(totalServicesAmountInCents)}</span>
@@ -554,17 +542,17 @@ const Edit = () => {
                   <span className="numeric text-xl">{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
                 </div>
               ) : null}
-              {equityCalculation.amountInCents > 0 ? (
+              {equityCalculation.equityCents > 0 ? (
                 <>
                   <div className="flex flex-col items-end">
                     <span>Swapped for equity (not paid in cash)</span>
-                    <span className="numeric text-xl">{formatMoneyFromCents(equityCalculation.amountInCents)}</span>
+                    <span className="numeric text-xl">{formatMoneyFromCents(equityCalculation.equityCents)}</span>
                   </div>
                   <Separator />
                   <div className="flex flex-col items-end">
                     <span>Net amount in cash</span>
                     <span className="numeric text-3xl">
-                      {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.amountInCents)}
+                      {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.equityCents)}
                     </span>
                   </div>
                 </>

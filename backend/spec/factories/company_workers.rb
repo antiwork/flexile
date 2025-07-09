@@ -31,7 +31,7 @@ FactoryBot.define do
       end
 
       if evaluator.equity_percentage
-        create(:equity_allocation, company_worker:, equity_percentage: evaluator.equity_percentage)
+        company_worker.update!(equity_percentage: evaluator.equity_percentage)
       end
     end
   end

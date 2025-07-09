@@ -9,11 +9,9 @@ class CompanyWorker < ApplicationRecord
   belongs_to :user
 
   has_many :contracts, foreign_key: :company_contractor_id
-  has_many :equity_allocations, foreign_key: :company_contractor_id
   has_many :invoices, foreign_key: :company_contractor_id
   has_many :integration_records, as: :integratable
 
-  MAX_EQUITY_PERCENTAGE = 100
   MIN_COMPENSATION_AMOUNT_FOR_1099_NEC = 600_00
 
   enum :pay_rate_type, {
@@ -78,14 +76,6 @@ class CompanyWorker < ApplicationRecord
 
   after_commit :notify_rate_updated, on: :update, if: -> { saved_change_to_pay_rate_in_subunits? }
 
-  def equity_allocation_for(year)
-    equity_allocations.find_by(year:)
-  end
-
-  def equity_percentage(year)
-    equity_allocations.find_by(year:)&.equity_percentage
-  end
-
   def active? = ended_at.nil?
 
   def alumni?
@@ -129,14 +119,6 @@ class CompanyWorker < ApplicationRecord
     return unless grants.size == 1
 
     grants.first
-  end
-
-  def send_equity_percent_selection_email(year)
-    equity_allocation = equity_allocations.find_or_initialize_by(year:)
-    return if equity_allocation.equity_percentage? || equity_allocation.sent_equity_percent_selection_email?
-
-    CompanyWorkerMailer.equity_percent_selection(id).deliver_later
-    equity_allocation.update!(sent_equity_percent_selection_email: true)
   end
 
   private

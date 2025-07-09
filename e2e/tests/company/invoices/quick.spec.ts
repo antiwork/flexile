@@ -1,18 +1,16 @@
 import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
-import { equityAllocationsFactory } from "@test/factories/equityAllocations";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { desc, eq } from "drizzle-orm";
-import { companies, companyContractors, invoices, users } from "@/db/schema";
+import { companies, invoices, users } from "@/db/schema";
 import { fillDatePicker } from "@test/helpers";
 
 test.describe("quick invoicing", () => {
   let company: typeof companies.$inferSelect;
   let contractorUser: typeof users.$inferSelect;
-  let companyContractor: typeof companyContractors.$inferSelect;
 
   test.beforeEach(async () => {
     company = (await companiesFactory.createCompletedOnboarding()).company;
@@ -22,13 +20,11 @@ test.describe("quick invoicing", () => {
         streetAddress: "1st St.",
       })
     ).user;
-    companyContractor = (
-      await companyContractorsFactory.create({
-        companyId: company.id,
-        userId: contractorUser.id,
-        payRateInSubunits: 6000,
-      })
-    ).companyContractor;
+    await companyContractorsFactory.create({
+      companyId: company.id,
+      userId: contractorUser.id,
+      payRateInSubunits: 6000,
+    });
   });
 
   test("allows submitting a quick invoice", async ({ page }) => {
@@ -71,12 +67,6 @@ test.describe("quick invoicing", () => {
     });
 
     test("handles equity compensation when allocation is set", async ({ page }) => {
-      await equityAllocationsFactory.create({
-        companyContractorId: companyContractor.id,
-        equityPercentage: 20,
-        year: 2024,
-      });
-
       await login(page, contractorUser);
       await page.getByLabel("Hours / Qty").fill("10:30");
       await fillDatePicker(page, "Date", "08/08/2024");
