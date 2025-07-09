@@ -11,7 +11,7 @@ import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 import EquityLayout from "../Layout";
-import DividendRoundSkeleton from "@/components/DividendRoundSkeleton";
+import TableSkeleton from "@/components/TableSkeleton";
 
 type DividendRound = RouterOutput["dividendRounds"]["list"][number];
 const columnHelper = createColumnHelper<DividendRound>();
@@ -38,7 +38,7 @@ export default function DividendRounds() {
   return (
     <EquityLayout>
       {isLoading ? (
-        <DividendRoundSkeleton />
+        <TableSkeleton columns={3} />
       ) : dividendRounds.length > 0 ? (
         <DataTable table={table} onRowClicked={(row) => router.push(`/equity/dividend_rounds/${row.id}`)} />
       ) : (

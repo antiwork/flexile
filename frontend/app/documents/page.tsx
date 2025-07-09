@@ -378,7 +378,7 @@ export default function DocumentsPage() {
           </Alert>
         ) : null}
         {isLoading ? (
-          <TableSkeleton />
+          <TableSkeleton columns={6} />
         ) : documents.length > 0 ? (
           <>
             <DataTable

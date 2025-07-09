@@ -24,7 +24,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import React, { useState } from "react";
 import StripeMicrodepositVerification from "@/app/administrator/settings/StripeMicrodepositVerification";
 import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import BankAccountCardSkeleton from "@/components/BankAccountSkeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const columnHelper = createColumnHelper<RouterOutput["consolidatedInvoices"]["list"][number]>();
 const columns = [
@@ -139,9 +139,7 @@ export default function Billing() {
         </p>
       </hgroup>
 
-      {stripeData === undefined ? (
-        <BankAccountCardSkeleton />
-      ) : (
+      {stripeData !== undefined ? (
         // Re-render Stripe Elements provider when data changes as it considers its options immutable
         <>
           {stripeData.bank_account_last4 ? (
@@ -176,6 +174,8 @@ export default function Billing() {
             <AddBankAccount open={addingBankAccount} onOpenChange={setAddingBankAccount} />
           </Elements>
         </>
+      ) : (
+        <BankAccountCardSkeleton />
       )}
       <StripeMicrodepositVerification />
       <h3 className="mt-4 text-base font-medium">Billing history</h3>
@@ -247,3 +247,17 @@ const AddBankAccount = (props: React.ComponentProps<typeof Dialog>) => {
     </Dialog>
   );
 };
+
+function BankAccountCardSkeleton() {
+  return (
+    <div className="border-gray-40 rounded-md p-4 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div>
+          <Skeleton className="mb-2 h-5 w-40 rounded" />
+          <Skeleton className="h-4 w-28 rounded" />
+        </div>
+        <Skeleton className="h-8 w-16 rounded" />
+      </div>
+    </div>
+  );
+}
