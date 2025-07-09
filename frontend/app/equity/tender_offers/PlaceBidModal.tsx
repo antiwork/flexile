@@ -2,7 +2,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { formatMoney } from "@/utils/formatMoney";
+import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatServerDate } from "@/utils/time";
 import LetterOfTransmittalModal from "./LetterOfTransmittalModal";
 import PlaceBidFormModal from "./PlaceBidFormModal";
@@ -13,6 +13,7 @@ type TenderOffer = {
   startsAt: Date;
   endsAt: Date;
   minimumValuation: bigint;
+  startingPrice: bigint;
   attachment:
     | {
         key: string;
@@ -82,6 +83,12 @@ const PlaceBidModal = ({ isOpen, onClose, tenderOffer }: PlaceBidModalProps) => 
               <span className="font-medium">Starting valuation</span>
               <span>{formatMoney(tenderOffer.minimumValuation)}</span>
             </div>
+
+            <div className="flex justify-between border-b border-gray-200 py-4">
+              <span className="font-medium">Starting price per share</span>
+              <span>{formatMoneyFromCents(tenderOffer.startingPrice)}</span>
+            </div>
+
             {tenderOffer.attachment ? (
               <div className="flex justify-between border-b border-gray-200 py-4">
                 <span className="font-medium">Buyback documents</span>

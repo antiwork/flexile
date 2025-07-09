@@ -17,8 +17,9 @@ const formSchema = z
     name: z.string().min(1, "Buyback name is required"),
     startDate: z.instanceof(CalendarDate, { message: "Start date is required" }),
     endDate: z.instanceof(CalendarDate, { message: "End date is required" }),
-    startingValuation: z.number().min(0, "Starting valuation must be positive"),
-    targetBuybackValue: z.number().min(0, "Target buyback value must be positive"),
+    minimumValuation: z.number().min(0, "Starting valuation must be positive"),
+    startingPrice: z.number().min(0, "Starting price must be positive"),
+    totalAmountInCents: z.number().min(0, "Target buyback value must be positive"),
     attachment: z.instanceof(File, { message: "Buyback documents are required" }),
   })
   .refine((data) => data.startDate.compare(data.endDate) < 0, {
@@ -31,7 +32,7 @@ type FormValues = z.infer<typeof formSchema>;
 type NewBuybackModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onNext: (data: any) => void;
+  onNext: (data: FormValues) => void;
   data?: Partial<FormValues>;
 };
 
@@ -45,15 +46,7 @@ const NewBuybackModal = ({ isOpen, onClose, onNext, data }: NewBuybackModalProps
     },
   });
 
-  const handleSubmit = form.handleSubmit((data) => {
-    const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const buybackData = {
-      ...data,
-      startDate: data.startDate.toDate(localTimeZone),
-      endDate: data.endDate.toDate(localTimeZone),
-    };
-    onNext(buybackData);
-  });
+  const handleSubmit = form.handleSubmit((values) => onNext(values));
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -90,7 +83,7 @@ const NewBuybackModal = ({ isOpen, onClose, onNext, data }: NewBuybackModalProps
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-h-[80vh] max-w-md overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Start a new buyback</DialogTitle>
         </DialogHeader>
@@ -179,7 +172,7 @@ const NewBuybackModal = ({ isOpen, onClose, onNext, data }: NewBuybackModalProps
 
             <FormField
               control={form.control}
-              name="startingValuation"
+              name="minimumValuation"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Starting valuation</FormLabel>
@@ -193,7 +186,21 @@ const NewBuybackModal = ({ isOpen, onClose, onNext, data }: NewBuybackModalProps
 
             <FormField
               control={form.control}
-              name="targetBuybackValue"
+              name="startingPrice"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Starting price</FormLabel>
+                  <FormControl>
+                    <NumberInput {...field} prefix="$" placeholder="0" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="totalAmountInCents"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Target buyback value</FormLabel>
@@ -273,9 +280,6 @@ const NewBuybackModal = ({ isOpen, onClose, onNext, data }: NewBuybackModalProps
         </Form>
 
         <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
-            Cancel
-          </Button>
           <Button onClick={() => void handleSubmit()} className="w-full sm:w-auto">
             Continue
           </Button>

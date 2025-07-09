@@ -20,16 +20,17 @@ import { isFuture, isPast } from "date-fns";
 import { utc } from "@date-fns/utc";
 import { useMutation } from "@tanstack/react-query";
 import { md5Checksum } from "@/utils";
+import { CalendarDate, getLocalTimeZone } from "@internationalized/date";
 
 type ActiveModal = "buyback-details" | "letter-of-transmittal" | "select-investors" | null;
 
 interface BuybackData {
   buybackType: "single" | "tender";
   name: string;
-  startDate: Date;
-  endDate: Date;
-  startingValuation: number;
-  targetBuybackValue: number;
+  startDate: CalendarDate;
+  endDate: CalendarDate;
+  minimumValuation: number;
+  totalAmountInCents: number;
   attachment: File;
 }
 
@@ -204,7 +205,7 @@ export default function Buybacks() {
         throw new Error("Buyback data is required");
       }
 
-      const { attachment, startDate, endDate, startingValuation } = buybackData;
+      const { attachment, startDate, endDate, minimumValuation } = buybackData;
 
       const base64Checksum = await md5Checksum(attachment);
       const { directUploadUrl, key } = await createUploadUrl.mutateAsync({
@@ -227,9 +228,9 @@ export default function Buybacks() {
       await createTenderOffer.mutateAsync({
         companyId: company.id,
         name: buybackData.name,
-        startsAt: startDate,
-        endsAt: endDate,
-        minimumValuation: BigInt(startingValuation),
+        startsAt: startDate.toDate(getLocalTimeZone()),
+        endsAt: endDate.toDate(getLocalTimeZone()),
+        minimumValuation: BigInt(minimumValuation),
         attachmentKey: key,
       });
     },

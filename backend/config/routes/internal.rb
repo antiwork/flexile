@@ -75,6 +75,9 @@ scope path: :internal, module: :internal do
         post :sign
       end
     end
+    resources :tender_offers, only: [:index, :show, :create] do
+      resources :bids, only: [:index, :create, :destroy], controller: "tender_offer_bids"
+    end
   end
 
   resources :wise_account_requirements, only: :create
