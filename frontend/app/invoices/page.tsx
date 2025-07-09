@@ -61,7 +61,7 @@ import { linkClasses } from "@/components/Link";
 import DatePicker from "@/components/DatePicker";
 import { CalendarDate, today, getLocalTimeZone } from "@internationalized/date";
 import { zodResolver } from "@hookform/resolvers/zod";
-import InvoicesTableSkeleton from "@/components/InvoicesSkeleton";
+import TableSkeleton from "@/components/TableSkeleton";
 
 import type { ActionConfig, ActionContext } from "@/components/actions/types";
 import { SelectionActions } from "@/components/actions/SelectionActions";
@@ -358,7 +358,7 @@ export default function InvoicesPage() {
 
         <QuickInvoicesSection />
         {isLoading ? (
-          <InvoicesTableSkeleton />
+          <TableSkeleton columns={6} />
         ) : data.length > 0 ? (
           <>
             {user.roles.administrator ? (
