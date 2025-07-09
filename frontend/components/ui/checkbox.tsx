@@ -17,7 +17,7 @@ function Checkbox({
   checked: boolean | "indeterminate";
   onCheckedChange: (checked: boolean | "indeterminate") => void;
 }) {
-  const title = invalid ? `Please ${checked ? "uncheck" : "check"} this field.` : "";
+  const title = invalid && checked !== "indeterminate" ? `Please ${checked ? "uncheck" : "check"} this field.` : "";
 
   return (
     <Label className={cn("relative flex cursor-pointer items-center gap-2", invalid && "text-red", className)}>
