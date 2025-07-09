@@ -4,8 +4,8 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
   before_action :set_dividend_computation, only: [:show, :confirm]
 
   def index
+    authorize DividendComputation
     computations = Current.company.dividend_computations.includes(:dividend_computation_outputs)
-    authorize computations
     render json: { 
       success: true, 
       data: computations.map { |comp| DividendComputationPresenter.new(comp).props }
