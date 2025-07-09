@@ -66,7 +66,7 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
   });
 
   return (
-    <Dialog open={open} onOpenChange={() => {}} /* Prevent dismissal during onboarding */>
+    <Dialog open={open}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>What will you be doing at {company.name}?</DialogTitle>
@@ -162,7 +162,7 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
                     <FormLabel>Rate</FormLabel>
                     <FormControl>
                       <NumberInput
-                        value={field.value == null ? null : field.value / 100}
+                        value={field.value / 100}
                         onChange={(value) => field.onChange(value == null ? null : value * 100)}
                         placeholder="0"
                         prefix="$"
@@ -210,7 +210,7 @@ const OnboardingCompleteModal = ({ open, onNext }: OnboardingStepProps) => {
   const company = useCurrentCompany();
 
   return (
-    <Dialog open={open} onOpenChange={() => {}} /* Prevent dismissal during onboarding */>
+    <Dialog open={open}>
       <DialogHeader className="sr-only">
         <DialogTitle>Onboarding Complete</DialogTitle>
       </DialogHeader>

@@ -37,7 +37,7 @@ test.describe("Contractor Invite Link", () => {
     await page.evaluate(() => {
       Object.defineProperty(navigator, "clipboard", {
         value: {
-          writeText: async () => {},
+          writeText: async () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
         },
         configurable: true,
       });

@@ -40,7 +40,7 @@ export const companyInviteLinksRouter = createRouter({
       if (!template) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Document template not found" });
       }
-      params.append("document_template_id", template?.id.toString());
+      params.append("document_template_id", template.id.toString());
     }
 
     const url = company_invite_links_url(ctx.company.externalId, { host: ctx.host });
@@ -52,7 +52,7 @@ export const companyInviteLinksRouter = createRouter({
     if (!response.ok) {
       throw new TRPCError({ code: "BAD_REQUEST", message: "Failed to get invite link" });
     }
-    const data = await response.json();
+    const data = z.object({ invite_link: z.string() }).parse(await response.json());
     return { invite_link: `${ctx.host}/invite/${data.invite_link}` };
   }),
 
@@ -84,7 +84,7 @@ export const companyInviteLinksRouter = createRouter({
       if (!response.ok) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Failed to reset invite link" });
       }
-      const data = await response.json();
+      const data = z.object({ invite_link: z.string() }).parse(await response.json());
       return { invite_link: `${ctx.host}/invite/${data.invite_link}` };
     }),
 
@@ -140,7 +140,7 @@ export const companyInviteLinksRouter = createRouter({
       const inviter = assertDefined(document.signatures.find((s) => s.title === "Company Representative")?.user);
       const submission = await createSubmission(ctx, template.docusealId, inviter, "Signer");
       await db.update(documents).set({ docusealSubmissionId: submission.id }).where(eq(documents.id, document.id));
-      return { documentId: document?.id };
+      return { documentId: document.id };
     }),
 
   accept: baseProcedure.input(z.object({ token: z.string() })).mutation(async ({ ctx, input }) => {
@@ -155,7 +155,7 @@ export const companyInviteLinksRouter = createRouter({
       throw new TRPCError({ code: "BAD_REQUEST", message: error_message });
     }
 
-    const data = await response.json();
+    const data = z.object({ company_worker_id: z.string() }).parse(await response.json());
     return data.company_worker_id;
   }),
 
@@ -169,11 +169,20 @@ export const companyInviteLinksRouter = createRouter({
     });
 
     if (!response.ok) {
-      return { valid: false } as VerifyInviteLinkResult;
+      const invalidResult: VerifyInviteLinkResult = { valid: false };
+      return invalidResult;
     }
 
-    const result = await response.json();
+    const parsedResult = z
+      .object({
+        valid: z.boolean(),
+        inviter_name: z.string().optional(),
+        company_name: z.string().optional(),
+        company_id: z.string().optional(),
+        error: z.string().optional(),
+      })
+      .parse(await response.json());
 
-    return result as VerifyInviteLinkResult;
+    return parsedResult;
   }),
 });

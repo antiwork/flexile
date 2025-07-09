@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +18,8 @@ import { z } from "zod";
 import { Switch } from "@/components/ui/switch";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import { MutationStatusButton } from "@/components/MutationButton";
-import { Check, Copy } from "lucide-react";
+import { Copy } from "lucide-react";
+import CopyButton from "@/components/CopyButton";
 
 interface InviteLinkModalProps {
   open: boolean;
@@ -27,7 +28,6 @@ interface InviteLinkModalProps {
 
 const InviteLinkModal = ({ open, onOpenChange }: InviteLinkModalProps) => {
   const company = useCurrentCompany();
-  const [copied, setCopied] = useState(false);
   const [showResetLinkModal, setShowResetLinkModal] = useState(false);
 
   const form = useForm({
@@ -64,19 +64,13 @@ const InviteLinkModal = ({ open, onOpenChange }: InviteLinkModalProps) => {
   const resetInviteLinkMutation = trpc.companyInviteLinks.reset.useMutation({
     onSuccess: async () => {
       await trpcUtils.companyInviteLinks.get.invalidate(queryParams);
-      refetch();
+      await refetch();
       setShowResetLinkModal(false);
     },
   });
   const resetInviteLink = () => {
-    resetInviteLinkMutation.mutateAsync(queryParams);
+    void resetInviteLinkMutation.mutateAsync(queryParams);
   };
-
-  useEffect(() => {
-    if (open) {
-      setCopied(false);
-    }
-  }, [open]);
 
   return (
     <>
@@ -131,29 +125,10 @@ const InviteLinkModal = ({ open, onOpenChange }: InviteLinkModalProps) => {
             >
               Reset link
             </Button>
-            <Button
-              type="button"
-              size="default"
-              variant={copied ? "success" : "default"}
-              disabled={!invite?.invite_link}
-              onClick={async () => {
-                await navigator.clipboard.writeText(invite?.invite_link || "");
-                setCopied(true);
-                setTimeout(() => setCopied(false), 3000);
-              }}
-            >
-              {copied ? (
-                <div className="flex items-center">
-                  <Check className="mr-2 h-4 w-4" />
-                  <span>Copied!</span>
-                </div>
-              ) : (
-                <div className="flex items-center">
-                  <Copy className="mr-2 h-4 w-4" />
-                  <span>Copy link</span>
-                </div>
-              )}
-            </Button>
+            <CopyButton variant="link" aria-label="Copy Invite" copyText={invite?.invite_link || ""}>
+              <Copy className="size-4" />
+              <span>Copy link</span>
+            </CopyButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

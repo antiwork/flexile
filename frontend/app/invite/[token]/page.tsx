@@ -13,6 +13,7 @@ import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
 
 import { INVITATION_TOKEN_COOKIE_MAX_AGE, INVITATION_TOKEN_COOKIE_NAME } from "@/models/constants";
+import Link from "next/link";
 
 export default function AcceptInvitationPage() {
   const { token } = useParams();
@@ -23,10 +24,9 @@ export default function AcceptInvitationPage() {
   const { data: inviteData, isLoading, isError } = trpc.companyInviteLinks.verify.useQuery({ token: safeToken });
 
   useEffect(() => {
-    if (inviteData && inviteData.valid) {
-      handleAcceptClick();
+    if (inviteData?.valid) {
+      acceptInvite();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inviteData]);
 
   const queryClient = useQueryClient();
@@ -45,12 +45,12 @@ export default function AcceptInvitationPage() {
   const acceptInviteMutation = trpc.companyInviteLinks.accept.useMutation({
     onSuccess: async () => {
       document.cookie = `${INVITATION_TOKEN_COOKIE_NAME}=; path=/; max-age=0`;
-      switchCompany(inviteData?.company_id || "");
+      await switchCompany(inviteData?.company_id || "");
       router.push("/dashboard");
     },
   });
 
-  const handleAcceptClick = () => {
+  const acceptInvite = () => {
     if (!user) {
       document.cookie = `${INVITATION_TOKEN_COOKIE_NAME}=${safeToken}; path=/; max-age=${INVITATION_TOKEN_COOKIE_MAX_AGE}`;
       router.push("/signup");
@@ -83,9 +83,9 @@ export default function AcceptInvitationPage() {
           <div className="mb-4 text-sm text-gray-600">
             Please check your invitation link or contact your administrator.
           </div>
-          <a href="/" className="rounded bg-black px-4 py-2 text-white transition hover:bg-gray-900">
+          <Link href="/" className="rounded bg-black px-4 py-2 text-white transition hover:bg-gray-900">
             Go to Home
-          </a>
+          </Link>
         </div>
       </SimpleLayout>
     );

@@ -1,5 +1,4 @@
 import { clerk } from "@clerk/testing/playwright";
-import { faker } from "@faker-js/faker";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
@@ -8,7 +7,6 @@ import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { companies, companyContractors, users } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
-import { assert } from "console";
 
 test.describe("Contractor Invite Link Joining flow", () => {
   let company: typeof companies.$inferSelect;
@@ -46,7 +44,7 @@ test.describe("Contractor Invite Link Joining flow", () => {
     await clerk.signOut({ page });
 
     await page.goto(`https://${inviteLink}`);
-    await expect(page).toHaveURL(/signup/i);
+    await expect(page).toHaveURL(/signup/iu);
 
     const cookies = await context.cookies();
     const invitationCookie = cookies.find((c) => c.name === "invitation_token");
@@ -74,7 +72,7 @@ test.describe("Contractor Invite Link Joining flow", () => {
     await login(page, contractor);
 
     await page.goto(`https://${inviteLink}`);
-    await expect(page).toHaveURL(/documents/i);
+    await expect(page).toHaveURL(/documents/iu);
 
     const createdCompayContractor = await db.query.companyContractors.findFirst({
       where: and(eq(companyContractors.companyId, company.id), eq(companyContractors.userId, contractor.id)),
@@ -84,7 +82,7 @@ test.describe("Contractor Invite Link Joining flow", () => {
     expect(createdCompayContractor?.role).toBe("UNASSIGNED");
     expect(createdCompayContractor?.contractSignedElsewhere).toBe(true);
 
-    await expect(page.getByText(/What will you be doing at/i)).toBeVisible();
+    await expect(page.getByText(/What will you be doing at/iu)).toBeVisible();
     await expect(page.getByLabel("Role")).toBeVisible();
     await expect(page.getByLabel("Rate")).toBeVisible();
 
