@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { Badge } from "@/components/ui/badge";
-import { formatMoney } from "@/utils/formatMoney";
 import { format } from "date-fns";
 import { Plus, Eye, CheckCircle, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -69,7 +68,7 @@ function DividendComputationsContent() {
       const demoComputations = JSON.parse(localStorage.getItem('demoComputations') || '[]');
       const updatedDemoComputations = demoComputations.filter((comp: any) => comp.id !== computationId);
       localStorage.setItem('demoComputations', JSON.stringify(updatedDemoComputations));
-      
+
       // Update local state
       const updatedComputations = computations.filter(comp => comp.id !== computationId);
       setComputations(updatedComputations);
@@ -118,9 +117,9 @@ function DividendComputationsContent() {
               </Button>
             </Link>
             {!computation.confirmed_at && (
-              <Button 
-                variant="outline" 
-                size="small" 
+              <Button
+                variant="outline"
+                size="small"
                 className="text-red-600 hover:bg-red-50"
                 onClick={() => handleDelete(computation.id)}
               >
