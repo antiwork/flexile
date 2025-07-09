@@ -389,48 +389,104 @@ test.describe("One-off payments", () => {
     });
 
     test("shows 'Pay again' button for failed payments", async ({ page }) => {
-      const { invoice } = await invoicesFactory.create({
-        companyId: company.id,
-        companyContractorId: companyContractor.id,
-        status: "approved",
-        totalAmountInUsdCents: BigInt(50000),
-        invoiceNumber: "O-0002",
-      });
-
-      await db.update(invoices).set({ status: "failed" }).where(eq(invoices.id, invoice.id));
-
       await login(page, adminUser);
-      await page.goto("/invoices");
       
-      await expect(page.locator("tbody")).toBeVisible();
+      await page.goto(`/people/${workerUser.externalId}?tab=invoices`);
+      await page.getByRole("button", { name: "Issue payment" }).click();
+
+      await withinModal(
+        async (modal) => {
+          await modal.getByLabel("Amount").fill("500.00");
+          await modal.getByLabel("What is this for?").fill("Test payment for failed status");
+          await modal.getByRole("button", { name: "Issue payment" }).click();
+        },
+        { page },
+      );
+      await expect(page.getByRole("dialog")).not.toBeVisible();
+
+      await clerk.signOut({ page });
+      await login(page, workerUser);
+      await page.getByRole("link", { name: "Invoices" }).click();
       
       const invoiceRow = await findRequiredTableRow(page, {
         "Invoice ID": "O-0002",
         Amount: "$500.00",
       });
-      await expect(invoiceRow.getByRole("button", { name: "Pay again" })).toBeVisible();
-      await expect(invoiceRow.getByRole("button", { name: "Pay now" })).not.toBeVisible();
+      await invoiceRow.click();
+      await page.getByRole("button", { name: "Accept payment" }).click();
+      await withinModal(
+        async (modal) => {
+          await modal.getByRole("button", { name: "Accept payment" }).click();
+        },
+        { page },
+      );
+
+      await clerk.signOut({ page });
+      await login(page, adminUser);
+      await page.goto("/invoices");
+      
+      const invoice = await db.query.invoices.findFirst({
+        where: and(eq(invoices.invoiceNumber, "O-0002"), eq(invoices.companyId, company.id)),
+      });
+      if (invoice) {
+        await db.update(invoices).set({ status: "failed" }).where(eq(invoices.id, invoice.id));
+      }
+      
+      await page.reload();
+      await expect(page.locator("tbody")).toBeVisible();
+      
+      const failedInvoiceRow = await findRequiredTableRow(page, {
+        "Invoice ID": "O-0002",
+        Amount: "$500.00",
+      });
+      await expect(failedInvoiceRow.getByRole("button", { name: "Pay again" })).toBeVisible();
+      await expect(failedInvoiceRow.getByRole("button", { name: "Pay now" })).not.toBeVisible();
     });
 
     test("shows 'Payment initiated' success message when paying", async ({ page }) => {
-      const { invoice } = await invoicesFactory.create({
-        companyId: company.id,
-        companyContractorId: companyContractor.id,
-        status: "approved",
-        totalAmountInUsdCents: BigInt(50000),
-        invoiceNumber: "O-0003",
-      });
+      await login(page, adminUser);
+      
+      await page.goto(`/people/${workerUser.externalId}?tab=invoices`);
+      await page.getByRole("button", { name: "Issue payment" }).click();
 
+      await withinModal(
+        async (modal) => {
+          await modal.getByLabel("Amount").fill("300.00");
+          await modal.getByLabel("What is this for?").fill("Test payment for success message");
+          await modal.getByRole("button", { name: "Issue payment" }).click();
+        },
+        { page },
+      );
+      await expect(page.getByRole("dialog")).not.toBeVisible();
+
+      await clerk.signOut({ page });
+      await login(page, workerUser);
+      await page.getByRole("link", { name: "Invoices" }).click();
+      
+      const invoiceRow = await findRequiredTableRow(page, {
+        "Invoice ID": "O-0003",
+        Amount: "$300.00",
+      });
+      await invoiceRow.click();
+      await page.getByRole("button", { name: "Accept payment" }).click();
+      await withinModal(
+        async (modal) => {
+          await modal.getByRole("button", { name: "Accept payment" }).click();
+        },
+        { page },
+      );
+
+      await clerk.signOut({ page });
       await login(page, adminUser);
       await page.goto("/invoices");
       
       await expect(page.locator("tbody")).toBeVisible();
       
-      const invoiceRow = await findRequiredTableRow(page, {
+      const payableInvoiceRow = await findRequiredTableRow(page, {
         "Invoice ID": "O-0003",
-        Amount: "$500.00",
+        Amount: "$300.00",
       });
-      await invoiceRow.getByRole("button", { name: "Pay now" }).click();
+      await payableInvoiceRow.getByRole("button", { name: "Pay now" }).click();
 
       await expect(page.getByText("Payment initiated")).toBeVisible();
       await expect(page.getByText("Payment sent!")).not.toBeVisible();
