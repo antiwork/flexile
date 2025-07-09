@@ -40,4 +40,8 @@ class InvoicePolicy < ApplicationPolicy
   def reject?
     approve?
   end
+
+  def destroy?
+    new? && Invoice::DELETABLE_STATES.include?(record.status)
+  end
 end

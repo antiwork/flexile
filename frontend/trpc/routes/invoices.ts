@@ -239,7 +239,11 @@ export const invoicesRouter = createRouter({
       if (!ctx.companyContractor) throw new TRPCError({ code: "FORBIDDEN" });
 
       const invoice = await db.query.invoices.findFirst({
-        where: and(eq(invoices.externalId, input.id), eq(invoices.companyId, ctx.company.id)),
+        where: and(
+          eq(invoices.externalId, input.id),
+          eq(invoices.companyId, ctx.company.id),
+          isNull(invoices.deletedAt),
+        ),
       });
       if (!invoice) throw new TRPCError({ code: "NOT_FOUND" });
       if (invoice.userId !== ctx.companyContractor.userId) throw new TRPCError({ code: "FORBIDDEN" });
@@ -325,6 +329,7 @@ export const invoicesRouter = createRouter({
         },
         where: and(
           eq(invoices.companyId, ctx.company.id),
+          isNull(invoices.deletedAt),
           input.contractorId
             ? eq(invoices.companyContractorId, byExternalId(companyContractors, input.contractorId))
             : undefined,
@@ -373,6 +378,7 @@ export const invoicesRouter = createRouter({
       where: and(
         eq(invoices.externalId, input.id),
         eq(invoices.companyId, ctx.company.id),
+        isNull(invoices.deletedAt),
         !ctx.companyAdministrator
           ? eq(invoices.companyContractorId, assertDefined(ctx.companyContractor).id)
           : undefined,
@@ -455,8 +461,11 @@ export const invoicesRouter = createRouter({
       })),
       rejector: invoice.rejector && simpleUser(invoice.rejector),
       contractor: {
-        ...pick(invoice.contractor, "payRateType"),
-        user: { complianceInfo: invoice.contractor.user.userComplianceInfos[0] },
+        ...pick(invoice.contractor, "payRateInSubunits", "payRateType"),
+        user: {
+          id: invoice.contractor.user.externalId,
+          complianceInfo: invoice.contractor.user.userComplianceInfos[0],
+        },
       },
     };
   }),

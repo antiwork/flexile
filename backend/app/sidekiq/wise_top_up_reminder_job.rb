@@ -11,7 +11,7 @@ class WiseTopUpReminderJob
 
   def perform
     company_ids = Company.active.is_trusted.pluck(:id)
-    pending_invoice_amount_usd = Invoice.where(status: [Invoice::RECEIVED, Invoice::APPROVED], company_id: company_ids).sum(&:cash_amount_in_usd)
+    pending_invoice_amount_usd = Invoice.alive.where(status: [Invoice::RECEIVED, Invoice::APPROVED], company_id: company_ids).sum(&:cash_amount_in_usd)
 
     flexile_balance_usd = Wise::AccountBalance.refresh_flexile_balance
     return if flexile_balance_usd >= pending_invoice_amount_usd + REQUIRED_BUFFER

@@ -115,7 +115,7 @@ RSpec.describe "Invoice creation flow" do
            .and change { InvoiceLineItem.count }.by(1)
            .and change { InvoiceExpense.count }.by(1)
 
-        invoice = Invoice.last
+        invoice = Invoice.alive.last
         invoice_expense = invoice.invoice_expenses.last
         expected_total_amount_in_usd_cents = invoice.invoice_line_items.sum(:total_amount_cents) + invoice_expense.total_amount_in_cents
         expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_usd_cents)
@@ -171,7 +171,7 @@ RSpec.describe "Invoice creation flow" do
            .and change { InvoiceLineItem.count }.by(1)
            .and change { InvoiceExpense.count }.by(1)
 
-        invoice = Invoice.last
+        invoice = Invoice.alive.last
         expect(invoice.total_minutes).to eq(205)
         expect(invoice.total_amount_in_usd_cents).to eq(1_205_99)
         expect(invoice.cash_amount_in_cents).to eq(1144_49)

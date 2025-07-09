@@ -24,35 +24,35 @@ import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
 import { UserPlus, Users } from "lucide-react";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
-import FormFields from "./FormFields";
-import { DEFAULT_WORKING_HOURS_PER_WEEK } from "@/models";
+import FormFields, { schema as formSchema } from "./FormFields";
 import { Switch } from "@/components/ui/switch";
+import TableSkeleton from "@/components/TableSkeleton";
+import { useQueryClient } from "@tanstack/react-query";
 
-const schema = z.object({
+const schema = formSchema.extend({
   email: z.string().email(),
-  payRateType: z.nativeEnum(PayRateType),
-  payRateInSubunits: z.number(),
-  hoursPerWeek: z.number().nullable(),
-  role: z.string(),
   startDate: z.instanceof(CalendarDate),
   documentTemplateId: z.string(),
   contractSignedElsewhere: z.boolean().default(false),
 });
 
+const removeMailtoPrefix = (email: string) => email.replace(/^mailto:/iu, "");
+
 export default function PeoplePage() {
   const company = useCurrentCompany();
+  const queryClient = useQueryClient();
   const router = useRouter();
-  const [workers, { refetch }] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id });
+  const { data: workers = [], isLoading, refetch } = trpc.contractors.list.useQuery({ companyId: company.id });
   const [showInviteModal, setShowInviteModal] = useState(false);
   const lastContractor = workers[0];
 
   const form = useForm({
     defaultValues: {
-      ...(lastContractor ? { payRateInSubunits: lastContractor.payRateInSubunits, role: lastContractor.role } : {}),
+      ...(lastContractor ? { role: lastContractor.role } : {}),
       payRateType: lastContractor?.payRateType ?? PayRateType.Hourly,
-      hoursPerWeek: lastContractor?.hoursPerWeek ?? DEFAULT_WORKING_HOURS_PER_WEEK,
+      payRateInSubunits: lastContractor?.payRateInSubunits ?? null,
       startDate: today(getLocalTimeZone()),
-      contractSignedElsewhere: false,
+      contractSignedElsewhere: lastContractor?.contractSignedElsewhere ?? false,
     },
     resolver: zodResolver(schema),
   });
@@ -64,6 +64,8 @@ export default function PeoplePage() {
       await trpcUtils.documents.list.invalidate();
       setShowInviteModal(false);
       form.reset();
+      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+
       if (data.documentId)
         router.push(`/documents?${new URLSearchParams({ sign: data.documentId.toString(), next: "/people" })}`);
     },
@@ -138,7 +140,9 @@ export default function PeoplePage() {
         ) : null
       }
     >
-      {workers.length > 0 ? (
+      {isLoading ? (
+        <TableSkeleton columns={4} />
+      ) : workers.length > 0 ? (
         <DataTable
           table={table}
           searchColumn="user_name"
@@ -166,7 +170,12 @@ export default function PeoplePage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input {...field} type="email" placeholder="Contractor's email" />
+                      <Input
+                        {...field}
+                        type="email"
+                        placeholder="Contractor's email"
+                        onChange={(e) => field.onChange(removeMailtoPrefix(e.target.value))}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -197,7 +206,7 @@ export default function PeoplePage() {
                       <Switch
                         checked={field.value}
                         onCheckedChange={field.onChange}
-                        label="Already signed contract elsewhere"
+                        label="Already signed contract elsewhere."
                       />
                     </FormControl>
                   </FormItem>

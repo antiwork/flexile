@@ -6,12 +6,12 @@ class CompanyWorkerMailerPreview < ActionMailer::Preview
   end
 
   def invoice_rejected_without_reason
-    CompanyWorkerMailer.invoice_rejected(invoice_id: Invoice.where(status: Invoice::REJECTED).last.id)
+    CompanyWorkerMailer.invoice_rejected(invoice_id: Invoice.alive.where(status: Invoice::REJECTED).last.id)
   end
 
   def invoice_rejected_with_reason
     CompanyWorkerMailer.invoice_rejected(
-      invoice_id: Invoice.where(status: Invoice::REJECTED).last.id,
+      invoice_id: Invoice.alive.where(status: Invoice::REJECTED).last.id,
       reason: "Invoice issue date mismatch"
     )
   end
@@ -33,11 +33,11 @@ class CompanyWorkerMailerPreview < ActionMailer::Preview
   end
 
   def invoice_approved
-    CompanyWorkerMailer.invoice_approved(invoice_id: Invoice.where(equity_percentage: 0).last.id)
+    CompanyWorkerMailer.invoice_approved(invoice_id: Invoice.alive.where(equity_percentage: 0).last.id)
   end
 
   def invoice_with_equity_approved
-    CompanyWorkerMailer.invoice_approved(invoice_id: Invoice.where("equity_percentage > 0").last.id)
+    CompanyWorkerMailer.invoice_approved(invoice_id: Invoice.alive.where("equity_percentage > 0").last.id)
   end
 
   def equity_percent_selection
