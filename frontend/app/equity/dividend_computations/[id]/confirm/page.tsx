@@ -56,6 +56,10 @@ function ConfirmDividendComputationContent() {
   useEffect(() => {
     // Load computation data from localStorage for demo
     const computationId = parseInt(params.id as string);
+    if (isNaN(computationId)) {
+      console.error('Invalid computation ID:', params.id);
+      return;
+    }
     const demoComputations = JSON.parse(localStorage.getItem('demoComputations') || '[]');
     const foundComputation = demoComputations.find((comp: any) => comp.id === computationId);
     

@@ -25,9 +25,7 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     
     service = DividendComputationGeneration.new(
       Current.company,
-      amount_in_usd: params[:amount_in_usd],
-      dividends_issuance_date: params[:dividends_issuance_date] || Date.current,
-      return_of_capital: params[:return_of_capital] || false
+      **dividend_computation_params
     )
     
     computation = service.process
@@ -66,5 +64,12 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
 
   def set_dividend_computation
     @dividend_computation = Current.company.dividend_computations.find(params[:id])
+  end
+
+  def dividend_computation_params
+    params.permit(:amount_in_usd, :dividends_issuance_date, :return_of_capital).tap do |permitted|
+      permitted[:dividends_issuance_date] ||= Date.current
+      permitted[:return_of_capital] = ActiveModel::Type::Boolean.new.cast(permitted[:return_of_capital])
+    end
   end
 end

@@ -30,13 +30,25 @@ function NewDividendComputationContent() {
       // Demo environment - simulate creation and redirect
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
       
-      // Generate a demo ID
-      const demoId = Math.floor(Math.random() * 1000) + 3;
+      // Validate amount
+      const parsedAmount = parseFloat(amount);
+      if (isNaN(parsedAmount) || parsedAmount <= 0) {
+        setError('Please enter a valid amount greater than 0');
+        return;
+      }
+      
+      // Generate a unique demo ID based on timestamp to avoid collisions
+      const existingComputations = JSON.parse(localStorage.getItem('demoComputations') || '[]');
+      const existingIds = new Set(existingComputations.map((comp: any) => comp.id));
+      let demoId: number;
+      do {
+        demoId = Date.now() % 100000 + Math.floor(Math.random() * 1000);
+      } while (existingIds.has(demoId));
       
       // Store demo data in localStorage for the demo
       const demoComputation = {
         id: demoId,
-        total_amount_in_usd: parseFloat(amount),
+        total_amount_in_usd: parsedAmount,
         dividends_issuance_date: date,
         return_of_capital: returnOfCapital,
         created_at: new Date().toISOString(),
@@ -48,25 +60,24 @@ function NewDividendComputationContent() {
             share_class: "Common",
             number_of_shares: 1000,
             preferred_dividend_amount_in_usd: 0,
-            dividend_amount_in_usd: parseFloat(amount) * 0.4,
-            qualified_dividend_amount_usd: parseFloat(amount) * 0.4,
-            total_amount_in_usd: parseFloat(amount) * 0.4
+            dividend_amount_in_usd: parsedAmount * 0.4,
+            qualified_dividend_amount_usd: parsedAmount * 0.4,
+            total_amount_in_usd: parsedAmount * 0.4
           },
           {
             id: 2,
             investor_name: "Demo Investor B",
             share_class: "Preferred A",
             number_of_shares: 500,
-            preferred_dividend_amount_in_usd: parseFloat(amount) * 0.2,
-            dividend_amount_in_usd: parseFloat(amount) * 0.4,
-            qualified_dividend_amount_usd: parseFloat(amount) * 0.5,
-            total_amount_in_usd: parseFloat(amount) * 0.6
+            preferred_dividend_amount_in_usd: parsedAmount * 0.2,
+            dividend_amount_in_usd: parsedAmount * 0.4,
+            qualified_dividend_amount_usd: parsedAmount * 0.5,
+            total_amount_in_usd: parsedAmount * 0.6
           }
         ]
       };
       
       // Store in localStorage for demo purposes
-      const existingComputations = JSON.parse(localStorage.getItem('demoComputations') || '[]');
       existingComputations.push(demoComputation);
       localStorage.setItem('demoComputations', JSON.stringify(existingComputations));
       
