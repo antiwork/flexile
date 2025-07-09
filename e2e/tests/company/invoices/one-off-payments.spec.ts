@@ -399,7 +399,10 @@ test.describe("One-off payments", () => {
       await login(page, adminUser);
       await page.goto("/invoices");
       
-      const invoiceRow = page.locator("tbody tr").filter({ hasText: invoice.invoiceNumber });
+      const invoiceRow = await findRequiredTableRow(page, {
+        "Invoice ID": invoice.invoiceNumber,
+        Amount: "$500.00",
+      });
       await expect(invoiceRow.getByRole("button", { name: "Pay again" })).toBeVisible();
       await expect(invoiceRow.getByRole("button", { name: "Pay now" })).not.toBeVisible();
     });
@@ -415,7 +418,10 @@ test.describe("One-off payments", () => {
       await login(page, adminUser);
       await page.goto("/invoices");
       
-      const invoiceRow = page.locator("tbody tr").filter({ hasText: invoice.invoiceNumber });
+      const invoiceRow = await findRequiredTableRow(page, {
+        "Invoice ID": invoice.invoiceNumber,
+        Amount: "$500.00",
+      });
       await invoiceRow.getByRole("button", { name: "Pay now" }).click();
       
       await expect(page.getByText("Payment initiated")).toBeVisible();
