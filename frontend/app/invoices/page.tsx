@@ -61,6 +61,7 @@ import { linkClasses } from "@/components/Link";
 import DatePicker from "@/components/DatePicker";
 import { CalendarDate, today, getLocalTimeZone } from "@internationalized/date";
 import { zodResolver } from "@hookform/resolvers/zod";
+import TableSkeleton from "@/components/TableSkeleton";
 
 import type { ActionConfig, ActionContext } from "@/components/actions/types";
 import { SelectionActions } from "@/components/actions/SelectionActions";
@@ -86,7 +87,7 @@ export default function InvoicesPage() {
   const isActionable = useIsActionable();
   const isPayable = useIsPayable();
   const isDeletable = useIsDeletable();
-  const [data] = trpc.invoices.list.useSuspenseQuery({
+  const { data = [], isLoading } = trpc.invoices.list.useQuery({
     companyId: company.id,
     contractorId: user.roles.administrator ? undefined : user.roles.worker?.id,
   });
@@ -356,7 +357,9 @@ export default function InvoicesPage() {
         ) : null}
 
         <QuickInvoicesSection />
-        {data.length > 0 ? (
+        {isLoading ? (
+          <TableSkeleton columns={6} />
+        ) : data.length > 0 ? (
           <>
             {user.roles.administrator ? (
               <>

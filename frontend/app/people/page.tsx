@@ -27,6 +27,7 @@ import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import FormFields, { schema as formSchema } from "./FormFields";
 import InviteLinkModal from "./InviteLinkModal";
 import { Switch } from "@/components/ui/switch";
+import TableSkeleton from "@/components/TableSkeleton";
 import { useQueryClient } from "@tanstack/react-query";
 
 const schema = formSchema.extend({
@@ -42,7 +43,7 @@ export default function PeoplePage() {
   const company = useCurrentCompany();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const [workers, { refetch }] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id });
+  const { data: workers = [], isLoading, refetch } = trpc.contractors.list.useQuery({ companyId: company.id });
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showInviteLinkModal, setShowInviteLinkModal] = useState(false);
 
@@ -148,7 +149,9 @@ export default function PeoplePage() {
         ) : null
       }
     >
-      {workers.length > 0 ? (
+      {isLoading ? (
+        <TableSkeleton columns={4} />
+      ) : workers.length > 0 ? (
         <DataTable
           table={table}
           searchColumn="user_name"
