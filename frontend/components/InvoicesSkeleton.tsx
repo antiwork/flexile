@@ -3,8 +3,8 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 
 export default function InvoicesTableSkeleton() {
   return (
-    <div className="overflow-x-auto bg-white">
-      <Table className="w-full caption-top max-md:block">
+    <div className="overflow-x-auto">
+      <Table className="w-full max-md:block">
         <TableBody className="max-md:block">
           {Array.from({ length: 5 }).map((_, i) => (
             <TableRow
