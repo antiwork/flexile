@@ -406,6 +406,40 @@ test.describe("Tax settings", () => {
       await expect(page.getByLabel("Tax ID (EIN)")).toHaveValue("12-3456");
     });
 
+    test("allows searching for countries by name", async ({ page }) => {
+      await login(page, user);
+      await page.goto("/settings/tax");
+
+      // Test partial country name search
+      await page.getByRole("combobox", { name: "Country of citizenship" }).click();
+      await page.getByPlaceholder("Search...").fill("polan");
+      await expect(page.getByRole("option", { name: "Poland" })).toBeVisible();
+      await page.getByRole("option", { name: "Poland" }).click();
+      await expect(page.getByRole("combobox", { name: "Country of citizenship" })).toHaveText("Poland");
+
+      // Test another partial search
+      await page.getByRole("combobox", { name: "Country of residence" }).click();
+      await page.getByPlaceholder("Search...").fill("united sta");
+      await expect(page.getByRole("option", { name: "United States" })).toBeVisible();
+      await expect(page.getByRole("option", { name: "United States Minor Outlying Islands" })).toBeVisible();
+      await page.getByRole("option", { name: "United States" }).click();
+      await expect(page.getByRole("combobox", { name: "Country of residence" })).toHaveText("United States");
+
+      // Test case-insensitive search
+      await page.getByRole("combobox", { name: "Country of citizenship" }).click();
+      await page.getByPlaceholder("Search...").fill("CANADA");
+      await expect(page.getByRole("option", { name: "Canada" })).toBeVisible();
+      await page.getByRole("option", { name: "Canada" }).click();
+      await expect(page.getByRole("combobox", { name: "Country of citizenship" })).toHaveText("Canada");
+
+      // Test that country code still works
+      await page.getByRole("combobox", { name: "Country of residence" }).click();
+      await page.getByPlaceholder("Search...").fill("GB");
+      await expect(page.getByRole("option", { name: "United Kingdom" })).toBeVisible();
+      await page.getByRole("option", { name: "United Kingdom" }).click();
+      await expect(page.getByRole("combobox", { name: "Country of residence" })).toHaveText("United Kingdom");
+    });
+
     test("handles country change correctly for tax ID formatting", async ({ page }) => {
       await db.update(users).set({ countryCode: "US", citizenshipCountryCode: "US" }).where(eq(users.id, user.id));
 
