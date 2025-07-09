@@ -27,8 +27,16 @@ test.describe("New Contractor", () => {
     let submitters = { "Company Representative": adminUser, Signer: contractorUser };
     const { mockForm } = mockDocuseal(next, { submitters: () => submitters });
     await mockForm(page);
+    await companyContractorsFactory.create({
+      companyId: company.id,
+      userId: contractorUser.id,
+    });
     await companyContractorsFactory.createCustom({ companyId: company.id });
     const { user: projectBasedUser } = await usersFactory.create();
+    await companyContractorsFactory.createCustom({
+      companyId: company.id,
+      userId: projectBasedUser.id,
+    });
     await optionPoolsFactory.create({ companyId: company.id });
     await login(page, adminUser);
     await page.getByRole("button", { name: "Equity" }).click();

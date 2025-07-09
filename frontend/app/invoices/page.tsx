@@ -619,7 +619,11 @@ const QuickInvoicesSection = () => {
   const isHourly = user.roles.worker.payRateType === "hourly";
 
   const { canSubmitInvoices } = useCanSubmitInvoices();
-  const [[lastInvoice]] = trpc.invoices.list.useSuspenseQuery({ companyId: company.id, limit: 1 });
+  const [[lastInvoice]] = trpc.invoices.list.useSuspenseQuery({
+    companyId: company.id,
+    contractorId: user.roles.worker.id,
+    limit: 1,
+  });
   const lastEquityPercentage = lastInvoice?.equityPercentage ?? 0;
   const form = useForm({
     resolver: zodResolver(quickInvoiceSchema),
@@ -633,15 +637,19 @@ const QuickInvoicesSection = () => {
   });
 
   const date = form.watch("date");
-  const rate = form.watch("rate") * 100;
   const quantity = form.watch("quantity").quantity;
   const hourly = form.watch("quantity").hourly;
+  const rate = form.watch("rate") * 100;
   const totalAmountInCents = Math.ceil((quantity / (hourly ? 60 : 1)) * rate);
   const invoiceEquityPercent = form.watch("invoiceEquityPercent");
   const newCompanyInvoiceRoute = () => {
-    const params = new URLSearchParams(
-      Object.fromEntries(Object.entries(form.getValues()).map(([k, v]) => [k, v.toString()])),
-    );
+    const params = new URLSearchParams({
+      date: date.toString(),
+      split: String(invoiceEquityPercent),
+      rate: rate.toString(),
+      quantity: quantity.toString(),
+      hourly: hourly.toString(),
+    });
     return `/invoices/new?${params.toString()}` as const;
   };
 

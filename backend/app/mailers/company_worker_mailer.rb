@@ -77,14 +77,6 @@ class CompanyWorkerMailer < ApplicationMailer
     mail(to: user.email, reply_to: company.email, subject: "🔴 Payment failed: re-enter your bank details")
   end
 
-  def equity_percent_selection(company_worker_id)
-    company_worker = CompanyWorker.find(company_worker_id)
-    @company = company_worker.company
-    user = company_worker.user
-
-    mail(to: user.email, reply_to: @company.email, subject: "🆕 Join #{@company.name}'s equity program")
-  end
-
   def confirm_tax_info_reminder(company_worker_id: nil, company_contractor_id: nil, tax_year:)
     id = find_id!(company_worker_id:, company_contractor_id:)
     company_worker = CompanyWorker.find(id)

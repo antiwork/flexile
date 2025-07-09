@@ -30,7 +30,7 @@ class InvoicePresenter
         rejected_by: nil,
         rejection_reason: nil,
         equity_amount_in_cents: 0,
-        equity_percentage: contractor.invoices.last.equity_percentage,
+        equity_percentage: contractor.invoices.last&.equity_percentage || 0,
         line_items: [],
         expenses:,
       },

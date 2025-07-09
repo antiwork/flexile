@@ -64,7 +64,8 @@ class CreateOrUpdateInvoiceService
         company_worker: contractor,
         company: invoice.company,
         service_amount_cents: services_in_cents,
-        invoice_year:
+        invoice_year:,
+        equity_percentage: invoice_params[:equity_percentage]
       ).calculate
       if equity_calculation_result.nil?
         error = "Something went wrong. Please contact the company administrator."
@@ -100,7 +101,7 @@ class CreateOrUpdateInvoiceService
     attr_reader :params, :invoice, :contractor, :user
 
     def invoice_params
-      params.permit(invoice: [:invoice_date, :invoice_number, :notes])[:invoice]
+      params.permit(invoice: [:invoice_date, :invoice_number, :notes, :equity_percentage])[:invoice]
     end
 
     def invoice_line_items_params

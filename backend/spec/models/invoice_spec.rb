@@ -1147,9 +1147,6 @@ RSpec.describe Invoice do
       end
 
       it "updates the status to paid and performs the appropriate processes" do
-        # Assert this so we know that the method's effects apply. The method itself is tested in company_worker_spec.rb
-        expect_any_instance_of(CompanyWorker).to receive(:send_equity_percent_selection_email).and_call_original
-
         expect do
           invoice.mark_as_paid!(timestamp: timestamp, payment_id: payment.id)
         end.to have_enqueued_mail(CompanyWorkerMailer, :payment_sent).with(payment.id)
@@ -1162,8 +1159,6 @@ RSpec.describe Invoice do
 
     context "when the invoice does not have an equity component" do
       it "updates the status to paid and performs the appropriate processes" do
-        expect_any_instance_of(CompanyWorker).not_to receive(:send_equity_percent_selection_email)
-
         expect do
           invoice.mark_as_paid!(timestamp: timestamp, payment_id: payment.id)
         end.to have_enqueued_mail(CompanyWorkerMailer, :payment_sent).with(payment.id)
@@ -1181,8 +1176,6 @@ RSpec.describe Invoice do
       end
 
       it "does not send the equity percent selection email" do
-        expect_any_instance_of(CompanyWorker).not_to receive(:send_equity_percent_selection_email)
-
         expect do
           invoice.mark_as_paid!(timestamp: timestamp, payment_id: payment.id)
         end.to have_enqueued_mail(CompanyWorkerMailer, :payment_sent).with(payment.id)
@@ -1200,9 +1193,6 @@ RSpec.describe Invoice do
       end
 
       it "does not enqueue the payment_sent email" do
-        # Assert this so we know that the method's effects apply. The method itself is tested in company_worker_spec.rb
-        expect_any_instance_of(CompanyWorker).to receive(:send_equity_percent_selection_email).and_call_original
-
         expect do
           invoice.mark_as_paid!(timestamp: timestamp)
         end.not_to have_enqueued_mail(CompanyWorkerMailer, :payment_sent)

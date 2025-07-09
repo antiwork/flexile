@@ -164,6 +164,7 @@ const Edit = () => {
       const formData = new FormData();
       formData.append("invoice[invoice_number]", invoiceNumber);
       formData.append("invoice[invoice_date]", issueDate.toString());
+      formData.append("invoice[equity_percentage]", equityPercentage.toString());
       for (const lineItem of lineItems) {
         if (!lineItem.description || !lineItem.quantity) continue;
         if (lineItem.id) {
@@ -306,12 +307,6 @@ const Edit = () => {
                   unit="%"
                 />
               </div>
-              <p className="mt-4">
-                By submitting this invoice, your current equity selection will be locked for all {invoiceYear}.{" "}
-                <strong>
-                  You won't be able to choose a different allocation until the next options grant for {invoiceYear + 1}.
-                </strong>
-              </p>
             </CardContent>
           </Card>
         </section>

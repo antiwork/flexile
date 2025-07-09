@@ -1692,7 +1692,6 @@ export const companyContractors = pgTable(
     role: varchar("role").notNull(),
     externalId: varchar("external_id").$default(nanoid).notNull(),
     payRateType: integer("pay_rate_type").$type<PayRateType>().default(PayRateType.Hourly).notNull(),
-    sentEquityPercentSelectionEmail: boolean("sent_equity_percent_selection_email").notNull().default(false),
     payRateInSubunits: integer("pay_rate_in_subunits"),
     payRateCurrency: varchar("pay_rate_currency").default("usd").notNull(),
     contractSignedElsewhere: boolean("contract_signed_elsewhere").notNull().default(false),

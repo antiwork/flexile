@@ -14,5 +14,6 @@ class DropEquityAllocations < ActiveRecord::Migration[8.0]
     end
 
     drop_enum :equity_allocations_status, %w[pending_confirmation pending_grant_creation pending_approval approved]
+    remove_column :company_contractors, :sent_equity_percent_selection_email, :boolean, default: false, null: false
   end
 end
