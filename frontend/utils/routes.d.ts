@@ -916,6 +916,58 @@ export const company_dividend_path: ((
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/dividend_computations/:id(.:format)
+ * @param {any} company_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_dividend_computation_url: ((
+  company_id: RequiredRouteParameter,
+  id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/dividend_computations/:id(.:format)
+ * @param {any} company_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_dividend_computation_path: ((
+  company_id: RequiredRouteParameter,
+  id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/dividend_computations(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_dividend_computations_url: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/dividend_computations(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_dividend_computations_path: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /internal/companies/:company_id/equity_exercise_payments/:id(.:format)
  * @param {any} company_id
  * @param {any} id
@@ -1207,6 +1259,34 @@ export const company_workers_url: ((
  */
 export const company_workers_path: ((
   company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/dividend_computations/:id/confirm(.:format)
+ * @param {any} company_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const confirm_company_dividend_computation_url: ((
+  company_id: RequiredRouteParameter,
+  id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/dividend_computations/:id/confirm(.:format)
+ * @param {any} company_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const confirm_company_dividend_computation_path: ((
+  company_id: RequiredRouteParameter,
+  id: RequiredRouteParameter,
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
