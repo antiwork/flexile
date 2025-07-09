@@ -1,29 +1,10 @@
 import { SignOutButton } from "@clerk/nextjs";
-import {
-  Rss,
-  ChevronsUpDown,
-  ReceiptIcon,
-  Files,
-  Users,
-  BookUser,
-  Settings,
-  ChartPie,
-  CircleDollarSign,
-  LogOut,
-  ChevronRight,
-} from "lucide-react";
-import { skipToken, useQueryClient } from "@tanstack/react-query";
-import Image from "next/image";
+import { ChevronsUpDown, LogOut, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
@@ -40,15 +21,12 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
-import defaultCompanyLogo from "@/images/default-company-logo.svg";
-import { trpc } from "@/trpc/client";
-import { request } from "@/utils/request";
-import { company_switch_path } from "@/utils/routes";
-import type { Route } from "next";
-import { useIsActionable } from "@/app/invoices";
+import { useCurrentUser } from "@/global";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
-import { navLinks as equityNavLinks } from "@/app/equity";
+import { MobileBottomNav } from "@/components/navigation/MobileBottomNav";
+import { useIsMobile } from "@/utils/use-mobile";
+import { hasSubItems, useNavLinks, type NavLinkInfo } from "@/lib/useNavLinks";
+import { CompanySwitcherList, CompanySwitcherHeader } from "@/components/navigation/CompanySwitcher";
 
 export default function MainLayout({
   children,
@@ -66,100 +44,73 @@ export default function MainLayout({
   footer?: React.ReactNode;
 }) {
   const user = useCurrentUser();
-
-  const queryClient = useQueryClient();
-  const switchCompany = async (companyId: string) => {
-    useUserStore.setState((state) => ({ ...state, pending: true }));
-    await request({
-      method: "POST",
-      url: company_switch_path(companyId),
-      accept: "json",
-    });
-    await queryClient.resetQueries({ queryKey: ["currentUser"] });
-    useUserStore.setState((state) => ({ ...state, pending: false }));
-  };
+  const isMobile = useIsMobile();
 
   return (
     <SidebarProvider>
-      <Sidebar collapsible="offcanvas">
-        <SidebarHeader>
-          {user.companies.length > 1 ? (
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <SidebarMenuButton size="lg" className="text-base" aria-label="Switch company">
-                      <CompanyName />
-                      <ChevronsUpDown className="ml-auto" />
-                    </SidebarMenuButton>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-(radix-dropdown-menu-trigger-width)" align="start">
-                    {user.companies.map((company) => (
-                      <DropdownMenuItem
-                        key={company.id}
-                        onSelect={() => {
-                          if (user.currentCompanyId !== company.id) void switchCompany(company.id);
-                        }}
-                        className="flex items-center gap-2"
-                      >
-                        <Image
-                          src={company.logo_url || defaultCompanyLogo}
-                          width={20}
-                          height={20}
-                          className="rounded-xs"
-                          alt=""
-                        />
-                        <span className="line-clamp-1">{company.name}</span>
-                        {company.id === user.currentCompanyId && (
-                          <div className="ml-auto size-2 rounded-full bg-blue-500"></div>
-                        )}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          ) : (
-            <div className="flex items-center gap-2 p-2">
-              <CompanyName />
-            </div>
-          )}
-        </SidebarHeader>
-        <SidebarContent>
-          {user.currentCompanyId ? (
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <NavLinks />
-              </SidebarGroupContent>
-            </SidebarGroup>
-          ) : null}
-
-          <SidebarGroup className="mt-auto">
-            <SidebarGroupContent>
+      {isMobile ? (
+        <MobileBottomNav />
+      ) : (
+        <Sidebar collapsible="offcanvas">
+          <SidebarHeader>
+            {user.companies.length > 1 ? (
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SignOutButton>
-                    <SidebarMenuButton className="cursor-pointer">
-                      <LogOut className="size-6" />
-                      <span>Log out</span>
-                    </SidebarMenuButton>
-                  </SignOutButton>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <SidebarMenuButton size="lg" className="text-base" aria-label="Switch company">
+                        <CompanySwitcherHeader />
+                        <ChevronsUpDown className="ml-auto" />
+                      </SidebarMenuButton>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-(radix-dropdown-menu-trigger-width)" align="start">
+                      <CompanySwitcherList className="p-1" />
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </SidebarMenuItem>
               </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-      </Sidebar>
+            ) : (
+              <div className="flex items-center gap-2 p-2">
+                <CompanySwitcherHeader />
+              </div>
+            )}
+          </SidebarHeader>
+          <SidebarContent>
+            {user.currentCompanyId ? (
+              <SidebarGroup>
+                <SidebarGroupContent>
+                  <NavLinks />
+                </SidebarGroupContent>
+              </SidebarGroup>
+            ) : null}
+
+            <SidebarGroup className="mt-auto">
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SignOutButton>
+                      <SidebarMenuButton className="cursor-pointer">
+                        <LogOut className="size-6" />
+                        <span>Log out</span>
+                      </SidebarMenuButton>
+                    </SignOutButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+        </Sidebar>
+      )}
       <SidebarInset>
         <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
-          <main className="flex flex-1 flex-col pb-4 not-print:overflow-y-auto">
+          <main className={`flex flex-1 flex-col pb-4 not-print:overflow-y-auto ${isMobile ? "pb-20" : ""}`}>
             <div>
               <header className="px-3 py-2 md:px-4 md:py-4">
                 <div className="grid gap-y-8">
                   <div className="grid items-center justify-between gap-3 md:flex">
                     <div>
                       <div className="flex items-center justify-between gap-2">
-                        <SidebarTrigger className="md:hidden" />
+                        {!isMobile && <SidebarTrigger className="md:hidden" />}
                         <h1 className="text-sm font-bold">{title}</h1>
                       </div>
                       {subtitle}
@@ -179,136 +130,79 @@ export default function MainLayout({
   );
 }
 
-const CompanyName = () => {
-  const company = useCurrentCompany();
-  return (
-    <>
-      <div className="relative size-6">
-        <Image src={company.logo_url || defaultCompanyLogo} fill className="rounded-sm" alt="" />
-      </div>
-      <div>
-        <span className="line-clamp-1 text-sm font-bold" title={company.name ?? ""}>
-          {company.name}
-        </span>
-      </div>
-    </>
-  );
-};
-
 const NavLinks = () => {
-  const user = useCurrentUser();
-  const company = useCurrentCompany();
   const pathname = usePathname();
-  const routes = new Set(
-    company.routes.flatMap((route) => [route.label, ...(route.subLinks?.map((subLink) => subLink.label) || [])]),
-  );
-  const { data: invoicesData } = trpc.invoices.list.useQuery(
-    user.currentCompanyId && user.roles.administrator
-      ? { companyId: user.currentCompanyId, status: ["received", "approved", "failed"] }
-      : skipToken,
-    { refetchInterval: 30_000 },
-  );
-  const isInvoiceActionable = useIsActionable();
-  const { data: documentsData } = trpc.documents.list.useQuery(
-    user.currentCompanyId && user.id
-      ? { companyId: user.currentCompanyId, userId: user.id, signable: true }
-      : skipToken,
-    { refetchInterval: 30_000 },
-  );
-  const updatesPath = company.routes.find((route) => route.label === "Updates")?.name;
-  const equityLinks = equityNavLinks(user, company);
-
-  const [isOpen, setIsOpen] = React.useState(() => localStorage.getItem("equity-menu-state") === "open");
+  const navLinks = useNavLinks();
 
   return (
     <SidebarMenu>
-      {updatesPath ? (
-        <NavLink href="/updates/company" icon={Rss} filledIcon={Rss} active={pathname.startsWith("/updates")}>
-          Updates
-        </NavLink>
-      ) : null}
-      {routes.has("Invoices") && (
-        <NavLink
-          href="/invoices"
-          icon={ReceiptIcon}
-          active={pathname.startsWith("/invoices")}
-          badge={invoicesData?.filter(isInvoiceActionable).length}
-        >
-          Invoices
-        </NavLink>
-      )}
-      {routes.has("Expenses") && (
-        <NavLink
-          href={`/companies/${company.id}/expenses`}
-          icon={CircleDollarSign}
-          active={pathname.startsWith(`/companies/${company.id}/expenses`)}
-        >
-          Expenses
-        </NavLink>
-      )}
-      {routes.has("Documents") && (
-        <NavLink
-          href="/documents"
-          icon={Files}
-          active={pathname.startsWith("/documents") || pathname.startsWith("/document_templates")}
-          badge={documentsData?.length}
-        >
-          Documents
-        </NavLink>
-      )}
-      {routes.has("People") && (
-        <NavLink
-          href="/people"
-          icon={Users}
-          active={pathname.startsWith("/people") || pathname.includes("/investor_entities/")}
-        >
-          People
-        </NavLink>
-      )}
-      {routes.has("Roles") && (
-        <NavLink href="/roles" icon={BookUser} active={pathname.startsWith("/roles")}>
-          Roles
-        </NavLink>
-      )}
-      {routes.has("Equity") && equityLinks.length > 0 && (
-        <Collapsible
-          open={isOpen}
-          onOpenChange={(state) => {
-            setIsOpen(state);
-            localStorage.setItem("equity-menu-state", state ? "open" : "closed");
-          }}
-          className="group/collapsible"
-        >
-          <SidebarMenuItem>
-            <CollapsibleTrigger asChild>
-              <SidebarMenuButton>
-                <ChartPie />
-                <span>Equity</span>
-                <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-              </SidebarMenuButton>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SidebarMenuSub>
-                {equityLinks.map((link) => (
-                  <SidebarMenuSubItem key={link.route}>
-                    <SidebarMenuSubButton asChild isActive={pathname === link.route}>
-                      <Link href={link.route}>{link.label}</Link>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                ))}
-              </SidebarMenuSub>
-            </CollapsibleContent>
-          </SidebarMenuItem>
-        </Collapsible>
-      )}
-      <NavLink href="/settings" active={pathname.startsWith("/settings")} icon={Settings}>
-        Settings
-      </NavLink>
+      {navLinks.map((link) => {
+        if (hasSubItems(link)) {
+          return <CollapsibleNavLink key={link.label} link={link} pathname={pathname} />;
+        }
+
+        if (link.href) {
+          return (
+            <NavLink key={link.label} href={link.href} icon={link.icon} active={link.isActive} badge={link.badge}>
+              {link.label}
+            </NavLink>
+          );
+        }
+
+        return null;
+      })}
     </SidebarMenu>
   );
 };
 
-const NavLink = <T extends string>({
+interface CollapsibleNavLinkProps {
+  link: NavLinkInfo & { subItems: NonNullable<NavLinkInfo["subItems"]> };
+  pathname: string;
+}
+
+const CollapsibleNavLink = ({ link, pathname }: CollapsibleNavLinkProps) => {
+  const Icon = link.icon;
+  const storageKey = `${link.label.toLowerCase().replace(/\s+/gu, "-")}-menu-state`;
+
+  const [isOpen, setIsOpen] = React.useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(storageKey) === "open";
+  });
+
+  return (
+    <Collapsible
+      open={isOpen}
+      onOpenChange={(state) => {
+        setIsOpen(state);
+        localStorage.setItem(storageKey, state ? "open" : "closed");
+      }}
+      className="group/collapsible"
+    >
+      <SidebarMenuItem>
+        <CollapsibleTrigger asChild>
+          <SidebarMenuButton>
+            <Icon />
+            <span>{link.label}</span>
+            <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+          </SidebarMenuButton>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            {link.subItems.map((subItem) => (
+              <SidebarMenuSubItem key={subItem.route}>
+                <SidebarMenuSubButton asChild isActive={pathname === subItem.route}>
+                  <Link href={{ pathname: subItem.route }}>{subItem.label}</Link>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+            ))}
+          </SidebarMenuSub>
+        </CollapsibleContent>
+      </SidebarMenuItem>
+    </Collapsible>
+  );
+};
+
+const NavLink = ({
   icon,
   filledIcon,
   children,
@@ -319,7 +213,7 @@ const NavLink = <T extends string>({
 }: {
   children: React.ReactNode;
   className?: string;
-  href: Route<T>;
+  href: string | { pathname: string };
   active?: boolean;
   icon: React.ComponentType;
   filledIcon?: React.ComponentType;
@@ -329,7 +223,7 @@ const NavLink = <T extends string>({
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={active ?? false} className={className}>
-        <Link href={href}>
+        <Link href={typeof href === "string" ? { pathname: href } : href}>
           <Icon />
           <span>{children}</span>
           {badge && badge > 0 ? (
