@@ -1,7 +1,6 @@
 import { SignOutButton } from "@clerk/nextjs";
 import {
   Rss,
-  ChevronsUpDown,
   ReceiptIcon,
   Files,
   Users,
@@ -11,6 +10,11 @@ import {
   CircleDollarSign,
   LogOut,
   ChevronRight,
+  Briefcase,
+  CreditCard,
+  PieChart,
+  Building,
+  UserCircle2,
 } from "lucide-react";
 import { skipToken, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
@@ -22,6 +26,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -49,6 +55,7 @@ import type { Route } from "next";
 import { useIsActionable } from "@/app/invoices";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { navLinks as equityNavLinks } from "@/app/equity";
+import type { CurrentUser } from "@/models/user";
 
 export default function MainLayout({
   children,
@@ -83,47 +90,7 @@ export default function MainLayout({
     <SidebarProvider>
       <Sidebar collapsible="offcanvas">
         <SidebarHeader>
-          {user.companies.length > 1 ? (
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <SidebarMenuButton size="lg" className="text-base" aria-label="Switch company">
-                      <CompanyName />
-                      <ChevronsUpDown className="ml-auto" />
-                    </SidebarMenuButton>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-(radix-dropdown-menu-trigger-width)" align="start">
-                    {user.companies.map((company) => (
-                      <DropdownMenuItem
-                        key={company.id}
-                        onSelect={() => {
-                          if (user.currentCompanyId !== company.id) void switchCompany(company.id);
-                        }}
-                        className="flex items-center gap-2"
-                      >
-                        <Image
-                          src={company.logo_url || defaultCompanyLogo}
-                          width={20}
-                          height={20}
-                          className="rounded-xs"
-                          alt=""
-                        />
-                        <span className="line-clamp-1">{company.name}</span>
-                        {company.id === user.currentCompanyId && (
-                          <div className="ml-auto size-2 rounded-full bg-blue-500"></div>
-                        )}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          ) : (
-            <div className="flex items-center gap-2 p-2">
-              <CompanyName />
-            </div>
-          )}
+          <CompanyDropdown user={user} switchCompany={switchCompany} />
         </SidebarHeader>
         <SidebarContent>
           {user.currentCompanyId ? (
@@ -179,19 +146,104 @@ export default function MainLayout({
   );
 }
 
-const CompanyName = () => {
+type SettingsLink = {
+  label: string;
+  route: Route;
+  icon: React.ComponentType<{ className?: string }>;
+  show: boolean;
+};
+
+const CompanyDropdown = ({
+  user,
+  switchCompany,
+}: {
+  user: CurrentUser;
+  switchCompany: (companyId: string) => Promise<void>;
+}) => {
   const company = useCurrentCompany();
+  const isAdmin = !!user.roles.administrator;
+  const companies = user.companies;
+
+  const settingsLinks: SettingsLink[] = [
+    {
+      label: "Workspace settings",
+      route: "/administrator/settings" as const,
+      icon: Building,
+      show: isAdmin,
+    },
+    {
+      label: "Company details",
+      route: "/administrator/settings/details" as const,
+      icon: Briefcase,
+      show: isAdmin,
+    },
+    {
+      label: "Billing",
+      route: "/administrator/settings/billing" as const,
+      icon: CreditCard,
+      show: isAdmin,
+    },
+    {
+      label: "Equity value",
+      route: "/administrator/settings/equity" as const,
+      icon: PieChart,
+      show: isAdmin,
+    },
+  ];
+
   return (
-    <>
-      <div className="relative size-6">
-        <Image src={company.logo_url || defaultCompanyLogo} fill className="rounded-sm" alt="" />
-      </div>
-      <div>
-        <span className="line-clamp-1 text-sm font-bold" title={company.name ?? ""}>
-          {company.name}
-        </span>
-      </div>
-    </>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <SidebarMenuButton size="lg" className="w-full text-base" aria-label="Company menu">
+          <div className="flex w-full items-center gap-2">
+            <div className="relative size-6">
+              <Image src={company.logo_url || defaultCompanyLogo} fill className="rounded-sm" alt="" />
+            </div>
+            <span className="line-clamp-1 text-sm font-bold" title={company.name ?? ""}>
+              {company.name}
+            </span>
+          </div>
+        </SidebarMenuButton>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56" align="start">
+        <DropdownMenuLabel>Workspace</DropdownMenuLabel>
+        {companies.length > 1 && (
+          <>
+            {companies.map((c) => (
+              <DropdownMenuItem
+                key={c.id}
+                onSelect={() => {
+                  if (user.currentCompanyId !== c.id) void switchCompany(c.id);
+                }}
+                className="flex items-center gap-2"
+              >
+                <Image src={c.logo_url || defaultCompanyLogo} width={20} height={20} className="rounded-xs" alt="" />
+                <span className="line-clamp-1">{c.name}</span>
+                {c.id === user.currentCompanyId && <div className="ml-auto size-2 rounded-full bg-blue-500"></div>}
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+          </>
+        )}
+        <DropdownMenuItem asChild>
+          <Link href="/settings" className="flex items-center gap-2">
+            <UserCircle2 className="h-4 w-4" />
+            <span>Profile</span>
+          </Link>
+        </DropdownMenuItem>
+        {settingsLinks.filter((l) => l.show).length > 0 && <DropdownMenuSeparator />}
+        {settingsLinks
+          .filter((l) => l.show)
+          .map((link) => (
+            <DropdownMenuItem asChild key={link.route}>
+              <Link href={link.route} className="flex items-center gap-2">
+                <link.icon className="h-4 w-4" />
+                <span>{link.label}</span>
+              </Link>
+            </DropdownMenuItem>
+          ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 
