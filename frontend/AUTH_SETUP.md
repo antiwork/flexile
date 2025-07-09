@@ -10,9 +10,8 @@ Add these environment variables to your `.env` file:
 # Auth.js secret (server-side only)
 AUTH_SECRET=your-auth-secret-here
 
-# API configuration (client-side accessible)
-NEXT_PUBLIC_API_SECRET_TOKEN=your-api-secret-token-here
-NEXT_PUBLIC_API_URL=http://localhost:3000  # Optional - defaults to localhost:3000 in dev
+# API token for backend communication (server-side only)
+API_SECRET_TOKEN=your-api-secret-token-here
 ```
 
 ### AUTH_SECRET
@@ -21,24 +20,26 @@ Generate a random secret for Auth.js:
 npx auth secret
 ```
 
-### NEXT_PUBLIC_API_SECRET_TOKEN
-This should match the API token configured in your backend for accessing the OTP endpoints. Uses `NEXT_PUBLIC_` prefix to make it available in client-side code.
-
-### NEXT_PUBLIC_API_URL (Optional)
-Override the default API URL. If not set, it will auto-detect based on environment:
-- Development: `http://localhost:3000`
-- Production: `https://api.flexile.com`
-- Preview: Auto-generated Heroku URL
+### API_SECRET_TOKEN
+This should match the API token configured in your Rails backend for accessing the OTP endpoints. This is kept server-side only for security.
 
 ## How it Works
 
-1. **OTP Request**: User enters email on `/login2` → calls `/api/v1/email_otp` → sends email with OTP
-2. **OTP Verification**: User enters OTP → calls `/api/v1/login` → returns JWT → creates Auth.js session
+1. **OTP Request**: User enters email on `/login2` → calls Next.js `/api/auth/send-otp` → calls Rails `/api/v1/email_otp` → sends email with OTP
+2. **OTP Verification**: User enters OTP → calls Next.js `/api/auth/login` → calls Rails `/api/v1/login` → returns JWT → creates Auth.js session
 
-## API Endpoints Used
+## API Architecture
 
-- `POST /api/v1/email_otp` - Send OTP email
-- `POST /api/v1/login` - Verify OTP and login
+**Frontend** → **Next.js API Routes** → **Rails Backend**
+
+### Next.js API Routes
+- `POST /api/auth/send-otp` - Proxy to Rails email_otp endpoint
+- `POST /api/auth/login` - Proxy to Rails login endpoint
+- `GET/POST /api/auth/[...nextauth]` - Auth.js session management
+
+### Rails Backend API Endpoints
+- `POST /api/v1/email_otp` - Send OTP email (called by Next.js)
+- `POST /api/v1/login` - Verify OTP and login (called by Next.js)
 
 ## Routes
 
@@ -65,3 +66,5 @@ Visit `/login2/test` to see the authentication status and session data.
 - Parallel to existing Clerk authentication
 - Stores JWT token in session for backend API calls
 - No frontend data storage - all authentication handled by backend APIs
+- **Security**: API tokens kept server-side, frontend only calls Next.js API routes
+- **Architecture**: Frontend → Next.js API → Rails Backend (no direct Rails API calls from frontend)

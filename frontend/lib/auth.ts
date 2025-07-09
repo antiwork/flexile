@@ -1,27 +1,18 @@
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import { z } from "zod"
-import clientEnv from "@/env/client"
 
-// Define the API base URL based on environment
-const API_BASE_URL = (() => {
-  // If NEXT_PUBLIC_API_URL is set, use it
-  if (clientEnv.NEXT_PUBLIC_API_URL) {
-    return clientEnv.NEXT_PUBLIC_API_URL
+// Get the Next.js application URL
+const getNextJsUrl = () => {
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
   }
-
-  // Otherwise, determine based on environment
-  switch (clientEnv.VERCEL_ENV) {
-    case "production":
-      return "https://api.flexile.com"
-    case "preview":
-      return `https://flexile-pipeline-pr-${clientEnv.VERCEL_GIT_PULL_REQUEST_ID || 'unknown'}.herokuapp.com`
-    default:
-      return "http://localhost:3000"
+  if (process.env.NEXTAUTH_URL) {
+    return process.env.NEXTAUTH_URL
   }
-})()
-
-const API_TOKEN = clientEnv.NEXT_PUBLIC_API_SECRET_TOKEN || process.env.API_SECRET_TOKEN || "your-api-token"
+  // Fallback for local development
+  return "https://flexile.dev"
+}
 
 // Schema for OTP login
 const otpLoginSchema = z.object({
@@ -54,8 +45,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           const { email, otp_code } = validatedFields.data
 
-          // Call the backend login API
-          const response = await fetch(`${API_BASE_URL}/api/v1/login`, {
+          // Call the Next.js login API
+          const nextJsUrl = getNextJsUrl()
+          const response = await fetch(`${nextJsUrl}/api/auth/login`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -63,7 +55,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             body: JSON.stringify({
               email,
               otp_code,
-              token: API_TOKEN,
             }),
           })
 
@@ -118,14 +109,14 @@ export async function sendOTP(email: string) {
       throw new Error("Invalid email")
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/v1/email_otp`, {
+    const nextJsUrl = getNextJsUrl()
+    const response = await fetch(`${nextJsUrl}/api/auth/send-otp`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         email,
-        token: API_TOKEN,
       }),
     })
 
