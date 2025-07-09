@@ -13,6 +13,8 @@ import { desc, eq } from "drizzle-orm";
 import type { NextFixture } from "next/experimental/testmode/playwright";
 import { companies, companyContractors, users } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
+import { companyContractorsFactory } from "@test/factories/companyContractors";
+import { PayRateType } from "@/db/enums";
 
 test.describe("New Contractor", () => {
   let company: typeof companies.$inferSelect;
@@ -80,13 +82,9 @@ test.describe("New Contractor", () => {
     const { mockForm } = mockDocuseal(next, {
       __payRate: "99 per hour",
       __role: "Hourly Role 1",
-      __targetAnnualHours: "Target Annual Hours: 1,100",
-      __maximumFee:
-        'Maximum fee payable to Contractor on this Project Assignment, including all items in the first two paragraphs above is $152,460 (the "Maximum Fee").',
     });
     const { email } = await fillForm(page);
     await page.getByLabel("Role").fill("Hourly Role 1");
-    await page.getByLabel("Average hours").fill("25");
     await page.getByLabel("Rate").fill("99");
 
     await mockForm(page);
@@ -122,13 +120,11 @@ test.describe("New Contractor", () => {
     const { mockForm } = mockDocuseal(next, {
       __payRate: "1,000 per project",
       __role: "Project-based Role",
-      __targetAnnualHours: "",
-      __maximumFee: "",
     });
     await mockForm(page);
     const { email } = await fillForm(page);
     await page.getByLabel("Role").fill("Project-based Role");
-    await page.getByLabel("Project-based").check({ force: true });
+    await page.getByRole("radio", { name: "Custom" }).click({ force: true });
     await page.getByLabel("Rate").fill("1000");
 
     await page.getByRole("button", { name: "Send invite" }).click();
@@ -162,9 +158,8 @@ test.describe("New Contractor", () => {
   test("allows inviting a contractor with contract signed elsewhere", async ({ page }) => {
     const { email } = await fillForm(page);
     await page.getByLabel("Role").fill("Contract Signed Elsewhere Role");
-    await page.getByLabel("Rate").fill("100");
 
-    await page.getByLabel("Already signed contract elsewhere").check({ force: true });
+    await page.getByLabel("Already signed contract elsewhere.").check({ force: true });
 
     await page.getByRole("button", { name: "Send invite" }).click();
 
@@ -179,6 +174,24 @@ test.describe("New Contractor", () => {
     await login(page, newUser);
 
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+  });
+
+  test("pre-fills form with last contractor's values", async ({ page }) => {
+    await companyContractorsFactory.create({
+      companyId: company.id,
+      userId: user.id,
+      role: "Hourly Role 1",
+      payRateInSubunits: 10000,
+      payRateType: PayRateType.Custom,
+      contractSignedElsewhere: true,
+    });
+    await login(page, user);
+    await page.goto("/people");
+    await page.getByRole("button", { name: "Invite contractor" }).click();
+    await expect(page.getByLabel("Role")).toHaveValue("Hourly Role 1");
+    await expect(page.getByLabel("Rate")).toHaveValue("100");
+    await expect(page.getByLabel("Already signed contract elsewhere")).toBeChecked();
+    await expect(page.getByLabel("Custom")).toBeChecked();
   });
 
   // TODO: write these tests after the most important tests are done

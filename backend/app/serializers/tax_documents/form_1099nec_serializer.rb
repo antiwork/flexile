@@ -64,6 +64,6 @@ class TaxDocuments::Form1099necSerializer < TaxDocuments::BaseSerializer
     end
 
     def compensation_amount_for_tax_year(tax_year)
-      @_amount ||= (contractor.invoices.for_tax_year(tax_year).sum(:cash_amount_in_cents) / 100.to_d).round.to_s
+      @_amount ||= (contractor.invoices.alive.for_tax_year(tax_year).sum(:cash_amount_in_cents) / 100.to_d).round.to_s
     end
 end

@@ -102,4 +102,8 @@ FactoryBot.define do
     approved
     approvals { company.required_invoice_approval_count - 1 }
   end
+
+  trait :deleted do
+    deleted_at { 1.day.ago }
+  end
 end

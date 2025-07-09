@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_23_190844) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_24_011111) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -133,14 +133,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_23_190844) do
     t.bigint "user_id", null: false
     t.bigint "company_id", null: false
     t.datetime "started_at", null: false
-    t.integer "hours_per_week"
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.datetime "ended_at"
     t.string "external_id", null: false
     t.integer "pay_rate_type", default: 0, null: false
     t.boolean "sent_equity_percent_selection_email", default: false, null: false
-    t.integer "pay_rate_in_subunits", null: false
+    t.integer "pay_rate_in_subunits"
     t.string "pay_rate_currency", default: "usd", null: false
     t.string "role", null: false
     t.boolean "contract_signed_elsewhere", default: false, null: false
@@ -791,6 +790,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_23_190844) do
     t.integer "min_allowed_equity_percentage"
     t.integer "max_allowed_equity_percentage"
     t.datetime "accepted_at"
+    t.datetime "deleted_at"
     t.index ["company_contractor_id"], name: "index_invoices_on_company_contractor_id"
     t.index ["company_id"], name: "index_invoices_on_company_id"
     t.index ["created_by_id"], name: "index_invoices_on_created_by_id"

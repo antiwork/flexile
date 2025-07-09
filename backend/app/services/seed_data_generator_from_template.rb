@@ -567,7 +567,6 @@ class SeedDataGeneratorFromTemplate
               pay_rate_in_subunits: company_worker_attributes.fetch("pay_rate_in_subunits"),
               pay_rate_type: company_worker_attributes.fetch("pay_rate_type"),
               role: company_worker_attributes.fetch("role"),
-              hours_per_week: company_worker_attributes.fetch("hours_per_week", nil),
             }
             result = InviteWorker.new(
               current_user: company_administrator.user,
@@ -669,7 +668,7 @@ class SeedDataGeneratorFromTemplate
     end
 
     def create_consolidated_invoices!(company)
-      company.invoices.group_by { |invoice| invoice.invoice_date.beginning_of_month }.each do |date, invoices|
+      company.invoices.alive.group_by { |invoice| invoice.invoice_date.beginning_of_month }.each do |date, invoices|
         next unless date < current_time - 2.months
 
         date = date + rand(1..3).days
@@ -691,7 +690,7 @@ class SeedDataGeneratorFromTemplate
               end
             end
           end
-          consolidated_invoice.reload.invoices.each do |invoice|
+          consolidated_invoice.reload.invoices.alive.each do |invoice|
             invoice.payments.each do |payment|
               # Simulates WiseTransferUpdateJob
               transfer_id = payment.wise_transfer_id
