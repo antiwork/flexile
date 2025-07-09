@@ -380,7 +380,7 @@ test.describe("One-off payments", () => {
 
       await expect(page.getByRole("button", { name: "Pay now" })).toBeVisible();
       await expect(page.getByRole("button", { name: "Pay again" })).not.toBeVisible();
-      
+
       await page.getByRole("button", { name: "Pay now" }).click();
       await page.getByRole("button", { name: "Filter" }).click();
       await page.getByRole("menuitem", { name: "Clear all filters" }).click();
@@ -395,7 +395,7 @@ test.describe("One-off payments", () => {
         status: "failed",
         totalAmountInUsdCents: BigInt(50000),
       });
-      
+
       await login(page, adminUser);
       await page.goto("/invoices");
       
@@ -414,7 +414,7 @@ test.describe("One-off payments", () => {
         status: "approved",
         totalAmountInUsdCents: BigInt(50000),
       });
-      
+
       await login(page, adminUser);
       await page.goto("/invoices");
       
@@ -423,7 +423,7 @@ test.describe("One-off payments", () => {
         Amount: "$500.00",
       });
       await invoiceRow.getByRole("button", { name: "Pay now" }).click();
-      
+
       await expect(page.getByText("Payment initiated")).toBeVisible();
       await expect(page.getByText("Payment sent!")).not.toBeVisible();
     });
