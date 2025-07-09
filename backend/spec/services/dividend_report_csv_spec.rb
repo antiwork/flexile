@@ -11,7 +11,7 @@ RSpec.describe DividendReportCsv do
       "transfer_fees" => "Transfer fees ($)",
       "total_ach_pull" => "Total ACH pull ($)",
       "number_of_investors" => "Number of investors",
-      "dividend_round_status" => "Dividend round status"
+      "dividend_round_status" => "Dividend round status",
     }
     col_name = header_map[column.to_s] || column.to_s
     col_index = DividendReportCsv::HEADERS.index(col_name)
