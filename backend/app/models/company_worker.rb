@@ -98,6 +98,14 @@ class CompanyWorker < ApplicationRecord
     update!(ended_at: Time.current)
   end
 
+  def contract_signed?
+    contract_signed_elsewhere ||
+      user.documents.joins(:signatures)
+          .where(documents: { document_type: Document.document_types[:consulting_contract], deleted_at: nil, company: company })
+          .where.not(document_signatures: { signed_at: nil })
+          .exists?
+  end
+
   def quickbooks_entity
     "Vendor"
   end

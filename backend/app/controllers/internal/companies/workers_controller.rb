@@ -17,7 +17,7 @@ class Internal::Companies::WorkersController < Internal::Companies::BaseControll
     ).perform
 
     if result[:success]
-      render json: { success: true, new_user_id: result[:company_worker].user_id, document_id: result[:document].id }, status: :ok
+      render json: { success: true, new_user_id: result[:company_worker].user_id, document_id: result[:document]&.id }, status: :ok
     else
       render json: result, status: :unprocessable_entity
     end
@@ -25,6 +25,6 @@ class Internal::Companies::WorkersController < Internal::Companies::BaseControll
 
   private
     def worker_params
-      params.require(:contractor).permit(:email, :started_at, :pay_rate_in_subunits, :role, :pay_rate_type)
+      params.require(:contractor).permit(:email, :started_at, :pay_rate_in_subunits, :role, :pay_rate_type, :contract_signed_elsewhere)
     end
 end

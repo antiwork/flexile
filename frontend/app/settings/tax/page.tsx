@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, type UseMutationResult, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, type UseMutationResult, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { iso31662 } from "iso-3166";
 import { Eye, EyeOff, AlertTriangle, Info, ArrowUpRightFromSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -90,6 +90,7 @@ export default function TaxPage() {
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
   const updateTaxSettings = trpc.users.updateTaxSettings.useMutation();
+  const queryClient = useQueryClient();
 
   const { data } = useSuspenseQuery({
     queryKey: ["settings-tax"],
@@ -158,6 +159,7 @@ export default function TaxPage() {
         await trpcUtils.documents.list.invalidate();
         router.push(`/documents?sign=${data.documentId}`);
       } else setShowCertificationModal(false);
+      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     },
   });
 
