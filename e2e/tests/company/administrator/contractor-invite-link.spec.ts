@@ -37,14 +37,14 @@ test.describe("Contractor Invite Link", () => {
     await page.evaluate(() => {
       Object.defineProperty(navigator, "clipboard", {
         value: {
-          writeText: async () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+          writeText: async () => Promise.resolve(),
         },
         configurable: true,
       });
     });
 
     await page.getByRole("button", { name: "Copy" }).click();
-    await expect(page.getByRole("button", { name: "Copied!" })).toBeVisible();
+    await expect(page.getByText("Copied!")).toBeVisible();
   });
 
   test("shows different invite links for different templates and contract signed elsewhere switch", async ({

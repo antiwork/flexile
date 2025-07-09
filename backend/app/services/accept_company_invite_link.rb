@@ -22,9 +22,8 @@ class AcceptCompanyInviteLink
       contract_signed_elsewhere: invite_link.document_template_id.nil?,
       ended_at: nil
     )
-    company_worker.save
 
-    if @user.errors.blank? && company_worker.errors.blank?
+    if company_worker.save
       { success: true, company_worker: company_worker }
     else
       error_object = if company_worker.errors.any?

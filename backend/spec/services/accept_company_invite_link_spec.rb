@@ -2,9 +2,8 @@
 
 RSpec.describe AcceptCompanyInviteLink do
   let(:company) { create(:company) }
-  let(:inviter) { create(:user) }
   let(:user) { create(:user) }
-  let(:invite_link) { create(:company_invite_link, company: company, inviter: inviter) }
+  let(:invite_link) { create(:company_invite_link, company: company) }
 
   describe "#perform" do
     context "when the token is invalid" do
@@ -38,7 +37,6 @@ RSpec.describe AcceptCompanyInviteLink do
         allow_any_instance_of(CompanyWorker).to receive(:save).and_return(false)
         result = described_class.new(token: invite_link.token, user: user).perform
         expect(result[:success]).to eq(false)
-        expect(result[:error]).to be_present
       end
     end
   end

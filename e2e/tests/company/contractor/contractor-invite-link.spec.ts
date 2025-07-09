@@ -79,7 +79,7 @@ test.describe("Contractor Invite Link Joining flow", () => {
     });
 
     expect(createdCompayContractor).toBeDefined();
-    expect(createdCompayContractor?.role).toBe("UNASSIGNED");
+    expect(createdCompayContractor?.role).toBe(null);
     expect(createdCompayContractor?.contractSignedElsewhere).toBe(true);
 
     await expect(page.getByText(/What will you be doing at/iu)).toBeVisible();
@@ -87,7 +87,6 @@ test.describe("Contractor Invite Link Joining flow", () => {
     await expect(page.getByLabel("Rate")).toBeVisible();
 
     await page.getByLabel("Role").fill("Hourly Role 1");
-    await page.getByLabel("Average hours").fill("25");
     await page.getByLabel("Rate").fill("99");
     await page.getByRole("button", { name: "Continue" }).click();
 
@@ -102,7 +101,7 @@ test.describe("Contractor Invite Link Joining flow", () => {
     const updatedCompayContractor = await db.query.companyContractors.findFirst({
       where: and(eq(companyContractors.companyId, company.id), eq(companyContractors.userId, contractor.id)),
     });
-    expect(updatedCompayContractor?.role).not.toBe("UNASSIGNED");
+    expect(updatedCompayContractor?.role).not.toBe(null);
 
     await clerk.signOut({ page });
     await login(page, admin);

@@ -4,7 +4,7 @@ RSpec.describe CompleteInviteLinkOnboarding do
   let(:company) { create(:company) }
   let(:user) { create(:user) }
   let(:company_worker) { create(:company_worker, user: user, company: company) }
-  let(:invite_link) { create(:company_invite_link, company: company, inviter: create(:user)) }
+  let(:invite_link) { create(:company_invite_link, company: company) }
 
   before do
     user.update!(signup_invite_link: invite_link)
@@ -79,14 +79,24 @@ RSpec.describe CompleteInviteLinkOnboarding do
 
     context "when invite_link id is present but invite_link does not exist" do
       before do
-        company_worker.update!(contract_signed_elsewhere: false)
         user.update!(signup_invite_link_id: 999_999) # non-existent id
+        company_worker.update!(contract_signed_elsewhere: false)
       end
 
       it "returns failure" do
         result = described_class.new(user: user, company: company, update_params: update_params).process
         expect(result[:success]).to eq(false)
         expect(result[:error]).to match(/Invite link not found/)
+      end
+    end
+
+    context "when invite_accepted email is sent" do
+      before { company_worker.update!(contract_signed_elsewhere: true) }
+
+      it "sends the invite accepted email" do
+        expect do
+          described_class.new(user: user, company: company, update_params: update_params).process
+        end.to have_enqueued_mail(CompanyWorkerMailer, :notify_invite_accepted).with(company_worker.id)
       end
     end
   end

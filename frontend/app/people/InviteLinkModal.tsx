@@ -123,9 +123,9 @@ const InviteLinkModal = ({ open, onOpenChange }: InviteLinkModalProps) => {
             >
               Reset link
             </Button>
-            <CopyButton aria-label="Copy Invite" copyText={invite?.invite_link || ""}>
+            <CopyButton aria-label="Copy" copyText={invite?.invite_link || ""}>
               <Copy className="size-4" />
-              <span>Copy link</span>
+              <span>Copy</span>
             </CopyButton>
           </DialogFooter>
         </DialogContent>
