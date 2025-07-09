@@ -1,0 +1,44 @@
+- Always use the latest version of TypeScript, React, and Next.js
+- Sentence case headers and buttons and stuff, not title case
+- Always write ALL of the code
+- Don't apologize for errors, fix them
+- Newlines at end of files, always
+
+- To add a feature:
+  - Add page to `frontend/app/**/page.tsx`
+  - Add any components to `frontend/components/**/*.tsx`
+  - Add tRPC API routes to `frontend/trpc/routes/**/index.ts` and then add those to `frontend/trpc/server.ts`
+  - Create API handlers using tRPC API routes that follow REST principles
+  - Forms for adding new objects to the database should inherit values from the last object added to the table (e.g., contractor forms should default to the last contractor's values like contractSignedElsewhere, payRateInSubunits, role, etc.)
+
+- For writing end-to-end tests:
+  - Use Playwright tests in `e2e/**/*.spec.ts`
+  - If migrating from rspec, delete the rspec tests
+  - Factories can be created using the rspec factories in `spec/factories` in the `/e2e/factories` folder
+  - For any broken locators / assertions, you can use the playwright extension to record tests or pick locators
+
+- For writing front-end code:
+  - Do not use `React.FC`. Use the following syntax: `const Component = ({ prop1, prop2 }: { prop1: string; prop2: number }) => { ... }`
+
+- After any functional code change:
+  - For Ruby/Rails changes:
+    - Add or update unit tests in `backend/spec/models/` for model changes
+    - Add or update controller tests in `backend/spec/controllers/` for controller changes
+    - Add or update system tests in `backend/spec/system/` for UI flow changes
+    - Run tests with `bundle exec rspec <path_to_spec>` to verify
+  - For TypeScript/Next.js changes:
+    - Add or update unit tests for front-end business logic
+    - Add or update e2e tests in `e2e/tests/` that cover the changed functionality
+    - Follow the existing test patterns in similar files
+    - Run tests with `pnpm playwright test <path_to_spec>` to verify e2e tests
+  - Tests should cover:
+    - Happy path (expected behavior)
+    - Edge cases and error handling
+    - Any regressions that might be introduced
+
+- Tech debt:
+  - Add a `TODO (techdebt)` comment to document refactors that should be made in the future
+
+- No explanatory comments please
+
+- When adding new rules: Always update both `.cursorrules` and `.github/copilot-instructions.md` to keep them synchronized

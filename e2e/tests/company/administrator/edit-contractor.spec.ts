@@ -9,6 +9,7 @@ import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
 import { assert } from "@/utils/assert";
+import { PayRateType } from "@/db/enums";
 
 test.describe("Edit contractor", () => {
   test("allows searching for contractors by name", async ({ page }) => {
@@ -48,7 +49,7 @@ test.describe("Edit contractor", () => {
     await expect(page.getByRole("row").filter({ hasText: contractor1User.preferredName || "" })).toBeVisible();
     await expect(page.getByRole("row").filter({ hasText: contractor2User.preferredName || "" })).not.toBeVisible();
   });
-  test("allows editing details of contractors", async ({ page, sentEmails, next }) => {
+  test("allows editing details of contractors", async ({ page, next }) => {
     const { company } = await companiesFactory.create();
     const { user: admin } = await usersFactory.create();
     await companyAdministratorsFactory.create({
@@ -77,7 +78,6 @@ test.describe("Edit contractor", () => {
 
     await page.getByLabel("Role").fill("Stuff-doer");
     await page.getByLabel("Rate").fill("107");
-    await page.getByLabel("Average hours").fill("24");
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByRole("button", { name: "Sign now" })).toBeVisible();
 
@@ -86,21 +86,10 @@ test.describe("Edit contractor", () => {
     });
     assert(updatedContractor !== undefined);
     expect(updatedContractor.role).toBe("Stuff-doer");
-    expect(updatedContractor.hoursPerWeek).toBe(24);
     expect(updatedContractor.payRateInSubunits).toBe(10700);
-
-    expect(sentEmails).toEqual([
-      expect.objectContaining({
-        to: contractor.email,
-        subject: "Your rate has changed!",
-        text: expect.stringContaining(
-          `Your rate has changed!Old rate$${companyContractor.payRateInSubunits / 100}/hrNew rate$107/hr`,
-        ),
-      }),
-    ]);
   });
 
-  test("allows editing project-based contractor details", async ({ page, next }) => {
+  test("allows editing details of contractors with a custom rate", async ({ page, next }) => {
     const { company } = await companiesFactory.create();
     const { user: admin } = await usersFactory.create();
     await companyAdministratorsFactory.create({
@@ -108,36 +97,34 @@ test.describe("Edit contractor", () => {
       userId: admin.id,
     });
 
-    const { companyContractor: projectBasedContractor } = await companyContractorsFactory.createProjectBased({
-      companyId: company.id,
+    const { companyContractor } = await companyContractorsFactory.create({ companyId: company.id });
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, companyContractor.userId),
     });
-    const projectBasedUser = await db.query.users.findFirst({
-      where: eq(users.id, projectBasedContractor.userId),
-    });
-    assert(projectBasedUser !== undefined);
-    assert(projectBasedUser.preferredName !== null);
+    assert(user !== undefined);
+    assert(user.preferredName !== null);
     const { mockForm } = mockDocuseal(next, {
-      submitters: () => ({ "Company Representative": admin, Signer: projectBasedUser }),
+      submitters: () => ({ "Company Representative": admin, Signer: user }),
     });
     await mockForm(page);
 
     await login(page, admin);
     await page.getByRole("link", { name: "People" }).click();
-    await page.getByRole("link", { name: projectBasedUser.preferredName }).click();
-
-    await page.getByRole("heading", { name: projectBasedUser.preferredName }).click();
-    await expect(page.getByLabel("Role")).toHaveValue(projectBasedContractor.role);
+    await page.getByRole("link", { name: user.preferredName }).click();
+    await page.getByRole("heading", { name: user.preferredName }).click();
 
     await page.getByLabel("Role").fill("Stuff-doer");
+    await page.getByRole("radio", { name: "Custom" }).click({ force: true });
     await page.getByLabel("Rate").fill("2000");
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByRole("button", { name: "Sign now" })).toBeVisible();
 
-    const updatedProjectContractor = await db.query.companyContractors.findFirst({
-      where: eq(users.id, projectBasedContractor.id),
+    const updatedContractor = await db.query.companyContractors.findFirst({
+      where: eq(users.id, companyContractor.id),
     });
-    assert(updatedProjectContractor !== undefined);
-    expect(updatedProjectContractor.role).toBe("Stuff-doer");
-    expect(updatedProjectContractor.payRateInSubunits).toBe(200000);
+    assert(updatedContractor !== undefined);
+    expect(updatedContractor.payRateType).toBe(PayRateType.Custom);
+    expect(updatedContractor.role).toBe("Stuff-doer");
+    expect(updatedContractor.payRateInSubunits).toBe(200000);
   });
 });

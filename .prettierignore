@@ -3,3 +3,4 @@ backend
 vendor
 tmp
 frontend/.next
+.github

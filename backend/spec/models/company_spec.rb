@@ -58,6 +58,213 @@ RSpec.describe Company do
     end
   end
 
+  describe "checklist functionality" do
+    let(:company) { create(:company, :without_bank_account) }
+
+    describe "#checklist_items" do
+      context "for company administrators" do
+        let(:company) { create(:company, :pre_onboarding) }
+        let(:admin) { create(:company_administrator, company: company) }
+
+        it "returns admin checklist items with completion status" do
+          items = company.checklist_items(admin)
+
+          expect(items).to have_attributes(size: 4)
+          expect(items.map { |item| item[:key] }).to contain_exactly(
+            "add_company_details", "add_bank_account", "invite_contractor", "send_first_payment"
+          )
+          expect(items.all? { |item| item[:completed] == false }).to be true
+        end
+
+        it "completes company details item when company name is present" do
+          items = company.checklist_items(admin)
+          company_details_item = items.find { |item| item[:key] == "add_company_details" }
+          expect(company_details_item[:completed]).to be false
+
+          company.update!(name: "Test Company")
+          items = company.reload.checklist_items(admin)
+          company_details_item = items.find { |item| item[:key] == "add_company_details" }
+          expect(company_details_item[:completed]).to be true
+        end
+
+        it "completes bank account item when stripe account becomes ready" do
+          items = company.checklist_items(admin)
+          bank_account_item = items.find { |item| item[:key] == "add_bank_account" }
+          expect(bank_account_item[:completed]).to be false
+
+          stripe_account = create(:company_stripe_account, company: company, status: "processing")
+          items = company.reload.checklist_items(admin)
+          bank_account_item = items.find { |item| item[:key] == "add_bank_account" }
+          expect(bank_account_item[:completed]).to be false
+
+          stripe_account.update!(status: "ready")
+          items = company.reload.checklist_items(admin)
+          bank_account_item = items.find { |item| item[:key] == "add_bank_account" }
+          expect(bank_account_item[:completed]).to be true
+        end
+
+        it "completes contractor item when worker is created" do
+          items = company.checklist_items(admin)
+          contractor_item = items.find { |item| item[:key] == "invite_contractor" }
+          expect(contractor_item[:completed]).to be false
+
+          create(:company_worker, company: company, user: create(:user))
+          items = company.reload.checklist_items(admin)
+          contractor_item = items.find { |item| item[:key] == "invite_contractor" }
+          expect(contractor_item[:completed]).to be true
+        end
+
+        it "completes payment item when payment succeeds" do
+          items = company.checklist_items(admin)
+          payment_item = items.find { |item| item[:key] == "send_first_payment" }
+          expect(payment_item[:completed]).to be false
+
+          contractor = create(:company_worker, company: company)
+          company.update!(name: "Test Company")
+          invoice = create(:invoice, company: company, company_worker: contractor, user: contractor.user)
+          items = company.reload.checklist_items(admin)
+          payment_item = items.find { |item| item[:key] == "send_first_payment" }
+          expect(payment_item[:completed]).to be false
+
+          invoice.update!(status: Invoice::PAID)
+          items = company.reload.checklist_items(admin)
+          payment_item = items.find { |item| item[:key] == "send_first_payment" }
+          expect(payment_item[:completed]).to be true
+        end
+
+        it "marks all admin items as completed when conditions are met" do
+          company.update!(name: "Test Company")
+          create(:company_stripe_account, company: company, status: "ready")
+          contractor = create(:company_worker, company: company)
+          invoice = create(:invoice, company: company, company_worker: contractor, user: contractor.user)
+          invoice.update!(status: Invoice::PAID)
+          company.reload
+
+          items = company.checklist_items(admin)
+          expect(items.all? { |item| item[:completed] }).to be true
+        end
+      end
+
+      context "for company workers" do
+        let(:worker) { create(:company_worker, without_contract: true, company: company, user: create(:user, without_bank_account: true)) }
+
+        it "returns worker checklist items with completion status" do
+          items = company.checklist_items(worker)
+
+          expect(items).to have_attributes(size: 3)
+          expect(items.map { |item| item[:key] }).to contain_exactly(
+            "fill_tax_information", "add_payout_information", "sign_contract"
+          )
+          expect(items.all? { |item| item[:completed] == false }).to be true
+        end
+
+        it "completes tax information item when worker confirms tax details" do
+          items = company.checklist_items(worker)
+          tax_item = items.find { |item| item[:key] == "fill_tax_information" }
+          expect(tax_item[:completed]).to be false
+
+          worker.user.compliance_info.update!(tax_information_confirmed_at: Time.current)
+
+          items = company.checklist_items(worker)
+          tax_item = items.find { |item| item[:key] == "fill_tax_information" }
+          expect(tax_item[:completed]).to be true
+        end
+
+        it "completes payout information item when worker adds bank account" do
+          items = company.checklist_items(worker)
+          payout_item = items.find { |item| item[:key] == "add_payout_information" }
+          expect(payout_item[:completed]).to be false
+
+          create(:wise_recipient, user: worker.user, used_for_invoices: true)
+          worker.user.reload
+
+          items = company.checklist_items(worker)
+          payout_item = items.find { |item| item[:key] == "add_payout_information" }
+          expect(payout_item[:completed]).to be true
+        end
+
+        it "completes contract item when worker signs contract" do
+          items = company.checklist_items(worker)
+          contract_item = items.find { |item| item[:key] == "sign_contract" }
+          expect(contract_item[:completed]).to be false
+
+          create(:document, company: company, document_type: :consulting_contract, signatories: [worker.user])
+
+          items = company.checklist_items(worker)
+          contract_item = items.find { |item| item[:key] == "sign_contract" }
+          expect(contract_item[:completed]).to be true
+        end
+      end
+
+      context "for other user types" do
+        let(:other_user) { create(:user) }
+
+        it "returns empty array for non-company users" do
+          items = company.checklist_items(other_user)
+          expect(items).to be_empty
+        end
+      end
+    end
+
+    describe "#checklist_completion_percentage" do
+      context "for company administrators" do
+        let(:company) { create(:company, :pre_onboarding) }
+        let(:admin) { create(:company_administrator, company: company) }
+
+        it "returns 0 when no items are completed" do
+          expect(company.checklist_completion_percentage(admin)).to eq(0)
+        end
+
+        it "returns correct percentage when some items are completed" do
+          create(:company_stripe_account, company: company, status: "ready")
+          company.reload
+          expect(company.checklist_completion_percentage(admin)).to eq(25)
+        end
+
+        it "returns 100 when all items are completed" do
+          company.update!(name: "Test Company")
+          create(:company_stripe_account, company: company, status: "ready")
+          contractor = create(:company_worker, company: company)
+          invoice = create(:invoice, company: company, user: contractor.user)
+          invoice.update!(status: Invoice::PAID)
+          company.reload
+
+          expect(company.checklist_completion_percentage(admin)).to eq(100)
+        end
+      end
+
+      context "for company workers" do
+        let(:worker) { create(:company_worker, without_contract: true, company: company, user: create(:user, without_bank_account: true)) }
+
+        it "returns 0 when no items are completed" do
+          expect(company.checklist_completion_percentage(worker)).to eq(0)
+        end
+
+        it "returns correct percentage when some items are completed" do
+          worker.user.compliance_info.update!(tax_information_confirmed_at: Time.current)
+
+          expect(company.checklist_completion_percentage(worker)).to eq(33)
+        end
+
+        it "returns 100 when all worker items are completed" do
+          worker.user.compliance_info.update!(tax_information_confirmed_at: Time.current)
+          create(:wise_recipient, user: worker.user, used_for_invoices: true)
+          create(:document, company: company, document_type: :consulting_contract, signatories: [worker.user])
+
+          expect(company.checklist_completion_percentage(worker)).to eq(100)
+        end
+      end
+
+      context "for other user types" do
+        let(:other_user) { create(:user) }
+
+        it "returns 0 for non-company users" do
+          expect(company.checklist_completion_percentage(other_user)).to eq(0)
+        end
+      end
+    end
+  end
+
   describe "validations" do
     it { is_expected.to validate_presence_of(:email) }
     it { is_expected.to validate_presence_of(:country_code) }
@@ -314,20 +521,6 @@ RSpec.describe Company do
     end
   end
 
-  describe "#completed_onboarding?" do
-    let(:company) { create(:company_administrator).company }
-
-    it "returns true if onboarding requirements are met" do
-      allow_any_instance_of(OnboardingState::Company).to receive(:complete?).and_return(true)
-      expect(company.completed_onboarding?).to eq true
-    end
-
-    it "returns false if onboarding requirements are not met" do
-      allow_any_instance_of(OnboardingState::Company).to receive(:complete?).and_return(false)
-      expect(company.completed_onboarding?).to eq false
-    end
-  end
-
   describe "#contractor_payment_processing_time_in_days" do
     let(:company) { create(:company, is_trusted:) }
 
@@ -464,7 +657,7 @@ RSpec.describe Company do
     end
   end
 
-  describe "#fetch_stripe_setup_intent" do
+  describe "#create_stripe_setup_intent" do
     let(:setup_intent_id) { "seti_#{SecureRandom.hex}" }
     let(:stripe_customer_id) { "cus_#{SecureRandom.hex}" }
     let(:setup_intent) { Stripe::SetupIntent.new(setup_intent_id) }
@@ -489,33 +682,14 @@ RSpec.describe Company do
       }).and_return(setup_intent)
     end
 
-    it "creates a new customer setup intent if one does not exist" do
+    it "creates a new customer setup intent" do
       company = create(:company, without_bank_account: true, stripe_customer_id: nil)
 
-      expect do
-        result = company.fetch_stripe_setup_intent
-
-        expect(result).to eq setup_intent
-        company.reload
-        expect(company.stripe_customer_id).to eq stripe_customer_id
-        expect(company.bank_account.setup_intent_id).to eq setup_intent_id
-        expect(Stripe::Customer).to have_received(:create).once
-        expect(Stripe::SetupIntent).to have_received(:create).once
-      end.to change { company.company_stripe_accounts.count }.from(0).to(1)
-    end
-
-    it "returns the setup intent if one already exists" do
-      company = create(:company, without_bank_account: true, stripe_customer_id:,
-                                 bank_account: build(:company_stripe_account, setup_intent_id:))
-
-      expect do
-        result = company.fetch_stripe_setup_intent
-        expect(result).to eq setup_intent
-
-        expect(Stripe::Customer).not_to have_received(:create)
-        expect(Stripe::SetupIntent).not_to have_received(:create)
-        expect(Stripe::SetupIntent).to have_received(:retrieve).once
-      end.not_to change { company.company_stripe_accounts.count }
+      expect(company.create_stripe_setup_intent).to eq setup_intent
+      company.reload
+      expect(company.stripe_customer_id).to eq stripe_customer_id
+      expect(Stripe::Customer).to have_received(:create).once
+      expect(Stripe::SetupIntent).to have_received(:create).once
     end
   end
 

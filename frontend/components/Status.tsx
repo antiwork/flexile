@@ -2,6 +2,7 @@ import { CheckCircleIcon, ExclamationTriangleIcon } from "@heroicons/react/16/so
 import { Circle } from "lucide-react";
 import React from "react";
 import { cn } from "@/utils";
+import { Slot } from "@radix-ui/react-slot";
 
 export type Variant = "critical" | "primary" | "success" | "secondary";
 
@@ -17,7 +18,7 @@ const Status = ({
   className?: string | undefined;
 }) => (
   <span className={cn("inline-flex items-center gap-2", className)}>
-    <span
+    <Slot
       className={cn("size-4", {
         "text-red": variant === "critical",
         "text-green": variant === "success",
@@ -31,9 +32,9 @@ const Status = ({
         ) : variant === "success" ? (
           <CheckCircleIcon />
         ) : (
-          <Circle className="h-4 w-4" />
+          <Circle />
         ))}
-    </span>
+    </Slot>
     {children}
   </span>
 );

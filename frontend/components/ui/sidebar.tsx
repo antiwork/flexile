@@ -5,7 +5,7 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetOverlay, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/utils";
 import { useIsMobile } from "@/utils/use-mobile";
@@ -164,22 +164,20 @@ function Sidebar({
   if (isMobile) {
     return (
       <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
-        <SheetOverlay>
-          <SheetContent
-            data-sidebar="sidebar"
-            data-slot="sidebar"
-            data-mobile="true"
-            className="text-foreground w-(--sidebar-width) bg-gray-50 p-0 [&>button]:hidden"
-            style={{ "--sidebar-width": SIDEBAR_WIDTH_MOBILE }}
-            side={side}
-          >
-            <SheetHeader className="sr-only">
-              <SheetTitle>Sidebar</SheetTitle>
-              <SheetDescription>Displays the mobile sidebar.</SheetDescription>
-            </SheetHeader>
-            <div className="flex h-full w-full flex-col">{children}</div>
-          </SheetContent>
-        </SheetOverlay>
+        <SheetContent
+          data-sidebar="sidebar"
+          data-slot="sidebar"
+          data-mobile="true"
+          className="text-foreground w-(--sidebar-width) bg-gray-50 p-0 [&>button]:hidden"
+          style={{ "--sidebar-width": SIDEBAR_WIDTH_MOBILE }}
+          side={side}
+        >
+          <SheetHeader className="sr-only">
+            <SheetTitle>Sidebar</SheetTitle>
+            <SheetDescription>Displays the mobile sidebar.</SheetDescription>
+          </SheetHeader>
+          <div className="flex h-full w-full flex-col">{children}</div>
+        </SheetContent>
       </Sheet>
     );
   }
@@ -467,17 +465,19 @@ function SidebarMenuButton({
   size = "default",
   className,
   onClick,
+  closeOnMobileClick = true,
   ...props
 }: React.ComponentProps<"button"> & {
   asChild?: boolean;
   isActive?: boolean;
+  closeOnMobileClick?: boolean;
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const Comp = asChild ? Slot : "button";
   const { isMobile, setOpenMobile } = useSidebar();
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     onClick?.(event);
-    if (isMobile) {
+    if (isMobile && closeOnMobileClick) {
       setOpenMobile(false);
     }
   };

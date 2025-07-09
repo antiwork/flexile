@@ -166,12 +166,12 @@ class SeedDataGeneratorFromTemplate
           )
         end
       end
-      print_message("Created company #{company.name}#{company.completed_onboarding? ? " (completed onboarding)" : nil}")
+      print_message("Created company #{company.name}")
       company
     end
 
     def create_bank_account!(company)
-      stripe_setup_intent = company.fetch_stripe_setup_intent
+      stripe_setup_intent = company.create_stripe_setup_intent
       # https://docs.stripe.com/testing#test-account-numbers
       test_bank_account = Stripe::PaymentMethod.create(
         {
@@ -214,7 +214,7 @@ class SeedDataGeneratorFromTemplate
       Stripe::PaymentMethod.attach(
         test_bank_account.id, { customer: stripe_setup_intent.customer }
       )
-      company.bank_account.update!(
+      company.create_bank_account!(
         status: CompanyStripeAccount::READY,
         setup_intent_id: stripe_setup_intent.id,
         bank_account_last_four: test_bank_account.us_bank_account.last4,
@@ -567,7 +567,6 @@ class SeedDataGeneratorFromTemplate
               pay_rate_in_subunits: company_worker_attributes.fetch("pay_rate_in_subunits"),
               pay_rate_type: company_worker_attributes.fetch("pay_rate_type"),
               role: company_worker_attributes.fetch("role"),
-              hours_per_week: company_worker_attributes.fetch("hours_per_week", nil),
             }
             result = InviteWorker.new(
               current_user: company_administrator.user,
@@ -669,7 +668,7 @@ class SeedDataGeneratorFromTemplate
     end
 
     def create_consolidated_invoices!(company)
-      company.invoices.group_by { |invoice| invoice.invoice_date.beginning_of_month }.each do |date, invoices|
+      company.invoices.alive.group_by { |invoice| invoice.invoice_date.beginning_of_month }.each do |date, invoices|
         next unless date < current_time - 2.months
 
         date = date + rand(1..3).days
@@ -691,7 +690,7 @@ class SeedDataGeneratorFromTemplate
               end
             end
           end
-          consolidated_invoice.reload.invoices.each do |invoice|
+          consolidated_invoice.reload.invoices.alive.each do |invoice|
             invoice.payments.each do |payment|
               # Simulates WiseTransferUpdateJob
               transfer_id = payment.wise_transfer_id

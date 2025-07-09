@@ -29,7 +29,7 @@ const sections = [
 export default function Terms() {
   return (
     <SimpleLayout>
-      <section className="prose">
+      <section className="prose [&_a]:break-all">
         <h1>Terms of Service Agreement</h1>
         <p>
           This Terms of Service Agreement ("<strong>Agreement</strong>") is for Customers and Contractors (defined

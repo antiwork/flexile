@@ -33,9 +33,26 @@ module SetCurrent
     end
     Current.user = user
 
-    company = Current.user.present? ? company_from_param || company_from_user : nil
+    if Current.user.present?
+      company = company_from_param || company_from_user
+      if company.nil?
+        ApplicationRecord.transaction do
+          company = user.all_companies.first
+          if company.nil?
+            company = Company.create!(
+              email: user.email,
+              country_code: user.country_code || "US",
+              default_currency: "USD"
+            )
+            user.company_administrators.create!(company: company)
+            user.company_administrators.reload
+            user.companies.reload
+          end
+        end
+      end
+      cookies.permanent[current_user_selected_company_cookie_name] = company.external_id if company.present?
+    end
     Current.company = company
-    cookies.permanent[current_user_selected_company_cookie_name] = company.external_id if company.present?
 
     context = CurrentContext.new(user: Current.user, company:)
     Current.company_administrator = context.company_administrator

@@ -10,6 +10,14 @@ export const equityGrantExercisesRouter = createRouter({
     if (!ctx.companyAdministrator && !ctx.companyLawyer) throw new TRPCError({ code: "FORBIDDEN" });
     return await db.query.equityGrantExercises.findMany({
       columns: { id: true, requestedAt: true, numberOfOptions: true, totalCostCents: true, status: true },
+      with: {
+        exerciseRequests: {
+          with: {
+            equityGrant: { columns: { name: true } },
+            shareHolding: { columns: { name: true } },
+          },
+        },
+      },
       where: and(
         eq(equityGrantExercises.companyId, ctx.company.id),
         ne(equityGrantExercises.status, "pending"),
