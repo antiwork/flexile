@@ -179,6 +179,8 @@ AdminMailer.custom(
 
 ### Calculating Fees
 
+Should this formula be updated to match the one in DividendReportCsv or should that one be changed to match this?
+
 ```ruby
 company = Company.find(1823)
 dividends = company.dividends
