@@ -1,4 +1,4 @@
-import { NextAuthOptions } from "next-auth";
+import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { z } from "zod";
 
@@ -7,6 +7,10 @@ const API_SECRET_TOKEN = process.env.API_SECRET_TOKEN;
 
 if (!API_SECRET_TOKEN) {
   throw new Error("API_SECRET_TOKEN environment variable is required");
+}
+
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error("NEXTAUTH_SECRET environment variable is required");
 }
 
 const otpLoginSchema = z.object({
@@ -90,18 +94,19 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.jwt = user.jwt;
-        token.legalName = user.legalName;
-        token.preferredName = user.preferredName;
+        const customUser = user as any;
+        token.jwt = customUser.jwt;
+        token.legalName = customUser.legalName;
+        token.preferredName = customUser.preferredName;
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.sub!;
-        session.user.jwt = token.jwt!;
-        session.user.legalName = token.legalName;
-        session.user.preferredName = token.preferredName;
+        (session.user as any).id = token.sub!;
+        (session.user as any).jwt = token.jwt!;
+        (session.user as any).legalName = token.legalName;
+        (session.user as any).preferredName = token.preferredName;
       }
       return session;
     },
@@ -109,7 +114,7 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login2",
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET!,
 };
 
 // Helper function to send OTP email
