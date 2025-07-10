@@ -1,38 +1,25 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Plus, Eye, CheckCircle, Trash2 } from "lucide-react";
 import Link from "next/link";
 import EquityLayout from "@/app/equity/Layout";
+import { trpc } from "@/trpc/client";
+import { useCurrentCompany } from "@/global";
 
-// Mock data - replace with actual API call
-const mockComputations = [
-  {
-    id: 1,
-    total_amount_in_usd: 50000,
-    dividends_issuance_date: "2025-01-15",
-    return_of_capital: false,
-    created_at: "2025-01-10T10:00:00Z",
-    confirmed_at: null,
-    outputs: []
-  },
-  {
-    id: 2,
-    total_amount_in_usd: 75000,
-    dividends_issuance_date: "2024-12-01",
-    return_of_capital: true,
-    created_at: "2024-11-25T14:30:00Z",
-    confirmed_at: "2024-11-26T09:15:00Z",
-    outputs: []
-  }
-];
-
-type DividendComputation = typeof mockComputations[0];
+type DividendComputation = {
+  id: number;
+  total_amount_in_usd: number;
+  dividends_issuance_date: string;
+  return_of_capital: boolean;
+  created_at: string;
+  confirmed_at: string | null;
+  outputs: any[];
+};
 
 const StatusBadge = ({ confirmed_at }: { confirmed_at: string | null }) => {
   if (confirmed_at) {
@@ -50,90 +37,26 @@ const StatusBadge = ({ confirmed_at }: { confirmed_at: string | null }) => {
   );
 };
 
-const columnHelper = createColumnHelper<DividendComputation>();
-
 function DividendComputationsContent() {
-  const [computations, setComputations] = useState(mockComputations);
+  const company = useCurrentCompany();
+  const [computations, { refetch }] = trpc.dividendComputations.list.useSuspenseQuery(
+    { companyId: company.id }
+  );
 
-  useEffect(() => {
-    // Load demo computations from localStorage
-    const demoComputations = JSON.parse(localStorage.getItem('demoComputations') || '[]');
-    const allComputations = [...mockComputations, ...demoComputations];
-    setComputations(allComputations);
-  }, []);
+  const deleteMutation = trpc.dividendComputations.delete.useMutation({
+    onSuccess: () => {
+      void refetch();
+    },
+  });
 
   const handleDelete = (computationId: number) => {
-    if (confirm('Are you sure you want to delete this computation?')) {
-      // Remove from localStorage (demo data)
-      const demoComputations = JSON.parse(localStorage.getItem('demoComputations') || '[]');
-      const updatedDemoComputations = demoComputations.filter((comp: any) => comp.id !== computationId);
-      localStorage.setItem('demoComputations', JSON.stringify(updatedDemoComputations));
-
-      // Update local state
-      const updatedComputations = computations.filter(comp => comp.id !== computationId);
-      setComputations(updatedComputations);
+    if (typeof window !== 'undefined' && confirm('Are you sure you want to delete this computation? This action cannot be undone.')) {
+      deleteMutation.mutate({
+        companyId: company.id,
+        id: computationId
+      });
     }
   };
-
-  const columns = [
-    columnHelper.accessor("dividends_issuance_date", {
-      header: "Issuance Date",
-      cell: (info) => {
-        const date = new Date(info.getValue());
-        return format(date, "MMM d, yyyy");
-      },
-    }),
-    columnHelper.accessor("total_amount_in_usd", {
-      header: "Total Amount",
-      cell: (info) => {
-        const amount = info.getValue();
-        return `$${amount.toLocaleString()}`; // Display as dollars directly
-      },
-    }),
-    columnHelper.accessor("return_of_capital", {
-      header: "Type",
-      cell: (info) => {
-        const isReturnOfCapital = info.getValue();
-        return isReturnOfCapital ? "Return of Capital" : "Dividend";
-      },
-    }),
-    columnHelper.accessor("confirmed_at", {
-      header: "Status",
-      cell: (info) => {
-        return <StatusBadge confirmed_at={info.getValue()} />;
-      },
-    }),
-    columnHelper.display({
-      id: "actions",
-      header: "Actions",
-      cell: (info) => {
-        const computation = info.row.original;
-        return (
-          <div className="flex space-x-2">
-            <Link href={`/equity/dividend_computations/${computation.id}`}>
-              <Button variant="outline" size="small">
-                <Eye className="w-4 h-4 mr-1" />
-                View
-              </Button>
-            </Link>
-            {!computation.confirmed_at && (
-              <Button
-                variant="outline"
-                size="small"
-                className="text-red-600 hover:bg-red-50"
-                onClick={() => handleDelete(computation.id)}
-              >
-                <Trash2 className="w-4 h-4 mr-1" />
-                Delete
-              </Button>
-            )}
-          </div>
-        );
-      },
-    }),
-  ];
-
-  const table = useTable({ columns, data: computations });
 
   return (
     <div className="space-y-6">
@@ -160,7 +83,65 @@ function DividendComputationsContent() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <DataTable table={table} />
+          {computations.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-3 px-4">Issuance Date</th>
+                    <th className="text-left py-3 px-4">Total Amount</th>
+                    <th className="text-left py-3 px-4">Type</th>
+                    <th className="text-left py-3 px-4">Status</th>
+                    <th className="text-left py-3 px-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {computations.map((computation: DividendComputation) => (
+                    <tr key={computation.id} className="border-b hover:bg-gray-50">
+                      <td className="py-3 px-4">
+                        {format(new Date(computation.dividends_issuance_date), "MMM d, yyyy")}
+                      </td>
+                      <td className="py-3 px-4">
+                        ${computation.total_amount_in_usd.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4">
+                        {computation.return_of_capital ? "Return of Capital" : "Dividend"}
+                      </td>
+                      <td className="py-3 px-4">
+                        <StatusBadge confirmed_at={computation.confirmed_at} />
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex space-x-2">
+                          <Link href={`/equity/dividend_computations/${computation.id}`}>
+                            <Button variant="outline" size="small">
+                              <Eye className="w-4 h-4 mr-1" />
+                              View
+                            </Button>
+                          </Link>
+                          {!computation.confirmed_at && (
+                            <Button
+                              variant="outline"
+                              size="small"
+                              className="text-red-600 hover:bg-red-50"
+                              onClick={() => handleDelete(computation.id)}
+                              disabled={deleteMutation.isPending}
+                            >
+                              <Trash2 className="w-4 h-4 mr-1" />
+                              Delete
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              No dividend computations found. Create your first computation to get started.
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

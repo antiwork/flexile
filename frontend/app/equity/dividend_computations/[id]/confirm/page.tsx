@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,84 +18,52 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import EquityLayout from "@/app/equity/Layout";
+import { trpc } from "@/trpc/client";
+import { useCurrentCompany } from "@/global";
 
-// Mock data - replace with actual API call
-const mockComputation = {
-  id: 1,
-  total_amount_in_usd: 50000,
-  dividends_issuance_date: "2025-01-15",
-  return_of_capital: false,
-  created_at: "2025-01-10T10:00:00Z",
-  confirmed_at: null,
-  outputs: [
-    {
-      id: 1,
-      investor_name: "John Doe",
-      share_class: "Common",
-      number_of_shares: 1000,
-      total_amount_in_usd: 5000
-    },
-    {
-      id: 2,
-      investor_name: "Jane Smith",
-      share_class: "Preferred A",
-      number_of_shares: 500,
-      total_amount_in_usd: 5000
-    }
-  ]
+type DividendComputationOutput = {
+  id: number;
+  investor_name: string;
+  share_class: string;
+  number_of_shares: number;
+  total_amount_in_usd: number;
+};
+
+type DividendComputation = {
+  id: number;
+  total_amount_in_usd: number;
+  dividends_issuance_date: string;
+  return_of_capital: boolean;
+  created_at: string;
+  confirmed_at: string | null;
+  outputs: DividendComputationOutput[];
 };
 
 function ConfirmDividendComputationContent() {
   const params = useParams();
   const router = useRouter();
-  const [computation, setComputation] = useState(mockComputation);
-  const [isLoading, setIsLoading] = useState(false);
+  const company = useCurrentCompany();
+  const computationId = parseInt(params.id as string);
+  
+  const [computation] = trpc.dividendComputations.get.useSuspenseQuery({
+    companyId: company.id,
+    id: computationId
+  });
+  
   const totalRecipients = computation.outputs.length;
   const totalShares = computation.outputs.reduce((sum, output) => sum + (output.number_of_shares || 0), 0);
+  
+  const confirmMutation = trpc.dividendComputations.confirm.useMutation({
+    onSuccess: () => {
+      router.push(`/equity/dividend_computations/${computationId}`);
+    },
+  });
 
-  useEffect(() => {
-    // Load computation data from localStorage for demo
-    const computationId = parseInt(params.id as string);
-    if (isNaN(computationId)) {
-      console.error('Invalid computation ID:', params.id);
-      return;
-    }
-    const demoComputations = JSON.parse(localStorage.getItem('demoComputations') || '[]');
-    const foundComputation = demoComputations.find((comp: any) => comp.id === computationId);
-    
-    if (foundComputation) {
-      setComputation(foundComputation);
-    }
-  }, [params.id]);
-
-  const handleConfirm = async () => {
-    setIsLoading(true);
-    
-    try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Update the computation to confirmed
-      const updatedComputation = {
-        ...computation,
-        confirmed_at: new Date().toISOString()
-      };
-      
-      // Update localStorage
-      const demoComputations = JSON.parse(localStorage.getItem('demoComputations') || '[]');
-      const updatedComputations = demoComputations.map((comp: any) => 
-        comp.id === computation.id ? updatedComputation : comp
-      );
-      localStorage.setItem('demoComputations', JSON.stringify(updatedComputations));
-      
-      // Redirect back to detail view
-      router.push(`/equity/dividend_computations/${computation.id}`);
-      
-    } catch (error) {
-      console.error('Error confirming computation:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleConfirm = () => {
+    confirmMutation.mutate({
+      companyId: company.id,
+      id: computationId
+    });
   };
 
   return (
@@ -276,9 +244,9 @@ function ConfirmDividendComputationContent() {
         <Link href={`/equity/dividend_computations/${computation.id}`}>
           <Button variant="outline">Cancel</Button>
         </Link>
-        <Button onClick={handleConfirm} disabled={isLoading}>
+        <Button onClick={handleConfirm} disabled={confirmMutation.isPending}>
           <CheckCircle className="w-4 h-4 mr-2" />
-          {isLoading ? "Confirming..." : "Confirm Computation"}
+          {confirmMutation.isPending ? "Confirming..." : "Confirm Computation"}
         </Button>
       </div>
     </div>

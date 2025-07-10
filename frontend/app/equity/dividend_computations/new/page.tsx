@@ -7,88 +7,47 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-// import DatePicker from "@/components/DatePicker";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, Calculator, DollarSign, Calendar, Info, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import EquityLayout from "@/app/equity/Layout";
+import { trpc } from "@/trpc/client";
+import { useCurrentCompany } from "@/global";
 
 function NewDividendComputationContent() {
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState("");
   const [returnOfCapital, setReturnOfCapital] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const company = useCurrentCompany();
+  
+  const createMutation = trpc.dividendComputations.create.useMutation({
+    onSuccess: (data: any) => {
+      router.push(`/equity/dividend_computations/${data.id}`);
+    },
+    onError: (error: any) => {
+      setError(error.message);
+    },
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError("");
 
-    try {
-      // Demo environment - simulate creation and redirect
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      
-      // Validate amount
-      const parsedAmount = parseFloat(amount);
-      if (isNaN(parsedAmount) || parsedAmount <= 0) {
-        setError('Please enter a valid amount greater than 0');
-        return;
-      }
-      
-      // Generate a unique demo ID based on timestamp to avoid collisions
-      const existingComputations = JSON.parse(localStorage.getItem('demoComputations') || '[]');
-      const existingIds = new Set(existingComputations.map((comp: any) => comp.id));
-      let demoId: number;
-      do {
-        demoId = Date.now() % 100000 + Math.floor(Math.random() * 1000);
-      } while (existingIds.has(demoId));
-      
-      // Store demo data in localStorage for the demo
-      const demoComputation = {
-        id: demoId,
-        total_amount_in_usd: parsedAmount,
-        dividends_issuance_date: date,
-        return_of_capital: returnOfCapital,
-        created_at: new Date().toISOString(),
-        confirmed_at: null,
-        outputs: [
-          {
-            id: 1,
-            investor_name: "Demo Investor A",
-            share_class: "Common",
-            number_of_shares: 1000,
-            preferred_dividend_amount_in_usd: 0,
-            dividend_amount_in_usd: parsedAmount * 0.4,
-            qualified_dividend_amount_usd: parsedAmount * 0.4,
-            total_amount_in_usd: parsedAmount * 0.4
-          },
-          {
-            id: 2,
-            investor_name: "Demo Investor B",
-            share_class: "Preferred A",
-            number_of_shares: 500,
-            preferred_dividend_amount_in_usd: parsedAmount * 0.2,
-            dividend_amount_in_usd: parsedAmount * 0.4,
-            qualified_dividend_amount_usd: parsedAmount * 0.5,
-            total_amount_in_usd: parsedAmount * 0.6
-          }
-        ]
-      };
-      
-      // Store in localStorage for demo purposes
-      existingComputations.push(demoComputation);
-      localStorage.setItem('demoComputations', JSON.stringify(existingComputations));
-      
-      // Redirect to the new computation
-      router.push(`/equity/dividend_computations/${demoId}`);
-      
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create computation');
-    } finally {
-      setIsLoading(false);
+    // Validate amount
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      setError('Please enter a valid amount greater than 0');
+      return;
     }
+
+    createMutation.mutate({
+      companyId: company.id,
+      amount_in_usd: parsedAmount,
+      dividends_issuance_date: date,
+      return_of_capital: returnOfCapital,
+    });
   };
 
   return (
@@ -236,9 +195,9 @@ function NewDividendComputationContent() {
           <Link href="/equity/dividend_computations">
             <Button variant="outline">Cancel</Button>
           </Link>
-          <Button type="submit" disabled={isLoading}>
+          <Button type="submit" disabled={createMutation.isPending}>
             <Calculator className="w-4 h-4 mr-2" />
-            {isLoading ? "Creating..." : "Create Computation"}
+            {createMutation.isPending ? "Creating..." : "Create Computation"}
           </Button>
         </div>
       </form>

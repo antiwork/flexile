@@ -16,4 +16,8 @@ class DividendComputationPolicy < ApplicationPolicy
   def confirm?
     company_administrator.present?
   end
+
+  def destroy?
+    company_administrator.present?
+  end
 end

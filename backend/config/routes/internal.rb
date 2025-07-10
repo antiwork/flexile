@@ -72,7 +72,7 @@ scope path: :internal, module: :internal do
       end
     end
     
-    resources :dividend_computations, only: [:index, :show, :create] do
+    resources :dividend_computations, only: [:index, :show, :create, :destroy] do
       member do
         post :confirm
       end

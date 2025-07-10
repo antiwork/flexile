@@ -59,10 +59,10 @@ export const request = (settings: RequestSettings): Promise<Response> => {
   }
   headers.append("Accept", acceptType);
   if (!settings.skipRailsCsrf && settings.method !== "GET") {
-    const csrfToken = document.cookie
+    const csrfToken = typeof document !== 'undefined' ? document.cookie
       .split("; ")
       .find((row) => row.startsWith("X-CSRF-Token="))
-      ?.split("=")[1];
+      ?.split("=")[1] : undefined;
     if (csrfToken) {
       headers.append("x-csrf-token", csrfToken);
     }

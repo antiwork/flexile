@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,37 +20,38 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import EquityLayout from "@/app/equity/Layout";
+import { trpc } from "@/trpc/client";
+import { useCurrentCompany } from "@/global";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { AlertTitle } from "@/components/ui/alert";
+import MutationButton from "@/components/MutationButton";
 
-// Mock data - replace with actual API call
-const mockComputation = {
-  id: 1,
-  total_amount_in_usd: 50000,
-  dividends_issuance_date: "2025-01-15",
-  return_of_capital: false,
-  created_at: "2025-01-10T10:00:00Z",
-  confirmed_at: null,
-  outputs: [
-    {
-      id: 1,
-      investor_name: "John Doe",
-      share_class: "Common",
-      number_of_shares: 1000,
-      preferred_dividend_amount_in_usd: 0,
-      dividend_amount_in_usd: 5000,
-      qualified_dividend_amount_usd: 5000,
-      total_amount_in_usd: 5000
-    },
-    {
-      id: 2,
-      investor_name: "Jane Smith",
-      share_class: "Preferred A",
-      number_of_shares: 500,
-      preferred_dividend_amount_in_usd: 2000,
-      dividend_amount_in_usd: 3000,
-      qualified_dividend_amount_usd: 4500,
-      total_amount_in_usd: 5000
-    }
-  ]
+type DividendComputationOutput = {
+  id: number;
+  investor_name: string;
+  share_class: string;
+  number_of_shares: number;
+  preferred_dividend_amount_in_usd: number;
+  dividend_amount_in_usd: number;
+  qualified_dividend_amount_usd: number;
+  total_amount_in_usd: number;
+};
+
+type DividendComputation = {
+  id: number;
+  total_amount_in_usd: number;
+  dividends_issuance_date: string;
+  return_of_capital: boolean;
+  created_at: string;
+  confirmed_at: string | null;
+  outputs: DividendComputationOutput[];
 };
 
 const StatusBadge = ({ confirmed_at }: { confirmed_at: string | null }) => {
@@ -71,66 +72,48 @@ const StatusBadge = ({ confirmed_at }: { confirmed_at: string | null }) => {
 
 function DividendComputationDetailContent() {
   const params = useParams();
-  const [computation, setComputation] = useState(mockComputation);
-  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const company = useCurrentCompany();
+  const computationId = parseInt(params.id as string);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  
+  const [computation, { refetch }] = trpc.dividendComputations.get.useSuspenseQuery({
+    companyId: company.id,
+    id: computationId
+  });
+  
   const isConfirmed = !!computation.confirmed_at;
+  
+  const confirmMutation = trpc.dividendComputations.confirm.useMutation({
+    onSuccess: () => {
+      setShowConfirmModal(false);
+      void refetch();
+    },
+  });
 
-  useEffect(() => {
-    // Load computation data from localStorage for demo
-    const computationId = parseInt(params.id as string);
-    if (isNaN(computationId)) {
-      console.error('Invalid computation ID:', params.id);
-      return;
-    }
-    const demoComputations = JSON.parse(localStorage.getItem('demoComputations') || '[]');
-    const foundComputation = demoComputations.find((comp: any) => comp.id === computationId);
-    
-    if (foundComputation) {
-      setComputation(foundComputation);
-    }
-  }, [params.id]);
+  const deleteMutation = trpc.dividendComputations.delete.useMutation({
+    onSuccess: () => {
+      router.push('/equity/dividend_computations');
+    },
+  });
 
-  const handleConfirm = async () => {
-    if (confirm('Are you sure you want to confirm this computation? This action cannot be undone.')) {
-      setIsLoading(true);
-      
-      try {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Update the computation to confirmed
-        const updatedComputation = {
-          ...computation,
-          confirmed_at: new Date().toISOString()
-        };
-        
-        // Update localStorage
-        const demoComputations = JSON.parse(localStorage.getItem('demoComputations') || '[]');
-        const updatedComputations = demoComputations.map((comp: any) => 
-          comp.id === computation.id ? updatedComputation : comp
-        );
-        localStorage.setItem('demoComputations', JSON.stringify(updatedComputations));
-        
-        // Update local state
-        setComputation(updatedComputation);
-        
-      } catch (error) {
-        console.error('Error confirming computation:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
+  const handleConfirm = () => {
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmSubmit = () => {
+    confirmMutation.mutate({
+      companyId: company.id,
+      id: computationId
+    });
   };
 
   const handleDelete = () => {
-    if (confirm('Are you sure you want to delete this computation?')) {
-      // Remove from localStorage
-      const demoComputations = JSON.parse(localStorage.getItem('demoComputations') || '[]');
-      const updatedComputations = demoComputations.filter((comp: any) => comp.id !== computation.id);
-      localStorage.setItem('demoComputations', JSON.stringify(updatedComputations));
-      
-      // Redirect back to list
-      window.location.href = '/equity/dividend_computations';
+    if (typeof window !== 'undefined' && confirm('Are you sure you want to delete this computation? This action cannot be undone.')) {
+      deleteMutation.mutate({
+        companyId: company.id,
+        id: computationId
+      });
     }
   };
 
@@ -289,12 +272,17 @@ function DividendComputationDetailContent() {
               </AlertDescription>
             </Alert>
             <div className="mt-4 flex space-x-4">
-              <Button onClick={handleConfirm} disabled={isLoading}>
+              <Button onClick={handleConfirm} disabled={confirmMutation.isPending}>
                 <CheckCircle className="w-4 h-4 mr-2" />
-                {isLoading ? "Confirming..." : "Confirm Computation"}
+                {confirmMutation.isPending ? "Confirming..." : "Confirm Computation"}
               </Button>
-              <Button variant="outline" className="text-red-600" onClick={handleDelete}>
-                Delete Computation
+              <Button 
+                variant="outline" 
+                className="text-red-600 hover:bg-red-50 hover:border-red-300" 
+                onClick={handleDelete}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? "Deleting..." : "Delete Computation"}
               </Button>
             </div>
           </CardContent>
@@ -317,6 +305,57 @@ function DividendComputationDetailContent() {
           </CardContent>
         </Card>
       )}
+
+      <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Dividend Computation</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>
+            Are you sure you want to confirm this dividend computation? This action cannot be undone.
+          </DialogDescription>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h3 className="text-muted-foreground text-sm">Total Amount</h3>
+              <p>${computation.total_amount_in_usd.toLocaleString()}</p>
+            </div>
+            <div>
+              <h3 className="text-muted-foreground text-sm">Recipients</h3>
+              <p className="text-sm">{computation.outputs.length}</p>
+            </div>
+            <div>
+              <h3 className="text-muted-foreground text-sm">Issuance Date</h3>
+              <p className="text-sm">{format(new Date(computation.dividends_issuance_date), "MMM d, yyyy")}</p>
+            </div>
+            <div>
+              <h3 className="text-muted-foreground text-sm">Type</h3>
+              <p className="text-sm">{computation.return_of_capital ? "Return of Capital" : "Dividend"}</p>
+            </div>
+          </div>
+
+          <Alert variant="destructive">
+            <AlertTriangle className="size-4" />
+            <AlertTitle>Important note</AlertTitle>
+            <AlertDescription>
+              Once confirmed, dividend records will be created and the computation cannot be modified. This action cannot be undone.
+            </AlertDescription>
+          </Alert>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowConfirmModal(false)}>
+              Cancel
+            </Button>
+            <MutationButton
+              idleVariant="critical"
+              mutation={confirmMutation}
+              param={{ companyId: company.id, id: computationId }}
+            >
+              Confirm Computation
+            </MutationButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

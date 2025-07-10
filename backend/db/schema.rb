@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_24_011111) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_10_115458) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -361,6 +361,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_24_011111) do
     t.date "dividends_issuance_date", null: false
     t.string "external_id", null: false
     t.boolean "return_of_capital", null: false
+    t.datetime "confirmed_at"
     t.index ["company_id"], name: "index_dividend_computations_on_company_id"
     t.index ["external_id"], name: "index_dividend_computations_on_external_id", unique: true
   end
