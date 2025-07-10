@@ -2,7 +2,7 @@
 
 import { AlertTriangle, Check, Plus, CircleDollarSign } from "lucide-react";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import React, { Fragment, useState } from "react";
+import React, { Fragment, Suspense, useState } from "react";
 import { z } from "zod";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
@@ -19,6 +19,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormLabel, FormMessage, FormControl, FormItem, FormField } from "@/components/ui/form";
 import { Card, CardTitle, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function PayoutsPage() {
   const user = useCurrentUser();
@@ -27,8 +28,10 @@ export default function PayoutsPage() {
     <SettingsLayout>
       <h2 className="mb-8 text-xl font-medium">Payouts</h2>
       <div className="grid gap-8">
-        {user.roles.investor ? <DividendSection /> : null}
-        <BankAccountsSection />
+        <Suspense fallback={<PayoutSkeleton />}>
+          {user.roles.investor ? <DividendSection /> : null}
+          <BankAccountsSection />
+        </Suspense>
       </div>
     </SettingsLayout>
   );
@@ -338,3 +341,13 @@ const BankAccountsSection = () => {
     </Card>
   );
 };
+
+const PayoutSkeleton = () => (
+  <div className="grid gap-6">
+    <div className="h-32 w-full p-4 flex flex-col justify-between bg-muted/20 rounded-lg">
+      <Skeleton className="h-6 w-32 bg-muted-foreground/5" />
+      <Skeleton className="h-10 w-48 bg-muted-foreground/10" />
+    </div>
+  </div>
+);
+
