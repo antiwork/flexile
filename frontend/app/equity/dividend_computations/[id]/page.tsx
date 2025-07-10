@@ -76,14 +76,14 @@ function DividendComputationDetailContent() {
   const company = useCurrentCompany();
   const computationId = parseInt(params.id as string);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  
+
   const [computation, { refetch }] = trpc.dividendComputations.get.useSuspenseQuery({
     companyId: company.id,
     id: computationId
   });
-  
+
   const isConfirmed = !!computation.confirmed_at;
-  
+
   const confirmMutation = trpc.dividendComputations.confirm.useMutation({
     onSuccess: () => {
       setShowConfirmModal(false);
@@ -276,9 +276,9 @@ function DividendComputationDetailContent() {
                 <CheckCircle className="w-4 h-4 mr-2" />
                 {confirmMutation.isPending ? "Confirming..." : "Confirm Computation"}
               </Button>
-              <Button 
-                variant="outline" 
-                className="text-red-600 hover:bg-red-50 hover:border-red-300" 
+              <Button
+                variant="outline"
+                className="text-red-600 hover:bg-red-50 hover:border-red-300"
                 onClick={handleDelete}
                 disabled={deleteMutation.isPending}
               >
@@ -314,7 +314,7 @@ function DividendComputationDetailContent() {
           <DialogDescription>
             Are you sure you want to confirm this dividend computation? This action cannot be undone.
           </DialogDescription>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <h3 className="text-muted-foreground text-sm">Total Amount</h3>

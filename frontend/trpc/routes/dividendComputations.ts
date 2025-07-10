@@ -1,10 +1,9 @@
 import { z } from "zod";
-import { createRouter } from "@/trpc";
-import { companyProcedure } from "@/trpc";
-import { 
-  company_dividend_computations_url, 
+import { createRouter, companyProcedure } from "@/trpc";
+import {
+  company_dividend_computations_url,
   company_dividend_computation_url,
-  confirm_company_dividend_computation_url 
+  confirm_company_dividend_computation_url
 } from "@/utils/routes";
 
 export const dividendComputationsRouter = createRouter({
@@ -17,11 +16,11 @@ export const dividendComputationsRouter = createRouter({
           headers: { "Content-Type": "application/json", ...ctx.headers },
         }
       );
-      
+
       if (!response.ok) {
         return [];
       }
-      
+
       // Handle the Rails response format: { success: true, data: [...] }
       const result = await response.json();
       return result.data || [];
@@ -41,11 +40,11 @@ export const dividendComputationsRouter = createRouter({
           headers: { "Content-Type": "application/json", ...ctx.headers },
         }
       );
-      
+
       if (!response.ok) {
         throw new Error("Dividend computation not found");
       }
-      
+
       const result = await response.json();
       return result.data;
     }),
@@ -67,12 +66,12 @@ export const dividendComputationsRouter = createRouter({
           body: JSON.stringify(input),
         }
       );
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(errorText || "Failed to create dividend computation");
       }
-      
+
       const result = await response.json();
       return result.data;
     }),
@@ -87,12 +86,12 @@ export const dividendComputationsRouter = createRouter({
           headers: { "Content-Type": "application/json", ...ctx.headers },
         }
       );
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(errorText || "Failed to confirm dividend computation");
       }
-      
+
       const result = await response.json();
       return result.data;
     }),
@@ -107,12 +106,12 @@ export const dividendComputationsRouter = createRouter({
           headers: { "Content-Type": "application/json", ...ctx.headers },
         }
       );
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(errorText || "Failed to delete dividend computation");
       }
-      
+
       return { success: true };
     }),
 });

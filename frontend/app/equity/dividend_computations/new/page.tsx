@@ -21,7 +21,7 @@ function NewDividendComputationContent() {
   const [error, setError] = useState("");
   const router = useRouter();
   const company = useCurrentCompany();
-  
+
   const createMutation = trpc.dividendComputations.create.useMutation({
     onSuccess: (data: any) => {
       router.push(`/equity/dividend_computations/${data.id}`);
@@ -132,8 +132,8 @@ function NewDividendComputationContent() {
 
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="return_of_capital" 
+                <Checkbox
+                  id="return_of_capital"
                   name="return_of_capital"
                   checked={returnOfCapital}
                   onCheckedChange={(checked) => setReturnOfCapital(!!checked)}

@@ -31,7 +31,7 @@ class DividendComputationPresenter
       preferred_dividend_amount_in_usd: output.preferred_dividend_amount_in_usd&.to_f,
       dividend_amount_in_usd: output.dividend_amount_in_usd&.to_f,
       qualified_dividend_amount_usd: output.qualified_dividend_amount_usd&.to_f,
-      total_amount_in_usd: output.total_amount_in_usd&.to_f
+      total_amount_in_usd: output.total_amount_in_usd&.to_f,
     }
   end
 end

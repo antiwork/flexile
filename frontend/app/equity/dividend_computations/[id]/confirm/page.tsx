@@ -44,15 +44,15 @@ function ConfirmDividendComputationContent() {
   const router = useRouter();
   const company = useCurrentCompany();
   const computationId = parseInt(params.id as string);
-  
+
   const [computation] = trpc.dividendComputations.get.useSuspenseQuery({
     companyId: company.id,
     id: computationId
   });
-  
+
   const totalRecipients = computation.outputs.length;
   const totalShares = computation.outputs.reduce((sum, output) => sum + (output.number_of_shares || 0), 0);
-  
+
   const confirmMutation = trpc.dividendComputations.confirm.useMutation({
     onSuccess: () => {
       router.push(`/equity/dividend_computations/${computationId}`);
