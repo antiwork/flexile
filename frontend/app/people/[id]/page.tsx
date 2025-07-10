@@ -814,7 +814,7 @@ const ContractSkeleton = () => (
 );
 
 
-export function PersonalInfoSkeleton() {
+const PersonalInfoSkeleton = () => {
   return (
     <div className="grid gap-4">
       <div>
