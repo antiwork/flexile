@@ -53,7 +53,7 @@ import { useForm } from "react-hook-form";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import RangeInput from "@/components/RangeInput";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { request } from "@/utils/request";
 import EquityPercentageLockModal from "./EquityPercentageLockModal";
 import { useCanSubmitInvoices } from ".";
@@ -61,6 +61,7 @@ import { linkClasses } from "@/components/Link";
 import DatePicker from "@/components/DatePicker";
 import { CalendarDate, today, getLocalTimeZone } from "@internationalized/date";
 import { zodResolver } from "@hookform/resolvers/zod";
+import TableSkeleton from "@/components/TableSkeleton";
 
 import type { ActionConfig, ActionContext } from "@/components/actions/types";
 import { SelectionActions } from "@/components/actions/SelectionActions";
@@ -86,7 +87,7 @@ export default function InvoicesPage() {
   const isActionable = useIsActionable();
   const isPayable = useIsPayable();
   const isDeletable = useIsDeletable();
-  const [data] = trpc.invoices.list.useSuspenseQuery({
+  const { data = [], isLoading } = trpc.invoices.list.useQuery({
     companyId: company.id,
     contractorId: user.roles.administrator ? undefined : user.roles.worker?.id,
   });
@@ -356,7 +357,9 @@ export default function InvoicesPage() {
         ) : null}
 
         <QuickInvoicesSection />
-        {data.length > 0 ? (
+        {isLoading ? (
+          <TableSkeleton columns={6} />
+        ) : data.length > 0 ? (
           <>
             {user.roles.administrator ? (
               <>
@@ -610,6 +613,8 @@ const QuickInvoicesSection = () => {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const trpcUtils = trpc.useUtils();
+  const queryClient = useQueryClient();
+
   if (!user.roles.worker) return null;
   const payRateInSubunits = user.roles.worker.payRateInSubunits;
   const isHourly = user.roles.worker.payRateType === "hourly";
@@ -674,6 +679,7 @@ const QuickInvoicesSection = () => {
       });
 
       form.reset();
+      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
       await trpcUtils.invoices.list.invalidate();
     },
   });
