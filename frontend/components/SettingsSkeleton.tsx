@@ -20,7 +20,6 @@ export function SettingsProfileSkeleton() {
   );
 }
 
-
 export function SettingsPayoutsSkeleton() {
   return (
     <div className="grid gap-8">
@@ -70,7 +69,7 @@ export function SettingsTaxSkeleton() {
         <Skeleton className="h-5 w-96" />
       </hgroup>
       <div className="grid gap-4">
-        <Skeleton className="h-16 w-full rounded-md border border-red-200 bg-red-50" />
+          <Skeleton className="h-16 w-full rounded-md border border-destructive/20 bg-destructive/10" />
 
         <div>
           <Skeleton className="mb-2 h-4 w-64" />
@@ -146,8 +145,6 @@ export function SettingsTaxSkeleton() {
     </div>
   );
 }
-
-
 
 export function SettingsDetailsSkeleton() {
   return (
