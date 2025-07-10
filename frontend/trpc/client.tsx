@@ -20,15 +20,17 @@ const GetUserData = ({ children }: { children: React.ReactNode }) => {
   const { data: session } = useSession(); // NextAuth
   const { user, login, logout } = useUserStore();
 
-  // Check if user is authenticated via either method
-  const isAuthenticated = isSignedIn || !!session?.user;
-  const authId = userId || session?.user?.email;
+  // Prioritize OTP authentication over Clerk
+  const isOtpAuthenticated = !!session?.user;
+  const isClerkAuthenticated = isSignedIn && !isOtpAuthenticated; // Only use Clerk if no OTP session
+  const isAuthenticated = isOtpAuthenticated || isClerkAuthenticated;
+  const authId = isOtpAuthenticated ? session?.user?.email : userId;
 
   const { data } = useQuery({
-    queryKey: ["currentUser", authId],
+    queryKey: ["currentUser", authId, isOtpAuthenticated ? "otp" : "clerk"],
     queryFn: async (): Promise<unknown> => {
-      // If using NextAuth session, fetch user data using JWT
-      if (session?.user && 'jwt' in session.user) {
+      // Prioritize NextAuth session over Clerk
+      if (isOtpAuthenticated && session?.user && 'jwt' in session.user) {
         const response = await request({
           url: "/api/user-data",
           method: "POST",
@@ -39,14 +41,18 @@ const GetUserData = ({ children }: { children: React.ReactNode }) => {
         return await response.json();
       }
 
-      // Otherwise use Clerk authentication
-      const response = await request({
-        url: internal_current_user_data_path(),
-        accept: "json",
-        method: "GET",
-        assertOk: true,
-      });
-      return await response.json();
+      // Fall back to Clerk authentication only if no OTP session
+      if (isClerkAuthenticated) {
+        const response = await request({
+          url: internal_current_user_data_path(),
+          accept: "json",
+          method: "GET",
+          assertOk: true,
+        });
+        return await response.json();
+      }
+
+      throw new Error("No authentication method available");
     },
     enabled: !!isAuthenticated,
   });

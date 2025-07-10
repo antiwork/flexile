@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 async function handler(req: Request) {
   const routes = ["^/internal/", "^/api/", "^/admin/", "^/admin$", "^/webhooks/", "^/v1/", "^/rails/", "^/assets/"];
@@ -17,20 +19,43 @@ async function handler(req: Request) {
       url.port = process.env.RAILS_ENV === "test" ? "3100" : "3000";
       url.protocol = "http";
   }
+
+  // Get NextAuth session to extract JWT token
+  const session = await getServerSession(authOptions);
+
+  const headers = new Headers(req.headers);
+
+  // Add JWT token to Authorization header if user is authenticated via OTP
+  if (session?.user && 'jwt' in session.user) {
+    headers.set("Authorization", `Bearer ${(session.user as any).jwt}`);
+  }
+
+  // Add API secret token for API requests
+  let finalUrl = url;
+  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/v1/")) {
+    const API_SECRET_TOKEN = process.env.API_SECRET_TOKEN;
+    if (API_SECRET_TOKEN) {
+      // For API requests, we need to pass both JWT and API secret token
+      const requestUrl = new URL(url);
+      requestUrl.searchParams.set("token", API_SECRET_TOKEN);
+      finalUrl = requestUrl;
+    }
+  }
+
   const data = {
-    headers: req.headers,
+    headers,
     body: req.body,
     method: req.method,
     duplex: "half",
     redirect: "manual",
   } as const;
-  const response = await fetch(url, data);
+  const response = await fetch(finalUrl, data);
 
-  const headers = new Headers(response.headers);
-  headers.delete("content-encoding");
-  headers.delete("content-length");
+  const responseHeaders = new Headers(response.headers);
+  responseHeaders.delete("content-encoding");
+  responseHeaders.delete("content-length");
   return new Response(response.body, {
-    headers,
+    headers: responseHeaders,
     status: response.status,
     statusText: response.statusText,
   });
