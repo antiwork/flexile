@@ -5,7 +5,7 @@ import { useMutation, type UseMutationResult, useQueryClient, useSuspenseQuery }
 import { iso31662 } from "iso-3166";
 import { Eye, EyeOff, AlertTriangle, Info, ArrowUpRightFromSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useId, useState } from "react";
+import React, { useEffect, useId, useState, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import DatePicker from "@/components/DatePicker";
@@ -29,6 +29,7 @@ import MutationButton, { MutationStatusButton } from "@/components/MutationButto
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { linkClasses } from "@/components/Link";
 import { Label } from "@/components/ui/label";
+import SettingsTaxSkeleton from "@/components/SettingsTaxSkeleton";
 
 const dataSchema = z.object({
   birth_date: z.string().nullable(),
@@ -85,7 +86,7 @@ const formSchema = formValuesSchema
     message: "Please select a tax classification.",
   });
 
-export default function TaxPage() {
+function TaxContent() {
   const user = useCurrentUser();
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
@@ -180,7 +181,7 @@ export default function TaxPage() {
   });
 
   return (
-    <SettingsLayout>
+    <>
       <Form {...form}>
         <form onSubmit={(e) => void submit(e)} className="grid gap-8">
           <hgroup>
@@ -508,6 +509,16 @@ export default function TaxPage() {
         isBusiness={formValues.business_entity}
         mutation={saveMutation}
       />
+    </>
+  );
+}
+
+export default function TaxPage() {
+  return (
+    <SettingsLayout>
+      <Suspense fallback={<SettingsTaxSkeleton />}>
+        <TaxContent />
+      </Suspense>
     </SettingsLayout>
   );
 }

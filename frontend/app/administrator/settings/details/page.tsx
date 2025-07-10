@@ -6,6 +6,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import { MutationStatusButton } from "@/components/MutationButton";
+import SettingsDetailsSkeleton from "@/components/SettingsDetailsSkeleton";
+import { Suspense } from "react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useCurrentCompany } from "@/global";
@@ -31,7 +33,7 @@ const formSchema = z.object({
   zipCode: z.string().min(1, "This field is required."),
 });
 
-export default function Details() {
+function DetailsContent() {
   const company = useCurrentCompany();
   const [settings] = trpc.companies.settings.useSuspenseQuery({ companyId: company.id });
   const utils = trpc.useUtils();
@@ -207,5 +209,13 @@ export default function Details() {
         </MutationStatusButton>
       </Form>
     </form>
+  );
+}
+
+export default function Details() {
+  return (
+    <Suspense fallback={<SettingsDetailsSkeleton />}>
+      <DetailsContent />
+    </Suspense>
   );
 }
