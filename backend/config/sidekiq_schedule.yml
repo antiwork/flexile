@@ -73,3 +73,11 @@ process_scheduled_vesting_for_equity_grants_job:
   cron: "0 1 * * *" # Every day at UTC 01:00
   class: ProcessScheduledVestingForEquityGrantsJob
   description: Processes scheduled vesting events for active equity grants
+
+dividend_report_csv_email_job:
+  cron: "0 16 1 * *" # The 1st day of every month at UTC 16:00
+  class: DividendReportCsvEmailJob
+  description: Sends monthly dividend report data for accounting
+  args:
+    - - "solson@earlygrowth.com"
+      - "howard@antiwork.com"

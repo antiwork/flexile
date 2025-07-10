@@ -3,7 +3,7 @@ import { and, desc, eq, inArray, isNull, or } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { DocumentTemplateType } from "@/db/enums";
-import { companyContractors, documents, documentTemplates, users } from "@/db/schema";
+import { documents, documentTemplates, users } from "@/db/schema";
 import env from "@/env";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
 import { createRouter, protectedProcedure } from "@/trpc";
@@ -95,15 +95,6 @@ export const usersRouter = createRouter({
     }),
 
   updateTaxSettings: protectedProcedure.input(z.object({ data: z.unknown() })).mutation(async ({ ctx, input }) => {
-    const contractor = ctx.company
-      ? await db.query.companyContractors.findFirst({
-          where: and(
-            eq(companyContractors.userId, BigInt(ctx.userId)),
-            eq(companyContractors.companyId, ctx.company.id),
-          ),
-        })
-      : null;
-
     const response = await fetch(settings_tax_url({ host: ctx.host }), {
       method: "PATCH",
       headers: { "Content-Type": "application/json", ...ctx.headers },
@@ -111,10 +102,6 @@ export const usersRouter = createRouter({
     });
     if (!response.ok) throw new TRPCError({ code: "BAD_REQUEST", message: await response.text() });
     const { documentIds } = z.object({ documentIds: z.array(z.number()) }).parse(await response.json());
-
-    if (contractor?.contractSignedElsewhere) {
-      return { documentId: null };
-    }
 
     const createdDocuments = await db.query.documents.findMany({
       where: inArray(documents.id, documentIds.map(BigInt)),
