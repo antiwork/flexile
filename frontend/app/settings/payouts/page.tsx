@@ -19,8 +19,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormLabel, FormMessage, FormControl, FormItem, FormField } from "@/components/ui/form";
 import { Card, CardTitle, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
+import { SettingsPayoutsSkeleton } from "@/components/SettingsSkeleton";
+import { Suspense } from "react";
 
-export default function PayoutsPage() {
+function PayoutsContent() {
   const user = useCurrentUser();
 
   return (
@@ -31,6 +33,14 @@ export default function PayoutsPage() {
         <BankAccountsSection />
       </div>
     </SettingsLayout>
+  );
+}
+
+export default function PayoutsPage() {
+  return (
+    <Suspense fallback={<SettingsLayout><SettingsPayoutsSkeleton /></SettingsLayout>}>
+      <PayoutsContent />
+    </Suspense>
   );
 }
 

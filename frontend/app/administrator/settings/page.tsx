@@ -25,7 +25,7 @@ const formSchema = z.object({
   brandColor: z.string().nullable(),
   publicName: z.string(),
 });
-export default function SettingsPage() {
+function SettingsContent() {
   const company = useCurrentCompany();
   const [settings, { refetch }] = trpc.companies.settings.useSuspenseQuery({ companyId: company.id });
   const queryClient = useQueryClient();
@@ -180,4 +180,8 @@ export default function SettingsPage() {
       ) : null}
     </div>
   );
+}
+
+export default function SettingsPage() {
+  return <SettingsContent />;
 }

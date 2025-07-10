@@ -29,6 +29,8 @@ import MutationButton, { MutationStatusButton } from "@/components/MutationButto
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { linkClasses } from "@/components/Link";
 import { Label } from "@/components/ui/label";
+import { SettingsTaxSkeleton } from "@/components/SettingsSkeleton";
+import { Suspense } from "react";
 
 const dataSchema = z.object({
   birth_date: z.string().nullable(),
@@ -85,7 +87,7 @@ const formSchema = formValuesSchema
     message: "Please select a tax classification.",
   });
 
-export default function TaxPage() {
+function TaxContent() {
   const user = useCurrentUser();
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
@@ -509,6 +511,14 @@ export default function TaxPage() {
         mutation={saveMutation}
       />
     </SettingsLayout>
+  );
+}
+
+export default function TaxPage() {
+  return (
+    <Suspense fallback={<SettingsLayout><SettingsTaxSkeleton /></SettingsLayout>}>
+      <TaxContent />
+    </Suspense>
   );
 }
 

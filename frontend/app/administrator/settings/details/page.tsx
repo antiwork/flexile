@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { useCurrentCompany } from "@/global";
 import { usStates } from "@/models";
 import { trpc } from "@/trpc/client";
+import { SettingsDetailsSkeleton } from "@/components/SettingsSkeleton";
+import { Suspense } from "react";
 
 const formSchema = z.object({
   name: z.string().min(1, "This field is required."),
@@ -31,7 +33,7 @@ const formSchema = z.object({
   zipCode: z.string().min(1, "This field is required."),
 });
 
-export default function Details() {
+function DetailsContent() {
   const company = useCurrentCompany();
   const [settings] = trpc.companies.settings.useSuspenseQuery({ companyId: company.id });
   const utils = trpc.useUtils();
@@ -207,5 +209,13 @@ export default function Details() {
         </MutationStatusButton>
       </Form>
     </form>
+  );
+}
+
+export default function Details() {
+  return (
+    <Suspense fallback={<SettingsDetailsSkeleton />}>
+      <DetailsContent />
+    </Suspense>
   );
 }

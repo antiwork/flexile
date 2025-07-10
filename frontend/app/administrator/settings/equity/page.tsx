@@ -16,7 +16,7 @@ const formSchema = z.object({
   conversionSharePriceUsd: z.number().min(0),
 });
 
-export default function Equity() {
+function EquityContent() {
   const company = useCurrentCompany();
   const utils = trpc.useUtils();
   const queryClient = useQueryClient();
@@ -110,4 +110,8 @@ export default function Equity() {
       </Form>
     </div>
   );
+}
+
+export default function Equity() {
+  return <EquityContent />;
 }

@@ -9,11 +9,14 @@ import { useCurrentUser } from "@/global";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
 import { trpc } from "@/trpc/client";
 import SettingsLayout from "@/app/settings/Layout";
+import { SettingsProfileSkeleton } from "@/components/SettingsSkeleton";
 
 export default function SettingsPage() {
   return (
     <SettingsLayout>
-      <DetailsSection />
+      <React.Suspense fallback={<SettingsProfileSkeleton />}>
+        <DetailsSection />
+      </React.Suspense>
     </SettingsLayout>
   );
 }
