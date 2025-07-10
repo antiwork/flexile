@@ -27,7 +27,7 @@ async function handler(req: Request) {
 
   // Add JWT token to Authorization header if user is authenticated via OTP
   if (session?.user && 'jwt' in session.user) {
-    headers.set("Authorization", `Bearer ${(session.user as any).jwt}`);
+    headers.set("FAuthorization", `Bearer ${(session.user as any).jwt}`);
   }
 
   // Add API secret token for API requests

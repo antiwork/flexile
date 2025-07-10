@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const response = await fetch(`${API_BASE_URL}/internal/current_user_data`, {
       method: "GET",
       headers: {
-        "Authorization": `Bearer ${validation.data.jwt}`,
+        "FAuthorization": `Bearer ${validation.data.jwt}`,
         "Content-Type": "application/json",
       },
     });

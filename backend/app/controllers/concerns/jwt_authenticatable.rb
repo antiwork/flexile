@@ -34,7 +34,7 @@ module JwtAuthenticatable
     end
 
     def authorization_header
-      request.headers["Authorization"]
+      request.headers["FAuthorization"]
     end
 
     def jwt_secret
