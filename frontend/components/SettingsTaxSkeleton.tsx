@@ -3,15 +3,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function SettingsTaxSkeleton() {
   return (
     <div className="grid gap-8">
-      {/* Header section */}
       <hgroup>
         <Skeleton className="mb-1 h-7 w-40" />
         <Skeleton className="h-5 w-96" />
       </hgroup>
 
-      {/* Form content */}
       <div className="grid gap-4">
-        {/* Alert banner */}
         <div className="rounded-lg border border-destructive bg-destructive/10 p-4">
           <div className="flex items-start gap-3">
             <Skeleton className="h-5 w-5" />
@@ -19,19 +16,16 @@ export default function SettingsTaxSkeleton() {
           </div>
         </div>
 
-        {/* Full legal name */}
         <div className="grid gap-2">
           <Skeleton className="h-4 w-64" />
           <Skeleton className="h-10 w-full" />
         </div>
 
-        {/* Country of citizenship */}
         <div className="grid gap-2">
           <Skeleton className="h-4 w-36" />
           <Skeleton className="h-10 w-full" />
         </div>
 
-        {/* Type of entity (Radio buttons) */}
         <div className="grid gap-2">
           <Skeleton className="h-4 w-28" />
           <div className="grid auto-cols-fr gap-3 md:grid-flow-col">
@@ -46,7 +40,6 @@ export default function SettingsTaxSkeleton() {
           </div>
         </div>
 
-        {/* Business entity fields (conditional) */}
         <div className="grid auto-cols-fr grid-flow-col items-start gap-3">
           <div className="grid gap-2">
             <Skeleton className="h-4 w-36" />
@@ -62,13 +55,11 @@ export default function SettingsTaxSkeleton() {
           </div>
         </div>
 
-        {/* Country of residence/incorporation */}
         <div className="grid gap-2">
           <Skeleton className="h-4 w-48" />
           <Skeleton className="h-10 w-full" />
         </div>
 
-        {/* Tax ID and Birth Date row */}
         <div className="grid items-start gap-3 md:grid-cols-2">
           <div className="grid gap-2">
             <div className="flex justify-between gap-2">
@@ -86,19 +77,16 @@ export default function SettingsTaxSkeleton() {
           </div>
         </div>
 
-        {/* Street address */}
         <div className="grid gap-2">
           <Skeleton className="h-4 w-72" />
           <Skeleton className="h-10 w-full" />
         </div>
 
-        {/* City */}
         <div className="grid gap-2">
           <Skeleton className="h-4 w-8" />
           <Skeleton className="h-10 w-full" />
         </div>
 
-        {/* State and ZIP code row */}
         <div className="grid items-start gap-3 md:grid-cols-2">
           <div className="grid gap-2">
             <Skeleton className="h-4 w-12" />
@@ -111,7 +99,6 @@ export default function SettingsTaxSkeleton() {
         </div>
       </div>
 
-      {/* Action buttons and disclaimer */}
       <div className="flex flex-wrap gap-8">
         <Skeleton className="h-10 w-28" />
         <div className="flex items-center">
