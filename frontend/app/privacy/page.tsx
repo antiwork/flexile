@@ -19,7 +19,7 @@ const sections = [
 export default function Privacy() {
   return (
     <SimpleLayout>
-      <section className="prose">
+      <section className="prose [&_a]:break-all">
         <h1>Privacy Policy</h1>
         <p>Effective as of May 9, 2022.</p>
         <p>

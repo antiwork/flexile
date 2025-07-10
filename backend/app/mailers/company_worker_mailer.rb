@@ -47,7 +47,8 @@ class CompanyWorkerMailer < ApplicationMailer
   end
 
   def invoice_approved(invoice_id:)
-    @invoice = Invoice.find(invoice_id)
+    @invoice = Invoice.alive.find_by(id: invoice_id)
+    return if @invoice.nil?
     @company = @invoice.company
     @user = @invoice.user
     @bank_account = @user.bank_account

@@ -353,7 +353,7 @@ test.describe("One-off payments", () => {
         Amount: "$123.45",
       });
 
-      await invoiceRow.click();
+      await invoiceRow.getByRole("link", { name: "O-0001" }).click();
       await expect(page.getByRole("cell", { name: "Bonus!" })).toBeVisible();
 
       await page.getByRole("button", { name: "Accept payment" }).click();

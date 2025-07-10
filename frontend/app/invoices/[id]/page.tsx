@@ -2,10 +2,11 @@
 
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { InformationCircleIcon, PaperClipIcon, PencilIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { Trash2, CircleAlert } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Fragment, useMemo, useState } from "react";
+import React, { Fragment, useMemo, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import MainLayout from "@/components/layouts/Main";
 import { linkClasses } from "@/components/Link";
@@ -17,7 +18,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
-import { trpc } from "@/trpc/client";
+import { PayRateType, trpc } from "@/trpc/client";
 import { assert } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate, formatDuration } from "@/utils/time";
@@ -28,7 +29,9 @@ import {
   LegacyAddress,
   RejectModal,
   taxRequirementsMet,
+  DeleteModal,
   useIsActionable,
+  useIsDeletable,
 } from "..";
 import InvoiceStatus, { StatusDetails } from "../Status";
 
@@ -37,12 +40,15 @@ export default function InvoicePage() {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const [invoice, { refetch }] = trpc.invoices.get.useSuspenseQuery({ companyId: company.id, id });
+  const payRateInSubunits = invoice.contractor.payRateInSubunits;
   const complianceInfo = invoice.contractor.user.complianceInfo;
   const [expenseCategories] = trpc.expenseCategories.list.useSuspenseQuery({ companyId: company.id });
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const router = useRouter();
   const isActionable = useIsActionable();
+  const isDeletable = useIsDeletable();
 
   const searchParams = useSearchParams();
   const [acceptPaymentModalOpen, setAcceptPaymentModalOpen] = useState(
@@ -82,11 +88,7 @@ export default function InvoicePage() {
       title={`Invoice ${invoice.invoiceNumber}`}
       headerActions={
         <div className="flex gap-2">
-          {invoice.requiresAcceptanceByPayee && user.id === invoice.userId ? (
-            <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
-          ) : null}
           <InvoiceStatus aria-label="Status" invoice={invoice} />
-
           {user.roles.administrator && isActionable(invoice) ? (
             <>
               <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
@@ -104,17 +106,34 @@ export default function InvoicePage() {
               <ApproveButton invoice={invoice} onApprove={() => router.push(`/invoices`)} />
             </>
           ) : null}
-          {EDITABLE_INVOICE_STATES.includes(invoice.status) && user.id === invoice.userId ? (
-            invoice.requiresAcceptanceByPayee ? (
-              <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
-            ) : (
-              <Button variant="outline" asChild>
-                <Link href={`/invoices/${invoice.id}/edit`}>
-                  {invoice.status !== "rejected" && <PencilIcon className="h-4 w-4" />}
-                  {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
-                </Link>
-              </Button>
-            )
+          {user.id === invoice.userId ? (
+            <>
+              {invoice.requiresAcceptanceByPayee ? (
+                <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
+              ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
+                <Button variant="default" asChild>
+                  <Link href={`/invoices/${invoice.id}/edit`}>
+                    {invoice.status !== "rejected" && <PencilIcon className="h-4 w-4" />}
+                    {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
+                  </Link>
+                </Button>
+              ) : null}
+
+              {isDeletable(invoice) ? (
+                <>
+                  <Button variant="outline" onClick={() => setDeleteModalOpen(true)} className="hover:text-destructive">
+                    <Trash2 className="size-4" />
+                    <span>Delete</span>
+                  </Button>
+                  <DeleteModal
+                    open={deleteModalOpen}
+                    onClose={() => setDeleteModalOpen(false)}
+                    onDelete={() => router.push(`/invoices`)}
+                    invoices={[invoice]}
+                  />
+                </>
+              ) : null}
+            </>
           ) : null}
         </div>
       }
@@ -191,17 +210,25 @@ export default function InvoicePage() {
           </DialogContent>
         </Dialog>
       ) : null}
-      <div className="flex flex-col gap-4">
-        {!taxRequirementsMet(invoice) && (
-          <Alert variant="destructive">
-            <ExclamationTriangleIcon />
-            <AlertTitle>Missing tax information.</AlertTitle>
-            <AlertDescription>Invoice is not payable until contractor provides tax information.</AlertDescription>
-          </Alert>
-        )}
+      {!taxRequirementsMet(invoice) && (
+        <Alert variant="destructive">
+          <ExclamationTriangleIcon />
+          <AlertTitle>Missing tax information.</AlertTitle>
+          <AlertDescription>Invoice is not payable until contractor provides tax information.</AlertDescription>
+        </Alert>
+      )}
 
-        <StatusDetails invoice={invoice} />
-      </div>
+      <StatusDetails invoice={invoice} />
+
+      {payRateInSubunits && invoice.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
+        <Alert variant="warning">
+          <CircleAlert />
+          <AlertDescription>
+            This invoice includes rates above the default of {formatMoneyFromCents(payRateInSubunits)}/
+            {invoice.contractor.payRateType === PayRateType.Custom ? "project" : "hour"}.
+          </AlertDescription>
+        </Alert>
+      ) : null}
 
       {invoice.equityAmountInCents > 0 ? (
         <Alert className="print:hidden">
@@ -271,7 +298,7 @@ export default function InvoicePage() {
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
                         {lineItem.payRateInSubunits
-                          ? `${formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)} / hour`
+                          ? `${formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)}${lineItem.hourly ? " / hour" : ""}`
                           : ""}
                       </TableCell>
                       <TableCell className="text-right tabular-nums">

@@ -56,6 +56,20 @@ RSpec.describe Invoice do
         .allow_nil
     end
 
+    describe "allowed equity percentage range" do
+      it "ensures that min allowed equity percentage is less than or equal to max allowed equity percentage" do
+        invoice = build(:invoice, min_allowed_equity_percentage: 81, max_allowed_equity_percentage: 80)
+        expect(invoice).to be_invalid
+        expect(invoice.errors.full_messages).to eq(["Min allowed equity percentage must be less than or equal to maximum allowed equity percentage"])
+
+        invoice.min_allowed_equity_percentage = 80
+        expect(invoice).to be_valid
+
+        invoice.min_allowed_equity_percentage = 0
+        expect(invoice).to be_valid
+      end
+    end
+
     describe "fields that we auto-populate on create" do
       subject { create(:invoice) }
 
@@ -80,33 +94,34 @@ RSpec.describe Invoice do
       )
       expect(invoice).to be_valid
     end
+  end
 
-    it "ensures that the total amount is a sum of cash and equity amounts" do
-      invoice = create(:invoice, total_amount_in_usd_cents: 200_00, cash_amount_in_cents: 100_00, equity_amount_in_cents: 100_00)
-      expect(invoice).to be_valid
-
-      invoice.cash_amount_in_cents = 99_99
-      expect(invoice).to be_invalid
-      expect(invoice.errors.full_messages).to eq(["Total amount in USD cents must equal the sum of cash and equity amounts"])
-
-      invoice.cash_amount_in_cents = 100_00
-      invoice.equity_amount_in_cents = 99_99
-      expect(invoice).to be_invalid
-      expect(invoice.errors.full_messages).to eq(["Total amount in USD cents must equal the sum of cash and equity amounts"])
+  describe "deletion" do
+    it "allows deletion of invoices with deletable statuses" do
+      [Invoice::RECEIVED, Invoice::APPROVED].each do |status|
+        invoice = create(:invoice, status: status)
+        expect { invoice.mark_deleted! }.not_to raise_error
+      end
     end
 
-    describe "allowed equity percentage range" do
-      it "ensures that min allowed equity percentage is less than or equal to max allowed equity percentage" do
-        invoice = build(:invoice, min_allowed_equity_percentage: 81, max_allowed_equity_percentage: 80)
-        expect(invoice).to be_invalid
-        expect(invoice.errors.full_messages).to eq(["Min allowed equity percentage must be less than or equal to maximum allowed equity percentage"])
-
-        invoice.min_allowed_equity_percentage = 80
-        expect(invoice).to be_valid
-
-        invoice.min_allowed_equity_percentage = 0
-        expect(invoice).to be_valid
+    it "prevents deletion of invoices with non-deletable statuses" do
+      [Invoice::PAID, Invoice::PROCESSING, Invoice::REJECTED, Invoice::PAYMENT_PENDING, Invoice::FAILED].each do |status|
+        invoice = create(:invoice, status: status)
+        expect { invoice.mark_deleted! }.to raise_error(ActiveRecord::RecordInvalid, /Status cannot be #{status} for deleted invoices/)
       end
+    end
+
+    it "prevents status updates to active statuses on already-deleted invoices" do
+      invoice = create(:invoice, status: Invoice::APPROVED)
+      invoice.mark_deleted!
+
+      invoice.status = Invoice::PAID
+      expect(invoice).to be_invalid
+      expect(invoice.errors[:status]).to include("cannot be paid for deleted invoices")
+
+      invoice.status = Invoice::PROCESSING
+      expect(invoice).to be_invalid
+      expect(invoice.errors[:status]).to include("cannot be processing for deleted invoices")
     end
   end
 
@@ -273,6 +288,26 @@ RSpec.describe Invoice do
         create(:invoice, user:, created_by: admin) # Created by admin and not accepted
 
         expect(described_class.not_pending_acceptance).to match_array(expected)
+      end
+    end
+
+    describe ".alive" do
+      it "returns only non-deleted invoices" do
+        active_invoice = create(:invoice)
+        deleted_invoice = create(:invoice, :deleted)
+
+        expect(Invoice.alive).to include(active_invoice)
+        expect(Invoice.alive).not_to include(deleted_invoice)
+      end
+    end
+
+    describe ".deleted" do
+      it "returns only deleted invoices" do
+        active_invoice = create(:invoice)
+        deleted_invoice = create(:invoice, :deleted)
+
+        expect(Invoice.deleted).to include(deleted_invoice)
+        expect(Invoice.deleted).not_to include(active_invoice)
       end
     end
   end

@@ -1,3 +1,5 @@
+import { companies, consolidatedInvoices, invoiceApprovals, invoices, users, companyContractors } from "@/db/schema";
+import { assert } from "@/utils/assert";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
@@ -7,9 +9,15 @@ import { invoiceApprovalsFactory } from "@test/factories/invoiceApprovals";
 import { invoicesFactory } from "@test/factories/invoices";
 import { login } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
-import { and, eq, not } from "drizzle-orm";
-import { companies, consolidatedInvoices, invoiceApprovals, invoices, users } from "@/db/schema";
-import { assert } from "@/utils/assert";
+import { and, eq, exists, isNull, not } from "drizzle-orm";
+
+const setupCompany = async ({ trusted = true }: { trusted?: boolean } = {}) => {
+  const { company } = await companiesFactory.create({ isTrusted: trusted, requiredInvoiceApprovalCount: 2 });
+  const { administrator } = await companyAdministratorsFactory.create({ companyId: company.id });
+  const user = await db.query.users.findFirst({ where: eq(users.id, administrator.userId) });
+  assert(user !== undefined);
+  return { company, user };
+};
 
 test.describe("Invoices admin flow", () => {
   test("allows searching invoices by contractor name", async ({ page }) => {
@@ -40,13 +48,6 @@ test.describe("Invoices admin flow", () => {
 
     await expect(page.getByRole("row").filter({ hasText: contractorUser.legalName || "" })).toBeVisible();
   });
-  const setupCompany = async ({ trusted = true }: { trusted?: boolean } = {}) => {
-    const { company } = await companiesFactory.create({ isTrusted: trusted, requiredInvoiceApprovalCount: 2 });
-    const { administrator } = await companyAdministratorsFactory.create({ companyId: company.id });
-    const user = await db.query.users.findFirst({ where: eq(users.id, administrator.userId) });
-    assert(user !== undefined);
-    return { company, user };
-  };
 
   test.describe("account statuses", () => {
     test("when payment method setup is incomplete, it shows the correct status message", async ({ page }) => {
@@ -121,13 +122,21 @@ test.describe("Invoices admin flow", () => {
     });
   });
 
-  const countInvoiceApprovals = (companyId: bigint) =>
-    db.$count(
-      db
-        .select()
-        .from(invoiceApprovals)
-        .innerJoin(invoices, eq(invoiceApprovals.invoiceId, invoices.id))
-        .where(eq(invoices.companyId, companyId)),
+  const countInvoiceApprovals = async (companyId: bigint) =>
+    await db.$count(
+      invoiceApprovals,
+      exists(
+        db
+          .select()
+          .from(invoices)
+          .where(
+            and(
+              eq(invoices.id, invoiceApprovals.invoiceId),
+              eq(invoices.companyId, companyId),
+              isNull(invoices.deletedAt),
+            ),
+          ),
+      ),
     );
 
   test.describe("approving and paying invoices", () => {
@@ -259,7 +268,9 @@ test.describe("Invoices admin flow", () => {
         expect(await countInvoiceApprovals(company.id)).toBe(invoiceApprovalsCountBefore + 4);
         expect(consolidatedInvoicesCountAfter).toBe(consolidatedInvoicesCountBefore + 1);
 
-        const updatedInvoices = await db.query.invoices.findMany({ where: eq(invoices.companyId, company.id) });
+        const updatedInvoices = await db.query.invoices.findMany({
+          where: and(eq(invoices.companyId, company.id), isNull(invoices.deletedAt)),
+        });
         const expectedPaidInvoices = [invoice.id, invoice2.id];
         for (const invoice of updatedInvoices) {
           expect(invoice.status).toBe(expectedPaidInvoices.includes(invoice.id) ? "payment_pending" : "approved");
@@ -303,9 +314,7 @@ test.describe("Invoices admin flow", () => {
       await expect(page.getByText("2 selected")).toBeVisible();
       await page.getByRole("button", { name: "Reject selected" }).click();
 
-      await page
-        .getByLabel("Explain why the invoice was rejected and how to fix it (optional)")
-        .fill("Invoice issue date mismatch");
+      await page.getByLabel("Explain why the invoice").fill("Invoice issue date mismatch");
       await page.getByRole("button", { name: "Yes, reject" }).click();
       await page.getByRole("button", { name: "Filter" }).click();
       await page.getByRole("menuitem", { name: "Clear all filters" }).click();
@@ -318,6 +327,117 @@ test.describe("Invoices admin flow", () => {
           (invoice) => invoice.status === "rejected" && invoice.rejectionReason === "Invoice issue date mismatch",
         ),
       ).toBe(true);
+    });
+  });
+
+  test("shows alert when viewing invoice with rates above default pay rate", async ({ page }) => {
+    const { company, user: adminUser } = await setupCompany();
+    const { companyContractor } = await companyContractorsFactory.create({ companyId: company.id });
+
+    await invoicesFactory.create({
+      companyId: company.id,
+      companyContractorId: companyContractor.id,
+    });
+
+    await login(page, adminUser);
+    await page.getByRole("link", { name: "Invoices" }).click();
+    await page.locator("tbody tr").click();
+
+    await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).toBeVisible();
+
+    await db
+      .update(companyContractors)
+      .set({ payRateInSubunits: null })
+      .where(eq(companyContractors.id, companyContractor.id));
+    await page.reload();
+    await page.locator("tbody tr").click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).not.toBeVisible();
+
+    await db
+      .update(companyContractors)
+      .set({ payRateInSubunits: 60000 })
+      .where(eq(companyContractors.id, companyContractor.id));
+    await page.reload();
+    await page.locator("tbody tr").click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).not.toBeVisible();
+  });
+});
+
+test.describe("Invoices contractor flow", () => {
+  const setupCompanyAndContractor = async () => {
+    const { company, user: adminUser } = await setupCompany({ trusted: true });
+
+    const { companyContractor } = await companyContractorsFactory.create({ companyId: company.id });
+
+    const contractorUser = await db.query.users.findFirst({
+      where: eq(users.id, companyContractor.userId),
+    });
+    assert(contractorUser !== undefined);
+
+    return {
+      company,
+      adminUser,
+      companyContractor: { ...companyContractor, user: contractorUser },
+    };
+  };
+
+  test.describe("deleting invoices", () => {
+    test("handles invoice deletion scenarios comprehensively", async ({ page }) => {
+      const { company, companyContractor } = await setupCompanyAndContractor();
+
+      await invoicesFactory.create({
+        companyId: company.id,
+        companyContractorId: companyContractor.id,
+        status: "received",
+      });
+
+      await invoicesFactory.create({
+        companyId: company.id,
+        companyContractorId: companyContractor.id,
+        status: "received",
+      });
+
+      const { invoice: paidInvoice } = await invoicesFactory.create({
+        companyId: company.id,
+        companyContractorId: companyContractor.id,
+        status: "received",
+      });
+      await db.update(invoices).set({ status: "paid" }).where(eq(invoices.id, paidInvoice.id));
+
+      const contractorUser = companyContractor.user;
+      await login(page, contractorUser);
+      await page.getByRole("link", { name: "Invoices" }).click();
+
+      assert(contractorUser.legalName !== null);
+
+      const receivedInvoiceRow = page.getByRole("row").getByText("Awaiting approval").first();
+      await receivedInvoiceRow.click({ button: "right" });
+      await expect(page.getByRole("menuitem").filter({ hasText: "Delete" })).toBeVisible();
+
+      await page.click("body");
+
+      const paidInvoiceRow = page.getByRole("row").getByText("Paid");
+      await paidInvoiceRow.click({ button: "right" });
+      await expect(page.getByRole("menuitem").filter({ hasText: "Delete" })).not.toBeVisible();
+
+      await page.click("body");
+
+      await expect(page.locator("tbody tr")).toHaveCount(3);
+
+      const deletableInvoiceRow = page.getByRole("row").getByText("Awaiting approval").first();
+      await deletableInvoiceRow.click({ button: "right" });
+      await page.getByRole("menuitem", { name: "Delete" }).click();
+      await page.getByRole("dialog").waitFor();
+      await page.getByRole("button", { name: "Delete" }).click();
+
+      await expect(page.locator("tbody tr")).toHaveCount(2);
+
+      const remainingInvoices = await db.query.invoices.findMany({
+        where: and(eq(invoices.companyId, company.id), isNull(invoices.deletedAt)),
+      });
+      expect(remainingInvoices.length).toBe(2);
     });
   });
 });

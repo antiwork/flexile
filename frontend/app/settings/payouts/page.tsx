@@ -138,6 +138,8 @@ const DividendSection = () => {
 
 const BankAccountsSection = () => {
   const user = useCurrentUser();
+  const queryClient = useQueryClient();
+
   const { data } = useSuspenseQuery({
     queryKey: ["settings", "bank_accounts"],
     queryFn: async () => {
@@ -193,6 +195,7 @@ const BankAccountsSection = () => {
       });
       if (useFor === "invoices") setBankAccountForInvoices(bankAccountId);
       else setBankAccountForDividends(bankAccountId);
+      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     },
   });
 
@@ -303,6 +306,7 @@ const BankAccountsSection = () => {
                             onComplete={(result) => {
                               Object.assign(editingBankAccount, result);
                               setEditingBankAccount(null);
+                              void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
                             }}
                           />
                         ) : null}
@@ -334,6 +338,7 @@ const BankAccountsSection = () => {
             onComplete={(result) => {
               setBankAccounts((prev) => [...prev, result]);
               setAddingBankAccount(false);
+              void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
             }}
           />
         ) : null}
