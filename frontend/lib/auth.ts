@@ -1,7 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { z } from "zod";
-import env from "../env/client";
 
 // Extend the built-in session types
 declare module "next-auth" {
@@ -59,9 +58,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
           const { email, otp_code } = validatedFields.data;
 
-          const apiUrl = env.NEXT_PUBLIC_API_URL;
-
-          const response = await fetch(`${apiUrl}/api/v1/login`, {
+          // Call our Next.js API route instead of Rails directly
+          const response = await fetch(`${process.env.NEXTAUTH_URL}/api/auth/verify-otp`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -69,7 +67,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             body: JSON.stringify({
               email,
               otp_code,
-              token: env.NEXT_PUBLIC_API_SECRET_TOKEN,
             }),
           });
 
@@ -129,17 +126,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 });
 
 export async function sendOTP(email: string) {
-  const apiUrl = env.NEXT_PUBLIC_API_URL;
-
-  const response = await fetch(`${apiUrl}/api/v1/email_otp`, {
+  // Call our Next.js API route instead of Rails directly
+  const response = await fetch("/api/auth/send-otp", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      email,
-      token: env.NEXT_PUBLIC_API_SECRET_TOKEN,
-    }),
+    body: JSON.stringify({ email }),
   });
 
   if (!response.ok) {

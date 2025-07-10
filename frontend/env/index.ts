@@ -33,6 +33,8 @@ const env = z
     HELPER_HMAC_SECRET: z.string().optional(),
     NEXTAUTH_SECRET: z.string(),
     NEXTAUTH_URL: z.string(),
+    API_SECRET_TOKEN: z.string(),
+    API_URL: z.string(),
   })
   .parse(process.env);
 

@@ -1,25 +1,23 @@
 "use client";
 
 import { getSession } from "next-auth/react";
-import env from "../env/client";
 
 export interface ApiClientOptions {
   method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
   body?: any;
   headers?: Record<string, string>;
   useJWT?: boolean;
-  includeApiToken?: boolean;
 }
 
 export class ApiClient {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = env.NEXT_PUBLIC_API_URL;
+    this.baseUrl = ""; // Use relative URLs for Next.js API routes
   }
 
   async request<T>(endpoint: string, options: ApiClientOptions = {}): Promise<T> {
-    const { method = "GET", body, headers = {}, useJWT = true, includeApiToken = true } = options;
+    const { method = "GET", body, headers = {}, useJWT = true } = options;
 
     const url = `${this.baseUrl}${endpoint}`;
 
@@ -36,17 +34,7 @@ export class ApiClient {
       }
     }
 
-    // Prepare request body and include API token if needed
-    let requestBody: string | undefined;
-    if (body) {
-      const bodyWithToken = includeApiToken
-        ? { ...body, token: env.NEXT_PUBLIC_API_SECRET_TOKEN }
-        : body;
-      requestBody = JSON.stringify(bodyWithToken);
-    } else if (includeApiToken && (method === "POST" || method === "PUT" || method === "PATCH")) {
-      // For requests without body but that need the token
-      requestBody = JSON.stringify({ token: env.NEXT_PUBLIC_API_SECRET_TOKEN });
-    }
+    const requestBody = body ? JSON.stringify(body) : undefined;
 
     const response = await fetch(url, {
       method,
@@ -97,11 +85,11 @@ export class ApiClient {
 // Export a singleton instance
 export const apiClient = new ApiClient();
 
-// Export convenience functions
+// Export convenience functions for OTP operations
 export const sendOTP = async (email: string) => {
-  return apiClient.post("/api/v1/email_otp", { email }, { useJWT: false });
+  return apiClient.post("/api/auth/send-otp", { email }, { useJWT: false });
 };
 
 export const verifyOTPLogin = async (email: string, otp_code: string) => {
-  return apiClient.post("/api/v1/login", { email, otp_code }, { useJWT: false });
+  return apiClient.post("/api/auth/verify-otp", { email, otp_code }, { useJWT: false });
 };
