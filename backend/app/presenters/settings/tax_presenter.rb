@@ -13,8 +13,8 @@ class Settings::TaxPresenter
     {
       birth_date: birth_date&.to_s,
       business_name:,
-      citizenship_country_code:,
-      country_code:,
+      citizenship_country_code: citizenship_country_code || "",
+      country_code: country_code || "",
       city:,
       display_name:,
       business_entity: business_entity?,
@@ -22,14 +22,14 @@ class Settings::TaxPresenter
       tax_classification: UserComplianceInfo.tax_classifications[tax_classification],
       is_foreign: !requires_w9?,
       is_tax_information_confirmed: tax_information_confirmed_at.present?,
-      legal_name:,
+      legal_name: legal_name || "",
       signature: signature || "",
       state:,
       street_address:,
       tax_id:,
       tax_id_status:,
       zip_code:,
-      contractor_for_companies: user.company_workers.where(contract_signed_elsewhere: false).map(&:company).map(&:display_name),
+      contractor_for_companies: user.company_workers.where(contract_signed_elsewhere: false).map(&:company).compact.map(&:display_name).compact,
     }
   end
 
