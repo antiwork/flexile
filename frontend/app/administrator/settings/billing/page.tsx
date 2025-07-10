@@ -14,7 +14,7 @@ import Link from "next/link";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
-import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { request } from "@/utils/request";
 import { loadStripe } from "@stripe/stripe-js";
 import env from "@/env/client";
@@ -25,8 +25,6 @@ import React, { useState } from "react";
 import StripeMicrodepositVerification from "@/app/administrator/settings/StripeMicrodepositVerification";
 import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SettingsBillingSkeleton } from "@/components/SettingsSkeleton";
-import { Suspense } from "react";
 
 const columnHelper = createColumnHelper<RouterOutput["consolidatedInvoices"]["list"][number]>();
 const columns = [
@@ -109,10 +107,10 @@ const stripeAppearance = {
 };
 
 const stripePromise = loadStripe(env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-function BillingContent() {
+export default function Billing() {
   const company = useCurrentCompany();
   const [addingBankAccount, setAddingBankAccount] = useState(false);
-  const { data: stripeData } = useSuspenseQuery({
+  const { data: stripeData } = useQuery({
     queryKey: ["administratorBankAccount", company.id],
     queryFn: async () => {
       const response = await request({
@@ -141,37 +139,44 @@ function BillingContent() {
         </p>
       </hgroup>
 
-      {stripeData.bank_account_last4 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>USD bank account</CardTitle>
-            <CardDescription>Ending in {stripeData.bank_account_last4}</CardDescription>
-            <CardAction>
-              <Button variant="outline" onClick={() => setAddingBankAccount(true)}>
-                Edit
-              </Button>
-            </CardAction>
-          </CardHeader>
-        </Card>
+      {stripeData !== undefined ? (
+        // Re-render Stripe Elements provider when data changes as it considers its options immutable
+        <>
+          {stripeData.bank_account_last4 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>USD bank account</CardTitle>
+                <CardDescription>Ending in {stripeData.bank_account_last4}</CardDescription>
+                <CardAction>
+                  <Button variant="outline" onClick={() => setAddingBankAccount(true)}>
+                    Edit
+                  </Button>
+                </CardAction>
+              </CardHeader>
+            </Card>
+          ) : (
+            <Alert>
+              <InformationCircleIcon />
+              <AlertTitle>You currently do not have a bank account linked.</AlertTitle>
+              <AlertDescription className="flex items-center justify-between">
+                <div>
+                  <p>We'll use this account to debit contractor payments and our monthly fee.</p>
+                  <p>You won't be charged until the first payment.</p>
+                </div>
+                <Button onClick={() => setAddingBankAccount(true)}>Link your bank account</Button>
+              </AlertDescription>
+            </Alert>
+          )}
+          <Elements
+            stripe={stripePromise}
+            options={{ appearance: stripeAppearance, clientSecret: stripeData.client_secret }}
+          >
+            <AddBankAccount open={addingBankAccount} onOpenChange={setAddingBankAccount} />
+          </Elements>
+        </>
       ) : (
-        <Alert>
-          <InformationCircleIcon />
-          <AlertTitle>You currently do not have a bank account linked.</AlertTitle>
-          <AlertDescription className="flex items-center justify-between">
-            <div>
-              <p>We'll use this account to debit contractor payments and our monthly fee.</p>
-              <p>You won't be charged until the first payment.</p>
-            </div>
-            <Button onClick={() => setAddingBankAccount(true)}>Link your bank account</Button>
-          </AlertDescription>
-        </Alert>
+        <BankAccountCardSkeleton />
       )}
-      <Elements
-        stripe={stripePromise}
-        options={{ appearance: stripeAppearance, clientSecret: stripeData.client_secret }}
-      >
-        <AddBankAccount open={addingBankAccount} onOpenChange={setAddingBankAccount} />
-      </Elements>
       <StripeMicrodepositVerification />
       <h3 className="mt-4 text-base font-medium">Billing history</h3>
       <Alert>
@@ -188,14 +193,6 @@ function BillingContent() {
         <Placeholder icon={CircleDollarSign}>Invoices will appear here.</Placeholder>
       )}
     </div>
-  );
-}
-
-export default function Billing() {
-  return (
-    <Suspense fallback={<SettingsBillingSkeleton />}>
-      <BillingContent />
-    </Suspense>
   );
 }
 
