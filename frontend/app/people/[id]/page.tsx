@@ -40,7 +40,7 @@ import FormFields from "../FormFields";
 import RadioButtons from "@/components/RadioButtons";
 import CopyButton from "@/components/CopyButton";
 import { Decimal } from "decimal.js";
-
+import { Skeleton } from "@/components/ui/skeleton";
 const issuePaymentSchema = z.object({
   amountInCents: z.number().min(0),
   description: z.string().min(1, "This field is required"),
@@ -56,7 +56,7 @@ export default function ContractorPage() {
   const trpcUtils = trpc.useUtils();
   const { id } = useParams<{ id: string }>();
   const [user] = trpc.users.get.useSuspenseQuery({ companyId: company.id, id });
-  const { data: contractor, refetch } = trpc.contractors.get.useQuery(
+  const { data: contractor, refetch, isLoading } = trpc.contractors.get.useQuery(
     { companyId: company.id, userId: id },
     { enabled: !!currentUser.roles.administrator },
   );
@@ -137,11 +137,11 @@ export default function ContractorPage() {
       const invoice = await issuePayment.mutateAsync({
         ...(values.equityType === "range"
           ? {
-              ...values,
-              equityPercentage: values.equityRange[0],
-              minAllowedEquityPercentage: values.equityRange[0],
-              maxAllowedEquityPercentage: values.equityRange[1],
-            }
+            ...values,
+            equityPercentage: values.equityRange[0],
+            minAllowedEquityPercentage: values.equityRange[0],
+            maxAllowedEquityPercentage: values.equityRange[1],
+          }
           : values),
         companyId: company.id,
         userExternalId: id,
@@ -173,18 +173,19 @@ export default function ContractorPage() {
     <MainLayout
       title={user.displayName}
       headerActions={
-        contractor ? (
-          <div className="flex items-center gap-3">
-            <Button onClick={() => setIssuePaymentModalOpen(true)}>Issue payment</Button>
-            {contractor.endedAt && !isFuture(contractor.endedAt) ? (
-              <Status variant="critical">Alumni</Status>
-            ) : !contractor.endedAt || isFuture(contractor.endedAt) ? (
-              <Button variant="outline" onClick={() => setEndModalOpen(true)}>
-                End contract
-              </Button>
-            ) : null}
-          </div>
-        ) : null
+        isLoading ? (<HeaderSkeleton />)
+          : contractor ? (
+            <div className="flex items-center gap-3">
+              <Button onClick={() => setIssuePaymentModalOpen(true)}>Issue payment</Button>
+              {contractor.endedAt && !isFuture(contractor.endedAt) ? (
+                <Status variant="critical">Alumni</Status>
+              ) : !contractor.endedAt || isFuture(contractor.endedAt) ? (
+                <Button variant="outline" onClick={() => setEndModalOpen(true)}>
+                  End contract
+                </Button>
+              ) : null}
+            </div>
+          ) : null
       }
     >
       <Dialog open={endModalOpen} onOpenChange={setEndModalOpen}>
@@ -335,7 +336,7 @@ export default function ContractorPage() {
               ) : null}
 
               <small className="text-gray-600">
-                Your'll be able to initiate payment once it has been accepted by the recipient
+                You'll be able to initiate payment once it has been accepted by the recipient
                 {company.requiredInvoiceApprovals > 1 ? " and has sufficient approvals" : ""}.
               </small>
 
@@ -358,22 +359,28 @@ export default function ContractorPage() {
 
       {tabs.length > 1 ? <Tabs links={tabs.map((tab) => ({ label: tab.label, route: `?tab=${tab.tab}` }))} /> : null}
 
-      {(() => {
-        switch (selectedTab) {
-          case "options":
-            return investor ? <OptionsTab investorId={investor.id} userId={id} /> : null;
-          case "shares":
-            return investor ? <SharesTab investorId={investor.id} /> : null;
-          case "convertibles":
-            return investor ? <ConvertiblesTab investorId={investor.id} /> : null;
-          case "exercises":
-            return investor ? <ExercisesTab investorId={investor.id} /> : null;
-          case "dividends":
-            return investor ? <DividendsTab investorId={investor.id} /> : null;
-          case "details":
-            return <DetailsTab userId={id} setCancelModalOpen={setCancelModalOpen} />;
-        }
-      })()}
+      {isLoading ? (
+        <div>
+          <ContractSkeleton />
+          <PersonalInfoSkeleton />
+        </div>
+      ) : (
+        (() => {
+          switch (selectedTab) {
+            case "options":
+              return investor ? <OptionsTab investorId={investor.id} userId={id} /> : null;
+            case "shares":
+              return investor ? <SharesTab investorId={investor.id} /> : null;
+            case "convertibles":
+              return investor ? <ConvertiblesTab investorId={investor.id} /> : null;
+            case "exercises":
+              return investor ? <ExercisesTab investorId={investor.id} /> : null;
+            case "dividends":
+              return investor ? <DividendsTab investorId={investor.id} /> : null;
+            case "details":
+              return <DetailsTab userId={id} setCancelModalOpen={setCancelModalOpen} />;
+          }
+        })())}
     </MainLayout>
   );
 }
@@ -776,5 +783,93 @@ function DividendsTab({ investorId }: { investorId: string }) {
     <DataTable table={table} />
   ) : (
     <Placeholder icon={CircleCheck}>This investor hasn't received any dividends yet.</Placeholder>
+  );
+}
+
+const HeaderSkeleton = () => (
+  <div className="grid gap-3 grid-cols-2">
+    <Skeleton className="h-10 w-36" />
+    <Skeleton className="h-10 w-36" />
+  </div>
+);
+
+const ContractSkeleton = () => (
+  <div className="grid gap-6">
+    <Skeleton className="h-6 w-32" />
+    <div className="grid gap-4">
+      <Skeleton className="h-4 w-24" />
+      <Skeleton className="h-10 w-full" />
+      <Skeleton className="h-4 w-24" />
+      <div className="grid gap-3 md:grid-cols-2">
+        <Skeleton className="h-15" />
+        <Skeleton className="h-15" />
+      </div>
+      <Skeleton className="h-4 w-24" />
+      <Skeleton className="h-10 w-full" />
+    </div>
+    <div className="flex justify-end">
+      <Skeleton className="h-10 w-32" />
+    </div>
+  </div>
+);
+
+
+export function PersonalInfoSkeleton() {
+  return (
+    <div className="grid gap-4">
+      <div>
+        <Skeleton className="h-6 w-32" />
+      </div>
+
+      <div className="space-y-1">
+        <Skeleton className="h-4 w-24" />
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-6 w-6 rounded" />
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="space-y-1">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+        <div className="space-y-1">
+          <Skeleton className="h-4 w-36" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <Skeleton className="h-4 w-72" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="space-y-1">
+          <Skeleton className="h-4 w-56" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+        <div className="space-y-1">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+
+      <div className="space-y-1">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-6 w-30" />
+      </div>
+    </div>
   );
 }
