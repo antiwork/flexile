@@ -12,7 +12,7 @@ export default function SettingsTaxSkeleton() {
       {/* Form content */}
       <div className="grid gap-4">
         {/* Alert banner */}
-        <div className="border-destructive/50 bg-destructive/10 rounded-lg border p-4">
+        <div className="rounded-lg border border-destructive bg-destructive/10 p-4">
           <div className="flex items-start gap-3">
             <Skeleton className="h-5 w-5" />
             <Skeleton className="h-4 w-full max-w-lg" />
@@ -20,26 +20,26 @@ export default function SettingsTaxSkeleton() {
         </div>
 
         {/* Full legal name */}
-        <div>
-          <Skeleton className="mb-2 h-4 w-64" />
+        <div className="grid gap-2">
+          <Skeleton className="h-4 w-64" />
           <Skeleton className="h-10 w-full" />
         </div>
 
         {/* Country of citizenship */}
-        <div>
-          <Skeleton className="mb-2 h-4 w-36" />
+        <div className="grid gap-2">
+          <Skeleton className="h-4 w-36" />
           <Skeleton className="h-10 w-full" />
         </div>
 
         {/* Type of entity (Radio buttons) */}
-        <div>
-          <Skeleton className="mb-2 h-4 w-28" />
-          <div className="flex gap-6">
-            <div className="flex items-center gap-2">
+        <div className="grid gap-2">
+          <Skeleton className="h-4 w-28" />
+          <div className="grid auto-cols-fr gap-3 md:grid-flow-col">
+            <div className="flex cursor-pointer items-center gap-3 rounded-md border border-input bg-transparent p-4">
               <Skeleton className="h-4 w-4 rounded-full" />
               <Skeleton className="h-4 w-16" />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex cursor-pointer items-center gap-3 rounded-md border border-input bg-transparent p-4">
               <Skeleton className="h-4 w-4 rounded-full" />
               <Skeleton className="h-4 w-16" />
             </div>
@@ -48,30 +48,30 @@ export default function SettingsTaxSkeleton() {
 
         {/* Business entity fields (conditional) */}
         <div className="grid auto-cols-fr grid-flow-col items-start gap-3">
-          <div>
-            <Skeleton className="mb-2 h-4 w-36" />
+          <div className="grid gap-2">
+            <Skeleton className="h-4 w-36" />
             <Skeleton className="h-10 w-full" />
           </div>
-          <div>
-            <Skeleton className="mb-2 h-4 w-12" />
+          <div className="grid gap-2">
+            <Skeleton className="h-4 w-12" />
             <Skeleton className="h-10 w-full" />
           </div>
-          <div>
-            <Skeleton className="mb-2 h-4 w-28" />
+          <div className="grid gap-2">
+            <Skeleton className="h-4 w-28" />
             <Skeleton className="h-10 w-full" />
           </div>
         </div>
 
         {/* Country of residence/incorporation */}
-        <div>
-          <Skeleton className="mb-2 h-4 w-48" />
+        <div className="grid gap-2">
+          <Skeleton className="h-4 w-48" />
           <Skeleton className="h-10 w-full" />
         </div>
 
         {/* Tax ID and Birth Date row */}
         <div className="grid items-start gap-3 md:grid-cols-2">
-          <div>
-            <div className="mb-2 flex justify-between gap-2">
+          <div className="grid gap-2">
+            <div className="flex justify-between gap-2">
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-5 w-20 rounded-full" />
             </div>
@@ -80,32 +80,32 @@ export default function SettingsTaxSkeleton() {
               <Skeleton className="h-10 w-10 rounded-l-none" />
             </div>
           </div>
-          <div>
-            <Skeleton className="mb-2 h-4 w-32" />
+          <div className="grid gap-2">
+            <Skeleton className="h-4 w-32" />
             <Skeleton className="h-10 w-full" />
           </div>
         </div>
 
         {/* Street address */}
-        <div>
-          <Skeleton className="mb-2 h-4 w-72" />
+        <div className="grid gap-2">
+          <Skeleton className="h-4 w-72" />
           <Skeleton className="h-10 w-full" />
         </div>
 
         {/* City */}
-        <div>
-          <Skeleton className="mb-2 h-4 w-8" />
+        <div className="grid gap-2">
+          <Skeleton className="h-4 w-8" />
           <Skeleton className="h-10 w-full" />
         </div>
 
         {/* State and ZIP code row */}
         <div className="grid items-start gap-3 md:grid-cols-2">
-          <div>
-            <Skeleton className="mb-2 h-4 w-12" />
+          <div className="grid gap-2">
+            <Skeleton className="h-4 w-12" />
             <Skeleton className="h-10 w-full" />
           </div>
-          <div>
-            <Skeleton className="mb-2 h-4 w-20" />
+          <div className="grid gap-2">
+            <Skeleton className="h-4 w-20" />
             <Skeleton className="h-10 w-full" />
           </div>
         </div>
