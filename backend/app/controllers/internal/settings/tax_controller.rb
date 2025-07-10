@@ -19,7 +19,7 @@ class Internal::Settings::TaxController < Internal::Settings::BaseController
       error_message = UpdateUser.new(user:, update_params:, confirm_tax_info: true).process
 
       if error_message.nil? && should_regenerate_consulting_contract
-        user.company_workers.each do |company_worker|
+        user.company_workers.where(contract_signed_elsewhere: false).each do |company_worker|
           company_administrator = company_worker.company.primary_admin
           contracts << CreateConsultingContract.new(
             company_worker:,

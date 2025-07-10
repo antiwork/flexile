@@ -108,17 +108,15 @@ export default function InvoicePage() {
           ) : null}
           {user.id === invoice.userId ? (
             <>
-              {EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
-                invoice.requiresAcceptanceByPayee ? (
-                  <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
-                ) : (
-                  <Button variant="default" asChild>
-                    <Link href={`/invoices/${invoice.id}/edit`}>
-                      {invoice.status !== "rejected" && <PencilIcon className="h-4 w-4" />}
-                      {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
-                    </Link>
-                  </Button>
-                )
+              {invoice.requiresAcceptanceByPayee ? (
+                <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
+              ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
+                <Button variant="default" asChild>
+                  <Link href={`/invoices/${invoice.id}/edit`}>
+                    {invoice.status !== "rejected" && <PencilIcon className="h-4 w-4" />}
+                    {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
+                  </Link>
+                </Button>
               ) : null}
 
               {isDeletable(invoice) ? (

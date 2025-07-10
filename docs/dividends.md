@@ -183,10 +183,10 @@ AdminMailer.custom(
 company = Company.find(1823)
 dividends = company.dividends
 fees = dividends.map do |dividend|
-  calculated_fee = ((dividend.total_amount_in_cents.to_d * 1.5.to_d/100.to_d) + 50.to_d).round.to_i
-  [15_00, calculated_fee].min
+  calculated_fee = ((dividend.total_amount_in_cents.to_d * 2.9.to_d/100.to_d) + 30.to_d).round.to_i
+  [30_00, calculated_fee].min
 end
-fees.sum / 100.0 # 5490.21
+fees.sum / 100.0
 ```
 
 ### Fund Transfers
