@@ -29,11 +29,11 @@ export default function SettingsTaxSkeleton() {
         <div className="grid gap-2">
           <Skeleton className="h-4 w-28" />
           <div className="grid auto-cols-fr gap-3 md:grid-flow-col">
-            <div className="flex cursor-pointer items-center gap-3 rounded-md border border-input bg-transparent p-4">
+            <div className="border-input flex cursor-pointer items-center gap-3 rounded-md border bg-transparent p-4">
               <Skeleton className="h-4 w-4 rounded-full" />
               <Skeleton className="h-4 w-16" />
             </div>
-            <div className="flex cursor-pointer items-center gap-3 rounded-md border border-input bg-transparent p-4">
+            <div className="border-input flex cursor-pointer items-center gap-3 rounded-md border bg-transparent p-4">
               <Skeleton className="h-4 w-4 rounded-full" />
               <Skeleton className="h-4 w-16" />
             </div>
