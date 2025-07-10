@@ -69,6 +69,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             body: JSON.stringify({
               email,
               otp_code,
+              token: env.NEXT_PUBLIC_API_SECRET_TOKEN,
             }),
           });
 
@@ -135,7 +136,10 @@ export async function sendOTP(email: string) {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({
+      email,
+      token: env.NEXT_PUBLIC_API_SECRET_TOKEN,
+    }),
   });
 
   if (!response.ok) {

@@ -8,6 +8,7 @@ export interface ApiClientOptions {
   body?: any;
   headers?: Record<string, string>;
   useJWT?: boolean;
+  includeApiToken?: boolean;
 }
 
 export class ApiClient {
@@ -18,7 +19,7 @@ export class ApiClient {
   }
 
   async request<T>(endpoint: string, options: ApiClientOptions = {}): Promise<T> {
-    const { method = "GET", body, headers = {}, useJWT = true } = options;
+    const { method = "GET", body, headers = {}, useJWT = true, includeApiToken = true } = options;
 
     const url = `${this.baseUrl}${endpoint}`;
 
@@ -35,7 +36,17 @@ export class ApiClient {
       }
     }
 
-    const requestBody = body ? JSON.stringify(body) : undefined;
+    // Prepare request body and include API token if needed
+    let requestBody: string | undefined;
+    if (body) {
+      const bodyWithToken = includeApiToken
+        ? { ...body, token: env.NEXT_PUBLIC_API_SECRET_TOKEN }
+        : body;
+      requestBody = JSON.stringify(bodyWithToken);
+    } else if (includeApiToken && (method === "POST" || method === "PUT" || method === "PATCH")) {
+      // For requests without body but that need the token
+      requestBody = JSON.stringify({ token: env.NEXT_PUBLIC_API_SECRET_TOKEN });
+    }
 
     const response = await fetch(url, {
       method,

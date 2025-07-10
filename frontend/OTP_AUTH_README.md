@@ -15,6 +15,7 @@ Both systems work in parallel, allowing users to choose their preferred authenti
 ### Backend (Rails)
 - `Api::V1::EmailOtpController` - Sends OTP codes via email
 - `Api::V1::LoginController` - Verifies OTP codes and returns JWT tokens
+- **API Authentication** - All API endpoints require an `API_SECRET_TOKEN` for security
 
 ### Frontend (Next.js)
 - **Auth.js (NextAuth)** - Handles OTP authentication with JWT sessions
@@ -34,14 +35,22 @@ NEXTAUTH_URL=http://localhost:3000
 
 # API configuration for OTP authentication
 NEXT_PUBLIC_API_URL=http://api.flexile.dev  # or https://api.flexile.com for production
+NEXT_PUBLIC_API_SECRET_TOKEN=your-api-secret-token-here
+
+# Backend API token (must match the frontend token)
+API_SECRET_TOKEN=your-api-secret-token-here
 ```
+
+**Important**: The `NEXT_PUBLIC_API_SECRET_TOKEN` (frontend) and `API_SECRET_TOKEN` (backend) must be the same value.
 
 ### API Endpoints
 
 The system uses the following Rails API endpoints:
 
-- `POST /api/v1/email_otp` - Send OTP to email
-- `POST /api/v1/login` - Verify OTP and login
+- `POST /api/v1/email_otp` - Send OTP to email (requires `token` parameter)
+- `POST /api/v1/login` - Verify OTP and login (requires `token` parameter)
+
+All API calls automatically include the required `token` parameter for authentication.
 
 ## Usage
 
@@ -53,9 +62,9 @@ The system uses the following Rails API endpoints:
 ### OTP Login Flow
 
 1. User enters their email address
-2. System sends OTP code via email
+2. System sends OTP code via email (with API token authentication)
 3. User enters the 6-digit code
-4. System verifies code and creates session
+4. System verifies code and creates session (with API token authentication)
 5. User is redirected to dashboard
 
 ### For Developers
@@ -101,21 +110,21 @@ export default function DashboardPage() {
 }
 ```
 
-#### API Calls with JWT
+#### API Calls with JWT and Token
 
-For OTP-authenticated users, you can use the JWT token for API calls:
+For OTP-authenticated users, you can use the JWT token for API calls. The API client automatically includes the required API secret token:
 
 ```typescript
-const { jwt } = useAuthSession();
+import { apiClient } from "@/lib/api-client";
 
-if (jwt) {
-  // Make API call with JWT token
-  const response = await fetch('/api/protected-endpoint', {
-    headers: {
-      'Authorization': `Bearer ${jwt}`,
-    },
-  });
-}
+// Automatically includes both JWT token (if available) and API secret token
+const data = await apiClient.get('/api/protected-endpoint');
+
+// For endpoints that don't need JWT but still need API token
+const publicData = await apiClient.post('/api/public-endpoint', { data }, { useJWT: false });
+
+// To exclude API token (if needed for non-API endpoints)
+const response = await apiClient.post('/some-endpoint', { data }, { includeApiToken: false });
 ```
 
 ## File Structure
@@ -136,7 +145,8 @@ frontend/
 │   └── ProtectedPage.tsx    # Protected page component
 ├── lib/
 │   ├── auth.ts              # NextAuth configuration
-│   └── session.ts           # Unified session management
+│   ├── session.ts           # Unified session management
+│   └── api-client.ts        # API client with token handling
 └── env/
     ├── index.ts             # Server env vars (updated)
     └── client.ts            # Client env vars (updated)
@@ -144,18 +154,28 @@ frontend/
 
 ## Security Considerations
 
-1. **JWT Tokens** - Stored in NextAuth sessions with 30-day expiration
-2. **Rate Limiting** - Backend implements OTP rate limiting
-3. **Session Management** - Both systems use secure session storage
-4. **CSRF Protection** - Maintained for both authentication systems
+1. **API Secret Token** - Required for all backend API calls to prevent unauthorized access
+2. **JWT Tokens** - Stored in NextAuth sessions with 30-day expiration
+3. **Rate Limiting** - Backend implements OTP rate limiting
+4. **Session Management** - Both systems use secure session storage
+5. **CSRF Protection** - Maintained for both authentication systems
 
 ## Troubleshooting
 
 ### Common Issues
 
 1. **Environment Variables** - Ensure all required env vars are set
-2. **API Endpoints** - Verify API URLs are correct for your environment
-3. **CORS** - Ensure Rails API allows requests from frontend domain
+2. **API Token Mismatch** - Verify frontend and backend API tokens match exactly
+3. **API Endpoints** - Verify API URLs are correct for your environment
+4. **CORS** - Ensure Rails API allows requests from frontend domain
+
+### API Token Errors
+
+If you see "Token is required" or "Invalid token" errors:
+1. Check that `NEXT_PUBLIC_API_SECRET_TOKEN` is set in frontend environment
+2. Check that `API_SECRET_TOKEN` is set in backend environment
+3. Verify both tokens have the same value
+4. Restart both frontend and backend after changing environment variables
 
 ### Debug Mode
 
@@ -170,13 +190,15 @@ NEXTAUTH_DEBUG=true
 - Users can be authenticated via either system simultaneously
 - Session state is managed separately for each authentication method
 - The unified session hook provides a consistent interface for both systems
+- API secret token is automatically included in all API calls for security
 
 ## Production Deployment
 
 1. Set production environment variables
 2. Update API URLs to production endpoints
 3. Configure CORS settings in Rails
-4. Test both authentication flows thoroughly
+4. Ensure API secret tokens are securely generated and match between frontend/backend
+5. Test both authentication flows thoroughly
 
 ## Testing
 
@@ -184,5 +206,6 @@ Test both authentication flows:
 
 1. **Clerk Login** - Use `/login` and verify social/email login works
 2. **OTP Login** - Use `/login2` and verify email OTP flow works
-3. **Session Management** - Verify sessions work correctly for both systems
-4. **Protected Routes** - Ensure protected pages work with both auth methods
+3. **API Token Authentication** - Verify all API calls include proper tokens
+4. **Session Management** - Verify sessions work correctly for both systems
+5. **Protected Routes** - Ensure protected pages work with both auth methods
