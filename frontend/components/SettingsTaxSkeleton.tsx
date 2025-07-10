@@ -9,7 +9,7 @@ export default function SettingsTaxSkeleton() {
       </hgroup>
 
       <div className="grid gap-4">
-        <div className="rounded-lg border border-destructive bg-destructive/10 p-4">
+        <div className="border-destructive bg-destructive/10 rounded-lg border p-4">
           <div className="flex items-start gap-3">
             <Skeleton className="h-5 w-5" />
             <Skeleton className="h-4 w-full max-w-lg" />
