@@ -2,7 +2,7 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { z } from "zod";
 
-const API_BASE_URL = process.env.NODE_ENV === "production" ? "https://api.flexile.com" : "http://api.flexile.dev";
+const API_BASE_URL = process.env.NODE_ENV === "production" ? "https://api.flexile.com" : "https://api.flexile.dev";
 const API_SECRET_TOKEN = process.env.API_SECRET_TOKEN;
 
 if (!API_SECRET_TOKEN) {
@@ -50,7 +50,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          const response = await fetch(`${API_BASE_URL}/api/v1/login`, {
+          const response = await fetch(`${API_BASE_URL}/v1/login`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -120,7 +120,7 @@ export const authOptions: NextAuthOptions = {
 // Helper function to send OTP email
 export const sendOtpEmail = async (email: string) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/email_otp`, {
+    const response = await fetch(`${API_BASE_URL}/v1/email_otp`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
