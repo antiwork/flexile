@@ -13,7 +13,7 @@ RSpec.describe Api::V1::ExampleController, type: :controller do
         payload = {
           user_id: user.id,
           email: user.email,
-          exp: 24.hours.from_now.to_i
+          exp: 1.month.from_now.to_i
         }
         JWT.encode(payload, jwt_secret, "HS256")
       end
@@ -42,7 +42,7 @@ RSpec.describe Api::V1::ExampleController, type: :controller do
         payload = {
           user_id: user.id,
           email: user.email,
-          exp: 24.hours.from_now.to_i
+          exp: 1.month.from_now.to_i
         }
         JWT.encode(payload, jwt_secret, "HS256")
       end
@@ -118,7 +118,7 @@ RSpec.describe Api::V1::ExampleController, type: :controller do
         payload = {
           user_id: user.id,
           email: user.email,
-          exp: 24.hours.from_now.to_i
+          exp: 1.month.from_now.to_i
         }
         invalid_jwt_token = JWT.encode(payload, "wrong_secret", "HS256")
         request.headers["Authorization"] = "Bearer #{invalid_jwt_token}"
@@ -135,7 +135,7 @@ RSpec.describe Api::V1::ExampleController, type: :controller do
         non_existent_user_payload = {
           user_id: 999999,
           email: "nonexistent@example.com",
-          exp: 24.hours.from_now.to_i
+          exp: 1.month.from_now.to_i
         }
         jwt_token = JWT.encode(non_existent_user_payload, jwt_secret, "HS256")
         request.headers["Authorization"] = "Bearer #{jwt_token}"
@@ -170,7 +170,7 @@ RSpec.describe Api::V1::ExampleController, type: :controller do
         payload = {
           user_id: user.id,
           email: user.email,
-          exp: 24.hours.from_now.to_i
+          exp: 1.month.from_now.to_i
         }
         jwt_token = JWT.encode(payload, jwt_secret, "HS256")
         request.headers["Authorization"] = "Bearer #{jwt_token}"
@@ -183,7 +183,7 @@ RSpec.describe Api::V1::ExampleController, type: :controller do
       it "rejects JWT token with missing user_id" do
         payload = {
           email: user.email,
-          exp: 24.hours.from_now.to_i
+          exp: 1.month.from_now.to_i
         }
         jwt_token = JWT.encode(payload, jwt_secret, "HS256")
         request.headers["Authorization"] = "Bearer #{jwt_token}"

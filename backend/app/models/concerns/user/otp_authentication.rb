@@ -10,7 +10,7 @@ module User::OtpAuthentication
 
   MAX_OTP_ATTEMPTS = 5
   OTP_ATTEMPT_WINDOW = 10.minutes
-  OTP_DRIFT = 60.seconds
+  OTP_DRIFT = 10.minutes
 
   def verify_otp(code)
     return false if otp_rate_limited?

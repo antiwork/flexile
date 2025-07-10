@@ -172,7 +172,7 @@ RSpec.describe Api::V1::LoginController, type: :controller do
         expect(payload["user_id"]).to eq(user.id)
         expect(payload["email"]).to eq(user.email)
         expect(payload["exp"]).to be > Time.current.to_i
-        expect(payload["exp"]).to be <= 24.hours.from_now.to_i
+        expect(payload["exp"]).to be <= 1.month.from_now.to_i
       end
     end
 

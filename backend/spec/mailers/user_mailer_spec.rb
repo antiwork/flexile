@@ -17,7 +17,7 @@ RSpec.describe UserMailer, type: :mailer do
     it "renders the body" do
       expect(mail.body.encoded).to include("Your one-time password is:")
       expect(mail.body.encoded).to include(user.otp_code)
-      expect(mail.body.encoded).to include("This code will expire in 60 seconds")
+      expect(mail.body.encoded).to include("This code will expire in 10 minutes")
       expect(mail.body.encoded).to include(ApplicationMailer::SUPPORT_EMAIL)
     end
 

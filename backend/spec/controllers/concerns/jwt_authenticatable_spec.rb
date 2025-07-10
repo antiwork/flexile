@@ -29,7 +29,7 @@ RSpec.describe JwtAuthenticatable, type: :controller do
         payload = {
           user_id: user.id,
           email: user.email,
-          exp: 24.hours.from_now.to_i,
+          exp: 1.month.from_now.to_i,
         }
         token = JWT.encode(payload, jwt_secret, "HS256")
 
@@ -72,7 +72,7 @@ RSpec.describe JwtAuthenticatable, type: :controller do
         payload = {
           user_id: 999999,
           email: "nonexistent@example.com",
-          exp: 24.hours.from_now.to_i,
+          exp: 1.month.from_now.to_i,
         }
         token = JWT.encode(payload, jwt_secret, "HS256")
 

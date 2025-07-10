@@ -40,7 +40,7 @@ class Api::V1::LoginController < Api::BaseController
       payload = {
         user_id: user.id,
         email: user.email,
-        exp: 24.hours.from_now.to_i,
+        exp: 1.month.from_now.to_i,
       }
 
       JWT.encode(payload, jwt_secret, "HS256")
