@@ -2,7 +2,7 @@
 
 import { AlertTriangle, Check, Plus, CircleDollarSign } from "lucide-react";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useState, Suspense } from "react";
 import { z } from "zod";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
@@ -20,27 +20,28 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormLabel, FormMessage, FormControl, FormItem, FormField } from "@/components/ui/form";
 import { Card, CardTitle, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { SettingsPayoutsSkeleton } from "@/components/SettingsSkeleton";
-import { Suspense } from "react";
 
 function PayoutsContent() {
   const user = useCurrentUser();
 
   return (
-    <SettingsLayout>
+    <>
       <h2 className="mb-8 text-xl font-medium">Payouts</h2>
       <div className="grid gap-8">
         {user.roles.investor ? <DividendSection /> : null}
         <BankAccountsSection />
       </div>
-    </SettingsLayout>
+    </>
   );
 }
 
 export default function PayoutsPage() {
   return (
-    <Suspense fallback={<SettingsLayout><SettingsPayoutsSkeleton /></SettingsLayout>}>
-      <PayoutsContent />
-    </Suspense>
+    <SettingsLayout>
+      <Suspense fallback={<SettingsPayoutsSkeleton />}>
+        <PayoutsContent />
+      </Suspense>
+    </SettingsLayout>
   );
 }
 
