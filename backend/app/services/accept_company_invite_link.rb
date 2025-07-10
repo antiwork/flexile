@@ -26,12 +26,7 @@ class AcceptCompanyInviteLink
     if company_worker.save
       { success: true, company_worker: company_worker }
     else
-      error_object = if company_worker.errors.any?
-        company_worker
-      else
-        @user
-      end
-      { success: false, error: error_object.errors.full_messages.to_sentence }
+      { success: false, error: company_worker.errors.full_messages.to_sentence }
     end
   end
 end

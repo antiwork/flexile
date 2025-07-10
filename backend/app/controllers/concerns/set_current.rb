@@ -38,9 +38,6 @@ module SetCurrent
         user.update!(signup_invite_link: invite_link) if invite_link
         cookies.delete("invitation_token")
       end
-    end
-
-
 
     Current.user = user
 
