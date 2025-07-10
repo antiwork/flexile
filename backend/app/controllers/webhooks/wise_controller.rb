@@ -16,6 +16,16 @@ class Webhooks::WiseController < ApplicationController
     render json: { success: true }
   end
 
+  def payout_failure
+    WisePayoutFailureJob.perform_async(request.request_parameters.to_hash)
+    render json: { success: true }
+  end
+
+  def refund
+    WiseRefundJob.perform_async(request.request_parameters.to_hash)
+    render json: { success: true }
+  end
+
   private
     def validate_webhook
       return if Wise::WebhookValidator.new(request.headers["X-Signature-SHA256"], request.raw_post).valid?
