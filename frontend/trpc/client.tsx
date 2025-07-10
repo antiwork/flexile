@@ -1,5 +1,6 @@
 "use client";
 import { useAuth } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import { type QueryClient } from "@tanstack/react-query";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
@@ -15,11 +16,30 @@ import { createClient } from "./shared";
 export const trpc = createTRPCReact<AppRouter>();
 
 const GetUserData = ({ children }: { children: React.ReactNode }) => {
-  const { isSignedIn, userId } = useAuth();
+  const { isSignedIn, userId } = useAuth(); // Clerk
+  const { data: session } = useSession(); // NextAuth
   const { user, login, logout } = useUserStore();
+
+  // Check if user is authenticated via either method
+  const isAuthenticated = isSignedIn || !!session?.user;
+  const authId = userId || session?.user?.email;
+
   const { data } = useQuery({
-    queryKey: ["currentUser", userId],
+    queryKey: ["currentUser", authId],
     queryFn: async (): Promise<unknown> => {
+      // If using NextAuth session, fetch user data using JWT
+      if (session?.user && 'jwt' in session.user) {
+        const response = await request({
+          url: "/api/user-data",
+          method: "POST",
+          accept: "json",
+          jsonData: { jwt: (session.user as any).jwt },
+          assertOk: true,
+        });
+        return await response.json();
+      }
+
+      // Otherwise use Clerk authentication
       const response = await request({
         url: internal_current_user_data_path(),
         accept: "json",
@@ -28,13 +48,15 @@ const GetUserData = ({ children }: { children: React.ReactNode }) => {
       });
       return await response.json();
     },
-    enabled: !!isSignedIn,
+    enabled: !!isAuthenticated,
   });
+
   useEffect(() => {
-    if (isSignedIn && data) login(data);
+    if (isAuthenticated && data) login(data);
     else logout();
-  }, [isSignedIn, data]);
-  if (isSignedIn == null || (isSignedIn && !user)) return null;
+  }, [isAuthenticated, data, login, logout]);
+
+  if (isAuthenticated == null || (isAuthenticated && !user)) return null;
   return children;
 };
 
