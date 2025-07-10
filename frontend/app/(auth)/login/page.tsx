@@ -109,7 +109,7 @@ export default function LoginPage() {
 
   return (
     <SimpleLayout hideHeader>
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Login with email</CardTitle>
@@ -153,10 +153,6 @@ export default function LoginPage() {
               </form>
             ) : (
               <div className="space-y-4">
-                <div className="text-sm text-gray-600">
-                  Verification code sent to: <strong>{email}</strong>
-                </div>
-
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="otp">Verification code</Label>
@@ -172,7 +168,7 @@ export default function LoginPage() {
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Verifying..." : "Verify & login"}
+                    {loading ? "Verifying..." : "Login"}
                   </Button>
                 </form>
 
