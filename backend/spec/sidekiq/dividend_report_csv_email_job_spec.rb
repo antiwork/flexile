@@ -8,7 +8,7 @@ RSpec.describe DividendReportCsvEmailJob, :vcr do
       create(
         :dividend_round,
         company:,
-        issued_at: Time.current.beginning_of_month + 2.days
+        issued_at: Time.current.last_month.beginning_of_month + 2.days
       )
     end
     let(:user) { create(:user) }
@@ -21,7 +21,7 @@ RSpec.describe DividendReportCsvEmailJob, :vcr do
         company_investor:,
         status: Dividend::PAID,
         total_amount_in_cents: 100_00,
-        paid_at: Time.current.beginning_of_month + 3.days
+        paid_at: Time.current.last_month.beginning_of_month + 3.days
       )
     end
 
@@ -41,7 +41,7 @@ RSpec.describe DividendReportCsvEmailJob, :vcr do
         described_class.new.perform(recipients)
       end.to have_enqueued_mail(AdminMailer, :custom).with(
         to: recipients,
-        subject: "Flexile Dividend Report CSV #{Time.current.year}-#{Time.current.month.to_s.rjust(2, '0')}",
+        subject: "Flexile Dividend Report CSV #{Time.current.last_month.year}-#{Time.current.last_month.month.to_s.rjust(2, '0')}",
         body: "Attached",
         attached: hash_including("DividendReport.csv" => DividendReportCsv.new([dividend_round]).generate)
       )
@@ -51,7 +51,7 @@ RSpec.describe DividendReportCsvEmailJob, :vcr do
       other_round = create(
         :dividend_round,
         company: company,
-        issued_at: Time.current.beginning_of_month - 2.months
+        issued_at: Time.current.last_month.beginning_of_month - 2.months
       )
       create(:dividend, dividend_round: other_round, company:, company_investor:, status: Dividend::PAID)
 
@@ -59,15 +59,15 @@ RSpec.describe DividendReportCsvEmailJob, :vcr do
         described_class.new.perform(recipients)
       end.to have_enqueued_mail(AdminMailer, :custom).with(
         to: recipients,
-        subject: "Flexile Dividend Report CSV #{Time.current.year}-#{Time.current.month.to_s.rjust(2, '0')}",
+        subject: "Flexile Dividend Report CSV #{Time.current.last_month.year}-#{Time.current.last_month.month.to_s.rjust(2, '0')}",
         body: "Attached",
         attached: hash_including("DividendReport.csv" => DividendReportCsv.new([dividend_round]).generate)
       )
     end
 
     it "orders dividend rounds by issued_at ascending" do
-      round1 = create(:dividend_round, company:, issued_at: Time.current.beginning_of_month + 1.day)
-      round2 = create(:dividend_round, company:, issued_at: Time.current.beginning_of_month + 5.days)
+      round1 = create(:dividend_round, company:, issued_at: Time.current.last_month.beginning_of_month + 1.day)
+      round2 = create(:dividend_round, company:, issued_at: Time.current.last_month.beginning_of_month + 5.days)
       create(:dividend, dividend_round: round1, company:, company_investor:, status: Dividend::PAID)
       create(:dividend, dividend_round: round2, company:, company_investor:, status: Dividend::PAID)
 
@@ -75,7 +75,7 @@ RSpec.describe DividendReportCsvEmailJob, :vcr do
         described_class.new.perform(recipients)
       end.to have_enqueued_mail(AdminMailer, :custom).with(
         to: recipients,
-        subject: "Flexile Dividend Report CSV #{Time.current.year}-#{Time.current.month.to_s.rjust(2, '0')}",
+        subject: "Flexile Dividend Report CSV #{Time.current.last_month.year}-#{Time.current.last_month.month.to_s.rjust(2, '0')}",
         body: "Attached",
         attached: hash_including("DividendReport.csv" => DividendReportCsv.new([round1, dividend_round, round2]).generate)
       )

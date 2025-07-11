@@ -7,8 +7,8 @@ class DividendReportCsvEmailJob
   def perform(recipients, year = nil, month = nil)
     return unless Rails.env.production?
 
-    target_year = year || Time.current.year
-    target_month = month || Time.current.month
+    target_year = year || Time.current.last_month.year
+    target_month = month || Time.current.last_month.month
 
     start_date = Date.new(target_year, target_month, 1)
     end_date = start_date.end_of_month
