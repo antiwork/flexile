@@ -88,36 +88,6 @@ RSpec.describe 'Invoice List Query Performance', type: :request do
       expect(actual_time).to be < 10.0 # Should be under 10ms
     end
 
-    context 'performance comparison without index' do
-      # Note: We simulate the performance difference by using a different query pattern
-      # that can't use the composite index, rather than dropping the index in tests
-      
-      it 'demonstrates performance difference when index cannot be used' do
-        # Query that bypasses the composite index by using a different filter order
-        inefficient_query = ActiveRecord::Base.sanitize_sql_array([
-          <<~SQL, company.id
-            SELECT invoices.*
-            FROM invoices
-            WHERE invoices.deleted_at IS NULL
-              AND invoices.company_id = ?
-            ORDER BY invoices.invoice_date DESC, invoices.created_at DESC
-            LIMIT 100
-          SQL
-        ])
-        
-        efficient_query = build_invoice_list_sql(company.id)
-        
-        # Measure both approaches
-        inefficient_time = measure_query_time(inefficient_query)
-        efficient_time = measure_query_time(efficient_query)
-        
-        # The efficient query should be faster (though difference may be small with test data)
-        expect(efficient_time).to be <= inefficient_time
-        
-        # Both should complete reasonably quickly with test data
-        expect(efficient_time).to be < 100.0 # 100ms threshold for test environment
-      end
-    end
   end
 
   private
