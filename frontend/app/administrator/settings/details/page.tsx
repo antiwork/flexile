@@ -41,7 +41,6 @@ export default function DetailsMain() {
   );
 }
 
-
 function Details() {
   const company = useCurrentCompany();
   const [settings] = trpc.companies.settings.useSuspenseQuery({ companyId: company.id });
