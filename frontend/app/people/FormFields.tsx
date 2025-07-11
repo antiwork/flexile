@@ -34,12 +34,7 @@ export default function FormFields() {
           <FormItem>
             <FormLabel>Role</FormLabel>
             <FormControl>
-              <RoleSelect
-                value={field.value}
-                onChange={field.onChange}
-                options={uniqueRoles}
-                placeholder="Select or type a role"
-              />
+              <RoleSelect value={field.value} onChange={field.onChange} options={uniqueRoles} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -94,10 +89,9 @@ interface RoleSelectProps {
   value: string;
   onChange: (value: string) => void;
   options: string[];
-  placeholder?: string;
 }
 
-function RoleSelect({ value, onChange, options, placeholder = "Select or type" }: RoleSelectProps) {
+function RoleSelect({ value, onChange, options }: RoleSelectProps) {
   const [open, setOpen] = useState(false);
 
   const filteredOptions = useMemo(() => {
@@ -118,12 +112,11 @@ function RoleSelect({ value, onChange, options, placeholder = "Select or type" }
       <PopoverTrigger asChild>
         <Input
           value={value}
-          onChange={(e) => {
-            onChange(e.target.value);
-          }}
+          onChange={(e) => onChange(e.target.value)}
           onClick={() => setOpen(true)}
-          placeholder={placeholder}
+          placeholder="Select or type a role"
           type="text"
+          name="role"
         />
       </PopoverTrigger>
       <PopoverContent
