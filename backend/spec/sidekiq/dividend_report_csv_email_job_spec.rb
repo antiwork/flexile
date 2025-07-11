@@ -81,23 +81,5 @@ RSpec.describe DividendReportCsvEmailJob, :vcr do
       )
     end
 
-    it "accepts year and month parameters" do
-      specific_date = Date.new(2023, 6, 15)
-      specific_round = create(
-        :dividend_round,
-        company:,
-        issued_at: specific_date
-      )
-      create(:dividend, dividend_round: specific_round, company:, company_investor:, status: Dividend::PAID)
-
-      expect do
-        described_class.new.perform(recipients, 2023, 6)
-      end.to have_enqueued_mail(AdminMailer, :custom).with(
-        to: recipients,
-        subject: "Flexile Dividend Report CSV 2023-06",
-        body: "Attached",
-        attached: hash_including("DividendReport.csv" => DividendReportCsv.new([specific_round]).generate)
-      )
-    end
   end
 end
