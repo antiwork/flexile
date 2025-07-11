@@ -34,7 +34,7 @@ export default function FormFields() {
           <FormItem>
             <FormLabel>Role</FormLabel>
             <FormControl>
-              <RoleSelect value={field.value} onChange={field.onChange} options={uniqueRoles} />
+              <RoleSelect {...field} options={uniqueRoles} />
             </FormControl>
             <FormMessage />
           </FormItem>
