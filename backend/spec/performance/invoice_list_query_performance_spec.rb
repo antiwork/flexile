@@ -61,15 +61,17 @@ RSpec.describe 'Invoice List Query Performance', type: :request do
 
     it 'efficiently handles the exact TRPC query pattern' do
       # Simulate the exact query from frontend/trpc/routes/invoices.ts
-      query_execution_plan = ActiveRecord::Base.connection.execute(<<~SQL).to_a
-        EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) 
-        SELECT invoices.*
-        FROM invoices
-        WHERE invoices.company_id = #{company.id}
-          AND invoices.deleted_at IS NULL
-        ORDER BY invoices.invoice_date DESC, invoices.created_at DESC
-        LIMIT 100
-      SQL
+      query_sql = ActiveRecord::Base.sanitize_sql_array([
+        <<~SQL, company.id
+          SELECT invoices.*
+          FROM invoices
+          WHERE invoices.company_id = ?
+            AND invoices.deleted_at IS NULL
+          ORDER BY invoices.invoice_date DESC, invoices.created_at DESC
+          LIMIT 100
+        SQL
+      ])
+      query_execution_plan = ActiveRecord::Base.connection.execute("EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) #{query_sql}").to_a
       
       plan_data = JSON.parse(query_execution_plan.first['QUERY PLAN'])
       execution_plan = plan_data[0]['Plan']
@@ -92,14 +94,16 @@ RSpec.describe 'Invoice List Query Performance', type: :request do
       
       it 'demonstrates performance difference when index cannot be used' do
         # Query that bypasses the composite index by using a different filter order
-        inefficient_query = <<~SQL
-          SELECT invoices.*
-          FROM invoices
-          WHERE invoices.deleted_at IS NULL
-            AND invoices.company_id = #{company.id}
-          ORDER BY invoices.invoice_date DESC, invoices.created_at DESC
-          LIMIT 100
-        SQL
+        inefficient_query = ActiveRecord::Base.sanitize_sql_array([
+          <<~SQL, company.id
+            SELECT invoices.*
+            FROM invoices
+            WHERE invoices.deleted_at IS NULL
+              AND invoices.company_id = ?
+            ORDER BY invoices.invoice_date DESC, invoices.created_at DESC
+            LIMIT 100
+          SQL
+        ])
         
         efficient_query = build_invoice_list_sql(company.id)
         
