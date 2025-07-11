@@ -1,0 +1,35 @@
+name: Checks
+
+on:
+  push:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  typecheck:
+    runs-on: ubicloud-standard-2
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build setup
+        uses: ./.github/common/
+
+      - name: Run TypeScript type checking
+        run: pnpm run typecheck
+
+  lint:
+    runs-on: ubicloud-standard-2
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build setup
+        uses: ./.github/common/
+
+      - name: Run linting
+        run: bin/lint

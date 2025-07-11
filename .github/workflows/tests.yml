@@ -19,18 +19,6 @@ env:
   WISE_PROFILE_ID: ${{ secrets.WISE_PROFILE_ID }}
 
 jobs:
-  typecheck:
-    runs-on: ubicloud-standard-2
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build setup
-        uses: ./.github/common/
-
-      - name: Run TypeScript type checking
-        run: pnpm run typecheck
-
   rspec:
     runs-on: ubicloud-standard-2
 
