@@ -153,9 +153,8 @@ test.describe.serial("Onboarding checklist", () => {
     await page.getByRole("link", { name: "Back to app" }).click();
 
     await expect(page.getByText("You are all set!")).toBeVisible();
-
-    await expect(page.getByRole("button", { name: "X" })).toBeVisible();
     await expect(page.getByText("You are ready to send your first invoice.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Close" })).toBeVisible();
   });
 
   test("hides onboarding checklist after completion and allows worker to send first invoice", async ({ page }) => {
@@ -182,7 +181,7 @@ test.describe.serial("Onboarding checklist", () => {
     await page.getByRole("row").getByText("Pay now").click();
 
     await expect(page.getByText("You are all set!")).toBeVisible();
-    await expect(page.getByRole("button", { name: "X" })).toBeVisible();
     await expect(page.getByText("Everything is in place. Time to flex.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Close" })).toBeVisible();
   });
 });

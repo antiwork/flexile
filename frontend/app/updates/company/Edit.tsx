@@ -75,10 +75,7 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
     },
   });
 
-  const submit = form.handleSubmit(async (values, event) => {
-    if (event?.target instanceof HTMLElement && event.target.id === "preview") {
-      return saveMutation.mutateAsync({ preview: true, values });
-    }
+  const submit = form.handleSubmit(async () => {
     setModalOpen(true);
   });
 
@@ -96,11 +93,11 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
             ) : (
               <>
                 <MutationStatusButton
-                  type="submit"
+                  type="button"
                   mutation={saveMutation}
-                  id="preview"
                   idleVariant="outline"
                   loadingText="Saving..."
+                  onClick={() => form.handleSubmit((values) => saveMutation.mutateAsync({ values, preview: true }))()}
                 >
                   <ArrowTopRightOnSquareIcon className="size-4" />
                   Preview
