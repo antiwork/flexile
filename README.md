@@ -7,12 +7,31 @@ Equity for everyone.
 
 ## Setup
 
-You'll need:
+### Prerequisites
 
 - [Docker](https://docs.docker.com/engine/install/)
-- [Node.js](https://nodejs.org/en/download) (see [`.node-version`](.node-version))
+- [Node.js](https://nodejs.org/en/download) 22.14.0 (see [`.node-version`](.node-version))
+- [Ruby](https://www.ruby-lang.org/en/downloads/) 3.4.3 (see [`.ruby-version`](.ruby-version))
+- [pnpm](https://pnpm.io/installation) 10.8.0
 
-The easiest way to set up the development environment is to use the [`bin/setup` script](bin/setup), but feel free to run the commands in it yourself to:
+### Quick Setup with Makefile
+
+The easiest way to set up the development environment is using the Makefile:
+
+```bash
+# Check all system requirements
+make check-all
+
+# Install everything and set up the project
+make install
+
+# Start development servers
+make dev
+```
+
+### Manual Setup
+
+Alternatively, you can use the [`bin/setup` script](bin/setup) or run the commands manually:
 
 - Set up Ruby (ideally using `rbenv`/`rvm`) and PostgreSQL
 - Install dependencies using `pnpm i` and `cd backend && bundle i`
@@ -21,11 +40,76 @@ The easiest way to set up the development environment is to use the [`bin/setup`
 
 ## Running the App
 
-You can start the local app using the [`bin/dev` script](bin/dev) - or feel free to run the commands contained in it yourself.
+### Using Makefile (Recommended)
+
+```bash
+# Start all development servers
+make dev
+
+# Start only Docker services (database, redis, nginx)
+make local
+
+# Stop all services
+make stop_local
+```
+
+### Using Scripts
+
+You can also start the local app using the [`bin/dev` script](bin/dev).
 
 Once the local services are up and running, the application will be available at `https://flexile.dev`
 
 Check [the seeds](backend/config/data/seed_templates/gumroad.json) for default data created during setup.
+
+## Makefile Commands
+
+Here are the most important commands available:
+
+### Development
+- `make dev` - 🚀 Start all development servers
+- `make local` - 🏠 Start local development environment (Docker only)
+- `make stop_local` - 🛑 Stop local development environment
+
+### Setup & Installation
+- `make install` - 🚀 Complete installation process
+- `make check-all` - 🔍 Run all system checks
+- `make install-deps` - 📥 Install Node.js and Ruby dependencies
+
+### Code Quality
+- `make lint` - 🧹 Run all linters
+- `make lint-js` - 📝 Run JavaScript/TypeScript linters
+- `make lint-ruby` - 💎 Run Ruby linters
+- `make typecheck` - 🔍 Run TypeScript type checking
+- `make format` - Format all code with Prettier
+
+### Testing
+- `make test` - 🧪 Run all tests
+- `make test-backend` - 🧪 Run Rails tests
+- `make test-e2e` - 🎭 Run Playwright E2E tests
+
+### Database
+- `make db-migrate` - 🔄 Run database migrations
+- `make db-seed` - Seed the database
+- `make db-reset` - Reset the database
+- `make db-console` - Open database console
+
+### Docker
+- `make docker-up` - 🐳 Start Docker services
+- `make docker-down` - 🛑 Stop Docker services
+- `make docker-logs` - 📋 Show Docker service logs
+- `make docker-shell-postgres` - 🐘 Open PostgreSQL shell
+- `make docker-shell-redis` - 🔴 Open Redis CLI
+
+### Build & Deploy
+- `make build` - 🏗️ Build production assets
+- `make ghpr` - 🔀 Create a GitHub pull request
+
+### Utilities
+- `make clean` - 🧹 Clean all generated files
+- `make logs` - Tail development logs
+- `make security-check` - 🔐 Run security checks
+
+Run `make help` to see all available commands with descriptions.
 
 ## Common Issues / Debugging
 
