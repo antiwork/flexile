@@ -26,13 +26,13 @@ export default function PayoutsPage() {
 
   return (
     <SettingsLayout>
-      <h2 className="mb-8 text-xl font-medium">Payouts</h2>
-      <div className="grid gap-8">
-        <Suspense fallback={<PayoutSkeleton />}>
+      <Suspense fallback={<PayoutSkeleton />}>
+        <h2 className="mb-8 text-xl font-medium">Payouts</h2>
+        <div className="grid gap-8">
           {user.roles.investor ? <DividendSection /> : null}
           <BankAccountsSection />
-        </Suspense>
-      </div>
+        </div>
+      </Suspense>
     </SettingsLayout>
   );
 }
@@ -349,9 +349,10 @@ const BankAccountsSection = () => {
 
 function PayoutSkeleton() {
   return (
-      <div className="h-32 w-full p-4 flex flex-col justify-between border border-muted shadow-muted rounded-lg">
-        <Skeleton className="h-6 w-32" />
-        <Skeleton className="h-10 w-48" />
-      </div>
+    <div className="grid gap-8">
+      <Skeleton className="h-8 w-80" />
+      <Skeleton className="h-40 w-full" />
+      <Skeleton className="h-10 w-32" />
+    </div>
   );
 }

@@ -85,8 +85,8 @@ export default function SettingsPage() {
   const submit = form.handleSubmit((values) => saveMutation.mutate(values));
 
   return (
-    <div className="grid gap-8">
-      <Suspense fallback={<WorkspaceSettingSkeleton />}>
+    <Suspense fallback={<WorkspaceSettingSkeleton />}>
+      <div className="grid gap-8">
         <hgroup>
           <h2 className="mb-1 text-xl font-bold">Workspace settings</h2>
           <p className="text-muted-foreground text-base">
@@ -180,11 +180,10 @@ export default function SettingsPage() {
             <CardContent>{company.flags.includes("quickbooks") ? <QuickbooksIntegration /> : null}</CardContent>
           </Card>
         ) : null}
-      </Suspense>
-    </div>
+      </div>
+    </Suspense>
   );
 }
-
 
 function WorkspaceSettingSkeleton() {
   return (
@@ -207,8 +206,8 @@ function WorkspaceSettingSkeleton() {
           <Skeleton className="h-6 w-32" />
           <Skeleton className="h-8 w-full" />
         </div>
-        <Skeleton className="h-10 w-30" />
       </div>
+      <Skeleton className="h-10 w-32" />
     </div>
   );
 }

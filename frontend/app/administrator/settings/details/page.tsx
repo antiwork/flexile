@@ -222,49 +222,27 @@ function Details() {
 
 function DetailsSkeleton() {
   return (
-    <div className="space-y-8 md:space-y-4">
-      <div className="space-y-2">
-        <Skeleton className="h-6 w-28" />
-        <Skeleton className="mb-8 h-4 w-full max-w-md" />
+    <div className="grid gap-8">
+      <Skeleton className="h-8 w-64" />
+      <div className="space-y-4">
+        <Skeleton className="h-6 w-32" />
+        <Skeleton className="h-8 w-full" />
       </div>
-
-      <div className="mt-4 space-y-2">
-        <Skeleton className="h-4 w-36" />
-        <Skeleton className="h-10 w-full" />
+      <div className="space-y-4">
+        <Skeleton className="h-6 w-32" />
+        <Skeleton className="h-8 w-full" />
       </div>
-
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-10" />
-        <Skeleton className="h-10 w-full" />
-      </div>
-
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-28" />
-        <Skeleton className="h-10 w-full" />
-      </div>
-
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-[260px]" />
-        <Skeleton className="h-10 w-full" />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-10 w-full" />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="space-y-4">
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-8 w-full" />
         </div>
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-12" />
-          <Skeleton className="h-10 w-full" />
-        </div>
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-20" />
-          <Skeleton className="h-10 w-full" />
+        <div className="space-y-4">
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-8 w-full" />
         </div>
       </div>
-
-      <Skeleton className="h-4 w-[280px]" />
-      <Skeleton className="mt-6 h-10 w-32 rounded-md" />
+      <Skeleton className="h-10 w-32" />
     </div>
   );
 }
