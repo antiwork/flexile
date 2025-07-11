@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { navLinks as equityNavLinks } from "@/app/equity";
+import { navLinks as equityNavLinks } from "@/app/(dashboard)/equity";
 import { currentUserSchema } from "@/models/user";
 import { assertDefined } from "@/utils/assert";
 import { internal_current_user_data_url } from "@/utils/routes";

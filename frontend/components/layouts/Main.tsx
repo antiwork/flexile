@@ -1,3 +1,5 @@
+"use client";
+
 import { SignOutButton } from "@clerk/nextjs";
 import {
   Rss,
@@ -46,27 +48,16 @@ import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
 import type { Route } from "next";
-import { useIsActionable } from "@/app/invoices";
+import { useIsActionable } from "@/app/(dashboard)/invoices";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
-import { navLinks as equityNavLinks } from "@/app/equity";
+import { navLinks as equityNavLinks } from "@/app/(dashboard)/equity";
 import { GettingStarted } from "@/components/GettingStarted";
 import { storageKeys } from "@/models/constants";
+import { useLayoutStore } from "./LayoutStore";
 
-export default function MainLayout({
-  children,
-  title,
-  subtitle,
-  headerActions,
-  subheader,
-  footer,
-}: {
-  children: React.ReactNode;
-  title?: React.ReactNode;
-  subtitle?: React.ReactNode;
-  headerActions?: React.ReactNode;
-  subheader?: React.ReactNode;
-  footer?: React.ReactNode;
-}) {
+export default function MainLayout({ children }: { children: React.ReactNode }) {
+  const title = useLayoutStore((state) => state.title);
+  const headerActions = useLayoutStore((state) => state.headerActions);
   const user = useCurrentUser();
 
   const queryClient = useQueryClient();
@@ -173,17 +164,14 @@ export default function MainLayout({
                         <SidebarTrigger className="md:hidden" />
                         <h1 className="text-sm font-bold">{title}</h1>
                       </div>
-                      {subtitle}
                     </div>
                     {headerActions ? <div className="flex items-center gap-3 print:hidden">{headerActions}</div> : null}
                   </div>
                 </div>
               </header>
-              {subheader ? <div className="bg-gray-200/50">{subheader}</div> : null}
             </div>
             <div className="mx-3 flex flex-col gap-6">{children}</div>
           </main>
-          {footer ? <div className="mt-auto">{footer}</div> : null}
         </div>
       </SidebarInset>
     </SidebarProvider>
