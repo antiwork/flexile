@@ -9,7 +9,7 @@ class DividendReportCsvEmailJob
 
     target_year = year || Time.current.year
     target_month = month || Time.current.month
-    
+
     start_date = Date.new(target_year, target_month, 1)
     end_date = start_date.end_of_month
 

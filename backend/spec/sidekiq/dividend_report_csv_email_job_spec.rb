@@ -54,14 +54,14 @@ RSpec.describe DividendReportCsvEmailJob, :vcr do
         issued_at: Time.current.beginning_of_month - 2.months
       )
       create(:dividend, dividend_round: other_round, company:, company_investor:, status: Dividend::PAID)
-      
+
       current_month_round = create(
         :dividend_round,
         company: company,
         issued_at: Time.current.beginning_of_month + 2.days
       )
       create(:dividend, dividend_round: current_month_round, company:, company_investor:, status: Dividend::PAID)
-      
+
       expect do
         described_class.new.perform(recipients)
       end.to have_enqueued_mail(AdminMailer, :custom).with(
@@ -128,7 +128,7 @@ RSpec.describe DividendReportCsvEmailJob, :vcr do
     it "filters correctly by specified year and month" do
       june_round = create(:dividend_round, company:, issued_at: Date.new(2023, 6, 15))
       july_round = create(:dividend_round, company:, issued_at: Date.new(2023, 7, 15))
-      
+
       create(:dividend, dividend_round: june_round, company:, company_investor:, status: Dividend::PAID)
       create(:dividend, dividend_round: july_round, company:, company_investor:, status: Dividend::PAID)
 
@@ -136,7 +136,7 @@ RSpec.describe DividendReportCsvEmailJob, :vcr do
         described_class.new.perform(recipients, 2023, 6)
       end.to have_enqueued_mail(AdminMailer, :custom).with(
         to: recipients,
-        subject: "Flexile Dividend Report CSV", 
+        subject: "Flexile Dividend Report CSV",
         body: "Attached",
         attached: hash_including("DividendReport.csv" => DividendReportCsv.new([june_round]).generate)
       )
