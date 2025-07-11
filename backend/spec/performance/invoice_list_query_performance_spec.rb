@@ -40,20 +40,20 @@ RSpec.describe 'Invoice List Query Performance', type: :request do
       expect(execution_time).to be < 50.0 # 50ms threshold
     end
 
-    it 'maintains consistent performance regardless of company size' do
+    it "maintains consistent performance regardless of company size" do
       # Test with different data sizes to ensure O(log n) performance
       times = []
-      
+
       [100, 200, 400].each do |invoice_count|
         # Clean up and create specific number of invoices
-        company.invoices.destroy_all
+        company.invoices.delete_all  # More efficient than destroy_all
         create_test_invoices(invoice_count)
-        
+
         query_sql = build_invoice_list_sql(company.id)
         time = measure_query_time(query_sql)
         times << time
       end
-      
+
       # With proper indexing, query time should not increase linearly
       # Even with 4x more data, time should not increase significantly
       expect(times.last).to be < (times.first * 2)
@@ -121,46 +121,46 @@ RSpec.describe 'Invoice List Query Performance', type: :request do
   def create_test_invoices(count)
     # Create invoices with varied dates to make the test realistic
     count.times do |i|
-      create(:invoice, 
+      create(:invoice,
         company: company,
         company_contractor: company_contractor,
         invoice_date: i.days.ago.to_date,
         created_at: i.days.ago,
-        deleted_at: nil
-      )
+        deleted_at: nil)
     end
-    
+
     # Add some deleted invoices to test the deleted_at filter
     5.times do |i|
       create(:invoice,
-        company: company, 
+        company: company,
         company_contractor: company_contractor,
-        deleted_at: i.days.ago
-      )
+        deleted_at: i.days.ago)
     end
   end
 
   def build_invoice_list_sql(company_id)
-    <<~SQL
-      SELECT invoices.*
-      FROM invoices
-      WHERE invoices.company_id = #{company_id}
-        AND invoices.deleted_at IS NULL
-      ORDER BY invoices.invoice_date DESC, invoices.created_at DESC
-      LIMIT 100
-    SQL
+    ActiveRecord::Base.sanitize_sql_array([
+      <<~SQL, company_id
+        SELECT invoices.*
+        FROM invoices
+        WHERE invoices.company_id = ?
+          AND invoices.deleted_at IS NULL
+        ORDER BY invoices.invoice_date DESC, invoices.created_at DESC
+        LIMIT 100
+      SQL
+    ])
   end
 
   def capture_execution_plan(sql)
     result = ActiveRecord::Base.connection.execute("EXPLAIN #{sql}")
-    result.map { |row| row['QUERY PLAN'] }.join("\n")
+    result.map { |row| row["QUERY PLAN"] }.join("\n")
   end
 
   def measure_query_time(sql)
     start_time = Time.current
     ActiveRecord::Base.connection.execute(sql)
     end_time = Time.current
-    
+
     ((end_time - start_time) * 1000).round(2) # Return time in milliseconds
   end
 
