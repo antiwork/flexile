@@ -347,12 +347,13 @@ const BankAccountsSection = () => {
   );
 };
 
-const PayoutSkeleton = () => (
-  <div className="grid gap-6">
-    <div className="h-32 w-full p-4 flex flex-col justify-between bg-muted/20 rounded-lg">
-      <Skeleton className="h-6 w-32 bg-muted-foreground/5" />
-      <Skeleton className="h-10 w-48 bg-muted-foreground/10" />
+function PayoutSkeleton() {
+  return (
+    <div className="grid gap-6">
+      <div className="h-32 w-full p-4 flex flex-col justify-between bg-muted/20 rounded-lg">
+        <Skeleton className="h-6 w-32 bg-muted-foreground/5" />
+        <Skeleton className="h-10 w-48 bg-muted-foreground/10" />
+      </div>
     </div>
-  </div>
-);
-
+  );
+}

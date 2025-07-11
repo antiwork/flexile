@@ -19,7 +19,7 @@ import { md5Checksum } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import QuickbooksIntegration from "./QuickbooksIntegration";
 import StripeMicrodepositVerification from "./StripeMicrodepositVerification";
-import WorkspaceSettingSkeleton from "@/components/WorkspaceSettingSkeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const formSchema = z.object({
   website: z.string().url(),
@@ -92,95 +92,123 @@ export default function SettingsPage() {
           <p className="text-muted-foreground text-base">
             Set your workspace identity with your company's branding details.
           </p>
-      </hgroup>
-      <Form {...form}>
-        <form className="grid gap-4" onSubmit={(e) => void submit(e)}>
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="grid gap-2">
-              <div>Logo</div>
-              <Label className="flex cursor-pointer items-center">
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="image/*"
-                  aria-label="Logo"
-                  onChange={(e) => {
-                    if (e.target.files?.[0]) {
-                      setLogoFile(e.target.files[0]);
-                    }
-                  }}
-                />
-                <Avatar className="size-12 rounded-md">
-                  <AvatarImage src={logoUrl} alt="Company logo" />
-                  <AvatarFallback>Logo</AvatarFallback>
-                </Avatar>
-              </Label>
+        </hgroup>
+        <Form {...form}>
+          <form className="grid gap-4" onSubmit={(e) => void submit(e)}>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-2">
+                <div>Logo</div>
+                <Label className="flex cursor-pointer items-center">
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    aria-label="Logo"
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) {
+                        setLogoFile(e.target.files[0]);
+                      }
+                    }}
+                  />
+                  <Avatar className="size-12 rounded-md">
+                    <AvatarImage src={logoUrl} alt="Company logo" />
+                    <AvatarFallback>Logo</AvatarFallback>
+                  </Avatar>
+                </Label>
+              </div>
+              <FormField
+                control={form.control}
+                name="brandColor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Brand color</FormLabel>
+                    <FormControl>
+                      <ColorPicker value={field.value} onChange={field.onChange} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            <FormField
-              control={form.control}
-              name="brandColor"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Brand color</FormLabel>
-                  <FormControl>
-                    <ColorPicker value={field.value} onChange={field.onChange} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
 
-          <div className="grid gap-3 md:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="publicName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Company name</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="website"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Company website</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="publicName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="website"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company website</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-          <MutationStatusButton
-            mutation={saveMutation}
-            type="submit"
-            successText="Changes saved"
-            loadingText="Saving..."
-            className="w-fit"
-          >
-            Save changes
-          </MutationStatusButton>
-        </form>
-      </Form>
-      <StripeMicrodepositVerification />
-      {company.flags.includes("quickbooks") ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Integrations</CardTitle>
-          </CardHeader>
-          <CardContent>{company.flags.includes("quickbooks") ? <QuickbooksIntegration /> : null}</CardContent>
-        </Card>
-      ) : null}
-    </Suspense>
+            <MutationStatusButton
+              mutation={saveMutation}
+              type="submit"
+              successText="Changes saved"
+              loadingText="Saving..."
+              className="w-fit"
+            >
+              Save changes
+            </MutationStatusButton>
+          </form>
+        </Form>
+        <StripeMicrodepositVerification />
+        {company.flags.includes("quickbooks") ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Integrations</CardTitle>
+            </CardHeader>
+            <CardContent>{company.flags.includes("quickbooks") ? <QuickbooksIntegration /> : null}</CardContent>
+          </Card>
+        ) : null}
+      </Suspense>
+    </div>
+  );
+}
+
+
+function WorkspaceSettingSkeleton() {
+  return (
+    <div className="grid gap-8">
+      <Skeleton className="h-8 w-80" />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="space-y-4">
+          <Skeleton className="h-6 w-16" />
+          <Skeleton className="h-14 w-14 rounded-full" />
+        </div>
+        <div className="space-y-4">
+          <Skeleton className="h-6 w-16" />
+          <Skeleton className="h-14 w-14 rounded-full" />
+        </div>
+        <div className="space-y-4">
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-8 w-full" />
+        </div>
+        <div className="space-y-4">
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-8 w-full" />
+        </div>
+        <Skeleton className="h-10 w-30" />
+      </div>
     </div>
   );
 }
