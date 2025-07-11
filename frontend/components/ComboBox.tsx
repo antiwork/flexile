@@ -32,7 +32,8 @@ const ComboBox = ({
           role="combobox"
           aria-expanded={open}
           {...props}
-          className={cn("justify-between", className)}
+          className={cn("justify-between text-base font-normal", className)}
+          style={{ fontFamily: 'abc whyte, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', ...(props.style || {}) }}
         >
           <div className="truncate">
             {value?.length ? (multiple ? value.map(getLabel).join(", ") : getLabel(value)) : placeholder}

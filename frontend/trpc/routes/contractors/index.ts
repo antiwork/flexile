@@ -88,7 +88,7 @@ export const contractorsRouter = createRouter({
         startedAt: z.string(),
         payRateInSubunits: z.number().nullable(),
         payRateType: z.nativeEnum(PayRateType),
-        role: z.string(),
+        role: z.string(), // allow empty string for 'Not specified'
         documentTemplateId: z.string(),
         contractSignedElsewhere: z.boolean().default(false),
       }),

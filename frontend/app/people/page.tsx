@@ -29,11 +29,13 @@ import { Switch } from "@/components/ui/switch";
 import TableSkeleton from "@/components/TableSkeleton";
 import { useQueryClient } from "@tanstack/react-query";
 
+const allowedRoles = ["not_specified", "designer", "developer"] as const;
 const schema = formSchema.extend({
   email: z.string().email(),
   startDate: z.instanceof(CalendarDate),
   documentTemplateId: z.string(),
   contractSignedElsewhere: z.boolean().default(false),
+  role: z.enum(allowedRoles),
 });
 
 const removeMailtoPrefix = (email: string) => email.replace(/^mailto:/iu, "");
@@ -49,7 +51,7 @@ export default function PeoplePage() {
   const form = useForm({
     values: {
       email: "",
-      role: lastContractor?.role ?? "",
+      role: "not_specified",
       documentTemplateId: "",
       payRateType: lastContractor?.payRateType ?? PayRateType.Hourly,
       payRateInSubunits: lastContractor?.payRateInSubunits ?? null,
@@ -96,7 +98,12 @@ export default function PeoplePage() {
       }),
       columnHelper.accessor("role", {
         header: "Role",
-        cell: (info) => info.getValue() || "N/A",
+        cell: (info) => {
+          const value = info.getValue();
+          if (value === "not_specified") return "Not specified";
+          if (!value) return "N/A";
+          return value.charAt(0).toUpperCase() + value.slice(1);
+        },
         meta: { filterOptions: [...new Set(workers.map((worker) => worker.role))] },
       }),
       columnHelper.simple("user.countryCode", "Country", (v) => v && countries.get(v)),

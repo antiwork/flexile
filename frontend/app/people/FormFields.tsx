@@ -12,7 +12,7 @@ import { z } from "zod";
 export const schema = z.object({
   payRateType: z.nativeEnum(PayRateType),
   payRateInSubunits: z.number().nullable(),
-  role: z.string(),
+  role: z.string(), // will be restricted in page.tsx
 });
 
 export default function FormFields() {
@@ -21,7 +21,15 @@ export default function FormFields() {
   const companyId = useUserStore((state) => state.user?.currentCompanyId);
   const { data: workers } = trpc.contractors.list.useQuery(companyId ? { companyId, excludeAlumni: true } : skipToken);
 
-  const uniqueRoles = workers ? [...new Set(workers.map((worker) => worker.role))].sort() : [];
+  const baseRoles = ["designer", "developer"];
+  const uniqueRoles = workers
+    ? Array.from(new Set([...baseRoles, ...workers.map((worker) => worker.role)])).sort()
+    : baseRoles;
+
+  const roleOptions = [
+    { value: "not_specified", label: "Not specified" },
+    ...uniqueRoles.map((role) => ({ value: role, label: role })),
+  ];
 
   return (
     <>
@@ -34,8 +42,8 @@ export default function FormFields() {
             <FormControl>
               <ComboBox
                 {...field}
-                options={uniqueRoles.map((role) => ({ value: role, label: role }))}
-                placeholder="Select or type a role"
+                options={roleOptions}
+                placeholder="Not specified"
               />
             </FormControl>
             <FormMessage />
