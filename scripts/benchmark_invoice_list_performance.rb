@@ -65,7 +65,8 @@ class InvoiceListPerformanceBenchmark
     puts "\n🔍 Query execution plan:"
     
     sql = build_invoice_list_sql
-    result = ActiveRecord::Base.connection.execute("EXPLAIN (ANALYZE, BUFFERS) #{sql}")
+    sanitized_sql = ActiveRecord::Base.sanitize_sql_array([sql])
+    result = ActiveRecord::Base.connection.execute("EXPLAIN (ANALYZE, BUFFERS) #{sanitized_sql}")
     
     result.each do |row|
       puts "   #{row['QUERY PLAN']}"
@@ -107,13 +108,14 @@ class InvoiceListPerformanceBenchmark
 
   def build_invoice_list_sql(limit = 100)
     # Build the raw SQL to match the Drizzle query from the frontend
-    <<~SQL
+    # Use parameterized queries to prevent SQL injection
+    ActiveRecord::Base.sanitize_sql_array([<<~SQL, @company.id, limit])
       SELECT invoices.*
       FROM invoices
-      WHERE invoices.company_id = #{@company.id}
+      WHERE invoices.company_id = ?
         AND invoices.deleted_at IS NULL
       ORDER BY invoices.invoice_date DESC, invoices.created_at DESC
-      LIMIT #{limit}
+      LIMIT ?
     SQL
   end
 end
