@@ -57,9 +57,9 @@ export default function InputSelect({ value, onChange, options, placeholder = "S
                 ))}
               </CommandGroup>
             ) : value ? (
-              <div className="text-muted-foreground px-2 py-6 text-center text-sm">Use new value: "{value}"</div>
+              <div className="text-muted-foreground px-2 py-6 text-center text-sm">Use "{value}"</div>
             ) : (
-              <CommandEmpty>No values found</CommandEmpty>
+              <CommandEmpty>No existing values found</CommandEmpty>
             )}
           </CommandList>
         </Command>
