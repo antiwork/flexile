@@ -32,12 +32,7 @@ export default function FormFields() {
           <FormItem>
             <FormLabel>Role</FormLabel>
             <FormControl>
-              <InputSelect
-                value={field.value}
-                onChange={field.onChange}
-                options={uniqueRoles}
-                placeholder="Select or type a role"
-              />
+              <InputSelect {...field} options={uniqueRoles} placeholder="Select or type a role" />
             </FormControl>
             <FormMessage />
           </FormItem>
