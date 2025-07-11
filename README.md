@@ -33,21 +33,21 @@ Check [the seeds](backend/config/data/seed_templates/gumroad.json) for default d
 
 **Issue:** When running `bin/dev` (after `bin/setup`) encountered `FATAL: role "username" does not exist`
 
-**Resolution:** Manually create the Postgres user with:
+**Resolution:** The PostgreSQL user should be created automatically in the Docker container. If you still encounter this issue, manually create the user in the Docker PostgreSQL instance:
 
 ```
-psql postgres -c "CREATE USER username WITH LOGIN CREATEDB SUPERUSER PASSWORD 'password';"
+docker exec flexile-db-1 psql -U username -d postgres -c "CREATE USER username WITH LOGIN CREATEDB SUPERUSER PASSWORD 'password';"
 ```
 
-Likely caused by the `bin/setup` script failing silently due to lack of Postgres superuser permissions (common with Homebrew installations).
+This targets the Docker PostgreSQL instance rather than any local installation.
 
 ### 2. Redis Connection & database seeding
 
 **Issue:** First attempt to run `bin/dev` failed with `Redis::CannotConnectError` on port 6389.
 
-**Resolution:** Re-running `bin/dev` resolved it but data wasn't seeded properly, so had to run `db:reset`
+**Resolution:** The updated `bin/dev` script now waits for Docker services to be ready before proceeding. If you still encounter this issue, ensure Docker is running and try again.
 
-Likely caused by rails attempting to connect before Redis had fully started.
+This was caused by Rails attempting to connect before Redis had fully started.
 
 ## Testing
 
