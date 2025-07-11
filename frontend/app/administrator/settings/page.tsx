@@ -34,7 +34,8 @@ export default function SettingsPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       publicName: company.name ?? "",
-      ...pick(settings),
+      website: settings.website ?? "",
+      brandColor: settings.brandColor ?? null,
     },
   });
 
