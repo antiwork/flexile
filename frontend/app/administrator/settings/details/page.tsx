@@ -226,10 +226,10 @@ function DetailsSkeleton() {
     <div className="space-y-8 md:space-y-4">
       <div className="space-y-2">
         <Skeleton className="h-6 w-28" />
-        <Skeleton className="h-4 w-full max-w-md mb-8" />
+        <Skeleton className="mb-8 h-4 w-full max-w-md" />
       </div>
 
-      <div className="space-y-2 mt-4">
+      <div className="mt-4 space-y-2">
         <Skeleton className="h-4 w-36" />
         <Skeleton className="h-10 w-full" />
       </div>
@@ -249,7 +249,7 @@ function DetailsSkeleton() {
         <Skeleton className="h-10 w-full" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="space-y-2">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-10 w-full" />

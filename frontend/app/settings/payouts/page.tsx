@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, Check, Plus, CircleDollarSign } from "lucide-react";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import React, { Fragment, Suspense, useState } from "react";
 import { z } from "zod";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
