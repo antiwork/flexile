@@ -3,7 +3,7 @@
 set -e
 
 # Initialize rbenv to ensure we use the correct Ruby version
-eval "$(rbenv init - zsh)" 2>/dev/null || true
+eval "$(rbenv init -)" 2>/dev/null || true
 
 if [ -f ".vercel/project.json" ]; then
     pnpx vercel env pull .env
@@ -36,7 +36,7 @@ until docker exec flexile-redis-1 redis-cli ping; do
 done
 
 cd backend
-eval "$(rbenv init - zsh)" 2>/dev/null || true
+eval "$(rbenv init -)" 2>/dev/null || true
 bin/rails db:prepare
 cd ..
 

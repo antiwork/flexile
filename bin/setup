@@ -34,7 +34,7 @@ if ! node -v | grep -q "$(cat .node-version)" 2>/dev/null; then
 fi
 
 # Check if we have the correct Ruby version
-eval "$(rbenv init - zsh)" 2>/dev/null || true
+eval "$(rbenv init -)" 2>/dev/null || true
 if ! ruby -v | grep -q "$(cat .ruby-version)" 2>/dev/null; then
   read -p "Would you like to install Ruby $(cat .ruby-version) using rbenv? (y/N) " answer
   if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
@@ -45,7 +45,7 @@ if ! ruby -v | grep -q "$(cat .ruby-version)" 2>/dev/null; then
     fi
     
     # Initialize rbenv for current session
-    eval "$(rbenv init - zsh)"
+    eval "$(rbenv init -)"
     
     echo "Installing Ruby $(cat .ruby-version)..."
     rbenv install -s $(cat .ruby-version)
