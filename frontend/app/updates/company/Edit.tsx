@@ -75,9 +75,7 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
     },
   });
 
-  const submit = form.handleSubmit(async () => {
-    setModalOpen(true);
-  });
+  const submit = form.handleSubmit(() => setModalOpen(true));
 
   return (
     <Form {...form}>
@@ -97,7 +95,9 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
                   mutation={saveMutation}
                   idleVariant="outline"
                   loadingText="Saving..."
-                  onClick={() => form.handleSubmit((values) => saveMutation.mutateAsync({ values, preview: true }))()}
+                  onClick={() =>
+                    void form.handleSubmit((values) => saveMutation.mutateAsync({ values, preview: true }))()
+                  }
                 >
                   <ArrowTopRightOnSquareIcon className="size-4" />
                   Preview
