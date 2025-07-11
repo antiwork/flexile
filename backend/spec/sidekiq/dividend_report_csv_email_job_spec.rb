@@ -80,6 +80,5 @@ RSpec.describe DividendReportCsvEmailJob, :vcr do
         attached: hash_including("DividendReport.csv" => DividendReportCsv.new([round1, dividend_round, round2]).generate)
       )
     end
-
   end
 end
