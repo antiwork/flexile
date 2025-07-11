@@ -5,7 +5,7 @@ import { useFormContext } from "react-hook-form";
 import RadioButtons from "@/components/RadioButtons";
 import NumberInput from "@/components/NumberInput";
 import { useUserStore } from "@/global";
-import ComboBox from "@/components/ComboBox";
+import InputSelect from "@/components/ui/input-select";
 import { skipToken } from "@tanstack/react-query";
 import { z } from "zod";
 
@@ -32,9 +32,10 @@ export default function FormFields() {
           <FormItem>
             <FormLabel>Role</FormLabel>
             <FormControl>
-              <ComboBox
-                {...field}
-                options={uniqueRoles.map((role) => ({ value: role, label: role }))}
+              <InputSelect
+                value={field.value}
+                onChange={field.onChange}
+                options={uniqueRoles}
                 placeholder="Select or type a role"
               />
             </FormControl>
