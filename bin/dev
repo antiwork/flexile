@@ -2,6 +2,9 @@
 
 set -e
 
+# Initialize rbenv to ensure we use the correct Ruby version
+eval "$(rbenv init - zsh)" 2>/dev/null || true
+
 if [ -f ".vercel/project.json" ]; then
     pnpx vercel env pull .env
 elif [ ! -f ".env" ]; then
@@ -11,6 +14,29 @@ fi
 pnpm install
 cd backend
 bundle install
+
+echo "Waiting for Docker services to be ready..."
+cd ..
+export NODE_EXTRA_CA_CERTS="$(node docker/createCertificate.js)" || export NODE_EXTRA_CA_CERTS=""
+make local
+
+echo "Waiting for PostgreSQL to be ready..."
+until docker exec flexile-db-1 pg_isready -U username -d flexile_development; do
+  sleep 1
+done
+
+echo "Testing PostgreSQL connection..."
+until docker exec flexile-db-1 psql -U username -d flexile_development -c "SELECT 1;" > /dev/null 2>&1; do
+  sleep 1
+done
+
+echo "Waiting for Redis to be ready..."
+until docker exec flexile-redis-1 redis-cli ping; do
+  sleep 1
+done
+
+cd backend
+eval "$(rbenv init - zsh)" 2>/dev/null || true
 bin/rails db:prepare
 cd ..
 
@@ -23,6 +49,4 @@ kill_process_listening_on_port 3000
 kill_process_listening_on_port 3001
 kill_process_listening_on_port 8288 # inngest
 
-export NODE_EXTRA_CA_CERTS="$(node docker/createCertificate.js)"
-make local
 foreman start -f Procfile.dev "$@"

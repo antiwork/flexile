@@ -3,4 +3,4 @@ import { createSelfSignedCertificate } from "next/dist/lib/mkcert.js";
 const log = console.log;
 console.log = () => {};
 const certificate = await createSelfSignedCertificate("flexile.dev");
-log(certificate.rootCA);
+log(certificate?.rootCA || "");

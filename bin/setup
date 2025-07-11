@@ -21,25 +21,48 @@ function install_if_missing() {
 
 echo "🚀 Setting up development environment..."
 
-if install_if_missing "brew" "Homebrew" "curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | bash"; then
-  brew install postgresql
-  brew services start postgresql
-  psql -c "CREATE USER username WITH LOGIN SUPERUSER PASSWORD 'password';" || true
-else
-  read -p "Please make sure PostgreSQL headers are installed before continuing."
+install_if_missing "brew" "Homebrew" "curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | bash"
+
+echo "PostgreSQL and Redis will be provided by Docker containers"
+
+install_if_missing "mkcert" "mkcert for SSL certificates" "brew install mkcert"
+
+# Check Node version
+if ! node -v | grep -q "$(cat .node-version)" 2>/dev/null; then
+  echo "Warning: Node version mismatch. Expected: $(cat .node-version), Current: $(node -v)"
+  echo "Consider using 'pnpm env use --global $(cat .node-version)' to install the correct version"
 fi
 
-if install_if_missing "ruby" "Ruby using rbenv" "curl -fsSL https://github.com/rbenv/rbenv-installer/raw/HEAD/bin/rbenv-installer | bash"; then
-  rbenv install -s $(cat .ruby-version)
-else
-  read -p "Please make sure Ruby is installed before continuing."
+# Check if we have the correct Ruby version
+eval "$(rbenv init - zsh)" 2>/dev/null || true
+if ! ruby -v | grep -q "$(cat .ruby-version)" 2>/dev/null; then
+  read -p "Would you like to install Ruby $(cat .ruby-version) using rbenv? (y/N) " answer
+  if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
+    # Install rbenv if not present
+    if ! command -v rbenv &> /dev/null; then
+      echo "Installing rbenv..."
+      curl -fsSL https://github.com/rbenv/rbenv-installer/raw/HEAD/bin/rbenv-installer | bash
+    fi
+    
+    # Initialize rbenv for current session
+    eval "$(rbenv init - zsh)"
+    
+    echo "Installing Ruby $(cat .ruby-version)..."
+    rbenv install -s $(cat .ruby-version)
+    rbenv global $(cat .ruby-version)
+    rbenv rehash
+    
+    echo "Ruby $(rbenv version) is now active"
+  else
+    echo "Please make sure Ruby $(cat .ruby-version) is installed before continuing."
+  fi
 fi
 
 corepack enable
 
 if [ ! -f ".env" ]; then
     read -p "Would you like to pull environment variables from Vercel? (y/N) " answer
-
+ 
     if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
         pnpx vercel link && pnpx vercel env pull .env
     else
@@ -50,6 +73,6 @@ fi
 
 ln -sf $PWD/.env ./frontend/.env
 
-gem install foreman
+gem install bundler foreman
 
 echo "✨ Setup complete! You can now start the development server."
