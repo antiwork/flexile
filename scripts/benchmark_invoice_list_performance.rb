@@ -65,8 +65,7 @@ class InvoiceListPerformanceBenchmark
     puts "\n🔍 Query execution plan:"
     
     sql = build_invoice_list_sql
-    sanitized_sql = ActiveRecord::Base.sanitize_sql_array([sql])
-    result = ActiveRecord::Base.connection.execute("EXPLAIN (ANALYZE, BUFFERS) #{sanitized_sql}")
+    result = ActiveRecord::Base.connection.execute("EXPLAIN (ANALYZE, BUFFERS) #{sql}")
     
     result.each do |row|
       puts "   #{row['QUERY PLAN']}"
