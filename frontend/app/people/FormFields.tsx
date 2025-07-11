@@ -22,7 +22,6 @@ export default function FormFields() {
   const payRateType = form.watch("payRateType");
   const companyId = useUserStore((state) => state.user?.currentCompanyId);
   const { data: workers } = trpc.contractors.list.useQuery(companyId ? { companyId, excludeAlumni: true } : skipToken);
-  const role = form.watch("role");
 
   const [rolePopoverOpen, setRolePopoverOpen] = useState(false);
   const roleRegex = new RegExp(form.watch("role"), "iu");
@@ -38,7 +37,7 @@ export default function FormFields() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Role</FormLabel>
-            <Command shouldFilter={false} value={filteredRoles.includes(role) ? role : ""}>
+            <Command shouldFilter={false}>
               <Popover open={!!rolePopoverOpen && filteredRoles.length > 0}>
                 <PopoverAnchor asChild>
                   <FormControl>
