@@ -18,43 +18,72 @@ import EquityLayout from "../Layout";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import { isFuture, isPast } from "date-fns";
 import { utc } from "@date-fns/utc";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { md5Checksum } from "@/utils";
 import { CalendarDate, getLocalTimeZone } from "@internationalized/date";
+import { request } from "@/utils/request";
+import { company_tender_offers_path } from "@/utils/routes";
+import { z } from "zod";
 
 type ActiveModal = "buyback-details" | "letter-of-transmittal" | "select-investors" | null;
-
-interface BuybackData {
-  buybackType: "single" | "tender";
-  name: string;
-  startDate: CalendarDate;
-  endDate: CalendarDate;
-  minimumValuation: number;
-  totalAmountInCents: number;
-  attachment: File;
-}
 
 interface LetterData {
   content: string;
 }
 
+const buybackSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  buyback_type: z.enum(["single", "tender"]),
+  starts_at: z.instanceof(Date),
+  ends_at: z.instanceof(Date),
+  minimum_valuation: z.number(),
+  implied_valuation: z.number().nullable(),
+  total_amount_in_cents: z.number(),
+  accepted_price_cents: z.number().nullable(),
+  participation: z.number().nullable(),
+  bid_count: z.number().nullable(),
+  investor_count: z.number().nullable(),
+  open: z.boolean(),
+});
+
+const createBuybackSchema = buybackSchema
+  .pick({ name: true, starts_at: true, ends_at: true, minimum_valuation: true })
+  .extend({ starting_price_per_share_cents: z.number(), attachment: z.instanceof(File) });
+
 export default function Buybacks() {
   const company = useCurrentCompany();
   const router = useRouter();
   const user = useCurrentUser();
-  const [data, { refetch }] = trpc.tenderOffers.list.useSuspenseQuery({ companyId: company.id });
-  const [selectedTenderOffer, setSelectedTenderOffer] = useState<(typeof data)[number] | null>(null);
+
+  const { data, refetch } = useSuspenseQuery({
+    queryKey: ["buybacks", company.id],
+    queryFn: async () => {
+      const response = await request({
+        accept: "json",
+        method: "GET",
+        url: company_tender_offers_path(company.id),
+        assertOk: true,
+      });
+      return z
+        .object({
+          buybacks: z.array(buybackSchema),
+        })
+        .parse(await response.json());
+    },
+  });
+
+  const [selectedTenderOffer, setSelectedTenderOffer] = useState<z.infer<typeof buybackSchema> | null>(null);
 
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
 
-  const [buybackData, setBuybackData] = useState<BuybackData | null>(null);
+  const [buybackData, setBuybackData] = useState<z.infer<typeof createBuybackSchema> | null>(null);
   const [letterData, setLetterData] = useState<LetterData | null>(null);
   const [investorsData, setInvestorsData] = useState<string[]>([]);
 
   const createUploadUrl = trpc.files.createDirectUploadUrl.useMutation();
-  const createTenderOffer = trpc.tenderOffers.create.useMutation();
 
-  const columnHelper = createColumnHelper<(typeof data)[number]>();
+  const columnHelper = createColumnHelper<z.infer<typeof buybackSchema>>();
   const columns = useMemo(
     () => [
       columnHelper.display({
@@ -69,10 +98,10 @@ export default function Buybacks() {
           );
         },
       }),
-      columnHelper.simple("endsAt", "End date", formatDate),
-      columnHelper.simple("minimumValuation", "Starting valuation", formatMoney),
+      columnHelper.simple("ends_at", "End date", formatDate),
+      columnHelper.simple("minimum_valuation", "Starting valuation", formatMoney),
       columnHelper.display({
-        id: "impliedValuation",
+        id: "implied_valuation",
         header: "Implied valuation",
         cell: () =>
           // TODO: Need to store fullyDilutedShares at tender offer creation time
@@ -85,19 +114,19 @@ export default function Buybacks() {
         header: "Participation",
         cell: (info) => {
           const { participation } = info.row.original;
-          return participation > 0 ? formatMoneyFromCents(participation) : "—";
+          if (!participation) return "—";
+          return formatMoneyFromCents(participation);
         },
       }),
-      columnHelper.accessor("bidCount", {
+      columnHelper.accessor("bid_count", {
         header: user.roles.administrator ? "Investors" : "Your bids",
         cell: (info) => info.getValue(),
       }),
-
       columnHelper.accessor(
         (row) =>
-          row.acceptedPriceCents // TODO
+          row.accepted_price_cents // TODO
             ? "Settled"
-            : isFuture(utc(row.endsAt))
+            : isFuture(utc(row.ends_at))
               ? "Open"
               : user.roles.administrator
                 ? "Closed"
@@ -130,7 +159,7 @@ export default function Buybacks() {
         id: "actions",
         cell: (info) => (
           <>
-            {isFuture(utc(info.row.original.endsAt)) ? (
+            {info.row.original.open ? (
               <Button
                 size="small"
                 variant="outline"
@@ -142,7 +171,7 @@ export default function Buybacks() {
                 Place bid
               </Button>
             ) : null}
-            {user.roles.administrator && isPast(utc(info.row.original.endsAt)) ? (
+            {user.roles.administrator && isPast(utc(info.row.original.ends_at)) ? (
               <Button
                 size="small"
                 className="fill-black"
@@ -163,12 +192,12 @@ export default function Buybacks() {
 
   const table = useTable({
     columns,
-    data,
+    data: data.buybacks,
     getSortedRowModel: getSortedRowModel(),
     ...(user.roles.administrator && { getFilteredRowModel: getFilteredRowModel() }),
   });
 
-  const handleBuybackDetailsNext = (data: BuybackData) => {
+  const handleBuybackDetailsNext = (data: z.infer<typeof createBuybackSchema>) => {
     setBuybackData(data);
     setActiveModal("letter-of-transmittal");
   };
@@ -205,7 +234,7 @@ export default function Buybacks() {
         throw new Error("Buyback data is required");
       }
 
-      const { attachment, startDate, endDate, minimumValuation } = buybackData;
+      const { attachment } = buybackData;
 
       const base64Checksum = await md5Checksum(attachment);
       const { directUploadUrl, key } = await createUploadUrl.mutateAsync({
@@ -225,13 +254,17 @@ export default function Buybacks() {
         },
       });
 
-      await createTenderOffer.mutateAsync({
-        companyId: company.id,
-        name: buybackData.name,
-        startsAt: startDate.toDate(getLocalTimeZone()),
-        endsAt: endDate.toDate(getLocalTimeZone()),
-        minimumValuation: BigInt(minimumValuation),
-        attachmentKey: key,
+      await request({
+        method: "POST",
+        url: company_tender_offers_path(company.id),
+        accept: "json",
+        jsonData: createBuybackSchema.parse({
+          ...buybackData,
+          ...letterData,
+          ...investorsData,
+          attachmentKey: key,
+        }),
+        assertOk: true,
       });
     },
     onSuccess: () => {
@@ -243,7 +276,7 @@ export default function Buybacks() {
   return (
     <EquityLayout
       headerActions={
-        user.roles.administrator && !data.length ? (
+        user.roles.administrator && !data.buybacks.length ? (
           <Button size="small" variant="outline" onClick={() => setActiveModal("buyback-details")}>
             <Plus className="size-4" />
             New buyback
@@ -251,7 +284,7 @@ export default function Buybacks() {
         ) : null
       }
     >
-      {data.length ? (
+      {data.buybacks.length ? (
         <DataTable
           searchColumn={user.roles.administrator ? "name" : undefined}
           table={table}

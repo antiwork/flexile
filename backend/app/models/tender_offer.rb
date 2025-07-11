@@ -9,9 +9,11 @@ class TenderOffer < ApplicationRecord
   has_many :bids, class_name: "TenderOfferBid"
   has_many :equity_buyback_rounds
   has_one_attached :attachment
+  has_one_attached :letter_of_transmittal
 
   validates :name, presence: true
   validates :attachment, presence: true
+  validates :letter_of_transmittal, presence: true
   validates :starts_at, presence: true
   validates :ends_at, presence: true
   validates :minimum_valuation, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
@@ -19,11 +21,20 @@ class TenderOffer < ApplicationRecord
   validates :number_of_shareholders, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :total_amount_in_cents, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :accepted_price_cents, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
+  validates :starting_price_per_share_cents, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
+  validates :fully_diluted_shares, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+
   validate :ends_at_must_be_after_starts_at
   validate :correct_attachment_mime_type
 
   def open?
     Time.current.utc.between?(starts_at, ends_at)
+  end
+
+  def implied_valuation
+    return nil if accepted_price_cents.nil?
+
+    (accepted_price_cents * 100) * fully_diluted_shares.to_i
   end
 
   def securities_available_for_purchase(company_investor)
@@ -52,6 +63,10 @@ class TenderOffer < ApplicationRecord
     def correct_attachment_mime_type
       if attachment.attached? && !attachment.content_type.in?(%w(application/zip))
         errors.add(:attachment, "must be a ZIP file")
+      end
+
+      if letter_of_transmittal.attached? && letter_of_transmittal.content_type.in?(%w(application/pdf))
+        errors.add(:attachment, "must be a PDF file")
       end
     end
 end

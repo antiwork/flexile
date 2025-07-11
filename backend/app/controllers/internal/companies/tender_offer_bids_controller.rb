@@ -21,6 +21,7 @@ class Internal::Companies::TenderOfferBidsController < Internal::Companies::Base
   def create
     authorize TenderOfferBid
 
+    # TODO test validations here
     @bid = @tender_offer.bids.build(
       company_investor: Current.company_investor,
       **bid_params

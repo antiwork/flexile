@@ -1188,6 +1188,118 @@ export const company_switch_path: ((
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/tender_offers/:id(.:format)
+ * @param {any} company_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_tender_offer_url: ((
+  company_id: RequiredRouteParameter,
+  id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/tender_offers/:id(.:format)
+ * @param {any} company_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_tender_offer_path: ((
+  company_id: RequiredRouteParameter,
+  id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/tender_offers/:tender_offer_id/bids/:id(.:format)
+ * @param {any} company_id
+ * @param {any} tender_offer_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_tender_offer_bid_url: ((
+  company_id: RequiredRouteParameter,
+  tender_offer_id: RequiredRouteParameter,
+  id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/tender_offers/:tender_offer_id/bids/:id(.:format)
+ * @param {any} company_id
+ * @param {any} tender_offer_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_tender_offer_bid_path: ((
+  company_id: RequiredRouteParameter,
+  tender_offer_id: RequiredRouteParameter,
+  id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/tender_offers/:tender_offer_id/bids(.:format)
+ * @param {any} company_id
+ * @param {any} tender_offer_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_tender_offer_bids_url: ((
+  company_id: RequiredRouteParameter,
+  tender_offer_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/tender_offers/:tender_offer_id/bids(.:format)
+ * @param {any} company_id
+ * @param {any} tender_offer_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_tender_offer_bids_path: ((
+  company_id: RequiredRouteParameter,
+  tender_offer_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/tender_offers(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_tender_offers_url: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/tender_offers(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_tender_offers_path: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /internal/companies/:company_id/workers(.:format)
  * @param {any} company_id
  * @param {object | undefined} options

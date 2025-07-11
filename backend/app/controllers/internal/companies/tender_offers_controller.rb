@@ -8,14 +8,14 @@ class Internal::Companies::TenderOffersController < Internal::Companies::BaseCon
 
     tender_offers = Current.company.tender_offers.order(created_at: :desc)
     render json: {
-      tender_offers: tender_offers.map { |to| TenderOfferPresenter.new(to).props(current_user: Current.user) },
+      tender_offers: tender_offers.map { |offer| TenderOfferPresenter.new(offer).props(user: Current.user, company: Current.company) },
     }
   end
 
   def show
     authorize @tender_offer
     render json: {
-      tender_offer: TenderOfferPresenter.new(@tender_offer).props(current_user: Current.user),
+      tender_offer: TenderOfferPresenter.new(@tender_offer).props(user: Current.user, company: Current.company),
     }
   end
 
@@ -29,7 +29,7 @@ class Internal::Companies::TenderOffersController < Internal::Companies::BaseCon
 
     if result[:success]
       render json: {
-        tender_offer: TenderOfferPresenter.new(result[:tender_offer]).props(current_user: Current.user),
+        tender_offer: TenderOfferPresenter.new(result[:tender_offer]).props(current_user: Current.user, company: Current.company),
       }, status: :created
     else
       render json: { success: false, error_message: result[:error_message] }, status: :unprocessable_entity
@@ -42,6 +42,6 @@ class Internal::Companies::TenderOffersController < Internal::Companies::BaseCon
     end
 
     def tender_offer_params
-      params.require(:tender_offer).permit(:name, :starts_at, :ends_at, :minimum_valuation, :attachment)
+      params.require(:tender_offer).permit(:name, :starts_at, :ends_at, :minimum_valuation, :starting_price_per_share_cents, :attachment, :letter_of_transmittal)
     end
 end

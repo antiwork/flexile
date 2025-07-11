@@ -1385,6 +1385,86 @@ export const company_switch_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/tender_offers/:id(.:format)
+ * @param {any} company_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_tender_offer_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"tender_offers"],[2,[7,"/"],[2,[3,"id"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/tender_offers/:id(.:format)
+ * @param {any} company_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_tender_offer_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"tender_offers"],[2,[7,"/"],[2,[3,"id"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]);
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/tender_offers/:tender_offer_id/bids/:id(.:format)
+ * @param {any} company_id
+ * @param {any} tender_offer_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_tender_offer_bid_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"tender_offer_id":{"r":true},"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"tender_offers"],[2,[7,"/"],[2,[3,"tender_offer_id"],[2,[7,"/"],[2,[6,"bids"],[2,[7,"/"],[2,[3,"id"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/tender_offers/:tender_offer_id/bids/:id(.:format)
+ * @param {any} company_id
+ * @param {any} tender_offer_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_tender_offer_bid_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"tender_offer_id":{"r":true},"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"tender_offers"],[2,[7,"/"],[2,[3,"tender_offer_id"],[2,[7,"/"],[2,[6,"bids"],[2,[7,"/"],[2,[3,"id"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]]]]);
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/tender_offers/:tender_offer_id/bids(.:format)
+ * @param {any} company_id
+ * @param {any} tender_offer_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_tender_offer_bids_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"tender_offer_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"tender_offers"],[2,[7,"/"],[2,[3,"tender_offer_id"],[2,[7,"/"],[2,[6,"bids"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/tender_offers/:tender_offer_id/bids(.:format)
+ * @param {any} company_id
+ * @param {any} tender_offer_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_tender_offer_bids_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"tender_offer_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"tender_offers"],[2,[7,"/"],[2,[3,"tender_offer_id"],[2,[7,"/"],[2,[6,"bids"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]]);
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/tender_offers(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_tender_offers_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"tender_offers"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/tender_offers(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_tender_offers_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"tender_offers"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]);
+
+/**
+ * Generates rails route to
  * /internal/companies/:company_id/workers(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
