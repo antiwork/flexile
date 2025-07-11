@@ -80,5 +80,77 @@ RSpec.describe DividendReportCsvEmailJob, :vcr do
         attached: hash_including("DividendReport.csv" => DividendReportCsv.new([round1, dividend_round, round2]).generate)
       )
     end
+
+    context "when year and month parameters are provided" do
+      let(:target_year) { 2023 }
+      let(:target_month) { 6 }
+      let(:custom_dividend_round) do
+        create(
+          :dividend_round,
+          company:,
+          issued_at: Date.new(target_year, target_month, 15)
+        )
+      end
+      let!(:custom_dividend) do
+        create(
+          :dividend,
+          dividend_round: custom_dividend_round,
+          company:,
+          company_investor:,
+          status: Dividend::PAID,
+          total_amount_in_cents: 200_00,
+          paid_at: Date.new(target_year, target_month, 16)
+        )
+      end
+
+      it "sends email with correct subject for custom year and month" do
+        expect do
+          described_class.new.perform(recipients, target_year, target_month)
+        end.to have_enqueued_mail(AdminMailer, :custom).with(
+          to: recipients,
+          subject: "Flexile Dividend Report CSV 2023-06",
+          body: "Attached",
+          attached: hash_including("DividendReport.csv" => DividendReportCsv.new([custom_dividend_round]).generate)
+        )
+      end
+
+      it "filters dividend rounds for the specified month and year" do
+        other_month_round = create(
+          :dividend_round,
+          company:,
+          issued_at: Date.new(target_year, target_month + 1, 10)
+        )
+        create(:dividend, dividend_round: other_month_round, company:, company_investor:, status: Dividend::PAID)
+
+        expect do
+          described_class.new.perform(recipients, target_year, target_month)
+        end.to have_enqueued_mail(AdminMailer, :custom).with(
+          to: recipients,
+          subject: "Flexile Dividend Report CSV 2023-06",
+          body: "Attached",
+          attached: hash_including("DividendReport.csv" => DividendReportCsv.new([custom_dividend_round]).generate)
+        )
+      end
+
+      it "handles single digit months with zero padding in subject" do
+        march_year = 2023
+        march_month = 3
+        march_round = create(
+          :dividend_round,
+          company:,
+          issued_at: Date.new(march_year, march_month, 10)
+        )
+        create(:dividend, dividend_round: march_round, company:, company_investor:, status: Dividend::PAID)
+
+        expect do
+          described_class.new.perform(recipients, march_year, march_month)
+        end.to have_enqueued_mail(AdminMailer, :custom).with(
+          to: recipients,
+          subject: "Flexile Dividend Report CSV 2023-03",
+          body: "Attached",
+          attached: hash_including("DividendReport.csv" => DividendReportCsv.new([march_round]).generate)
+        )
+      end
+    end
   end
 end
