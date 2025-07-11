@@ -51,12 +51,13 @@ pnpm playwright test
 1. Update documentation if you're changing behavior
 2. Add or update tests for your changes
 3. Include screenshots of your test suite passing locally
-4. Make sure all tests pass
-5. Request a review from maintainers
-6. After reviews begin, avoid force-pushing to your branch
+4. Use professional English in all communication with no excessive capitalization, question marks, or informal language - we have a zero tolerance policy as it makes async communication difficult
+5. Make sure all tests pass
+6. Request a review from maintainers
+7. After reviews begin, avoid force-pushing to your branch
    - Force-pushing rewrites history and makes review threads hard to follow
    - Don't worry about messy commits - we squash everything when merging to main
-7. The PR will be merged once you have the sign-off of at least one other developer
+8. The PR will be merged once you have the sign-off of at least one other developer
 
 ## Style Guide
 

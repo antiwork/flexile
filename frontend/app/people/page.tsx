@@ -47,8 +47,10 @@ export default function PeoplePage() {
   const lastContractor = workers[0];
 
   const form = useForm({
-    defaultValues: {
-      ...(lastContractor ? { role: lastContractor.role } : {}),
+    values: {
+      email: "",
+      role: lastContractor?.role ?? "",
+      documentTemplateId: "",
       payRateType: lastContractor?.payRateType ?? PayRateType.Hourly,
       payRateInSubunits: lastContractor?.payRateInSubunits ?? null,
       startDate: today(getLocalTimeZone()),
