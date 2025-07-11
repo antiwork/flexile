@@ -5,7 +5,10 @@ import { useFormContext } from "react-hook-form";
 import RadioButtons from "@/components/RadioButtons";
 import NumberInput from "@/components/NumberInput";
 import { useUserStore } from "@/global";
-import ComboBox from "@/components/ComboBox";
+import { Popover, PopoverContent } from "@/components/ui/popover";
+import { PopoverTrigger } from "@radix-ui/react-popover";
+import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { Input } from "@/components/ui/input";
 import { skipToken } from "@tanstack/react-query";
 import { z } from "zod";
 
@@ -22,6 +25,7 @@ export default function FormFields() {
   const { data: workers } = trpc.contractors.list.useQuery(companyId ? { companyId, excludeAlumni: true } : skipToken);
 
   const uniqueRoles = workers ? [...new Set(workers.map((worker) => worker.role))].sort() : [];
+  const roleRegex = new RegExp(form.watch("role"), "iu");
 
   return (
     <>
@@ -31,13 +35,30 @@ export default function FormFields() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Role</FormLabel>
-            <FormControl>
-              <ComboBox
-                {...field}
-                options={uniqueRoles.map((role) => ({ value: role, label: role }))}
-                placeholder="Select or type a role"
-              />
-            </FormControl>
+            <Command shouldFilter={false} value={uniqueRoles.find((role) => roleRegex.test(role)) ?? ""}>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Input {...field} type="text" />
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                  className="p-0"
+                  style={{ width: "var(--radix-popover-trigger-width)" }}
+                >
+                  <CommandList>
+                    <CommandGroup>
+                      {uniqueRoles.map((option) => (
+                        <CommandItem key={option} value={option} onSelect={(e) => field.onChange(e)}>
+                          {option}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </PopoverContent>
+              </Popover>
+            </Command>
             <FormMessage />
           </FormItem>
         )}
