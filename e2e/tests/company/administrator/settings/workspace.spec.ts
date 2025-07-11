@@ -54,16 +54,16 @@ test.describe.serial("Workspace settings", () => {
     const companyNameInput = page.getByLabel("Company name");
     const websiteInput = page.getByLabel("Company website");
 
-    await expect(companyNameInput).toHaveValue(company.name || "");
+    await expect(companyNameInput).toHaveValue(company.name as string);
 
     const companyData = await db.query.companies.findFirst({
       where: eq(companies.id, company.id),
     });
 
-    await expect(websiteInput).toHaveValue(companyData?.website || "");
+    await expect(websiteInput).toHaveValue(companyData?.website as string);
 
     const colorInput = page.locator('input[type="color"]');
-    await expect(colorInput).toHaveValue(companyData?.brandColor || "");
+    await expect(colorInput).toHaveValue(companyData?.brandColor || "#000000");
 
     const logoImage = page.locator('img[alt="Company logo"]');
     await expect(logoImage).toBeVisible();
