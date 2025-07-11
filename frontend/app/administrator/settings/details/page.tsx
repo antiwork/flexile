@@ -264,7 +264,7 @@ function DetailsSkeleton() {
       </div>
 
       <Skeleton className="h-4 w-[280px]" />
-      <Skeleton className="h-10 w-32 rounded-md mt-6" />
+      <Skeleton className="mt-6 h-10 w-32 rounded-md" />
     </div>
   );
 }
