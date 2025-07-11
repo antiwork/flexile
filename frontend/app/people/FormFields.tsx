@@ -1,13 +1,15 @@
-import React from "react";
+import { useCallback, useMemo, useState } from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { PayRateType, trpc } from "@/trpc/client";
 import { useFormContext } from "react-hook-form";
 import RadioButtons from "@/components/RadioButtons";
 import NumberInput from "@/components/NumberInput";
 import { useUserStore } from "@/global";
-import InputSelect from "@/components/ui/input-select";
 import { skipToken } from "@tanstack/react-query";
 import { z } from "zod";
+import { Command, CommandGroup, CommandItem, CommandList, CommandEmpty } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
 
 export const schema = z.object({
   payRateType: z.nativeEnum(PayRateType),
@@ -32,7 +34,12 @@ export default function FormFields() {
           <FormItem>
             <FormLabel>Role</FormLabel>
             <FormControl>
-              <InputSelect {...field} options={uniqueRoles} placeholder="Select or type a role" />
+              <RoleSelect
+                value={field.value}
+                onChange={field.onChange}
+                options={uniqueRoles}
+                placeholder="Select or type a role"
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -80,5 +87,70 @@ export default function FormFields() {
         )}
       />
     </>
+  );
+}
+
+interface RoleSelectProps {
+  value: string;
+  onChange: (value: string) => void;
+  options: string[];
+  placeholder?: string;
+}
+
+function RoleSelect({ value, onChange, options, placeholder = "Select or type" }: RoleSelectProps) {
+  const [open, setOpen] = useState(false);
+
+  const filteredOptions = useMemo(() => {
+    if (!value) return options;
+    return options.filter((option) => option.toLowerCase().includes(value.toLowerCase()));
+  }, [value, options]);
+
+  const handleSelect = useCallback(
+    (selectedValue: string) => {
+      onChange(selectedValue);
+      setOpen(false);
+    },
+    [onChange],
+  );
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Input
+          value={value}
+          onChange={(e) => {
+            onChange(e.target.value);
+          }}
+          onClick={() => setOpen(true)}
+          placeholder={placeholder}
+          type="text"
+        />
+      </PopoverTrigger>
+      <PopoverContent
+        className="p-0"
+        style={{ width: "var(--radix-popover-trigger-width)" }}
+        align="start"
+        sideOffset={4}
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
+        <Command shouldFilter={false}>
+          <CommandList>
+            {filteredOptions.length > 0 ? (
+              <CommandGroup>
+                {filteredOptions.map((option) => (
+                  <CommandItem key={option} value={option} onSelect={handleSelect}>
+                    {option}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            ) : value ? (
+              <div className="text-muted-foreground px-2 py-6 text-center text-sm">Use "{value}"</div>
+            ) : (
+              <CommandEmpty>No existing values found</CommandEmpty>
+            )}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
