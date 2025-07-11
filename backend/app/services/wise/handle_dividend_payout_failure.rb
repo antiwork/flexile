@@ -1,5 +1,11 @@
+# frozen_string_literal: true
+
 module Wise
-  class HandleDividendPayoutFailure < ApplicationService
+  class HandleDividendPayoutFailure
+    def self.call(dividend_payment, webhook_params)
+      new(dividend_payment, webhook_params).call
+    end
+
     def initialize(dividend_payment, webhook_params)
       @dividend_payment = dividend_payment
       @params = webhook_params
