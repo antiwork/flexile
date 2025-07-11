@@ -57,9 +57,9 @@ export default function InputSelect({ value, onChange, options, placeholder = "S
                 ))}
               </CommandGroup>
             ) : value ? (
-              <div className="text-muted-foreground px-2 py-6 text-center text-sm">Press Enter to use "{value}"</div>
+              <div className="text-muted-foreground px-2 py-6 text-center text-sm">Use new value: "{value}"</div>
             ) : (
-              <CommandEmpty>No roles found.</CommandEmpty>
+              <CommandEmpty>No values found</CommandEmpty>
             )}
           </CommandList>
         </Command>
