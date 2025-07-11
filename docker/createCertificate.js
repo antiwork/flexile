@@ -3,4 +3,7 @@ import { createSelfSignedCertificate } from "next/dist/lib/mkcert.js";
 const log = console.log;
 console.log = () => {};
 const certificate = await createSelfSignedCertificate("flexile.dev");
+if (!certificate?.rootCA) {
+  console.warn("Warning: Next.js certificate generation failed unexpectedly");
+}
 log(certificate?.rootCA || "");
