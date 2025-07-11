@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# TODO: Move this model on to `Company` model once we have moved away from DocumentTemplates
+
 class CompanyInviteLink < ApplicationRecord
   belongs_to :company
   belongs_to :document_template, optional: true

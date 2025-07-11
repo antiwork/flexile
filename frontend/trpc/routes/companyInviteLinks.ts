@@ -1,3 +1,5 @@
+// TODO Remove this TRCP once we have moved away from DocumentTemplates table
+
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { db } from "@/db";

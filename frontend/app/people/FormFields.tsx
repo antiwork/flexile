@@ -19,7 +19,6 @@ const defaultRoles = ["Software Engineer", "Designer", "Product Manager", "Data 
 
 export default function FormFields() {
   const form = useFormContext<z.infer<typeof schema>>();
-  const [rolePopoverOpen, setRolePopoverOpen] = React.useState(false);
   const payRateType = form.watch("payRateType");
   const companyId = useUserStore((state) => state.user?.currentCompanyId);
   const { data: workers } = trpc.contractors.list.useQuery(companyId ? { companyId, excludeAlumni: true } : skipToken);
