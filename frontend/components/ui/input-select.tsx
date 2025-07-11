@@ -3,14 +3,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 import { Command, CommandGroup, CommandItem, CommandList, CommandEmpty } from "./command";
 import { Input } from "./input";
 
-interface InputSelect {
+interface InputSelectProps {
   value: string;
   onChange: (value: string) => void;
   options: string[];
   placeholder?: string;
 }
 
-export default function InputSelect({ value, onChange, options, placeholder = "Select or type" }: InputSelect) {
+export default function InputSelect({ value, onChange, options, placeholder = "Select or type" }: InputSelectProps) {
   const [open, setOpen] = useState(false);
 
   const filteredOptions = useMemo(() => {
