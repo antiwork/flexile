@@ -12,6 +12,7 @@ const ComboBox = ({
   multiple,
   onChange,
   placeholder = "Select...",
+  searchPlaceholder = "Search...",
   className,
   modal,
   onInput,
@@ -19,6 +20,7 @@ const ComboBox = ({
 }: {
   options: { value: string; label: string }[];
   placeholder?: string;
+  searchPlaceholder?: string;
   modal?: boolean;
   onInput?: (value: string) => void;
 } & (
@@ -41,7 +43,8 @@ const ComboBox = ({
           className={cn("justify-between", className)}
         >
           <div className="truncate">
-            {value?.length ? (multiple ? value.map(getLabel).join(", ") : getLabel(value)) : placeholder}
+            {(value?.length ? (multiple ? value.map(getLabel).join(", ") : getLabel(value)) : placeholder) ||
+              placeholder}
           </div>
           <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
@@ -49,7 +52,7 @@ const ComboBox = ({
       <PopoverContent className="p-0" style={{ width: "var(--radix-popover-trigger-width)" }}>
         <Command value={!multiple ? (value ?? "") : ""}>
           <CommandInput
-            placeholder="Search..."
+            placeholder={searchPlaceholder}
             onInput={(e) => {
               onInput?.(e.currentTarget.value);
             }}

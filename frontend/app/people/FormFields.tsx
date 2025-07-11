@@ -39,6 +39,7 @@ export default function FormFields() {
                 onInput={(newRole) => setNewRole(newRole.trim())}
                 options={uniqueRoles.map((role) => ({ value: role, label: role }))}
                 placeholder="Select or type a role"
+                searchPlaceholder="Search or create role..."
               />
             </FormControl>
             <FormMessage />
