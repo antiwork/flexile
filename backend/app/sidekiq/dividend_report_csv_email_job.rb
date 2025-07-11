@@ -20,7 +20,8 @@ class DividendReportCsvEmailJob
                                    .distinct
                                    .order(issued_at: :asc)
 
+    subject = "Flexile Dividend Report CSV #{target_year}-#{target_month.to_s.rjust(2, '0')}"
     attached = { "DividendReport.csv" => DividendReportCsv.new(dividend_rounds).generate }
-    AdminMailer.custom(to: recipients, subject: "Flexile Dividend Report CSV", body: "Attached", attached:).deliver_later
+    AdminMailer.custom(to: recipients, subject: subject, body: "Attached", attached:).deliver_later
   end
 end
