@@ -1,7 +1,5 @@
 import { companiesFactory } from "@test/factories/companies";
-import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
-import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { fillDatePicker } from "@test/helpers";
 import { expect, test } from "@test/index";
@@ -59,12 +57,7 @@ test.describe("Role selection component", () => {
   });
 
   test("allows entering custom roles not in the suggestion list", async ({ page }) => {
-    const { company } = await companiesFactory.create();
-    const { user: admin } = await usersFactory.create();
-    await companyAdministratorsFactory.create({
-      companyId: company.id,
-      userId: admin.id,
-    });
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
 
     // Create one existing role
     await companyContractorsFactory.create({
@@ -72,7 +65,7 @@ test.describe("Role selection component", () => {
       role: "Frontend Developer",
     });
 
-    await login(page, admin);
+    await login(page, adminUser);
     await page.getByRole("link", { name: "People" }).click();
     await page.getByRole("button", { name: "Invite contractor" }).click();
 
