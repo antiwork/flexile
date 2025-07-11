@@ -157,7 +157,7 @@ export default function Billing() {
           ) : (
             <Alert>
               <InformationCircleIcon />
-              <AlertTitle className="line-clamp-none">You currently do not have a bank account linked.</AlertTitle>
+              <AlertTitle>You currently do not have a bank account linked.</AlertTitle>
               <AlertDescription className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p>We'll use this account to debit contractor payments and our monthly fee.</p>
@@ -181,9 +181,7 @@ export default function Billing() {
       <h3 className="mt-4 text-base font-medium">Billing history</h3>
       <Alert>
         <InformationCircleIcon />
-        <AlertTitle className="line-clamp-none">
-          Payments to contractors may take up to 10 business days to process.
-        </AlertTitle>
+        <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
         <AlertDescription>
           Want faster payments? Email us at <a href="mailto:support@flexile.com">support@flexile.com</a> to complete
           additional verification steps.
