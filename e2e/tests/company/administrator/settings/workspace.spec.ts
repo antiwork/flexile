@@ -12,7 +12,7 @@ test.describe.serial("Workspace settings", () => {
   let adminUser: Awaited<ReturnType<typeof usersFactory.create>>["user"];
 
   test.beforeEach(async ({ page }) => {
-    clerk.signOut({ page });
+    await clerk.signOut({ page });
     ({ company, adminUser } = await companiesFactory.createCompletedOnboarding());
     await login(page, adminUser);
     await page.goto("/administrator/settings");
@@ -54,16 +54,16 @@ test.describe.serial("Workspace settings", () => {
     const companyNameInput = page.getByLabel("Company name");
     const websiteInput = page.getByLabel("Company website");
 
-    await expect(companyNameInput).toHaveValue(company.name as string);
+    await expect(companyNameInput).toHaveValue(company.name ?? "");
 
     const companyData = await db.query.companies.findFirst({
       where: eq(companies.id, company.id),
     });
 
-    await expect(websiteInput).toHaveValue(companyData?.website as string);
+    await expect(websiteInput).toHaveValue(companyData?.website ?? "");
 
     const colorInput = page.locator('input[type="color"]');
-    await expect(colorInput).toHaveValue(companyData?.brandColor || "#000000");
+    await expect(colorInput).toHaveValue(companyData?.brandColor ?? "#000000");
 
     const logoImage = page.locator('img[alt="Company logo"]');
     await expect(logoImage).toBeVisible();
