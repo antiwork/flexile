@@ -12,7 +12,7 @@ BOLD := \033[1m
 # Project configuration
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
-.PHONY: help install dev test lint clean local stop_local .setup ghpr
+.PHONY: help install dev test lint clean local stop_local stop-dev .setup ghpr kill-ports ensure-node-version
 
 # Detect OS
 UNAME_S := $(shell uname -s)
@@ -296,15 +296,31 @@ docker-down: ## 🛑 Stop Docker services
 stop_local: docker-down ## 🛑 Stop local development environment (alias)
 	@printf "$(CYAN)🛑 Local development environment stopped$(RESET)\n"
 
+stop-dev: kill-ports docker-down ## 🛑 Stop all development servers and services
+	@printf "$(CYAN)🛑 Stopping all development servers and services...$(RESET)\n"
+	@printf "$(GREEN)✅ All development processes stopped$(RESET)\n"
+
 docker-logs: ## 📋 Show Docker service logs
 	COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) \
 		$(DOCKER_COMPOSE_CMD) -f docker/$(LOCAL_DOCKER_COMPOSE_CONFIG) logs -f
 
 kill-ports: ## 🚫 Kill processes on development ports
 	@printf "$(CYAN)🚫 Killing processes on ports 3000, 3001, 8288...$(RESET)\n"
-	@lsof -ti:3000 | xargs -r kill -9 2>/dev/null || true
-	@lsof -ti:3001 | xargs -r kill -9 2>/dev/null || true
-	@lsof -ti:8288 | xargs -r kill -9 2>/dev/null || true
+	@for port in 3000 3001 8288; do \
+		for attempt in 1 2 3; do \
+			pids=$$(lsof -ti:$$port 2>/dev/null || true); \
+			if [ -n "$$pids" ]; then \
+				printf "$(YELLOW)Attempt $$attempt: Killing processes on port $$port: $$pids$(RESET)\n"; \
+				echo "$$pids" | xargs kill -9 2>/dev/null || true; \
+				sleep 1; \
+			else \
+				printf "$(GREEN)✓ Port $$port is free$(RESET)\n"; \
+				break; \
+			fi; \
+		done; \
+	done
+	@printf "$(YELLOW)Waiting for ports to be released...$(RESET)\n"
+	@sleep 3
 	@printf "$(GREEN)✅ Ports cleared$(RESET)\n"
 
 local: .setup ## 🏠 Start local development environment
@@ -353,8 +369,8 @@ ensure-node-version: ## 🔧 Ensure correct Node.js version before starting
 	fi
 
 dev-frontend: ## Start only frontend development server
-	@echo "$(CYAN)Starting frontend development server...$(RESET)"
-	pnpm next dev $(FRONTEND_DIR)
+	@printf "$(CYAN)🚀 Starting frontend development server...$(RESET)\n"
+	TZ=UTC pnpm next dev $(FRONTEND_DIR) -H flexile.dev -p 3001
 
 dev-backend: ## Start only backend development server
 	@echo "$(CYAN)Starting backend development server...$(RESET)"
