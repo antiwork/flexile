@@ -37,16 +37,17 @@ class InvoiceListPerformanceBenchmark
 
   def warm_up_queries
     puts "🔥 Warming up database connection..."
-    3.times { run_invoice_list_query }
+    3.times { run_full_activerecord_query }
   end
 
   def benchmark_invoice_list_query
-    puts "⏱️  Timing invoice list query (10 iterations):"
+    puts "⏱️  Timing full ActiveRecord query with joins/includes (10 iterations):"
+    puts "   (This tests the complete application query performance)"
     
     times = []
     10.times do |i|
       start_time = Time.current
-      run_invoice_list_query
+      run_full_activerecord_query
       end_time = Time.current
       
       duration = ((end_time - start_time) * 1000).round(2)
@@ -58,13 +59,22 @@ class InvoiceListPerformanceBenchmark
     puts "   Average: #{(times.sum / times.length).round(2)}ms"
     puts "   Min:     #{times.min}ms"
     puts "   Max:     #{times.max}ms"
-    puts "   Median:  #{times.sort[times.length / 2]}ms"
+    
+    # Calculate median correctly for even/odd length arrays
+    sorted_times = times.sort
+    median = if times.length.odd?
+      sorted_times[times.length / 2]
+    else
+      (sorted_times[times.length / 2 - 1] + sorted_times[times.length / 2]) / 2.0
+    end
+    puts "   Median:  #{median.round(2)}ms"
   end
 
   def explain_analyze_query
-    puts "\n🔍 Query execution plan:"
+    puts "\n🔍 Query execution plan for index-focused SQL:"
+    puts "   (This shows how the composite index optimizes WHERE/ORDER BY)"
     
-    sql = build_invoice_list_sql
+    sql = build_index_focused_sql
     result = ActiveRecord::Base.connection.execute("EXPLAIN (ANALYZE, BUFFERS) #{sql}")
     
     result.each do |row|
@@ -73,11 +83,12 @@ class InvoiceListPerformanceBenchmark
   end
 
   def benchmark_scalability
-    puts "\n📈 Scalability test (queries with different result sizes):"
+    puts "\n📈 Scalability test using index-focused SQL (queries with different result sizes):"
+    puts "   (This isolates the index performance without join overhead)"
     
     # Test with different limits to simulate pagination
     [10, 50, 100, 500].each do |limit|
-      sql = build_invoice_list_sql(limit)
+      sql = build_index_focused_sql(limit)
       
       start_time = Time.current
       ActiveRecord::Base.connection.execute(sql)
@@ -88,8 +99,9 @@ class InvoiceListPerformanceBenchmark
     end
   end
 
-  def run_invoice_list_query
-    # This mirrors the exact query from frontend/trpc/routes/invoices.ts line 315-339
+  def run_full_activerecord_query
+    # Full ActiveRecord query as used in the application
+    # This includes joins and eager loading which add overhead beyond the index optimization
     @company.invoices
              .joins(company_contractor: :user)
              .includes(
@@ -105,9 +117,9 @@ class InvoiceListPerformanceBenchmark
              .to_a
   end
 
-  def build_invoice_list_sql(limit = 100)
-    # Build the raw SQL to match the Drizzle query from the frontend
-    # Use parameterized queries to prevent SQL injection
+  def build_index_focused_sql(limit = 100)
+    # Simplified SQL that focuses on testing the composite index performance
+    # This isolates the WHERE/ORDER BY optimization without join overhead
     ActiveRecord::Base.sanitize_sql_array([<<~SQL, @company.id, limit])
       SELECT invoices.*
       FROM invoices
@@ -123,28 +135,33 @@ end
 puts <<~USAGE
   🎯 Invoice List Performance Benchmark
   
-  This script benchmarks the performance of the invoice list query that's used
-  in the TRPC endpoint (frontend/trpc/routes/invoices.ts).
+  This script benchmarks two aspects of invoice list performance:
   
-  The query filters by:
-  - company_id = [current company]
-  - deleted_at IS NULL
+  1. Full ActiveRecord Query Performance
+     - Tests the complete application query with joins and includes
+     - Shows real-world performance including all overhead
   
-  And orders by:
-  - invoice_date DESC, created_at DESC
+  2. Index-Focused SQL Performance  
+     - Isolates the composite index optimization
+     - Tests only the WHERE/ORDER BY clauses without join overhead
+     - Better demonstrates the specific index improvement
+  
+  The composite index optimizes:
+  - WHERE company_id = ? AND deleted_at IS NULL
+  - ORDER BY invoice_date DESC, created_at DESC
   
   🚀 To see the improvement:
   
   1. Run this script BEFORE applying the migration:
-     ruby scripts/benchmark_invoice_list_performance.rb
+     ruby scripts/benchmark_invoice_list_performance.rb --run
   
   2. Apply the migration:
      rails db:migrate
   
   3. Run this script AFTER applying the migration:
-     ruby scripts/benchmark_invoice_list_performance.rb
+     ruby scripts/benchmark_invoice_list_performance.rb --run
   
-  Expected improvement: 5-50x faster for companies with 1000+ invoices
+  Expected improvement: 5-50x faster for the index-focused queries
   
 USAGE
 
