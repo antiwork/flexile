@@ -6,7 +6,7 @@ import { companyAdministratorsFactory } from "@test/factories/companyAdministrat
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { mockDocuseal as mockDocusealHelper } from "@test/helpers/docuseal";
-import { fillDatePicker } from "@test/helpers";
+import { fillDatePicker, selectComboboxOption } from "@test/helpers";
 import { expect, type Page, test, withinModal } from "@test/index";
 import { addMonths, format } from "date-fns";
 import { desc, eq } from "drizzle-orm";
@@ -84,7 +84,7 @@ test.describe("New Contractor", () => {
       __role: "Hourly Role 1",
     });
     const { email } = await fillForm(page);
-    await page.getByLabel("Role").fill("Hourly Role 1");
+    await selectComboboxOption(page, "Role", "Hourly Role 1", true);
     await page.getByLabel("Rate").fill("99");
 
     await mockForm(page);
@@ -123,7 +123,7 @@ test.describe("New Contractor", () => {
     });
     await mockForm(page);
     const { email } = await fillForm(page);
-    await page.getByLabel("Role").fill("Project-based Role");
+    await selectComboboxOption(page, "Role", "Project-based Role", true);
     await page.getByRole("radio", { name: "Custom" }).click({ force: true });
     await page.getByLabel("Rate").fill("1000");
 
@@ -157,7 +157,7 @@ test.describe("New Contractor", () => {
 
   test("allows inviting a contractor with contract signed elsewhere", async ({ page }) => {
     const { email } = await fillForm(page);
-    await page.getByLabel("Role").fill("Contract Signed Elsewhere Role");
+    await selectComboboxOption(page, "Role", "Contract Signed Elsewhere Role", true);
 
     await page.getByLabel("Already signed contract elsewhere.").check({ force: true });
 
@@ -188,7 +188,7 @@ test.describe("New Contractor", () => {
     await login(page, user);
     await page.goto("/people");
     await page.getByRole("button", { name: "Invite contractor" }).click();
-    await expect(page.getByLabel("Role")).toHaveValue("Hourly Role 1");
+    await expect(page.getByRole("combobox", { name: "Role" })).toHaveText("Hourly Role 1");
     await expect(page.getByLabel("Rate")).toHaveValue("100");
     await expect(page.getByLabel("Already signed contract elsewhere")).toBeChecked();
     await expect(page.getByLabel("Custom")).toBeChecked();

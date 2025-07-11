@@ -5,7 +5,7 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
-import { fillDatePicker } from "@test/helpers";
+import { fillDatePicker, selectComboboxOption } from "@test/helpers";
 import { expect, test, withinModal } from "@test/index";
 
 test.describe("Contractor for multiple companies", () => {
@@ -32,7 +32,7 @@ test.describe("Contractor for multiple companies", () => {
 
     await page.getByLabel("Email").fill(contractorUser.email);
     await fillDatePicker(page, "Start date", "08/08/2025");
-    await page.getByLabel("Role").fill("Role");
+    await selectComboboxOption(page, "Role", "Role", true);
     await page.getByRole("button", { name: "Send invite" }).click();
     await withinModal(
       async (modal) => {

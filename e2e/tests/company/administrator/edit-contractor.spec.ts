@@ -10,6 +10,7 @@ import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
 import { assert } from "@/utils/assert";
 import { PayRateType } from "@/db/enums";
+import { selectComboboxOption } from "@test/helpers";
 
 test.describe("Edit contractor", () => {
   test("allows searching for contractors by name", async ({ page }) => {
@@ -72,11 +73,11 @@ test.describe("Edit contractor", () => {
     await page.getByRole("link", { name: contractor.preferredName }).click();
 
     await page.getByRole("heading", { name: contractor.preferredName }).click();
-    await expect(page.getByLabel("Role")).toHaveValue(companyContractor.role);
+    await expect(page.getByRole("combobox", { name: "Role" })).toHaveText(companyContractor.role);
     await expect(page.getByLabel("Legal name")).toHaveValue(contractor.legalName);
     await expect(page.getByLabel("Legal name")).toBeDisabled();
 
-    await page.getByLabel("Role").fill("Stuff-doer");
+    await selectComboboxOption(page, "Role", "Stuff-doer", true);
     await page.getByLabel("Rate").fill("107");
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByRole("button", { name: "Sign now" })).toBeVisible();
@@ -113,7 +114,7 @@ test.describe("Edit contractor", () => {
     await page.getByRole("link", { name: user.preferredName }).click();
     await page.getByRole("heading", { name: user.preferredName }).click();
 
-    await page.getByLabel("Role").fill("Stuff-doer");
+    await selectComboboxOption(page, "Role", "Stuff-doer", true);
     await page.getByRole("radio", { name: "Custom" }).click({ force: true });
     await page.getByLabel("Rate").fill("2000");
     await page.getByRole("button", { name: "Save changes" }).click();

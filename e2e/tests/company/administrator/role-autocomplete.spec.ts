@@ -49,15 +49,22 @@ test.describe("Role autocomplete", () => {
     await expect(page.getByRole("option", { name: role3, selected: true })).toBeVisible();
     await expect(page.getByRole("option", { name: "Alumni Role" })).not.toBeVisible();
 
-    await roleField.fill("dev");
+    await page.getByPlaceholder("Search...").fill("dev");
+    await expect(page.getByRole("option", { name: "dev", selected: false })).toBeVisible();
     await expect(page.getByRole("option", { name: role1, selected: true })).toBeVisible();
-    await expect(page.getByRole("option", { name: role2, selected: false })).toBeVisible();
-    await expect(page.getByRole("option", { name: role3, selected: false })).toBeVisible();
-    await roleField.press("Enter");
-    await expect(roleField).toHaveValue(role1);
+    await expect(page.getByRole("option", { name: role2 })).not.toBeVisible();
+    await expect(page.getByRole("option", { name: role3 })).not.toBeVisible();
+    await page.getByRole("option", { name: role1 }).click();
+    await expect(roleField).toHaveText(role1);
 
-    await page.getByRole("option", { name: role2 }).click();
-    await expect(roleField).toHaveValue(role2);
+    await roleField.click();
+    await page.getByPlaceholder("Search...").fill("Consultant");
+    await expect(page.getByRole("option", { name: "Consultant", selected: true })).toBeVisible();
+    await expect(page.getByRole("option", { name: role1 })).not.toBeVisible();
+    await expect(page.getByRole("option", { name: role2 })).not.toBeVisible();
+    await expect(page.getByRole("option", { name: role3 })).not.toBeVisible();
+    await page.getByRole("option", { name: "Consultant" }).click();
+    await expect(roleField).toHaveText("Consultant");
   };
 
   test("suggests existing roles when inviting a new contractor", async ({ page }) => {
@@ -80,7 +87,7 @@ test.describe("Role autocomplete", () => {
     await login(page, admin);
     await page.getByRole("link", { name: "People" }).click();
     await page.getByRole("link", { name: user.preferredName ?? "" }).click();
-    await expect(page.getByLabel("Role")).toHaveValue(contractor.role);
+    await expect(page.getByRole("combobox", { name: "Role" })).toHaveText(contractor.role);
     await testAutofill(page);
   });
 });

@@ -20,8 +20,10 @@ export default function FormFields() {
   const payRateType = form.watch("payRateType");
   const companyId = useUserStore((state) => state.user?.currentCompanyId);
   const { data: workers } = trpc.contractors.list.useQuery(companyId ? { companyId, excludeAlumni: true } : skipToken);
+  const [newRole, setNewRole] = React.useState("");
 
-  const uniqueRoles = workers ? [...new Set(workers.map((worker) => worker.role))].sort() : [];
+  const uniqueWorkerRoles = [...new Set((workers || []).map((worker) => worker.role))].sort();
+  const uniqueRoles = newRole ? [...new Set([...uniqueWorkerRoles, newRole])] : uniqueWorkerRoles;
 
   return (
     <>
@@ -34,6 +36,7 @@ export default function FormFields() {
             <FormControl>
               <ComboBox
                 {...field}
+                onInput={(newRole) => setNewRole(newRole)}
                 options={uniqueRoles.map((role) => ({ value: role, label: role }))}
                 placeholder="Select or type a role"
               />

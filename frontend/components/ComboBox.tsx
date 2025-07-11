@@ -14,12 +14,18 @@ const ComboBox = ({
   placeholder = "Select...",
   className,
   modal,
+  onInput,
   ...props
-}: { options: { value: string; label: string }[]; placeholder?: string; modal?: boolean } & (
+}: {
+  options: { value: string; label: string }[];
+  placeholder?: string;
+  modal?: boolean;
+  onInput?: (value: string) => void;
+} & (
   | { multiple: true; value: string[]; onChange: (value: string[]) => void }
   | { multiple?: false; value: string | null | undefined; onChange: (value: string) => void }
 ) &
-  Omit<React.ComponentProps<typeof Button>, "value" | "onChange">) => {
+  Omit<React.ComponentProps<typeof Button>, "value" | "onChange" | "onInput">) => {
   const [open, setOpen] = React.useState(false);
   const getLabel = (value: string) => options.find((o) => o.value === value)?.label;
 
@@ -41,8 +47,13 @@ const ComboBox = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0" style={{ width: "var(--radix-popover-trigger-width)" }}>
-        <Command>
-          <CommandInput placeholder="Search..." />
+        <Command value={!multiple ? (value ?? "") : ""}>
+          <CommandInput
+            placeholder="Search..."
+            onInput={(e) => {
+              onInput?.(e.currentTarget.value);
+            }}
+          />
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup>

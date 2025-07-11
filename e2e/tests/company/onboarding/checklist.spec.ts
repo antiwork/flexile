@@ -69,7 +69,10 @@ test.describe.serial("Onboarding checklist", () => {
       async (modal) => {
         await expect(modal.getByText("Who's joining?")).toBeVisible();
         await modal.getByLabel("Email").fill(contractWorkerUser.email);
-        await modal.getByLabel("Role").fill("Software Engineer");
+        await modal.getByRole("combobox", { name: "Role" }).click();
+        await modal.getByPlaceholder("Search...").fill("Software Engineer");
+        await modal.getByRole("option", { name: "Software Engineer" }).click();
+        await modal.getByRole("option").waitFor({ state: "detached" });
         await modal.getByLabel("Hourly").check();
         await modal.getByLabel("Rate").fill("100");
         await modal.getByLabel("Already signed contract elsewhere.").check({ force: true });
