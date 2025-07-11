@@ -36,7 +36,7 @@ export default function FormFields() {
             <FormControl>
               <ComboBox
                 {...field}
-                onInput={(newRole) => setNewRole(newRole)}
+                onInput={(newRole) => setNewRole(newRole.trim())}
                 options={uniqueRoles.map((role) => ({ value: role, label: role }))}
                 placeholder="Select or type a role"
               />
