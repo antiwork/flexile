@@ -20,7 +20,7 @@ import QuickbooksIntegration from "./QuickbooksIntegration";
 import StripeMicrodepositVerification from "./StripeMicrodepositVerification";
 
 const formSchema = z.object({
-  website: z.string().url().nullable(),
+  website: z.string().url().nullish().or(z.literal("")),
   brandColor: z.string().nullable(),
   publicName: z.string(),
 });
@@ -32,8 +32,9 @@ export default function SettingsPage() {
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      ...settings,
       publicName: company.name ?? "",
+      website: settings.website ?? "",
+      brandColor: settings.brandColor ?? null,
     },
   });
 
