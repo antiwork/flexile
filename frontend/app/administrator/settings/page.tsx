@@ -121,7 +121,7 @@ export default function SettingsPage() {
                 <FormItem>
                   <FormLabel>Brand color</FormLabel>
                   <FormControl>
-                    <ColorPicker value={field.value} onChange={field.onChange} />
+                    <ColorPicker {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
