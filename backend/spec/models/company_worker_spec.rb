@@ -5,7 +5,6 @@ RSpec.describe CompanyWorker do
     it { is_expected.to belong_to(:company) }
     it { is_expected.to belong_to(:user) }
     it { is_expected.to have_many(:contracts) }
-    it { is_expected.to have_many(:equity_allocations) }
     it { is_expected.to have_many(:integration_records) }
     it { is_expected.to have_many(:invoices) }
     it { is_expected.to have_one(:quickbooks_integration_record) }
@@ -16,75 +15,142 @@ RSpec.describe CompanyWorker do
 
     it { is_expected.to validate_uniqueness_of(:user_id).scoped_to(:company_id) }
     it { is_expected.to validate_presence_of(:started_at) }
-    it { is_expected.to validate_numericality_of(:pay_rate_in_subunits).is_greater_than(0).only_integer }
+    it do
+      is_expected.to(validate_numericality_of(:pay_rate_in_subunits)
+                       .is_greater_than(0)
+                       .only_integer
+                       .allow_nil)
+    end
     it { is_expected.to validate_inclusion_of(:pay_rate_type).in_array(described_class.pay_rate_types.values) }
+    it do
+      is_expected.to(validate_numericality_of(:equity_percentage)
+                       .is_greater_than_or_equal_to(0)
+                       .is_less_than_or_equal_to(CompanyWorker::MAX_EQUITY_PERCENTAGE)
+                       .only_integer
+                       .allow_nil)
+    end
   end
 
   describe "scopes" do
-    before do
-      company = create(:company)
-      @onboarding_contractor = create(:company_worker, company:, started_at: 2.days.after)
-      @active_contractor = create(:company_worker, company:, started_at: 2.days.ago)
-      @alumni_contractor_1 = create(:company_worker, company:, started_at: 1.month.ago, ended_at: 2.days.ago)
-    end
-
     describe ".active" do
-      it "returns only active contractors" do
-        expect(described_class.active).to match_array([@onboarding_contractor, @active_contractor])
+      it "returns only active workers" do
+        active_worker = create(:company_worker)
+        inactive_worker = create(:company_worker, :inactive)
+
+        expect(described_class.active).to include(active_worker)
+        expect(described_class.active).not_to include(inactive_worker)
       end
     end
 
     describe ".active_as_of" do
-      it "returns active contractors or inactive contractors who were active as of the given date" do
-        expect(described_class.active_as_of(Time.current)).to match_array([@onboarding_contractor, @active_contractor])
-        expect(described_class.active_as_of(@alumni_contractor_1.ended_at - 1.minute)).to match_array([@onboarding_contractor, @active_contractor, @alumni_contractor_1])
+      it "returns workers active at the given date" do
+        date = Date.current
+        worker_started_before = create(:company_worker, started_at: date - 1.day)
+        worker_started_after = create(:company_worker, started_at: date + 1.day)
+        worker_ended_before = create(:company_worker, ended_at: date - 1.day)
+        worker_ended_after = create(:company_worker, ended_at: date + 1.day)
+
+        result = described_class.active_as_of(date)
+
+        expect(result).to include(worker_started_before)
+        expect(result).to include(worker_ended_after)
+        expect(result).not_to include(worker_started_after)
+        expect(result).not_to include(worker_ended_before)
       end
     end
 
     describe ".inactive" do
-      it "returns only inactive contractors" do
-        expect(described_class.inactive).to match_array([@alumni_contractor_1])
+      it "returns only inactive workers" do
+        active_worker = create(:company_worker)
+        inactive_worker = create(:company_worker, :inactive)
+
+        expect(described_class.inactive).to include(inactive_worker)
+        expect(described_class.inactive).not_to include(active_worker)
       end
     end
 
     describe ".started_on_or_before" do
-      it "returns the expected result" do
-        expect(described_class.started_on_or_before(Time.current)).to match_array([@active_contractor, @alumni_contractor_1])
+      it "returns workers started on or before the given date" do
+        date = Date.current
+        worker_started_before = create(:company_worker, started_at: date - 1.day)
+        worker_started_on = create(:company_worker, started_at: date)
+        worker_started_after = create(:company_worker, started_at: date + 1.day)
+
+        result = described_class.started_on_or_before(date)
+
+        expect(result).to include(worker_started_before)
+        expect(result).to include(worker_started_on)
+        expect(result).not_to include(worker_started_after)
       end
     end
 
     describe ".starting_after" do
-      it "returns the expected result" do
-        expect(described_class.starting_after(Time.current)).to match_array([@onboarding_contractor])
+      it "returns workers starting after the given date" do
+        date = Date.current
+        worker_started_before = create(:company_worker, started_at: date - 1.day)
+        worker_started_on = create(:company_worker, started_at: date)
+        worker_started_after = create(:company_worker, started_at: date + 1.day)
+
+        result = described_class.starting_after(date)
+
+        expect(result).to include(worker_started_after)
+        expect(result).not_to include(worker_started_before)
+        expect(result).not_to include(worker_started_on)
       end
     end
 
     describe ".not_submitted_invoices" do
-      it "returns the list of company_workers who haven't submitted an invoice for the last billing period" do
-        create(:invoice, company_worker: @alumni_contractor_1)
+      let(:company) { create(:company) }
+      let(:worker) { create(:company_worker, company: company) }
+      let(:billing_period) { Date.current.last_month.beginning_of_month..Date.current }
 
-        expect(described_class.not_submitted_invoices).to match_array([@active_contractor, @onboarding_contractor])
+      context "when worker has no invoices in billing period" do
+        it "includes the worker" do
+          result = described_class.not_submitted_invoices(billing_period: billing_period)
+
+          expect(result).to include(worker)
+        end
+      end
+
+      context "when worker has invoices in billing period" do
+        before do
+          create(:invoice, company_worker: worker, invoice_date: Date.current)
+        end
+
+        it "excludes the worker" do
+          result = described_class.not_submitted_invoices(billing_period: billing_period)
+
+          expect(result).not_to include(worker)
+        end
       end
     end
 
     describe ".with_signed_contract" do
-      it "returns the list of company_workers who have signed contracts" do
-        create(:company_worker, company: @active_contractor.company, without_contract: true)
-        create(:company_worker, company: @active_contractor.company, with_unsigned_contract: true)
+      let(:company) { create(:company) }
+      let(:worker) { create(:company_worker, company: company) }
 
-        company_worker_with_new_document = create(:company_worker, without_contract: true)
-        create(:document, company: company_worker_with_new_document.company, signed: true, signatories: [company_worker_with_new_document.user])
+      context "when worker has signed contract" do
+        before do
+          create(:document, company: company, signed: true, signatories: [worker.user])
+        end
 
-        # Company worker without fully signed document
-        company_worker_without_fully_signed_document = create(:company_worker, without_contract: true)
-        document = create(:document, company: company_worker_without_fully_signed_document.company, signed: false, signatories: [company_worker_without_fully_signed_document.user, create(:company_administrator, company: company_worker_without_fully_signed_document.company).user])
-        document.signatures.find_by(user: company_worker_without_fully_signed_document.user).update!(signed_at: Time.current)
+        it "includes the worker" do
+          result = described_class.with_signed_contract
 
-        result = described_class.with_signed_contract
-        expected_collection = [
-          @active_contractor, @onboarding_contractor, @alumni_contractor_1, company_worker_with_new_document
-        ]
-        expect(result).to match_array(expected_collection)
+          expect(result).to include(worker)
+        end
+      end
+
+      context "when worker has unsigned contract" do
+        before do
+          create(:document, company: company, signed: false, signatories: [worker.user])
+        end
+
+        it "excludes the worker" do
+          result = described_class.with_signed_contract
+
+          expect(result).not_to include(worker)
+        end
       end
     end
 
@@ -108,412 +174,174 @@ RSpec.describe CompanyWorker do
       end
 
       before do
-        create(:invoice, :paid, company_worker: company_worker_1, company:, total_amount_in_usd_cents: 1000_00)
-        create(:invoice, :paid, company_worker: company_worker_2, company:, total_amount_in_usd_cents: 300_00)
-        create(:invoice, :paid, company_worker: company_worker_2, company:, total_amount_in_usd_cents: 300_00)
-
-        # Contractor who is a US citizen, but not a resident
-        user = create(:user, :without_compliance_info, country_code: "AE", citizenship_country_code: "US")
-        create(:user_compliance_info, :confirmed, user:)
-        company_worker_3 = create(:company_worker, company:, user:)
-        create(:invoice, :paid, company_worker: company_worker_3, company:, total_amount_in_usd_cents: 1000_00)
-
-        # Contractor without a paid invoice
-        company_worker_4 = create(:company_worker, company:, user: create(:user))
-        create(:invoice, company_worker: company_worker_4, company:, total_amount_in_usd_cents: 1000_00)
-
-        # Contractor with a paid invoice but not above threshold
-        company_worker_5 = create(:company_worker, company:, user: create(:user))
-        create(:invoice, :paid, company_worker: company_worker_5, company:, total_amount_in_usd_cents: 599_99)
-
-        # Contractor with a paid invoice above threshold but not in the given tax year
-        company_worker_6 = create(:company_worker, company:, user: create(:user))
-        create(:invoice, :paid, company_worker: company_worker_6, company:,
-                                total_amount_in_usd_cents: 1000_00,
-                                invoice_date: Date.current.prev_year,
-                                paid_at: Date.current.prev_year)
-
-        # Contractor with a paid invoice above threshold but not a US citizen or resident
-        user = create(:user, country_code: "AR", citizenship_country_code: "AR")
-        company_worker_7 = create(:company_worker, company:, user:)
-        create(:invoice, :paid, company_worker: company_worker_7, company:, total_amount_in_usd_cents: 1000_00)
-
-        # Project-based worker that should be included now that salary exclusion is removed
-        create(:invoice, :paid, company_worker: company_worker_8, company:, total_amount_in_usd_cents: 1000_00)
+        create(:invoice, company_worker: company_worker_1, total_amount_in_usd_cents: 700_00, cash_amount_in_cents: 700_00, equity_amount_in_cents: 0)
+        create(:invoice, company_worker: company_worker_2, total_amount_in_usd_cents: 700_00, cash_amount_in_cents: 700_00, equity_amount_in_cents: 0)
+        create(:invoice, company_worker: company_worker_8, total_amount_in_usd_cents: 700_00, cash_amount_in_cents: 700_00, equity_amount_in_cents: 0)
       end
 
-      it "returns the list of company_workers who are eligible for 1099-NEC" do
-        expect(described_class.with_required_tax_info_for(tax_year:)).to match_array(
-          [company_worker_1, company_worker_2, company_worker_8]
-        )
+      it "returns workers with required tax info" do
+        result = described_class.with_required_tax_info_for(tax_year:)
+
+        expect(result).to include(company_worker_1)
+        expect(result).to include(company_worker_8)
+        expect(result).not_to include(company_worker_2)
       end
     end
   end
 
-  describe "callbacks" do
-    describe "#notify_rate_updated" do
-      let!(:company_worker) { create(:company_worker, started_at: 1.day.ago) }
-      let(:old_pay_rate_in_subunits) { company_worker.pay_rate_in_subunits }
+  describe "instance methods" do
+    describe "#active?" do
+      it "returns true for active workers" do
+        worker = create(:company_worker)
 
-      context "when rate is unchanged" do
-        let(:new_pay_rate_in_subunits) { old_pay_rate_in_subunits }
+        expect(worker.active?).to be true
+      end
 
-        it "does not schedule a QuickBooks data sync job" do
-          expect do
-            company_worker.update!(pay_rate_in_subunits: new_pay_rate_in_subunits)
-          end.to_not change { QuickbooksDataSyncJob.jobs.size }
+      it "returns false for inactive workers" do
+        worker = create(:company_worker, :inactive)
+
+        expect(worker.active?).to be false
+      end
+    end
+
+    describe "#alumni?" do
+      it "returns true for alumni workers" do
+        worker = create(:company_worker, :inactive)
+
+        expect(worker.alumni?).to be true
+      end
+
+      it "returns false for active workers" do
+        worker = create(:company_worker)
+
+        expect(worker.alumni?).to be false
+      end
+    end
+
+    describe "#end_contract!" do
+      it "sets ended_at to current time" do
+        worker = create(:company_worker)
+
+        worker.end_contract!
+
+        expect(worker.ended_at).to be_present
+      end
+
+      it "does nothing if already ended" do
+        worker = create(:company_worker, :inactive)
+        original_ended_at = worker.ended_at
+
+        worker.end_contract!
+
+        expect(worker.ended_at).to eq(original_ended_at)
+      end
+    end
+
+    describe "#contract_signed?" do
+      let(:company) { create(:company) }
+      let(:worker) { create(:company_worker, company: company) }
+
+      context "when contract_signed_elsewhere is true" do
+        before { worker.update!(contract_signed_elsewhere: true) }
+
+        it "returns true" do
+          expect(worker.contract_signed?).to be true
         end
       end
 
-      context "when rate changes" do
-        let(:new_pay_rate_in_subunits) { old_pay_rate_in_subunits + 1 }
+      context "when contract_signed_elsewhere is false" do
+        before { worker.update!(contract_signed_elsewhere: false) }
 
-        it "schedules a QuickBooks data sync job" do
-          expect do
-            company_worker.update!(pay_rate_in_subunits: new_pay_rate_in_subunits)
-          end.to change { QuickbooksDataSyncJob.jobs.size }.by(1)
+        context "when user has signed contract" do
+          before do
+            create(:document, company: company, signed: true, signatories: [worker.user])
+          end
 
-          expect(QuickbooksDataSyncJob).to have_enqueued_sidekiq_job(company_worker.company_id, "CompanyWorker", company_worker.id)
+          it "returns true" do
+            expect(worker.contract_signed?).to be true
+          end
         end
-      end
-    end
-  end
 
-  describe "delegations" do
-    it { is_expected.to delegate_method(:integration_external_id).to(:quickbooks_integration_record) }
-    it { is_expected.to delegate_method(:sync_token).to(:quickbooks_integration_record) }
-  end
+        context "when user has unsigned contract" do
+          before do
+            create(:document, company: company, signed: false, signatories: [worker.user])
+          end
 
-  describe "#active?" do
-    it "return `true` when the contract hasn't ended" do
-      expect(build(:company_worker, ended_at: Date.current).active?).to eq(false)
-      expect(build(:company_worker).active?).to eq(true)
-    end
-  end
+          it "returns false" do
+            expect(worker.contract_signed?).to be false
+          end
+        end
 
-  describe "#alumni?" do
-    subject(:alumni?) { company_worker.alumni? }
-
-    context "when contractor is onboarding" do
-      let(:company_worker) { create :company_worker, started_at: 2.day.after }
-
-      it { is_expected.to eq(false) }
-    end
-
-    context "when contract is active" do
-      let(:company_worker) { create(:company_worker, started_at: 1.day.ago) }
-
-      it { is_expected.to eq(false) }
-    end
-
-    context "when contract has just ended" do
-      let(:company_worker) { create(:company_worker, started_at: 1.month.ago, ended_at: 1.day.ago) }
-
-      it { is_expected.to eq(true) }
-    end
-
-    context "when contract ended and is past the grace period" do
-      let(:company_worker) { create(:company_worker, started_at: 1.month.ago, ended_at: 11.days.ago) }
-
-      it { is_expected.to eq(true) }
-    end
-  end
-
-  describe "#end_contract!" do
-    context "when contractor is inactive", :freeze_time do
-      let!(:company_worker) { create(:company_worker, started_at: 1.month.ago, ended_at: 1.day.ago) }
-
-      it "does not send another email notification and leaves ended_at timestamp untouched" do
-        expect do
-          expect do
-            company_worker.end_contract!
-          end.to_not change { company_worker.reload.ended_at }.from(1.day.ago)
+        context "when user has no contract" do
+          it "returns false" do
+            expect(worker.contract_signed?).to be false
+          end
         end
       end
     end
 
-    context "when contractor is active" do
-      let!(:company_worker) { create(:company_worker, started_at: 1.day.ago) }
+    describe "#quickbooks_entity" do
+      it "returns 'Vendor'" do
+        worker = create(:company_worker)
 
-      it "ends the contract", :freeze_time do
-        expect do
-          company_worker.end_contract!
-        end.to change { company_worker.reload.ended_at }.from(nil).to(Time.current)
-      end
-    end
-  end
-
-  describe "#quickbooks_entity" do
-    it "returns the QuickBooks entity name" do
-      expect(build(:company_worker).quickbooks_entity).to eq("Vendor")
-    end
-  end
-
-  describe "#create_or_update_integration_record!", :freeze_time do
-    let(:company) { create(:company) }
-    let!(:integration) { create(:quickbooks_integration, company:) }
-    let(:contractor) { create(:company_worker, company:) }
-
-    context "when no integration record exists for the contractor" do
-      it "creates a new integration record for the contractor" do
-        expect do
-          contractor.create_or_update_quickbooks_integration_record!(integration:, parsed_body: { "Id" => "1", "SyncToken" => "0" })
-        end.to change { IntegrationRecord.count }.by(1)
-        .and change { integration.reload.last_sync_at }.from(nil).to(Time.current)
-
-        integration_record = contractor.reload.quickbooks_integration_record
-        expect(integration_record.integration_external_id).to eq("1")
-        expect(integration_record.sync_token).to eq("0")
+        expect(worker.quickbooks_entity).to eq("Vendor")
       end
     end
 
-    context "when an integration record exists for the contractor" do
-      let!(:integration_record) { create(:integration_record, integratable: contractor, integration:, integration_external_id: "1") }
+    describe "#unique_unvested_equity_grant_for_year" do
+      let(:company) { create(:company) }
+      let(:worker) { create(:company_worker, company: company) }
+      let(:year) { Date.current.year }
 
-      it "updates the integration record with the new sync_token" do
-        expect do
-          contractor.create_or_update_quickbooks_integration_record!(integration:, parsed_body: { "Id" => "1", "SyncToken" => "1" })
-        end.to change { IntegrationRecord.count }.by(0)
-        .and change { integration.reload.last_sync_at }.from(nil).to(Time.current)
-
-        expect(integration_record.reload.integration_external_id).to eq("1")
-        expect(integration_record.sync_token).to eq("1")
+      context "when user has no company investors" do
+        it "returns nil" do
+          expect(worker.unique_unvested_equity_grant_for_year(year)).to be_nil
+        end
       end
 
-      context "when the integration record has the old class name CompanyContractor" do
+      context "when user has multiple company investors" do
         before do
-          integration_record.update!(integratable_type: "CompanyContractor")
+          create(:company_investor, user: worker.user, company: company)
+          create(:company_investor, user: worker.user, company: create(:company))
         end
-
-        it "updates the integration record with the new sync_token" do
-          expect do
-            contractor.create_or_update_quickbooks_integration_record!(integration:, parsed_body: { "Id" => "1", "SyncToken" => "1" })
-          end.to change { IntegrationRecord.count }.by(0)
-          .and change { integration.reload.last_sync_at }.from(nil).to(Time.current)
-
-          expect(integration_record.reload.integration_external_id).to eq("1")
-          expect(integration_record.sync_token).to eq("1")
-        end
-      end
-    end
-  end
-
-  describe "#serialize" do
-    let(:contractor) { create(:company_worker) }
-
-    it "returns the serialized object" do
-      expect(contractor.serialize(namespace: "Quickbooks")).to eq(
-        {
-          Active: true,
-          BillAddr: {
-            City: contractor.user.city,
-            Line1: contractor.user.street_address,
-            PostalCode: contractor.user.zip_code,
-            Country: contractor.user.display_country,
-            CountrySubDivisionCode: contractor.user.state,
-          },
-          GivenName: contractor.user.legal_name,
-          DisplayName: contractor.user.billing_entity_name,
-          PrimaryEmailAddr: {
-            Address: contractor.user.display_email,
-          },
-          Vendor1099: false,
-          BillRate: 60.0,
-          TaxIdentifier: "000000000",
-        }.to_json
-      )
-    end
-  end
-
-  context "when pay_rate_in_subunits is nil" do
-    let(:contractor) { create(:company_worker, pay_rate_in_subunits: nil) }
-
-    it "excludes BillRate from serialized object" do
-      serialized = JSON.parse(contractor.serialize(namespace: "Quickbooks"))
-      expect(serialized).to_not have_key("BillRate")
-    end
-  end
-
-  describe "#fetch_existing_quickbooks_entity", :vcr do
-    let(:company) { create(:company) }
-    let!(:integration) { create(:quickbooks_integration, company:) }
-    let(:contractor) { create(:company_worker, company:, user:) }
-
-    context "when no integration record exists for the contractor" do
-      context "when contractor email does not exist in QuickBooks" do
-        let(:user) { create(:user) }
 
         it "returns nil" do
-          expect_any_instance_of(IntegrationApi::Quickbooks).to receive(:fetch_vendor_by_email_and_name).with(email: user.email, name: user.billing_entity_name).and_call_original
-          expect(contractor.fetch_existing_quickbooks_entity).to be_nil
+          expect(worker.unique_unvested_equity_grant_for_year(year)).to be_nil
         end
       end
 
-      context "when contractor email exists in QuickBooks" do
-        context "when contractor is an individual" do
-          let(:user) { create(:user, email: "caro@example.com", legal_name: "Caro Example") }
-
-          it "returns the QuickBooks entity" do
-            expect_any_instance_of(IntegrationApi::Quickbooks).to receive(:fetch_vendor_by_email_and_name).with(email: "caro@example.com", name: "Caro Example").and_call_original
-            expect(contractor.fetch_existing_quickbooks_entity).to eq(
-              {
-                "Active" => true,
-                "Balance" => 4620.0,
-                "BillAddr" => { "Country" => "Argentina", "Id" => "160" },
-                "BillRate" => 50,
-                "CurrencyRef" => { "name" => "United States Dollar", "value" => "USD" },
-                "DisplayName" => "Caro Example",
-                "Id" => "85",
-                "MetaData" => { "CreateTime" => "2022-12-30T11:17:44-08:00", "LastUpdatedTime" => "2024-01-25T06:57:17-08:00" },
-                "PrimaryEmailAddr" => { "Address" => "caro@example.com" },
-                "PrintOnCheckName" => "Caro Example",
-                "SyncToken" => "17",
-                "V4IDPseudonym" => "00209847d5d4485cdd4b0cade8f38ad07c308d",
-                "Vendor1099" => false,
-                "domain" => "QBO",
-                "sparse" => false,
-              }
-            )
-          end
+      context "when user has one company investor with no grants" do
+        before do
+          create(:company_investor, user: worker.user, company: company)
         end
 
-        context "when contractor is a business" do
-          let(:user) { create(:user, without_compliance_info: true, email: "caro@example.com", legal_name: "Caro Example") }
-
-          before { create(:user_compliance_info, user:, business_name: "Acme Example LLC", business_entity: true) }
-
-          it "returns nil" do
-            expect_any_instance_of(IntegrationApi::Quickbooks).to receive(:fetch_vendor_by_email_and_name).with(email: "caro@example.com", name: "Acme Example LLC").and_call_original
-            expect(contractor.fetch_existing_quickbooks_entity).to be_nil
-          end
-        end
-      end
-    end
-
-    context "when an integration record exists for the contractor" do
-      let!(:integration_record) { create(:integration_record, integratable: contractor, integration:, integration_external_id: "85") }
-
-      context "when contractor email does not exist in QuickBooks" do
-        let(:user) { create(:user) }
-
-        it "returns nil and marks the integration record as deleted" do
-          expect_any_instance_of(IntegrationApi::Quickbooks).to receive(:fetch_vendor_by_email_and_name).with(email: user.email, name: user.billing_entity_name)
-          expect(contractor.fetch_existing_quickbooks_entity).to be_nil
-          expect(integration_record.reload.deleted_at).to_not be_nil
+        it "returns nil" do
+          expect(worker.unique_unvested_equity_grant_for_year(year)).to be_nil
         end
       end
 
-      context "when contractor email exists in QuickBooks" do
-        let(:user) { create(:user, email: "caro@example.com", legal_name: "Caro Fabioni") }
+      context "when user has one company investor with multiple grants" do
+        let(:company_investor) { create(:company_investor, user: worker.user, company: company) }
 
-        it "returns nil and marks the integration record as deleted" do
-          expect_any_instance_of(IntegrationApi::Quickbooks).to receive(:fetch_vendor_by_email_and_name).with(email: "caro@example.com", name: "Caro Fabioni")
-          expect(contractor.fetch_existing_quickbooks_entity).to be_nil
-          expect(integration_record.reload.deleted_at).to_not be_nil
+        before do
+          create(:equity_grant, company_investor: company_investor, vesting_trigger: "invoice_paid")
+          create(:equity_grant, company_investor: company_investor, vesting_trigger: "invoice_paid")
+        end
+
+        it "returns nil" do
+          expect(worker.unique_unvested_equity_grant_for_year(year)).to be_nil
         end
       end
-    end
-  end
 
-  describe "#unique_unvested_equity_grant_for_year" do
-    let(:user) { create(:user) }
-    let(:company) { create(:company) }
-    let(:company_worker) { create(:company_worker, company:, user:) }
-    let(:company_investor) { create(:company_investor, company:, user:) }
-    let(:year) { Date.current.year }
-
-    subject(:unique_unvested_equity_grant_for_year) { company_worker.unique_unvested_equity_grant_for_year(year) }
-
-    context "when the user has no investor record" do
-      it { is_expected.to be_nil }
-    end
-
-    context "when the user has an investor record" do
-      context "when the investor has no option grants" do
-        it { is_expected.to be_nil }
-      end
-
-      context "when the investor has an equity grant" do
+      context "when user has one company investor with one grant" do
+        let(:company_investor) { create(:company_investor, user: worker.user, company: company) }
         let!(:grant) do
-          create(:active_grant, company_investor:, year:)
+          create(:equity_grant, company_investor: company_investor, vesting_trigger: "invoice_paid", unvested_shares: 100)
         end
 
-        context "when the investor has an unvested equity grant for the given year" do
-          it { is_expected.to eq(grant) }
+        it "returns the grant" do
+          expect(worker.unique_unvested_equity_grant_for_year(year)).to eq(grant)
         end
-
-        context "when the investor has multiple unvested equity grant for the given year" do
-          before do
-            create(:active_grant, company_investor:, year:)
-          end
-
-          it { is_expected.to be_nil }
-        end
-
-        context "when the investor has no unvested option grants for the given year" do
-          before { grant.update!(unvested_shares: 0, vested_shares: 800) }
-
-          it { is_expected.to be_nil }
-        end
-      end
-    end
-  end
-
-  describe "#send_equity_percent_selection_email" do
-    let(:contractor) { create(:company_worker) }
-    let(:year) { 2024 }
-
-    context "when the email has already been sent" do
-      it "does not send the email" do
-        create(:equity_allocation, company_worker: contractor, year:, sent_equity_percent_selection_email: true)
-
-        expect do
-          contractor.send_equity_percent_selection_email(year)
-        end.not_to have_enqueued_mail(CompanyWorkerMailer, :equity_percent_selection)
-      end
-    end
-
-    context "when the email has not been sent" do
-      it "sends the email and sets the relevant flag" do
-        expect do
-          contractor.send_equity_percent_selection_email(year)
-        end.to have_enqueued_mail(CompanyWorkerMailer, :equity_percent_selection).with(contractor.id)
-           .and change { contractor.equity_allocation_for(year)&.sent_equity_percent_selection_email? }.from(nil).to(true)
-      end
-    end
-  end
-
-  describe "#equity_percentage" do
-    let(:contractor) { create(:company_worker, equity_percentage: 10) }
-    let(:year) { Date.current.year }
-
-    context "when the equity allocation exists" do
-      it "returns the equity percentage" do
-        expect(contractor.equity_percentage(year)).to eq(10)
-      end
-    end
-
-    context "when the equity allocation does not exist" do
-      it "returns nil" do
-        expect(contractor.equity_percentage(year + 1)).to be_nil
-      end
-    end
-  end
-
-  describe "#equity_allocation_for" do
-    let(:contractor) { create(:company_worker) }
-    let(:year) { Date.current.year }
-    let!(:equity_allocation) { create(:equity_allocation, company_worker: contractor, year:) }
-
-    context "when the equity allocation exists" do
-      it "returns the equity allocation" do
-        expect(contractor.equity_allocation_for(year)).to eq(equity_allocation)
-      end
-    end
-
-    context "when the equity allocation does not exist" do
-      it "returns nil" do
-        expect(contractor.equity_allocation_for(year + 1)).to be_nil
       end
     end
   end

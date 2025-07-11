@@ -29,10 +29,6 @@ FactoryBot.define do
       unless evaluator.without_contract
         create(:document, company: company_worker.company, signed: !evaluator.with_unsigned_contract, signatories: [company_worker.user])
       end
-
-      if evaluator.equity_percentage
-        create(:equity_allocation, company_worker:, equity_percentage: evaluator.equity_percentage)
-      end
     end
   end
 end
