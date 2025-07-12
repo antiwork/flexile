@@ -158,7 +158,7 @@ export default function Billing() {
             <Alert>
               <InformationCircleIcon />
               <AlertTitle>You currently do not have a bank account linked.</AlertTitle>
-              <AlertDescription className="flex items-center justify-between">
+              <AlertDescription className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p>We'll use this account to debit contractor payments and our monthly fee.</p>
                   <p>You won't be charged until the first payment.</p>
