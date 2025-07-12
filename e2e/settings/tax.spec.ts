@@ -479,6 +479,22 @@ test.describe("Tax settings", () => {
       const updatedUser = await db.query.users.findFirst({ where: eq(users.id, user.id) }).then(takeOrThrow);
       expect(updatedUser.legalName).toBe("John Middle Doe");
     });
+
+    test("handles null company data and user fields without errors", async ({ page }) => {
+      await db.update(companies).set({ name: null }).where(eq(companies.id, company.id));
+
+      await login(page, user);
+      await page.goto("/settings/tax");
+
+      await expect(
+        page.getByText("These details will be included in your invoices and applicable tax forms."),
+      ).toBeVisible();
+
+      await page.getByLabel("Full legal name (must match your ID)").clear();
+      await expect(page.getByLabel("Full legal name (must match your ID)")).toHaveValue("");
+
+      await expect(page.getByLabel("Individual")).toBeChecked();
+    });
   });
 
   test.describe("as an investor", () => {
