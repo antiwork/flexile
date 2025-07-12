@@ -5,6 +5,7 @@ import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { equityAllocationsFactory } from "@test/factories/equityAllocations";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { usersFactory } from "@test/factories/users";
+import { fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { subDays } from "date-fns";
@@ -18,7 +19,6 @@ import {
   invoices,
   users,
 } from "@/db/schema";
-import { fillDatePicker } from "@test/helpers";
 
 test.describe("invoice creation", () => {
   let company: typeof companies.$inferSelect;

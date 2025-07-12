@@ -3,8 +3,8 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
-import { login } from "@test/helpers/auth";
 import { fillDatePicker } from "@test/helpers";
+import { login } from "@test/helpers/auth";
 import { expect, type Page, test, withinModal } from "@test/index";
 
 type User = Awaited<ReturnType<typeof usersFactory.create>>["user"];

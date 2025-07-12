@@ -3,7 +3,7 @@ import { companyAdministratorsFactory } from "@test/factories/companyAdministrat
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
-import { expect, test, type Page } from "@test/index";
+import { expect, type Page, test } from "@test/index";
 
 test.describe("Role autocomplete", () => {
   const role1 = "Designer";
