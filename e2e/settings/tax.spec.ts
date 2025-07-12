@@ -510,7 +510,7 @@ test.describe("Tax settings", () => {
         await login(page, user);
         await page.goto("/settings/tax");
 
-        await expect(page).toHaveURL(new RegExp(`^.*/companies/${company.externalId}/worker/onboarding$`));
+        await expect(page).toHaveURL(new RegExp(`^.*/companies/${company.externalId}/worker/onboarding$`, "u"));
       });
     });
   });
@@ -578,7 +578,7 @@ test.describe("Tax settings", () => {
       await login(page, user);
       await page.goto("/settings/tax");
 
-      await expect(page).toHaveURL(new RegExp(`^.*/companies/${company.externalId}/investor/onboarding$`));
+      await expect(page).toHaveURL(new RegExp(`^.*/companies/${company.externalId}/investor/onboarding$`, "u"));
     });
   });
 
