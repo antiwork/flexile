@@ -668,7 +668,7 @@ const QuickInvoicesSection = () => {
     },
   });
 
-  const handleSubmit = form.handleSubmit((values) => submit.mutate(values));
+  const handleSubmit = form.handleSubmit(() => submit.mutate());
 
   return (
     <Card className={canSubmitInvoices ? "" : "opacity-50"}>
