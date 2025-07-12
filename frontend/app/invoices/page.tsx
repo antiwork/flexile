@@ -650,15 +650,15 @@ const QuickInvoicesSection = () => {
   const cashAmountCents = totalAmountInCents - equityAmountCents;
 
   const submit = useMutation({
-    mutationFn: async (values: z.infer<typeof quickInvoiceSchema>) => {
+    mutationFn: async () => {
       await request({
         method: "POST",
         url: company_invoices_path(company.id),
         assertOk: true,
         accept: "json",
         jsonData: {
-          invoice: { invoice_date: values.date.toString() },
-          invoice_line_items: [{ description: "-", pay_rate_in_subunits: values.rate, ...values }],
+          invoice: { invoice_date: date.toString() },
+          invoice_line_items: [{ description: "-", pay_rate_in_subunits: rate, quantity, hourly }],
         },
       });
 

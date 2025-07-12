@@ -39,44 +39,6 @@ test.describe("invoice creation", () => {
     ).companyContractor;
   });
 
-  test("creates an invoice with an equity component", async ({ page }) => {
-    await login(page, contractorUser);
-    await page.goto("/invoices/new");
-
-    await page.getByLabel("Hours").fill("3:25");
-    await page.getByPlaceholder("Description").fill("I worked on invoices");
-    await fillDatePicker(page, "Date", "08/08/2023");
-
-    await expect(page.getByRole("textbox", { name: "Cash vs equity split" })).toHaveValue("20");
-    await expect(
-      page.getByText("By submitting this invoice, your current equity selection will be locked for all 2023."),
-    ).toBeVisible();
-
-    await expect(page.getByText("Total services$205")).toBeVisible();
-    await expect(page.getByText("Swapped for equity (not paid in cash)$41")).toBeVisible();
-    await expect(page.getByText("Net amount in cash$164")).toBeVisible();
-
-    await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("50");
-    await expect(page.getByText("Total services$205")).toBeVisible();
-    await expect(page.getByText("Swapped for equity (not paid in cash)$102.50")).toBeVisible();
-    await expect(page.getByText("Net amount in cash$102.50")).toBeVisible();
-
-    await page.getByRole("button", { name: "Send invoice" }).click();
-
-    await expect(page.locator("tbody")).toContainText(
-      ["Invoice ID", "1", "Sent on", "Aug 8, 2023", "Amount", "$205", "Status", "Awaiting approval (0/2)"].join(""),
-    );
-
-    const invoice = await db.query.invoices
-      .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
-      .then(takeOrThrow);
-    expect(invoice).toBeDefined();
-    expect(invoice.totalAmountInUsdCents).toBe(20500n);
-    expect(invoice.cashAmountInCents).toBe(10250n);
-    expect(invoice.equityAmountInCents).toBe(10250n);
-    expect(invoice.equityPercentage).toBe(50);
-  });
-
   test("considers the invoice year when calculating equity", async ({ page }) => {
     const companyInvestor = (await companyInvestorsFactory.create({ userId: contractorUser.id, companyId: company.id }))
       .companyInvestor;
@@ -93,16 +55,11 @@ test.describe("invoice creation", () => {
 
     await page.getByPlaceholder("Description").fill("I worked on invoices");
     await page.getByLabel("Hours").fill("03:25");
+    await expect(page.getByText("Total services$60")).toBeVisible();
+    await expect(page.getByText("Swapped for equity (not paid in cash)$0")).toBeVisible();
+    await expect(page.getByText("Net amount in cash$60")).toBeVisible();
+
     await fillDatePicker(page, "Date", "08/08/2021");
-
-    await expect(
-      page.getByText("By submitting this invoice, your current equity selection will be locked for all 2021."),
-    ).not.toBeVisible();
-
-    await expect(page.getByText("Total$205")).toBeVisible();
-    await expect(page.getByText("Swapped for equity")).not.toBeVisible();
-    await expect(page.getByText("Net amount in cash")).not.toBeVisible();
-
     await page.waitForTimeout(300);
     await page.getByLabel("Hours / Qty").fill("100:00");
     await page.waitForTimeout(300);
@@ -147,7 +104,8 @@ test.describe("invoice creation", () => {
 
     await login(page, contractorUser);
     await page.goto("/invoices/new");
-    await expect(page.getByRole("textbox", { name: "Cash vs equity split" })).not.toBeVisible();
+    await expect(page.getByText("Total services")).toBeVisible();
+    await expect(page.getByText("Swapped for equity")).not.toBeVisible();
   });
 
   test("creates an invoice with only expenses, no line items", async ({ page }) => {

@@ -34,6 +34,7 @@ import { type DateValue, parseDate } from "@internationalized/date";
 import QuantityInput from "./QuantityInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CircleAlert } from "lucide-react";
+import { linkClasses } from "@/components/Link";
 
 const addressSchema = z.object({
   street_address: z.string(),
@@ -509,7 +510,11 @@ const Edit = () => {
               {company.equityCompensationEnabled ? (
                 <>
                   <div className="flex flex-col items-end">
-                    <span>Swapped for equity (not paid in cash)</span>
+                    <span>
+                      <Link href="/settings/payouts" className={linkClasses}>
+                        Swapped for equity (not paid in cash)
+                      </Link>
+                    </span>
                     <span className="numeric text-xl">{formatMoneyFromCents(equityCalculation.equityCents)}</span>
                   </div>
                   <Separator />
