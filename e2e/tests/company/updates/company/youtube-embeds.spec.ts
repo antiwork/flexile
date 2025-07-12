@@ -3,7 +3,6 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyUpdatesFactory } from "@test/factories/companyUpdates";
 import { login } from "@test/helpers/auth";
 
-// Use our own video for consistent testing
 const ANTIWORK_VIDEO = {
   id: "qaTy2klHNuI",
   fullUrl: "https://www.youtube.com/watch?v=qaTy2klHNuI",
