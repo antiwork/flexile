@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
-import { SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
-import { cn } from "@/utils";
-import { useCurrentCompany, useCurrentUser } from "@/global";
-import type { Route } from "next";
 import { ChevronDown, X } from "lucide-react";
-import { storageKeys } from "@/models/constants";
+import type { Route } from "next";
 import { usePathname, useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 import CircularProgress from "@/components/CircularProgress";
+import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { useCurrentCompany, useCurrentUser } from "@/global";
+import { storageKeys } from "@/models/constants";
+import { cn } from "@/utils";
 
 const CheckIcon = () => (
   <svg className="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 20 20">

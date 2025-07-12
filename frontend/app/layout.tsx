@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { TRPCProvider } from "@/trpc/client";
 import { HelperWrapper } from "@/components/HelperWrapper";
+import { TRPCProvider } from "@/trpc/client";
 
 const abcWhyte = localFont({
   src: [

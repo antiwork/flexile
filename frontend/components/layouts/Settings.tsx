@@ -1,32 +1,32 @@
-import React from "react";
+import {
+  Briefcase,
+  Building,
+  ChevronLeft,
+  CreditCard,
+  Landmark,
+  PieChart,
+  ScrollText,
+  UserCircle2,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import React from "react";
 import {
-  UserCircle2,
-  Briefcase,
-  CreditCard,
-  PieChart,
-  ChevronLeft,
-  Landmark,
-  ScrollText,
-  Building,
-} from "lucide-react";
-import { useCurrentUser } from "@/global";
-import type { CurrentUser } from "@/models/user";
-import {
-  SidebarProvider,
   Sidebar,
   SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarGroupLabel,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarInset,
+  SidebarGroupLabel,
   SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { useCurrentUser } from "@/global";
+import type { CurrentUser } from "@/models/user";
 
 const personalLinks = [
   {

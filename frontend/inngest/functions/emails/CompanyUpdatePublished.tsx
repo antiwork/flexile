@@ -1,6 +1,5 @@
 import { Heading, Img, Link, Preview, Text } from "@react-email/components";
 import React from "react";
-
 import { companies, companyUpdates } from "@/db/schema";
 import { RichText } from "@/trpc/email";
 import EmailLayout from "@/trpc/EmailLayout";

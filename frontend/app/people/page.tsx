@@ -1,33 +1,33 @@
 "use client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
+import { useQueryClient } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
+import { formatISO } from "date-fns";
+import { UserPlus, Users } from "lucide-react";
 import Link from "next/link";
-import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import React, { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { formatISO } from "date-fns";
-import DatePicker from "@/components/DatePicker";
-import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
+import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
+import DatePicker from "@/components/DatePicker";
 import MainLayout from "@/components/layouts/Main";
+import { MutationStatusButton } from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
+import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { MutationStatusButton } from "@/components/MutationButton";
+import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
 import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
-import { UserPlus, Users } from "lucide-react";
-import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import FormFields, { schema as formSchema } from "./FormFields";
-import { Switch } from "@/components/ui/switch";
-import TableSkeleton from "@/components/TableSkeleton";
-import { useQueryClient } from "@tanstack/react-query";
 
 const schema = formSchema.extend({
   email: z.string().email(),
