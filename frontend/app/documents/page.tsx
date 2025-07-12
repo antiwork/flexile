@@ -39,6 +39,7 @@ import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { storageKeys } from "@/models/constants";
 import TableSkeleton from "@/components/TableSkeleton";
+import { FinishOnboarding } from "@/app/documents/FinishOnboarding";
 
 type Document = RouterOutput["documents"]["list"][number];
 type SignableDocument = Document & { docusealSubmissionId: number };
@@ -209,6 +210,8 @@ export default function DocumentsPage() {
   const isCompanyRepresentative = !!user.roles.administrator || !!user.roles.lawyer;
   const userId = isCompanyRepresentative ? null : user.id;
   const canSign = user.address.street_address || isCompanyRepresentative;
+
+  const [forceWorkerOnboarding, setForceWorkerOnboarding] = useState<boolean>(!user.roles.worker?.role);
 
   const currentYear = new Date().getFullYear();
   const { data: documents = [], isLoading } = trpc.documents.list.useQuery({ companyId: company.id, userId });
@@ -427,6 +430,7 @@ export default function DocumentsPage() {
           </Form>
         </DialogContent>
       </Dialog>
+      {forceWorkerOnboarding ? <FinishOnboarding handleComplete={() => setForceWorkerOnboarding(false)} /> : null}
     </MainLayout>
   );
 }

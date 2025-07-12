@@ -53,6 +53,7 @@ class Company < ApplicationRecord
     end
   end
   has_many :company_investors
+  has_many :company_invite_links, dependent: :destroy # dependent: :destroy is needed to clean up invite links when a company is deleted
 
   has_many :investors, through: :company_investors, source: :user
   has_many :company_updates

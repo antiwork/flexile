@@ -30,11 +30,20 @@ module SetCurrent
       if clerk.user? && clerk.session_claims["iat"] != user.current_sign_in_at.to_i
         user.update!(current_sign_in_at: Time.zone.at(clerk.session_claims["iat"]))
       end
+
+      invited_company = nil
+      if cookies["invitation_token"].present?
+        invite_link = CompanyInviteLink.find_by(token: cookies["invitation_token"])
+        invited_company = invite_link&.company
+        user.update!(signup_invite_link: invite_link) if invite_link
+        cookies.delete("invitation_token")
+      end
     end
+
     Current.user = user
 
     if Current.user.present?
-      company = company_from_param || company_from_user
+      company = invited_company || company_from_param || company_from_user
       if company.nil?
         ApplicationRecord.transaction do
           company = user.all_companies.first
@@ -61,7 +70,6 @@ module SetCurrent
     Current.company_lawyer = context.company_lawyer
     context
   end
-
 
   private
     def company_from_param
