@@ -1,21 +1,15 @@
 "use client";
 
-import React from "react";
-import { useForm } from "react-hook-form";
 import { MutationStatusButton } from "@/components/MutationButton";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useCurrentUser } from "@/global";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
 import { trpc } from "@/trpc/client";
-import SettingsLayout from "@/app/settings/Layout";
+import { useForm } from "react-hook-form";
 
 export default function SettingsPage() {
-  return (
-    <SettingsLayout>
-      <DetailsSection />
-    </SettingsLayout>
-  );
+  return <DetailsSection />;
 }
 
 const DetailsSection = () => {

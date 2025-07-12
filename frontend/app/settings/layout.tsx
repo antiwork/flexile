@@ -1,32 +1,34 @@
-import React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+"use client";
+
 import {
-  UserCircle2,
-  Briefcase,
-  CreditCard,
-  PieChart,
-  ChevronLeft,
-  Landmark,
-  ScrollText,
-  Building,
-} from "lucide-react";
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { useCurrentUser } from "@/global";
 import type { CurrentUser } from "@/models/user";
 import {
-  SidebarProvider,
-  Sidebar,
-  SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarGroupLabel,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarInset,
-  SidebarHeader,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+  Briefcase,
+  Building,
+  ChevronLeft,
+  CreditCard,
+  Landmark,
+  PieChart,
+  ScrollText,
+  UserCircle2,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import React from "react";
 
 const personalLinks = [
   {
@@ -75,8 +77,7 @@ const companyLinks = [
     isVisible: (user: CurrentUser) => !!user.roles.administrator,
   },
 ];
-
-const Settings = ({ children }: { children: React.ReactNode }) => {
+export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   const user = useCurrentUser();
   const pathname = usePathname();
   const filteredPersonalLinks = personalLinks.filter((link) => link.isVisible(user));
@@ -150,6 +151,4 @@ const Settings = ({ children }: { children: React.ReactNode }) => {
       </div>
     </SidebarProvider>
   );
-};
-
-export default Settings;
+}
