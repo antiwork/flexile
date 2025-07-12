@@ -55,7 +55,7 @@ export default function InvoicePage() {
     invoice.requiresAcceptanceByPayee && searchParams.get("accept") === "true",
   );
   const acceptPayment = trpc.invoices.acceptPayment.useMutation();
-  const defaultEquityPercentage = invoice.minAllowedEquityPercentage ?? invoice.equityPercentage;
+  const defaultEquityPercentage = invoice.equityPercentage ?? invoice.minAllowedEquityPercentage ?? 0;
   const [equityPercentage, setEquityPercentageElected] = useState(defaultEquityPercentage);
 
   const equityAmountInCents = useMemo(
@@ -162,7 +162,7 @@ export default function InvoicePage() {
                         className="mb-4"
                         value={[equityPercentage]}
                         onValueChange={([selection]) =>
-                          setEquityPercentageElected(selection ?? invoice.minAllowedEquityPercentage ?? 0)
+                          setEquityPercentageElected(selection !== undefined ? selection : (invoice.minAllowedEquityPercentage ?? 0))
                         }
                         min={invoice.minAllowedEquityPercentage}
                         max={invoice.maxAllowedEquityPercentage}
