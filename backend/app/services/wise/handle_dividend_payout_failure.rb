@@ -18,11 +18,7 @@ module Wise
       user.bank_account_for_dividends&.update!(deleted_at: Time.current)
       @dividend_payment.dividends.update!(status: "Issued", paid_at: nil)
 
-      failure_reason = @params.dig('data', 'failure_description')
-
-      CompanyInvestorMailer.with(user: user, reason: failure_reason)
-                           .dividend_payment_failed
-                           .deliver_later
+      CompanyInvestorMailer.with(user: user).dividend_payment_failed.deliver_later
     end
   end
 end

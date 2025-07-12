@@ -56,7 +56,6 @@ Rails.application.routes.draw do
         post :transfer_state_change
         post :balance_credit
         post :payout_failure
-        post :refund
       end
     end
 

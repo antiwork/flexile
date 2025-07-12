@@ -187,7 +187,6 @@ class CompanyInvestorMailer < ApplicationMailer
 
   def dividend_payment_failed
     @user = params[:user]
-    @reason = params[:reason]
 
     mail(
       to: @user.email,
