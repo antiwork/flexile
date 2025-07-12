@@ -1695,6 +1695,7 @@ export const companyContractors = pgTable(
     payRateInSubunits: integer("pay_rate_in_subunits"),
     payRateCurrency: varchar("pay_rate_currency").default("usd").notNull(),
     contractSignedElsewhere: boolean("contract_signed_elsewhere").notNull().default(false),
+    equityPercentage: integer("equity_percentage").default(0).notNull(),
   },
   (table) => [
     index("index_company_contractors_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
