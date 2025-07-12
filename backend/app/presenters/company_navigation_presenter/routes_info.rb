@@ -26,8 +26,17 @@ class CompanyNavigationPresenter::RoutesInfo
   private
     attr_reader :current_context, :user, :company, :company_administrator, :company_worker, :company_investor, :company_lawyer
 
+    def policy_allows?(record, action = :index)
+      @policy_cache ||= {}
+      key = [record, action]
+      @policy_cache[key] ||= begin
+        policy = Pundit.policy!(current_context, record)
+        policy.public_send("#{action}?")
+      end
+    end
+
     def company_updates_route_props
-      return unless Pundit.policy!(current_context, CompanyUpdate).index?
+      return unless policy_allows?(CompanyUpdate)
 
       {
         label: "Updates",
@@ -36,7 +45,7 @@ class CompanyNavigationPresenter::RoutesInfo
     end
 
     def company_invoices_route_props
-      return unless Pundit.policy!(current_context, Invoice).index?
+      return unless policy_allows?(Invoice)
 
       {
         label: "Invoices",
@@ -52,7 +61,7 @@ class CompanyNavigationPresenter::RoutesInfo
     end
 
     def company_workers_route_props
-      return unless Pundit.policy!(current_context, CompanyWorker).index?
+      return unless policy_allows?(CompanyWorker)
 
       {
         label: "People",
@@ -64,11 +73,11 @@ class CompanyNavigationPresenter::RoutesInfo
       name = \
         if company.cap_table_enabled?
           "company_cap_table"
-        elsif Pundit.policy!(current_context, Dividend).index?
+        elsif policy_allows?(Dividend)
           "company_dividends"
-        elsif Pundit.policy!(current_context, EquityGrant).index?
+        elsif policy_allows?(EquityGrant)
           "company_equity_grants"
-        elsif Pundit.policy!(current_context, DividendRound).index?
+        elsif policy_allows?(DividendRound)
           "company_dividend_rounds"
         end
       return unless name
@@ -80,12 +89,12 @@ class CompanyNavigationPresenter::RoutesInfo
     end
 
     def company_settings_route_props
-      if Pundit.policy!(current_context, current_context.company).show?
+      if policy_allows?(current_context.company, :show)
         {
           label: "Settings",
           name: "company_administrator_settings",
         }
-      elsif Pundit.policy!(current_context, EquityAllocation).show?
+      elsif policy_allows?(EquityAllocation, :show)
         {
           label: "Settings",
           name: "company_settings_equity",

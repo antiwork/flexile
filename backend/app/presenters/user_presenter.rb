@@ -85,50 +85,7 @@ class UserPresenter
     end
 
     {
-      companies: user.all_companies.compact.map do |company|
-        flags = %w[company_updates].filter { Flipper.enabled?(_1, company) }
-        flags.push("equity_compensation") if company.equity_compensation_enabled?
-        flags.push("equity_grants") if company.equity_grants_enabled?
-        flags.push("dividends")
-        flags.push("quickbooks") if company.quickbooks_enabled?
-        flags.push("tender_offers") if company.tender_offers_enabled?
-        flags.push("cap_table") if company.cap_table_enabled?
-        flags.push("lawyers") if company.lawyers_enabled?
-        flags.push("expenses") if company.expenses_enabled?
-        flags.push("equity_compensation") if company.equity_compensation_enabled?
-        flags.push("option_exercising") if company.json_flag?("option_exercising")
-        can_view_financial_data = user.company_administrator_for?(company) || user.company_investor_for?(company)
-        {
-          **company_navigation_props(
-            company:,
-          ),
-          address: {
-            street_address: company.street_address,
-            city: company.city,
-            zip_code: company.zip_code,
-            state: company.state,
-            country_code: company.country_code,
-            country: ISO3166::Country[company.country_code].common_name,
-          },
-          flags:,
-          equityCompensationEnabled: company.equity_compensation_enabled,
-          requiredInvoiceApprovals: company.required_invoice_approval_count,
-          paymentProcessingDays: company.contractor_payment_processing_time_in_days,
-          createdAt: company.created_at.iso8601,
-          fullyDilutedShares: can_view_financial_data ? company.fully_diluted_shares : nil,
-          valuationInDollars: can_view_financial_data ? company.valuation_in_dollars : nil,
-          sharePriceInUsd: can_view_financial_data ? company.share_price_in_usd.to_s : nil,
-          conversionSharePriceUsd: can_view_financial_data ? company.conversion_share_price_usd.to_s : nil,
-          exercisePriceInUsd: can_view_financial_data ? company.fmv_per_share_in_usd.to_s : nil,
-          investorCount: user.company_administrator_for?(company) ? company.company_investors.where.not(user_id: company.company_workers.active.select(:user_id)).count : nil,
-          contractorCount: user.company_administrator_for?(company) ? company.company_workers.active.count : nil,
-          primaryAdminName: company.primary_admin.user.name,
-          completedPaymentMethodSetup: company.bank_account_ready?,
-          isTrusted: company.is_trusted,
-          checklistItems: company.checklist_items(user.company_administrator_for(company) || user.company_worker_for(company)),
-          checklistCompletionPercentage: company.checklist_completion_percentage(user.company_administrator_for(company) || user.company_worker_for(company)),
-        }
-      end,
+      companies: companies_data,
       id: user.external_id,
       currentCompanyId: company&.external_id,
       name: user.display_name,
@@ -154,6 +111,79 @@ class UserPresenter
 
   private
     attr_reader :current_context, :user, :company, :company_administrator, :company_worker, :company_investor, :company_lawyer
+
+    def companies_data
+      @companies_data ||= begin
+        companies = user.all_companies.compact
+        company_ids = companies.map(&:id)
+
+        worker_counts = CompanyWorker.where(company_id: company_ids).active.group(:company_id).count
+
+        investor_counts = CompanyInvestor.joins(
+          "LEFT JOIN company_contractors ON company_investors.company_id = company_contractors.company_id
+           AND company_contractors.user_id = company_investors.user_id AND company_contractors.ended_at IS NULL"
+        ).where(company_id: company_ids, company_contractors: { user_id: nil }).group(:company_id).count
+
+        flipper_flags = companies.each_with_object({}) do |comp, flags|
+          flags[comp.id] = {
+            company_updates: Flipper.enabled?("company_updates", comp),
+          }
+        end
+
+        admin_for_companies = companies.each_with_object({}) do |comp, memo|
+          memo[comp.id] = user.company_administrator_for?(comp)
+        end
+        investor_for_companies = companies.each_with_object({}) do |comp, memo|
+          memo[comp.id] = user.company_investor_for?(comp)
+        end
+
+        companies.map do |comp|
+          user_is_admin = admin_for_companies[comp.id]
+          user_is_investor = investor_for_companies[comp.id]
+          can_view_financial_data = user_is_admin || user_is_investor
+
+          flags = ["company_updates"].filter { flipper_flags.dig(comp.id, :company_updates) }
+          flags.push("equity_compensation") if comp.equity_compensation_enabled?
+          flags.push("equity_grants") if comp.equity_grants_enabled?
+          flags.push("dividends")
+          flags.push("quickbooks") if comp.quickbooks_enabled?
+          flags.push("tender_offers") if comp.tender_offers_enabled?
+          flags.push("cap_table") if comp.cap_table_enabled?
+          flags.push("lawyers") if comp.lawyers_enabled?
+          flags.push("expenses") if comp.expenses_enabled?
+          flags.push("option_exercising") if comp.json_flag?("option_exercising")
+
+          {
+            **company_navigation_props(company: comp),
+            address: {
+              street_address: comp.street_address,
+              city: comp.city,
+              zip_code: comp.zip_code,
+              state: comp.state,
+              country_code: comp.country_code,
+              country: ISO3166::Country[comp.country_code].common_name,
+            },
+            flags:,
+            equityCompensationEnabled: comp.equity_compensation_enabled,
+            requiredInvoiceApprovals: comp.required_invoice_approval_count,
+            paymentProcessingDays: comp.contractor_payment_processing_time_in_days,
+            createdAt: comp.created_at.iso8601,
+            fullyDilutedShares: can_view_financial_data ? comp.fully_diluted_shares : nil,
+            valuationInDollars: can_view_financial_data ? comp.valuation_in_dollars : nil,
+            sharePriceInUsd: can_view_financial_data ? comp.share_price_in_usd.to_s : nil,
+            conversionSharePriceUsd: can_view_financial_data ? comp.conversion_share_price_usd.to_s : nil,
+            exercisePriceInUsd: can_view_financial_data ? comp.fmv_per_share_in_usd.to_s : nil,
+            investorCount: user_is_admin ? investor_counts[comp.id] || 0 : nil,
+            contractorCount: user_is_admin ? worker_counts[comp.id] || 0 : nil,
+            primaryAdminName: comp.primary_admin.user.name,
+            completedPaymentMethodSetup: comp.bank_account_ready?,
+            isTrusted: comp.is_trusted,
+            checklistItems: comp.checklist_items(admin_for_companies[comp.id] || user.company_worker_for(comp)),
+            checklistCompletionPercentage: comp.checklist_completion_percentage(admin_for_companies[comp.id] || user.company_worker_for(comp)),
+          }
+        end
+      end
+    end
 
     def user_props
       result = common_props.merge(

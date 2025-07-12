@@ -152,7 +152,20 @@ class User < ApplicationRecord
   end
 
   def all_companies
-    (companies + clients + portfolio_companies + represented_companies).uniq
+    @all_companies ||= Company.joins(
+      <<~SQL
+        LEFT JOIN company_administrators ON companies.id = company_administrators.company_id AND company_administrators.user_id = #{id}
+        LEFT JOIN company_contractors ON companies.id = company_contractors.company_id AND company_contractors.user_id = #{id}
+        LEFT JOIN company_investors ON companies.id = company_investors.company_id AND company_investors.user_id = #{id}
+        LEFT JOIN company_lawyers ON companies.id = company_lawyers.company_id AND company_lawyers.user_id = #{id}
+      SQL
+    ).where(
+      "company_administrators.user_id = ? OR company_contractors.user_id = ? OR company_investors.user_id = ? OR company_lawyers.user_id = ?",
+      id, id, id, id
+    ).includes(
+      :company_administrators, :company_workers, :company_investors, :company_lawyers,
+      :primary_admin, primary_admin: :user
+    ).distinct
   end
 
   def worker?
