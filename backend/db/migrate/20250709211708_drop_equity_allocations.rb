@@ -1,5 +1,10 @@
 class DropEquityAllocations < ActiveRecord::Migration[8.0]
   def change
+    add_column :company_contractors, :equity_percentage, :integer, default: 0, null: false
+    up_only do
+      execute "UPDATE company_contractors SET equity_percentage = COALESCE((SELECT equity_percentage FROM equity_allocations WHERE equity_allocations.company_contractor_id = company_contractors.id ORDER BY year DESC LIMIT 1), 0)"
+    end
+
     drop_table :equity_allocations do |t|
       t.bigint "company_contractor_id", null: false
       t.integer "equity_percentage"
@@ -14,6 +19,5 @@ class DropEquityAllocations < ActiveRecord::Migration[8.0]
     end
 
     drop_enum :equity_allocations_status, %w[pending_confirmation pending_grant_creation pending_approval approved]
-    remove_column :company_contractors, :sent_equity_percent_selection_email, :boolean, default: false, null: false
   end
 end

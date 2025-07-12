@@ -51,8 +51,6 @@ import QuantityInput from "./QuantityInput";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
-import { MAX_EQUITY_PERCENTAGE } from "@/models";
-import RangeInput from "@/components/RangeInput";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { request } from "@/utils/request";
 import { useCanSubmitInvoices } from ".";
@@ -605,7 +603,6 @@ const quickInvoiceSchema = z.object({
   rate: z.number().min(0.01),
   quantity: z.object({ quantity: z.number().min(1), hourly: z.boolean() }),
   date: z.instanceof(CalendarDate, { message: "This field is required." }),
-  invoiceEquityPercent: z.number().min(0).max(100),
 });
 
 const QuickInvoicesSection = () => {
@@ -619,19 +616,12 @@ const QuickInvoicesSection = () => {
   const isHourly = user.roles.worker.payRateType === "hourly";
 
   const { canSubmitInvoices } = useCanSubmitInvoices();
-  const [[lastInvoice]] = trpc.invoices.list.useSuspenseQuery({
-    companyId: company.id,
-    contractorId: user.roles.worker.id,
-    limit: 1,
-  });
-  const lastEquityPercentage = lastInvoice?.equityPercentage ?? 0;
   const form = useForm({
     resolver: zodResolver(quickInvoiceSchema),
     defaultValues: {
       rate: payRateInSubunits ? payRateInSubunits / 100 : 0,
       quantity: { quantity: isHourly ? 60 : 1, hourly: isHourly },
       date: today(getLocalTimeZone()),
-      invoiceEquityPercent: lastEquityPercentage,
     },
     disabled: !canSubmitInvoices,
   });
@@ -641,11 +631,9 @@ const QuickInvoicesSection = () => {
   const hourly = form.watch("quantity").hourly;
   const rate = form.watch("rate") * 100;
   const totalAmountInCents = Math.ceil((quantity / (hourly ? 60 : 1)) * rate);
-  const invoiceEquityPercent = form.watch("invoiceEquityPercent");
   const newCompanyInvoiceRoute = () => {
     const params = new URLSearchParams({
       date: date.toString(),
-      split: String(invoiceEquityPercent),
       rate: rate.toString(),
       quantity: quantity.toString(),
       hourly: hourly.toString(),
@@ -657,7 +645,6 @@ const QuickInvoicesSection = () => {
     companyId: company.id,
     invoiceYear: date.year,
     servicesInCents: totalAmountInCents,
-    selectedPercentage: invoiceEquityPercent,
   });
   const equityAmountCents = equityCalculation?.equityCents ?? 0;
   const cashAmountCents = totalAmountInCents - equityAmountCents;
@@ -727,28 +714,6 @@ const QuickInvoicesSection = () => {
                   </FormItem>
                 )}
               />
-
-              {company.equityCompensationEnabled ? (
-                <FormField
-                  control={form.control}
-                  name="invoiceEquityPercent"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>How much of your rate would you like to swap for equity?</FormLabel>
-                      <FormControl>
-                        <RangeInput
-                          {...field}
-                          min={0}
-                          max={MAX_EQUITY_PERCENTAGE}
-                          unit="%"
-                          disabled={!canSubmitInvoices}
-                          aria-label="Cash vs equity split"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              ) : null}
             </div>
 
             <Separator orientation="horizontal" className="block w-full lg:hidden" />
@@ -760,7 +725,11 @@ const QuickInvoicesSection = () => {
                 <div className="text-3xl font-bold">{formatMoneyFromCents(totalAmountInCents)}</div>
                 {company.equityCompensationEnabled ? (
                   <div className="mt-1 text-sm text-gray-500">
-                    ({formatMoneyFromCents(cashAmountCents)} cash + {formatMoneyFromCents(equityAmountCents)} equity)
+                    ({formatMoneyFromCents(cashAmountCents)} cash +{" "}
+                    <Link href="/settings/payouts" className={linkClasses}>
+                      {formatMoneyFromCents(equityAmountCents)} equity
+                    </Link>
+                    )
                   </div>
                 ) : null}
               </div>

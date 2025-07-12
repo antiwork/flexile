@@ -10,6 +10,7 @@ scope path: :internal, module: :internal do
     resource :dividend, only: [:show, :update], controller: "dividend"
     resource :tax, only: [:show, :update], controller: "tax"
     resources :bank_accounts, only: [:index, :update]
+    resource :equity, only: [:update], controller: "equity"
   end
   resource :onboarding, controller: "onboarding", only: [:show, :update] do
     get :bank_account

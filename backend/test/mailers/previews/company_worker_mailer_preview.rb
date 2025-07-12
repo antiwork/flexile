@@ -40,6 +40,10 @@ class CompanyWorkerMailerPreview < ActionMailer::Preview
     CompanyWorkerMailer.invoice_approved(invoice_id: Invoice.alive.where("equity_percentage > 0").last.id)
   end
 
+  def equity_percent_selection
+    CompanyWorkerMailer.equity_percent_selection(CompanyWorker.last.id)
+  end
+
   def add_tax_info_reminder
     CompanyWorkerMailer.confirm_tax_info_reminder(
       company_worker_id: CompanyWorker.joins(user: :compliance_info).where(users: { user_compliance_infos: { tax_information_confirmed_at: nil } }).last.id,

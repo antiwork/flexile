@@ -142,6 +142,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_09_211708) do
     t.string "role", null: false
     t.boolean "contract_signed_elsewhere", default: false, null: false
     t.integer "pay_rate_type", default: 0, null: false
+    t.integer "equity_percentage", default: 0, null: false
     t.index ["company_id"], name: "index_company_contractors_on_company_id"
     t.index ["external_id"], name: "index_company_contractors_on_external_id", unique: true
     t.index ["user_id", "company_id"], name: "index_company_contractors_on_user_id_and_company_id", unique: true

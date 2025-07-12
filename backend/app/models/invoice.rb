@@ -57,7 +57,7 @@ class Invoice < ApplicationRecord
   validates :equity_percentage, presence: true, numericality: {
     only_integer: true,
     greater_than_or_equal_to: 0,
-    less_than_or_equal_to: 100,
+    less_than_or_equal_to: CompanyWorker::MAX_EQUITY_PERCENTAGE,
   }
   validates :min_allowed_equity_percentage, numericality: {
     only_integer: true,
@@ -214,6 +214,7 @@ class Invoice < ApplicationRecord
     update!(status: PAID, paid_at: timestamp)
     CompanyWorkerMailer.payment_sent(payment_id).deliver_later if payment_id
     VestStockOptionsJob.perform_async(id) if equity_amount_in_options > 0
+    company_worker.send_equity_percent_selection_email(invoice_date.year) if company.equity_compensation_enabled? && !company_worker.alumni?
   end
 
   def calculate_flexile_fee_cents

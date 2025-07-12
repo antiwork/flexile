@@ -6,7 +6,7 @@ class InvoicePresenter
   delegate :user, :company, :invoice_approvals, :external_id, :invoice_number,
            :invoice_date, :payment_expected_by, :paid_at, :bill_from, :bill_to, :created_at,
            :contractor_role, :total_amount_in_usd, :cash_amount_in_cents, :equity_amount_in_cents,
-           :description, :invoice_line_items, :invoice_expenses, :equity_percentage,
+           :description, :invoice_line_items, :invoice_expenses,
            :status, :rejected?, :rejected_by, :rejected_at, :attachment, :notes, :payable?, :user_id,
            :tax_requirements_met?, to: :invoice, allow_nil: true
 
@@ -30,7 +30,6 @@ class InvoicePresenter
         rejected_by: nil,
         rejection_reason: nil,
         equity_amount_in_cents: 0,
-        equity_percentage: contractor.invoices.last&.equity_percentage || 0,
         line_items: [],
         expenses:,
       },
@@ -55,7 +54,6 @@ class InvoicePresenter
           rejected_by: rejector_name,
           rejection_reason:,
           total_amount_in_usd:,
-          equity_percentage:,
           equity_amount_in_cents:,
           line_items:,
           expenses:,

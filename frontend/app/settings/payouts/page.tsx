@@ -9,30 +9,144 @@ import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { useCurrentUser } from "@/global";
+import { useCurrentUser, useCurrentCompany } from "@/global";
 import { currencyCodes, sanctionedCountries } from "@/models/constants";
 import { request } from "@/utils/request";
-import { settings_bank_account_path, settings_bank_accounts_path, settings_dividend_path } from "@/utils/routes";
+import {
+  settings_equity_path,
+  settings_bank_account_path,
+  settings_bank_accounts_path,
+  settings_dividend_path,
+} from "@/utils/routes";
 import SettingsLayout from "@/app/settings/Layout";
 import BankAccountModal, { type BankAccount, bankAccountSchema } from "./BankAccountModal";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormLabel, FormMessage, FormControl, FormItem, FormField } from "@/components/ui/form";
 import { Card, CardTitle, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
+import { MAX_EQUITY_PERCENTAGE } from "@/models";
+import RangeInput from "@/components/RangeInput";
+import { formatMoneyFromCents } from "@/utils/formatMoney";
+import { assert } from "@/utils/assert";
 
 export default function PayoutsPage() {
   const user = useCurrentUser();
+  const company = useCurrentCompany();
 
   return (
     <SettingsLayout>
       <h2 className="mb-8 text-xl font-medium">Payouts</h2>
       <div className="grid gap-8">
+        {user.roles.worker && company.equityCompensationEnabled ? <EquitySection /> : null}
         {user.roles.investor ? <DividendSection /> : null}
         <BankAccountsSection />
       </div>
     </SettingsLayout>
   );
 }
+
+const equityFormSchema = z.object({
+  equityPercentage: z.number().min(0).max(MAX_EQUITY_PERCENTAGE),
+});
+
+const EquitySection = () => {
+  const user = useCurrentUser();
+  const worker = user.roles.worker;
+  assert(worker != null);
+
+  const form = useForm({
+    defaultValues: { equityPercentage: worker.equityPercentage },
+    resolver: zodResolver(equityFormSchema),
+  });
+  const payRateInSubunits = worker.payRateInSubunits ?? 0;
+  const equityPercentage = form.watch("equityPercentage");
+
+  const saveMutation = useMutation({
+    mutationFn: async (values: z.infer<typeof equityFormSchema>) => {
+      await request({
+        method: "PATCH",
+        accept: "json",
+        url: settings_equity_path(),
+        jsonData: { equity_percentage: values.equityPercentage },
+        assertOk: true,
+      });
+    },
+    onSuccess: () => setTimeout(() => saveMutation.reset(), 2000),
+  });
+
+  const submit = form.handleSubmit((values) => saveMutation.mutate(values));
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Equity</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={(e) => void submit(e)} className="grid gap-4">
+            <FormField
+              control={form.control}
+              name="equityPercentage"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>How much of your rate would you like to swap for equity?</FormLabel>
+                  <FormControl>
+                    <RangeInput
+                      {...field}
+                      min={0}
+                      max={MAX_EQUITY_PERCENTAGE}
+                      aria-label="Cash vs equity split"
+                      unit="%"
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            {worker.payRateInSubunits != null ? (
+              <>
+                <Separator />
+                <div className="flex justify-between gap-2">
+                  <div>Cash amount</div>
+                  <div>
+                    {formatMoneyFromCents((equityPercentage * payRateInSubunits) / 100)}{" "}
+                    <span className="text-gray-500">/ {worker.payRateType}</span>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex justify-between gap-2">
+                  <div>Equity value</div>
+                  <div>
+                    {formatMoneyFromCents(((100 - equityPercentage) * payRateInSubunits) / 100)}{" "}
+                    <span className="text-gray-500">/ {worker.payRateType}</span>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex justify-between gap-2">
+                  <div>Total amount</div>
+                  <div>
+                    {formatMoneyFromCents(payRateInSubunits)}{" "}
+                    <span className="text-gray-500">/ {worker.payRateType}</span>
+                  </div>
+                </div>
+              </>
+            ) : null}
+            <CardFooter className="justify-start p-0">
+              <MutationStatusButton
+                type="submit"
+                mutation={saveMutation}
+                loadingText="Saving..."
+                successText="Saved!"
+                className="justify-self-end"
+              >
+                Save changes
+              </MutationStatusButton>
+            </CardFooter>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
+  );
+};
 
 const dividendsFormSchema = z.object({
   minimumDividendPaymentAmount: z.number(),

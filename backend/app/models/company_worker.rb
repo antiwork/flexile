@@ -12,6 +12,7 @@ class CompanyWorker < ApplicationRecord
   has_many :invoices, foreign_key: :company_contractor_id
   has_many :integration_records, as: :integratable
 
+  MAX_EQUITY_PERCENTAGE = 100
   MIN_COMPENSATION_AMOUNT_FOR_1099_NEC = 600_00
 
   enum :pay_rate_type, {
@@ -23,6 +24,7 @@ class CompanyWorker < ApplicationRecord
   validates :role, presence: true
   validates :started_at, presence: true
   validates :pay_rate_in_subunits, numericality: { only_integer: true, greater_than: 0, allow_nil: true }
+  validates :equity_percentage, allow_nil: true, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: MAX_EQUITY_PERCENTAGE }
 
   scope :active, -> { where(ended_at: nil) }
   scope :active_as_of, ->(date) { active.or(where("ended_at > ?", date)) }
@@ -119,6 +121,13 @@ class CompanyWorker < ApplicationRecord
     return unless grants.size == 1
 
     grants.first
+  end
+
+  def send_equity_percent_selection_email
+    return if equity_percentage? || sent_equity_percent_selection_email?
+
+    CompanyWorkerMailer.equity_percent_selection(id).deliver_later
+    update!(sent_equity_percent_selection_email: true)
   end
 
   private

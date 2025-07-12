@@ -1,0 +1,37 @@
+<h1>
+  Determine your equity % to become a stakeholder in <%= @company.name %>
+</h1>
+<p>
+  <%= @company.name %>'s equity program lets you exchange a portion of your cash compensation for a stake in the
+  company, which take the form as granted Non-Qualified Stock Options (NSOs).
+</p>
+<p>
+  What are stock options?
+  Stock options give you the chance to buy a set number of <%= @company.name %> shares at a fixed price known as the
+  "exercise price." These options, once vested and exercised (purchased from the company), enable you to participate
+  in potential liquidity events such as dividends and secondary offerings.
+</p>
+<p>
+  <strong>How does <%= @company.name %> determine my stock options?</strong><br>
+  You can exchange anywhere from 0% to <%= CompanyWorker::MAX_EQUITY_PERCENTAGE %>% of your rate.
+  At the beginning of the year, you will be granted options for the full year, unvested. As your invoices get
+  approved, your chosen percentage of the invoice total will be received as vested options that are then eligible for
+  exercise.
+</p>
+<p>
+  <strong>When can I exercise my options?</strong><br>
+  You can exercise your options any time starting now to 10 years from now.
+</p>
+<p>
+  <strong>Changing your equity allocation</strong><br>
+  Once you make your % selection and submit an invoice as a contractor, your equity allocation for the current year
+  will be fixed. However, you'll have the opportunity to choose a different allocation for the upcoming year during
+  the next annual selection period.
+</p>
+
+<%= link_to("Select your equity allocation",
+            "#{PROTOCOL}://#{DOMAIN}/settings/equity",
+            class: "button") %>
+
+<p>
+</p>

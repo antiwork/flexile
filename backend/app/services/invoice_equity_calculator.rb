@@ -2,24 +2,23 @@
 
 class InvoiceEquityCalculator
   # If you make changes here, update the tRPC route equityCalculations in frontend/trpc/routes/equityCalculations.ts
-  def initialize(company_worker:, company:, service_amount_cents:, invoice_year:, equity_percentage:)
+  def initialize(company_worker:, company:, service_amount_cents:, invoice_year:)
     @company_worker = company_worker
     @company = company
     @service_amount_cents = service_amount_cents
     @invoice_year = invoice_year
-    @equity_percentage = equity_percentage
   end
 
   def calculate
     unvested_grant = company_worker.unique_unvested_equity_grant_for_year(invoice_year)
     share_price_usd = unvested_grant&.share_price_usd || company.fmv_per_share_in_usd
-    if equity_percentage.nonzero? && share_price_usd.nil?
+    if company_worker.equity_percentage.nonzero? && share_price_usd.nil?
       Bugsnag.notify("InvoiceEquityCalculator: Error determining share price for CompanyWorker #{company_worker.id}")
       return
     end
-    equity_amount_in_cents = ((service_amount_cents * equity_percentage) / 100.to_d).round
+    equity_amount_in_cents = ((service_amount_cents * company_worker.equity_percentage) / 100.to_d).round
     equity_amount_in_options =
-      if equity_percentage.zero?
+      if company_worker.equity_percentage.zero?
         0
       else
         (equity_amount_in_cents / (share_price_usd * 100.to_d)).round
@@ -36,5 +35,5 @@ class InvoiceEquityCalculator
   end
 
   private
-    attr_reader :company_worker, :company, :service_amount_cents, :invoice_year, :equity_percentage
+    attr_reader :company_worker, :company, :service_amount_cents, :invoice_year
 end

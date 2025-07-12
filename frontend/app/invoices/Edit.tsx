@@ -6,7 +6,7 @@ import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
 import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
-import React, { useId, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import MainLayout from "@/components/layouts/Main";
@@ -29,9 +29,6 @@ import {
   new_company_invoice_path,
 } from "@/utils/routes";
 import { LegacyAddress as Address, useCanSubmitInvoices } from ".";
-import { Card, CardContent } from "@/components/ui/card";
-import { MAX_EQUITY_PERCENTAGE } from "@/models";
-import RangeInput from "@/components/RangeInput";
 import DatePicker from "@/components/DatePicker";
 import { type DateValue, parseDate } from "@internationalized/date";
 import QuantityInput from "./QuantityInput";
@@ -69,7 +66,6 @@ const dataSchema = z.object({
     invoice_number: z.string(),
     notes: z.string().nullable(),
     status: z.enum(["received", "approved", "processing", "payment_pending", "paid", "rejected", "failed"]).nullable(),
-    equity_percentage: z.number(),
     line_items: z.array(
       z.object({
         id: z.number().optional(),
@@ -79,7 +75,6 @@ const dataSchema = z.object({
         pay_rate_in_subunits: z.number(),
       }),
     ),
-    equity_amount_in_cents: z.number(),
     expenses: z.array(
       z.object({
         id: z.string().optional(),
@@ -100,7 +95,6 @@ const Edit = () => {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const { canSubmitInvoices } = useCanSubmitInvoices();
-  const uid = useId();
   if (!canSubmitInvoices) throw redirect("/invoices");
   const { id } = useParams<{ id: string }>();
   const searchParams = useSearchParams();
@@ -147,8 +141,6 @@ const Edit = () => {
   const [expenses, setExpenses] = useState(List<InvoiceFormExpense>(data.invoice.expenses));
   const showExpensesTable = showExpenses || expenses.size > 0;
 
-  const [equityPercentage, setEquityPercent] = useState(data.invoice.equity_percentage);
-
   const validate = () => {
     setErrorField(null);
     if (invoiceNumber.length === 0) setErrorField("invoiceNumber");
@@ -164,7 +156,6 @@ const Edit = () => {
       const formData = new FormData();
       formData.append("invoice[invoice_number]", invoiceNumber);
       formData.append("invoice[invoice_date]", issueDate.toString());
-      formData.append("invoice[equity_percentage]", equityPercentage.toString());
       for (const lineItem of lineItems) {
         if (!lineItem.description || !lineItem.quantity) continue;
         if (lineItem.id) {
@@ -238,7 +229,6 @@ const Edit = () => {
     companyId: company.id,
     servicesInCents: totalServicesAmountInCents,
     invoiceYear,
-    selectedPercentage: equityPercentage,
   });
   const updateLineItem = (index: number, update: Partial<InvoiceFormLineItem>) =>
     setLineItems((lineItems) =>
@@ -289,27 +279,6 @@ const Edit = () => {
             {data.user.project_based ? "project" : "hour"}. Please check before submitting.
           </AlertDescription>
         </Alert>
-      ) : null}
-
-      {company.equityCompensationEnabled ? (
-        <section className="mb-6">
-          <Card>
-            <CardContent>
-              <div className="grid gap-2">
-                <Label htmlFor={`${uid}-equity-split`}>Confirm your equity split for {invoiceYear}</Label>
-                <RangeInput
-                  id={`${uid}-equity-split`}
-                  value={equityPercentage}
-                  onChange={setEquityPercent}
-                  min={0}
-                  max={MAX_EQUITY_PERCENTAGE}
-                  aria-label="Cash vs equity split"
-                  unit="%"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </section>
       ) : null}
 
       <section>
@@ -525,7 +494,7 @@ const Edit = () => {
               className="w-full lg:w-96"
             />
             <div className="flex flex-col gap-2 md:self-start lg:items-end">
-              {showExpensesTable || equityCalculation.equityCents > 0 ? (
+              {showExpensesTable || company.equityCompensationEnabled ? (
                 <div className="flex flex-col items-end">
                   <span>Total services</span>
                   <span className="numeric text-xl">{formatMoneyFromCents(totalServicesAmountInCents)}</span>
@@ -537,7 +506,7 @@ const Edit = () => {
                   <span className="numeric text-xl">{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
                 </div>
               ) : null}
-              {equityCalculation.equityCents > 0 ? (
+              {company.equityCompensationEnabled ? (
                 <>
                   <div className="flex flex-col items-end">
                     <span>Swapped for equity (not paid in cash)</span>
