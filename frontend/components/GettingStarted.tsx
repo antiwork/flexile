@@ -112,6 +112,7 @@ export const GettingStarted = () => {
                   className="ml-4 cursor-pointer transition-colors hover:text-black/80"
                 >
                   <X className="h-4 w-4" />
+                  <span className="sr-only">Close</span>
                 </button>
               </div>
               <div className="mx-4">
