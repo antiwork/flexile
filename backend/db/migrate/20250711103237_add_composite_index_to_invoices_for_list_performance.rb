@@ -1,4 +1,7 @@
 class AddCompositeIndexToInvoicesForListPerformance < ActiveRecord::Migration[8.0]
+  # Disable transaction for CONCURRENTLY index creation
+  disable_ddl_transaction!
+  
   def change
     # Add composite index optimized for the invoice list query pattern:
     # WHERE company_id = ? AND deleted_at IS NULL ORDER BY invoice_date DESC, created_at DESC
