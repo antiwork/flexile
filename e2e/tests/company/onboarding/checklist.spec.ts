@@ -1,12 +1,12 @@
+import { faker } from "@faker-js/faker";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyStripeAccountsFactory } from "@test/factories/companyStripeAccounts";
 import { usersFactory } from "@test/factories/users";
+import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { companies, users } from "@/db/schema";
-import { faker } from "@faker-js/faker";
-import { selectComboboxOption } from "@test/helpers";
 
 test.describe.serial("Onboarding checklist", () => {
   let company: typeof companies.$inferSelect;

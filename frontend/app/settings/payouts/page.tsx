@@ -1,24 +1,24 @@
 "use client";
 
-import { AlertTriangle, Check, Plus, CircleDollarSign } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { AlertTriangle, Check, CircleDollarSign, Plus } from "lucide-react";
 import React, { Fragment, useState } from "react";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
+import SettingsLayout from "@/app/settings/Layout";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { useCurrentUser } from "@/global";
 import { currencyCodes, sanctionedCountries } from "@/models/constants";
 import { request } from "@/utils/request";
 import { settings_bank_account_path, settings_bank_accounts_path, settings_dividend_path } from "@/utils/routes";
-import SettingsLayout from "@/app/settings/Layout";
 import BankAccountModal, { type BankAccount, bankAccountSchema } from "./BankAccountModal";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormLabel, FormMessage, FormControl, FormItem, FormField } from "@/components/ui/form";
-import { Card, CardTitle, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 
 export default function PayoutsPage() {
   const user = useCurrentUser();

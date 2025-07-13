@@ -1,4 +1,7 @@
 "use client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { skipToken, useQueryClient } from "@tanstack/react-query";
+import { type ColumnFiltersState, getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import {
   BriefcaseBusiness,
   CircleCheck,
@@ -9,36 +12,33 @@ import {
   PercentIcon,
   SendHorizontal,
 } from "lucide-react";
-import { skipToken, useQueryClient } from "@tanstack/react-query";
-import { getFilteredRowModel, getSortedRowModel, type ColumnFiltersState } from "@tanstack/react-table";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import DocusealForm, { customCss } from "@/app/documents/DocusealForm";
 import DataTable, { createColumnHelper, filterValueSchema, useTable } from "@/components/DataTable";
-import { Input } from "@/components/ui/input";
 import MainLayout from "@/components/layouts/Main";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { linkClasses } from "@/components/Link";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import Status, { type Variant as StatusVariant } from "@/components/Status";
+import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCurrentCompany, useCurrentUser } from "@/global";
+import { storageKeys } from "@/models/constants";
 import type { RouterOutput } from "@/trpc";
 import { DocumentTemplateType, DocumentType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
 import { formatDate } from "@/utils/time";
-import { linkClasses } from "@/components/Link";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { storageKeys } from "@/models/constants";
-import TableSkeleton from "@/components/TableSkeleton";
 import { FinishOnboarding } from "@/app/documents/FinishOnboarding";
 
 type Document = RouterOutput["documents"]["list"][number];
