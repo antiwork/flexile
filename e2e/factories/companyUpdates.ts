@@ -21,17 +21,15 @@ export const companyUpdatesFactory = {
     return { companyUpdate: insertedUpdate };
   },
 
-  createWithYouTubeVideo: async (videoUrl: string, overrides: Partial<typeof companyUpdates.$inferInsert> = {}) => {
-    return companyUpdatesFactory.create({
+  createWithYouTubeVideo: async (videoUrl: string, overrides: Partial<typeof companyUpdates.$inferInsert> = {}) =>
+    companyUpdatesFactory.create({
       videoUrl,
       ...overrides,
-    });
-  },
+    }),
 
-  createPublished: async (overrides: Partial<typeof companyUpdates.$inferInsert> = {}) => {
-    return companyUpdatesFactory.create({
+  createPublished: async (overrides: Partial<typeof companyUpdates.$inferInsert> = {}) =>
+    companyUpdatesFactory.create({
       sentAt: new Date(),
       ...overrides,
-    });
-  },
+    }),
 };

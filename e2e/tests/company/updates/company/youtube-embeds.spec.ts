@@ -19,10 +19,10 @@ async function assertYouTubeIframeLoaded(page: Page, videoId: string): Promise<L
   await expect(iframe).toHaveAttribute("allowfullscreen");
   await expect(iframe).toHaveAttribute("allow", "clipboard-write; encrypted-media; picture-in-picture;");
   await expect(iframe).toHaveAttribute("referrerpolicy", "strict-origin-when-cross-origin");
-  await expect(iframe).toHaveClass(/size-full/);
+  await expect(iframe).toHaveClass(/size-full/u);
 
   const iframeParent = iframe.locator("..");
-  await expect(iframeParent).toHaveClass(/aspect-video/);
+  await expect(iframeParent).toHaveClass(/aspect-video/u);
 
   return iframe;
 }
