@@ -3,8 +3,8 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { equityAllocations } from "@/db/schema";
-import { companyProcedure, createRouter } from "@/trpc";
 import { MAX_EQUITY_PERCENTAGE } from "@/models";
+import { companyProcedure, createRouter } from "@/trpc";
 
 export const equityAllocationsRouter = createRouter({
   get: companyProcedure.input(z.object({ year: z.number() })).query(async ({ ctx, input }) => {

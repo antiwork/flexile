@@ -20,7 +20,7 @@ export default clerkMiddleware((_, req) => {
     };
     style-src 'self' 'unsafe-inline';
     connect-src 'self' ${clerkFapiUrl} https://docuseal.com ${s3Urls} ${helperHost};
-    img-src 'self' https://img.clerk.com https://docuseal.s3.amazonaws.com ${s3Urls};
+    img-src 'self' blob: https://img.clerk.com https://docuseal.s3.amazonaws.com ${s3Urls};
     worker-src 'self' blob:;
     font-src 'self';
     base-uri 'self';

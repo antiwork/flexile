@@ -1,5 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq, sql } from "drizzle-orm";
+import { pick } from "lodash-es";
 import { db } from "@/db";
 import {
   activeStorageAttachments,
@@ -9,7 +10,6 @@ import {
   invoices,
 } from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
-import { pick } from "lodash-es";
 
 export const consolidatedInvoicesRouter = createRouter({
   last: companyProcedure.query(async ({ ctx }) => {
