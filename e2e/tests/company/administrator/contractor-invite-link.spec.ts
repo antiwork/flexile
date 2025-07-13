@@ -1,11 +1,11 @@
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
+import { documentTemplatesFactory } from "@test/factories/documentTemplates";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
-import { companies, users } from "@/db/schema";
 import { DocumentTemplateType } from "@/db/enums";
-import { documentTemplatesFactory } from "@test/factories/documentTemplates";
+import { companies, users } from "@/db/schema";
 
 test.describe("Contractor Invite Link", () => {
   let company: typeof companies.$inferSelect;

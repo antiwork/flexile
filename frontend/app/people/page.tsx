@@ -4,7 +4,7 @@ import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
 import { useQueryClient } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import { formatISO } from "date-fns";
-import { UserPlus, Users } from "lucide-react";
+import { LinkIcon, UserPlus, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";

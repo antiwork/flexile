@@ -5,8 +5,8 @@ import { companyAdministratorsFactory } from "@test/factories/companyAdministrat
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
-import { companies, companyContractors, users } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
+import { companies, companyContractors, users } from "@/db/schema";
 
 test.describe("Contractor Invite Link Joining flow", () => {
   let company: typeof companies.$inferSelect;

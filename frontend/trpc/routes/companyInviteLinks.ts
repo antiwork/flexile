@@ -1,22 +1,21 @@
 // TODO Remove this TRCP once we have moved away from DocumentTemplates table
 
 import { TRPCError } from "@trpc/server";
+import { and, eq, isNull, or } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
+import { DocumentTemplateType, PayRateType } from "@/db/enums";
 import { documents, documentTemplates } from "@/db/schema";
 import { baseProcedure, companyProcedure, createRouter } from "@/trpc";
-import {
-  company_invite_links_url,
-  reset_company_invite_links_url,
-  accept_invite_links_url,
-  verify_invite_links_url,
-  complete_onboarding_company_invite_links_url,
-} from "@/utils/routes";
-
-import { DocumentTemplateType, PayRateType } from "@/db/enums";
-import { and, eq, isNull, or } from "drizzle-orm";
 import { createSubmission } from "@/trpc/routes/documents/templates";
 import { assertDefined } from "@/utils/assert";
+import {
+  accept_invite_links_url,
+  company_invite_links_url,
+  complete_onboarding_company_invite_links_url,
+  reset_company_invite_links_url,
+  verify_invite_links_url,
+} from "@/utils/routes";
 
 type VerifyInviteLinkResult = {
   valid: boolean;
