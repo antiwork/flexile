@@ -16,14 +16,16 @@ class InvoiceEquityCalculator
       Bugsnag.notify("InvoiceEquityCalculator: Error determining share price for CompanyWorker #{company_worker.id}")
       return
     end
-    equity_amount_in_cents = ((service_amount_cents * company_worker.equity_percentage) / 100.to_d).round
+    equity_percentage = company_worker.equity_percentage
+    equity_amount_in_cents = ((service_amount_cents * equity_percentage) / 100.to_d).round
     equity_amount_in_options =
-      if company_worker.equity_percentage.zero?
+      if equity_percentage.zero? || !company.equity_compensation_enabled?
         0
       else
         (equity_amount_in_cents / (share_price_usd * 100.to_d)).round
       end
     if equity_amount_in_options <= 0
+      equity_percentage = 0
       equity_amount_in_cents = 0
       equity_amount_in_options = 0
     end
@@ -31,6 +33,7 @@ class InvoiceEquityCalculator
     {
       equity_cents: equity_amount_in_cents,
       equity_options: equity_amount_in_options,
+      equity_percentage:,
     }
   end
 

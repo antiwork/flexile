@@ -22,7 +22,6 @@ FactoryBot.define do
     transient do
       without_contract { false }
       with_unsigned_contract { false }
-      equity_percentage { nil }
     end
 
     after :create do |company_worker, evaluator|
