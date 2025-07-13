@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe DividendReportCsvEmailJob, :vcr do
+RSpec.describe DividendReportCsvEmailJob do
   describe "#perform" do
     let(:recipients) { ["admin@example.com", "cfo@example.com"] }
     let(:company) { create(:company, name: "TestCo") }
@@ -23,10 +23,6 @@ RSpec.describe DividendReportCsvEmailJob, :vcr do
         total_amount_in_cents: 100_00,
         paid_at: Time.current.last_month.beginning_of_month + 3.days
       )
-    end
-
-    before do
-      allow(Rails).to receive(:env).and_return(ActiveSupport::StringInquirer.new("production"))
     end
 
     it "does not send email if not in production" do
