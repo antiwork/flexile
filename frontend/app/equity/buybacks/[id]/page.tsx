@@ -25,7 +25,7 @@ import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatServerDate } from "@/utils/time";
-import { VESTED_SHARES_CLASS } from "../";
+import { VESTED_SHARES_CLASS } from "..";
 import LetterOfTransmissal from "./LetterOfTransmissal";
 type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
 

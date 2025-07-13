@@ -11,7 +11,7 @@ import { MutationStatusButton } from "@/components/MutationButton";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
-import { VESTED_SHARES_CLASS } from "./";
+import { VESTED_SHARES_CLASS } from ".";
 
 type TenderOffer = {
   id: string;
