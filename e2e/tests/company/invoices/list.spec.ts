@@ -1,5 +1,3 @@
-import { companies, consolidatedInvoices, invoiceApprovals, invoices, users, companyContractors } from "@/db/schema";
-import { assert } from "@/utils/assert";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
@@ -10,6 +8,8 @@ import { invoicesFactory } from "@test/factories/invoices";
 import { login } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { and, eq, exists, isNull, not } from "drizzle-orm";
+import { companies, companyContractors, consolidatedInvoices, invoiceApprovals, invoices, users } from "@/db/schema";
+import { assert } from "@/utils/assert";
 
 const setupCompany = async ({ trusted = true }: { trusted?: boolean } = {}) => {
   const { company } = await companiesFactory.create({ isTrusted: trusted, requiredInvoiceApprovalCount: 2 });
@@ -341,7 +341,7 @@ test.describe("Invoices admin flow", () => {
 
     await login(page, adminUser);
     await page.getByRole("link", { name: "Invoices" }).click();
-    await page.locator("tbody tr").click();
+    await page.getByRole("row").getByText("Awaiting approval").first().click();
 
     await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).toBeVisible();
 
@@ -350,7 +350,7 @@ test.describe("Invoices admin flow", () => {
       .set({ payRateInSubunits: null })
       .where(eq(companyContractors.id, companyContractor.id));
     await page.reload();
-    await page.locator("tbody tr").click();
+    await page.getByRole("row").getByText("Awaiting approval").first().click();
     await expect(page.getByRole("dialog")).toBeVisible();
     await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).not.toBeVisible();
 
@@ -359,7 +359,7 @@ test.describe("Invoices admin flow", () => {
       .set({ payRateInSubunits: 60000 })
       .where(eq(companyContractors.id, companyContractor.id));
     await page.reload();
-    await page.locator("tbody tr").click();
+    await page.getByRole("row").getByText("Awaiting approval").first().click();
     await expect(page.getByRole("dialog")).toBeVisible();
     await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).not.toBeVisible();
   });

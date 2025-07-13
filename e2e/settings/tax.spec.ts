@@ -6,6 +6,7 @@ import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { companyLawyersFactory } from "@test/factories/companyLawyers";
 import { userComplianceInfosFactory } from "@test/factories/userComplianceInfos";
 import { usersFactory } from "@test/factories/users";
+import { fillDatePicker, selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test } from "@test/index";
@@ -13,7 +14,6 @@ import { and, desc, eq, isNull } from "drizzle-orm";
 import { BusinessType, DocumentType, TaxClassification } from "@/db/enums";
 import { companies, documents, users } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
-import { selectComboboxOption, fillDatePicker } from "@test/helpers";
 
 test.describe("Tax settings", () => {
   let company: typeof companies.$inferSelect;

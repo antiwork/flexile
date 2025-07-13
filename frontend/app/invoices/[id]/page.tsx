@@ -2,21 +2,21 @@
 
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { InformationCircleIcon, PaperClipIcon, PencilIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { Trash2, CircleAlert } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
+import { CircleAlert, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { Fragment, useMemo, useState } from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import MainLayout from "@/components/layouts/Main";
 import { linkClasses } from "@/components/Link";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton from "@/components/MutationButton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { PayRateType, trpc } from "@/trpc/client";
 import { assert } from "@/utils/assert";
@@ -25,11 +25,11 @@ import { formatDate, formatDuration } from "@/utils/time";
 import {
   Address,
   ApproveButton,
+  DeleteModal,
   EDITABLE_INVOICE_STATES,
   LegacyAddress,
   RejectModal,
   taxRequirementsMet,
-  DeleteModal,
   useIsActionable,
   useIsDeletable,
 } from "..";

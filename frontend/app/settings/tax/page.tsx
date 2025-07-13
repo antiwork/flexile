@@ -1,21 +1,27 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { CalendarDate, parseDate } from "@internationalized/date";
 import { useMutation, type UseMutationResult, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { iso31662 } from "iso-3166";
-import { Eye, EyeOff, AlertTriangle, Info, ArrowUpRightFromSquare } from "lucide-react";
+import { AlertTriangle, ArrowUpRightFromSquare, Eye, EyeOff, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import SettingsLayout from "@/app/settings/Layout";
+import ComboBox from "@/components/ComboBox";
 import DatePicker from "@/components/DatePicker";
-import { CalendarDate, parseDate } from "@internationalized/date";
+import { linkClasses } from "@/components/Link";
+import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import RadioButtons from "@/components/RadioButtons";
 import Status from "@/components/Status";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { BusinessType, TaxClassification } from "@/db/enums";
 import { useCurrentUser } from "@/global";
 import { countries } from "@/models/constants";
@@ -23,12 +29,6 @@ import { trpc } from "@/trpc/client";
 import { getTinName } from "@/utils/legal";
 import { request } from "@/utils/request";
 import { settings_tax_path } from "@/utils/routes";
-import SettingsLayout from "@/app/settings/Layout";
-import ComboBox from "@/components/ComboBox";
-import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { linkClasses } from "@/components/Link";
-import { Label } from "@/components/ui/label";
 
 const dataSchema = z.object({
   birth_date: z.string().nullable(),
