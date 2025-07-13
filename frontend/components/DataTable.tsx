@@ -1,3 +1,19 @@
+import {
+  type AccessorKeyColumnDef,
+  type Column,
+  createColumnHelper as originalCreateColumnHelper,
+  type DeepKeys,
+  type DeepValue,
+  flexRender,
+  getCoreRowModel,
+  type RowData,
+  type Table,
+  type TableOptions,
+  useReactTable,
+} from "@tanstack/react-table";
+import { ChevronDown, ChevronUp, ListFilterIcon, SearchIcon, X } from "lucide-react";
+import React, { useMemo } from "react";
+import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -25,22 +41,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/utils";
-import {
-  type AccessorKeyColumnDef,
-  type Column,
-  type DeepKeys,
-  type DeepValue,
-  flexRender,
-  getCoreRowModel,
-  createColumnHelper as originalCreateColumnHelper,
-  type RowData,
-  type Table,
-  type TableOptions,
-  useReactTable,
-} from "@tanstack/react-table";
-import { ChevronDown, ChevronUp, ListFilterIcon, SearchIcon, X } from "lucide-react";
-import React, { useMemo } from "react";
-import { z } from "zod";
 
 declare module "@tanstack/react-table" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -297,10 +297,9 @@ export default function DataTable<T extends RowData>({
               {selectable ? (
                 <TableHead className={cellClasses(null, "header")}>
                   <Checkbox
-                    checked={table.getIsAllRowsSelected()}
+                    checked={table.getIsSomeRowsSelected() ? "indeterminate" : table.getIsAllRowsSelected()}
                     aria-label="Select all"
                     onCheckedChange={() => table.toggleAllRowsSelected()}
-                    indeterminate={table.getIsSomeRowsSelected() && !table.getIsAllRowsSelected()}
                   />
                 </TableHead>
               ) : null}

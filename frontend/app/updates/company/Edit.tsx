@@ -2,27 +2,23 @@
 
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid";
 import { EnvelopeIcon, UsersIcon } from "@heroicons/react/24/outline";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-
 import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import MainLayout from "@/components/layouts/Main";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import { Editor as RichTextEditor } from "@/components/RichText";
 import { Button } from "@/components/ui/button";
-
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
-
 import { pluralize } from "@/utils/pluralize";
-
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 
 const formSchema = z.object({
   title: z.string().trim().min(1, "This field is required."),
@@ -75,12 +71,7 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
     },
   });
 
-  const submit = form.handleSubmit(async (values, event) => {
-    if (event?.target instanceof HTMLElement && event.target.id === "preview") {
-      return saveMutation.mutateAsync({ preview: true, values });
-    }
-    setModalOpen(true);
-  });
+  const submit = form.handleSubmit(() => setModalOpen(true));
 
   return (
     <Form {...form}>
@@ -96,11 +87,13 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
             ) : (
               <>
                 <MutationStatusButton
-                  type="submit"
+                  type="button"
                   mutation={saveMutation}
-                  id="preview"
                   idleVariant="outline"
                   loadingText="Saving..."
+                  onClick={() =>
+                    void form.handleSubmit((values) => saveMutation.mutateAsync({ values, preview: true }))()
+                  }
                 >
                   <ArrowTopRightOnSquareIcon className="size-4" />
                   Preview

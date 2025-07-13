@@ -1,13 +1,13 @@
 import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
+import { userComplianceInfosFactory } from "@test/factories/userComplianceInfos";
 import { usersFactory } from "@test/factories/users";
 import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, type Page, test } from "@test/index";
 import { eq } from "drizzle-orm";
 import { companies, users, wiseRecipients } from "@/db/schema";
-import { userComplianceInfosFactory } from "@test/factories/userComplianceInfos";
 
 async function fillOutUsdBankAccountForm(
   page: Page,

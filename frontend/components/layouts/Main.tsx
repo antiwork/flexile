@@ -1,22 +1,27 @@
 import { SignOutButton } from "@clerk/nextjs";
-import {
-  Rss,
-  ChevronsUpDown,
-  ReceiptIcon,
-  Files,
-  Users,
-  BookUser,
-  Settings,
-  ChartPie,
-  CircleDollarSign,
-  LogOut,
-  ChevronRight,
-} from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { skipToken, useQueryClient } from "@tanstack/react-query";
+import {
+  BookUser,
+  ChartPie,
+  ChevronRight,
+  ChevronsUpDown,
+  CircleDollarSign,
+  Files,
+  LogOut,
+  ReceiptIcon,
+  Rss,
+  Settings,
+  Users,
+} from "lucide-react";
+import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
+import { navLinks as equityNavLinks } from "@/app/equity";
+import { useIsActionable } from "@/app/invoices";
+import { GettingStarted } from "@/components/GettingStarted";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -42,15 +47,10 @@ import {
 } from "@/components/ui/sidebar";
 import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
 import defaultCompanyLogo from "@/images/default-company-logo.svg";
+import { storageKeys } from "@/models/constants";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
-import type { Route } from "next";
-import { useIsActionable } from "@/app/invoices";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
-import { navLinks as equityNavLinks } from "@/app/equity";
-import { GettingStarted } from "@/components/GettingStarted";
-import { storageKeys } from "@/models/constants";
 
 export default function MainLayout({
   children,
@@ -194,9 +194,11 @@ const CompanyName = () => {
   const company = useCurrentCompany();
   return (
     <>
-      <div className="relative size-6">
-        <Image src={company.logo_url || defaultCompanyLogo} fill className="rounded-sm" alt="" />
-      </div>
+      {company.name ? (
+        <Link href="/settings" className="relative size-6">
+          <Image src={company.logo_url || defaultCompanyLogo} fill className="rounded-sm" alt="" />
+        </Link>
+      ) : null}
       <div>
         <span className="line-clamp-1 text-sm font-bold" title={company.name ?? ""}>
           {company.name}

@@ -4,11 +4,11 @@ import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { dividendRoundsFactory } from "@test/factories/dividendRounds";
 import { dividendsFactory } from "@test/factories/dividends";
 import { usersFactory } from "@test/factories/users";
+import { wiseRecipientsFactory } from "@test/factories/wiseRecipients";
 import { login } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { eq } from "drizzle-orm";
 import { companyInvestors, dividends, wiseRecipients } from "@/db/schema";
-import { wiseRecipientsFactory } from "@test/factories/wiseRecipients";
 import { assertDefined } from "@/utils/assert";
 
 test.describe("Dividends", () => {

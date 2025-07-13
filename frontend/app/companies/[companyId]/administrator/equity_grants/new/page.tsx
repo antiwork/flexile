@@ -1,13 +1,16 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import { optionGrantTypeDisplayNames, relationshipDisplayNames, vestingTriggerDisplayNames } from "@/app/equity/grants";
 import ComboBox from "@/components/ComboBox";
+import DatePicker from "@/components/DatePicker";
 import MainLayout from "@/components/layouts/Main";
 import { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
@@ -21,9 +24,6 @@ import {
 } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
-import TemplateSelector from "@/app/document_templates/TemplateSelector";
-import DatePicker from "@/components/DatePicker";
-import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
 
 const MAX_VESTING_DURATION_IN_MONTHS = 120;
 

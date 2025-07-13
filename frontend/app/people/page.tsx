@@ -1,32 +1,33 @@
 "use client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
+import { useQueryClient } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
+import { formatISO } from "date-fns";
+import { UserPlus, Users } from "lucide-react";
 import Link from "next/link";
-import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import React, { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { formatISO } from "date-fns";
-import DatePicker from "@/components/DatePicker";
-import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
+import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
+import DatePicker from "@/components/DatePicker";
 import MainLayout from "@/components/layouts/Main";
+import { MutationStatusButton } from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
+import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { MutationStatusButton } from "@/components/MutationButton";
+import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
 import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
-import { UserPlus, Users } from "lucide-react";
-import TemplateSelector from "@/app/document_templates/TemplateSelector";
 import FormFields, { schema as formSchema } from "./FormFields";
-import { Switch } from "@/components/ui/switch";
-import { useQueryClient } from "@tanstack/react-query";
 
 const schema = formSchema.extend({
   email: z.string().email(),
@@ -41,13 +42,15 @@ export default function PeoplePage() {
   const company = useCurrentCompany();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const [workers, { refetch }] = trpc.contractors.list.useSuspenseQuery({ companyId: company.id });
+  const { data: workers = [], isLoading, refetch } = trpc.contractors.list.useQuery({ companyId: company.id });
   const [showInviteModal, setShowInviteModal] = useState(false);
   const lastContractor = workers[0];
 
   const form = useForm({
-    defaultValues: {
-      ...(lastContractor ? { role: lastContractor.role } : {}),
+    values: {
+      email: "",
+      role: lastContractor?.role ?? "",
+      documentTemplateId: "",
       payRateType: lastContractor?.payRateType ?? PayRateType.Hourly,
       payRateInSubunits: lastContractor?.payRateInSubunits ?? null,
       startDate: today(getLocalTimeZone()),
@@ -139,7 +142,9 @@ export default function PeoplePage() {
         ) : null
       }
     >
-      {workers.length > 0 ? (
+      {isLoading ? (
+        <TableSkeleton columns={4} />
+      ) : workers.length > 0 ? (
         <DataTable
           table={table}
           searchColumn="user_name"

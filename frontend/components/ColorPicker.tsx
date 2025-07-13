@@ -1,22 +1,10 @@
-import { useId } from "react";
+import type React from "react";
+import { cn } from "@/utils";
 
-interface ColorPickerProps {
-  value: string | null;
-  onChange: (value: string) => void;
-}
-
-export default function ColorPicker({ value, onChange }: ColorPickerProps) {
-  const id = useId();
-
+export default function ColorPicker(props: React.ComponentProps<"input">) {
   return (
     <div className="relative size-12 overflow-hidden rounded-full border">
-      <input
-        id={id}
-        type="color"
-        value={value ?? ""}
-        onChange={(e) => onChange(e.target.value)}
-        className="absolute -inset-1/2 size-auto cursor-pointer"
-      />
+      <input {...props} type="color" className={cn("absolute -inset-1/2 size-auto cursor-pointer", props.className)} />
     </div>
   );
 }

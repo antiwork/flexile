@@ -78,3 +78,11 @@ process_tender_offer_equilibrium_price_job:
   cron: "0 2 * * *" # Every day at UTC 02:00
   class: ProcessTenderOfferEquilibriumPriceJob
   description: Calculates equilibrium prices for ended tender offers
+
+dividend_report_csv_email_job:
+  cron: "0 16 1 * *" # The 1st day of every month at UTC 16:00
+  class: DividendReportCsvEmailJob
+  description: Sends monthly dividend report data for accounting
+  args:
+    - - "solson@earlygrowth.com"
+      - "howard@antiwork.com"

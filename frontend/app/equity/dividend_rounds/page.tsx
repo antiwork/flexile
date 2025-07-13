@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
+import TableSkeleton from "@/components/TableSkeleton";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -30,13 +31,15 @@ const columns = [
 export default function DividendRounds() {
   const company = useCurrentCompany();
   const router = useRouter();
-  const [dividendRounds] = trpc.dividendRounds.list.useSuspenseQuery({ companyId: company.id });
+  const { data: dividendRounds = [], isLoading } = trpc.dividendRounds.list.useQuery({ companyId: company.id });
 
   const table = useTable({ columns, data: dividendRounds });
 
   return (
     <EquityLayout>
-      {dividendRounds.length > 0 ? (
+      {isLoading ? (
+        <TableSkeleton columns={3} />
+      ) : dividendRounds.length > 0 ? (
         <DataTable table={table} onRowClicked={(row) => router.push(`/equity/dividend_rounds/${row.id}`)} />
       ) : (
         <Placeholder icon={CircleCheck}>You have not issued any dividends yet.</Placeholder>

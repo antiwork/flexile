@@ -1,29 +1,30 @@
 "use client";
 
-import { Download, CircleDollarSign, RefreshCw } from "lucide-react";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
+import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { CircleDollarSign, Download, RefreshCw } from "lucide-react";
+import Link from "next/link";
+import React, { useState } from "react";
+import { z } from "zod";
+import StripeMicrodepositVerification from "@/app/administrator/settings/StripeMicrodepositVerification";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import env from "@/env/client";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
-import { formatDate } from "@/utils/time";
-import Link from "next/link";
-import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InformationCircleIcon } from "@heroicons/react/24/outline";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { request } from "@/utils/request";
-import { loadStripe } from "@stripe/stripe-js";
-import env from "@/env/client";
-import { z } from "zod";
 import { company_administrator_settings_bank_accounts_path } from "@/utils/routes";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import React, { useState } from "react";
-import StripeMicrodepositVerification from "@/app/administrator/settings/StripeMicrodepositVerification";
-import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatDate } from "@/utils/time";
 
 const columnHelper = createColumnHelper<RouterOutput["consolidatedInvoices"]["list"][number]>();
 const columns = [
@@ -138,7 +139,8 @@ export default function Billing() {
         </p>
       </hgroup>
 
-      {stripeData ? ( // Re-render Stripe Elements provider when data changes as it considers its options immutable
+      {stripeData !== undefined ? (
+        // Re-render Stripe Elements provider when data changes as it considers its options immutable
         <>
           {stripeData.bank_account_last4 ? (
             <Card>
@@ -172,7 +174,9 @@ export default function Billing() {
             <AddBankAccount open={addingBankAccount} onOpenChange={setAddingBankAccount} />
           </Elements>
         </>
-      ) : null}
+      ) : (
+        <BankAccountCardSkeleton />
+      )}
       <StripeMicrodepositVerification />
       <h3 className="mt-4 text-base font-medium">Billing history</h3>
       <Alert>
@@ -243,3 +247,17 @@ const AddBankAccount = (props: React.ComponentProps<typeof Dialog>) => {
     </Dialog>
   );
 };
+
+function BankAccountCardSkeleton() {
+  return (
+    <div className="border-gray-40 rounded-md p-4 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div>
+          <Skeleton className="mb-2 h-5 w-40 rounded" />
+          <Skeleton className="h-4 w-28 rounded" />
+        </div>
+        <Skeleton className="h-8 w-16 rounded" />
+      </div>
+    </div>
+  );
+}
