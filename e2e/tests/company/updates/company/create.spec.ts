@@ -1,10 +1,10 @@
-import { test, expect, type Page } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
+import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyUpdatesFactory } from "@test/factories/companyUpdates";
 import { login } from "@test/helpers/auth";
-import { db } from "@test/db";
-import { companyUpdates } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { companyUpdates } from "@/db/schema";
 
 test.describe("company update creation", () => {
   let company: Awaited<ReturnType<typeof companiesFactory.createCompletedOnboarding>>["company"];
@@ -36,7 +36,7 @@ test.describe("company update creation", () => {
     await expect(page.getByRole("dialog", { name: "Publish update?" })).toBeVisible();
     await page.getByRole("button", { name: "Yes, publish" }).click();
 
-    await page.waitForURL(/\/updates\/company\/[^\/]+$/);
+    await page.waitForURL(/\/updates\/company\/[^/]+$/u);
 
     await expect(page.getByText(title)).toBeVisible();
     await expect(page.getByText(content)).toBeVisible();
@@ -110,7 +110,7 @@ test.describe("company update creation", () => {
     await expect(page.getByRole("dialog", { name: "Publish update?" })).toBeVisible();
     await page.getByRole("button", { name: "Yes, update" }).click();
 
-    await page.waitForURL(/\/updates\/company\/[^\/]+$/);
+    await page.waitForURL(/\/updates\/company\/[^/]+$/u);
 
     const updatedRecord = await db.query.companyUpdates.findFirst({
       where: eq(companyUpdates.id, companyUpdate.id),

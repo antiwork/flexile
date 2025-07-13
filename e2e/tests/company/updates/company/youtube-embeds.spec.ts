@@ -1,4 +1,4 @@
-import { test, expect, type Page, type Locator } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { companiesFactory } from "@test/factories/companies";
 import { companyUpdatesFactory } from "@test/factories/companyUpdates";
 import { login } from "@test/helpers/auth";
