@@ -1,25 +1,25 @@
-import React, { useState, useMemo } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Copy } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import TemplateSelector from "@/app/document_templates/TemplateSelector";
+import CopyButton from "@/components/CopyButton";
+import { MutationStatusButton } from "@/components/MutationButton";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";
 import { DocumentTemplateType, trpc } from "@/trpc/client";
-import { Form, FormField, FormItem, FormControl } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Switch } from "@/components/ui/switch";
-import TemplateSelector from "@/app/document_templates/TemplateSelector";
-import { MutationStatusButton } from "@/components/MutationButton";
-import { Copy } from "lucide-react";
-import CopyButton from "@/components/CopyButton";
 
 interface InviteLinkModalProps {
   open: boolean;

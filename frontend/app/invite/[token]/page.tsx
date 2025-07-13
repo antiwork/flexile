@@ -1,19 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-
-import { CheckCircleIcon } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-
-import { useUserStore } from "@/global";
+import { CheckCircleIcon } from "lucide-react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect } from "react";
 import SimpleLayout from "@/components/layouts/Simple";
+import { useUserStore } from "@/global";
+import { INVITATION_TOKEN_COOKIE_MAX_AGE, INVITATION_TOKEN_COOKIE_NAME } from "@/models/constants";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
-
-import { INVITATION_TOKEN_COOKIE_MAX_AGE, INVITATION_TOKEN_COOKIE_NAME } from "@/models/constants";
-import Link from "next/link";
 
 export default function AcceptInvitationPage() {
   const { token } = useParams();

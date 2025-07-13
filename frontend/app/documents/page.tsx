@@ -20,6 +20,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import DocusealForm, { customCss } from "@/app/documents/DocusealForm";
+import { FinishOnboarding } from "@/app/documents/FinishOnboarding";
 import DataTable, { createColumnHelper, filterValueSchema, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
 import { linkClasses } from "@/components/Link";
@@ -39,7 +40,6 @@ import type { RouterOutput } from "@/trpc";
 import { DocumentTemplateType, DocumentType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
 import { formatDate } from "@/utils/time";
-import { FinishOnboarding } from "@/app/documents/FinishOnboarding";
 
 type Document = RouterOutput["documents"]["list"][number];
 type SignableDocument = Document & { docusealSubmissionId: number };

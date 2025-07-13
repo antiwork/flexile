@@ -1,19 +1,15 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-
-import { getLocalTimeZone, today, CalendarDate } from "@internationalized/date";
-
-import { PayRateType, trpc } from "@/trpc/client";
-import { useCurrentCompany } from "@/global";
-
-import { MutationStatusButton } from "@/components/MutationButton";
-
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Form } from "@/components/ui/form";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
 import FormFields from "@/app/people/FormFields";
+import { MutationStatusButton } from "@/components/MutationButton";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form } from "@/components/ui/form";
+import { useCurrentCompany } from "@/global";
+import { PayRateType, trpc } from "@/trpc/client";
 
 type OnboardingStepProps = {
   open: boolean;
