@@ -145,6 +145,31 @@ test.describe("Bank account settings", () => {
     await expect(page.getByLabel("ZIP code")).toHaveValue(onboardingUser.zipCode ?? "");
   });
 
+  test("disables Continue button when required fields are empty", async ({ page }) => {
+    await page.getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("link", { name: "Payouts" }).click();
+    await page.getByRole("button", { name: "Add bank account" }).click();
+
+    const modal = page.getByRole("dialog", { name: /bank account/i });
+    await expect(modal).toBeVisible();
+
+    const continueBtn = modal.getByRole("button", { name: "Continue" });
+    await expect(continueBtn).toBeDisabled();
+
+    await modal.getByLabel(/full name/i).fill("Jane Doe");
+    await expect(continueBtn).toBeDisabled();
+
+    await modal.getByLabel(/routing number/i).fill("071004200");
+    await expect(continueBtn).toBeDisabled();
+
+    await modal.getByLabel(/account number/i).fill("12345678");
+    await expect(continueBtn).toBeEnabled();
+
+    await modal.getByLabel(/account number/i).clear();
+    await expect(modal.getByLabel(/account number/i)).toHaveValue("");
+    await expect(continueBtn).toBeDisabled();
+  });
+
   test("validates name and bank account information", async ({ page }) => {
     await page.getByRole("link", { name: "Settings" }).click();
     await page.getByRole("link", { name: "Payouts" }).click();

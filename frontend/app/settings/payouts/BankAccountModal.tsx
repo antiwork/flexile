@@ -263,6 +263,13 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
     [visibleFields, errors],
   );
 
+  const hasEmptyRequiredFields = useMemo(
+    () => visibleFields?.some((field) => field.required && !details.get(field.key)?.trim()),
+    [visibleFields, details],
+  );
+
+  const isFormValid = !hasVisibleErrors && !hasEmptyRequiredFields;
+
   const validateField = async (field: Field) => {
     const value = details.get(field.key)?.trim() ?? "";
     if (!field.required && !value) return null;
@@ -521,7 +528,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
               Save bank account
             </MutationButton>
           ) : (
-            <Button disabled={hasVisibleErrors} onClick={() => setShowBillingDetails(true)}>
+            <Button disabled={!isFormValid} onClick={() => setShowBillingDetails(true)}>
               Continue
             </Button>
           )}
