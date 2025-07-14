@@ -1,10 +1,19 @@
 import { TRPCError } from "@trpc/server";
-import { and, eq } from "drizzle-orm";
+import { and, eq, or, isNotNull } from "drizzle-orm";
 import { createUpdateSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
-import { activeStorageAttachments, activeStorageBlobs, companies } from "@/db/schema";
+import {
+  activeStorageAttachments,
+  activeStorageBlobs,
+  companies,
+  companyAdministrators,
+  users,
+  companyWorkers,
+  companyInvestors,
+  companyLawyers,
+} from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 import {
   company_administrator_stripe_microdeposit_verifications_url,
@@ -119,6 +128,86 @@ export const companiesRouter = createRouter({
       if (!response.ok) {
         const { error } = z.object({ error: z.string() }).parse(await response.json());
         throw new TRPCError({ code: "BAD_REQUEST", message: error });
+      }
+    }),
+
+  listUsersWithAdminStatus: companyProcedure
+    .input(z.object({ companyId: z.string() }))
+    .query(async ({ ctx }) => {
+      if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+
+      const companyUsers = await db
+        .select({ id: users.id, email: users.email, name: users.name })
+        .from(users)
+        .leftJoin(companyWorkers, eq(companyWorkers.userId, users.id))
+        .leftJoin(companyInvestors, eq(companyInvestors.userId, users.id))
+        .leftJoin(companyLawyers, eq(companyLawyers.userId, users.id))
+        .leftJoin(companyAdministrators, eq(companyAdministrators.userId, users.id))
+        .where(
+          or(
+            and(eq(companyWorkers.companyId, ctx.company.id), isNotNull(companyWorkers.id)),
+            and(eq(companyInvestors.companyId, ctx.company.id), isNotNull(companyInvestors.id)),
+            and(eq(companyLawyers.companyId, ctx.company.id), isNotNull(companyLawyers.id)),
+            and(eq(companyAdministrators.companyId, ctx.company.id), isNotNull(companyAdministrators.id)),
+          ),
+        )
+        .groupBy(users.id);
+
+      const admins = await db.query.companyAdministrators.findMany({
+        where: eq(companyAdministrators.companyId, ctx.company.id),
+      });
+
+      const adminUserIds = new Set(admins.map((admin) => admin.userId.toString()));
+
+      return companyUsers.map((user) => ({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        isAdmin: adminUserIds.has(user.id.toString()),
+      }));
+    }),
+
+  toggleAdminRole: companyProcedure
+    .input(
+      z.object({ companyId: z.string(), userId: z.string(), isAdmin: z.boolean() })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+
+      const targetUserId = BigInt(input.userId);
+
+      if (ctx.userId === Number(input.userId) && !input.isAdmin) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You cannot remove your own admin role",
+        });
+      }
+
+      const currentAdmins = await db.query.companyAdministrators.findMany({
+        where: eq(companyAdministrators.companyId, ctx.company.id),
+      });
+
+      if (!input.isAdmin && currentAdmins.length === 1 && currentAdmins[0].userId === targetUserId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot remove the last administrator",
+        });
+      }
+
+      if (input.isAdmin) {
+        const existing = currentAdmins.find((admin) => admin.userId === targetUserId);
+        if (!existing) {
+          await db.insert(companyAdministrators).values({
+            userId: targetUserId,
+            companyId: ctx.company.id,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+        }
+      } else {
+        await db
+          .delete(companyAdministrators)
+          .where(and(eq(companyAdministrators.userId, targetUserId), eq(companyAdministrators.companyId, ctx.company.id)));
       }
     }),
 });

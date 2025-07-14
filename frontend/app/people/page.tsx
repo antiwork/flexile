@@ -23,9 +23,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { useCurrentCompany } from "@/global";
+import styles from "./AdminToggleColumn.module.css";
+import { useCurrentCompany, useCurrentUser } from "@/global";
 import { countries } from "@/models/constants";
 import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
+import { cn } from "@/utils";
 import { formatDate } from "@/utils/time";
 import FormFields, { schema as formSchema } from "./FormFields";
 import InviteLinkModal from "./InviteLinkModal";
@@ -41,9 +43,34 @@ const removeMailtoPrefix = (email: string) => email.replace(/^mailto:/iu, "");
 
 export default function PeoplePage() {
   const company = useCurrentCompany();
+  const currentUser = useCurrentUser();
   const queryClient = useQueryClient();
   const router = useRouter();
   const { data: workers = [], isLoading, refetch } = trpc.contractors.list.useQuery({ companyId: company.id });
+
+  const trpcUtils = trpc.useUtils();
+
+  const { data: usersWithAdminStatus = [] } = trpc.companies.listUsersWithAdminStatus.useQuery(
+    { companyId: company.id },
+    { enabled: !!company.id, refetchOnMount: true },
+  );
+
+  const toggleAdminMutation = trpc.companies.toggleAdminRole.useMutation({
+    onSuccess: async () => {
+      await trpcUtils.companies.listUsersWithAdminStatus.invalidate();
+    },
+    onError: (error) => {
+      console.error("Failed to toggle admin role:", error.message);
+    },
+  });
+
+  const adminStatusMap = useMemo(() => {
+    const map = new Map<string, boolean>();
+    usersWithAdminStatus.forEach((user) => {
+      map.set(user.email, user.isAdmin);
+    });
+    return map;
+  }, [usersWithAdminStatus]);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showInviteLinkModal, setShowInviteLinkModal] = useState(false);
 
@@ -62,7 +89,6 @@ export default function PeoplePage() {
     resolver: zodResolver(schema),
   });
 
-  const trpcUtils = trpc.useUtils();
   const saveMutation = trpc.contractors.create.useMutation({
     onSuccess: async (data) => {
       await refetch();
@@ -119,6 +145,54 @@ export default function PeoplePage() {
             <Status variant="primary">Invited</Status>
           ),
       }),
+      columnHelper.accessor((row) => adminStatusMap.get(row.user.email) ?? false, {
+        id: "adminStatus",
+        header: "Admin",
+        cell: (info) => {
+          const isAdmin = info.getValue() as boolean;
+          const userId = info.row.original.user.id;
+          const userEmail = info.row.original.user.email;
+          const isCurrentUser = currentUser.email === userEmail;
+          const isLoading =
+            toggleAdminMutation.isLoading && toggleAdminMutation.variables?.userId === userId.toString();
+          return (
+            <div className={styles.adminToggleCell} onClick={(e) => e.stopPropagation()}>
+              <div className={cn("md:hidden", styles.mobileLabel)}>Admin</div>
+              <div
+                className={cn(
+                  styles.toggleWrapper,
+                  isCurrentUser && styles.disabled,
+                  isLoading && styles.toggleLoading,
+                )}
+              >
+                <Switch
+                  checked={isAdmin}
+                  onCheckedChange={(checked) => {
+                    if (isCurrentUser) return;
+                    toggleAdminMutation.mutate({
+                      companyId: company.id,
+                      userId: userId.toString(),
+                      isAdmin: checked,
+                    });
+                  }}
+                  disabled={isCurrentUser || isLoading}
+                  label={isAdmin ? "Admin" : "User"}
+                  aria-label={`Toggle admin status for ${info.row.original.user.name}`}
+                />
+              </div>
+              <span
+                className={cn(
+                  "hidden md:inline",
+                  styles.adminLabel,
+                  isAdmin && styles.isAdmin,
+                )}
+              >
+                {isAdmin ? "Admin" : "User"}
+              </span>
+            </div>
+          );
+        },
+      }),
     ],
     [],
   );
@@ -152,7 +226,7 @@ export default function PeoplePage() {
       }
     >
       {isLoading ? (
-        <TableSkeleton columns={4} />
+        <TableSkeleton columns={5} />
       ) : workers.length > 0 ? (
         <DataTable
           table={table}
