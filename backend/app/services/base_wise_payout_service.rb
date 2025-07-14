@@ -42,7 +42,7 @@ class BaseWisePayoutService
       amount = net_amount_in_usd
     else
       exchange_rate = payout_service.get_exchange_rate(target_currency:).first["rate"]
-      Bugsnag.leave_breadcrumb("PayInvestorDividends - fetched exchange rate",
+      Bugsnag.leave_breadcrumb("#{self.class.name} - fetched exchange rate",
                                { response: exchange_rate }, Bugsnag::Breadcrumbs::LOG_BREADCRUMB_TYPE)
       amount = net_amount_in_usd * exchange_rate
     end
@@ -59,7 +59,7 @@ class BaseWisePayoutService
       raise WiseError, "Bank account is no longer active for #{item_type_name.downcase} payment #{payment.id}"
     end
     quote = payout_service.create_quote(target_currency:, amount:, recipient_id: bank_account.recipient_id)
-    Bugsnag.leave_breadcrumb("PayInvestorDividends - received quote",
+    Bugsnag.leave_breadcrumb("#{self.class.name} - received quote",
                              { response: quote }, Bugsnag::Breadcrumbs::LOG_BREADCRUMB_TYPE)
     quote_id = quote["id"]
     raise WiseError, "Creating quote failed for #{item_type_name.downcase} payment #{payment.id}" unless quote_id.present?
@@ -73,7 +73,7 @@ class BaseWisePayoutService
     transfer = payout_service.create_transfer(quote_id:, recipient_id: bank_account.recipient_id,
                                               unique_transaction_id: payment.processor_uuid,
                                               reference: payment.wise_transfer_reference)
-    Bugsnag.leave_breadcrumb("PayInvestorDividends - created transfer",
+    Bugsnag.leave_breadcrumb("#{self.class.name} - created transfer",
                              { response: transfer }, Bugsnag::Breadcrumbs::LOG_BREADCRUMB_TYPE)
     transfer_id = transfer["id"]
     raise WiseError, "Creating transfer failed for #{item_type_name.downcase} payment #{payment.id}" unless transfer_id.present?
@@ -83,7 +83,7 @@ class BaseWisePayoutService
                     recipient_last4: bank_account.last_four_digits)
     response = payout_service.fund_transfer(transfer_id:)
 
-    Bugsnag.leave_breadcrumb("PayInvestorDividends - funded transfer",
+    Bugsnag.leave_breadcrumb("#{self.class.name} - funded transfer",
                              { response: }, Bugsnag::Breadcrumbs::LOG_BREADCRUMB_TYPE)
     unless response["status"] == "COMPLETED"
       raise WiseError, "Funding transfer failed for #{item_type_name.downcase} payment #{payment.id}"
