@@ -43,7 +43,7 @@ class PayInvestorEquityBuybacks < BaseWisePayoutService
         status: Payment::INITIAL,
         processor_uuid: SecureRandom.uuid,
         wise_credential: WiseCredential.flexile_credential,
-        wise_recipient: bank_account,
+        wise_recipient: user.bank_account_for_dividends,
         processor_name: EquityBuybackPayment::PROCESSOR_WISE,
       }
     end
@@ -57,7 +57,7 @@ class PayInvestorEquityBuybacks < BaseWisePayoutService
     end
 
     def fee_update_attributes(wise_fee)
-      { transfer_fee_cents: (wise_fee.to_d * 100).to_i }
+      { transfer_fee_in_cents: (wise_fee.to_d * 100).to_i }
     end
 
     def run_pre_payout_validations
