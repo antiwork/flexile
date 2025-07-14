@@ -57,7 +57,7 @@ class PayInvestorEquityBuybacks < BaseWisePayoutService
     end
 
     def fee_update_attributes(wise_fee)
-      { transfer_fee_in_cents: (wise_fee.to_d * 100).to_i }
+      { transfer_fee_cents: (wise_fee.to_d * 100).to_i }
     end
 
     def run_pre_payout_validations
