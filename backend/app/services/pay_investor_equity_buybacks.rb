@@ -34,7 +34,7 @@ class PayInvestorEquityBuybacks < BaseWisePayoutService
     end
 
     def requires_bank_account?
-      true
+      false
     end
 
     def payment_attributes
