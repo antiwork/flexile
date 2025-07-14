@@ -40,9 +40,6 @@ import { request } from "@/utils/request";
 import { approve_company_invoices_path, company_equity_exercise_payment_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import FormFields, { schema as formSchema } from "../FormFields";
-import RadioButtons from "@/components/RadioButtons";
-import CopyButton from "@/components/CopyButton";
-import { Decimal } from "decimal.js";
 import TableSkeleton from "@/components/TableSkeleton";
 
 const issuePaymentSchema = z.object({

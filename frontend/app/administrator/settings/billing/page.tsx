@@ -24,13 +24,8 @@ import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_administrator_settings_bank_accounts_path } from "@/utils/routes";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import React, { useState } from "react";
-import StripeMicrodepositVerification from "@/app/administrator/settings/StripeMicrodepositVerification";
-import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import TableSkeleton from "@/components/TableSkeleton";
 import { formatDate } from "@/utils/time";
+import TableSkeleton from "@/components/TableSkeleton";
 
 const columnHelper = createColumnHelper<RouterOutput["consolidatedInvoices"]["list"][number]>();
 const columns = [
