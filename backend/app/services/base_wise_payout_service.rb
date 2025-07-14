@@ -89,7 +89,7 @@ class BaseWisePayoutService
       raise WiseError, "Funding transfer failed for #{item_type_name.downcase} payment #{payment.id}"
     end
   rescue WiseError => e
-    payment.update!(status: Payment::FAILED)
+    payment.update!(status: Payment::FAILED) if defined?(payment) && payment
     raise e
   end
 
