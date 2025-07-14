@@ -34,7 +34,7 @@ class PayInvestorEquityBuybacks < BaseWisePayoutService
     end
 
     def requires_bank_account?
-      false
+      true
     end
 
     def payment_attributes
@@ -43,7 +43,7 @@ class PayInvestorEquityBuybacks < BaseWisePayoutService
         status: Payment::INITIAL,
         processor_uuid: SecureRandom.uuid,
         wise_credential: WiseCredential.flexile_credential,
-        wise_recipient: user.bank_account_for_dividends,
+        wise_recipient: bank_account,
         processor_name: EquityBuybackPayment::PROCESSOR_WISE,
       }
     end
