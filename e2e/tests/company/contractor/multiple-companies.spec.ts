@@ -3,9 +3,9 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
+import { fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
-import { fillDatePicker } from "@test/helpers";
 import { expect, test, withinModal } from "@test/index";
 
 test.describe("Contractor for multiple companies", () => {
