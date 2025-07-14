@@ -4,7 +4,7 @@ class AddNameToContract < ActiveRecord::Migration[7.1]
 
     Contract.reset_column_information
     Contract.all.find_in_batches do |contracts|
-      Contract.where(id: contracts.map(&:id)).update_all(name: Contract::CONSULTING_CONTRACT_NAME)
+      Contract.where(id: contracts.map(&:id)).update_all(name: Document::CONSULTING_CONTRACT_NAME)
     end
 
     change_column_null :contracts, :name, false
