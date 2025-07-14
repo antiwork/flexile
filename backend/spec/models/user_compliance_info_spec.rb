@@ -420,7 +420,7 @@ RSpec.describe UserComplianceInfo do
         let(:business_entity) { false }
 
         it "returns the W-9 form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(TaxDocument::FORM_W_9)
+          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_9)
         end
       end
 
@@ -428,7 +428,7 @@ RSpec.describe UserComplianceInfo do
         let(:business_entity) { true }
 
         it "returns the W-9 form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(TaxDocument::FORM_W_9)
+          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_9)
         end
       end
     end
@@ -440,7 +440,7 @@ RSpec.describe UserComplianceInfo do
         let(:business_entity) { false }
 
         it "returns the W-9 form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(TaxDocument::FORM_W_9)
+          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_9)
         end
       end
 
@@ -448,7 +448,7 @@ RSpec.describe UserComplianceInfo do
         let(:business_entity) { true }
 
         it "returns the W-9 form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(TaxDocument::FORM_W_9)
+          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_9)
         end
       end
     end
@@ -460,7 +460,7 @@ RSpec.describe UserComplianceInfo do
         let(:business_entity) { false }
 
         it "returns the W-8BEN form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(TaxDocument::FORM_W_8BEN)
+          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_8BEN)
         end
       end
 
@@ -468,7 +468,7 @@ RSpec.describe UserComplianceInfo do
         let(:business_entity) { true }
 
         it "returns the W-8BEN-E form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(TaxDocument::FORM_W_8BEN_E)
+          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_8BEN_E)
         end
       end
     end
@@ -481,7 +481,7 @@ RSpec.describe UserComplianceInfo do
       let(:user) { create(:user, country_code: "US", citizenship_country_code: "RO") }
 
       it "returns the 1099-DIV form name" do
-        expect(user_compliance_info.investor_tax_document_name).to eq(TaxDocument::FORM_1099_DIV)
+        expect(user_compliance_info.investor_tax_document_name).to eq(Document::FORM_1099_DIV)
       end
     end
 
@@ -489,7 +489,7 @@ RSpec.describe UserComplianceInfo do
       let(:user) { create(:user, country_code: "RO", citizenship_country_code: "US") }
 
       it "returns the 1099-DIV form name" do
-        expect(user_compliance_info.investor_tax_document_name).to eq(TaxDocument::FORM_1099_DIV)
+        expect(user_compliance_info.investor_tax_document_name).to eq(Document::FORM_1099_DIV)
       end
     end
 
@@ -499,7 +499,7 @@ RSpec.describe UserComplianceInfo do
       end
 
       it "returns the 1042-S form name" do
-        expect(user_compliance_info.investor_tax_document_name).to eq(TaxDocument::FORM_1042_S)
+        expect(user_compliance_info.investor_tax_document_name).to eq(Document::FORM_1042_S)
       end
     end
   end

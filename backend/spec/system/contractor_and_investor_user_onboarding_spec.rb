@@ -70,7 +70,7 @@ RSpec.describe "Onboarding for a user with contractor and investor roles", :vcr 
 
     # Contract signing
     expect(page).to have_current_path(spa_company_worker_onboarding_contract_path(company.external_id))
-    expect(page).to have_text("Consulting agreement")
+    expect(page).to have_text(Document::CONSULTING_CONTRACT_NAME)
     expect(page).to have_selector("h1", text: "CONSULTING AGREEMENT")
     expect(page).to have_selector("span", text: "United States")
     expect(page).to have_selector("span", text: "United Kingdom")
@@ -133,7 +133,7 @@ RSpec.describe "Onboarding for a user with contractor and investor roles", :vcr 
       end
       # Skips bank account info
       # Contract signing
-      expect(page).to have_text("Consulting agreement")
+      expect(page).to have_text(Document::CONSULTING_CONTRACT_NAME)
       expect(page).to have_current_path(spa_company_worker_onboarding_contract_path(company.external_id))
       expect(find_button("Click to add signature", disabled: true)).to have_tooltip "Have you read everything yet?"
       click_on "Discovery Procedures (Exhibit B)"
@@ -211,7 +211,7 @@ RSpec.describe "Onboarding for a user with contractor and investor roles", :vcr 
       click_on "Continue"
 
       # Contract signing
-      expect(page).to have_text("Consulting agreement")
+      expect(page).to have_text(Document::CONSULTING_CONTRACT_NAME)
       expect(page).to have_current_path(spa_company_worker_onboarding_contract_path(company.external_id))
       expect(find_button("Click to add signature", disabled: true)).to have_tooltip "Have you read everything yet?"
       click_on "Discovery Procedures (Exhibit B)"

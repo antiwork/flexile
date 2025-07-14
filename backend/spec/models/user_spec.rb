@@ -16,7 +16,6 @@ RSpec.describe User do
     it { is_expected.to have_many(:company_investors) }
     it { is_expected.to have_many(:portfolio_companies).through(:company_investors).source(:company) }
 
-    it { is_expected.to have_many(:contracts) }
     it { is_expected.to have_many(:documents) }
     it { is_expected.to have_many(:dividends).through(:company_investors) }
     it { is_expected.to have_many(:time_entries) }

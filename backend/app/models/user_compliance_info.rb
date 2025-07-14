@@ -10,7 +10,6 @@ class UserComplianceInfo < ApplicationRecord
 
   belongs_to :user
 
-  has_many :tax_documents
   has_many :documents
   has_many :dividends
 
@@ -49,21 +48,21 @@ class UserComplianceInfo < ApplicationRecord
   def tax_information_document_name
     case
     when requires_w9?
-      TaxDocument::FORM_W_9
+      Document::FORM_W_9
     when business_entity?
-      TaxDocument::FORM_W_8BEN_E
+      Document::FORM_W_8BEN_E
     else
-      TaxDocument::FORM_W_8BEN
+      Document::FORM_W_8BEN
     end
   end
 
   def investor_tax_document_name
-    requires_w9? ? TaxDocument::FORM_1099_DIV : TaxDocument::FORM_1042_S
+    requires_w9? ? Document::FORM_1099_DIV : Document::FORM_1042_S
   end
 
   def mark_deleted!
     docs = documents.tax_document.unsigned
-    docs = docs.where.not(name: [TaxDocument::FORM_1099_DIV, TaxDocument::FORM_1042_S]) if dividends.paid.any?
+    docs = docs.where.not(name: [Document::FORM_1099_DIV, Document::FORM_1042_S]) if dividends.paid.any?
     docs.each(&:mark_deleted!)
     super
   end

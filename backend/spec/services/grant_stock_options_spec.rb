@@ -198,7 +198,6 @@ RSpec.describe GrantStockOptions do
           expect(result).to eq(success: false, error: "Equity contract not appropriate for #{user.display_name} from country China")
         end.to change { CompanyInvestor.count }.by(0)
            .and change { EquityGrant.count }.by(0)
-           .and change { Contract.count }.by(0)
       end
     end
 
