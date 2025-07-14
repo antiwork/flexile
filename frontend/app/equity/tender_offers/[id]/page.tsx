@@ -27,6 +27,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormField, FormItem, FormControl, FormLabel, FormMessage } from "@/components/ui/form";
 import Link from "next/link";
+import TableSkeleton from "@/components/TableSkeleton";
 type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
 
 const formSchema = z.object({
@@ -42,7 +43,11 @@ export default function BuybackView() {
   const [data] = trpc.tenderOffers.get.useSuspenseQuery({ companyId: company.id, id });
   const isOpen = isPast(utc(data.startsAt)) && isFuture(utc(data.endsAt));
   const investorId = user.roles.investor?.id;
-  const [bids, { refetch: refetchBids }] = trpc.tenderOffers.bids.list.useSuspenseQuery({
+  const {
+    data: bids,
+    isLoading,
+    refetch: refetchBids,
+  } = trpc.tenderOffers.bids.list.useQuery({
     companyId: company.id,
     tenderOfferId: id,
     investorId: user.roles.administrator ? undefined : investorId,
@@ -128,7 +133,7 @@ export default function BuybackView() {
     [],
   );
 
-  const bidsTable = useTable({ data: bids, columns });
+  const bidsTable = useTable({ data: bids ?? [], columns });
 
   return (
     <MainLayout title='Buyback details ("Sell Elections")'>
@@ -274,7 +279,7 @@ export default function BuybackView() {
         </>
       ) : null}
 
-      {bids.length > 0 ? <DataTable table={bidsTable} /> : null}
+      {isLoading ? <TableSkeleton columns={5} /> : bids && bids.length > 0 ? <DataTable table={bidsTable} /> : null}
 
       {cancelingBid ? (
         <Dialog open onOpenChange={() => setCancelingBid(null)}>
