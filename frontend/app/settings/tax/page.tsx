@@ -548,7 +548,7 @@ const LegalCertificationModal = ({
         if (!sticky) onClose();
       }}
     >
-      <DialogContent className="flex min-h-0 flex-col">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{certificateType} Certification and Tax Forms Delivery</DialogTitle>
         </DialogHeader>
