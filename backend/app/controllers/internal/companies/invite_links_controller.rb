@@ -27,18 +27,4 @@ class Internal::Companies::InviteLinksController < Internal::BaseController
       render json: { success: false, error: "Invite link not found" }, status: :not_found
     end
   end
-
-  def complete_onboarding
-    update_params = params_for_update
-    result = CompleteInviteLinkOnboarding.new(user: Current.user, company: Current.company, update_params:).process
-    if result[:success]
-      render json: { success: true, document_id: result[:document]&.id,  template_id: result[:template_id] }, status: :ok
-    else
-      render json: { success: false, error_message: result[:error] }, status: :unprocessable_entity
-    end
-  end
-
-  def params_for_update
-    params.permit(:started_at, :role, :pay_rate_type, :pay_rate_in_subunits)
-  end
 end

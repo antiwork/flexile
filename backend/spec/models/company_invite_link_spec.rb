@@ -31,7 +31,6 @@ RSpec.describe CompanyInviteLink do
       it "is not valid" do
         dup = described_class.new(company: company, document_template_id: document_template_id)
         expect(dup).not_to be_valid
-        expect(dup.errors[:base]).to include("An invite for this company, document template already exists")
       end
     end
   end

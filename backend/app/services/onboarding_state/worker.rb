@@ -9,7 +9,7 @@ class OnboardingState::Worker < OnboardingState::BaseUser
     if !has_personal_details?
       return spa_company_worker_onboarding_path(company.external_id)
     end
-    spa_documents_path unless user.company_worker_for(company)&.role.present?
+    "/documents" unless user.company_worker_for(company)&.role.present?
   end
 
   def after_complete_onboarding_path

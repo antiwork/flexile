@@ -190,7 +190,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_25_204538) do
     t.string "token", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["company_id", "document_template_id"], name: "idx_on_company_id_document_template_id_57bbad7c26"
+    t.index ["company_id", "document_template_id"], name: "idx_on_company_id_document_template_id_57bbad7c26", unique: true
     t.index ["company_id"], name: "index_company_invite_links_on_company_id"
     t.index ["document_template_id"], name: "index_company_invite_links_on_document_template_id"
     t.index ["token"], name: "index_company_invite_links_on_token", unique: true

@@ -69,7 +69,6 @@ scope path: :internal, module: :internal do
 
     resources :invite_links, only: [] do
       collection do
-        post :complete_onboarding
         get :show
         patch :reset
       end

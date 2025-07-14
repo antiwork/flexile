@@ -10,7 +10,7 @@ class CreateCompanyInviteLink < ActiveRecord::Migration[8.0]
     end
 
     add_index :company_invite_links, :token, unique: true
-    add_index :company_invite_links, [:company_id, :document_template_id]
+    add_index :company_invite_links, [:company_id, :document_template_id], unique: true
 
     change_table :users do |t|
       t.references :signup_invite_link, null: true

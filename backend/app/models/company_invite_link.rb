@@ -10,8 +10,7 @@ class CompanyInviteLink < ApplicationRecord
 
   validates :company_id, :token, presence: true
   validates :token, uniqueness: true
-
-  validate :unique_per_company_and_template
+  validates :document_template_id, uniqueness: { scope: :company_id, message: "An invite for this company, document template already exists" }
 
   def reset!
     update!(token: SecureRandom.base58(16))
@@ -20,18 +19,5 @@ class CompanyInviteLink < ApplicationRecord
   private
     def generate_token
       self.token ||= SecureRandom.base58(16)
-    end
-
-    def unique_per_company_and_template
-      existing = CompanyInviteLink.where(
-        company_id: company_id,
-        document_template_id: document_template_id
-      )
-
-      existing = existing.where.not(id: id) if persisted?
-
-      if existing.exists?
-        errors.add(:base, "An invite for this company, document template already exists")
-      end
     end
 end
