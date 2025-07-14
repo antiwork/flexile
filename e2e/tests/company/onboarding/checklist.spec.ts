@@ -63,7 +63,7 @@ test.describe.serial("Onboarding checklist", () => {
     await page.getByText("Invite a contractor").click();
     await expect(page).toHaveURL(/\/people/u);
     await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
-    await page.getByRole("button", { name: "Invite contractor" }).click();
+    await page.getByRole("button", { name: "Add contractor" }).click();
 
     await withinModal(
       async (modal) => {

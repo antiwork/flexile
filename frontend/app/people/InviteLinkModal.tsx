@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Copy } from "lucide-react";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import TemplateSelector from "@/app/document_templates/TemplateSelector";
@@ -46,13 +46,10 @@ const InviteLinkModal = ({ open, onOpenChange }: InviteLinkModalProps) => {
   const documentTemplateId = form.watch("documentTemplateId");
   const contractSignedElsewhere = form.watch("contractSignedElsewhere");
 
-  const queryParams = useMemo(
-    () => ({
-      companyId: company.id,
-      documentTemplateId: !contractSignedElsewhere ? (documentTemplateId ?? null) : null,
-    }),
-    [company.id, documentTemplateId, contractSignedElsewhere],
-  );
+  const queryParams = {
+    companyId: company.id,
+    documentTemplateId: !contractSignedElsewhere ? (documentTemplateId ?? null) : null,
+  };
 
   const { data: invite, refetch } = trpc.companyInviteLinks.get.useQuery(queryParams, {
     enabled: !!company.id,

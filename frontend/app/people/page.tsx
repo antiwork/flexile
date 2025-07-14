@@ -145,7 +145,7 @@ export default function PeoplePage() {
             </Button>
             <Button size="small" variant="outline" onClick={() => setShowInviteModal(true)}>
               <UserPlus className="size-4" />
-              Invite contractor
+              Add contractor
             </Button>
           </div>
         ) : null
@@ -165,7 +165,7 @@ export default function PeoplePage() {
               </Button>
               <Button size="small" variant="outline" onClick={() => setShowInviteModal(true)}>
                 <UserPlus className="size-4" />
-                Invite contractor
+                Add contractor
               </Button>
             </div>
           }

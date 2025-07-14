@@ -211,7 +211,9 @@ export default function DocumentsPage() {
   const userId = isCompanyRepresentative ? null : user.id;
   const canSign = user.address.street_address || isCompanyRepresentative;
 
-  const [forceWorkerOnboarding, setForceWorkerOnboarding] = useState<boolean>(!user.roles.worker?.role);
+  const [forceWorkerOnboarding, setForceWorkerOnboarding] = useState<boolean>(
+    user.roles.worker ? !user.roles.worker.role : false,
+  );
 
   const currentYear = new Date().getFullYear();
   const { data: documents = [], isLoading } = trpc.documents.list.useQuery({ companyId: company.id, userId });
