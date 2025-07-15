@@ -115,21 +115,21 @@ export const companyInviteLinksRouter = createRouter({
       if (!ctx.companyContractor.contractSignedElsewhere && ctx.user.signupInviteLinkId) {
         const inviteLink = await db.query.companyInviteLinks.findFirst({
           where: and(
-            eq(companyInviteLinks.companyId, Number(ctx.company.id)),
+            eq(companyInviteLinks.companyId, BigInt(ctx.company.id)),
             eq(companyInviteLinks.id, BigInt(ctx.user.signupInviteLinkId)),
             isNotNull(companyInviteLinks.documentTemplateId),
           ),
           columns: { documentTemplateId: true },
         });
 
-        const templateId = assertDefined(inviteLink?.documentTemplateId);
-
-        template = await db.query.documentTemplates.findFirst({
-          where: and(
-            eq(documentTemplates.id, BigInt(templateId)),
-            eq(documentTemplates.type, DocumentTemplateType.ConsultingContract),
-          ),
-        });
+        if (inviteLink?.documentTemplateId) {
+          template = await db.query.documentTemplates.findFirst({
+            where: and(
+              eq(documentTemplates.id, BigInt(inviteLink.documentTemplateId)),
+              eq(documentTemplates.type, DocumentTemplateType.ConsultingContract),
+            ),
+          });
+        }
       }
 
       if (!template) return { documentId: null };
