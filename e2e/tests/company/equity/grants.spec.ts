@@ -201,8 +201,11 @@ test.describe("New Contractor", () => {
     await withinModal(
       async (modal) => {
         await modal.getByLabel("Options to exercise").fill("10");
-        await expect(modal.getByText("Exercise cost$50")).toBeVisible();
-        await expect(modal.getByText("Options valueBased on 2M valuation$1,000")).toBeVisible();
+        await expect(modal.getByText("Exercise cost$50")).toBeVisible(); // 10 * $5 (exercise price)
+        // Option value $1000 = 10 * $100 (option value)
+        // Option value diff 1,900% = 1000 / 50 - 1 = 19x
+        await expect(modal.getByText("Options valueBased on 2M valuation$1,0001,900%")).toBeVisible();
+
         await modal.getByRole("button", { name: "Proceed" }).click();
         await modal.getByRole("button", { name: "Sign now" }).click();
         await modal.getByRole("link", { name: "Type" }).click();
