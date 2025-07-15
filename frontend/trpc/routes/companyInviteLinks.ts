@@ -132,17 +132,17 @@ export const companyInviteLinksRouter = createRouter({
         }
       }
 
-      if (!template) return { documentId: null };
-
       const userSignedDocument = await db.query.documentSignatures.findFirst({
         where: eq(documentSignatures.userId, ctx.user.id),
       });
+
+      if (!template || !userSignedDocument) return { documentId: null };
 
       const document = await db.query.documents.findFirst({
         where: and(
           eq(documents.companyId, ctx.company.id),
           eq(documents.type, DocumentType.ConsultingContract),
-          eq(documents.id, assertDefined(userSignedDocument).documentId),
+          eq(documents.id, userSignedDocument.documentId),
         ),
         with: { signatures: { with: { user: true } } },
       });
