@@ -9,14 +9,6 @@ class OnboardingPolicy < ApplicationPolicy
     show?
   end
 
-  def bank_account?
-    show?
-  end
-
-  def save_bank_account?
-    show?
-  end
-
   def contract?
     company_worker.present?
   end
