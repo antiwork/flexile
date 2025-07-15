@@ -9,14 +9,6 @@ class OnboardingPolicy < ApplicationPolicy
     show?
   end
 
-  def legal?
-    show?
-  end
-
-  def save_legal?
-    show?
-  end
-
   def bank_account?
     show?
   end

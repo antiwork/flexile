@@ -88,7 +88,6 @@ Rails.application.routes.draw do
   get "/onboarding/contract", to: redirect("/companies/_/worker/onboarding/contract")
   get "/investor_onboarding", to: redirect("/companies/_/investor/onboarding")
   get "/investor_onboarding/invitation", to: redirect { |path_params, req| "/companies/_/investor/onboarding/invitation#{path_params[:id]}#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/investor_onboarding/legal", to: redirect("/companies/_/investor/onboarding/legal")
   get "/investor_onboarding/bank_account", to: redirect("/companies/_/investor/onboarding/bank_account")
   get "/lawyer_onboarding/invitation", to: redirect { |path_params, req| "/companies/_/lawyer/onboarding/invitation#{path_params[:id]}#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   get "/internal/userid", to: "application#userid"
@@ -103,7 +102,6 @@ Rails.application.routes.draw do
   scope as: :spa do
     with_options to: spa_controller_action do
       resource :onboarding, only: :show, to: "application#main_vue" do
-        resource :legal, only: :show, to: "application#main_vue"
         resource :bank_account, only: :show, to: "application#main_vue"
       end
 
@@ -120,7 +118,6 @@ Rails.application.routes.draw do
         namespace :worker, module: nil do
           resource :onboarding, only: :show, to: "application#main_vue" do
             resource :invitation, only: :show, to: "application#main_vue"
-            resource :legal, only: :show, to: "application#main_vue"
             resource :bank_account, only: :show, to: "application#main_vue"
             resource :contract, only: :show, to: "application#main_vue"
           end
@@ -129,7 +126,6 @@ Rails.application.routes.draw do
         namespace :investor, module: nil do
           resource :onboarding, only: :show, to: "application#main_vue" do
             resource :invitation, only: :show, to: "application#main_vue"
-            resource :legal, only: :show, to: "application#main_vue"
             resource :bank_account, only: :show, to: "application#main_vue"
           end
         end

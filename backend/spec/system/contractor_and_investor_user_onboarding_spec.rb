@@ -27,25 +27,7 @@ RSpec.describe "Onboarding for a user with contractor and investor roles", :vcr 
     select "Australia", from: "Country of citizenship"
     click_on "Continue"
 
-    # Legal info
-    expect(page).to have_current_path(spa_company_worker_onboarding_legal_path(company.external_id))
-    expect(page).to have_text("How will you be billing?")
-    choose "I'm a business"
-    fill_in "Full legal name of entity", with: "Business Name"
-    fill_in "Foreign tax identification number", with: "123-45-6789"
-    fill_in "Date of birth", with: "06/07/1980"
-    expect(page).to have_text("How will you be billing?")
-    fill_in "Residential address (street name, number, apartment)", with: "123 Main St"
-    fill_in "City", with: "London"
-    select "London", from: "State"
-    fill_in "Postal code", with: "E1 8RU"
-    wait_for_ajax
-    click_on "Continue"
-    within_modal do
-      click_on "Save"
-    end
-
-    # Bank account
+    # Bank account (skip legal info)
     expect(page).to have_current_path(spa_company_worker_onboarding_bank_account_path(company.external_id))
     expect(page).to have_text("Get Paid Fast")
     user.reload
@@ -114,24 +96,29 @@ RSpec.describe "Onboarding for a user with contractor and investor roles", :vcr 
         click_on "Proceed"
       end
 
-      # Legal info
-      expect(page).to have_current_path(spa_company_worker_onboarding_legal_path(company.external_id))
-      expect(page).to have_text("How will you be billing?")
-      choose "I'm a business"
-      fill_in "Full legal name of entity", with: "Business Name"
-      fill_in "Foreign tax identification number", with: "555-66-6789"
-      fill_in "Date of birth", with: "06/07/1980"
-      expect(page).to have_text("How will you be billing?")
-      fill_in "Residential address (street name, number, apartment)", with: "123 Main St"
-      fill_in "City", with: "Pinar del Río"
-      expect(page).to have_field("State", exact: true)
-      select "Pinar del Río", from: "State"
-      fill_in "Postal code", with: "20100"
-      click_on "Continue"
+      # Bank account (skip legal info)
+      expect(page).to have_current_path(spa_company_worker_onboarding_bank_account_path(company.external_id))
+      expect(page).to have_text("Get Paid Fast")
+      user.reload
+      click_on "Set up"
+      select_wise_field "USD (United States Dollar)", from: "Currency"
+      check "My bank account is in the US"
+      fill_in "Name of the business / organisation", with: "Marco Antônio"
+      fill_in "ACH routing number", with: "026009593"
+      fill_in "Account number", with: "12345678"
       within_modal do
-        click_on "Save"
+        click_on "Continue"
       end
-      # Skips bank account info
+      select "United States", from: "Country"
+      fill_in "City", with: "Haleiwa"
+      fill_in "Street address, apt number", with: "59-720 Kamehameha Hwy"
+      expect(page).to have_field("State", exact: true)
+      select "Hawaii", from: "State"
+      fill_in "ZIP code", with: "96712"
+      click_on "Save bank account"
+      expect(page).to have_text("Account ending in 5678")
+      click_on "Continue"
+
       # Contract signing
       expect(page).to have_text("Consulting agreement")
       expect(page).to have_current_path(spa_company_worker_onboarding_contract_path(company.external_id))
@@ -170,31 +157,14 @@ RSpec.describe "Onboarding for a user with contractor and investor roles", :vcr 
       fill_in "Preferred name (visible to others)", with: "Marco"
       click_on "Continue"
 
-      # Legal info
-      expect(page).to have_current_path(spa_company_worker_onboarding_legal_path(company.external_id))
-      expect(page).to have_text("How will you be billing?")
-      choose "I'm a business"
-      fill_in "Full legal name of entity", with: "Business Name"
-      fill_in "Foreign tax identification number", with: "555-66-6789"
-      fill_in "Date of birth", with: "06/07/1980"
-      expect(page).to have_text("How will you be billing?")
-      fill_in "Residential address (street name, number, apartment)", with: "123 Main St"
-      fill_in "City", with: "São Paulo"
-      expect(page).to have_field("State", exact: true)
-      select "São Paulo", from: "State"
-      fill_in "Postal code", with: "01000-000"
-      click_on "Continue"
-      within_modal do
-        click_on "Save"
-      end
-
-      # Bank account
-      expect(page).to have_text("Get Paid Fast")
+      # Bank account (skip legal info)
       expect(page).to have_current_path(spa_company_worker_onboarding_bank_account_path(company.external_id))
+      expect(page).to have_text("Get Paid Fast")
       user.reload
       click_on "Set up"
-      check "My bank account is in the US"
       select_wise_field "USD (United States Dollar)", from: "Currency"
+      check "My bank account is in the US"
+      fill_in "Name of the business / organisation", with: "Marco Antônio"
       fill_in "ACH routing number", with: "026009593"
       fill_in "Account number", with: "12345678"
       within_modal do
