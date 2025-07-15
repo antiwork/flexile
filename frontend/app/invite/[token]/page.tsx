@@ -20,12 +20,6 @@ export default function AcceptInvitationPage() {
   const safeToken = typeof token === "string" ? token : "";
   const { data: inviteData, isLoading, isError } = trpc.companyInviteLinks.verify.useQuery({ token: safeToken });
 
-  useEffect(() => {
-    if (inviteData?.valid) {
-      acceptInvite();
-    }
-  }, [inviteData]);
-
   const queryClient = useQueryClient();
 
   const switchCompany = async (companyId: string) => {
@@ -61,6 +55,12 @@ export default function AcceptInvitationPage() {
 
     acceptInviteMutation.mutate({ token: safeToken });
   };
+
+  useEffect(() => {
+    if (inviteData?.valid) {
+      acceptInvite();
+    }
+  }, [inviteData]);
 
   if (isLoading) {
     return (

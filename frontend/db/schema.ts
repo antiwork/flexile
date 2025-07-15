@@ -1967,11 +1967,13 @@ export const companyInviteLinks = pgTable(
   "company_invite_links",
   {
     id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    companyId: bigint("company_id", { mode: "number" }).notNull(),
-    documentTemplateId: bigint("document_template_id", { mode: "number" }),
+    companyId: bigint("company_id", { mode: "bigint" }).notNull(),
+    documentTemplateId: bigint("document_template_id", { mode: "bigint" }),
     token: varchar().notNull(),
-    createdAt: timestamp("created_at", { precision: 6, mode: "string" }).notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "string" }).notNull(),
+    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
+      .notNull()
+      .$onUpdate(() => new Date()),
   },
   (table) => [
     uniqueIndex("idx_on_company_id_document_template_id_57bbad7c26").using(
