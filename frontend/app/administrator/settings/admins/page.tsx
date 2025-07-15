@@ -1,5 +1,8 @@
 "use client";
 
+import { useMemo } from "react";
+import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
+import TableSkeleton from "@/components/TableSkeleton";
 import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
@@ -8,75 +11,111 @@ import { cn } from "@/utils";
 export default function AdminsPage() {
   const company = useCurrentCompany();
   const currentUser = useCurrentUser();
-  const { data: workers = [], isLoading } = trpc.contractors.list.useQuery({ 
-    companyId: company.id 
-  });
+  const { data: users = [], isLoading } = trpc.companies.listUsersWithRoles.useQuery({ companyId: company.id });
 
   const trpcUtils = trpc.useUtils();
 
   const toggleAdminMutation = trpc.companies.toggleAdminRole.useMutation({
-    onSuccess: async () => {
-      await trpcUtils.contractors.list.invalidate();
+    onMutate: async ({ userId, isAdmin }) => {
+      // Optimistic update
+      await trpcUtils.companies.listUsersWithRoles.cancel({ companyId: company.id });
+      const previousUsers = trpcUtils.companies.listUsersWithRoles.getData({ companyId: company.id });
+
+      trpcUtils.companies.listUsersWithRoles.setData({ companyId: company.id }, (old) => {
+        if (!old) return old;
+        return old.map((user) => {
+          if (user.id === userId) {
+            return {
+              ...user,
+              isAdmin,
+              role: isAdmin ? "Admin" : null,
+            };
+          }
+          return user;
+        });
+      });
+
+      return { previousUsers };
     },
-    onError: (error) => {
-      console.error("Failed to toggle admin role:", error.message);
+    onError: (_error, _variables, context) => {
+      if (context?.previousUsers) {
+        trpcUtils.companies.listUsersWithRoles.setData({ companyId: company.id }, context.previousUsers);
+      }
     },
+    onSettled: async () => {
+      await trpcUtils.companies.listUsersWithRoles.invalidate();
+    },
+  });
+
+  const columnHelper = createColumnHelper<(typeof users)[number]>();
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor("name", {
+        header: "Name",
+        cell: (info) => {
+          const user = info.row.original;
+          const isCurrentUser = currentUser.email === user.email;
+          return (
+            <div>
+              <div className="font-medium">
+                {user.name}
+                {isCurrentUser ? <span className="text-muted-foreground ml-1">(You)</span> : null}
+              </div>
+              <div className="text-muted-foreground text-sm">{user.email}</div>
+            </div>
+          );
+        },
+      }),
+      columnHelper.accessor("role", {
+        header: "Role",
+        cell: (info) => info.getValue() || "-",
+      }),
+      columnHelper.display({
+        id: "active",
+        header: "Active",
+        cell: (info) => {
+          const user = info.row.original;
+          const isCurrentUserRow = currentUser.email === user.email;
+          const isLoadingToggle = toggleAdminMutation.isPending && toggleAdminMutation.variables.userId === user.id;
+
+          return (
+            <Switch
+              checked={user.isAdmin}
+              onCheckedChange={(checked) => {
+                if (isCurrentUserRow) return;
+                toggleAdminMutation.mutate({
+                  companyId: company.id,
+                  userId: user.id,
+                  isAdmin: checked,
+                });
+              }}
+              disabled={isCurrentUserRow || isLoadingToggle}
+              aria-label={`Toggle admin status for ${user.name || user.email}`}
+              className={cn(
+                isCurrentUserRow && "cursor-not-allowed opacity-50",
+                isLoadingToggle && "pointer-events-none opacity-70",
+              )}
+            />
+          );
+        },
+      }),
+    ],
+    [currentUser.email, company.id, toggleAdminMutation],
+  );
+
+  const table = useTable({
+    columns,
+    data: users,
   });
 
   return (
     <div className="grid gap-8">
       <hgroup>
         <h2 className="mb-1 text-xl font-bold">Admins</h2>
-        <p className="text-muted-foreground text-base">
-          Manage administrator access for your workspace members.
-        </p>
+        <p className="text-muted-foreground text-base">Manage access for users with admin roles in your workspace.</p>
       </hgroup>
 
-      <div className="rounded-lg border">
-        {isLoading ? (
-          <div className="p-8 text-center text-muted-foreground">Loading...</div>
-        ) : workers.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">No team members found.</div>
-        ) : (
-          <div className="divide-y">
-            {workers.map((worker) => {
-              const isCurrentUserRow = currentUser.email === worker.user.email;
-              const isLoadingToggle = 
-                toggleAdminMutation.isPending && 
-                toggleAdminMutation.variables?.userId === worker.user.id;
-              
-              return (
-                <div 
-                  key={worker.id} 
-                  className="flex items-center justify-between px-6 py-4 transition-colors hover:bg-muted/50"
-                >
-                  <div>
-                    <div className="font-medium">{worker.user.name}</div>
-                    <div className="text-sm text-muted-foreground">{worker.user.email}</div>
-                  </div>
-                  <Switch
-                    checked={worker.user.isAdmin ?? false}
-                    onCheckedChange={(checked) => {
-                      if (isCurrentUserRow) return;
-                      toggleAdminMutation.mutate({
-                        companyId: company.id,
-                        userId: worker.user.id,
-                        isAdmin: checked,
-                      });
-                    }}
-                    disabled={isCurrentUserRow || isLoadingToggle}
-                    aria-label={`Toggle admin status for ${worker.user.name || worker.user.email}`}
-                    className={cn(
-                      isCurrentUserRow && "opacity-50 cursor-not-allowed",
-                      isLoadingToggle && "opacity-70 pointer-events-none"
-                    )}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      {isLoading ? <TableSkeleton columns={3} /> : <DataTable table={table} />}
     </div>
   );
 }

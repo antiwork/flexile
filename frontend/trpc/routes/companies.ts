@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, eq, or, isNotNull } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { createUpdateSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
@@ -9,10 +9,10 @@ import {
   activeStorageBlobs,
   companies,
   companyAdministrators,
-  users,
   companyContractors,
   companyInvestors,
   companyLawyers,
+  users,
 } from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 import {
@@ -44,6 +44,137 @@ export const companiesRouter = createRouter({
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
     return pick(ctx.company, ["taxId", "brandColor", "website", "name", "phoneNumber"]);
+  }),
+
+  listUsersWithRoles: companyProcedure.input(z.object({ companyId: z.string() })).query(async ({ ctx }) => {
+    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+
+    // Fetch all users who have any relationship with the company
+    const [admins, contractors, investors, lawyers] = await Promise.all([
+      db.query.companyAdministrators.findMany({
+        where: eq(companyAdministrators.companyId, ctx.company.id),
+        with: { user: true },
+        orderBy: companyAdministrators.id, // Order by ID to match Rails primary_admin logic
+      }),
+      db.query.companyContractors.findMany({
+        where: eq(companyContractors.companyId, ctx.company.id),
+        with: { user: true },
+      }),
+      db.query.companyInvestors.findMany({
+        where: eq(companyInvestors.companyId, ctx.company.id),
+        with: { user: true },
+      }),
+      db.query.companyLawyers.findMany({
+        where: eq(companyLawyers.companyId, ctx.company.id),
+        with: { user: true },
+      }),
+    ]);
+
+    // Get the primary admin (owner) - first admin by ID (matches Rails primary_admin logic)
+    const primaryAdmin = admins.length > 0 ? admins[0] : null;
+
+    // Create a map to store user relationships and roles
+    const usersMap = new Map<
+      bigint,
+      {
+        user: typeof users.$inferSelect;
+        isAdmin: boolean;
+        contractorRole?: string;
+        isInvestor: boolean;
+        isLawyer: boolean;
+      }
+    >();
+
+    // Add contractors
+    contractors.forEach((contractor) => {
+      usersMap.set(contractor.user.id, {
+        user: contractor.user,
+        isAdmin: false,
+        contractorRole: contractor.role,
+        isInvestor: false,
+        isLawyer: false,
+      });
+    });
+
+    // Add investors
+    investors.forEach((investor) => {
+      const existing = usersMap.get(investor.user.id);
+      if (existing) {
+        existing.isInvestor = true;
+      } else {
+        usersMap.set(investor.user.id, {
+          user: investor.user,
+          isAdmin: false,
+          isInvestor: true,
+          isLawyer: false,
+        });
+      }
+    });
+
+    // Add lawyers
+    lawyers.forEach((lawyer) => {
+      const existing = usersMap.get(lawyer.user.id);
+      if (existing) {
+        existing.isLawyer = true;
+      } else {
+        usersMap.set(lawyer.user.id, {
+          user: lawyer.user,
+          isAdmin: false,
+          isInvestor: false,
+          isLawyer: true,
+        });
+      }
+    });
+
+    // Add admins (they override the isAdmin flag)
+    admins.forEach((admin) => {
+      const existing = usersMap.get(admin.user.id);
+      if (existing) {
+        existing.isAdmin = true;
+      } else {
+        usersMap.set(admin.user.id, {
+          user: admin.user,
+          isAdmin: true,
+          isInvestor: false,
+          isLawyer: false,
+        });
+      }
+    });
+
+    // Convert to array and format with proper role determination
+    const results = Array.from(usersMap.values()).map(({ user, isAdmin, contractorRole, isInvestor, isLawyer }) => {
+      // Role priority: Owner > Admin > Lawyer > Investor > Contractor
+      let role: string | null = null;
+      const isOwner = primaryAdmin?.userId === user.id;
+
+      if (isAdmin) {
+        role = isOwner ? "Owner" : "Admin";
+      } else if (isLawyer) {
+        role = "Lawyer";
+      } else if (isInvestor) {
+        role = "Investor";
+      } else if (contractorRole) {
+        role = contractorRole;
+      }
+
+      return {
+        id: user.externalId,
+        email: user.email,
+        name: user.legalName || user.preferredName || user.email,
+        isAdmin,
+        role,
+        isOwner,
+      };
+    });
+
+    // Sort results: Owner first, then other admins, then everyone else
+    return results.sort((a, b) => {
+      if (a.isOwner && !b.isOwner) return -1;
+      if (!a.isOwner && b.isOwner) return 1;
+      if (a.isAdmin && !b.isAdmin) return -1;
+      if (!a.isAdmin && b.isAdmin) return 1;
+      return 0;
+    });
   }),
   update: companyProcedure
     .input(
@@ -132,9 +263,7 @@ export const companiesRouter = createRouter({
     }),
 
   toggleAdminRole: companyProcedure
-    .input(
-      z.object({ companyId: z.string(), userId: z.string(), isAdmin: z.boolean() })
-    )
+    .input(z.object({ companyId: z.string(), userId: z.string(), isAdmin: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
@@ -143,7 +272,7 @@ export const companiesRouter = createRouter({
         where: eq(users.externalId, input.userId),
       });
       if (!targetUser) throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
-      
+
       const targetUserId = targetUser.id;
 
       if (BigInt(ctx.userId) === targetUserId && !input.isAdmin) {
@@ -157,7 +286,7 @@ export const companiesRouter = createRouter({
         where: eq(companyAdministrators.companyId, ctx.company.id),
       });
 
-      if (!input.isAdmin && currentAdmins.length === 1 && currentAdmins[0].userId === targetUserId) {
+      if (!input.isAdmin && currentAdmins.length === 1 && currentAdmins[0]?.userId === targetUserId) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Cannot remove the last administrator",
@@ -177,7 +306,9 @@ export const companiesRouter = createRouter({
       } else {
         await db
           .delete(companyAdministrators)
-          .where(and(eq(companyAdministrators.userId, targetUserId), eq(companyAdministrators.companyId, ctx.company.id)));
+          .where(
+            and(eq(companyAdministrators.userId, targetUserId), eq(companyAdministrators.companyId, ctx.company.id)),
+          );
       }
     }),
 });

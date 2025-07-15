@@ -8,7 +8,7 @@ import {
   Landmark,
   PieChart,
   ScrollText,
-  Shield,
+  ShieldUser,
   UserCircle2,
 } from "lucide-react";
 import Link from "next/link";
@@ -60,6 +60,12 @@ const companyLinks = [
     isVisible: (user: CurrentUser) => !!user.roles.administrator,
   },
   {
+    label: "Workspace admins",
+    route: "/administrator/settings/admins" as const,
+    icon: ShieldUser,
+    isVisible: (user: CurrentUser) => !!user.roles.administrator,
+  },
+  {
     label: "Company details",
     route: "/settings/administrator/details" as const,
     icon: Briefcase,
@@ -75,12 +81,6 @@ const companyLinks = [
     label: "Equity value",
     route: "/settings/administrator/equity" as const,
     icon: PieChart,
-    isVisible: (user: CurrentUser) => !!user.roles.administrator,
-  },
-  {
-    label: "Admins",
-    route: "/administrator/settings/admins" as const,
-    icon: Shield,
     isVisible: (user: CurrentUser) => !!user.roles.administrator,
   },
 ];
