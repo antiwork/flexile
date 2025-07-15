@@ -55,10 +55,8 @@ const InviteLinkModal = ({ open, onOpenChange }: InviteLinkModalProps) => {
     enabled: !!company.id,
   });
 
-  const trpcUtils = trpc.useUtils();
   const resetInviteLinkMutation = trpc.companyInviteLinks.reset.useMutation({
     onSuccess: async () => {
-      await trpcUtils.companyInviteLinks.get.invalidate(queryParams);
       await refetch();
       setShowResetLinkModal(false);
     },
