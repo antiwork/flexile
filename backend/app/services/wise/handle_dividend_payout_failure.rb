@@ -15,7 +15,7 @@ module Wise
       user = @dividend_payment.dividends.first&.company_investor&.user
       return unless user
 
-      user.bank_account_for_dividends&.update!(deleted_at: Time.current)
+      user.bank_account_for_dividends&.mark_deleted!
       @dividend_payment.dividends.update!(status: "Issued", paid_at: nil)
 
       CompanyInvestorMailer.with(user: user).dividend_payment_failed.deliver_later
