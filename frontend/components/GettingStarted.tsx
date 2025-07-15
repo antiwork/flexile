@@ -20,13 +20,13 @@ const CheckIcon = () => (
 );
 
 const CHECKLIST_ROUTES: Record<string, Route> = {
-  add_bank_account: "/administrator/settings/billing",
+  add_bank_account: "/settings/administrator/billing",
   invite_contractor: "/people",
   send_first_payment: "/invoices",
   fill_tax_information: "/settings/tax",
   add_payout_information: "/settings/payouts",
   sign_contract: "/documents",
-  add_company_details: "/administrator/settings/details",
+  add_company_details: "/settings/administrator/details",
 } as const;
 
 const getItemHref = (key: string): Route => CHECKLIST_ROUTES[key] || "/";

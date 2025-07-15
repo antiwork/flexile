@@ -9,7 +9,6 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import SettingsLayout from "@/app/settings/Layout";
 import ComboBox from "@/components/ComboBox";
 import DatePicker from "@/components/DatePicker";
 import { linkClasses } from "@/components/Link";
@@ -180,7 +179,7 @@ export default function TaxPage() {
   });
 
   return (
-    <SettingsLayout>
+    <>
       <Form {...form}>
         <form onSubmit={(e) => void submit(e)} className="grid gap-8">
           <hgroup>
@@ -508,7 +507,7 @@ export default function TaxPage() {
         isBusiness={formValues.business_entity}
         mutation={saveMutation}
       />
-    </SettingsLayout>
+    </>
   );
 }
 
