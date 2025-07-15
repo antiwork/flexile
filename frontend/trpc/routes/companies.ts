@@ -10,7 +10,7 @@ import {
   companies,
   companyAdministrators,
   users,
-  companyWorkers,
+  companyContractors,
   companyInvestors,
   companyLawyers,
 } from "@/db/schema";
@@ -137,15 +137,15 @@ export const companiesRouter = createRouter({
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
       const companyUsers = await db
-        .select({ id: users.id, email: users.email, name: users.name })
+        .select({ id: users.id, email: users.email, name: users.preferredName })
         .from(users)
-        .leftJoin(companyWorkers, eq(companyWorkers.userId, users.id))
+        .leftJoin(companyContractors, eq(companyContractors.userId, users.id))
         .leftJoin(companyInvestors, eq(companyInvestors.userId, users.id))
         .leftJoin(companyLawyers, eq(companyLawyers.userId, users.id))
         .leftJoin(companyAdministrators, eq(companyAdministrators.userId, users.id))
         .where(
           or(
-            and(eq(companyWorkers.companyId, ctx.company.id), isNotNull(companyWorkers.id)),
+            and(eq(companyContractors.companyId, ctx.company.id), isNotNull(companyContractors.id)),
             and(eq(companyInvestors.companyId, ctx.company.id), isNotNull(companyInvestors.id)),
             and(eq(companyLawyers.companyId, ctx.company.id), isNotNull(companyLawyers.id)),
             and(eq(companyAdministrators.companyId, ctx.company.id), isNotNull(companyAdministrators.id)),
@@ -174,9 +174,15 @@ export const companiesRouter = createRouter({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-      const targetUserId = BigInt(input.userId);
+      // Find user by external_id
+      const targetUser = await db.query.users.findFirst({
+        where: eq(users.externalId, input.userId),
+      });
+      if (!targetUser) throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      
+      const targetUserId = targetUser.id;
 
-      if (ctx.userId === Number(input.userId) && !input.isAdmin) {
+      if (BigInt(ctx.userId) === targetUserId && !input.isAdmin) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "You cannot remove your own admin role",

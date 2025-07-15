@@ -50,14 +50,17 @@ export default function PeoplePage() {
 
   const trpcUtils = trpc.useUtils();
 
-  const { data: usersWithAdminStatus = [] } = trpc.companies.listUsersWithAdminStatus.useQuery(
+  const { data: usersWithAdminStatus = [], isLoading: isLoadingAdminStatus } = trpc.companies.listUsersWithAdminStatus.useQuery(
     { companyId: company.id },
     { enabled: !!company.id, refetchOnMount: true },
   );
 
   const toggleAdminMutation = trpc.companies.toggleAdminRole.useMutation({
     onSuccess: async () => {
-      await trpcUtils.companies.listUsersWithAdminStatus.invalidate();
+      await Promise.all([
+        trpcUtils.companies.listUsersWithAdminStatus.invalidate(),
+        trpcUtils.contractors.list.invalidate()
+      ]);
     },
     onError: (error) => {
       console.error("Failed to toggle admin role:", error.message);
@@ -148,16 +151,16 @@ export default function PeoplePage() {
       columnHelper.accessor((row) => adminStatusMap.get(row.user.email) ?? false, {
         id: "adminStatus",
         header: "Admin",
+        meta: { numeric: false },
         cell: (info) => {
           const isAdmin = info.getValue() as boolean;
           const userId = info.row.original.user.id;
           const userEmail = info.row.original.user.email;
           const isCurrentUser = currentUser.email === userEmail;
           const isLoading =
-            toggleAdminMutation.isLoading && toggleAdminMutation.variables?.userId === userId.toString();
+            toggleAdminMutation.isPending && toggleAdminMutation.variables?.userId === userId.toString();
           return (
             <div className={styles.adminToggleCell} onClick={(e) => e.stopPropagation()}>
-              <div className={cn("md:hidden", styles.mobileLabel)}>Admin</div>
               <div
                 className={cn(
                   styles.toggleWrapper,
@@ -176,25 +179,15 @@ export default function PeoplePage() {
                     });
                   }}
                   disabled={isCurrentUser || isLoading}
-                  label={isAdmin ? "Admin" : "User"}
-                  aria-label={`Toggle admin status for ${info.row.original.user.name}`}
+                  aria-label={`Toggle admin status for ${info.row.original.user.name || info.row.original.user.email}`}
                 />
               </div>
-              <span
-                className={cn(
-                  "hidden md:inline",
-                  styles.adminLabel,
-                  isAdmin && styles.isAdmin,
-                )}
-              >
-                {isAdmin ? "Admin" : "User"}
-              </span>
             </div>
           );
         },
       }),
     ],
-    [],
+    [adminStatusMap, currentUser, toggleAdminMutation, company.id, workers],
   );
 
   const table = useTable({
@@ -225,7 +218,7 @@ export default function PeoplePage() {
         ) : null
       }
     >
-      {isLoading ? (
+      {isLoading || isLoadingAdminStatus ? (
         <TableSkeleton columns={5} />
       ) : workers.length > 0 ? (
         <DataTable

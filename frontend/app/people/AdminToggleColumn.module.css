@@ -2,27 +2,14 @@
 
 /* Container for the admin toggle cell */
 .adminToggleCell {
-  /* Align with existing DataTable cell styles */
+  /* Ensure left alignment for the toggle */
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 0.5rem;
-  min-height: 2.5rem;
+  width: 100%;
+  text-align: left !important;
 }
 
-/* Admin badge/label next to toggle */
-.adminLabel {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--gray-600);
-  white-space: nowrap;
-}
-
-/* Active admin state */
-.adminLabel.isAdmin {
-  color: var(--blue-600);
-  font-weight: 600;
-}
 
 /* Toggle wrapper for click handling */
 .toggleWrapper {
@@ -37,31 +24,6 @@
   cursor: not-allowed;
 }
 
-/* Mobile responsive styles - matches DataTable pattern */
-@media (max-width: 768px) {
-  .adminToggleCell {
-    /* Stack label and toggle vertically on mobile */
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-  }
-  
-  /* Mobile label styling */
-  .mobileLabel {
-    font-size: 0.875rem;
-    color: var(--gray-500);
-    margin-bottom: 0.25rem;
-  }
-  
-  /* Ensure toggle is accessible on mobile */
-  .toggleWrapper {
-    /* Larger touch target on mobile */
-    padding: 0.25rem;
-    margin: -0.25rem;
-  }
-}
 
 /* Loading state */
 .toggleLoading {
