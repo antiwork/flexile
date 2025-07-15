@@ -27,30 +27,7 @@ RSpec.describe "Onboarding for a user with contractor and investor roles", :vcr 
     select "Australia", from: "Country of citizenship"
     click_on "Continue"
 
-    # Bank account (skip legal info)
-    expect(page).to have_current_path(spa_company_worker_onboarding_bank_account_path(company.external_id))
-    expect(page).to have_text("Get Paid Fast")
-    user.reload
-    click_on "Set up"
-    select_wise_field "USD (United States Dollar)", from: "Currency"
-    check "My bank account is in the US"
-    fill_in "Name of the business / organisation", with: "John Doe"
-    fill_in "ACH routing number", with: "026009593"
-    fill_in "Account number", with: "12345678"
-    within_modal do
-      click_on "Continue"
-    end
-    select "United States", from: "Country"
-    fill_in "City", with: "Haleiwa"
-    fill_in "Street address, apt number", with: "59-720 Kamehameha Hwy"
-    expect(page).to have_field("State", exact: true)
-    select "Hawaii", from: "State"
-    fill_in "ZIP code", with: "96712"
-    click_on "Save bank account"
-    expect(page).to have_text("Account ending in 5678")
-    click_on "Continue"
-
-    # Contract signing
+    # Skip bank account onboarding step
     expect(page).to have_current_path(spa_company_worker_onboarding_contract_path(company.external_id))
     expect(page).to have_text("Consulting agreement")
     expect(page).to have_selector("h1", text: "CONSULTING AGREEMENT")
@@ -86,7 +63,7 @@ RSpec.describe "Onboarding for a user with contractor and investor roles", :vcr 
       expect(page).to have_select("Country of residence", selected: "Cuba")
       expect(page).to have_select("Country of citizenship", selected: "Cuba")
       expect(page).to have_text("Let's get to know you")
-      fill_in "Full legal name", with: "Marco Antônio"
+
       fill_in "Preferred name (visible to others)", with: "Marco"
       click_on "Continue"
 
@@ -96,32 +73,9 @@ RSpec.describe "Onboarding for a user with contractor and investor roles", :vcr 
         click_on "Proceed"
       end
 
-      # Bank account (skip legal info)
-      expect(page).to have_current_path(spa_company_worker_onboarding_bank_account_path(company.external_id))
-      expect(page).to have_text("Get Paid Fast")
-      user.reload
-      click_on "Set up"
-      select_wise_field "USD (United States Dollar)", from: "Currency"
-      check "My bank account is in the US"
-      fill_in "Name of the business / organisation", with: "Marco Antônio"
-      fill_in "ACH routing number", with: "026009593"
-      fill_in "Account number", with: "12345678"
-      within_modal do
-        click_on "Continue"
-      end
-      select "United States", from: "Country"
-      fill_in "City", with: "Haleiwa"
-      fill_in "Street address, apt number", with: "59-720 Kamehameha Hwy"
-      expect(page).to have_field("State", exact: true)
-      select "Hawaii", from: "State"
-      fill_in "ZIP code", with: "96712"
-      click_on "Save bank account"
-      expect(page).to have_text("Account ending in 5678")
-      click_on "Continue"
-
-      # Contract signing
-      expect(page).to have_text("Consulting agreement")
+      # Skip bank account onboarding step
       expect(page).to have_current_path(spa_company_worker_onboarding_contract_path(company.external_id))
+      expect(page).to have_text("Consulting agreement")
       expect(find_button("Click to add signature", disabled: true)).to have_tooltip "Have you read everything yet?"
       click_on "Discovery Procedures (Exhibit B)"
       click_on "Click to add signature"
@@ -157,32 +111,9 @@ RSpec.describe "Onboarding for a user with contractor and investor roles", :vcr 
       fill_in "Preferred name (visible to others)", with: "Marco"
       click_on "Continue"
 
-      # Bank account (skip legal info)
-      expect(page).to have_current_path(spa_company_worker_onboarding_bank_account_path(company.external_id))
-      expect(page).to have_text("Get Paid Fast")
-      user.reload
-      click_on "Set up"
-      select_wise_field "USD (United States Dollar)", from: "Currency"
-      check "My bank account is in the US"
-      fill_in "Name of the business / organisation", with: "Marco Antônio"
-      fill_in "ACH routing number", with: "026009593"
-      fill_in "Account number", with: "12345678"
-      within_modal do
-        click_on "Continue"
-      end
-      select "United States", from: "Country"
-      fill_in "City", with: "Haleiwa"
-      fill_in "Street address, apt number", with: "59-720 Kamehameha Hwy"
-      expect(page).to have_field("State", exact: true)
-      select "Hawaii", from: "State"
-      fill_in "ZIP code", with: "96712"
-      click_on "Save bank account"
-      expect(page).to have_text("Account ending in 5678")
-      click_on "Continue"
-
-      # Contract signing
-      expect(page).to have_text("Consulting agreement")
+      # Skip bank account onboarding step
       expect(page).to have_current_path(spa_company_worker_onboarding_contract_path(company.external_id))
+      expect(page).to have_text("Consulting agreement")
       expect(find_button("Click to add signature", disabled: true)).to have_tooltip "Have you read everything yet?"
       click_on "Discovery Procedures (Exhibit B)"
       click_on "Click to add signature"

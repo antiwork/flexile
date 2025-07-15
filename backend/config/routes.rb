@@ -102,7 +102,6 @@ Rails.application.routes.draw do
   scope as: :spa do
     with_options to: spa_controller_action do
       resource :onboarding, only: :show, to: "application#main_vue" do
-        resource :bank_account, only: :show, to: "application#main_vue"
       end
 
       resources :companies, only: [] do
@@ -111,14 +110,12 @@ Rails.application.routes.draw do
           namespace :onboarding, module: nil do
             resource :invitation, only: :show, to: "application#main_vue"
             resource :details, only: :show, to: "application#main_vue"
-            resource :bank_account, only: :show, to: "application#main_vue"
           end
         end
 
         namespace :worker, module: nil do
           resource :onboarding, only: :show, to: "application#main_vue" do
             resource :invitation, only: :show, to: "application#main_vue"
-            resource :bank_account, only: :show, to: "application#main_vue"
             resource :contract, only: :show, to: "application#main_vue"
           end
         end
@@ -126,7 +123,6 @@ Rails.application.routes.draw do
         namespace :investor, module: nil do
           resource :onboarding, only: :show, to: "application#main_vue" do
             resource :invitation, only: :show, to: "application#main_vue"
-            resource :bank_account, only: :show, to: "application#main_vue"
           end
         end
 

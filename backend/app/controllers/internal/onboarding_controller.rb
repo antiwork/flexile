@@ -30,25 +30,6 @@ class Internal::OnboardingController < Internal::BaseController
     end
   end
 
-  def bank_account
-    authorize :onboarding
-
-    return json_redirect("/dashboard") if Current.user.bank_account.present?
-
-    render json: UserPresenter.new(current_context: pundit_user).billing_details_props
-  end
-
-  def save_bank_account
-    authorize :onboarding
-
-    recipient_service = Recipient::CreateService.new(
-      user: Current.user,
-      params: params_for_save_bank_account.to_h,
-      replace_recipient_id: params[:replace_recipient_id].presence
-    )
-    render json: recipient_service.process
-  end
-
   private
     def ensure_required_data_present
       return if onboarding_service.has_personal_details?

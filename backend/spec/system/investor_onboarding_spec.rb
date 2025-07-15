@@ -33,27 +33,7 @@ RSpec.describe "Onboarding for a user with investor role", :vcr do
     fill_in_personal_details
     click_on "Continue"
 
-    # Bank account (skip legal info)
-    click_on "Set up"
-    select_wise_field "USD (United States Dollar)", from: "Currency"
-    expect(page).to have_field("Full name of the account holder", with: legal_name)
-    fill_in "ACH routing number", with: "026009593"
-    fill_in "Account number", with: "12345678"
-    within_modal do
-      click_on "Continue"
-    end
-    select_wise_field "United States", from: "Country"
-    fill_in "City", with: "San Francisco"
-    fill_in "Street address, apt number", with: "59-720 Kamehameha Hwy"
-    select "Hawaii", from: "State"
-    fill_in "ZIP code", with: "96712"
-
-    click_on "Save bank account"
-    wait_for_ajax
-
-    expect(page).to have_text("Account ending in 5678")
-
-    click_on "Continue"
+    # Skip bank account onboarding step
     expect(page).to have_current_path(spa_company_dividends_path(company.external_id))
     expect(page).to have_text("Equity")
   end
@@ -71,7 +51,7 @@ RSpec.describe "Onboarding for a user with investor role", :vcr do
         click_on "Proceed"
       end
 
-      # Skips the bank account step
+      # Should redirect to payouts page (no bank account onboarding)
       expect(page).to have_current_path(spa_settings_payouts_path)
       expect(page).to have_text("Payout method")
       expect(page).to have_selector("strong", text: "Payouts are disabled")

@@ -1,0 +1,111 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.clerk.com/v1/users
+    body:
+      encoding: UTF-8
+      string: '{"email_address":["edgar942745b9_1824@flexile.com"],"first_name":"Melita","last_name":"Kuhlman","created_at":"2025-07-15T07:48:58Z","legal_accepted_at":"2025-07-15T07:48:58Z","skip_password_requirement":true}'
+    headers:
+      Content-Type:
+      - application/json
+      User-Agent:
+      - OpenAPI-Generator/2.0.0/ruby
+      Accept:
+      - application/json
+      Authorization:
+      - Bearer sk_test_P0b6c9Hvv3iIZ8JrLUoGodg319UnsKbrP2eyvZbD1L
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Tue, 15 Jul 2025 07:48:59 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Ray:
+      - 95f7a91dba257766-BOM
+      Cf-Cache-Status:
+      - DYNAMIC
+      Clerk-Api-Version:
+      - '2025-04-10'
+      X-Cfworker:
+      - '1'
+      X-Clerk-Trace-Id:
+      - 594ede49cd017b678176c144dbe29a9c
+      X-Cloud-Trace-Context:
+      - 594ede49cd017b678176c144dbe29a9c
+      Set-Cookie:
+      - __cf_bm=Cik8Dn5ldtOO2dHa81vBnXK776nMgfxeaYJQtu88gno-1752565739-1.0.1.1-1oIcXRtbg6yZJOUYYyTn13NA1O3kiHhz9COUePBg0ey20FjvC0q86TEFNiPZ5acTW.uY2.C6UgNyRQ2..JcbEJu8zmKDm0Eszh.57jbtgMk;
+        path=/; expires=Tue, 15-Jul-25 08:18:59 GMT; domain=.api.clerk.com; HttpOnly;
+        Secure; SameSite=None
+      Vary:
+      - Accept-Encoding
+      Server:
+      - cloudflare
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"user_2zu0dlV0MB8xXOVik90A9FiASfT","object":"user","username":null,"first_name":"Melita","last_name":"Kuhlman","image_url":"https://img.clerk.com/eyJ0eXBlIjoiZGVmYXVsdCIsImlpZCI6Imluc18yemRCdmJ5M3VMdVI1NGg0N0xVcnJzN0VoYzQiLCJyaWQiOiJ1c2VyXzJ6dTBkbFYwTUI4eFhPVmlrOTBBOUZpQVNmVCIsImluaXRpYWxzIjoiTUsifQ","has_image":false,"primary_email_address_id":"idn_2zu0dlustMS1MmhcEQkzYXwI7gd","primary_phone_number_id":null,"primary_web3_wallet_id":null,"password_enabled":false,"two_factor_enabled":false,"totp_enabled":false,"backup_code_enabled":false,"email_addresses":[{"id":"idn_2zu0dlustMS1MmhcEQkzYXwI7gd","object":"email_address","email_address":"edgar942745b9_1824@flexile.com","reserved":false,"verification":{"status":"verified","strategy":"admin","attempts":null,"expire_at":null},"linked_to":[],"matches_sso_connection":false,"created_at":1752565739367,"updated_at":1752565739367}],"phone_numbers":[],"web3_wallets":[],"passkeys":[],"external_accounts":[],"saml_accounts":[],"enterprise_accounts":[],"public_metadata":{},"private_metadata":{},"unsafe_metadata":{},"external_id":null,"last_sign_in_at":null,"banned":false,"locked":false,"lockout_expires_in_seconds":null,"verification_attempts_remaining":100,"created_at":1752565738000,"updated_at":1752565739370,"delete_self_enabled":true,"create_organization_enabled":true,"last_active_at":null,"mfa_enabled_at":null,"mfa_disabled_at":null,"legal_accepted_at":1752565738000,"profile_image_url":"https://www.gravatar.com/avatar?d=mp"}'
+  recorded_at: Tue, 15 Jul 2025 07:48:59 GMT
+- request:
+    method: post
+    uri: https://api.clerk.com/v1/users
+    body:
+      encoding: UTF-8
+      string: '{"email_address":["edgarbd5b61ba_1825@flexile.com"],"first_name":"Gil","last_name":"Adams","created_at":"2025-07-15T07:48:59Z","legal_accepted_at":"2025-07-15T07:48:59Z","skip_password_requirement":true}'
+    headers:
+      Content-Type:
+      - application/json
+      User-Agent:
+      - OpenAPI-Generator/2.0.0/ruby
+      Accept:
+      - application/json
+      Authorization:
+      - Bearer sk_test_P0b6c9Hvv3iIZ8JrLUoGodg319UnsKbrP2eyvZbD1L
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Tue, 15 Jul 2025 07:49:00 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Ray:
+      - 95f7a92238ff538b-BOM
+      Cf-Cache-Status:
+      - DYNAMIC
+      Clerk-Api-Version:
+      - '2025-04-10'
+      X-Cfworker:
+      - '1'
+      X-Clerk-Trace-Id:
+      - 9ff9e64fbb655c77cf05d99c34fd270d
+      X-Cloud-Trace-Context:
+      - 9ff9e64fbb655c77cf05d99c34fd270d
+      Set-Cookie:
+      - __cf_bm=kDCwWJGdpC6HV88nvHH94S2lfrrKEJPr5fU0YhEN_8c-1752565740-1.0.1.1-y.N7QL9YRaba4kBM53Ta1OizVGKkIwOwWNFLJ7P_hQvQ7auNPgr6BuEXxJNPuCSZMx.dkEk3E03ChRBoZuUDh4DFI6dSC30OR_oTSlNxDWU;
+        path=/; expires=Tue, 15-Jul-25 08:19:00 GMT; domain=.api.clerk.com; HttpOnly;
+        Secure; SameSite=None
+      Vary:
+      - Accept-Encoding
+      Server:
+      - cloudflare
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"user_2zu0drsFaxT09jGeTGoX3XzHVB7","object":"user","username":null,"first_name":"Gil","last_name":"Adams","image_url":"https://img.clerk.com/eyJ0eXBlIjoiZGVmYXVsdCIsImlpZCI6Imluc18yemRCdmJ5M3VMdVI1NGg0N0xVcnJzN0VoYzQiLCJyaWQiOiJ1c2VyXzJ6dTBkcnNGYXhUMDlqR2VUR29YM1h6SFZCNyIsImluaXRpYWxzIjoiR0EifQ","has_image":false,"primary_email_address_id":"idn_2zu0doANiqXd1rZe9MCIQbSbCkf","primary_phone_number_id":null,"primary_web3_wallet_id":null,"password_enabled":false,"two_factor_enabled":false,"totp_enabled":false,"backup_code_enabled":false,"email_addresses":[{"id":"idn_2zu0doANiqXd1rZe9MCIQbSbCkf","object":"email_address","email_address":"edgarbd5b61ba_1825@flexile.com","reserved":false,"verification":{"status":"verified","strategy":"admin","attempts":null,"expire_at":null},"linked_to":[],"matches_sso_connection":false,"created_at":1752565740090,"updated_at":1752565740090}],"phone_numbers":[],"web3_wallets":[],"passkeys":[],"external_accounts":[],"saml_accounts":[],"enterprise_accounts":[],"public_metadata":{},"private_metadata":{},"unsafe_metadata":{},"external_id":null,"last_sign_in_at":null,"banned":false,"locked":false,"lockout_expires_in_seconds":null,"verification_attempts_remaining":100,"created_at":1752565739000,"updated_at":1752565740092,"delete_self_enabled":true,"create_organization_enabled":true,"last_active_at":null,"mfa_enabled_at":null,"mfa_disabled_at":null,"legal_accepted_at":1752565739000,"profile_image_url":"https://www.gravatar.com/avatar?d=mp"}'
+  recorded_at: Tue, 15 Jul 2025 07:49:00 GMT
+recorded_with: VCR 6.3.1
