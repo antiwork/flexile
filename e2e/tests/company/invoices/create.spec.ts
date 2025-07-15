@@ -35,6 +35,7 @@ test.describe("invoice creation", () => {
         companyId: company.id,
         userId: contractorUser.id,
         payRateInSubunits: 6000,
+        equityPercentage: 20,
       })
     ).companyContractor;
   });
@@ -104,7 +105,7 @@ test.describe("invoice creation", () => {
 
     await login(page, contractorUser);
     await page.goto("/invoices/new");
-    await expect(page.getByText("Total services")).toBeVisible();
+    await expect(page.getByText("Total")).toBeVisible();
     await expect(page.getByText("Swapped for equity")).not.toBeVisible();
   });
 

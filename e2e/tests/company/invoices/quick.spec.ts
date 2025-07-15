@@ -1,6 +1,8 @@
 import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
+import { companyInvestorsFactory } from "@test/factories/companyInvestors";
+import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
@@ -24,6 +26,7 @@ test.describe("quick invoicing", () => {
       companyId: company.id,
       userId: contractorUser.id,
       payRateInSubunits: 6000,
+      equityPercentage: 20,
     });
   });
 
@@ -62,11 +65,16 @@ test.describe("quick invoicing", () => {
   });
 
   test("handles equity compensation", async ({ page }) => {
+    const companyInvestor = (await companyInvestorsFactory.create({ userId: contractorUser.id, companyId: company.id }))
+      .companyInvestor;
+    await equityGrantsFactory.createActive(
+      { companyInvestorId: companyInvestor.id, sharePriceUsd: "100" },
+      { year: 2024 },
+    );
     await db.update(companies).set({ equityCompensationEnabled: true }).where(eq(companies.id, company.id));
     await login(page, contractorUser);
     await page.getByLabel("Hours / Qty").fill("10:30");
     await fillDatePicker(page, "Date", "08/08/2024");
-    await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("20");
 
     await expect(page.getByText("($504 cash + $126 equity)")).toBeVisible();
     await expect(page.getByText("$630", { exact: true })).toBeVisible();
