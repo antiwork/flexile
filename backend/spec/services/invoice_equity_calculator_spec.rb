@@ -56,10 +56,6 @@ RSpec.describe InvoiceEquityCalculator do
     context "and an eligible unvested equity grant for the year is absent" do
       let(:invoice_year) { Date.current.year + 2 }
 
-      it "returns nil" do
-        expect(calculator.calculate).to be_nil
-      end
-
       context "and the company does not have a share price" do
         before do
           company.update!(fmv_per_share_in_usd: nil)

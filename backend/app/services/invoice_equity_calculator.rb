@@ -30,10 +30,6 @@ class InvoiceEquityCalculator
       equity_amount_in_options = 0
     end
 
-    if equity_percentage.nonzero? && (!unvested_grant.present? || unvested_grant.unvested_shares < equity_amount_in_options)
-      return nil
-    end
-
     {
       equity_cents: equity_amount_in_cents,
       equity_options: equity_amount_in_options,
