@@ -7,11 +7,11 @@ RSpec.describe WisePayoutFailureJob, type: :job do
     let!(:dividend_payment) { create(:dividend_payment, transfer_id: '12345') }
     let(:webhook_params) do
       {
-        'data' => {
-          'resource' => { 'id' => dividend_payment.transfer_id },
-          'transfer_id' => dividend_payment.transfer_id,
-          'type' => 'payout-failure',
-          'profile_id' => '9876'
+        "data" => {
+          "resource" => { "id" => dividend_payment.transfer_id },
+          "transfer_id" => dividend_payment.transfer_id,
+          "type" => "payout-failure",
+          "profile_id" => "9876"
         }
       }.with_indifferent_access
     end

@@ -53,19 +53,17 @@ RSpec.describe CompanyInvestorMailer do
     end
   end
 
-  # New Spec (will remove this comment in upcoming commits)
-
-  describe '#dividend_payment_failed' do
-    let(:company) { create(:company, name: 'Flexile') }
+  describe "#dividend_payment_failed" do
+    let(:company) { create(:company, name: "Flexile") }
     let(:investor) { create(:company_investor, company:) }
     let(:user) { investor.user }
     let(:dividend_payment) { create(:dividend_payment, dividends: [create(:dividend, company_investor: investor)]) }
     let(:mail) { described_class.dividend_payment_failed(user, dividend_payment) }
 
-    it 'sends the failure email with correct attributes' do
+    it "sends the failure email with correct attributes" do
       plaintext = ActionView::Base.full_sanitizer.sanitize(mail.body.encoded).gsub("\r\n", " ").gsub(/\s+/, " ").strip
 
-      expect(mail.subject).to eq('🔴 Action required: Your dividend payment failed')
+      expect(mail.subject).to eq("🔴 Action required: Your dividend payment failed")
       expect(mail.to).to eq([user.email])
       default_from_email = Mail::Address.new(described_class.default[:from]).address
       expect(mail.from).to eq([default_from_email])

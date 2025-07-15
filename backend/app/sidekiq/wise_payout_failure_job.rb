@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class WisePayoutFailureJob
   include Sidekiq::Job
   sidekiq_options retry: 3
