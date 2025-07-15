@@ -1,15 +1,15 @@
-import React, { useState } from "react";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { PayRateType, trpc } from "@/trpc/client";
-import { useFormContext } from "react-hook-form";
-import RadioButtons from "@/components/RadioButtons";
-import NumberInput from "@/components/NumberInput";
-import { useUserStore } from "@/global";
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
-import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
-import { Input } from "@/components/ui/input";
 import { skipToken } from "@tanstack/react-query";
+import React, { useState } from "react";
+import { useFormContext } from "react-hook-form";
 import { z } from "zod";
+import NumberInput from "@/components/NumberInput";
+import RadioButtons from "@/components/RadioButtons";
+import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
+import { useUserStore } from "@/global";
+import { PayRateType, trpc } from "@/trpc/client";
 
 export const schema = z.object({
   payRateType: z.nativeEnum(PayRateType),

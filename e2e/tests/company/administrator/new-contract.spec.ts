@@ -3,18 +3,18 @@ import { faker } from "@faker-js/faker";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
+import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
+import { fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { mockDocuseal as mockDocusealHelper } from "@test/helpers/docuseal";
-import { fillDatePicker } from "@test/helpers";
 import { expect, type Page, test, withinModal } from "@test/index";
 import { addMonths, format } from "date-fns";
 import { desc, eq } from "drizzle-orm";
 import type { NextFixture } from "next/experimental/testmode/playwright";
+import { PayRateType } from "@/db/enums";
 import { companies, companyContractors, users } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
-import { companyContractorsFactory } from "@test/factories/companyContractors";
-import { PayRateType } from "@/db/enums";
 
 test.describe("New Contractor", () => {
   let company: typeof companies.$inferSelect;
