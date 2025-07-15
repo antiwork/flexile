@@ -12,4 +12,8 @@ class TenderOfferPolicy < ApplicationPolicy
   def create?
     company.tender_offers_enabled? && company_administrator?
   end
+
+  def finalize?
+    company.tender_offers_enabled? && company_administrator?
+  end
 end

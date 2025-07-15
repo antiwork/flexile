@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 class Internal::Companies::TenderOfferBidsController < Internal::Companies::BaseController
-  before_action :load_tender_offer!
+  before_action :load_buyback!
   before_action :load_bid!, only: [:destroy]
 
   def index
     authorize TenderOfferBid
 
-    bids_query = @tender_offer.bids
+    bids_query = @buyback.bids
     unless Current.company_administrator?
       bids_query = bids_query.where(company_investor: Current.company_investor)
     end
@@ -21,8 +21,7 @@ class Internal::Companies::TenderOfferBidsController < Internal::Companies::Base
   def create
     authorize TenderOfferBid
 
-    # TODO test validations here
-    @bid = @tender_offer.bids.build(
+    @bid = @buyback.bids.build(
       company_investor: Current.company_investor,
       **bid_params
     )
@@ -32,6 +31,8 @@ class Internal::Companies::TenderOfferBidsController < Internal::Companies::Base
     render json: {
       bid: TenderOfferBidPresenter.new(@bid).props,
     }, status: :created
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { success: false, error_message: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
   end
 
   def destroy
@@ -42,15 +43,15 @@ class Internal::Companies::TenderOfferBidsController < Internal::Companies::Base
   end
 
   private
-    def load_tender_offer!
-      @tender_offer = Current.company.tender_offers.find_by!(external_id: params[:tender_offer_id])
+    def load_buyback!
+      @buyback = Current.company.tender_offers.find_by!(external_id: params[:tender_offer_id])
     end
 
     def load_bid!
-      @bid = @tender_offer.bids.find_by!(external_id: params[:id])
+      @bid = @buyback.bids.find_by!(external_id: params[:id])
     end
 
     def bid_params
-      params.require(:bid).permit(:number_of_shares, :share_price_cents, :share_class)
+      params.permit(:number_of_shares, :share_price_cents, :share_class)
     end
 end

@@ -1,18 +1,19 @@
 import { useState } from "react";
+import type { Buyback } from "@/app/equity/buybacks";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCurrentUser } from "@/global";
-import LetterOfTransmissal from "./[id]/LetterOfTransmissal";
 
 type LetterOfTransmittalModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onBack: () => void;
   onNext: () => void;
+  buyback?: Buyback | null;
 };
 
-const LetterOfTransmittalModal = ({ isOpen, onClose, onBack, onNext }: LetterOfTransmittalModalProps) => {
+const LetterOfTransmittalModal = ({ isOpen, onClose, onBack, onNext, buyback }: LetterOfTransmittalModalProps) => {
   const user = useCurrentUser();
   const [hasReviewed, setHasReviewed] = useState(false);
   const [hasSigned, setHasSigned] = useState(false);
@@ -24,15 +25,16 @@ const LetterOfTransmittalModal = ({ isOpen, onClose, onBack, onNext }: LetterOfT
     }
   };
 
-  const handleReviewedChange = (checked: boolean) => {
-    setHasReviewed(checked);
-  };
-
   const canContinue = hasReviewed && hasSigned;
+
+  // Generate the PDF URL for the iframe
+  const pdfUrl = buyback?.letter_of_transmittal
+    ? `/download/${buyback.letter_of_transmittal.key}/${encodeURIComponent(buyback.letter_of_transmittal.filename)}?inline=true`
+    : null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-lg flex-col overflow-hidden p-4 sm:p-6">
+      <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-4xl flex-col overflow-hidden p-4 sm:p-6">
         <DialogHeader className="shrink-0">
           <DialogTitle>Letter of transmittal</DialogTitle>
         </DialogHeader>
@@ -42,13 +44,13 @@ const LetterOfTransmittalModal = ({ isOpen, onClose, onBack, onNext }: LetterOfT
             Review and sign the Letter of Transmittal to confirm your participation in this buyback.
           </p>
 
-          {showDocument ? (
-            <div className="mb-4 min-h-0 flex-1">
-              <div className="h-full max-h-80 overflow-y-auto rounded-md border p-4">
-                <div className="prose prose-sm max-w-none">
-                  <LetterOfTransmissal />
-                </div>
-              </div>
+          {showDocument && pdfUrl ? (
+            <div className="mb-4 flex-1">
+              <iframe
+                src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+                className="h-full min-h-105 w-full border-none bg-white"
+                title="Letter of Transmittal"
+              />
             </div>
           ) : null}
 
@@ -57,7 +59,7 @@ const LetterOfTransmittalModal = ({ isOpen, onClose, onBack, onNext }: LetterOfT
               <Checkbox
                 id="reviewed"
                 checked={hasReviewed}
-                onCheckedChange={handleReviewedChange}
+                onCheckedChange={() => setHasReviewed(!hasReviewed)}
                 className="shrink-0"
               />
               <label htmlFor="reviewed" className="cursor-pointer text-sm leading-tight font-medium">

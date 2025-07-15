@@ -1,32 +1,30 @@
-import React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-import { formatMoneyFromCents } from "@/utils/formatMoney";
-import type { RouterOutput } from "@/trpc";
+import React from "react";
+import type { BuybackBid } from "@/app/equity/buybacks";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { download } from "@/utils";
-
-type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
+import { formatMoneyFromCents } from "@/utils/formatMoney";
 
 type ReviewInvestorsModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onNext: () => void;
   onBack: () => void;
-  bids: Bid[];
+  bids: BuybackBid[];
 };
 
 const ReviewInvestorsModal = ({ isOpen, onClose, onNext, onBack, bids }: ReviewInvestorsModalProps) => {
-  const acceptedBids = bids.filter((bid) => Number(bid.acceptedShares) > 0);
-  const totalShares = acceptedBids.reduce((sum, bid) => sum + Number(bid.acceptedShares), 0);
-  const totalPayout = acceptedBids.reduce((sum, bid) => sum + Number(bid.acceptedShares) * bid.sharePriceCents, 0);
+  const acceptedBids = bids.filter((bid) => Number(bid.accepted_shares) > 0);
+  const totalShares = acceptedBids.reduce((sum, bid) => sum + Number(bid.accepted_shares), 0);
+  const totalPayout = acceptedBids.reduce((sum, bid) => sum + Number(bid.accepted_shares) * bid.share_price_cents, 0);
 
   const handleDownloadCSV = () => {
     const csvHeader = "Investor,Shares,Total\n";
     const csvRows = acceptedBids
       .map(
         (bid) =>
-          `"${bid.companyInvestor.user.name}",${Number(bid.acceptedShares)},"${formatMoneyFromCents(Number(bid.acceptedShares) * bid.sharePriceCents)}"`,
+          `"${bid.investor.name}",${Number(bid.accepted_shares)},"${formatMoneyFromCents(Number(bid.accepted_shares) * bid.share_price_cents)}"`,
       )
       .join("\n");
 
@@ -64,10 +62,10 @@ const ReviewInvestorsModal = ({ isOpen, onClose, onNext, onBack, bids }: ReviewI
               {acceptedBids.length > 0 ? (
                 acceptedBids.map((bid) => (
                   <div key={bid.id} className="grid grid-cols-3 gap-4 border-t border-gray-200 px-2 py-3 text-sm">
-                    <span className="font-medium">{bid.companyInvestor.user.name}</span>
-                    <span className="text-right">{Number(bid.acceptedShares).toLocaleString()}</span>
+                    <span className="font-medium">{bid.investor.name}</span>
+                    <span className="text-right">{Number(bid.accepted_shares).toLocaleString()}</span>
                     <span className="text-right">
-                      {formatMoneyFromCents(Number(bid.acceptedShares) * bid.sharePriceCents)}
+                      {formatMoneyFromCents(Number(bid.accepted_shares) * bid.share_price_cents)}
                     </span>
                   </div>
                 ))

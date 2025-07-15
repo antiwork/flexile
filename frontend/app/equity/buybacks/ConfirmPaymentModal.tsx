@@ -1,31 +1,28 @@
+import type { UseMutationResult } from "@tanstack/react-query";
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import type { Buyback, BuybackBid } from "@/app/equity/buybacks";
+import { MutationStatusButton } from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MutationStatusButton } from "@/components/MutationButton";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
-import type { RouterOutput } from "@/trpc";
-import type { UseMutationResult } from "@tanstack/react-query";
-
-type TenderOffer = RouterOutput["tenderOffers"]["get"];
-type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
 
 type ConfirmPaymentModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onBack: () => void;
-  tenderOffer: TenderOffer;
-  bids: Bid[];
+  buyback: Buyback;
+  bids: BuybackBid[];
   mutation: UseMutationResult<unknown, unknown, void>;
 };
 
-const ConfirmPaymentModal = ({ isOpen, onClose, onBack, tenderOffer, bids, mutation }: ConfirmPaymentModalProps) => {
+const ConfirmPaymentModal = ({ isOpen, onClose, onBack, buyback, bids, mutation }: ConfirmPaymentModalProps) => {
   const [confirmed, setConfirmed] = useState(false);
 
-  const acceptedBids = bids.filter((bid) => Number(bid.acceptedShares) > 0);
-  const totalShares = acceptedBids.reduce((sum, bid) => sum + Number(bid.acceptedShares), 0);
+  const acceptedBids = bids.filter((bid) => Number(bid.accepted_shares) > 0);
+  const totalShares = acceptedBids.reduce((sum, bid) => sum + Number(bid.accepted_shares), 0);
 
-  const clearingPrice = tenderOffer.acceptedPriceCents || 0;
+  const clearingPrice = buyback.accepted_price_cents || 0;
 
   const totalPayout = totalShares * clearingPrice;
 
@@ -33,10 +30,6 @@ const ConfirmPaymentModal = ({ isOpen, onClose, onBack, tenderOffer, bids, mutat
     if (confirmed) {
       mutation.mutate(undefined);
     }
-  };
-
-  const handleConfirmedChange = (checked: boolean | "indeterminate") => {
-    setConfirmed(checked === true);
   };
 
   return (
@@ -53,7 +46,7 @@ const ConfirmPaymentModal = ({ isOpen, onClose, onBack, tenderOffer, bids, mutat
         <div>
           <div className="flex justify-between pb-4">
             <span className="font-medium">Accepted investors</span>
-            <span>{acceptedBids.length}</span>
+            <span>{buyback.investor_count}</span>
           </div>
 
           <div className="flex justify-between border-t border-gray-200 py-4">
@@ -76,7 +69,7 @@ const ConfirmPaymentModal = ({ isOpen, onClose, onBack, tenderOffer, bids, mutat
           <Checkbox
             id="confirm-details"
             checked={confirmed}
-            onCheckedChange={handleConfirmedChange}
+            onCheckedChange={() => setConfirmed(!confirmed)}
             className="data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600"
           />
           <label htmlFor="confirm-details" className="text-sm">

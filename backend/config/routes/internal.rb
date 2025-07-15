@@ -72,6 +72,9 @@ scope path: :internal, module: :internal do
       end
     end
     resources :tender_offers, only: [:index, :show, :create] do
+      member do
+        post :finalize
+      end
       resources :bids, only: [:index, :create, :destroy], controller: "tender_offer_bids"
     end
   end

@@ -1,20 +1,20 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
+import type { UseMutationResult } from "@tanstack/react-query";
+import { ChevronDown, Search } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
 import { MutationStatusButton } from "@/components/MutationButton";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, ChevronDown } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useCurrentCompany } from "@/global";
-import { trpc } from "@/trpc/client";
 import { fetchInvestorEmail, isInvestor } from "@/models/investor";
-import type { UseMutationResult } from "@tanstack/react-query";
+import { trpc } from "@/trpc/client";
 import { cn } from "@/utils";
 
 type SelectInvestorsModalProps = {
@@ -23,10 +23,9 @@ type SelectInvestorsModalProps = {
   onBack: () => void;
   onNext: (data: string[]) => void;
   mutation: UseMutationResult<unknown, unknown, void>;
-  data?: string[];
 };
 
-const SelectInvestorsModal = ({ isOpen, onClose, onBack, onNext, mutation, data }: SelectInvestorsModalProps) => {
+const SelectInvestorsModal = ({ isOpen, onClose, onBack, onNext, mutation }: SelectInvestorsModalProps) => {
   const company = useCurrentCompany();
   const [searchTerm, setSearchTerm] = useState("");
   const [shareClassFilter, setShareClassFilter] = useState("All share classes");
@@ -51,12 +50,6 @@ const SelectInvestorsModal = ({ isOpen, onClose, onBack, onNext, mutation, data 
       }),
     [investors, searchTerm, shareClassFilter],
   );
-
-  useEffect(() => {
-    if (data && data.length > 0) {
-      setSelectedInvestors(new Set(data));
-    }
-  }, [data]);
 
   useEffect(() => {
     setAllSelected(selectedInvestors.size === filteredInvestors.length && filteredInvestors.length > 0);

@@ -1,59 +1,47 @@
 "use client";
 import { utc } from "@date-fns/utc";
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { ArrowDownTrayIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { isFuture, isPast } from "date-fns";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { getFilteredRowModel, getSortedRowModel, type Table } from "@tanstack/react-table";
+import { isFuture } from "date-fns";
+import { Download, InboxIcon, InfoIcon, LucideCircleDollarSign, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import React, { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
-import ComboBox from "@/components/ComboBox";
+import { type Buyback, type BuybackBid, buybackBidSchema, buybackSchema } from "@/app/equity/buybacks";
+import ConfirmPaymentModal from "@/app/equity/buybacks/ConfirmPaymentModal";
+import FinalizeBuybackModal from "@/app/equity/buybacks/FinalizeBuybackModal";
+import PlaceBidModal from "@/app/equity/buybacks/PlaceBidModal";
+import ReviewInvestorsModal from "@/app/equity/buybacks/ReviewInvestorsModal";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import MainLayout from "@/components/layouts/Main";
-import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
-import NumberInput from "@/components/NumberInput";
+import MutationButton from "@/components/MutationButton";
+import Placeholder from "@/components/Placeholder";
+import Status from "@/components/Status";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
-import type { RouterOutput } from "@/trpc";
-import { trpc } from "@/trpc/client";
-import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
-import { formatServerDate } from "@/utils/time";
-import { VESTED_SHARES_CLASS } from "..";
-import LetterOfTransmissal from "./LetterOfTransmissal";
-type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
-
-import Link from "next/link";
-import PlaceBidModal from "@/app/equity/tender_offers/PlaceBidModal";
-import FinalizeBuybackModal from "@/app/equity/tender_offers/FinalizeBuybackModal";
-import ReviewInvestorsModal from "@/app/equity/tender_offers/ReviewInvestorsModal";
-import ConfirmPaymentModal from "@/app/equity/tender_offers/ConfirmPaymentModal";
-import Placeholder from "@/components/Placeholder";
-import { Download, InboxIcon, InfoIcon, LucideCircleDollarSign, Trash2 } from "lucide-react";
+import { download } from "@/utils";
+import { formatMoneyFromCents } from "@/utils/formatMoney";
+import { request } from "@/utils/request";
+import {
+  company_tender_offer_bid_path,
+  company_tender_offer_bids_path,
+  company_tender_offer_path,
+  finalize_company_tender_offer_path,
+} from "@/utils/routes";
 import EquityLayout from "../../Layout";
-import Status from "@/components/Status";
-import { getFilteredRowModel, getSortedRowModel, type Table } from "@tanstack/react-table";
-import { useMutation } from "@tanstack/react-query";
-
-type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
-type TenderOffer = RouterOutput["tenderOffers"]["get"];
 
 type BuybackActionsProps = {
-  data: TenderOffer;
+  buyback: Buyback;
   user: ReturnType<typeof useCurrentUser>;
-  bids: Bid[];
-  isOpen: boolean;
+  bids: BuybackBid[];
   onSetActiveModal: (modal: "place" | "summary" | "review" | "confirm" | null) => void;
-  table?: Table<Bid>;
+  table?: Table<BuybackBid>;
 };
 
-const BuybackActions = ({ data, user, bids, isOpen, onSetActiveModal, table }: BuybackActionsProps) => {
+const BuybackActions = ({ buyback, user, bids, onSetActiveModal, table }: BuybackActionsProps) => {
   const handleDownloadCSV = () => {
     if (!table) return;
 
@@ -80,9 +68,9 @@ const BuybackActions = ({ data, user, bids, isOpen, onSetActiveModal, table }: B
 
   return (
     <>
-      {data.attachment ? (
+      {buyback.attachment ? (
         <Button asChild size="small" variant="outline">
-          <Link href={`/download/${data.attachment.key}/${data.attachment.filename}`}>
+          <Link href={`/download/${buyback.attachment.key}/${buyback.attachment.filename}`}>
             <Download className="size-4" />
             Download documents
           </Link>
@@ -94,12 +82,12 @@ const BuybackActions = ({ data, user, bids, isOpen, onSetActiveModal, table }: B
           Download CSV
         </Button>
       ) : null}
-      {user.roles.administrator && !isOpen && bids.length ? (
+      {user.roles.administrator && !buyback.open && bids.length && !buyback.equity_buyback_round_count ? (
         <Button size="small" onClick={() => onSetActiveModal("summary")}>
           Finalize buyback
         </Button>
       ) : null}
-      {isOpen ? (
+      {buyback.open ? (
         <Button size="small" onClick={() => onSetActiveModal("place")}>
           Place bid
         </Button>
@@ -112,87 +100,144 @@ export default function BuybackView() {
   const { id } = useParams<{ id: string }>();
   const company = useCurrentCompany();
   const user = useCurrentUser();
-  const [data] = trpc.tenderOffers.get.useSuspenseQuery({ companyId: company.id, id });
-  const isOpen = !data.acceptedPriceCents && isFuture(utc(data.endsAt));
-  const investorId = user.roles.investor?.id;
-  const [bids, { refetch: refetchBids }] = trpc.tenderOffers.bids.list.useSuspenseQuery({
-    companyId: company.id,
-    tenderOfferId: id,
-    investorId: user.roles.administrator ? undefined : investorId,
+
+  const {
+    data: { buyback },
+    refetch: refetchBuyback,
+  } = useSuspenseQuery({
+    queryKey: ["buybacks", company.id, id],
+    queryFn: async () => {
+      const response = await request({
+        accept: "json",
+        method: "GET",
+        url: company_tender_offer_path(company.id, id),
+        assertOk: true,
+      });
+      return z
+        .object({
+          buyback: buybackSchema,
+        })
+        .parse(await response.json());
+    },
   });
 
-  const [cancelingBid, setCancelingBid] = useState<Bid | null>(null);
-  const [activeModal, setActiveModal] = useState<"place" | "summary" | "review" | "confirm" | null>(null);
+  const {
+    data: { bids },
+    refetch: refetchBids,
+  } = useSuspenseQuery({
+    queryKey: ["buybacks", "bids", company.id, id],
+    queryFn: async () => {
+      const response = await request({
+        accept: "json",
+        method: "GET",
+        url: company_tender_offer_bids_path(company.id, id),
+        assertOk: true,
+      });
+      return z
+        .object({
+          bids: z.array(buybackBidSchema),
+        })
+        .parse(await response.json());
+    },
+  });
 
-  const destroyMutation = trpc.tenderOffers.bids.destroy.useMutation({
+  const [selectedBid, setSelectedBid] = useState<BuybackBid | null>(null);
+
+  const [activeModal, setActiveModal] = useState<"place" | "summary" | "review" | "confirm" | "cancel" | null>(null);
+
+  const destroyMutation = useMutation({
+    mutationFn: async ({ bidId }: { bidId: string }) => {
+      await request({
+        method: "DELETE",
+        url: company_tender_offer_bid_path(company.id, id, bidId),
+        accept: "json",
+        assertOk: true,
+      });
+    },
     onSuccess: async () => {
-      setCancelingBid(null);
+      handleBidAction(null);
       await refetchBids();
     },
   });
 
   const finalizeMutation = useMutation({
     mutationFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await request({
+        method: "POST",
+        url: finalize_company_tender_offer_path(company.id, id),
+        accept: "json",
+        assertOk: true,
+        jsonData: {},
+      });
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       setActiveModal(null);
+      await refetchBuyback();
+      await refetchBids();
     },
   });
 
-  const columnHelper = createColumnHelper<Bid>();
+  const handleBidAction = (bid: BuybackBid | null, action?: "cancel") => {
+    setSelectedBid(bid);
+    setActiveModal(action || null);
+  };
+
+  const columnHelper = createColumnHelper<BuybackBid>();
   const columns = useMemo(
     () =>
       [
         user.roles.administrator
-          ? columnHelper.accessor("companyInvestor.user.name", {
+          ? columnHelper.accessor("investor.name", {
               id: "investor",
               header: "Investor",
               cell: (info) => info.getValue(),
-              footer: data.acceptedPriceCents ? "Total payout" : "",
+              footer: buyback.accepted_price_cents ? "Total payout" : "",
             })
           : null,
-        columnHelper.simple("shareClass", "Share class"),
-        user.roles.administrator || data.acceptedPriceCents
+        columnHelper.simple("share_class", "Share class"),
+        columnHelper.simple("number_of_shares", "Shares", (value) => value.toLocaleString()),
+        user.roles.administrator || buyback.accepted_price_cents
           ? columnHelper.display({
-              id: "acceptedShares",
+              id: "accepted_shares",
               header: "Accepted",
-              cell: (info) => Number(info.row.original.acceptedShares || 0).toLocaleString(),
-              footer: data.acceptedPriceCents
-                ? bids.reduce((sum, bid) => sum + Number(bid.acceptedShares), 0).toLocaleString()
+              cell: (info) => Number(info.row.original.accepted_shares || 0).toLocaleString(),
+              footer: buyback.accepted_price_cents
+                ? bids.reduce((sum, bid) => sum + Number(bid.accepted_shares), 0).toLocaleString()
                 : "",
             })
           : null,
-        columnHelper.simple("numberOfShares", "Shares", (value) => value.toLocaleString()),
-        user.roles.administrator || data.acceptedPriceCents
+        user.roles.administrator || buyback.accepted_price_cents
           ? columnHelper.display({
-              id: "clearingPrice",
+              id: "clearing_price",
               header: "Clearing Price",
               cell: (info) =>
-                info.row.original.acceptedShares && data.acceptedPriceCents
-                  ? formatMoneyFromCents(data.acceptedPriceCents)
+                info.row.original.accepted_shares && buyback.accepted_price_cents
+                  ? formatMoneyFromCents(buyback.accepted_price_cents)
                   : "-",
-              footer: data.acceptedPriceCents ? formatMoneyFromCents(data.acceptedPriceCents) : "",
+              footer: buyback.accepted_price_cents ? formatMoneyFromCents(buyback.accepted_price_cents) : "",
             })
           : null,
-        columnHelper.simple("sharePriceCents", "Bid price", formatMoneyFromCents),
+        columnHelper.simple("share_price_cents", "Bid price", formatMoneyFromCents),
         columnHelper.display({
           id: "total",
           header: "Total",
           cell: (info) =>
-            formatMoneyFromCents(Number(info.row.original.numberOfShares) * info.row.original.sharePriceCents), // TODO confirm this calculation
-          footer: data.acceptedPriceCents
+            formatMoneyFromCents(Number(info.row.original.number_of_shares) * info.row.original.share_price_cents), // TODO confirm this calculation
+          footer: buyback.accepted_price_cents
             ? formatMoneyFromCents(
-                bids.reduce((sum, bid) => sum + Number(bid.acceptedShares || 0) * (data.acceptedPriceCents || 0), 0),
+                bids.reduce(
+                  (sum, bid) => sum + Number(bid.accepted_shares || 0) * (buyback.accepted_price_cents || 0),
+                  0,
+                ),
               )
             : "",
         }),
-        !user.roles.administrator || data.acceptedPriceCents
+        buyback.accepted_price_cents
           ? columnHelper.accessor(
               (row) =>
-                Number(row.acceptedShares) === Number(row.numberOfShares)
+                Number(row.accepted_shares) === Number(row.number_of_shares)
                   ? "Accepted"
-                  : Number(row.acceptedShares)
+                  : Number(row.accepted_shares)
                     ? "Partially accepted"
                     : "Excluded",
               {
@@ -206,19 +251,23 @@ export default function BuybackView() {
               },
             )
           : null,
-        isOpen
+        buyback.open
           ? columnHelper.display({
               id: "actions",
               cell: (info) =>
-                info.row.original.companyInvestor.user.id === user.id ? (
-                  <Button size="icon" variant="outline" onClick={() => setCancelingBid(info.row.original)}>
+                info.row.original.investor.id === user.roles.investor?.id ? (
+                  <Button
+                    className="size-9"
+                    variant="outline"
+                    onClick={() => handleBidAction(info.row.original, "cancel")}
+                  >
                     <Trash2 className="size-4" />
                   </Button>
                 ) : null,
             })
           : null,
       ].filter((column) => !!column),
-    [user.roles.administrator, user.id, isOpen, data.acceptedPriceCents, bids],
+    [user.roles.administrator, user.roles.investor?.id, buyback.open, buyback.accepted_price_cents, bids],
   );
 
   const bidsTable = useTable({
@@ -230,10 +279,10 @@ export default function BuybackView() {
 
   return (
     <EquityLayout
-      pageTitle={data.name}
+      pageTitle={buyback.name}
       headerActions={
         !bids.length || !user.roles.administrator ? (
-          <BuybackActions data={data} user={user} bids={bids} isOpen={isOpen} onSetActiveModal={setActiveModal} />
+          <BuybackActions buyback={buyback} user={user} bids={bids} onSetActiveModal={setActiveModal} />
         ) : null
       }
     >
@@ -246,9 +295,7 @@ export default function BuybackView() {
           </AlertDescription>
         </Alert>
       ) : null}
-      {!user.roles.administrator &&
-      data.acceptedPriceCents &&
-      (!data.equityBuybackRounds.length || data.equityBuybackRounds.some((round) => round.status !== "Paid")) ? (
+      {!user.roles.administrator && buyback.accepted_price_cents && !buyback.equity_buyback_round_count ? (
         <Alert>
           <InfoIcon />
           <AlertDescription>
@@ -257,14 +304,12 @@ export default function BuybackView() {
         </Alert>
       ) : null}
 
-      {!user.roles.administrator &&
-      data.acceptedPriceCents &&
-      data.equityBuybackRounds.length &&
-      data.equityBuybackRounds.every((round) => round.status === "Paid") ? (
+      {!user.roles.administrator && buyback.accepted_price_cents && buyback.equity_buyback_round_count ? (
         <Alert>
           <InfoIcon />
           <AlertDescription>
-            This buyback has been settled. All accepted bids cleared at {formatMoneyFromCents(data.acceptedPriceCents)}
+            This buyback has been settled. All accepted bids cleared at{" "}
+            {formatMoneyFromCents(buyback.accepted_price_cents)}
             per share, and payouts have been processed.
           </AlertDescription>
         </Alert>
@@ -277,10 +322,9 @@ export default function BuybackView() {
           actions={
             user.roles.administrator ? (
               <BuybackActions
-                data={data}
+                buyback={buyback}
                 user={user}
                 bids={bids}
-                isOpen={isOpen}
                 onSetActiveModal={setActiveModal}
                 table={bidsTable}
               />
@@ -295,29 +339,25 @@ export default function BuybackView() {
         <Placeholder icon={LucideCircleDollarSign}>Place your first bid to participate in the buyback.</Placeholder>
       )}
 
-      {cancelingBid ? (
-        <Dialog open onOpenChange={() => setCancelingBid(null)}>
+      {selectedBid ? (
+        <Dialog open={activeModal === "cancel"} onOpenChange={() => handleBidAction(null)}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Cancel bid?</DialogTitle>
             </DialogHeader>
             <p>Are you sure you want to cancel this bid?</p>
             <p>
-              Share class: {cancelingBid.shareClass}
+              Share class: {selectedBid.share_class}
               <br />
-              Number of shares: {cancelingBid.numberOfShares.toLocaleString()}
+              Number of shares: {selectedBid.number_of_shares.toLocaleString()}
               <br />
-              Bid price: {formatMoneyFromCents(cancelingBid.sharePriceCents)}
+              BuybackBid price: {formatMoneyFromCents(selectedBid.share_price_cents)}
             </p>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setCancelingBid(null)}>
+              <Button variant="outline" onClick={() => handleBidAction(null)}>
                 No, keep bid
               </Button>
-              <MutationButton
-                mutation={destroyMutation}
-                param={{ companyId: company.id, id: cancelingBid.id }}
-                loadingText="Canceling..."
-              >
+              <MutationButton mutation={destroyMutation} param={{ bidId: selectedBid.id }} loadingText="Canceling...">
                 Yes, cancel bid
               </MutationButton>
             </DialogFooter>
@@ -325,13 +365,13 @@ export default function BuybackView() {
         </Dialog>
       ) : null}
 
-      <PlaceBidModal isOpen={activeModal === "place"} onClose={() => setActiveModal(null)} tenderOffer={data} />
+      <PlaceBidModal isOpen={activeModal === "place"} onClose={() => setActiveModal(null)} buyback={buyback} />
 
       <FinalizeBuybackModal
         isOpen={activeModal === "summary"}
         onClose={() => setActiveModal(null)}
         onNext={() => setActiveModal("review")}
-        tenderOffer={data}
+        buyback={buyback}
         bids={bids}
       />
 
@@ -349,7 +389,7 @@ export default function BuybackView() {
         onBack={() => setActiveModal("review")}
         bids={bids}
         mutation={finalizeMutation}
-        tenderOffer={data}
+        buyback={buyback}
       />
     </EquityLayout>
   );

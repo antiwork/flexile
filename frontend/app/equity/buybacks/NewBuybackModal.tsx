@@ -1,49 +1,45 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { CalendarDate } from "@internationalized/date";
+import { CloudUpload, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CalendarDate } from "@internationalized/date";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Form, FormField, FormItem, FormControl, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import NumberInput from "@/components/NumberInput";
 import DatePicker from "@/components/DatePicker";
-import { CloudUpload, Trash2 } from "lucide-react";
+import NumberInput from "@/components/NumberInput";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 
 const formSchema = z
   .object({
-    buybackType: z.enum(["single", "tender"]),
+    type: z.enum(["single", "tender"]),
     name: z.string().min(1, "Buyback name is required"),
-    startDate: z.instanceof(CalendarDate, { message: "Start date is required" }),
-    endDate: z.instanceof(CalendarDate, { message: "End date is required" }),
-    minimumValuation: z.number().min(0, "Starting valuation must be positive"),
-    startingPrice: z.number().min(0, "Starting price must be positive"),
-    totalAmountInCents: z.number().min(0, "Target buyback value must be positive"),
+    start_date: z.instanceof(CalendarDate, { message: "Start date is required" }),
+    end_date: z.instanceof(CalendarDate, { message: "End date is required" }),
+    minimum_valuation: z.number().min(0, "Starting valuation must be positive"),
+    starting_price: z.number().min(0, "Starting price must be positive"),
+    total_amount: z.number().min(0, "Target buyback value must be positive"),
     attachment: z.instanceof(File, { message: "Buyback documents are required" }),
   })
-  .refine((data) => data.startDate.compare(data.endDate) < 0, {
+  .refine((data) => data.start_date.compare(data.end_date) < 0, {
     message: "End date must be after start date",
-    path: ["endDate"],
+    path: ["end_date"],
   });
 
-type FormValues = z.infer<typeof formSchema>;
+type BuybackFormValues = z.infer<typeof formSchema>;
 
 type NewBuybackModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onNext: (data: FormValues) => void;
-  data?: Partial<FormValues>;
+  onNext: (data: BuybackFormValues) => void;
 };
 
-const NewBuybackModal = ({ isOpen, onClose, onNext, data }: NewBuybackModalProps) => {
+const NewBuybackModal = ({ isOpen, onClose, onNext }: NewBuybackModalProps) => {
   const [dragActive, setDragActive] = useState(false);
 
-  const form = useForm<FormValues>({
+  const form = useForm<BuybackFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      ...data,
-    },
   });
 
   const handleSubmit = form.handleSubmit((values) => onNext(values));
@@ -96,7 +92,7 @@ const NewBuybackModal = ({ isOpen, onClose, onNext, data }: NewBuybackModalProps
           <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
             <FormField
               control={form.control}
-              name="buybackType"
+              name="type"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Type of buyback</FormLabel>
@@ -146,7 +142,7 @@ const NewBuybackModal = ({ isOpen, onClose, onNext, data }: NewBuybackModalProps
             <div className="grid grid-cols-2 gap-3">
               <FormField
                 control={form.control}
-                name="startDate"
+                name="start_date"
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
@@ -158,7 +154,7 @@ const NewBuybackModal = ({ isOpen, onClose, onNext, data }: NewBuybackModalProps
               />
               <FormField
                 control={form.control}
-                name="endDate"
+                name="end_date"
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
@@ -172,7 +168,7 @@ const NewBuybackModal = ({ isOpen, onClose, onNext, data }: NewBuybackModalProps
 
             <FormField
               control={form.control}
-              name="minimumValuation"
+              name="minimum_valuation"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Starting valuation</FormLabel>
@@ -186,7 +182,7 @@ const NewBuybackModal = ({ isOpen, onClose, onNext, data }: NewBuybackModalProps
 
             <FormField
               control={form.control}
-              name="startingPrice"
+              name="starting_price"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Starting price</FormLabel>
@@ -200,7 +196,7 @@ const NewBuybackModal = ({ isOpen, onClose, onNext, data }: NewBuybackModalProps
 
             <FormField
               control={form.control}
-              name="totalAmountInCents"
+              name="total_amount"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Target buyback value</FormLabel>

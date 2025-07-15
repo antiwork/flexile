@@ -16,7 +16,6 @@ class TenderOfferBidPresenter
       share_class: share_class,
       accepted_shares: accepted_shares,
       investor: investor_info,
-      total_value_cents: number_of_shares * share_price_cents,
       created_at: created_at,
     }
   end

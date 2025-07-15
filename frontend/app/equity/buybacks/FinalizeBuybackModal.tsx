@@ -1,27 +1,24 @@
 import React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import type { Buyback, BuybackBid } from "@/app/equity/buybacks";
 import { Button } from "@/components/ui/button";
-import { formatMoneyFromCents } from "@/utils/formatMoney";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCurrentCompany } from "@/global";
-import type { RouterOutput } from "@/trpc";
-
-type TenderOffer = RouterOutput["tenderOffers"]["get"];
-type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
+import { formatMoneyFromCents } from "@/utils/formatMoney";
 
 type FinalizeBuybackModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onNext: () => void;
-  tenderOffer: TenderOffer;
-  bids: Bid[];
+  buyback: Buyback;
+  bids: BuybackBid[];
 };
 
-const FinalizeBuybackModal = ({ isOpen, onClose, onNext, tenderOffer, bids }: FinalizeBuybackModalProps) => {
+const FinalizeBuybackModal = ({ isOpen, onClose, onNext, buyback, bids }: FinalizeBuybackModalProps) => {
   const company = useCurrentCompany();
-  const acceptedBids = bids.filter((bid) => Number(bid.acceptedShares) > 0);
-  const totalAcceptedShares = acceptedBids.reduce((sum, bid) => sum + Number(bid.acceptedShares), 0);
+  const acceptedBids = bids.filter((bid) => Number(bid.accepted_shares) > 0);
+  const totalAcceptedShares = acceptedBids.reduce((sum, bid) => sum + Number(bid.accepted_shares), 0);
 
-  const clearingPrice = tenderOffer.acceptedPriceCents || 0;
+  const clearingPrice = buyback.accepted_price_cents || 0;
 
   const totalPayout = totalAcceptedShares * clearingPrice;
 
@@ -39,13 +36,12 @@ const FinalizeBuybackModal = ({ isOpen, onClose, onNext, tenderOffer, bids }: Fi
         <div className="space-y-0">
           <div className="flex justify-between border-b border-gray-200 pb-4">
             <span className="font-medium">Buyback name</span>
-            <span>{tenderOffer.name}</span>
+            <span>{buyback.name}</span>
           </div>
 
           <div className="flex justify-between border-b border-gray-200 py-4">
             <span className="font-medium">Accepted investors</span>
-            {/* TODO this isn't correct, we need to show the number of unique investors */}
-            <span>{acceptedBids.length}</span>
+            <span>{buyback.investor_count}</span>
           </div>
 
           <div className="flex justify-between border-b border-gray-200 py-4">

@@ -1,55 +1,32 @@
 "use client";
+import { utc } from "@date-fns/utc";
+import { getLocalTimeZone } from "@internationalized/date";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
+import { isFuture, isPast } from "date-fns";
 import { Circle, CircleCheck, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
+import { z } from "zod";
+import { type Buyback, buybackSchema, createBuybackSchema } from "@/app/equity/buybacks";
+import CreateLetterOfTransmittalModal from "@/app/equity/buybacks/CreateLetterOfTransmittalModal";
+import NewBuybackModal from "@/app/equity/buybacks/NewBuybackModal";
+import PlaceBidModal from "@/app/equity/buybacks/PlaceBidModal";
+import SelectInvestorsModal from "@/app/equity/buybacks/SelectInvestorsModal";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
-import PlaceBidModal from "@/app/equity/tender_offers/PlaceBidModal";
-import NewBuybackModal from "@/app/equity/tender_offers/NewBuybackModal";
-import CreateLetterOfTransmittalModal from "@/app/equity/tender_offers/CreateLetterOfTransmittalModal";
-import SelectInvestorsModal from "@/app/equity/tender_offers/SelectInvestorsModal";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
-import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
-import { formatDate } from "@/utils/time";
-import EquityLayout from "../Layout";
-import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import { isFuture, isPast } from "date-fns";
-import { utc } from "@date-fns/utc";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { md5Checksum } from "@/utils";
-import { CalendarDate, getLocalTimeZone } from "@internationalized/date";
+import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_tender_offers_path } from "@/utils/routes";
-import { z } from "zod";
+import { formatDate } from "@/utils/time";
+import EquityLayout from "../Layout";
 
 type ActiveModal = "buyback-details" | "letter-of-transmittal" | "select-investors" | null;
-
-interface LetterData {
-  content: string;
-}
-
-const buybackSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  buyback_type: z.enum(["single", "tender"]),
-  starts_at: z.instanceof(Date),
-  ends_at: z.instanceof(Date),
-  minimum_valuation: z.number(),
-  implied_valuation: z.number().nullable(),
-  total_amount_in_cents: z.number(),
-  accepted_price_cents: z.number().nullable(),
-  participation: z.number().nullable(),
-  bid_count: z.number().nullable(),
-  investor_count: z.number().nullable(),
-  open: z.boolean(),
-});
-
-const createBuybackSchema = buybackSchema
-  .pick({ name: true, starts_at: true, ends_at: true, minimum_valuation: true })
-  .extend({ starting_price_per_share_cents: z.number(), attachment: z.instanceof(File) });
 
 export default function Buybacks() {
   const company = useCurrentCompany();
@@ -73,17 +50,20 @@ export default function Buybacks() {
     },
   });
 
-  const [selectedTenderOffer, setSelectedTenderOffer] = useState<z.infer<typeof buybackSchema> | null>(null);
-
+  const [selectedBuyback, setSelectedBuyback] = useState<Buyback | null>(null);
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
-
-  const [buybackData, setBuybackData] = useState<z.infer<typeof createBuybackSchema> | null>(null);
-  const [letterData, setLetterData] = useState<LetterData | null>(null);
-  const [investorsData, setInvestorsData] = useState<string[]>([]);
+  const [buybackData, setBuybackData] = useState<Omit<
+    z.infer<typeof createBuybackSchema>,
+    "investors" | "letter_of_transmittal"
+  > | null>(null);
+  const [letterData, setLetterData] = useState<z.infer<typeof createBuybackSchema>["letter_of_transmittal"] | null>(
+    null,
+  );
+  const [investorsData, setInvestorsData] = useState<z.infer<typeof createBuybackSchema>["investors"] | null>(null);
 
   const createUploadUrl = trpc.files.createDirectUploadUrl.useMutation();
 
-  const columnHelper = createColumnHelper<z.infer<typeof buybackSchema>>();
+  const columnHelper = createColumnHelper<Buyback>();
   const columns = useMemo(
     () => [
       columnHelper.display({
@@ -92,7 +72,7 @@ export default function Buybacks() {
         cell: (info) => {
           const content = info.row.original.name;
           return (
-            <Link href={`/equity/tender_offers/${info.row.original.id}`} className="after:absolute after:inset-0">
+            <Link href={`/equity/buybacks/${info.row.original.id}`} className="after:absolute after:inset-0">
               {content}
             </Link>
           );
@@ -107,7 +87,7 @@ export default function Buybacks() {
           // TODO: Need to store fullyDilutedShares at tender offer creation time
           // Using current fullyDilutedShares gives incorrect historical valuations
           // See backend TODO in company_investor_mailer/tender_offer_closed.html.erb
-          "-",
+          "—",
       }),
       columnHelper.display({
         id: "participation",
@@ -115,16 +95,21 @@ export default function Buybacks() {
         cell: (info) => {
           const { participation } = info.row.original;
           if (!participation) return "—";
-          return formatMoneyFromCents(participation);
+          return formatMoney(participation);
         },
       }),
-      columnHelper.accessor("bid_count", {
-        header: user.roles.administrator ? "Investors" : "Your bids",
-        cell: (info) => info.getValue(),
-      }),
+      user.roles.administrator
+        ? columnHelper.accessor("investor_count", {
+            header: "Investors",
+            cell: (info) => info.getValue(),
+          })
+        : columnHelper.accessor("bid_count", {
+            header: "Your bids",
+            cell: (info) => info.getValue(),
+          }),
       columnHelper.accessor(
         (row) =>
-          row.accepted_price_cents // TODO
+          row.equity_buyback_round_count
             ? "Settled"
             : isFuture(utc(row.ends_at))
               ? "Open"
@@ -165,7 +150,7 @@ export default function Buybacks() {
                 variant="outline"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setSelectedTenderOffer(info.row.original);
+                  setSelectedBuyback(info.row.original);
                 }}
               >
                 Place bid
@@ -177,7 +162,7 @@ export default function Buybacks() {
                 className="fill-black"
                 onClick={(e) => {
                   e.stopPropagation();
-                  router.push(`/equity/tender_offers/${info.row.original.id}`);
+                  router.push(`/equity/buybacks/${info.row.original.id}`);
                 }}
               >
                 Review
@@ -197,28 +182,8 @@ export default function Buybacks() {
     ...(user.roles.administrator && { getFilteredRowModel: getFilteredRowModel() }),
   });
 
-  const handleBuybackDetailsNext = (data: z.infer<typeof createBuybackSchema>) => {
-    setBuybackData(data);
-    setActiveModal("letter-of-transmittal");
-  };
-
-  const handleLetterNext = (data: LetterData) => {
-    setLetterData(data);
-    setActiveModal("select-investors");
-  };
-
-  const handleLetterBack = () => {
-    setActiveModal("buyback-details");
-  };
-
   const handleInvestorsBack = () => {
     setActiveModal("letter-of-transmittal");
-  };
-
-  const handleInvestorsNext = (data: string[]) => {
-    setInvestorsData(data);
-    setActiveModal("select-investors");
-    createBuybackMutation.mutate();
   };
 
   const resetFlow = () => {
@@ -234,35 +199,37 @@ export default function Buybacks() {
         throw new Error("Buyback data is required");
       }
 
-      const { attachment } = buybackData;
+      const { attachment, ...jsonData } = buybackData;
 
-      const base64Checksum = await md5Checksum(attachment);
-      const { directUploadUrl, key } = await createUploadUrl.mutateAsync({
-        isPublic: false,
-        filename: attachment.name,
-        byteSize: attachment.size,
-        checksum: base64Checksum,
-        contentType: attachment.type,
-      });
+      if (attachment) {
+        const base64Checksum = await md5Checksum(attachment);
+        const { directUploadUrl, key } = await createUploadUrl.mutateAsync({
+          isPublic: false,
+          filename: attachment.name,
+          byteSize: attachment.size,
+          checksum: base64Checksum,
+          contentType: attachment.type,
+        });
 
-      await fetch(directUploadUrl, {
-        method: "PUT",
-        body: attachment,
-        headers: {
-          "Content-Type": attachment.type,
-          "Content-MD5": base64Checksum,
-        },
-      });
+        await fetch(directUploadUrl, {
+          method: "PUT",
+          body: attachment,
+          headers: {
+            "Content-Type": attachment.type,
+            "Content-MD5": base64Checksum,
+          },
+        });
+        jsonData.attachment_key = key;
+      }
 
       await request({
         method: "POST",
         url: company_tender_offers_path(company.id),
         accept: "json",
         jsonData: createBuybackSchema.parse({
-          ...buybackData,
-          ...letterData,
-          ...investorsData,
-          attachmentKey: key,
+          ...jsonData,
+          letter_of_transmittal: letterData,
+          investors: investorsData,
         }),
         assertOk: true,
       });
@@ -288,7 +255,7 @@ export default function Buybacks() {
         <DataTable
           searchColumn={user.roles.administrator ? "name" : undefined}
           table={table}
-          onRowClicked={(row) => router.push(`/equity/tender_offers/${row.id}`)}
+          onRowClicked={(row) => router.push(`/equity/buybacks/${row.id}`)}
           actions={
             user.roles.administrator ? (
               <Button size="small" variant="outline" onClick={() => setActiveModal("buyback-details")}>
@@ -302,34 +269,45 @@ export default function Buybacks() {
         <Placeholder icon={CircleCheck}>There are no buybacks yet.</Placeholder>
       )}
 
-      <PlaceBidModal
-        isOpen={!!selectedTenderOffer}
-        onClose={() => setSelectedTenderOffer(null)}
-        // fetch single tender offer data
-        tenderOffer={selectedTenderOffer}
-      />
+      <PlaceBidModal isOpen={!!selectedBuyback} onClose={() => setSelectedBuyback(null)} buyback={selectedBuyback} />
 
       <NewBuybackModal
         isOpen={activeModal === "buyback-details"}
         onClose={resetFlow}
-        onNext={handleBuybackDetailsNext}
+        onNext={({ start_date, end_date, total_amount, starting_price, ...data }) => {
+          setBuybackData({
+            ...data,
+            starts_at: start_date.toDate(getLocalTimeZone()),
+            ends_at: end_date.toDate(getLocalTimeZone()),
+            total_amount_in_cents: total_amount * 100,
+            starting_price_per_share_cents: starting_price * 100,
+          });
+          setActiveModal("letter-of-transmittal");
+        }}
       />
 
       <CreateLetterOfTransmittalModal
         isOpen={activeModal === "letter-of-transmittal"}
         onClose={resetFlow}
-        onNext={handleLetterNext}
-        onBack={handleLetterBack}
-        data={letterData}
+        onNext={(data) => {
+          setLetterData(data);
+          setActiveModal("select-investors");
+        }}
+        onBack={() => {
+          setActiveModal("buyback-details");
+        }}
       />
 
       <SelectInvestorsModal
         isOpen={activeModal === "select-investors"}
         onClose={resetFlow}
         onBack={handleInvestorsBack}
-        onNext={handleInvestorsNext}
+        onNext={(data) => {
+          setInvestorsData(data);
+          setActiveModal("select-investors");
+          createBuybackMutation.mutate();
+        }}
         mutation={createBuybackMutation}
-        data={investorsData}
       />
     </EquityLayout>
   );

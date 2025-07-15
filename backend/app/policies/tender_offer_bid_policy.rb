@@ -10,6 +10,6 @@ class TenderOfferBidPolicy < ApplicationPolicy
   end
 
   def destroy?
-    company.tender_offers_enabled? && company_investor? && record.company_investor == user.company_investor
+    company.tender_offers_enabled? && company_investor? && record.company_investor == company_investor
   end
 end

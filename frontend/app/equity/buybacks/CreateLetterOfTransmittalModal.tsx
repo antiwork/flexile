@@ -1,57 +1,57 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Link2, PencilLine } from "lucide-react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Form, FormField, FormItem, FormControl, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Link, Link2, PencilLine, PenLine, PenTool } from "lucide-react";
 
-const formSchema = z.object({
-  content: z.string().min(1, "Letter content is required"),
-});
+const formSchema = z
+  .object({
+    type: z.enum(["link", "text"]),
+    data: z.string(),
+  })
+  .superRefine((val, ctx) => {
+    if (val.type === "text" && !val.data.trim()) {
+      ctx.addIssue({ path: ["data"], code: z.ZodIssueCode.custom, message: "Content is required" });
+    }
+    if (val.type === "link") {
+      if (!val.data.trim()) {
+        ctx.addIssue({ path: ["data"], code: z.ZodIssueCode.custom, message: "Link URL is required" });
+      } else if (!/^https?:\/\/.+/iu.test(val.data)) {
+        ctx.addIssue({ path: ["data"], code: z.ZodIssueCode.custom, message: "Please enter a valid URL" });
+      }
+    }
+  });
 
 type FormValues = z.infer<typeof formSchema>;
 
 type CreateLetterOfTransmittalModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onNext: (data: any) => void;
+  onNext: (data: FormValues) => void;
   onBack: () => void;
-  data?: any;
 };
 
-const CreateLetterOfTransmittalModal = ({
-  isOpen,
-  onClose,
-  onNext,
-  onBack,
-  data,
-}: CreateLetterOfTransmittalModalProps) => {
-  const [activeTab, setActiveTab] = useState<"link" | "create">(data?.type || "link");
-  const [linkValue, setLinkValue] = useState(data?.link || "");
-
+const CreateLetterOfTransmittalModal = ({ isOpen, onClose, onNext, onBack }: CreateLetterOfTransmittalModalProps) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      ...data,
-    },
+    defaultValues: { type: "link", data: "" },
   });
+
+  const watchedType = form.watch("type");
+
+  useEffect(() => {
+    form.setValue("data", "");
+    form.clearErrors("data");
+  }, [watchedType, form]);
 
   const handleSubmit = form.handleSubmit((data) => {
-    onNext({
-      type: "create",
-      content: data.content,
-    });
+    onNext(data);
   });
-
-  const handleContinue = () => {
-    onNext({
-      type: "link",
-      link: linkValue,
-    });
-  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -68,9 +68,9 @@ const CreateLetterOfTransmittalModal = ({
           <div className="mb-3 flex space-x-1 rounded-md bg-gray-50 p-1">
             <button
               type="button"
-              onClick={() => setActiveTab("link")}
+              onClick={() => form.setValue("type", "link")}
               className={`flex flex-1 items-center justify-center space-x-2 rounded-sm px-3 py-2 text-sm font-medium transition-colors ${
-                activeTab === "link" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
+                watchedType === "link" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
               }`}
             >
               <Link2 className="h-4 w-4" />
@@ -78,9 +78,9 @@ const CreateLetterOfTransmittalModal = ({
             </button>
             <button
               type="button"
-              onClick={() => setActiveTab("create")}
+              onClick={() => form.setValue("type", "text")}
               className={`flex flex-1 items-center justify-center space-x-2 rounded-sm px-3 py-2 text-sm font-medium transition-colors ${
-                activeTab === "create" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
+                watchedType === "text" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
               }`}
             >
               <PencilLine className="h-4 w-4" />
@@ -89,41 +89,40 @@ const CreateLetterOfTransmittalModal = ({
           </div>
 
           <div className="flex flex-1 flex-col overflow-auto">
-            {activeTab === "link" ? (
-              <div className="text-center">
-                <input
-                  type="url"
-                  placeholder="Paste https://..."
-                  value={linkValue}
-                  onChange={(e) => setLinkValue(e.target.value)}
-                  className="w-full rounded-sm border border-gray-300 px-3 py-2 text-sm"
-                />
-              </div>
-            ) : (
-              <Form {...form}>
-                <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col">
-                  <FormField
-                    control={form.control}
-                    name="content"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormControl>
-                          <Textarea
+            <Form {...form}>
+              <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col">
+                <FormField
+                  control={form.control}
+                  name="data"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormControl>
+                        {watchedType === "link" ? (
+                          <Input
                             {...field}
-                            placeholder="Place or type your letter of transmittal here..."
-                            className="min-h-100 resize-none"
+                            type="url"
+                            placeholder="Paste https://..."
+                            className="w-full rounded-sm border border-gray-300 px-3 py-2 text-sm"
                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <p className="mt-2 text-xs text-gray-500">
-                    Rich text formatting will be preserved. You can paste from Word or Google Docs.
-                  </p>
-                </form>
-              </Form>
-            )}
+                        ) : (
+                          <div>
+                            <Textarea
+                              {...field}
+                              placeholder="Place or type your letter of transmittal here..."
+                              className="min-h-100 resize-none"
+                            />
+                            <p className="mt-2 text-xs text-gray-500">
+                              Rich text formatting will be preserved. You can paste from Word or Google Docs.
+                            </p>
+                          </div>
+                        )}
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </form>
+            </Form>
           </div>
         </div>
 
@@ -133,11 +132,7 @@ const CreateLetterOfTransmittalModal = ({
           </Button>
           <Button
             onClick={() => {
-              if (activeTab === "create") {
-                void handleSubmit();
-              } else {
-                handleContinue();
-              }
+              void handleSubmit();
             }}
             className="w-full sm:w-24"
           >

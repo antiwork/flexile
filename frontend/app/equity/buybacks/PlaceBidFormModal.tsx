@@ -1,47 +1,40 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormField, FormItem, FormControl, FormLabel, FormMessage } from "@/components/ui/form";
-import NumberInput from "@/components/NumberInput";
 import ComboBox from "@/components/ComboBox";
 import { MutationStatusButton } from "@/components/MutationButton";
+import NumberInput from "@/components/NumberInput";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
-import { VESTED_SHARES_CLASS } from ".";
-
-type TenderOffer = {
-  id: string;
-  startsAt: Date;
-  endsAt: Date;
-  minimumValuation: bigint;
-  attachment:
-    | {
-        key: string;
-        filename: string;
-      }
-    | undefined;
-};
+import { request } from "@/utils/request";
+import { company_tender_offer_bids_path } from "@/utils/routes";
+import { type Buyback, placeBuybackBidSchema, VESTED_SHARES_CLASS } from ".";
 
 type PlaceBidFormModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onBack: () => void;
-  tenderOffer: TenderOffer;
+  buyback: Buyback;
 };
 
-const formSchema = z.object({
-  shareClass: z.string().min(1, "This field is required"),
-  numberOfShares: z.number().min(1),
-  pricePerShare: z.number().min(0),
-});
+const formSchema = placeBuybackBidSchema
+  .pick({
+    share_class: true,
+    number_of_shares: true,
+  })
+  .extend({
+    share_price: z.number({ coerce: true }).min(0),
+  });
 
-type FormValues = z.infer<typeof formSchema>;
+type BuybackBidFormValues = z.infer<typeof formSchema>;
 
-const PlaceBidFormModal = ({ isOpen, onClose, onBack, tenderOffer }: PlaceBidFormModalProps) => {
+const PlaceBidFormModal = ({ isOpen, onClose, onBack, buyback }: PlaceBidFormModalProps) => {
   const company = useCurrentCompany();
   const user = useCurrentUser();
   const investorId = user.roles.investor?.id;
@@ -65,36 +58,43 @@ const PlaceBidFormModal = ({ isOpen, onClose, onBack, tenderOffer }: PlaceBidFor
     [ownShareHoldings, ownTotalVestedShares],
   );
 
-  const form = useForm<FormValues>({
-    defaultValues: { shareClass: holdings[0]?.className ?? "", pricePerShare: 0, numberOfShares: 0 },
+  const form = useForm<BuybackBidFormValues>({
+    defaultValues: { share_class: holdings[0]?.className ?? "", share_price: 0, number_of_shares: 0 },
     resolver: zodResolver(formSchema),
   });
 
-  const numberOfShares = form.watch("numberOfShares");
-  const pricePerShare = form.watch("pricePerShare");
-  const shareClass = form.watch("shareClass");
+  const numberOfShares = form.watch("number_of_shares");
+  const pricePerShare = form.watch("share_price");
+  const shareClass = form.watch("share_class");
   const maxShares = holdings.find((h) => h.className === shareClass)?.count || 0;
 
-  const createMutation = trpc.tenderOffers.bids.create.useMutation({
+  const createMutation = useMutation({
+    mutationFn: async (data: BuybackBidFormValues) => {
+      await request({
+        method: "POST",
+        url: company_tender_offer_bids_path(company.id, buyback.id),
+        accept: "json",
+        jsonData: placeBuybackBidSchema.parse({
+          number_of_shares: Number(data.number_of_shares),
+          share_price_cents: Math.round(Number(data.share_price) * 100),
+          share_class: data.share_class,
+        }),
+        assertOk: true,
+      });
+    },
     onSuccess: () => {
       form.reset();
       onClose();
     },
   });
 
-  const handleSubmit = form.handleSubmit(async (values) => {
-    if (values.numberOfShares > maxShares) {
-      return form.setError("numberOfShares", {
+  const handleSubmit = form.handleSubmit((values) => {
+    if (values.number_of_shares > maxShares) {
+      return form.setError("number_of_shares", {
         message: `Number of shares must be between 1 and ${maxShares.toLocaleString()}`,
       });
     }
-    await createMutation.mutateAsync({
-      companyId: company.id,
-      tenderOfferId: tenderOffer.id,
-      numberOfShares: Number(values.numberOfShares),
-      sharePriceCents: Math.round(Number(values.pricePerShare) * 100),
-      shareClass: values.shareClass,
-    });
+    createMutation.mutate(values);
   });
 
   const impliedValuation = company.fullyDilutedShares ? company.fullyDilutedShares * pricePerShare : 0;
@@ -114,7 +114,7 @@ const PlaceBidFormModal = ({ isOpen, onClose, onBack, tenderOffer }: PlaceBidFor
             <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-1 flex-col gap-4">
               <FormField
                 control={form.control}
-                name="shareClass"
+                name="share_class"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Share class</FormLabel>
@@ -136,7 +136,7 @@ const PlaceBidFormModal = ({ isOpen, onClose, onBack, tenderOffer }: PlaceBidFor
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="numberOfShares"
+                  name="number_of_shares"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Number of shares</FormLabel>
@@ -150,7 +150,7 @@ const PlaceBidFormModal = ({ isOpen, onClose, onBack, tenderOffer }: PlaceBidFor
 
                 <FormField
                   control={form.control}
-                  name="pricePerShare"
+                  name="share_price"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Price per share</FormLabel>
@@ -185,7 +185,7 @@ const PlaceBidFormModal = ({ isOpen, onClose, onBack, tenderOffer }: PlaceBidFor
             onClick={() => void handleSubmit()}
             mutation={createMutation}
             className="w-full sm:w-auto"
-            disabled={!form.formState.isValid || numberOfShares === 0 || pricePerShare === 0}
+            disabled={!form.formState.isValid || !numberOfShares || !pricePerShare}
           >
             Submit bid
           </MutationStatusButton>

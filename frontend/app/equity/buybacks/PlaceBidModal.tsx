@@ -1,36 +1,23 @@
+import { Download } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import type { Buyback } from "@/app/equity/buybacks";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatServerDate } from "@/utils/time";
 import LetterOfTransmittalModal from "./LetterOfTransmittalModal";
 import PlaceBidFormModal from "./PlaceBidFormModal";
-import { Download } from "lucide-react";
-
-type TenderOffer = {
-  id: string;
-  startsAt: Date;
-  endsAt: Date;
-  minimumValuation: bigint;
-  startingPrice: bigint;
-  attachment:
-    | {
-        key: string;
-        filename: string;
-      }
-    | undefined;
-};
 
 type PlaceBidModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  tenderOffer: TenderOffer | null;
+  buyback: Buyback | null;
 };
 
 type ModalStep = "details" | "letter" | "form";
 
-const PlaceBidModal = ({ isOpen, onClose, tenderOffer }: PlaceBidModalProps) => {
+const PlaceBidModal = ({ isOpen, onClose, buyback }: PlaceBidModalProps) => {
   const [currentStep, setCurrentStep] = useState<ModalStep>("details");
 
   const handleContinueFromDetails = () => {
@@ -54,7 +41,7 @@ const PlaceBidModal = ({ isOpen, onClose, tenderOffer }: PlaceBidModalProps) => 
     onClose();
   };
 
-  if (!tenderOffer) {
+  if (!buyback) {
     return null;
   }
 
@@ -71,29 +58,31 @@ const PlaceBidModal = ({ isOpen, onClose, tenderOffer }: PlaceBidModalProps) => 
           <div className="space-y-0">
             <div className="flex justify-between border-b border-gray-200 py-4">
               <span className="font-medium">Start date</span>
-              <span>{formatServerDate(tenderOffer.startsAt)}</span>
+              <span>{formatServerDate(buyback.starts_at)}</span>
             </div>
 
             <div className="flex justify-between border-b border-gray-200 py-4">
               <span className="font-medium">End date</span>
-              <span>{formatServerDate(tenderOffer.endsAt)}</span>
+              <span>{formatServerDate(buyback.ends_at)}</span>
             </div>
 
             <div className="flex justify-between border-b border-gray-200 py-4">
               <span className="font-medium">Starting valuation</span>
-              <span>{formatMoney(tenderOffer.minimumValuation)}</span>
+              <span>{formatMoney(buyback.minimum_valuation)}</span>
             </div>
 
-            <div className="flex justify-between border-b border-gray-200 py-4">
-              <span className="font-medium">Starting price per share</span>
-              <span>{formatMoneyFromCents(tenderOffer.startingPrice)}</span>
-            </div>
+            {buyback.starting_price_per_share_cents ? (
+              <div className="flex justify-between border-b border-gray-200 py-4">
+                <span className="font-medium">Starting price per share</span>
+                <span>{formatMoneyFromCents(buyback.starting_price_per_share_cents)}</span>
+              </div>
+            ) : null}
 
-            {tenderOffer.attachment ? (
+            {buyback.attachment ? (
               <div className="flex justify-between border-b border-gray-200 py-4">
                 <span className="font-medium">Buyback documents</span>
                 <Button asChild variant="outline" size="small">
-                  <Link href={`/download/${tenderOffer.attachment.key}/${tenderOffer.attachment.filename}`}>
+                  <Link href={`/download/${buyback.attachment.key}/${buyback.attachment.filename}`}>
                     <Download className="size-4" />
                     Download
                   </Link>
@@ -115,13 +104,14 @@ const PlaceBidModal = ({ isOpen, onClose, tenderOffer }: PlaceBidModalProps) => 
         onClose={handleClose}
         onBack={handleLetterBack}
         onNext={handleLetterContinue}
+        buyback={buyback}
       />
 
       <PlaceBidFormModal
         isOpen={currentStep === "form"}
         onClose={handleClose}
         onBack={handleFormBack}
-        tenderOffer={tenderOffer}
+        buyback={buyback}
       />
     </>
   );
