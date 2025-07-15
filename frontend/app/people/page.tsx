@@ -22,9 +22,11 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
 import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
+import { formatDate } from "@/utils/time";
 import FormFields, { schema as formSchema } from "./FormFields";
 import InviteLinkModal from "./InviteLinkModal";
 
@@ -42,8 +44,6 @@ export default function PeoplePage() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const { data: workers = [], isLoading, refetch } = trpc.contractors.list.useQuery({ companyId: company.id });
-
-  const trpcUtils = trpc.useUtils();
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showInviteLinkModal, setShowInviteLinkModal] = useState(false);
 
@@ -62,6 +62,7 @@ export default function PeoplePage() {
     resolver: zodResolver(schema),
   });
 
+  const trpcUtils = trpc.useUtils();
   const saveMutation = trpc.contractors.create.useMutation({
     onSuccess: async (data) => {
       await refetch();
@@ -107,11 +108,11 @@ export default function PeoplePage() {
         meta: { filterOptions: ["Active", "Onboarding", "Alumni"] },
         cell: (info) =>
           info.row.original.endedAt ? (
-            <Status variant="critical">Alumni</Status>
+            <Status variant="critical">Ended on {formatDate(info.row.original.endedAt)}</Status>
           ) : info.row.original.startedAt <= new Date() ? (
-            <Status variant="success">Active</Status>
+            <Status variant="success">Started on {formatDate(info.row.original.startedAt)}</Status>
           ) : info.row.original.user.onboardingCompleted ? (
-            <Status variant="success">Onboarding</Status>
+            <Status variant="success">Starts on {formatDate(info.row.original.startedAt)}</Status>
           ) : info.row.original.user.invitationAcceptedAt ? (
             <Status variant="primary">In Progress</Status>
           ) : (
@@ -119,7 +120,7 @@ export default function PeoplePage() {
           ),
       }),
     ],
-    [workers],
+    [],
   );
 
   const table = useTable({
