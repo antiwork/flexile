@@ -88,7 +88,6 @@ Rails.application.routes.draw do
   get "/onboarding/contract", to: redirect("/companies/_/worker/onboarding/contract")
   get "/investor_onboarding", to: redirect("/companies/_/investor/onboarding")
   get "/investor_onboarding/invitation", to: redirect { |path_params, req| "/companies/_/investor/onboarding/invitation#{path_params[:id]}#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/investor_onboarding/bank_account", to: redirect("/companies/_/investor/onboarding/bank_account")
   get "/lawyer_onboarding/invitation", to: redirect { |path_params, req| "/companies/_/lawyer/onboarding/invitation#{path_params[:id]}#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   get "/internal/userid", to: "application#userid"
   get "/internal/current_user_data", to: "application#current_user_data"

@@ -19,7 +19,11 @@ import {
 } from "@/models/constants";
 import { cn } from "@/utils";
 import { request } from "@/utils/request";
-import { settings_bank_accounts_path, wise_account_requirements_path } from "@/utils/routes";
+import {
+  settings_bank_account_path,
+  settings_bank_accounts_path,
+  wise_account_requirements_path,
+} from "@/utils/routes";
 
 const KEY_LEGAL_TYPE = "legalType";
 const KEY_CHECKING_ACCOUNT = "CHECKING";
@@ -317,9 +321,10 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
       );
       try {
         if (!form) return;
+        const isUpdate = !!bankAccount?.id;
         const response = await request({
-          method: "PATCH",
-          url: settings_bank_accounts_path(),
+          method: isUpdate ? "PATCH" : "POST",
+          url: isUpdate ? settings_bank_account_path(bankAccount.id) : settings_bank_accounts_path(),
           accept: "json",
           jsonData: {
             recipient: {
