@@ -23,12 +23,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import styles from "./AdminToggleColumn.module.css";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { countries } from "@/models/constants";
 import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
 import { cn } from "@/utils";
-import { formatDate } from "@/utils/time";
 import FormFields, { schema as formSchema } from "./FormFields";
 import InviteLinkModal from "./InviteLinkModal";
 
@@ -50,30 +48,14 @@ export default function PeoplePage() {
 
   const trpcUtils = trpc.useUtils();
 
-  const { data: usersWithAdminStatus = [], isLoading: isLoadingAdminStatus } = trpc.companies.listUsersWithAdminStatus.useQuery(
-    { companyId: company.id },
-    { enabled: !!company.id, refetchOnMount: true },
-  );
-
   const toggleAdminMutation = trpc.companies.toggleAdminRole.useMutation({
     onSuccess: async () => {
-      await Promise.all([
-        trpcUtils.companies.listUsersWithAdminStatus.invalidate(),
-        trpcUtils.contractors.list.invalidate()
-      ]);
+      await trpcUtils.contractors.list.invalidate();
     },
     onError: (error) => {
       console.error("Failed to toggle admin role:", error.message);
     },
   });
-
-  const adminStatusMap = useMemo(() => {
-    const map = new Map<string, boolean>();
-    usersWithAdminStatus.forEach((user) => {
-      map.set(user.email, user.isAdmin);
-    });
-    return map;
-  }, [usersWithAdminStatus]);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showInviteLinkModal, setShowInviteLinkModal] = useState(false);
 
@@ -137,18 +119,18 @@ export default function PeoplePage() {
         meta: { filterOptions: ["Active", "Onboarding", "Alumni"] },
         cell: (info) =>
           info.row.original.endedAt ? (
-            <Status variant="critical">Ended on {formatDate(info.row.original.endedAt)}</Status>
+            <Status variant="critical">Alumni</Status>
           ) : info.row.original.startedAt <= new Date() ? (
-            <Status variant="success">Started on {formatDate(info.row.original.startedAt)}</Status>
+            <Status variant="success">Active</Status>
           ) : info.row.original.user.onboardingCompleted ? (
-            <Status variant="success">Starts on {formatDate(info.row.original.startedAt)}</Status>
+            <Status variant="success">Onboarding</Status>
           ) : info.row.original.user.invitationAcceptedAt ? (
             <Status variant="primary">In Progress</Status>
           ) : (
             <Status variant="primary">Invited</Status>
           ),
       }),
-      columnHelper.accessor((row) => adminStatusMap.get(row.user.email) ?? false, {
+      columnHelper.accessor((row) => row.user.isAdmin ?? false, {
         id: "adminStatus",
         header: "Admin",
         meta: { numeric: false },
@@ -160,34 +142,29 @@ export default function PeoplePage() {
           const isLoading =
             toggleAdminMutation.isPending && toggleAdminMutation.variables?.userId === userId.toString();
           return (
-            <div className={styles.adminToggleCell} onClick={(e) => e.stopPropagation()}>
-              <div
-                className={cn(
-                  styles.toggleWrapper,
-                  isCurrentUser && styles.disabled,
-                  isLoading && styles.toggleLoading,
-                )}
-              >
-                <Switch
-                  checked={isAdmin}
-                  onCheckedChange={(checked) => {
-                    if (isCurrentUser) return;
-                    toggleAdminMutation.mutate({
-                      companyId: company.id,
-                      userId: userId.toString(),
-                      isAdmin: checked,
-                    });
-                  }}
-                  disabled={isCurrentUser || isLoading}
-                  aria-label={`Toggle admin status for ${info.row.original.user.name || info.row.original.user.email}`}
-                />
-              </div>
-            </div>
+            <Switch
+              checked={isAdmin}
+              onCheckedChange={(checked) => {
+                if (isCurrentUser) return;
+                toggleAdminMutation.mutate({
+                  companyId: company.id,
+                  userId: userId.toString(),
+                  isAdmin: checked,
+                });
+              }}
+              disabled={isCurrentUser || isLoading}
+              aria-label={`Toggle admin status for ${info.row.original.user.name || info.row.original.user.email}`}
+              className={cn(
+                isCurrentUser && "cursor-not-allowed opacity-50",
+                isLoading && "pointer-events-none opacity-70",
+              )}
+              onClick={(e) => e.stopPropagation()}
+            />
           );
         },
       }),
     ],
-    [adminStatusMap, currentUser, toggleAdminMutation, company.id, workers],
+    [currentUser, toggleAdminMutation, company.id, workers],
   );
 
   const table = useTable({
@@ -218,7 +195,7 @@ export default function PeoplePage() {
         ) : null
       }
     >
-      {isLoading || isLoadingAdminStatus ? (
+      {isLoading ? (
         <TableSkeleton columns={5} />
       ) : workers.length > 0 ? (
         <DataTable

@@ -7,6 +7,7 @@ import { z } from "zod";
 import { byExternalId, db } from "@/db";
 import { DocumentTemplateType, DocumentType, PayRateType } from "@/db/enums";
 import {
+  companyAdministrators,
   companyContractors,
   documents,
   documentSignatures,
@@ -39,6 +40,10 @@ export const contractorsRouter = createRouter({
             with: {
               userComplianceInfos: latestUserComplianceInfo,
               wiseRecipients: { columns: { id: true }, limit: 1 },
+              companyAdministrators: {
+                where: eq(companyAdministrators.companyId, ctx.company.id),
+                columns: { id: true },
+              },
             },
           },
         },
@@ -59,6 +64,7 @@ export const contractorsRouter = createRouter({
           ...simpleUser(worker.user),
           ...pick(worker.user, "countryCode", "invitationAcceptedAt"),
           onboardingCompleted: worker.user.legalName && worker.user.preferredName && worker.user.countryCode,
+          isAdmin: worker.user.companyAdministrators.length > 0,
         } as const,
       }));
       return workers.filter((worker) => worker.role);

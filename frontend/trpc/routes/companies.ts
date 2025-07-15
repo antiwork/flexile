@@ -131,42 +131,6 @@ export const companiesRouter = createRouter({
       }
     }),
 
-  listUsersWithAdminStatus: companyProcedure
-    .input(z.object({ companyId: z.string() }))
-    .query(async ({ ctx }) => {
-      if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
-
-      const companyUsers = await db
-        .select({ id: users.id, email: users.email, name: users.preferredName })
-        .from(users)
-        .leftJoin(companyContractors, eq(companyContractors.userId, users.id))
-        .leftJoin(companyInvestors, eq(companyInvestors.userId, users.id))
-        .leftJoin(companyLawyers, eq(companyLawyers.userId, users.id))
-        .leftJoin(companyAdministrators, eq(companyAdministrators.userId, users.id))
-        .where(
-          or(
-            and(eq(companyContractors.companyId, ctx.company.id), isNotNull(companyContractors.id)),
-            and(eq(companyInvestors.companyId, ctx.company.id), isNotNull(companyInvestors.id)),
-            and(eq(companyLawyers.companyId, ctx.company.id), isNotNull(companyLawyers.id)),
-            and(eq(companyAdministrators.companyId, ctx.company.id), isNotNull(companyAdministrators.id)),
-          ),
-        )
-        .groupBy(users.id);
-
-      const admins = await db.query.companyAdministrators.findMany({
-        where: eq(companyAdministrators.companyId, ctx.company.id),
-      });
-
-      const adminUserIds = new Set(admins.map((admin) => admin.userId.toString()));
-
-      return companyUsers.map((user) => ({
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        isAdmin: adminUserIds.has(user.id.toString()),
-      }));
-    }),
-
   toggleAdminRole: companyProcedure
     .input(
       z.object({ companyId: z.string(), userId: z.string(), isAdmin: z.boolean() })
