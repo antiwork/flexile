@@ -27,7 +27,6 @@ const LetterOfTransmittalModal = ({ isOpen, onClose, onBack, onNext, buyback }: 
 
   const canContinue = hasReviewed && hasSigned;
 
-  // Generate the PDF URL for the iframe
   const pdfUrl = buyback?.letter_of_transmittal
     ? `/download/${buyback.letter_of_transmittal.key}/${encodeURIComponent(buyback.letter_of_transmittal.filename)}?inline=true`
     : null;

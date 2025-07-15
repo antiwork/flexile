@@ -10,7 +10,7 @@ class Internal::Companies::TenderOffersController < Internal::Companies::BaseCon
 
     buybacks = Current.company.tender_offers.order(created_at: :desc)
     render json: {
-      buybacks: buybacks.map { |offer| TenderOfferPresenter.new(offer).props(user: Current.user, company: Current.company) },
+      buybacks: buybacks.map { |buyback| TenderOfferPresenter.new(buyback).props(user: Current.user, company: Current.company) },
     }
   end
 
