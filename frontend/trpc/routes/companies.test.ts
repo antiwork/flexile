@@ -9,7 +9,7 @@ vi.mock("@/db", () => ({
   db: {
     query: {
       users: {
-        findMany: vi.fn(),
+        findFirst: vi.fn(),
       },
       companyAdministrators: {
         findMany: vi.fn(),
@@ -37,62 +37,13 @@ const createMockContext = (overrides?: Partial<CompanyContext>): CompanyContext 
   ...overrides,
 });
 
-describe("companies.listUsersWithAdminStatus", () => {
-  it("should return all company users with their admin status", async () => {
-    const mockUsers = [
-      { id: BigInt(1), email: "admin@test.com", name: "Admin User" },
-      { id: BigInt(2), email: "user@test.com", name: "Regular User" },
-    ];
-    
-    const mockAdmins = [
-      { userId: BigInt(1), companyId: BigInt(1) },
-    ];
-
-    vi.mocked(db.query.users.findMany).mockResolvedValue(mockUsers as any);
-    vi.mocked(db.query.companyAdministrators.findMany).mockResolvedValue(mockAdmins as any);
-
-    const ctx = createMockContext();
-    const caller = companiesRouter.createCaller(ctx);
-    
-    const result = await caller.listUsersWithAdminStatus({ companyId: "test-company" });
-    
-    expect(result).toHaveLength(2);
-    expect(result[0]).toEqual({
-      id: BigInt(1),
-      email: "admin@test.com",
-      name: "Admin User",
-      isAdmin: true,
-    });
-    expect(result[1]).toEqual({
-      id: BigInt(2),
-      email: "user@test.com", 
-      name: "Regular User",
-      isAdmin: false,
-    });
-  });
-
-  it("should throw FORBIDDEN error for non-administrators", async () => {
-    const ctx = createMockContext({ companyAdministrator: null });
-    const caller = companiesRouter.createCaller(ctx);
-    
-    await expect(
-      caller.listUsersWithAdminStatus({ companyId: "test-company" })
-    ).rejects.toThrow(TRPCError);
-    
-    await expect(
-      caller.listUsersWithAdminStatus({ companyId: "test-company" })
-    ).rejects.toMatchObject({
-      code: "FORBIDDEN",
-    });
-  });
-});
-
 describe("companies.toggleAdminRole", () => {
   it("should add a user as admin when they are not currently an admin", async () => {
     const mockAdmins = [
       { userId: BigInt(1), companyId: BigInt(1) },
     ];
     
+    vi.mocked(db.query.users.findFirst).mockResolvedValue({ id: BigInt(2), externalId: "2" } as any);
     vi.mocked(db.query.companyAdministrators.findMany).mockResolvedValue(mockAdmins as any);
     vi.mocked(db.insert).mockReturnValue({
       values: vi.fn().mockReturnThis(),
@@ -117,6 +68,7 @@ describe("companies.toggleAdminRole", () => {
       { userId: BigInt(2), companyId: BigInt(1) },
     ];
     
+    vi.mocked(db.query.users.findFirst).mockResolvedValue({ id: BigInt(2), externalId: "2" } as any);
     vi.mocked(db.query.companyAdministrators.findMany).mockResolvedValue(mockAdmins as any);
     vi.mocked(db.delete).mockReturnValue({
       where: vi.fn().mockReturnThis(),
@@ -158,11 +110,38 @@ describe("companies.toggleAdminRole", () => {
     });
   });
 
+  it("should throw NOT_FOUND when user does not exist", async () => {
+    vi.mocked(db.query.users.findFirst).mockResolvedValue(null);
+    
+    const ctx = createMockContext();
+    const caller = companiesRouter.createCaller(ctx);
+    
+    await expect(
+      caller.toggleAdminRole({ 
+        companyId: "test-company", 
+        userId: "non-existent",
+        isAdmin: true,
+      })
+    ).rejects.toThrow(TRPCError);
+    
+    await expect(
+      caller.toggleAdminRole({ 
+        companyId: "test-company", 
+        userId: "non-existent",
+        isAdmin: true,
+      })
+    ).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      message: "User not found",
+    });
+  });
+
   it("should throw BAD_REQUEST when trying to remove the last admin", async () => {
     const mockAdmins = [
       { userId: BigInt(1), companyId: BigInt(1) },
     ];
     
+    vi.mocked(db.query.users.findFirst).mockResolvedValue({ id: BigInt(1), externalId: "1" } as any);
     vi.mocked(db.query.companyAdministrators.findMany).mockResolvedValue(mockAdmins as any);
 
     const ctx = createMockContext();
@@ -194,6 +173,7 @@ describe("companies.toggleAdminRole", () => {
       { userId: BigInt(2), companyId: BigInt(1) },
     ];
     
+    vi.mocked(db.query.users.findFirst).mockResolvedValue({ id: BigInt(1), externalId: "1" } as any);
     vi.mocked(db.query.companyAdministrators.findMany).mockResolvedValue(mockAdmins as any);
 
     const ctx = createMockContext({ userId: 1 });
