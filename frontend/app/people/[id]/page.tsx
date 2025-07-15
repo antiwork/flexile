@@ -395,6 +395,7 @@ const DetailsTab = ({
     defaultValues: contractor,
     disabled: !!contractor.endedAt,
   });
+  const payRateInSubunits = form.watch("payRateInSubunits");
   const trpcUtils = trpc.useUtils();
   const updateContractor = trpc.contractors.update.useMutation({
     onSuccess: async (data) => {
@@ -434,6 +435,35 @@ const DetailsTab = ({
           ) : null}
 
           <FormFields />
+          {payRateInSubunits && company.flags.includes("equity_compensation") ? (
+            <div>
+              <span>Equity split</span>
+              <div className="my-2 flex h-2 overflow-hidden rounded-xs bg-gray-200">
+                <div
+                  style={{ width: `${contractor.equityPercentage}%` }}
+                  className="flex flex-col justify-center bg-blue-600 whitespace-nowrap"
+                ></div>
+                <div
+                  style={{ width: `${100 - contractor.equityPercentage}%` }}
+                  className="flex flex-col justify-center"
+                ></div>
+              </div>
+              <div className="flex justify-between">
+                <span>
+                  {(contractor.equityPercentage / 100).toLocaleString(undefined, { style: "percent" })} Equity{" "}
+                  <span className="text-gray-600">
+                    ({formatMoneyFromCents((contractor.equityPercentage * payRateInSubunits) / 100)})
+                  </span>
+                </span>
+                <span>
+                  {((100 - contractor.equityPercentage) / 100).toLocaleString(undefined, { style: "percent" })} Cash{" "}
+                  <span className="text-gray-600">
+                    ({formatMoneyFromCents(((100 - contractor.equityPercentage) * payRateInSubunits) / 100)})
+                  </span>
+                </span>
+              </div>
+            </div>
+          ) : null}
           {!contractor.endedAt && (
             <MutationStatusButton
               type="submit"

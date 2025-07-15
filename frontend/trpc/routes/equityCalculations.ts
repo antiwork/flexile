@@ -1,10 +1,10 @@
 import Bugsnag from "@bugsnag/js";
 import { TRPCError } from "@trpc/server";
 import { Decimal } from "decimal.js";
-import { desc, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { companies, companyContractors, invoices } from "@/db/schema";
+import { companies, companyContractors } from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 import { getUniqueUnvestedEquityGrantForYear } from "@/trpc/routes/equityGrants";
 
@@ -20,14 +20,7 @@ export const calculateInvoiceEquity = async ({
   invoiceYear: number;
   providedEquityPercentage?: number;
 }) => {
-  let equityPercentage = providedEquityPercentage;
-  if (equityPercentage == null) {
-    const lastInvoice = await db.query.invoices.findFirst({
-      where: eq(invoices.companyContractorId, companyContractor.id),
-      orderBy: desc(invoices.id),
-    });
-    equityPercentage = lastInvoice?.equityPercentage ?? 0;
-  }
+  let equityPercentage = providedEquityPercentage ?? companyContractor.equityPercentage;
 
   const unvestedGrant = await getUniqueUnvestedEquityGrantForYear(companyContractor, invoiceYear);
   let sharePriceUsd = unvestedGrant?.sharePriceUsd ?? 0;
