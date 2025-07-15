@@ -191,7 +191,7 @@ class CompanyInvestorMailer < ApplicationMailer
 
     mail(
       to: @user.email,
-      subject: 'Action required: Your dividend payment failed'
+      subject: "🔴 Action required: Your dividend payment failed"
     )
   end
 end
