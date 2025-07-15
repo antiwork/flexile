@@ -20,7 +20,6 @@ const CheckIcon = () => (
 );
 
 const CHECKLIST_ROUTES: Record<string, Route> = {
-  add_bank_account: "/settings/administrator/billing",
   invite_contractor: "/people",
   send_first_payment: "/invoices",
   fill_tax_information: "/settings/tax",

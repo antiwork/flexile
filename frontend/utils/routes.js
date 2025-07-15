@@ -84,7 +84,7 @@ const __jsr = (
         },
         NIL: {
             define() {
-                // Defined using const __jsr = 
+                // Defined using const __jsr =
             },
             isSupported() {
                 return true;
@@ -985,22 +985,6 @@ export const balance_credit_webhooks_wise_index_path = /*#__PURE__*/ __jsr.r({"f
 
 /**
  * Generates rails route to
- * /internal/onboarding/bank_account(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const bank_account_onboarding_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"bank_account"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
-
-/**
- * Generates rails route to
- * /internal/onboarding/bank_account(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const bank_account_onboarding_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"bank_account"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
-
-/**
- * Generates rails route to
  * /internal/companies/:company_id/administrator/equity_grants(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
@@ -1791,22 +1775,6 @@ export const investor_onboarding_invitation_path = /*#__PURE__*/ __jsr.r({"forma
 
 /**
  * Generates rails route to
- * /investor_onboarding/legal(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const investor_onboarding_legal_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"investor_onboarding"],[2,[7,"/"],[2,[6,"legal"],[1,[2,[8,"."],[3,"format"]]]]]]], true);
-
-/**
- * Generates rails route to
- * /investor_onboarding/legal(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const investor_onboarding_legal_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"investor_onboarding"],[2,[7,"/"],[2,[6,"legal"],[1,[2,[8,"."],[3,"format"]]]]]]]);
-
-/**
- * Generates rails route to
  * /invoices(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
@@ -2273,22 +2241,6 @@ export const roles_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,
 
 /**
  * Generates rails route to
- * /internal/onboarding/save_bank_account(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const save_bank_account_onboarding_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"save_bank_account"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
-
-/**
- * Generates rails route to
- * /internal/onboarding/save_bank_account(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const save_bank_account_onboarding_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"save_bank_account"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
-
-/**
- * Generates rails route to
  * /internal/companies/:company_id/company_updates/:id/send_test_email(.:format)
  * @param {any} company_id
  * @param {any} id
@@ -2395,24 +2347,6 @@ export const sign_company_dividend_path = /*#__PURE__*/ __jsr.r({"company_id":{"
 
 /**
  * Generates rails route to
- * /companies/:company_id/administrator/onboarding/bank_account(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_company_administrator_onboarding_bank_account_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"administrator"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"bank_account"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]], true);
-
-/**
- * Generates rails route to
- * /companies/:company_id/administrator/onboarding/bank_account(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_company_administrator_onboarding_bank_account_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"administrator"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"bank_account"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]);
-
-/**
- * Generates rails route to
  * /companies/:company_id/administrator/onboarding/details(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
@@ -2485,24 +2419,6 @@ export const spa_company_investor_onboarding_path = /*#__PURE__*/ __jsr.r({"comp
 
 /**
  * Generates rails route to
- * /companies/:company_id/investor/onboarding/bank_account(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_company_investor_onboarding_bank_account_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"investor"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"bank_account"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]], true);
-
-/**
- * Generates rails route to
- * /companies/:company_id/investor/onboarding/bank_account(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_company_investor_onboarding_bank_account_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"investor"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"bank_account"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]);
-
-/**
- * Generates rails route to
  * /companies/:company_id/investor/onboarding/invitation(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
@@ -2518,24 +2434,6 @@ export const spa_company_investor_onboarding_invitation_url = /*#__PURE__*/ __js
  * @returns {string} route path
  */
 export const spa_company_investor_onboarding_invitation_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"investor"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"invitation"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]);
-
-/**
- * Generates rails route to
- * /companies/:company_id/investor/onboarding/legal(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_company_investor_onboarding_legal_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"investor"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"legal"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]], true);
-
-/**
- * Generates rails route to
- * /companies/:company_id/investor/onboarding/legal(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_company_investor_onboarding_legal_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"investor"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"legal"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]);
 
 /**
  * Generates rails route to
@@ -2575,24 +2473,6 @@ export const spa_company_worker_onboarding_path = /*#__PURE__*/ __jsr.r({"compan
 
 /**
  * Generates rails route to
- * /companies/:company_id/worker/onboarding/bank_account(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_company_worker_onboarding_bank_account_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"worker"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"bank_account"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]], true);
-
-/**
- * Generates rails route to
- * /companies/:company_id/worker/onboarding/bank_account(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_company_worker_onboarding_bank_account_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"worker"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"bank_account"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]);
-
-/**
- * Generates rails route to
  * /companies/:company_id/worker/onboarding/contract(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
@@ -2629,24 +2509,6 @@ export const spa_company_worker_onboarding_invitation_path = /*#__PURE__*/ __jsr
 
 /**
  * Generates rails route to
- * /companies/:company_id/worker/onboarding/legal(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_company_worker_onboarding_legal_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"worker"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"legal"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]], true);
-
-/**
- * Generates rails route to
- * /companies/:company_id/worker/onboarding/legal(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_company_worker_onboarding_legal_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"worker"],[2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"legal"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]);
-
-/**
- * Generates rails route to
  * /onboarding(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
@@ -2660,38 +2522,6 @@ export const spa_onboarding_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"
  * @returns {string} route path
  */
 export const spa_onboarding_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"onboarding"],[1,[2,[8,"."],[3,"format"]]]]]);
-
-/**
- * Generates rails route to
- * /onboarding/bank_account(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_onboarding_bank_account_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"bank_account"],[1,[2,[8,"."],[3,"format"]]]]]]], true);
-
-/**
- * Generates rails route to
- * /onboarding/bank_account(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_onboarding_bank_account_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"bank_account"],[1,[2,[8,"."],[3,"format"]]]]]]]);
-
-/**
- * Generates rails route to
- * /onboarding/legal(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_onboarding_legal_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"legal"],[1,[2,[8,"."],[3,"format"]]]]]]], true);
-
-/**
- * Generates rails route to
- * /onboarding/legal(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_onboarding_legal_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"onboarding"],[2,[7,"/"],[2,[6,"legal"],[1,[2,[8,"."],[3,"format"]]]]]]]);
 
 /**
  * Generates rails route to

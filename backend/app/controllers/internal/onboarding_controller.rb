@@ -5,10 +5,7 @@ class Internal::OnboardingController < Internal::BaseController
 
   before_action :authenticate_user_json!
 
-  before_action :redirect_if_onboarding_complete, only: [:bank_account]
   before_action :enforce_all_values_for_update, only: :update
-  before_action :ensure_required_data_present, only: :bank_account
-  before_action :skip_step, if: -> { Current.user.sanctioned_country_resident? }, only: [:bank_account, :save_bank_account]
 
   after_action :verify_authorized
 
@@ -39,10 +36,6 @@ class Internal::OnboardingController < Internal::BaseController
 
     def params_for_update
       params.require(:user).permit(:legal_name, :preferred_name, :country_code, :citizenship_country_code)
-    end
-
-    def params_for_save_bank_account
-      params.require(:recipient).permit(:currency, :type, details: {})
     end
 
     def enforce_all_values_for_update

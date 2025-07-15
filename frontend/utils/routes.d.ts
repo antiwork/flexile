@@ -652,26 +652,6 @@ export const balance_credit_webhooks_wise_index_path: ((
 
 /**
  * Generates rails route to
- * /internal/onboarding/bank_account(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const bank_account_onboarding_url: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/onboarding/bank_account(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const bank_account_onboarding_path: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /internal/companies/:company_id/administrator/equity_grants(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
@@ -1724,26 +1704,6 @@ export const investor_onboarding_invitation_path: ((
 
 /**
  * Generates rails route to
- * /investor_onboarding/legal(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const investor_onboarding_legal_url: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /investor_onboarding/legal(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const investor_onboarding_legal_path: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /invoices(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
@@ -2340,26 +2300,6 @@ export const roles_path: ((
 
 /**
  * Generates rails route to
- * /internal/onboarding/save_bank_account(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const save_bank_account_onboarding_url: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/onboarding/save_bank_account(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const save_bank_account_onboarding_path: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /internal/companies/:company_id/company_updates/:id/send_test_email(.:format)
  * @param {any} company_id
  * @param {any} id
@@ -2500,30 +2440,6 @@ export const sign_company_dividend_path: ((
 
 /**
  * Generates rails route to
- * /companies/:company_id/administrator/onboarding/bank_account(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_company_administrator_onboarding_bank_account_url: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /companies/:company_id/administrator/onboarding/bank_account(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_company_administrator_onboarding_bank_account_path: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /companies/:company_id/administrator/onboarding/details(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
@@ -2620,30 +2536,6 @@ export const spa_company_investor_onboarding_path: ((
 
 /**
  * Generates rails route to
- * /companies/:company_id/investor/onboarding/bank_account(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_company_investor_onboarding_bank_account_url: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /companies/:company_id/investor/onboarding/bank_account(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_company_investor_onboarding_bank_account_path: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /companies/:company_id/investor/onboarding/invitation(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
@@ -2662,30 +2554,6 @@ export const spa_company_investor_onboarding_invitation_url: ((
  * @returns {string} route path
  */
 export const spa_company_investor_onboarding_invitation_path: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /companies/:company_id/investor/onboarding/legal(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_company_investor_onboarding_legal_url: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /companies/:company_id/investor/onboarding/legal(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_company_investor_onboarding_legal_path: ((
   company_id: RequiredRouteParameter,
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
@@ -2740,30 +2608,6 @@ export const spa_company_worker_onboarding_path: ((
 
 /**
  * Generates rails route to
- * /companies/:company_id/worker/onboarding/bank_account(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_company_worker_onboarding_bank_account_url: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /companies/:company_id/worker/onboarding/bank_account(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_company_worker_onboarding_bank_account_path: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /companies/:company_id/worker/onboarding/contract(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
@@ -2812,30 +2656,6 @@ export const spa_company_worker_onboarding_invitation_path: ((
 
 /**
  * Generates rails route to
- * /companies/:company_id/worker/onboarding/legal(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_company_worker_onboarding_legal_url: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /companies/:company_id/worker/onboarding/legal(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_company_worker_onboarding_legal_path: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /onboarding(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
@@ -2851,46 +2671,6 @@ export const spa_onboarding_url: ((
  * @returns {string} route path
  */
 export const spa_onboarding_path: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /onboarding/bank_account(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_onboarding_bank_account_url: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /onboarding/bank_account(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_onboarding_bank_account_path: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /onboarding/legal(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_onboarding_legal_url: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /onboarding/legal(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const spa_onboarding_legal_path: ((
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
