@@ -114,8 +114,10 @@ export default function AdminsPage() {
         <h2 className="mb-1 text-xl font-bold">Admins</h2>
         <p className="text-muted-foreground text-base">Manage access for users with admin roles in your workspace.</p>
       </hgroup>
-
-      {isLoading ? <TableSkeleton columns={3} /> : <DataTable table={table} />}
+      {/* override default padding to align table content with page header */}
+      <div className="[&_td:first-child]:pl-0 [&_th:first-child]:pl-0">
+        {isLoading ? <TableSkeleton columns={3} /> : <DataTable table={table} />}
+      </div>
     </div>
   );
 }
