@@ -1,4 +1,4 @@
-import { db, takeOrThrow } from "@test/db";
+import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
@@ -56,7 +56,7 @@ test.describe("Admin Management", () => {
   });
 
   test.describe("Admin List Display", () => {
-    test("displays all users with correct roles and sorting", async ({ page }) => {
+    test("displays all users with correct roles and owner first", async ({ page }) => {
       await login(page, primaryAdmin);
       await page.goto("/settings/administrator/admins");
 
@@ -249,7 +249,6 @@ test.describe("Admin Management", () => {
       await login(page, contractorUser);
       await page.goto("/settings/administrator/admins");
 
-      // Should redirect or show error - not the admin management page
       await expect(page.getByRole("heading", { name: "Admins" })).not.toBeVisible();
     });
 

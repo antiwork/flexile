@@ -167,12 +167,10 @@ export const companiesRouter = createRouter({
       };
     });
 
-    // Sort results: Owner first, then other admins, then everyone else
+    // Sort results: Owner first, then maintain original order
     return results.sort((a, b) => {
       if (a.isOwner && !b.isOwner) return -1;
       if (!a.isOwner && b.isOwner) return 1;
-      if (a.isAdmin && !b.isAdmin) return -1;
-      if (!a.isAdmin && b.isAdmin) return 1;
       return 0;
     });
   }),
