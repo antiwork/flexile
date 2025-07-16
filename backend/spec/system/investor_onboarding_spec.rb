@@ -32,8 +32,6 @@ RSpec.describe "Onboarding for a user with investor role", :vcr do
 
     fill_in_personal_details
     click_on "Continue"
-
-    # Skip bank account onboarding step
     expect(page).to have_current_path(spa_company_dividends_path(company.external_id))
     expect(page).to have_text("Equity")
   end

@@ -27,7 +27,6 @@ RSpec.describe "Onboarding for a user with contractor and investor roles", :vcr 
     select "Australia", from: "Country of citizenship"
     click_on "Continue"
 
-    # Skip bank account onboarding step
     expect(page).to have_current_path(spa_company_worker_onboarding_contract_path(company.external_id))
     expect(page).to have_text("Consulting agreement")
     expect(page).to have_selector("h1", text: "CONSULTING AGREEMENT")
@@ -73,7 +72,6 @@ RSpec.describe "Onboarding for a user with contractor and investor roles", :vcr 
         click_on "Proceed"
       end
 
-      # Skip bank account onboarding step
       expect(page).to have_current_path(spa_company_worker_onboarding_contract_path(company.external_id))
       expect(page).to have_text("Consulting agreement")
       expect(find_button("Click to add signature", disabled: true)).to have_tooltip "Have you read everything yet?"
@@ -111,7 +109,6 @@ RSpec.describe "Onboarding for a user with contractor and investor roles", :vcr 
       fill_in "Preferred name (visible to others)", with: "Marco"
       click_on "Continue"
 
-      # Skip bank account onboarding step
       expect(page).to have_current_path(spa_company_worker_onboarding_contract_path(company.external_id))
       expect(page).to have_text("Consulting agreement")
       expect(find_button("Click to add signature", disabled: true)).to have_tooltip "Have you read everything yet?"
