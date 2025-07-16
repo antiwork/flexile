@@ -27,6 +27,9 @@ export const navLinks = (user: CurrentUser, company: Company): TabLink[] => {
       : company.flags.includes("dividends") && (isAdmin || isLawyer)
         ? { label: "Dividends", route: "/equity/dividend_rounds" }
         : null,
+    company.flags.includes("liquidation_scenarios") && (isAdmin || isLawyer)
+      ? { label: "Waterfall", route: "/equity/waterfall" }
+      : null,
     company.flags.includes("tender_offers") && (isAdmin || isInvestor)
       ? { label: "Buybacks", route: "/equity/tender_offers" }
       : null,
