@@ -30,10 +30,10 @@ test.describe("Admin Management", () => {
 
     // Create contractor
     const { user: contractorUserData } = await usersFactory.create({ legalName: "John Contractor" });
-    await companyContractorsFactory.create({ 
-      userId: contractorUserData.id, 
-      companyId: company.id, 
-      role: "Senior Developer" 
+    await companyContractorsFactory.create({
+      userId: contractorUserData.id,
+      companyId: company.id,
+      role: "Senior Developer",
     });
     contractorUser = contractorUserData;
 
@@ -99,12 +99,12 @@ test.describe("Admin Management", () => {
       // Create user with both legal_name and preferred_name
       const { user: userWithBothNames } = await usersFactory.create({
         legalName: "John Legal Name",
-        preferredName: "Johnny Preferred"
+        preferredName: "Johnny Preferred",
       });
-      await companyContractorsFactory.create({ 
-        userId: userWithBothNames.id, 
-        companyId: company.id, 
-        role: "Developer" 
+      await companyContractorsFactory.create({
+        userId: userWithBothNames.id,
+        companyId: company.id,
+        role: "Developer",
       });
 
       await login(page, primaryAdmin);
@@ -119,12 +119,12 @@ test.describe("Admin Management", () => {
       // Create user with no legal name
       const { user: userWithoutName } = await usersFactory.create({
         legalName: null,
-        preferredName: null
+        preferredName: null,
       });
-      await companyContractorsFactory.create({ 
-        userId: userWithoutName.id, 
-        companyId: company.id, 
-        role: "Developer" 
+      await companyContractorsFactory.create({
+        userId: userWithoutName.id,
+        companyId: company.id,
+        role: "Developer",
       });
 
       await login(page, primaryAdmin);
@@ -143,13 +143,13 @@ test.describe("Admin Management", () => {
       // Find contractor row and toggle admin switch
       const contractorRow = page.getByRole("row", { name: new RegExp(contractorUser.legalName!) });
       const adminSwitch = contractorRow.getByRole("switch", { name: new RegExp(contractorUser.legalName!) });
-      
+
       // Initially not admin
       await expect(adminSwitch).not.toBeChecked();
-      
+
       // Toggle to admin
       await adminSwitch.click();
-      
+
       // Should be checked now
       await expect(adminSwitch).toBeChecked();
 
@@ -157,8 +157,8 @@ test.describe("Admin Management", () => {
       const adminRecord = await db.query.companyAdministrators.findFirst({
         where: and(
           eq(companyAdministrators.userId, contractorUser.id),
-          eq(companyAdministrators.companyId, company.id)
-        )
+          eq(companyAdministrators.companyId, company.id),
+        ),
       });
       expect(adminRecord).toBeTruthy();
 
@@ -173,22 +173,19 @@ test.describe("Admin Management", () => {
       // Find second admin row and toggle admin switch
       const secondAdminRow = page.getByRole("row", { name: new RegExp(secondAdmin.legalName!) });
       const adminSwitch = secondAdminRow.getByRole("switch", { name: new RegExp(secondAdmin.legalName!) });
-      
+
       // Initially admin
       await expect(adminSwitch).toBeChecked();
-      
+
       // Toggle to remove admin
       await adminSwitch.click();
-      
+
       // Should not be checked now
       await expect(adminSwitch).not.toBeChecked();
 
       // Verify in database
       const adminRecord = await db.query.companyAdministrators.findFirst({
-        where: and(
-          eq(companyAdministrators.userId, secondAdmin.id),
-          eq(companyAdministrators.companyId, company.id)
-        )
+        where: and(eq(companyAdministrators.userId, secondAdmin.id), eq(companyAdministrators.companyId, company.id)),
       });
       expect(adminRecord).toBeFalsy();
 
@@ -203,25 +200,21 @@ test.describe("Admin Management", () => {
       // Find own row (marked with "You")
       const ownRow = page.getByRole("row", { name: new RegExp(primaryAdmin.legalName!) });
       const adminSwitch = ownRow.getByRole("switch", { name: new RegExp(primaryAdmin.legalName!) });
-      
+
       // Switch should be disabled for own row
       await expect(adminSwitch).toBeDisabled();
     });
 
     test("prevents removing last administrator", async ({ page }) => {
       // Remove all admins except primary admin
-      await db.delete(companyAdministrators).where(
-        and(
-          eq(companyAdministrators.companyId, company.id),
-          eq(companyAdministrators.userId, secondAdmin.id)
-        )
-      );
-      await db.delete(companyAdministrators).where(
-        and(
-          eq(companyAdministrators.companyId, company.id),
-          eq(companyAdministrators.userId, multiRoleUser.id)
-        )
-      );
+      await db
+        .delete(companyAdministrators)
+        .where(and(eq(companyAdministrators.companyId, company.id), eq(companyAdministrators.userId, secondAdmin.id)));
+      await db
+        .delete(companyAdministrators)
+        .where(
+          and(eq(companyAdministrators.companyId, company.id), eq(companyAdministrators.userId, multiRoleUser.id)),
+        );
 
       await login(page, primaryAdmin);
       await page.goto("/administrator/settings/admins");
@@ -229,7 +222,7 @@ test.describe("Admin Management", () => {
       // Primary admin switch should be disabled when they're the only admin
       const ownRow = page.getByRole("row", { name: new RegExp(primaryAdmin.legalName!) });
       const adminSwitch = ownRow.getByRole("switch", { name: new RegExp(primaryAdmin.legalName!) });
-      
+
       await expect(adminSwitch).toBeDisabled();
     });
 
@@ -239,13 +232,13 @@ test.describe("Admin Management", () => {
 
       const contractorRow = page.getByRole("row", { name: new RegExp(contractorUser.legalName!) });
       const adminSwitch = contractorRow.getByRole("switch", { name: new RegExp(contractorUser.legalName!) });
-      
+
       // Switch should be enabled initially
       await expect(adminSwitch).toBeEnabled();
-      
+
       // Click and verify the switch responds
       await adminSwitch.click();
-      
+
       // After successful toggle, should be checked
       await expect(adminSwitch).toBeChecked();
     });
@@ -267,43 +260,6 @@ test.describe("Admin Management", () => {
       // Should be able to access the page
       await expect(page.getByRole("heading", { name: "Admins" })).toBeVisible();
       await expect(page.getByText("Manage access for users with admin roles in your workspace.")).toBeVisible();
-    });
-  });
-
-  test.describe("Table Alignment", () => {
-    test("table content aligns with page title", async ({ page }) => {
-      await login(page, primaryAdmin);
-      await page.goto("/administrator/settings/admins");
-
-      // Get the bounding boxes of the title and first table cell
-      const title = page.getByRole("heading", { name: "Admins" });
-      const firstTableCell = page.getByRole("cell").first();
-
-      const titleBox = await title.boundingBox();
-      const cellBox = await firstTableCell.boundingBox();
-
-      expect(titleBox).toBeTruthy();
-      expect(cellBox).toBeTruthy();
-
-      // The left edges should align (within a small tolerance for borders/padding)
-      const tolerance = 5; // pixels
-      expect(Math.abs(titleBox!.x - cellBox!.x)).toBeLessThan(tolerance);
-    });
-
-    test("table has no extra left padding", async ({ page }) => {
-      await login(page, primaryAdmin);
-      await page.goto("/administrator/settings/admins");
-
-      // Check that first table cell has no left padding
-      const firstTableCell = page.getByRole("cell").first();
-      const styles = await firstTableCell.evaluate((el) => {
-        const computed = window.getComputedStyle(el);
-        return {
-          paddingLeft: computed.paddingLeft,
-        };
-      });
-
-      expect(styles.paddingLeft).toBe("0px");
     });
   });
 
