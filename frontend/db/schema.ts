@@ -1294,6 +1294,31 @@ export const tenderOffers = pgTable(
   ],
 );
 
+export const tenderOfferInvestors = pgTable(
+  "tender_offer_investors",
+  {
+    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
+    externalId: varchar("external_id").$default(nanoid).notNull(),
+    tenderOfferId: bigint("tender_offer_id", { mode: "bigint" }).notNull(),
+    companyInvestorId: bigint("company_investor_id", { mode: "bigint" }).notNull(),
+    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("index_tender_offer_investors_on_external_id").using(
+      "btree",
+      table.externalId.asc().nullsLast().op("text_ops"),
+    ),
+    index("idx_tender_offer_investors_unique").using(
+      "btree",
+      table.tenderOfferId.asc().nullsLast().op("int8_ops"),
+      table.companyInvestorId.asc().nullsLast().op("int8_ops"),
+    ),
+  ],
+);
+
 export const equityBuybackPayments = pgTable("equity_buyback_payments", {
   id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
   status: varchar().notNull(),
@@ -2392,6 +2417,18 @@ export const tenderOffersRelations = relations(tenderOffers, ({ one, many }) => 
   }),
   bids: many(tenderOfferBids),
   equityBuybackRounds: many(equityBuybackRounds),
+  tenderOfferInvestors: many(tenderOfferInvestors),
+}));
+
+export const tenderOfferInvestorsRelations = relations(tenderOfferInvestors, ({ one }) => ({
+  tenderOffer: one(tenderOffers, {
+    fields: [tenderOfferInvestors.tenderOfferId],
+    references: [tenderOffers.id],
+  }),
+  companyInvestor: one(companyInvestors, {
+    fields: [tenderOfferInvestors.companyInvestorId],
+    references: [companyInvestors.id],
+  }),
 }));
 
 export const tosAgreementsRelations = relations(tosAgreements, ({ one }) => ({
@@ -2428,6 +2465,7 @@ export const companyInvestorsRelations = relations(companyInvestors, ({ one, man
   equityGrants: many(equityGrants),
   shareHoldings: many(shareHoldings),
   tenderBids: many(tenderOfferBids),
+  tenderOfferInvestors: many(tenderOfferInvestors),
   convertibleSecurities: many(convertibleSecurities),
   dividendComputationOutputs: many(dividendComputationOutputs),
   dividends: many(dividends),

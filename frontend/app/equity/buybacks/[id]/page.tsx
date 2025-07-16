@@ -1,9 +1,7 @@
 "use client";
-import { utc } from "@date-fns/utc";
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel, type Table } from "@tanstack/react-table";
-import { isFuture } from "date-fns";
 import { Download, InboxIcon, InfoIcon, LucideCircleDollarSign, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -197,10 +195,10 @@ export default function BuybackView() {
         columnHelper.simple("share_class", "Share class"),
         columnHelper.simple("number_of_shares", "Shares", (value) => value.toLocaleString()),
         user.roles.administrator || buyback.accepted_price_cents
-          ? columnHelper.display({
+          ? columnHelper.accessor("accepted_shares", {
               id: "accepted_shares",
               header: "Accepted",
-              cell: (info) => Number(info.row.original.accepted_shares || 0).toLocaleString(),
+              cell: (info) => Number(info.getValue() || 0).toLocaleString(),
               footer: buyback.accepted_price_cents
                 ? bids.reduce((sum, bid) => sum + Number(bid.accepted_shares), 0).toLocaleString()
                 : "",

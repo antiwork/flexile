@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_27_180005) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_16_023114) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -919,10 +919,21 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_27_180005) do
     t.index ["tender_offer_id"], name: "index_tender_offer_bids_on_tender_offer_id"
   end
 
+  create_table "tender_offer_investors", force: :cascade do |t|
+    t.string "external_id", null: false
+    t.bigint "tender_offer_id", null: false
+    t.bigint "company_investor_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_investor_id"], name: "index_tender_offer_investors_on_company_investor_id"
+    t.index ["external_id"], name: "index_tender_offer_investors_on_external_id", unique: true
+    t.index ["tender_offer_id", "company_investor_id"], name: "idx_tender_offer_investors_unique", unique: true
+    t.index ["tender_offer_id"], name: "index_tender_offer_investors_on_tender_offer_id"
+  end
+
   create_table "tender_offers", force: :cascade do |t|
     t.bigint "company_id", null: false
     t.string "external_id", null: false
-    t.string "name"
     t.datetime "starts_at", null: false
     t.datetime "ends_at", null: false
     t.bigint "minimum_valuation", null: false
@@ -932,6 +943,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_27_180005) do
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.integer "accepted_price_cents"
+    t.string "name"
     t.index ["company_id"], name: "index_tender_offers_on_company_id"
     t.index ["external_id"], name: "index_tender_offers_on_external_id", unique: true
   end

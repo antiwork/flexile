@@ -2,7 +2,7 @@
 
 class TenderOfferPolicy < ApplicationPolicy
   def index?
-    company.tender_offers_enabled? && (company_administrator? || company_investor?)
+    company.tender_offers_enabled? && (company_administrator? || eligible_investor?)
   end
 
   def show?
@@ -16,4 +16,9 @@ class TenderOfferPolicy < ApplicationPolicy
   def finalize?
     company.tender_offers_enabled? && company_administrator?
   end
+
+  private
+    def eligible_investor?
+      company_investor? && record.tender_offer_investors.exists?(company_investor: company_investor)
+    end
 end

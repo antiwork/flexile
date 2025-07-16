@@ -8,6 +8,7 @@ class TenderOffer < ApplicationRecord
   belongs_to :company
   has_many :bids, class_name: "TenderOfferBid"
   has_many :equity_buyback_rounds
+  has_many :tender_offer_investors
   has_one_attached :attachment
   has_one_attached :letter_of_transmittal
 
