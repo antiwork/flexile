@@ -61,7 +61,7 @@ const companyLinks = [
   },
   {
     label: "Workspace admins",
-    route: "/administrator/settings/admins" as const,
+    route: "/settings/administrator/admins" as const,
     icon: ShieldUser,
     isVisible: (user: CurrentUser) => !!user.roles.administrator,
   },
