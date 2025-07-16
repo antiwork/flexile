@@ -91,6 +91,7 @@ export default function FormFields() {
             <FormLabel>Type</FormLabel>
             <FormControl>
               <RadioButtons
+                className="grid-flow-col"
                 {...field}
                 options={[
                   { label: "Hourly", value: PayRateType.Hourly },
