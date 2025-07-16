@@ -49,7 +49,6 @@ RSpec.describe "Onboarding for a user with investor role", :vcr do
         click_on "Proceed"
       end
 
-      # Should redirect to payouts page (no bank account onboarding)
       expect(page).to have_current_path(spa_settings_payouts_path)
       expect(page).to have_text("Payout method")
       expect(page).to have_selector("strong", text: "Payouts are disabled")
