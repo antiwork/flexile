@@ -4,20 +4,37 @@ This plan outlines the tasks required to implement liquidation waterfall analysi
 
 ## Milestone Breakdown
 
-### Milestone 1 – Data Layer
-1. Add migrations for `liquidation_scenarios` and `liquidation_payouts` tables.
+### Milestone 1 – Data Layer ✅ COMPLETED
+1. ✅ Add migrations for `liquidation_scenarios` and `liquidation_payouts` tables.
    - Columns follow the schema proposed in the feature discussion.
    - Include `ExternalId` behaviour like other models.
-2. Add deal‑term columns to `share_classes` and `convertible_securities`.
-3. Implement model validations and normalizers matching existing conventions.
-4. Create minimal RSpec tests ensuring migrations and validations work.
+2. ✅ Add deal‑term columns to `share_classes` and `convertible_securities`.
+3. ✅ Implement model validations and normalizers matching existing conventions.
+4. ✅ Create minimal RSpec tests ensuring migrations and validations work.
 
-### Milestone 2 – Calculation Service
+**Implementation Notes:**
+- Created 4 migrations successfully with proper indexes and foreign keys
+- New models: `LiquidationScenario`, `LiquidationPayout` with comprehensive validations
+- Enhanced models: `ShareClass`, `ConvertibleSecurity` with waterfall-specific fields
+- Full test coverage: 46 RSpec examples passing
+- Factory definitions with traits for different scenarios
+- All code follows Rails conventions and existing patterns
+- Committed in: `1d5a0ba` - "waterfall: add scenario and payout models (Milestone 1)"
+
+### Milestone 2 – Calculation Service 🚧 NEXT UP
 1. Create `LiquidationScenarioCalculation` service in `app/services`.
 2. Implement share‑class ranking logic and preference rules.
 3. Handle convertible security conversions based on valuation caps and discounts.
 4. Persist payouts to `liquidation_payouts` once calculated.
 5. Unit tests cover simple multi‑class scenarios.
+
+**Key Implementation Details:**
+- Follow pattern from `DividendComputationGeneration` service
+- Handle liquidation waterfall order: preferences → participation → common
+- Consider seniority ranking for payment priority
+- Implement convertible conversion logic (as-is vs. converted comparison)
+- Create comprehensive test scenarios for edge cases
+- **Reference**: See `docs/milestone2_handoff.md` for detailed implementation guide
 
 ### Milestone 3 – API Layer
 1. Extend Drizzle schema under `frontend/db/schema.ts` with the new tables.
