@@ -137,15 +137,15 @@ export default function ExitAmountControl({
         <div className="flex items-center justify-between text-sm text-gray-600">
           <span>$0</span>
           <span className="font-medium">{formatDollars(Number(exitAmountCents))}</span>
-          <span>{formatDollars(maxAmountCents)}</span>
+          <span>{formatDollars(maxAmountCents * 100)}</span>
         </div>
         
         <Slider
-          value={[Math.min(Number(exitAmountCents), maxAmountCents)]}
+          value={[Math.min(Number(exitAmountCents), maxAmountCents * 100)]}
           onValueChange={handleSliderChange}
-          max={maxAmountCents}
+          max={maxAmountCents * 100} // Convert to cents
           min={0}
-          step={100_000} // $1K steps
+          step={100_000} // $1K steps in cents
           disabled={disabled}
           className="w-full"
         />

@@ -11,7 +11,7 @@ import { trpc } from "@/trpc/client";
 import EquityLayout from "@/app/equity/Layout";
 import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
-import WaterfallChart from "@/components/WaterfallChart";
+import WaterfallChartPro from "@/components/WaterfallChartPro";
 import ExitAmountControl from "@/components/ExitAmountControl";
 import { useEquityPlayground } from "@/lib/equity-modeling/store";
 import { convertCapTableToPlayground, convertScenarioToPlayground } from "@/lib/equity-modeling/data-adapter";
@@ -27,6 +27,9 @@ export default function PlaygroundPage() {
   const user = useCurrentUser();
   const isAdmin = !!user.roles.administrator;
   const isLawyer = !!user.roles.lawyer;
+  
+  // Mutations
+  const createScenario = trpc.liquidationScenarios.run.useMutation();
   
   const [hoveredPayout, setHoveredPayout] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -93,6 +96,11 @@ export default function PlaygroundPage() {
   }, [equityStructure, isCalculating, recalculate]);
 
   const handleSave = async () => {
+    if (!isAdmin) {
+      alert('Only administrators can create new scenarios');
+      return;
+    }
+
     setIsSaving(true);
     try {
       // Auto-generate new name with version number
@@ -101,7 +109,7 @@ export default function PlaygroundPage() {
       const newName = `${originalName} v${versionNumber}`;
       
       // Save current scenario with updated values
-      const newScenario = await trpc.liquidationScenarios.run.mutateAsync({
+      const newScenario = await createScenario.mutateAsync({
         companyId: company.id,
         name: newName,
         description: scenario.description || `Modified version of ${originalName}`,
@@ -110,10 +118,18 @@ export default function PlaygroundPage() {
       });
       
       // Navigate to the new scenario
-      router.push(`/equity/waterfall/${newScenario.id}/playground`);
+      router.push(`/equity/waterfall/${newScenario.externalId}/playground`);
       markSaved();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save scenario:', error);
+      // Show user-friendly error message
+      if (error.message?.includes('FORBIDDEN')) {
+        alert('You do not have permission to create scenarios');
+      } else if (error.message?.includes('exitAmountCents')) {
+        alert('Invalid exit amount. Please check your input.');
+      } else {
+        alert(`Failed to save scenario: ${error.message || 'Unknown error'}`);
+      }
     } finally {
       setIsSaving(false);
     }
@@ -194,6 +210,31 @@ export default function PlaygroundPage() {
               />
             </Card>
 
+            {/* Quick stats */}
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Quick Stats</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Investors</span>
+                  <span className="font-medium">{equityStructure.investors.length}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Share Classes</span>
+                  <span className="font-medium">{equityStructure.shareClasses.length}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total Shares</span>
+                  <span className="font-medium">
+                    {equityStructure.shareHoldings.reduce((sum, h) => sum + h.numberOfShares, 0).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Recipients</span>
+                  <span className="font-medium">{payouts.length}</span>
+                </div>
+              </div>
+            </Card>
+
             {/* Scenario info */}
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
@@ -251,31 +292,6 @@ export default function PlaygroundPage() {
                 </div>
               </div>
             </Card>
-
-            {/* Quick stats */}
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Quick Stats</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Investors</span>
-                  <span className="font-medium">{equityStructure.investors.length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Share Classes</span>
-                  <span className="font-medium">{equityStructure.shareClasses.length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Shares</span>
-                  <span className="font-medium">
-                    {equityStructure.shareHoldings.reduce((sum, h) => sum + h.numberOfShares, 0).toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Recipients</span>
-                  <span className="font-medium">{payouts.length}</span>
-                </div>
-              </div>
-            </Card>
           </div>
 
           {/* Visualization panel */}
@@ -293,12 +309,11 @@ export default function PlaygroundPage() {
               </TabsList>
 
               <TabsContent value="waterfall">
-                <WaterfallChart
+                <WaterfallChartPro
                   payouts={payouts}
                   exitAmountCents={scenario.exitAmountCents}
                   onPayoutHover={setHoveredPayout}
                   highlightedPayoutId={hoveredPayout?.id}
-                  className="h-full"
                 />
               </TabsContent>
 

@@ -68,12 +68,14 @@ export const useEquityPlayground = create<EquityPlaygroundStore>()(
       isCalculating: false,
       hasUnsavedChanges: false,
       comparisonScenarios: [],
+      originalScenario: createDefaultScenario(),
       originalEquityStructure: createDefaultEquityStructure(),
 
       // Scenario management
       setScenario: (scenario) => set((state) => ({
         ...state,
         scenario,
+        originalScenario: structuredClone(scenario),
         hasUnsavedChanges: false,
       })),
 
@@ -265,6 +267,7 @@ export const useEquityPlayground = create<EquityPlaygroundStore>()(
       // Persistence and reset
       reset: () => set((state) => ({
         ...state,
+        scenario: structuredClone(state.originalScenario),
         equityStructure: structuredClone(state.originalEquityStructure),
         hasUnsavedChanges: false,
         comparisonScenarios: [],
