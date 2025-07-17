@@ -98,7 +98,6 @@ const WorkspaceAccessSection = () => {
   const user = useCurrentUser();
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const currentCompany = user.companies.find((company) => company.id === user.currentCompanyId);
-  console.log("Current Company:", currentCompany);
 
   const contractorStatusQuery = trpc.users.getContractorStatus.useQuery(
     { companyId: currentCompany?.id },
@@ -115,18 +114,16 @@ const WorkspaceAccessSection = () => {
 
   const leaveWorkspaceMutation = trpc.users.leaveWorkspace.useMutation({
     onSuccess: (data) => {
-      console.log("Leave workspace success:", data);
       setShowLeaveModal(false);
       void contractorStatusQuery.refetch();
     },
     onError: (error) => {
-      console.error("Leave workspace error:", error);
+      return error.message;
     },
   });
 
   const handleLeaveWorkspace = () => {
     if (!currentCompany?.id) {
-      console.error("No current company ID available");
       return;
     }
 
@@ -171,7 +168,6 @@ const WorkspaceAccessSection = () => {
   }
 
   if (!contractorStatusQuery.data?.hasActiveContract) {
-    console.log("No active contract found");
     return null;
   }
 
