@@ -2,7 +2,7 @@ import { createRouter, companyProcedure } from "../index";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { db } from "@/db";
-import { liquidationScenarios, liquidationPayouts, companyInvestors, users } from "@/db/schema";
+import { liquidationScenarios } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { calculate_company_liquidation_scenario_url } from "@/utils/routes";
@@ -30,7 +30,7 @@ export const liquidationScenariosRouter = createRouter({
       }
 
       // Create scenario in database
-      const [scenario] = await db
+      const result = await db
         .insert(liquidationScenarios)
         .values({
           companyId: BigInt(ctx.company.id),
@@ -42,6 +42,14 @@ export const liquidationScenariosRouter = createRouter({
           status: "draft",
         })
         .returning();
+
+      const scenario = result[0];
+      if (!scenario) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create liquidation scenario"
+        });
+      }
 
       // Call Rails backend to run calculation service
       try {
