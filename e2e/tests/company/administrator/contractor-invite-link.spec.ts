@@ -1,13 +1,13 @@
+import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { documentTemplatesFactory } from "@test/factories/documentTemplates";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
+import { and, eq, isNotNull, isNull } from "drizzle-orm";
 import { DocumentTemplateType } from "@/db/enums";
 import { companies, companyInviteLinks, users } from "@/db/schema";
-import { db } from "@test/db";
-import { and, eq, isNotNull, isNull } from "drizzle-orm";
 
 test.describe("Contractor Invite Link", () => {
   let company: typeof companies.$inferSelect;
@@ -83,11 +83,7 @@ test.describe("Contractor Invite Link", () => {
 
     await expect(page.getByRole("button", { name: "Copy" })).toBeEnabled();
     await page.route("**/trpc/contractors.list", (route) => {
-      route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify([]),
-      });
+      void route.fulfill({ status: 200, body: JSON.stringify([]) });
     });
     const defaultInviteLink = await db.query.companyInviteLinks.findFirst({
       where: and(eq(companyInviteLinks.companyId, company.id), isNull(companyInviteLinks.documentTemplateId)),
