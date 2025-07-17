@@ -5,7 +5,7 @@ class DividendReportCsvEmailJob
   sidekiq_options retry: 5
 
   def perform(recipients, year = nil, month = nil)
-    return unless Rails.env.production?
+    return unless Rails.env.production? || Rails.env.test?
 
     target_year = year || Time.current.last_month.year
     target_month = month || Time.current.last_month.month

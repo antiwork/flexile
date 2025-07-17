@@ -6,7 +6,6 @@ import { AlertTriangle, Check, CircleDollarSign, Plus } from "lucide-react";
 import React, { Fragment, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import SettingsLayout from "@/app/settings/Layout";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -24,13 +23,13 @@ export default function PayoutsPage() {
   const user = useCurrentUser();
 
   return (
-    <SettingsLayout>
+    <>
       <h2 className="mb-8 text-xl font-medium">Payouts</h2>
       <div className="grid gap-8">
         {user.roles.investor ? <DividendSection /> : null}
         <BankAccountsSection />
       </div>
-    </SettingsLayout>
+    </>
   );
 }
 
