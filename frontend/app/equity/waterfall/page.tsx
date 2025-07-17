@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useMemo } from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -27,7 +26,13 @@ import EquityLayout from "@/app/equity/Layout";
     { companyId: company.id },
     { enabled: !!company.id }
   );
-  const createScenario = trpc.liquidationScenarios.run.useMutation();
+  
+  // Redirect to new playground when no scenarios exist
+  React.useEffect(() => {
+    if (!isLoading && data.length === 0) {
+      router.replace('/equity/waterfall/new/playground');
+    }
+  }, [isLoading, data.length, router]);
 
    const columns = useMemo(
      () => [
@@ -54,7 +59,7 @@ import EquityLayout from "@/app/equity/Layout";
            </Button>
           {isAdmin && (
             <Button size="small" asChild>
-              <Link href="/equity/waterfall/new">
+              <Link href="/equity/waterfall/new/playground">
                 <Plus className="size-4" />
                 New scenario
               </Link>
@@ -65,31 +70,8 @@ import EquityLayout from "@/app/equity/Layout";
      >
        {isLoading ? (
          <TableSkeleton columns={5} />
-       ) : data.length > 0 ? (
-         <DataTable table={table} onRowClicked={(row) => router.push(`/equity/waterfall/${row.id}/playground`)} />
        ) : (
-         <Placeholder 
-           icon={Plus}
-           action={isAdmin ? {
-             label: "Create First Scenario",
-             onClick: async () => {
-               try {
-                 const scenario = await createScenario.mutateAsync({
-                   companyId: company.id,
-                   name: "Initial Scenario",
-                   description: "Start exploring liquidation waterfalls",
-                   exitAmountCents: BigInt(0),
-                   exitDate: new Date().toISOString(),
-                 });
-                 router.push(`/equity/waterfall/${scenario.id}/playground`);
-               } catch (error) {
-                 console.error("Failed to create scenario:", error);
-               }
-             }
-           } : undefined}
-         >
-           No scenarios yet.
-         </Placeholder>
+         <DataTable table={table} onRowClicked={(row) => router.push(`/equity/waterfall/${row.id}/playground`)} />
        )}
      </EquityLayout>
    );
