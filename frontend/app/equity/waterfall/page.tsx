@@ -23,7 +23,11 @@ import EquityLayout from "@/app/equity/Layout";
    const user = useCurrentUser();
    const router = useRouter();
    const isAdmin = !!user.roles.administrator;
-  const { data = [], isLoading } = trpc.liquidationScenarios.list.useQuery({ companyId: company.id });
+  const { data = [], isLoading } = trpc.liquidationScenarios.list.useQuery(
+    { companyId: company.id },
+    { enabled: !!company.id }
+  );
+  const createScenario = trpc.liquidationScenarios.run.useMutation();
 
    const columns = useMemo(
      () => [
@@ -62,9 +66,30 @@ import EquityLayout from "@/app/equity/Layout";
        {isLoading ? (
          <TableSkeleton columns={5} />
        ) : data.length > 0 ? (
-         <DataTable table={table} onRowClicked={(row) => router.push(`/equity/waterfall/${row.id}`)} />
+         <DataTable table={table} onRowClicked={(row) => router.push(`/equity/waterfall/${row.id}/playground`)} />
        ) : (
-         <Placeholder icon={Plus}>No scenarios yet.</Placeholder>
+         <Placeholder 
+           icon={Plus}
+           action={isAdmin ? {
+             label: "Create First Scenario",
+             onClick: async () => {
+               try {
+                 const scenario = await createScenario.mutateAsync({
+                   companyId: company.id,
+                   name: "Initial Scenario",
+                   description: "Start exploring liquidation waterfalls",
+                   exitAmountCents: BigInt(0),
+                   exitDate: new Date().toISOString(),
+                 });
+                 router.push(`/equity/waterfall/${scenario.id}/playground`);
+               } catch (error) {
+                 console.error("Failed to create scenario:", error);
+               }
+             }
+           } : undefined}
+         >
+           No scenarios yet.
+         </Placeholder>
        )}
      </EquityLayout>
    );

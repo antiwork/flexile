@@ -1,8 +1,8 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { Save, RotateCcw, Layers, TrendingUp } from "lucide-react";
+import { Save, RotateCcw, Layers, TrendingUp, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,9 +17,12 @@ import { useEquityPlayground } from "@/lib/equity-modeling/store";
 import { convertCapTableToPlayground, convertScenarioToPlayground } from "@/lib/equity-modeling/data-adapter";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function PlaygroundPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const company = useCurrentCompany();
   const user = useCurrentUser();
   const isAdmin = !!user.roles.administrator;
@@ -27,6 +30,7 @@ export default function PlaygroundPage() {
   
   const [hoveredPayout, setHoveredPayout] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isEditingDetails, setIsEditingDetails] = useState(false);
 
   // Zustand store
   const {
@@ -37,6 +41,7 @@ export default function PlaygroundPage() {
     hasUnsavedChanges,
     setScenario,
     updateExitAmount,
+    updateExitDate,
     loadFromBackendData,
     reset,
     markSaved,
@@ -53,15 +58,21 @@ export default function PlaygroundPage() {
   }
 
   // Load scenario data
-  const { data: scenarioData, isLoading: scenarioLoading } = trpc.liquidationScenarios.show.useQuery({ 
-    companyId: company.id,
-    scenarioId: id 
-  });
+  const { data: scenarioData, isLoading: scenarioLoading } = trpc.liquidationScenarios.show.useQuery(
+    { 
+      companyId: company.id,
+      scenarioId: id 
+    },
+    { enabled: !!company.id }
+  );
 
   // Load cap table data for equity structure
-  const { data: capTableData, isLoading: capTableLoading } = trpc.capTable.show.useQuery({
-    companyId: company.id
-  });
+  const { data: capTableData, isLoading: capTableLoading } = trpc.capTable.showForWaterfall.useQuery(
+    {
+      companyId: company.id
+    },
+    { enabled: !!company.id }
+  );
 
   // Initialize playground when data loads
   useEffect(() => {
@@ -84,14 +95,22 @@ export default function PlaygroundPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      // Auto-generate new name with version number
+      const originalName = scenarioData?.name || 'Scenario';
+      const versionNumber = Math.floor(Math.random() * 100) + 1; // Simple versioning
+      const newName = `${originalName} v${versionNumber}`;
+      
       // Save current scenario with updated values
-      await trpc.liquidationScenarios.run.mutateAsync({
+      const newScenario = await trpc.liquidationScenarios.run.mutateAsync({
         companyId: company.id,
-        name: `${scenario.name} (Modified)`,
-        description: scenario.description,
+        name: newName,
+        description: scenario.description || `Modified version of ${originalName}`,
         exitAmountCents: scenario.exitAmountCents,
         exitDate: scenario.exitDate.toISOString(),
       });
+      
+      // Navigate to the new scenario
+      router.push(`/equity/waterfall/${newScenario.id}/playground`);
       markSaved();
     } catch (error) {
       console.error('Failed to save scenario:', error);
@@ -122,6 +141,14 @@ export default function PlaygroundPage() {
     <EquityLayout
       headerActions={
         <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="small" 
+            onClick={() => router.push(`/equity/waterfall`)}
+          >
+            <ArrowLeft className="size-4 mr-2" />
+            Back to Scenarios
+          </Button>
           <Button 
             variant="outline" 
             size="small" 
@@ -169,26 +196,59 @@ export default function PlaygroundPage() {
 
             {/* Scenario info */}
             <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Scenario Details</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Scenario Details</h3>
+                <Button
+                  variant="ghost"
+                  size="small"
+                  onClick={() => setIsEditingDetails(!isEditingDetails)}
+                >
+                  {isEditingDetails ? 'Done' : 'Edit'}
+                </Button>
+              </div>
               <div className="space-y-3 text-sm">
                 <div>
                   <div className="text-gray-600">Name</div>
-                  <div className="font-medium">{scenario.name}</div>
+                  {isEditingDetails ? (
+                    <Input
+                      value={scenario.name}
+                      onChange={(e) => setScenario({...scenario, name: e.target.value})}
+                      className="mt-1"
+                    />
+                  ) : (
+                    <div className="font-medium">{scenario.name}</div>
+                  )}
                 </div>
                 <div>
                   <div className="text-gray-600">Exit Date</div>
-                  <div className="font-medium">{formatDate(scenario.exitDate)}</div>
+                  {isEditingDetails ? (
+                    <Input
+                      type="date"
+                      value={scenario.exitDate.toISOString().split('T')[0]}
+                      onChange={(e) => updateExitDate(new Date(e.target.value))}
+                      className="mt-1"
+                    />
+                  ) : (
+                    <div className="font-medium">{formatDate(scenario.exitDate)}</div>
+                  )}
                 </div>
                 <div>
                   <div className="text-gray-600">Status</div>
                   <div className="font-medium capitalize">{scenario.status}</div>
                 </div>
-                {scenario.description && (
-                  <div>
-                    <div className="text-gray-600">Description</div>
-                    <div className="font-medium">{scenario.description}</div>
-                  </div>
-                )}
+                <div>
+                  <div className="text-gray-600">Description</div>
+                  {isEditingDetails ? (
+                    <Textarea
+                      value={scenario.description}
+                      onChange={(e) => setScenario({...scenario, description: e.target.value})}
+                      className="mt-1"
+                      rows={3}
+                    />
+                  ) : (
+                    <div className="font-medium">{scenario.description || 'No description'}</div>
+                  )}
+                </div>
               </div>
             </Card>
 
