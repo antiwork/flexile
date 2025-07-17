@@ -13,6 +13,7 @@ import {
   numeric,
   pgEnum,
   pgTable,
+  smallint,
   text,
   timestamp,
   uniqueIndex,
@@ -951,6 +952,10 @@ export const shareClasses = pgTable(
       .$onUpdate(() => new Date()),
 
     preferred: boolean().notNull().default(false),
+    liquidationPreferenceMultiple: numeric("liquidation_preference_multiple").default("1.0").notNull(),
+    participating: boolean("participating").default(false).notNull(),
+    participationCapMultiple: numeric("participation_cap_multiple"),
+    seniorityRank: smallint("seniority_rank"),
   },
   (table) => [
     index("index_share_classes_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),

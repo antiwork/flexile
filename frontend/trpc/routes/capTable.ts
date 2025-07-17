@@ -17,6 +17,90 @@ import type { CapTableInvestor, CapTableInvestorForAdmin } from "@/models/invest
 import { companyProcedure, createRouter } from "@/trpc";
 
 export const capTableRouter = createRouter({
+  showForWaterfall: companyProcedure.query(async ({ ctx }) => {
+    const isAdminOrLawyer = !!(ctx.companyAdministrator || ctx.companyLawyer);
+    if (!ctx.company.capTableEnabled || !(isAdminOrLawyer || ctx.companyInvestor))
+      throw new TRPCError({ code: "FORBIDDEN" });
+
+    // Get detailed share holdings - need to filter through companyInvestor relationship
+    const allHoldings = await db.query.shareHoldings.findMany({
+      with: {
+        companyInvestor: {
+          with: {
+            user: true,
+          },
+        },
+        shareClass: true,
+      },
+    });
+    
+    // Filter holdings to only those belonging to this company
+    const holdings = allHoldings.filter(holding => 
+      holding.companyInvestor && holding.companyInvestor.companyId === BigInt(ctx.company.id)
+    );
+
+    // Get all share classes for the company
+    const allShareClasses = await db.query.shareClasses.findMany({
+      where: eq(shareClasses.companyId, BigInt(ctx.company.id)),
+    });
+
+    // Get all company investors (even those without current holdings)
+    const allInvestors = await db.query.companyInvestors.findMany({
+      where: eq(companyInvestors.companyId, BigInt(ctx.company.id)),
+      with: {
+        user: true,
+      },
+    });
+
+    return {
+      shareHoldings: holdings.map(holding => ({
+        id: holding.id.toString(),
+        numberOfShares: holding.numberOfShares,
+        sharePriceUsd: holding.sharePriceUsd?.toString() || '0',
+        totalAmountInCents: holding.totalAmountInCents,
+        issuedAt: holding.issuedAt.toISOString(),
+        companyInvestor: {
+          id: holding.companyInvestor.id.toString(),
+          user: holding.companyInvestor.user ? {
+            name: holding.companyInvestor.user.preferredName || holding.companyInvestor.user.legalName || holding.companyInvestor.user.email || 'Unknown',
+            email: holding.companyInvestor.user.email,
+            preferredName: holding.companyInvestor.user.preferredName,
+            legalName: holding.companyInvestor.user.legalName,
+          } : null,
+        },
+        shareClass: {
+          id: holding.shareClass.id.toString(),
+          name: holding.shareClass.name,
+          originalIssuePriceInDollars: holding.shareClass.originalIssuePriceInDollars?.toString() || '0',
+          liquidationPreferenceMultiple: holding.shareClass.liquidationPreferenceMultiple?.toString() || '0',
+          participating: holding.shareClass.participating || false,
+          participationCapMultiple: holding.shareClass.participationCapMultiple?.toString(),
+          seniorityRank: holding.shareClass.seniorityRank || 999,
+          preferred: holding.shareClass.preferred || false,
+        },
+      })),
+      shareClasses: allShareClasses.map(sc => ({
+        id: sc.id.toString(),
+        name: sc.name,
+        originalIssuePriceInDollars: sc.originalIssuePriceInDollars?.toString() || '0',
+        liquidationPreferenceMultiple: sc.liquidationPreferenceMultiple?.toString() || '0',
+        participating: sc.participating || false,
+        participationCapMultiple: sc.participationCapMultiple?.toString(),
+        seniorityRank: sc.seniorityRank || 999,
+        preferred: sc.preferred || false,
+      })),
+      investors: allInvestors.map(investor => ({
+        id: investor.id.toString(),
+        user: investor.user ? {
+          name: investor.user.preferredName || investor.user.legalName || investor.user.email || 'Unknown',
+          email: investor.user.email,
+          preferredName: investor.user.preferredName,
+          legalName: investor.user.legalName,
+        } : null,
+      })),
+    };
+  }),
+
   show: companyProcedure.input(z.object({ newSchema: z.boolean().optional() })).query(async ({ ctx, input }) => {
     const isAdminOrLawyer = !!(ctx.companyAdministrator || ctx.companyLawyer);
     if (!ctx.company.capTableEnabled || !(isAdminOrLawyer || ctx.companyInvestor))
