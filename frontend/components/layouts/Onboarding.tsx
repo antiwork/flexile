@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useCurrentUser } from "@/global";
 import logo from "@/images/flexile-logo.svg";
-import SimpleLayout from "./Simple";
 
 const OnboardingLayout = ({
   steps,
@@ -55,9 +54,17 @@ const OnboardingLayout = ({
           </SignOutButton>
         </div>
       </header>
-      <SimpleLayout hideHeader title={title} subtitle={subtitle}>
-        {children}
-      </SimpleLayout>
+      <div className="flex h-full flex-col">
+        <main className="flex flex-1 flex-col items-center overflow-y-auto px-3 py-3">
+          <div className="my-auto grid w-full max-w-md gap-4 print:my-0 print:max-w-full">
+            <hgroup className="grid gap-2 text-center">
+              <h1 className="text-3xl font-bold">{title}</h1>
+              <p className="text-gray-500">{subtitle}</p>
+            </hgroup>
+            {children}
+          </div>
+        </main>
+      </div>
     </div>
   );
 };
