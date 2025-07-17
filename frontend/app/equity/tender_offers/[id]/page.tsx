@@ -43,15 +43,13 @@ export default function BuybackView() {
   const [data] = trpc.tenderOffers.get.useSuspenseQuery({ companyId: company.id, id });
   const isOpen = isPast(utc(data.startsAt)) && isFuture(utc(data.endsAt));
   const investorId = user.roles.investor?.id;
-  const {
-    data: bids,
-    isLoading,
-    refetch: refetchBids,
-  } = trpc.tenderOffers.bids.list.useQuery({
+  const { data: bids = [], isLoading, refetch: refetchBids} = trpc.tenderOffers.bids.list.useQuery(
+    {
     companyId: company.id,
     tenderOfferId: id,
     investorId: user.roles.administrator ? undefined : investorId,
-  });
+    }
+  );
   const { data: ownShareHoldings } = trpc.shareHoldings.sumByShareClass.useQuery(
     { companyId: company.id, investorId },
     { enabled: !!investorId },
@@ -133,7 +131,7 @@ export default function BuybackView() {
     [],
   );
 
-  const bidsTable = useTable({ data: bids ?? [], columns });
+  const bidsTable = useTable({ data: bids, columns });
 
   return (
     <MainLayout title='Buyback details ("Sell Elections")'>

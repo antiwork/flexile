@@ -628,9 +628,9 @@ const sharesColumns = [
 type ShareHolding = RouterOutput["shareHoldings"]["list"][number];
 function SharesTab({ investorId }: { investorId: string }) {
   const company = useCurrentCompany();
-  const { data: shareHoldings, isLoading } = trpc.shareHoldings.list.useQuery({ companyId: company.id, investorId });
+  const { data: shareHoldings=[], isLoading } = trpc.shareHoldings.list.useQuery({ companyId: company.id, investorId });
 
-  const table = useTable({ data: shareHoldings ?? [], columns: sharesColumns });
+  const table = useTable({ data: shareHoldings, columns: sharesColumns });
 
   return isLoading ? (
     <TableSkeleton columns={6} />
