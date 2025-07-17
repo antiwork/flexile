@@ -69,12 +69,19 @@ export default function ScenarioPage() {
   return (
     <EquityLayout
       headerActions={
-        <Button variant="outline" size="small" asChild>
-          <a href="#">
-            <Download className="size-4" />
-            Download CSV
-          </a>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="small" asChild>
+            <a href={`/equity/waterfall/${id}/playground`}>
+              🚀 Interactive Playground
+            </a>
+          </Button>
+          <Button variant="outline" size="small" asChild>
+            <a href="#">
+              <Download className="size-4" />
+              Download CSV
+            </a>
+          </Button>
+        </div>
       }
     >
       {isLoading || !data ? (
