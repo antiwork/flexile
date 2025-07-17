@@ -5,25 +5,26 @@ import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
+import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
 
 const useData = () => {
   const company = useCurrentCompany();
-  const [data] = trpc.companyUpdates.list.useSuspenseQuery({ companyId: company.id });
-  return data;
+  const { data = { updates: [] }, isLoading } = trpc.companyUpdates.list.useQuery({ companyId: company.id });
+  return { updates: data.updates, isLoading };
 };
 
 export default function CompanyUpdates() {
   const user = useCurrentUser();
-  const { updates } = useData();
+  const { updates, isLoading } = useData();
 
   return (
     <MainLayout
@@ -36,7 +37,9 @@ export default function CompanyUpdates() {
         ) : null
       }
     >
-      {updates.length ? (
+      {isLoading ? (
+        <TableSkeleton columns={4} />
+      ) : updates.length ? (
         user.roles.administrator ? (
           <AdminList />
         ) : (

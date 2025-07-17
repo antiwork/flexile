@@ -2,13 +2,13 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { pick } from "lodash-es";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import ColorPicker from "@/components/ColorPicker";
 import { MutationStatusButton } from "@/components/MutationButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,12 +16,11 @@ import { useCurrentCompany } from "@/global";
 import defaultLogo from "@/images/default-company-logo.svg";
 import { trpc } from "@/trpc/client";
 import { md5Checksum } from "@/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import QuickbooksIntegration from "./QuickbooksIntegration";
 import StripeMicrodepositVerification from "./StripeMicrodepositVerification";
 
 const formSchema = z.object({
-  website: z.string().url(),
+  website: z.string().url().nullish().or(z.literal("")),
   brandColor: z.string().nullable(),
   publicName: z.string(),
 });
@@ -34,7 +33,8 @@ export default function SettingsPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       publicName: company.name ?? "",
-      ...pick(settings),
+      website: settings.website ?? "",
+      brandColor: settings.brandColor ?? null,
     },
   });
 
@@ -121,7 +121,7 @@ export default function SettingsPage() {
                 <FormItem>
                   <FormLabel>Brand color</FormLabel>
                   <FormControl>
-                    <ColorPicker value={field.value} onChange={field.onChange} />
+                    <ColorPicker {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

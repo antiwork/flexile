@@ -1,8 +1,6 @@
+import { usePathname } from "next/navigation";
 import React from "react";
 import MainLayout from "@/components/layouts/Main";
-import { usePathname } from "next/navigation";
-import { navLinks } from ".";
-import { useCurrentCompany, useCurrentUser } from "@/global";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,6 +8,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { useCurrentCompany, useCurrentUser } from "@/global";
+import { navLinks } from ".";
 
 const Layout = ({ children, headerActions }: { children: React.ReactNode; headerActions?: React.ReactNode }) => {
   const pathname = usePathname();

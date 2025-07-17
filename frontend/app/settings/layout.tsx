@@ -1,32 +1,34 @@
-import React from "react";
+"use client";
+
+import {
+  Briefcase,
+  Building,
+  ChevronLeft,
+  CreditCard,
+  Landmark,
+  PieChart,
+  ScrollText,
+  UserCircle2,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import React from "react";
 import {
-  UserCircle2,
-  Briefcase,
-  CreditCard,
-  PieChart,
-  ChevronLeft,
-  Landmark,
-  ScrollText,
-  Building,
-} from "lucide-react";
-import { useCurrentUser } from "@/global";
-import type { CurrentUser } from "@/models/user";
-import {
-  SidebarProvider,
   Sidebar,
   SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarGroupLabel,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarInset,
+  SidebarGroupLabel,
   SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { useCurrentUser } from "@/global";
+import type { CurrentUser } from "@/models/user";
 
 const personalLinks = [
   {
@@ -52,31 +54,30 @@ const personalLinks = [
 const companyLinks = [
   {
     label: "Workspace settings",
-    route: "/administrator/settings" as const,
+    route: "/settings/administrator" as const,
     icon: Building,
     isVisible: (user: CurrentUser) => !!user.roles.administrator,
   },
   {
     label: "Company details",
-    route: "/administrator/settings/details" as const,
+    route: "/settings/administrator/details" as const,
     icon: Briefcase,
     isVisible: (user: CurrentUser) => !!user.roles.administrator,
   },
   {
     label: "Billing",
-    route: "/administrator/settings/billing" as const,
+    route: "/settings/administrator/billing" as const,
     icon: CreditCard,
     isVisible: (user: CurrentUser) => !!user.roles.administrator,
   },
   {
     label: "Equity value",
-    route: "/administrator/settings/equity" as const,
+    route: "/settings/administrator/equity" as const,
     icon: PieChart,
     isVisible: (user: CurrentUser) => !!user.roles.administrator,
   },
 ];
-
-const Settings = ({ children }: { children: React.ReactNode }) => {
+export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   const user = useCurrentUser();
   const pathname = usePathname();
   const filteredPersonalLinks = personalLinks.filter((link) => link.isVisible(user));
@@ -150,6 +151,4 @@ const Settings = ({ children }: { children: React.ReactNode }) => {
       </div>
     </SidebarProvider>
   );
-};
-
-export default Settings;
+}
