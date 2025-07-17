@@ -29,7 +29,7 @@ class Settings::TaxPresenter
       tax_id:,
       tax_id_status:,
       zip_code:,
-      contractor_for_companies: user.company_workers.includes(:company).where(contract_signed_elsewhere: false).map(&:company).compact.map(&:display_name).compact,
+      contractor_for_companies: user.company_workers.includes(:company).where(contract_signed_elsewhere: false).filter_map(&:company).filter_map(&:display_name),
     }
   end
 
