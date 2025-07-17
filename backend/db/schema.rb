@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_24_011111) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_25_204538) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -141,7 +141,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_24_011111) do
     t.boolean "sent_equity_percent_selection_email", default: false, null: false
     t.integer "pay_rate_in_subunits"
     t.string "pay_rate_currency", default: "usd", null: false
-    t.string "role", null: false
+    t.string "role"
     t.boolean "contract_signed_elsewhere", default: false, null: false
     t.index ["company_id"], name: "index_company_contractors_on_company_id"
     t.index ["external_id"], name: "index_company_contractors_on_external_id", unique: true
@@ -182,6 +182,18 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_24_011111) do
     t.index ["external_id"], name: "index_company_investors_on_external_id", unique: true
     t.index ["user_id", "company_id"], name: "index_company_investors_on_user_id_and_company_id", unique: true
     t.index ["user_id"], name: "index_company_investors_on_user_id"
+  end
+
+  create_table "company_invite_links", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.bigint "document_template_id"
+    t.string "token", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id", "document_template_id"], name: "idx_on_company_id_document_template_id_57bbad7c26", unique: true
+    t.index ["company_id"], name: "index_company_invite_links_on_company_id"
+    t.index ["document_template_id"], name: "index_company_invite_links_on_document_template_id"
+    t.index ["token"], name: "index_company_invite_links_on_token", unique: true
   end
 
   create_table "company_lawyers", force: :cascade do |t|
@@ -1029,6 +1041,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_24_011111) do
     t.boolean "team_member", default: false, null: false
     t.boolean "sent_invalid_tax_id_email", default: false, null: false
     t.string "clerk_id"
+    t.bigint "signup_invite_link_id"
     t.index ["clerk_id"], name: "index_users_on_clerk_id", unique: true
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
@@ -1037,6 +1050,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_24_011111) do
     t.index ["invited_by_id"], name: "index_users_on_invited_by_id"
     t.index ["invited_by_type", "invited_by_id"], name: "index_users_on_invited_by"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.index ["signup_invite_link_id"], name: "index_users_on_signup_invite_link_id"
   end
 
   create_table "versions", force: :cascade do |t|

@@ -1,8 +1,8 @@
 import { CheckCircleIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
+import { Slot } from "@radix-ui/react-slot";
 import { Circle } from "lucide-react";
 import React from "react";
 import { cn } from "@/utils";
-import { Slot } from "@radix-ui/react-slot";
 
 export type Variant = "critical" | "primary" | "success" | "secondary";
 

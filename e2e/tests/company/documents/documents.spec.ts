@@ -1,3 +1,4 @@
+import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
@@ -5,7 +6,6 @@ import { documentsFactory } from "@test/factories/documents";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
-import { db } from "@test/db";
 import { eq } from "drizzle-orm";
 import { activeStorageAttachments, activeStorageBlobs, users } from "@/db/schema";
 import { assert } from "@/utils/assert";

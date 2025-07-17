@@ -1,8 +1,8 @@
+import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
+import { Signature } from "lucide-react";
 import React from "react";
 import Status from "@/components/Status";
 import type { RouterOutput } from "@/trpc";
-import { Signature } from "lucide-react";
-import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 
 type Dividend = RouterOutput["dividends"]["list"][number];
 

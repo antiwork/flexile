@@ -1,5 +1,3 @@
-import { companies, consolidatedInvoices, invoiceApprovals, invoices, users, companyContractors } from "@/db/schema";
-import { assert } from "@/utils/assert";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
@@ -10,6 +8,8 @@ import { invoicesFactory } from "@test/factories/invoices";
 import { login } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { and, eq, exists, isNull, not } from "drizzle-orm";
+import { companies, companyContractors, consolidatedInvoices, invoiceApprovals, invoices, users } from "@/db/schema";
+import { assert } from "@/utils/assert";
 
 const setupCompany = async ({ trusted = true }: { trusted?: boolean } = {}) => {
   const { company } = await companiesFactory.create({ isTrusted: trusted, requiredInvoiceApprovalCount: 2 });

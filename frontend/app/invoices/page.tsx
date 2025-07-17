@@ -1,71 +1,70 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import {
-  Download,
   AlertTriangle,
+  Ban,
+  CheckCircle,
+  CircleAlert,
   CircleCheck,
+  Download,
+  Eye,
   Info,
   Plus,
-  Trash2,
-  CheckCircle,
   SquarePen,
-  Eye,
-  Ban,
-  CircleAlert,
+  Trash2,
 } from "lucide-react";
-import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import Link from "next/link";
 import React, { Fragment, useCallback, useEffect, useMemo, useState } from "react";
-import StripeMicrodepositVerification from "@/app/administrator/settings/StripeMicrodepositVerification";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import {
   ApproveButton,
-  taxRequirementsMet,
+  DeleteModal,
   EDITABLE_INVOICE_STATES,
   RejectModal,
+  taxRequirementsMet,
   useApproveInvoices,
   useIsActionable,
-  useIsPayable,
   useIsDeletable,
-  DeleteModal,
+  useIsPayable,
 } from "@/app/invoices/index";
 import Status, { StatusDetails } from "@/app/invoices/Status";
+import StripeMicrodepositVerification from "@/app/settings/administrator/StripeMicrodepositVerification";
+import { ContextMenuActions } from "@/components/actions/ContextMenuActions";
+import { SelectionActions } from "@/components/actions/SelectionActions";
+import type { ActionConfig, ActionContext } from "@/components/actions/types";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
+import DatePicker from "@/components/DatePicker";
 import MainLayout from "@/components/layouts/Main";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { linkClasses } from "@/components/Link";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
+import NumberInput from "@/components/NumberInput";
 import Placeholder from "@/components/Placeholder";
+import RangeInput from "@/components/RangeInput";
+import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
+import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import type { RouterOutput } from "@/trpc";
 import { PayRateType, trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { pluralize } from "@/utils/pluralize";
+import { request } from "@/utils/request";
 import { company_invoices_path, export_company_invoices_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
-import NumberInput from "@/components/NumberInput";
-import QuantityInput from "./QuantityInput";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
-import { MAX_EQUITY_PERCENTAGE } from "@/models";
-import RangeInput from "@/components/RangeInput";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { request } from "@/utils/request";
 import EquityPercentageLockModal from "./EquityPercentageLockModal";
+import QuantityInput from "./QuantityInput";
 import { useCanSubmitInvoices } from ".";
-import { linkClasses } from "@/components/Link";
-import DatePicker from "@/components/DatePicker";
-import { CalendarDate, today, getLocalTimeZone } from "@internationalized/date";
-import { zodResolver } from "@hookform/resolvers/zod";
-import TableSkeleton from "@/components/TableSkeleton";
-
-import type { ActionConfig, ActionContext } from "@/components/actions/types";
-import { SelectionActions } from "@/components/actions/SelectionActions";
-import { ContextMenuActions } from "@/components/actions/ContextMenuActions";
 
 const statusNames = {
   received: "Awaiting approval",

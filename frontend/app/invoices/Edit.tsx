@@ -2,22 +2,29 @@
 
 import { ArrowUpTrayIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { PaperAirplaneIcon, PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { type DateValue, parseDate } from "@internationalized/date";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
+import { CircleAlert } from "lucide-react";
 import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useId, useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
+import DatePicker from "@/components/DatePicker";
 import MainLayout from "@/components/layouts/Main";
 import NumberInput from "@/components/NumberInput";
+import RangeInput from "@/components/RangeInput";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany } from "@/global";
+import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import { trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
@@ -28,15 +35,8 @@ import {
   edit_company_invoice_path,
   new_company_invoice_path,
 } from "@/utils/routes";
-import { LegacyAddress as Address, useCanSubmitInvoices } from ".";
-import { Card, CardContent } from "@/components/ui/card";
-import { MAX_EQUITY_PERCENTAGE } from "@/models";
-import RangeInput from "@/components/RangeInput";
-import DatePicker from "@/components/DatePicker";
-import { type DateValue, parseDate } from "@internationalized/date";
 import QuantityInput from "./QuantityInput";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CircleAlert } from "lucide-react";
+import { LegacyAddress as Address, useCanSubmitInvoices } from ".";
 
 const addressSchema = z.object({
   street_address: z.string(),

@@ -1,8 +1,8 @@
 import stream from "node:stream";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { notFound } from "next/navigation";
-import { s3Client } from "@/trpc";
 import env from "@/env";
+import { s3Client } from "@/trpc";
 
 export async function GET(_: Request, { params }: { params: Promise<{ key: string; name: string }> }) {
   const { key, name } = await params;

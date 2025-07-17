@@ -3,11 +3,11 @@ import { ClockIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import { addDays, isWeekend, nextMonday } from "date-fns";
 import React from "react";
 import Status, { type Variant } from "@/components/Status";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type Invoice = Pick<
   RouterOutput["invoices"]["list"][number],

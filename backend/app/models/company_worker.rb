@@ -22,7 +22,7 @@ class CompanyWorker < ApplicationRecord
   }, validate: true
 
   validates :user_id, uniqueness: { scope: :company_id }
-  validates :role, presence: true
+  validates :role, presence: true, on: :update
   validates :started_at, presence: true
   validates :pay_rate_in_subunits, numericality: { only_integer: true, greater_than: 0, allow_nil: true }
 

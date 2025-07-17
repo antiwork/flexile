@@ -2,9 +2,9 @@ import { clerk } from "@clerk/testing/playwright";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
+import { fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
-import { fillDatePicker } from "@test/helpers";
 import { expect, test, withinModal } from "@test/index";
 import { addDays, addYears, format } from "date-fns";
 import { eq } from "drizzle-orm";
@@ -44,7 +44,7 @@ test.describe("End contract", () => {
 
     // Re-invite
     await page.getByRole("link", { name: "People" }).click();
-    await page.getByRole("button", { name: "Invite contractor" }).click();
+    await page.getByRole("button", { name: "Add contractor" }).click();
     const { mockForm } = mockDocuseal(next, {
       submitters: () => ({ "Company Representative": adminUser, Signer: contractor }),
     });

@@ -20,10 +20,10 @@ import {
 } from "@/db/schema";
 import { DEFAULT_VESTING_SCHEDULE_OPTIONS } from "@/models";
 import { type CompanyContext, companyProcedure, createRouter } from "@/trpc";
+import { createSubmission } from "@/trpc/routes/documents/templates";
 import { simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
 import { company_administrator_equity_grants_url } from "@/utils/routes";
-import { createSubmission } from "@/trpc/routes/documents/templates";
 
 export type EquityGrant = typeof equityGrants.$inferSelect;
 export const equityGrantsRouter = createRouter({

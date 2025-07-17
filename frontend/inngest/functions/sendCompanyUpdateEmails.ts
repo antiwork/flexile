@@ -7,7 +7,6 @@ import { inngest } from "@/inngest/client";
 import CompanyUpdatePublished from "@/inngest/functions/emails/CompanyUpdatePublished";
 import { BATCH_SIZE, resend } from "@/trpc/email";
 import { companyLogoUrl, companyName } from "@/trpc/routes/companies";
-
 import { userDisplayName } from "@/trpc/routes/users";
 
 export default inngest.createFunction(

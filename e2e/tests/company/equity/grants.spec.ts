@@ -8,7 +8,7 @@ import { equityAllocationsFactory } from "@test/factories/equityAllocations";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { optionPoolsFactory } from "@test/factories/optionPools";
 import { usersFactory } from "@test/factories/users";
-import { selectComboboxOption, fillDatePicker } from "@test/helpers";
+import { fillDatePicker, selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";

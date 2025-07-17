@@ -3,11 +3,11 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { equityAllocationsFactory } from "@test/factories/equityAllocations";
 import { usersFactory } from "@test/factories/users";
+import { fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { desc, eq } from "drizzle-orm";
 import { companies, companyContractors, invoices, users } from "@/db/schema";
-import { fillDatePicker } from "@test/helpers";
 
 test.describe("quick invoicing", () => {
   let company: typeof companies.$inferSelect;

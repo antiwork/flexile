@@ -7,9 +7,9 @@ import { login } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
+import { PayRateType } from "@/db/enums";
 import { users } from "@/db/schema";
 import { assert } from "@/utils/assert";
-import { PayRateType } from "@/db/enums";
 
 test.describe("Edit contractor", () => {
   test("allows searching for contractors by name", async ({ page }) => {

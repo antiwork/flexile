@@ -69,7 +69,7 @@ RSpec.describe "List Contractors" do
     it "lists contractor details for all contractors" do
       perform_common_assertions
 
-      expect(page).to have_link("Invite contractor", href: new_spa_company_worker_path(company.external_id))
+      expect(page).to have_link("Add contractor", href: new_spa_company_worker_path(company.external_id))
       find(:table_row, { "Contractor" => contractor1.user.display_name }).click
       expect(page).to have_current_path(spa_company_worker_path(company.external_id, contractor1.external_id))
       expect(page).to have_text("Equity split")

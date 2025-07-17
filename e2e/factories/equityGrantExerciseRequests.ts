@@ -1,9 +1,9 @@
-import { equityGrantExerciseRequests, equityGrantExercises, equityGrants } from "@/db/schema";
-import { assert } from "@/utils/assert";
 import { db, takeOrThrow } from "@test/db";
 import { equityGrantExercisesFactory } from "@test/factories/equityGrantExercises";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { eq } from "drizzle-orm";
+import { equityGrantExerciseRequests, equityGrantExercises, equityGrants } from "@/db/schema";
+import { assert } from "@/utils/assert";
 
 export const equityGrantExerciseRequestsFactory = {
   create: async (overrides: Partial<typeof equityGrantExerciseRequests.$inferInsert> = {}) => {

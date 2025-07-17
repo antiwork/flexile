@@ -2,7 +2,6 @@
 import { EnvelopeIcon } from "@heroicons/react/24/outline";
 import { useParams } from "next/navigation";
 import React from "react";
-
 import MainLayout from "@/components/layouts/Main";
 import MutationButton from "@/components/MutationButton";
 import RichText from "@/components/RichText";

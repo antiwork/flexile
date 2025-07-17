@@ -185,6 +185,9 @@ export const currencyByCountryCode = new Map<string, Currency>([
   ["ZW", "USD"],
 ]);
 
+export const INVITATION_TOKEN_COOKIE_NAME = "invitation_token";
+export const INVITATION_TOKEN_COOKIE_MAX_AGE = 60 * 60 * 24 * 1;
+
 export const countries = new Map<string, string>(
   Object.entries(c).map(([countryCode, info]) => [countryCode, info.countryName]),
 );

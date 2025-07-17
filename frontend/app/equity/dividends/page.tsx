@@ -1,19 +1,19 @@
 "use client";
+import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
 import { CircleCheck, Info } from "lucide-react";
+import Link from "next/link";
 import React, { useMemo, useState } from "react";
+import { z } from "zod";
 import DividendStatusIndicator from "@/app/equity/DividendStatusIndicator";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import Placeholder from "@/components/Placeholder";
-import { useCurrentCompany, useCurrentUser } from "@/global";
-import type { RouterOutput } from "@/trpc";
-import { trpc } from "@/trpc/client";
-import { formatMoneyFromCents } from "@/utils/formatMoney";
-import { formatDate } from "@/utils/time";
-import EquityLayout from "../Layout";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import Link from "next/link";
 import { linkClasses } from "@/components/Link";
+import MutationButton from "@/components/MutationButton";
+import Placeholder from "@/components/Placeholder";
+import RichText from "@/components/RichText";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -22,15 +22,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
+import { Separator } from "@/components/ui/separator";
+import { useCurrentCompany, useCurrentUser } from "@/global";
+import type { RouterOutput } from "@/trpc";
+import { trpc } from "@/trpc/client";
+import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_dividend_path, sign_company_dividend_path } from "@/utils/routes";
-import { z } from "zod";
-import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import RichText from "@/components/RichText";
-import MutationButton from "@/components/MutationButton";
+import { formatDate } from "@/utils/time";
+import EquityLayout from "../Layout";
 
 type Dividend = RouterOutput["dividends"]["list"][number];
 const columnHelper = createColumnHelper<Dividend>();

@@ -1,7 +1,7 @@
 import { db, takeOrThrow } from "@test/db";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { eq } from "drizzle-orm";
-import { companyInvestors, equityGrantExercises, equityGrantExerciseRequests } from "@/db/schema";
+import { companyInvestors, equityGrantExerciseRequests, equityGrantExercises } from "@/db/schema";
 import { assert } from "@/utils/assert";
 
 export const equityGrantExercisesFactory = {

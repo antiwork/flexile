@@ -74,9 +74,9 @@ Rails.application.routes.draw do
   end
 
   # Old routes for backwards compatibility. Can be removed after Jan 1, 2025
-  get "/company/settings", to: redirect { |_path, req| "/companies/_/administrator/settings#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/company/details", to: redirect("/companies/_/administrator/settings/details")
-  get "/company/billing", to: redirect("/companies/_/administrator/settings/billing")
+  get "/company/settings", to: redirect { |_path, req| "/companies/_/settings/administrator#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/company/details", to: redirect("/companies/_/settings/administrator/details")
+  get "/company/billing", to: redirect("/companies/_/settings/administrator/billing")
   get "/expenses", to: redirect("/companies/_/expenses")
   get "/investors/:id", to: redirect { |path_params, req| "/companies/_/investors/#{path_params[:id]}#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   get "/invoices", to: redirect("/companies/_/invoices")
