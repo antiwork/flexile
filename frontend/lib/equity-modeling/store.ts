@@ -1,7 +1,6 @@
 // Zustand store for equity modeling playground state
 
 import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { calculateWaterfall } from './calculator';
 import type {
@@ -49,7 +48,7 @@ interface EquityPlaygroundStore extends PlaygroundState {
 const createDefaultScenario = (): PlaygroundScenario => ({
   name: 'New Scenario',
   description: '',
-  exitAmountCents: 10000000n, // $100k default
+  exitAmountCents: BigInt(10000000), // $100k default - use BigInt() constructor
   exitDate: new Date(),
   status: 'draft',
 });
@@ -61,8 +60,7 @@ const createDefaultEquityStructure = (): PlaygroundEquityStructure => ({
 });
 
 export const useEquityPlayground = create<EquityPlaygroundStore>()(
-  subscribeWithSelector(
-    immer((set, get) => ({
+  subscribeWithSelector((set, get) => ({
       // Initial state
       scenario: createDefaultScenario(),
       equityStructure: createDefaultEquityStructure(),
@@ -73,20 +71,29 @@ export const useEquityPlayground = create<EquityPlaygroundStore>()(
       originalEquityStructure: createDefaultEquityStructure(),
 
       // Scenario management
-      setScenario: (scenario) => set((state) => {
-        state.scenario = scenario;
-        state.hasUnsavedChanges = false;
-      }),
+      setScenario: (scenario) => set((state) => ({
+        ...state,
+        scenario,
+        hasUnsavedChanges: false,
+      })),
 
-      updateExitAmount: (exitAmountCents) => set((state) => {
-        state.scenario.exitAmountCents = exitAmountCents;
-        state.hasUnsavedChanges = true;
-      }),
+      updateExitAmount: (exitAmountCents) => set((state) => ({
+        ...state,
+        scenario: {
+          ...state.scenario,
+          exitAmountCents: BigInt(exitAmountCents.toString()),
+        },
+        hasUnsavedChanges: true,
+      })),
 
-      updateExitDate: (exitDate) => set((state) => {
-        state.scenario.exitDate = exitDate;
-        state.hasUnsavedChanges = true;
-      }),
+      updateExitDate: (exitDate) => set((state) => ({
+        ...state,
+        scenario: {
+          ...state.scenario,
+          exitDate,
+        },
+        hasUnsavedChanges: true,
+      })),
 
       // Investor management
       addInvestor: (investorData) => {
@@ -97,28 +104,38 @@ export const useEquityPlayground = create<EquityPlaygroundStore>()(
           isHypothetical: true,
         };
         
-        set((state) => {
-          state.equityStructure.investors.push(investor);
-          state.hasUnsavedChanges = true;
-        });
+        set((state) => ({
+          ...state,
+          equityStructure: {
+            ...state.equityStructure,
+            investors: [...state.equityStructure.investors, investor],
+          },
+          hasUnsavedChanges: true,
+        }));
         
         return investor;
       },
 
-      updateInvestor: (id, updates) => set((state) => {
-        const investor = state.equityStructure.investors.find(i => i.id === id);
-        if (investor) {
-          Object.assign(investor, updates);
-          state.hasUnsavedChanges = true;
-        }
-      }),
+      updateInvestor: (id, updates) => set((state) => ({
+        ...state,
+        equityStructure: {
+          ...state.equityStructure,
+          investors: state.equityStructure.investors.map(investor => 
+            investor.id === id ? { ...investor, ...updates } : investor
+          ),
+        },
+        hasUnsavedChanges: true,
+      })),
 
-      removeInvestor: (id) => set((state) => {
-        state.equityStructure.investors = state.equityStructure.investors.filter(i => i.id !== id);
-        // Also remove related share holdings
-        state.equityStructure.shareHoldings = state.equityStructure.shareHoldings.filter(h => h.investorId !== id);
-        state.hasUnsavedChanges = true;
-      }),
+      removeInvestor: (id) => set((state) => ({
+        ...state,
+        equityStructure: {
+          ...state.equityStructure,
+          investors: state.equityStructure.investors.filter(i => i.id !== id),
+          shareHoldings: state.equityStructure.shareHoldings.filter(h => h.investorId !== id),
+        },
+        hasUnsavedChanges: true,
+      })),
 
       // Share class management
       addShareClass: (shareClassData) => {
@@ -129,28 +146,38 @@ export const useEquityPlayground = create<EquityPlaygroundStore>()(
           isHypothetical: true,
         };
         
-        set((state) => {
-          state.equityStructure.shareClasses.push(shareClass);
-          state.hasUnsavedChanges = true;
-        });
+        set((state) => ({
+          ...state,
+          equityStructure: {
+            ...state.equityStructure,
+            shareClasses: [...state.equityStructure.shareClasses, shareClass],
+          },
+          hasUnsavedChanges: true,
+        }));
         
         return shareClass;
       },
 
-      updateShareClass: (id, updates) => set((state) => {
-        const shareClass = state.equityStructure.shareClasses.find(sc => sc.id === id);
-        if (shareClass) {
-          Object.assign(shareClass, updates);
-          state.hasUnsavedChanges = true;
-        }
-      }),
+      updateShareClass: (id, updates) => set((state) => ({
+        ...state,
+        equityStructure: {
+          ...state.equityStructure,
+          shareClasses: state.equityStructure.shareClasses.map(shareClass => 
+            shareClass.id === id ? { ...shareClass, ...updates } : shareClass
+          ),
+        },
+        hasUnsavedChanges: true,
+      })),
 
-      removeShareClass: (id) => set((state) => {
-        state.equityStructure.shareClasses = state.equityStructure.shareClasses.filter(sc => sc.id !== id);
-        // Also remove related share holdings
-        state.equityStructure.shareHoldings = state.equityStructure.shareHoldings.filter(h => h.shareClassId !== id);
-        state.hasUnsavedChanges = true;
-      }),
+      removeShareClass: (id) => set((state) => ({
+        ...state,
+        equityStructure: {
+          ...state.equityStructure,
+          shareClasses: state.equityStructure.shareClasses.filter(sc => sc.id !== id),
+          shareHoldings: state.equityStructure.shareHoldings.filter(h => h.shareClassId !== id),
+        },
+        hasUnsavedChanges: true,
+      })),
 
       // Share holding management
       addShareHolding: (holdingData) => {
@@ -161,34 +188,46 @@ export const useEquityPlayground = create<EquityPlaygroundStore>()(
           isHypothetical: true,
         };
         
-        set((state) => {
-          state.equityStructure.shareHoldings.push(holding);
-          state.hasUnsavedChanges = true;
-        });
+        set((state) => ({
+          ...state,
+          equityStructure: {
+            ...state.equityStructure,
+            shareHoldings: [...state.equityStructure.shareHoldings, holding],
+          },
+          hasUnsavedChanges: true,
+        }));
         
         return holding;
       },
 
-      updateShareHolding: (id, updates) => set((state) => {
-        const holding = state.equityStructure.shareHoldings.find(h => h.id === id);
-        if (holding) {
-          Object.assign(holding, updates);
-          state.hasUnsavedChanges = true;
-        }
-      }),
+      updateShareHolding: (id, updates) => set((state) => ({
+        ...state,
+        equityStructure: {
+          ...state.equityStructure,
+          shareHoldings: state.equityStructure.shareHoldings.map(holding => 
+            holding.id === id ? { ...holding, ...updates } : holding
+          ),
+        },
+        hasUnsavedChanges: true,
+      })),
 
-      removeShareHolding: (id) => set((state) => {
-        state.equityStructure.shareHoldings = state.equityStructure.shareHoldings.filter(h => h.id !== id);
-        state.hasUnsavedChanges = true;
-      }),
+      removeShareHolding: (id) => set((state) => ({
+        ...state,
+        equityStructure: {
+          ...state.equityStructure,
+          shareHoldings: state.equityStructure.shareHoldings.filter(h => h.id !== id),
+        },
+        hasUnsavedChanges: true,
+      })),
 
       // Calculations
       recalculate: () => {
         const state = get();
         
-        set((current) => {
-          current.isCalculating = true;
-        });
+        set((current) => ({
+          ...current,
+          isCalculating: true,
+        }));
 
         try {
           const result = calculateWaterfall({
@@ -197,50 +236,59 @@ export const useEquityPlayground = create<EquityPlaygroundStore>()(
             equityStructure: state.equityStructure,
           });
 
-          set((current) => {
-            current.payouts = result.payouts;
-            current.isCalculating = false;
-          });
+          set((current) => ({
+            ...current,
+            payouts: result.payouts,
+            isCalculating: false,
+          }));
         } catch (error) {
           console.error('Calculation failed:', error);
-          set((current) => {
-            current.payouts = [];
-            current.isCalculating = false;
-          });
+          set((current) => ({
+            ...current,
+            payouts: [],
+            isCalculating: false,
+          }));
         }
       },
 
       // Comparison scenarios
-      addComparisonScenario: (scenario) => set((state) => {
-        state.comparisonScenarios.push(scenario);
-      }),
+      addComparisonScenario: (scenario) => set((state) => ({
+        ...state,
+        comparisonScenarios: [...state.comparisonScenarios, scenario],
+      })),
 
-      removeComparisonScenario: (scenarioId) => set((state) => {
-        state.comparisonScenarios = state.comparisonScenarios.filter(s => s.id !== scenarioId);
-      }),
+      removeComparisonScenario: (scenarioId) => set((state) => ({
+        ...state,
+        comparisonScenarios: state.comparisonScenarios.filter(s => s.id !== scenarioId),
+      })),
 
       // Persistence and reset
-      reset: () => set((state) => {
-        state.equityStructure = JSON.parse(JSON.stringify(state.originalEquityStructure));
-        state.hasUnsavedChanges = false;
-        state.comparisonScenarios = [];
-      }),
+      reset: () => set((state) => ({
+        ...state,
+        equityStructure: structuredClone(state.originalEquityStructure),
+        hasUnsavedChanges: false,
+        comparisonScenarios: [],
+      })),
 
-      markSaved: () => set((state) => {
-        state.hasUnsavedChanges = false;
-        state.scenario.status = 'saved';
-      }),
+      markSaved: () => set((state) => ({
+        ...state,
+        scenario: {
+          ...state.scenario,
+          status: 'saved' as const,
+        },
+        hasUnsavedChanges: false,
+      })),
 
-      loadFromBackendData: (equityStructure) => set((state) => {
-        state.equityStructure = JSON.parse(JSON.stringify(equityStructure));
-        state.originalEquityStructure = JSON.parse(JSON.stringify(equityStructure));
-        state.hasUnsavedChanges = false;
-      }),
+      loadFromBackendData: (equityStructure) => set((state) => ({
+        ...state,
+        equityStructure: structuredClone(equityStructure),
+        originalEquityStructure: structuredClone(equityStructure),
+        hasUnsavedChanges: false,
+      })),
 
       // Utilities
       generateId: () => `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     }))
-  )
 );
 
 // Auto-recalculate when relevant state changes
@@ -257,8 +305,12 @@ useEquityPlayground.subscribe(
     }
   },
   {
-    equalityFn: (a, b) => 
-      a.exitAmount === b.exitAmount && 
-      JSON.stringify(a.equityStructure) === JSON.stringify(b.equityStructure)
+    equalityFn: (a, b) => {
+      // Safe comparison that handles BigInt
+      const exitAmountEqual = a.exitAmount.toString() === b.exitAmount.toString();
+      // Simple reference equality for equity structure (since we use immer)
+      const structureEqual = a.equityStructure === b.equityStructure;
+      return exitAmountEqual && structureEqual;
+    }
   }
 );
