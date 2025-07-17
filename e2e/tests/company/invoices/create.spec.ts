@@ -16,6 +16,7 @@ import {
   equityAllocations,
   expenseCategories,
   invoiceExpenses,
+  invoiceLineItems,
   invoices,
   users,
 } from "@/db/schema";
@@ -312,5 +313,33 @@ test.describe("invoice creation", () => {
       .where(eq(companyContractors.id, companyContractor.id));
     await page.reload();
     await expect(page.getByText("This invoice includes rates above your default")).not.toBeVisible();
+  });
+
+  test("supports decimal quantities for hours", async ({ page }) => {
+    await login(page, contractorUser);
+    await page.goto("/invoices/new");
+
+    await page.getByLabel("Hours").fill("2.5");
+    await page.getByPlaceholder("Description").fill("Development work with decimal hours");
+    await fillDatePicker(page, "Date", "12/15/2024");
+
+    await expect(page.getByText("Total services$150")).toBeVisible();
+    await expect(page.getByText("Net amount in cash$150")).toBeVisible();
+
+    await page.getByRole("button", { name: "Send invoice" }).click();
+
+    await expect(page.locator("tbody")).toContainText("$150");
+
+    const invoice = await db.query.invoices
+      .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
+      .then(takeOrThrow);
+
+    expect(invoice.totalAmountInUsdCents).toBe(15000n);
+
+    const lineItem = await db.query.invoiceLineItems
+      .findFirst({ where: eq(invoiceLineItems.invoiceId, invoice.id) })
+      .then(takeOrThrow);
+
+    expect(Number(lineItem.quantity)).toBe(2.5);
   });
 });

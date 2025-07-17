@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "spec_helper"
+
 RSpec.describe InvoiceLineItem do
   describe "associations" do
     it { is_expected.to belong_to(:invoice) }
@@ -29,6 +31,31 @@ RSpec.describe InvoiceLineItem do
         invoice_line_item.pay_rate_in_subunits = 1.5
         expect(invoice_line_item).to be_invalid
         expect(invoice_line_item.errors[:pay_rate_in_subunits]).to include("must be an integer")
+      end
+    end
+
+    describe "quantity validations" do
+      let(:invoice_line_item) { build(:invoice_line_item) }
+
+      it "requires quantity to be present" do
+        invoice_line_item.quantity = nil
+        expect(invoice_line_item).to be_invalid
+        expect(invoice_line_item.errors[:quantity]).to include("can't be blank")
+      end
+
+      it "accepts decimal quantity greater than or equal to 0.01" do
+        [0.01, 0.5, 1, 2.5, 100.99].each do |qty|
+          invoice_line_item.quantity = qty
+          expect(invoice_line_item).to be_valid
+        end
+      end
+
+      it "rejects quantities less than 0.01" do
+        [0, 0.001, 0.004, -1, -2.3].each do |qty|
+          invoice_line_item.quantity = qty
+          expect(invoice_line_item).to be_invalid
+          expect(invoice_line_item.errors[:quantity]).to include("must be greater than or equal to 0.01")
+        end
       end
     end
   end
