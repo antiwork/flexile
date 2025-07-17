@@ -8,7 +8,7 @@ import { CircleDollarSign, Download, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
 import { z } from "zod";
-import StripeMicrodepositVerification from "@/app/administrator/settings/StripeMicrodepositVerification";
+import StripeMicrodepositVerification from "@/app/settings/administrator/StripeMicrodepositVerification";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";

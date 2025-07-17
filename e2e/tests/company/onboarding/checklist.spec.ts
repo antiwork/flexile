@@ -37,7 +37,6 @@ test.describe.serial("Onboarding checklist", () => {
     await expect(page.getByText("Send your first payment")).toBeVisible();
 
     await page.getByText("Add company details").click();
-    await expect(page).toHaveURL(/\/administrator\/settings\/details/u);
     await page.getByLabel("Company's legal name").fill(faker.company.name());
     await page.getByLabel("EIN").fill(faker.string.numeric(9));
     await page.getByLabel("Phone number").fill(faker.phone.number());
@@ -52,7 +51,7 @@ test.describe.serial("Onboarding checklist", () => {
     await expect(page.getByText("25%")).toBeVisible();
 
     await page.getByText("Add bank account").click();
-    await expect(page).toHaveURL(/\/administrator\/settings\/billing/u);
+    await expect(page.getByRole("heading", { name: "Billing", exact: true })).toBeVisible();
     await companyStripeAccountsFactory.create({
       companyId: company.id,
     });
@@ -61,7 +60,6 @@ test.describe.serial("Onboarding checklist", () => {
     await expect(page.getByText("50%")).toBeVisible();
 
     await page.getByText("Invite a contractor").click();
-    await expect(page).toHaveURL(/\/people/u);
     await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
     await page.getByRole("button", { name: "Invite contractor" }).click();
 
