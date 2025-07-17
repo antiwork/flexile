@@ -2600,9 +2600,9 @@ export const liquidationPayouts = pgTable("liquidation_payouts", {
   securityType: varchar("security_type", { length: 50 }).notNull(),
   numberOfShares: bigint("number_of_shares", { mode: "bigint" }),
   payoutAmountCents: bigint("payout_amount_cents", { mode: "bigint" }).notNull(),
-  liquidationPreferenceAmount: decimal("liquidation_preference_amount", { precision: 20, scale: 2 }),
-  participationAmount: decimal("participation_amount", { precision: 20, scale: 2 }),
-  commonProceedsAmount: decimal("common_proceeds_amount", { precision: 20, scale: 2 }),
+  liquidationPreferenceAmount: numeric("liquidation_preference_amount", { precision: 20, scale: 2 }),
+  participationAmount: numeric("participation_amount", { precision: 20, scale: 2 }),
+  commonProceedsAmount: numeric("common_proceeds_amount", { precision: 20, scale: 2 }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

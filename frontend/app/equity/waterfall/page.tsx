@@ -12,8 +12,8 @@ import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
-import { export_company_liquidation_scenarios_path } from "@/utils/routes";
-import EquityLayout from "../Layout";
+// import { export_company_liquidation_scenarios_path } from "@/utils/routes";
+import EquityLayout from "@/app/equity/Layout";
 
  type Scenario = RouterOutput["liquidationScenarios"]["list"][number];
  const columnHelper = createColumnHelper<Scenario>();
@@ -43,7 +43,7 @@ import EquityLayout from "../Layout";
        headerActions={
          <div className="flex gap-2">
            <Button variant="outline" size="small" asChild>
-             <a href={export_company_liquidation_scenarios_path(company.id)}>
+             <a href="#">
                <Download className="size-4" />
                Download CSV
              </a>

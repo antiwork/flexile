@@ -59,6 +59,12 @@ scope path: :internal, module: :internal do
         get :microdeposit_verification_details
       end
     end
+    resources :liquidation_scenarios, only: [] do
+      member do
+        post :calculate
+        get :export
+      end
+    end
     resources :quickbooks, only: :update do
       collection do
         get :connect

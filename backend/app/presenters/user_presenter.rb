@@ -87,6 +87,7 @@ class UserPresenter
     {
       companies: user.all_companies.compact.map do |company|
         flags = %w[company_updates].filter { Flipper.enabled?(_1, company) }
+        flags.push("liquidation_scenarios") if Flipper.enabled?(:liquidation_scenarios, company)
         flags.push("equity_compensation") if company.equity_compensation_enabled?
         flags.push("equity_grants") if company.equity_grants_enabled?
         flags.push("dividends")

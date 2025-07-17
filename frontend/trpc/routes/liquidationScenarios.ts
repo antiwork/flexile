@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { liquidationScenarios, liquidationPayouts, companyInvestors, users } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
+import { calculate_company_liquidation_scenario_url } from "@/utils/routes";
 
 const createLiquidationScenarioSchema = createInsertSchema(liquidationScenarios).pick({
   name: true,
@@ -42,11 +43,27 @@ export const liquidationScenariosRouter = createRouter({
         })
         .returning();
 
-      // TODO: Call Rails backend to run calculation service
-      // This would normally be an API call to Rails:
-      // await fetch(`${RAILS_API_URL}/api/liquidation_scenarios/${scenario.id}/calculate`, { method: 'POST' })
+      // Call Rails backend to run calculation service
+      try {
+        const response = await fetch(
+          calculate_company_liquidation_scenario_url(ctx.company.externalId, scenario.externalId, { 
+            host: ctx.host 
+          }),
+          { 
+            method: 'POST',
+            headers: ctx.headers,
+          }
+        );
+
+        if (!response.ok) {
+          console.error("Failed to calculate liquidation scenario", response.status);
+        }
+      } catch (error) {
+        console.error("Error calculating liquidation scenario:", error);
+        // Continue anyway - calculation can be retried later
+      }
       
-      // For now, return the created scenario
+      // Return the created scenario
       return {
         id: scenario.id.toString(),
         externalId: scenario.externalId,
@@ -108,7 +125,7 @@ export const liquidationScenariosRouter = createRouter({
         updatedAt: scenario.updatedAt.toISOString(),
         payouts: scenario.liquidationPayouts.map(payout => ({
           id: payout.id.toString(),
-          investorName: payout.companyInvestor.user?.name || "Unknown",
+          investorName: payout.companyInvestor.user?.preferredName || payout.companyInvestor.user?.legalName || payout.companyInvestor.user?.email || "Unknown",
           shareClass: payout.shareClass,
           securityType: payout.securityType,
           numberOfShares: payout.numberOfShares?.toString(),

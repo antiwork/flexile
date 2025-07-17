@@ -67,6 +67,7 @@ class Company < ApplicationRecord
   has_many :time_entries
   has_many :convertible_investments
   has_many :convertible_securities, through: :convertible_investments
+  has_many :liquidation_scenarios
   has_many :consolidated_invoices
   has_many :invoices
   has_many :expense_categories

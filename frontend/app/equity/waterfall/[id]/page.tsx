@@ -6,19 +6,32 @@ import DataTable, { createColumnHelper, useTable } from "@/components/DataTable"
 import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
-import { useCurrentCompany } from "@/global";
+import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
-import { export_company_liquidation_scenario_path } from "@/utils/routes";
-import EquityLayout from "../Layout";
+// import { export_company_liquidation_scenario_path } from "@/utils/routes";
+import EquityLayout from "@/app/equity/Layout";
 
 type Scenario = RouterOutput["liquidationScenarios"]["show"];
 
 export default function ScenarioPage() {
   const { id } = useParams<{ id: string }>();
   const company = useCurrentCompany();
+  const user = useCurrentUser();
+  const isAdmin = !!user.roles.administrator;
+  const isLawyer = !!user.roles.lawyer;
+  
+  // Check authorization
+  if (!isAdmin && !isLawyer) {
+    return (
+      <EquityLayout>
+        <Placeholder>You don't have permission to view liquidation scenarios.</Placeholder>
+      </EquityLayout>
+    );
+  }
+  
   const { data, isLoading } = trpc.liquidationScenarios.show.useQuery({ companyId: company.id, scenarioId: id });
 
   const columnHelper = createColumnHelper<Scenario["payouts"][number]>();
@@ -57,7 +70,7 @@ export default function ScenarioPage() {
     <EquityLayout
       headerActions={
         <Button variant="outline" size="small" asChild>
-          <a href={export_company_liquidation_scenario_path(company.id, id)}>
+          <a href="#">
             <Download className="size-4" />
             Download CSV
           </a>

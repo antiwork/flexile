@@ -18,7 +18,7 @@ import { trpc } from "@/trpc/client";
 const formSchema = z.object({
   name: z.string().min(1, "This field is required."),
   description: z.string().optional(),
-  exitAmountCents: z.number().min(0),
+  exitAmount: z.number().min(0),
   exitDate: z.instanceof(CalendarDate),
 });
 
@@ -31,7 +31,7 @@ export default function NewScenario() {
     defaultValues: {
       name: "",
       description: "",
-      exitAmountCents: 0,
+      exitAmount: 0,
       exitDate: today(getLocalTimeZone()),
     },
   });
@@ -48,7 +48,7 @@ export default function NewScenario() {
       companyId: company.id,
       name: values.name,
       description: values.description || undefined,
-      exitAmountCents: BigInt(Math.round(values.exitAmountCents * 100)),
+      exitAmountCents: BigInt(Math.round(values.exitAmount * 100)),
       exitDate: values.exitDate.toDate(tz).toISOString(),
     });
   });
@@ -92,7 +92,7 @@ export default function NewScenario() {
           />
           <FormField
             control={form.control}
-            name="exitAmountCents"
+            name="exitAmount"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Exit amount</FormLabel>
