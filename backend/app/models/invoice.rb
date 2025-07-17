@@ -218,8 +218,8 @@ class Invoice < ApplicationRecord
   end
 
   def calculate_flexile_fee_cents
-    fee_cents = BASE_FLEXILE_FEE_CENTS + (total_amount_in_usd_cents * PERCENT_FLEXILE_FEE / 100)
-    [fee_cents, MAX_FLEXILE_FEE_CENTS].min.round
+    fee_cents = BigDecimal(BASE_FLEXILE_FEE_CENTS.to_s) + (BigDecimal(total_amount_in_usd_cents.to_s) * BigDecimal(PERCENT_FLEXILE_FEE.to_s) / BigDecimal('100'))
+    [fee_cents, MAX_FLEXILE_FEE_CENTS].min.round(0).to_i
   end
 
   def created_by_user?

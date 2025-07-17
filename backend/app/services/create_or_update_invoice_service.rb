@@ -32,7 +32,7 @@ class CreateOrUpdateInvoiceService
           end
 
           line_items_to_keep << invoice_line_item
-          invoice.total_amount_in_usd_cents += invoice_line_item.total_amount_cents
+          invoice.total_amount_in_usd_cents = BigDecimal(invoice.total_amount_in_usd_cents.to_s) + BigDecimal(invoice_line_item.total_amount_cents.to_s)
         end
       end
       line_items_to_remove = existing_line_items - line_items_to_keep
@@ -50,7 +50,7 @@ class CreateOrUpdateInvoiceService
           invoice_expense.assign_attributes(**expense.except(:id, :attachment))
         end
         keep_expenses << invoice_expense
-        invoice.total_amount_in_usd_cents += expense[:total_amount_in_cents].to_i
+        invoice.total_amount_in_usd_cents = BigDecimal(invoice.total_amount_in_usd_cents.to_s) + BigDecimal(expense[:total_amount_in_cents].to_s)
         expenses_in_cents += expense[:total_amount_in_cents].to_i
       end
       expenses_to_remove = existing_expenses - keep_expenses
@@ -58,6 +58,7 @@ class CreateOrUpdateInvoiceService
 
       invoice.attachments.each(&:purge_later)
 
+      invoice.total_amount_in_usd_cents = invoice.total_amount_in_usd_cents.round(0).to_i
       services_in_cents = invoice.total_amount_in_usd_cents - expenses_in_cents
       invoice_year = invoice.invoice_date.year
       equity_calculation_result = InvoiceEquityCalculator.new(
