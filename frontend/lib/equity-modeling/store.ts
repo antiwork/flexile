@@ -60,6 +60,7 @@ interface PlaygroundActions {
   setActiveTab: (tab: 'configuration' | 'visualization') => void;
   setSelectedInvestor: (id?: string) => void;
   setSelectedShareClass: (id?: string) => void;
+  setInitialized: (value: boolean) => void;
   
   // Utilities
   generateId: () => string;
@@ -115,6 +116,7 @@ export const usePlayground = create<PlaygroundStore>()(
     scenario: createDefaultScenario(),
     payouts: [],
     isCalculating: false,
+    isInitialized: false,
     activeTab: 'configuration',
     selectedInvestor: undefined,
     selectedShareClass: undefined,
@@ -395,6 +397,7 @@ export const usePlayground = create<PlaygroundStore>()(
     setActiveTab: (activeTab) => set({ activeTab }),
     setSelectedInvestor: (selectedInvestor) => set({ selectedInvestor }),
     setSelectedShareClass: (selectedShareClass) => set({ selectedShareClass }),
+    setInitialized: (isInitialized) => set({ isInitialized }),
 
     // Utilities
     generateId: () => `playground_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,

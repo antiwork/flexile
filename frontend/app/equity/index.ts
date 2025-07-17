@@ -30,6 +30,9 @@ export const navLinks = (user: CurrentUser, company: Company): TabLink[] => {
     company.flags.includes("tender_offers") && (isAdmin || isInvestor)
       ? { label: "Buybacks", route: "/equity/tender_offers" }
       : null,
+    isAdmin || isLawyer
+      ? { label: "Waterfall Playground", route: "/equity/waterfall/playground" }
+      : null,
   ];
   return links.filter((link) => !!link);
 };

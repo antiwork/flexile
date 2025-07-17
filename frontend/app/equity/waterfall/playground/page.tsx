@@ -8,7 +8,9 @@ import { useCurrentCompany, useCurrentUser } from "@/global";
 import EquityLayout from "@/app/equity/Layout";
 import Placeholder from "@/components/Placeholder";
 import WaterfallChartPro from "@/components/WaterfallChartPro";
+import ExitAmountControl from "@/components/ExitAmountControl";
 import { usePlayground } from "@/lib/equity-modeling/store";
+import { useLoadCapTable } from "@/lib/equity-modeling/useLoadCapTable";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 
 export default function WaterfallPlaygroundPage() {
@@ -19,7 +21,7 @@ export default function WaterfallPlaygroundPage() {
   
   const [hoveredPayout, setHoveredPayout] = useState<any>(null);
   
-  // Playground state
+  // Playground state - must be called before any conditional returns
   const {
     investors,
     shareClasses,
@@ -36,12 +38,42 @@ export default function WaterfallPlaygroundPage() {
     exportConfiguration,
     setActiveTab,
   } = usePlayground();
+  
+  // Load cap table data from database - must be called before any conditional returns
+  const { isLoading: isLoadingCapTable, error: loadError } = useLoadCapTable();
 
   // Check authorization
   if (!isAdmin && !isLawyer) {
     return (
       <EquityLayout>
         <Placeholder>You don't have permission to access the waterfall playground.</Placeholder>
+      </EquityLayout>
+    );
+  }
+
+  // Loading state
+  if (isLoadingCapTable) {
+    return (
+      <EquityLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
+            <p className="text-gray-600">Loading cap table data...</p>
+          </div>
+        </div>
+      </EquityLayout>
+    );
+  }
+
+  // Error state
+  if (loadError) {
+    return (
+      <EquityLayout>
+        <Placeholder>
+          <div className="text-red-600">
+            Failed to load cap table data: {loadError.message}
+          </div>
+        </Placeholder>
       </EquityLayout>
     );
   }
@@ -176,16 +208,10 @@ export default function WaterfallPlaygroundPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Exit Amount
                   </label>
-                  <input
-                    type="number"
-                    value={Number(scenario.exitAmountCents) / 100}
-                    onChange={(e) => updateExitAmount(BigInt(Math.round(Number(e.target.value) * 100)))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="100000"
+                  <ExitAmountControl
+                    exitAmountCents={scenario.exitAmountCents}
+                    onExitAmountChange={updateExitAmount}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Current: {formatMoneyFromCents(Number(scenario.exitAmountCents))}
-                  </p>
                 </div>
 
                 <div>

@@ -114,6 +114,7 @@ export interface PlaygroundState {
   
   // UI state
   isCalculating: boolean;
+  isInitialized: boolean;
   activeTab: 'configuration' | 'visualization';
   selectedInvestor?: string;
   selectedShareClass?: string;

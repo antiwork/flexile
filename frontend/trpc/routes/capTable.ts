@@ -17,6 +17,7 @@ import type { CapTableInvestor, CapTableInvestorForAdmin } from "@/models/invest
 import { companyProcedure, createRouter } from "@/trpc";
 
 export const capTableRouter = createRouter({
+  // Existing cap table endpoint
   show: companyProcedure.input(z.object({ newSchema: z.boolean().optional() })).query(async ({ ctx, input }) => {
     const isAdminOrLawyer = !!(ctx.companyAdministrator || ctx.companyLawyer);
     if (!ctx.company.capTableEnabled || !(isAdminOrLawyer || ctx.companyInvestor))

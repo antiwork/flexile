@@ -24,6 +24,7 @@ import { quickbooksRouter } from "./routes/quickbooks";
 import { shareHoldingsRouter } from "./routes/shareHoldings";
 import { tenderOffersRouter } from "./routes/tenderOffers";
 import { usersRouter } from "./routes/users";
+import { waterfallPlaygroundRouter } from "./routes/waterfallPlayground";
 import { createClient } from "./shared";
 import { createCallerFactory, createRouter } from "./";
 
@@ -54,6 +55,7 @@ export const appRouter = createRouter({
   equityAllocations: equityAllocationsRouter,
   equityCalculations: equityCalculationsRouter,
   lawyers: lawyersRouter,
+  waterfallPlayground: waterfallPlaygroundRouter,
 });
 export type AppRouter = typeof appRouter;
 
