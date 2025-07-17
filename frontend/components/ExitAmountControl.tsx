@@ -14,7 +14,7 @@ interface ExitAmountControlProps {
   disabled?: boolean;
 }
 
-const PRESET_MULTIPLIERS = [0.5, 1, 2, 5, 10];
+const PRESET_MULTIPLIERS = [5, 10, 50, 100, 500]; // Will create $500K, $1M, $5M, $10M, $50M
 
 function formatDollars(cents: number): string {
   const dollars = cents / 100;
@@ -95,8 +95,8 @@ export default function ExitAmountControl({
   }, []);
 
   const handlePresetClick = useCallback((multiplier: number) => {
-    const baseAmount = 10_000_000; // $100K base
-    const newAmountCents = BigInt(baseAmount * multiplier);
+    const baseAmount = 100_000; // $1K base
+    const newAmountCents = BigInt(baseAmount * 100 * multiplier); // Convert to cents
     onExitAmountChange(newAmountCents);
   }, [onExitAmountChange]);
 
@@ -156,7 +156,7 @@ export default function ExitAmountControl({
         <div className="text-sm font-medium text-gray-700">Quick Scenarios</div>
         <div className="flex gap-2 flex-wrap">
           {PRESET_MULTIPLIERS.map(multiplier => {
-            const amount = 10_000_000 * multiplier; // Base $100K
+            const amount = 100_000 * multiplier; // Base $1K
             const isActive = Math.abs(currentDollars - amount) < 1000; // Within $1K tolerance
             
             return (
