@@ -7,6 +7,7 @@ import DataTable, { createColumnHelper, useTable } from "@/components/DataTable"
 import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
+import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,7 +30,7 @@ type EquityGrant = RouterOutput["equityGrants"]["list"][number];
 export default function GrantsPage() {
   const router = useRouter();
   const company = useCurrentCompany();
-  const [data, { refetch }] = trpc.equityGrants.list.useSuspenseQuery({ companyId: company.id });
+  const { data = [], isLoading, refetch } = trpc.equityGrants.list.useQuery({ companyId: company.id });
   const [cancellingGrantId, setCancellingGrantId] = useState<string | null>(null);
   const cancellingGrant = data.find((grant) => grant.id === cancellingGrantId);
   const cancelGrant = trpc.equityGrants.cancel.useMutation({
@@ -101,7 +102,9 @@ export default function GrantsPage() {
           </AlertDescription>
         </Alert>
       ) : null}
-      {data.length > 0 ? (
+      {isLoading ? (
+        <TableSkeleton columns={8} />
+      ) : data.length > 0 ? (
         <DataTable table={table} onRowClicked={(row) => router.push(`/people/${row.user.id}`)} />
       ) : (
         <Placeholder icon={CircleCheck}>There are no option grants right now.</Placeholder>

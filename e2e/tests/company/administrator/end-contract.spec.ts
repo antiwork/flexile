@@ -44,7 +44,7 @@ test.describe("End contract", () => {
 
     // Re-invite
     await page.getByRole("link", { name: "People" }).click();
-    await page.getByRole("button", { name: "Invite contractor" }).click();
+    await page.getByRole("button", { name: "Add contractor" }).click();
     const { mockForm } = mockDocuseal(next, {
       submitters: () => ({ "Company Representative": adminUser, Signer: contractor }),
     });
