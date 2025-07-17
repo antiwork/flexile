@@ -99,18 +99,15 @@ const WorkspaceAccessSection = () => {
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const currentCompany = user.companies.find((company) => company.id === user.currentCompanyId);
 
-  const contractorStatusQuery = trpc.users.getContractorStatus.useQuery(
-    { companyId: currentCompany?.id },
-    {
-      enabled: !!currentCompany?.id && !!user?.id && !!user.currentCompanyId,
-      retry: (failureCount, error) => {
-        if (error?.data?.code === "UNAUTHORIZED" || error?.data?.code === "BAD_REQUEST") {
-          return false;
-        }
-        return failureCount < 3;
-      },
+  const contractorStatusQuery = trpc.users.getContractorStatus.useQuery({
+    enabled: !!currentCompany?.id && !!user?.id && !!user.currentCompanyId,
+    retry: (failureCount, error) => {
+      if (error?.data?.code === "UNAUTHORIZED" || error?.data?.code === "BAD_REQUEST") {
+        return false;
+      }
+      return failureCount < 3;
     },
-  );
+  });
 
   const leaveWorkspaceMutation = trpc.users.leaveWorkspace.useMutation({
     onSuccess: (data) => {
