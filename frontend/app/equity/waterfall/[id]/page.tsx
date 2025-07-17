@@ -1,19 +1,15 @@
 "use client";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 import TableSkeleton from "@/components/TableSkeleton";
 import EquityLayout from "@/app/equity/Layout";
 
-export default function ScenarioPage() {
-  const { id } = useParams<{ id: string }>();
+export default function ScenarioRedirect() {
   const router = useRouter();
-  
-  // Redirect to playground - it's the primary interface now
   useEffect(() => {
-    router.replace(`/equity/waterfall/${id}/playground`);
-  }, [id, router]);
-  
-  // Show loading while redirecting
+    router.replace("/equity/waterfall/playground");
+  }, [router]);
+
   return (
     <EquityLayout>
       <TableSkeleton columns={3} />
