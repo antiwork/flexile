@@ -3,6 +3,7 @@ import { CircleCheck } from "lucide-react";
 import React from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
+import TableSkeleton from "@/components/TableSkeleton";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -22,7 +23,7 @@ const columns = [
 export default function Convertibles() {
   const company = useCurrentCompany();
   const user = useCurrentUser();
-  const [data] = trpc.convertibleSecurities.list.useSuspenseQuery({
+  const { data = { convertibleSecurities: [] }, isLoading } = trpc.convertibleSecurities.list.useQuery({
     companyId: company.id,
     investorId: user.roles.investor?.id ?? "",
   });
@@ -31,7 +32,9 @@ export default function Convertibles() {
 
   return (
     <EquityLayout>
-      {data.convertibleSecurities.length > 0 ? (
+      {isLoading ? (
+        <TableSkeleton columns={4} />
+      ) : data.convertibleSecurities.length > 0 ? (
         <DataTable table={table} />
       ) : (
         <Placeholder icon={CircleCheck}>You do not hold any convertible securities.</Placeholder>
