@@ -301,6 +301,7 @@ export default function NewPlaygroundPage() {
                   exitAmountCents={scenario.exitAmountCents}
                   onPayoutHover={setHoveredPayout}
                   highlightedPayoutId={hoveredPayout?.id}
+                  isCalculating={isCalculating}
                 />
               </TabsContent>
 
