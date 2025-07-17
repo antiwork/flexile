@@ -876,6 +876,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_11_103237) do
     t.decimal "hurdle_rate"
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
+    t.boolean "preferred", default: false, null: false
     t.index ["company_id"], name: "index_share_classes_on_company_id"
   end
 
