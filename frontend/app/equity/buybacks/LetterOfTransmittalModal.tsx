@@ -2,7 +2,14 @@ import { useState } from "react";
 import type { Buyback } from "@/app/equity/buybacks";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useCurrentUser } from "@/global";
 
 type LetterOfTransmittalModalProps = {
@@ -36,13 +43,12 @@ const LetterOfTransmittalModal = ({ isOpen, onClose, onBack, onNext, buyback }: 
       <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-4xl flex-col overflow-hidden p-4 sm:p-6">
         <DialogHeader className="shrink-0">
           <DialogTitle>Letter of transmittal</DialogTitle>
+          <DialogDescription>
+            Review and sign the Letter of Transmittal to confirm your participation in this buyback.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <p className="mb-4 shrink-0 text-sm">
-            Review and sign the Letter of Transmittal to confirm your participation in this buyback.
-          </p>
-
           {showDocument && pdfUrl ? (
             <div className="mb-4 flex-1">
               <iframe

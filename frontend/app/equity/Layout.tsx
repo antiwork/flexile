@@ -18,7 +18,7 @@ const Layout = ({
 }: {
   children: React.ReactNode;
   headerActions?: React.ReactNode;
-  pageTitle?: string | null;
+  pageTitle?: React.ReactNode | string | null;
 }) => {
   const pathname = usePathname();
   const user = useCurrentUser();
@@ -27,7 +27,7 @@ const Layout = ({
     navLinks(user, company).find((link) => link.route === pathname) ||
     navLinks(user, company).find((link) => pathname.startsWith(link.route));
 
-  const crumbs = ["Equity"];
+  const crumbs: React.ReactNode[] = ["Equity"];
 
   if (currentLink) {
     crumbs.push(currentLink.label);

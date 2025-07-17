@@ -4,7 +4,14 @@ import type { Buyback, BuybackBid } from "@/app/equity/buybacks";
 import { MutationStatusButton } from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 
 type ConfirmPaymentModalProps = {
@@ -37,11 +44,11 @@ const ConfirmPaymentModal = ({ isOpen, onClose, onBack, buyback, bids, mutation 
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Confirm and process payment</DialogTitle>
+          <DialogDescription>
+            Please confirm all details are accurate. Payments will be issued and the buyback finalized once you hit
+            next.
+          </DialogDescription>
         </DialogHeader>
-
-        <p className="mb-4 text-sm">
-          Please confirm all details are accurate. Payments will be issued and the buyback finalized once you hit next.
-        </p>
 
         <div>
           <div className="flex justify-between pb-4">

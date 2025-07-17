@@ -3,7 +3,14 @@ import Link from "next/link";
 import { useState } from "react";
 import type { Buyback } from "@/app/equity/buybacks";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatServerDate } from "@/utils/time";
 import LetterOfTransmittalModal from "./LetterOfTransmittalModal";
@@ -51,19 +58,20 @@ const PlaceBidModal = ({ isOpen, onClose, buyback }: PlaceBidModalProps) => {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Buyback details</DialogTitle>
+            <DialogDescription>
+              Review the buyback terms below and continue to confirm your participation.
+            </DialogDescription>
           </DialogHeader>
-
-          <p className="mb-4 text-sm">Review the buyback terms below and continue to confirm your participation.</p>
 
           <div className="space-y-0">
             <div className="flex justify-between border-b border-gray-200 py-4">
               <span className="font-medium">Start date</span>
-              <span>{formatServerDate(buyback.starts_at)}</span>
+              <span>{formatServerDate(new Date(buyback.starts_at))}</span>
             </div>
 
             <div className="flex justify-between border-b border-gray-200 py-4">
               <span className="font-medium">End date</span>
-              <span>{formatServerDate(buyback.ends_at)}</span>
+              <span>{formatServerDate(new Date(buyback.ends_at))}</span>
             </div>
 
             <div className="flex justify-between border-b border-gray-200 py-4">

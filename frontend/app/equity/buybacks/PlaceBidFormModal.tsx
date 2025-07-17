@@ -7,7 +7,14 @@ import ComboBox from "@/components/ComboBox";
 import { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
@@ -105,11 +112,10 @@ const PlaceBidFormModal = ({ isOpen, onClose, onBack, buyback }: PlaceBidFormMod
       <DialogContent className="flex max-h-[90vh] w-[95vw] max-w-md flex-col overflow-hidden p-4 sm:p-6">
         <DialogHeader className="shrink-0">
           <DialogTitle>Place a bid</DialogTitle>
+          <DialogDescription>Submit an offer to sell your shares in this buyback event.</DialogDescription>
         </DialogHeader>
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <p className="mb-4 shrink-0 text-sm">Submit an offer to sell your shares in this buyback event.</p>
-
           <Form {...form}>
             <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-1 flex-col gap-4">
               <FormField

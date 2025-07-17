@@ -2,7 +2,14 @@ import { Download } from "lucide-react";
 import React from "react";
 import type { BuybackBid } from "@/app/equity/buybacks";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { download } from "@/utils";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 
@@ -36,11 +43,10 @@ const ReviewInvestorsModal = ({ isOpen, onClose, onNext, onBack, bids }: ReviewI
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Review investors</DialogTitle>
+          <DialogDescription>
+            Please review the list of investors and verify all information is correct before proceeding with settlement.
+          </DialogDescription>
         </DialogHeader>
-
-        <p className="mb-4 text-sm">
-          Please review the list of investors and verify all information is correct before proceeding with settlement.
-        </p>
 
         <div className="mb-4 flex items-center justify-between">
           <span className="font-medium">{acceptedBids.length} investors</span>

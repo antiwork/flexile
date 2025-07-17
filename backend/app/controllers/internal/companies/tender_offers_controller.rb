@@ -65,7 +65,7 @@ class Internal::Companies::TenderOffersController < Internal::Companies::BaseCon
 
     result = CreateTenderOffer.new(
       company: Current.company,
-      attributes: buyback_params.except!(:attachment_key, :letter_of_transmittal).merge!(attachment: attachment, letter_of_transmittal: letter_of_transmittal)
+      attributes: buyback_params.except(:attachment_key, :letter_of_transmittal).merge!(attachment: attachment, letter_of_transmittal: letter_of_transmittal)
     ).perform
 
     if result[:success]

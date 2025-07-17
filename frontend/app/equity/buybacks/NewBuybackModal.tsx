@@ -1,8 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDate, getLocalTimeZone } from "@internationalized/date";
 import { useMutation, type UseMutationResult } from "@tanstack/react-query";
+import { EditorContent, useEditor } from "@tiptap/react";
 import { ChevronDown, CloudUpload, Link2, PencilLine, Search, Trash2 } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { createBuybackSchema } from "@/app/equity/buybacks";
@@ -11,7 +12,14 @@ import { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,13 +28,48 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany } from "@/global";
 import { fetchInvestorEmail, isInvestor } from "@/models/investor";
 import { trpc } from "@/trpc/client";
 import { cn, md5Checksum } from "@/utils";
 import { request } from "@/utils/request";
+import { richTextExtensions } from "@/utils/richText";
 import { company_tender_offers_path } from "@/utils/routes";
+
+const SimpleRichTextEditor = ({
+  value,
+  onChange,
+  className,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  className?: string;
+}) => {
+  const editor = useEditor({
+    extensions: richTextExtensions,
+    content: value,
+    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+    editorProps: {
+      attributes: {
+        class: cn(
+          "prose max-w-none p-3 h-[50vh] overflow-y-auto",
+          "border-input rounded-md border bg-transparent text-sm",
+          "placeholder:text-muted-foreground",
+          className,
+        ),
+      },
+    },
+    immediatelyRender: false,
+  });
+
+  useEffect(() => {
+    if (editor && value !== editor.getHTML()) {
+      editor.commands.setContent(value, false);
+    }
+  }, [value, editor]);
+
+  return <EditorContent editor={editor} />;
+};
 
 const buybackFormSchema = z
   .object({
@@ -72,21 +115,24 @@ type NewBuybackModalProps = {
 };
 
 type BuybackFormSectionProps = {
+  isActive: boolean;
   onNext: (data: BuybackFormValues) => void;
 };
 
 type CreateLetterOfTransmittalSectionProps = {
+  isActive: boolean;
   onNext: (data: LetterOfTransmittalFormValues) => void;
   onBack: () => void;
 };
 
 type SelectInvestorsModalProps = {
+  isActive: boolean;
   onBack: () => void;
   onNext: (data: string[]) => void;
   mutation: UseMutationResult<unknown, unknown, void>;
 };
 
-type ActiveSection = "buyback-details" | "letter-of-transmittal" | "select-investors" | null;
+type ActiveSection = "buyback-details" | "letter-of-transmittal" | "select-investors";
 
 const NewBuybackModal = ({ isOpen, onClose }: NewBuybackModalProps) => {
   const company = useCurrentCompany();
@@ -106,7 +152,7 @@ const NewBuybackModal = ({ isOpen, onClose }: NewBuybackModalProps) => {
     setActiveSection("letter-of-transmittal");
   };
 
-  const [activeSection, setActiveSection] = useState<ActiveSection>(null);
+  const [activeSection, setActiveSection] = useState<ActiveSection>("buyback-details");
 
   const createBuybackMutation = useMutation({
     mutationFn: async () => {
@@ -150,21 +196,25 @@ const NewBuybackModal = ({ isOpen, onClose }: NewBuybackModalProps) => {
       });
     },
     onSuccess: () => {
-      setActiveSection(null);
+      setActiveSection("buyback-details");
       setBuybackData(null);
       setLetterData(null);
       setInvestorsData([]);
       onClose();
     },
+    onError: (error) => {
+      // TODO: Add proper error handling/toast notification
+    },
   });
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <BuybackFormSection
+        isActive={activeSection === "buyback-details"}
         onNext={({ start_date, end_date, total_amount, starting_price, ...data }) => {
           setBuybackData({
             ...data,
-            starts_at: start_date.toDate(getLocalTimeZone()),
-            ends_at: end_date.toDate(getLocalTimeZone()),
+            starts_at: start_date.toString(),
+            ends_at: end_date.toString(),
             total_amount_in_cents: total_amount * 100,
             starting_price_per_share_cents: starting_price * 100,
           });
@@ -172,6 +222,7 @@ const NewBuybackModal = ({ isOpen, onClose }: NewBuybackModalProps) => {
         }}
       />
       <CreateLetterOfTransmittalSection
+        isActive={activeSection === "letter-of-transmittal"}
         onNext={(data) => {
           setLetterData(data);
           setActiveSection("select-investors");
@@ -181,6 +232,7 @@ const NewBuybackModal = ({ isOpen, onClose }: NewBuybackModalProps) => {
         }}
       />
       <SelectInvestorsSection
+        isActive={activeSection === "select-investors"}
         onBack={handleInvestorsBack}
         onNext={(data) => {
           setInvestorsData(data);
@@ -193,7 +245,7 @@ const NewBuybackModal = ({ isOpen, onClose }: NewBuybackModalProps) => {
   );
 };
 
-const BuybackFormSection = ({ onNext }: BuybackFormSectionProps) => {
+const BuybackFormSection = ({ isActive, onNext }: BuybackFormSectionProps) => {
   const [dragActive, setDragActive] = useState(false);
 
   const form = useForm<BuybackFormValues>({
@@ -235,18 +287,21 @@ const BuybackFormSection = ({ onNext }: BuybackFormSectionProps) => {
 
   const watchedFile = form.watch("attachment");
 
+  if (!isActive) {
+    return null;
+  }
+
   return (
-    <DialogContent className="max-h-[80vh] max-w-md overflow-y-auto">
+    <DialogContent>
       <DialogHeader>
         <DialogTitle>Start a new buyback</DialogTitle>
+        <DialogDescription>
+          Set the timeline, valuation, and upload your buyback terms to begin collecting investor bids.
+        </DialogDescription>
       </DialogHeader>
 
-      <p className="mb-4 text-sm">
-        Set the timeline, valuation, and upload your buyback terms to begin collecting investor bids.
-      </p>
-
       <Form {...form}>
-        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+        <form onSubmit={(e) => void handleSubmit(e)} className="max-h-[60vh] space-y-4 overflow-y-auto px-1 py-1">
           <FormField
             control={form.control}
             name="type"
@@ -296,7 +351,7 @@ const BuybackFormSection = ({ onNext }: BuybackFormSectionProps) => {
             )}
           />
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <FormField
               control={form.control}
               name="start_date"
@@ -432,7 +487,7 @@ const BuybackFormSection = ({ onNext }: BuybackFormSectionProps) => {
         </form>
       </Form>
 
-      <DialogFooter className="mt-4">
+      <DialogFooter>
         <Button onClick={() => void handleSubmit()} className="w-full sm:w-auto">
           Continue
         </Button>
@@ -441,7 +496,7 @@ const BuybackFormSection = ({ onNext }: BuybackFormSectionProps) => {
   );
 };
 
-const CreateLetterOfTransmittalSection = ({ onNext, onBack }: CreateLetterOfTransmittalSectionProps) => {
+const CreateLetterOfTransmittalSection = ({ isActive, onNext, onBack }: CreateLetterOfTransmittalSectionProps) => {
   const form = useForm<LetterOfTransmittalFormValues>({
     resolver: zodResolver(letterOfTransmittalFormSchema),
     defaultValues: { type: "link", data: "" },
@@ -458,17 +513,20 @@ const CreateLetterOfTransmittalSection = ({ onNext, onBack }: CreateLetterOfTran
     onNext(data);
   });
 
+  if (!isActive) {
+    return null;
+  }
+
   return (
-    <DialogContent className="max-h-[80vh] max-w-md overflow-y-auto">
+    <DialogContent>
       <DialogHeader>
         <DialogTitle>Letter of transmittal</DialogTitle>
+        <DialogDescription>
+          Add the Letter of Transmittal to explain the buyback terms. Investors will see it during confirmation.
+        </DialogDescription>
       </DialogHeader>
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <p className="mb-4 text-sm">
-          Add the Letter of Transmittal to explain the buyback terms. Investors will see it during confirmation.
-        </p>
-
         <div className="mb-3 flex space-x-1 rounded-md bg-gray-50 p-1">
           <button
             type="button"
@@ -492,7 +550,7 @@ const CreateLetterOfTransmittalSection = ({ onNext, onBack }: CreateLetterOfTran
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col overflow-auto">
+        <div className="flex flex-1 flex-col overflow-auto px-1 py-1">
           <Form {...form}>
             <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col">
               <FormField
@@ -510,11 +568,7 @@ const CreateLetterOfTransmittalSection = ({ onNext, onBack }: CreateLetterOfTran
                         />
                       ) : (
                         <div>
-                          <Textarea
-                            {...field}
-                            placeholder="Place or type your letter of transmittal here..."
-                            className="min-h-100 resize-none"
-                          />
+                          <SimpleRichTextEditor value={field.value || ""} onChange={field.onChange} />
                           <p className="mt-2 text-xs text-gray-500">
                             Rich text formatting will be preserved. You can paste from Word or Google Docs.
                           </p>
@@ -547,7 +601,7 @@ const CreateLetterOfTransmittalSection = ({ onNext, onBack }: CreateLetterOfTran
   );
 };
 
-const SelectInvestorsSection = ({ onBack, onNext, mutation }: SelectInvestorsModalProps) => {
+const SelectInvestorsSection = ({ isActive, onBack, onNext, mutation }: SelectInvestorsModalProps) => {
   const company = useCurrentCompany();
   const [searchTerm, setSearchTerm] = useState("");
   const [shareClassFilter, setShareClassFilter] = useState("All share classes");
@@ -566,7 +620,9 @@ const SelectInvestorsSection = ({ onBack, onNext, mutation }: SelectInvestorsMod
           investor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           fetchInvestorEmail(investor)?.toLowerCase().includes(searchTerm.toLowerCase());
 
-        const matchesShareClass = shareClassFilter === "All share classes";
+        const matchesShareClass =
+          shareClassFilter === "All share classes" ||
+          investor.shareClassHoldings.some((holding) => holding.shareClassName === shareClassFilter);
 
         return matchesSearch && matchesShareClass;
       }),
@@ -576,6 +632,13 @@ const SelectInvestorsSection = ({ onBack, onNext, mutation }: SelectInvestorsMod
   useEffect(() => {
     setAllSelected(selectedInvestors.size === filteredInvestors.length && filteredInvestors.length > 0);
   }, [selectedInvestors.size, filteredInvestors.length]);
+
+  useEffect(() => {
+    if (allSelected) {
+      const allIds = new Set(filteredInvestors.map((inv) => inv.id));
+      setSelectedInvestors(allIds);
+    }
+  }, [allSelected]);
 
   const handleInvestorToggle = (investorId: string) => {
     const newSelected = new Set(selectedInvestors);
@@ -587,31 +650,25 @@ const SelectInvestorsSection = ({ onBack, onNext, mutation }: SelectInvestorsMod
     setSelectedInvestors(newSelected);
   };
 
-  const handleAllToggle = () => {
-    if (allSelected) {
-      setSelectedInvestors(new Set());
-    } else {
-      const allIds = new Set(filteredInvestors.map((inv) => inv.id));
-      setSelectedInvestors(allIds);
-    }
-  };
-
   const handleNext = () => {
     onNext(Array.from(selectedInvestors));
   };
 
+  if (!isActive) {
+    return null;
+  }
+
   return (
-    <DialogContent className="max-h-[80vh] max-w-md overflow-y-auto">
+    <DialogContent>
       <DialogHeader>
         <DialogTitle>Select who can join this buyback</DialogTitle>
+        <DialogDescription>
+          Choose investors who should be allowed to place bids. Only selected investors will see and participate in this
+          buyback.
+        </DialogDescription>
       </DialogHeader>
 
-      <p className="mb-4 text-sm">
-        Choose investors who should be allowed to place bids. Only selected investors will see and participate in this
-        buyback.
-      </p>
-
-      <div className="mb-4 flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3">
+      <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3">
         <div className="relative flex-1">
           <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
           <Input
@@ -638,41 +695,52 @@ const SelectInvestorsSection = ({ onBack, onNext, mutation }: SelectInvestorsMod
         </DropdownMenu>
       </div>
 
-      <div className="mb-3 max-h-64 overflow-y-auto">
-        <div className="flex items-center space-x-3 p-3">
+      <div className="flex flex-1 flex-col overflow-auto px-1 py-1">
+        <div className="flex items-center space-x-3 py-3">
           <Checkbox
             id="all-investors"
-            checked={allSelected}
-            onCheckedChange={handleAllToggle}
+            checked={allSelected || (selectedInvestors.size ? "indeterminate" : false)}
+            onCheckedChange={() => {
+              if (allSelected) {
+                setSelectedInvestors(new Set());
+              } else {
+                const allIds = new Set(filteredInvestors.map((inv) => inv.id));
+                setSelectedInvestors(allIds);
+              }
+            }}
             className="data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600"
           />
           <label htmlFor="all-investors" className="text-sm font-medium">
             {allSelected ? "All" : selectedInvestors.size} investors selected
           </label>
         </div>
-        <div>
-          {filteredInvestors.map((investor) => (
-            <div
-              key={investor.id}
-              className={cn(
-                "flex items-center justify-between border-t border-gray-200 p-3",
-                selectedInvestors.has(investor.id) && "bg-blue-50",
-              )}
-            >
-              <div className="flex items-center space-x-3">
-                <Checkbox
-                  id={investor.id}
-                  checked={selectedInvestors.has(investor.id)}
-                  onCheckedChange={() => handleInvestorToggle(investor.id)}
-                  className="h-4 w-4 data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600"
-                />
-                <label htmlFor={investor.id} className="cursor-pointer text-sm">
-                  {investor.name}
-                </label>
+        <div className="max-h-[50vh] overflow-auto">
+          <div className="min-w-fit">
+            {filteredInvestors.map((investor) => (
+              <div
+                key={investor.id}
+                className={cn(
+                  "flex w-full items-center justify-between border-t border-gray-200 py-3 pr-3",
+                  selectedInvestors.has(investor.id) && "bg-blue-50",
+                )}
+              >
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id={investor.id}
+                    checked={selectedInvestors.has(investor.id)}
+                    onCheckedChange={() => handleInvestorToggle(investor.id)}
+                    className="h-4 w-4 data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600"
+                  />
+                  <label htmlFor={investor.id} className="cursor-pointer text-sm">
+                    {investor.name}
+                  </label>
+                </div>
+                <div className="text-sm text-gray-500">
+                  {investor.shareClassHoldings.map((holding) => holding.shareClassName).join(", ")}
+                </div>
               </div>
-              <div className="text-sm text-gray-500">{fetchInvestorEmail(investor) || "No email"}</div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 

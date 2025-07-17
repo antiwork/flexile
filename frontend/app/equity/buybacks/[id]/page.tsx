@@ -2,7 +2,7 @@
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel, type Table } from "@tanstack/react-table";
-import { Download, InboxIcon, InfoIcon, LucideCircleDollarSign, Trash2 } from "lucide-react";
+import { CheckIcon, Download, InboxIcon, InfoIcon, LucideCircleDollarSign, Trash2, XIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import React, { useMemo, useState } from "react";
@@ -17,6 +17,7 @@ import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -241,11 +242,29 @@ export default function BuybackView() {
               {
                 header: "Status",
                 meta: { filterOptions: ["Accepted", "Partially accepted", "Excluded"] },
-                cell: (info) => (
-                  <Status variant={info.getValue().toLowerCase().includes("accepted") ? "success" : "secondary"}>
-                    {info.getValue()}
-                  </Status>
-                ),
+                cell: (info) =>
+                  info.getValue().toLowerCase() === "accepted" ? (
+                    <div className="inline-flex items-center gap-2">
+                      <span className="bg-green inline-flex h-4 w-4 items-center justify-center rounded-full text-white">
+                        <CheckIcon className="h-3 w-3" />
+                      </span>
+                      {info.getValue()}
+                    </div>
+                  ) : info.getValue().toLowerCase() === "partially accepted" ? (
+                    <div className="inline-flex items-center gap-2">
+                      <span className="border-green from-green h-4 w-4 rounded-full border-2 bg-gradient-to-r from-50% to-transparent to-50%" />
+                      {info.getValue()}
+                    </div>
+                  ) : info.getValue().toLowerCase() === "excluded" ? (
+                    <div className="inline-flex items-center gap-2">
+                      <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-gray-300 text-white">
+                        <XIcon className="h-3 w-3" />
+                      </span>
+                      {info.getValue()}
+                    </div>
+                  ) : (
+                    <div className="inline-flex items-center gap-2"> {info.getValue()}</div>
+                  ),
               },
             )
           : null,
@@ -277,7 +296,16 @@ export default function BuybackView() {
 
   return (
     <EquityLayout
-      pageTitle={buyback.name}
+      pageTitle={
+        <div className="gap-2">
+          {buyback.name}
+          {buyback.equity_buyback_round_count ? (
+            <Badge variant="outline" className="border-muted text-muted-foreground ml-4 rounded-full">
+              Closed and Settled
+            </Badge>
+          ) : null}
+        </div>
+      }
       headerActions={
         !bids.length || !user.roles.administrator ? (
           <BuybackActions buyback={buyback} user={user} bids={bids} onSetActiveModal={setActiveModal} />

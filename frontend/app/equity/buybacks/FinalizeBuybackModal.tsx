@@ -1,7 +1,14 @@
 import React from "react";
 import type { Buyback, BuybackBid } from "@/app/equity/buybacks";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useCurrentCompany } from "@/global";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 
@@ -29,9 +36,8 @@ const FinalizeBuybackModal = ({ isOpen, onClose, onNext, buyback, bids }: Finali
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Tender offer summary</DialogTitle>
+          <DialogDescription>Review the buyback details before finalizing the settlement.</DialogDescription>
         </DialogHeader>
-
-        <p className="mb-4 text-sm">Review the buyback details before finalizing the settlement.</p>
 
         <div className="space-y-0">
           <div className="flex justify-between border-b border-gray-200 pb-4">
