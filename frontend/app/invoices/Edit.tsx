@@ -252,7 +252,7 @@ const Edit = () => {
         const updated = { ...assertDefined(lineItem), ...update };
         updated.errors = [];
         if (updated.description.length === 0) updated.errors.push("description");
-        if (!updated.quantity || updated.quantity <= 0) updated.errors.push("quantity");
+        if (!updated.quantity || updated.quantity < 0.01) updated.errors.push("quantity");
         return updated;
       }),
     );

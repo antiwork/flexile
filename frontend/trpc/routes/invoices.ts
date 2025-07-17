@@ -202,7 +202,7 @@ export const invoicesRouter = createRouter({
         .values({
           invoiceId: invoice.id,
           description,
-          quantity: 1,
+          quantity: "1",
           payRateInSubunits: Number(totalAmountCents),
         })
         .returning();
