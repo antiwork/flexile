@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_11_103237) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_16_191114) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -343,6 +343,11 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_11_103237) do
     t.datetime "updated_at", null: false
     t.bigint "convertible_investment_id", null: false
     t.decimal "implied_shares", null: false
+    t.bigint "valuation_cap_cents"
+    t.decimal "discount_rate_percent"
+    t.decimal "interest_rate_percent"
+    t.date "maturity_date"
+    t.integer "seniority_rank", limit: 2
     t.index ["company_investor_id"], name: "index_convertible_securities_on_company_investor_id"
     t.index ["convertible_investment_id"], name: "index_convertible_securities_on_convertible_investment_id"
   end
@@ -813,6 +818,36 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_11_103237) do
     t.index ["user_id"], name: "index_invoices_on_user_id"
   end
 
+  create_table "liquidation_payouts", force: :cascade do |t|
+    t.bigint "liquidation_scenario_id", null: false
+    t.bigint "company_investor_id", null: false
+    t.string "share_class"
+    t.string "security_type", null: false
+    t.bigint "number_of_shares"
+    t.bigint "payout_amount_cents", null: false
+    t.decimal "liquidation_preference_amount"
+    t.decimal "participation_amount"
+    t.decimal "common_proceeds_amount"
+    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "updated_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.index ["company_investor_id"], name: "index_liquidation_payouts_on_company_investor_id"
+    t.index ["liquidation_scenario_id"], name: "index_liquidation_payouts_on_liquidation_scenario_id"
+  end
+
+  create_table "liquidation_scenarios", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.string "external_id", null: false
+    t.string "name", null: false
+    t.text "description"
+    t.bigint "exit_amount_cents", null: false
+    t.date "exit_date", null: false
+    t.string "status", default: "draft", null: false
+    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "updated_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.index ["company_id"], name: "index_liquidation_scenarios_on_company_id"
+    t.index ["external_id"], name: "index_liquidation_scenarios_on_external_id", unique: true
+  end
+
   create_table "option_pools", force: :cascade do |t|
     t.bigint "company_id", null: false
     t.string "name", null: false
@@ -877,6 +912,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_11_103237) do
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.boolean "preferred", default: false, null: false
+    t.decimal "liquidation_preference_multiple", default: "1.0", null: false
+    t.boolean "participating", default: false, null: false
+    t.decimal "participation_cap_multiple"
+    t.integer "seniority_rank", limit: 2
     t.index ["company_id"], name: "index_share_classes_on_company_id"
   end
 
@@ -1123,4 +1162,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_11_103237) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "liquidation_payouts", "company_investors"
+  add_foreign_key "liquidation_payouts", "liquidation_scenarios"
+  add_foreign_key "liquidation_scenarios", "companies"
 end
