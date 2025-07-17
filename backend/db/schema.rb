@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_24_011111) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_17_154701) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -743,7 +743,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_24_011111) do
   create_table "invoice_line_items", force: :cascade do |t|
     t.bigint "invoice_id", null: false
     t.string "description", null: false
-    t.integer "quantity", null: false
+    t.decimal "quantity", precision: 10, scale: 2, null: false
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.integer "pay_rate_in_subunits", null: false

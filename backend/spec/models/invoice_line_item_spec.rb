@@ -31,6 +31,13 @@ RSpec.describe InvoiceLineItem do
         expect(invoice_line_item.errors[:pay_rate_in_subunits]).to include("must be an integer")
       end
     end
+
+    describe "quantity as float" do
+      it "allows float values for quantity" do
+        item = build(:invoice_line_item, quantity: 2.5)
+        expect(item).to be_valid
+      end
+    end
   end
 
   describe "#cash_amount_in_cents" do

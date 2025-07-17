@@ -73,7 +73,7 @@ const dataSchema = z.object({
       z.object({
         id: z.number().optional(),
         description: z.string(),
-        quantity: z.number().nullable(),
+        quantity: z.number().min(0.01).nullable(),
         hourly: z.boolean(),
         pay_rate_in_subunits: z.number(),
       }),
@@ -133,7 +133,7 @@ const Edit = () => {
     return List([
       {
         description: "",
-        quantity: parseInt(searchParams.get("quantity") ?? "", 10) || (data.user.project_based ? 1 : 60),
+        quantity: parseFloat(searchParams.get("quantity") ?? "") || (data.user.project_based ? 1 : 60),
         hourly: searchParams.has("hourly") ? searchParams.get("hourly") === "true" : !data.user.project_based,
         pay_rate_in_subunits: parseInt(searchParams.get("rate") ?? "", 10) || (payRateInSubunits ?? 0),
       },
@@ -211,7 +211,7 @@ const Edit = () => {
     setLineItems((lineItems) =>
       lineItems.push({
         description: "",
-        quantity: data.user.project_based ? 1 : 60,
+        quantity: data.user.project_based ? 1.0 : 60.0,
         hourly: !data.user.project_based,
         pay_rate_in_subunits: payRateInSubunits ?? 0,
       }),

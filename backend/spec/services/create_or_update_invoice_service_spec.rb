@@ -513,4 +513,32 @@ RSpec.describe CreateOrUpdateInvoiceService do
       end
     end
   end
+
+  describe "creating an invoice with a float quantity" do
+    let(:float_quantity_params) do
+      ActionController::Parameters.new({
+        **invoice_params,
+        invoice_line_items: [
+          {
+            description: "Float quantity item",
+            pay_rate_in_subunits: contractor.pay_rate_in_subunits,
+            quantity: 2.5,
+            hourly: false,
+          },
+        ],
+      })
+    end
+    let(:float_quantity_service) { described_class.new(params: float_quantity_params, user: user, company: company, contractor: contractor, invoice: nil) }
+
+    it "creates an invoice with a float quantity" do
+      expect do
+        result = float_quantity_service.process
+        expect(result[:success]).to be(true)
+        invoice = result[:invoice]
+        expect(invoice.invoice_line_items.first.quantity).to eq(2.5)
+        expected_amount = (contractor.pay_rate_in_subunits * 2.5).ceil
+        expect(invoice.total_amount_in_usd_cents).to eq(expected_amount)
+      end.to change { user.invoices.count }.by(1)
+    end
+  end
 end
