@@ -4,7 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { and, eq, isNotNull, isNull, or } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { DocumentTemplateType, PayRateType, DocumentType } from "@/db/enums";
+import { DocumentTemplateType, DocumentType, PayRateType } from "@/db/enums";
 import { companyContractors, companyInviteLinks, documents, documentSignatures, documentTemplates } from "@/db/schema";
 import { baseProcedure, companyProcedure, createRouter } from "@/trpc";
 import { createSubmission } from "@/trpc/routes/documents/templates";

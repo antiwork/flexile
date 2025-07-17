@@ -5,7 +5,6 @@ import { CheckCircleIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import SimpleLayout from "@/components/layouts/Simple";
 import { useUserStore } from "@/global";
 import { INVITATION_TOKEN_COOKIE_MAX_AGE, INVITATION_TOKEN_COOKIE_NAME } from "@/models/constants";
 import { trpc } from "@/trpc/client";
@@ -64,32 +63,27 @@ export default function AcceptInvitationPage() {
 
   if (isLoading) {
     return (
-      <SimpleLayout>
-        <div className="flex flex-col items-center rounded-xl bg-white p-8 shadow-lg">
-          <div className="border-muted mb-4 h-8 w-8 animate-spin rounded-full border-4 border-t-black" />
-          <div className="text-md font-semibold">Verifying invitation...</div>
-        </div>
-      </SimpleLayout>
+      <div className="flex flex-col items-center rounded-xl bg-white p-8 shadow-lg">
+        <div className="border-muted mb-4 h-8 w-8 animate-spin rounded-full border-4 border-t-black" />
+        <div className="text-md font-semibold">Verifying invitation...</div>
+      </div>
     );
   }
 
   if (isError || !inviteData?.valid) {
     return (
-      <SimpleLayout title="Invalid Invite" subtitle="This invite link is no longer valid.">
-        <div className="flex flex-col items-center">
-          <div className="mb-4 text-sm text-gray-600">
-            Please check your invitation link or contact your administrator.
-          </div>
-          <Link href="/" className="rounded bg-black px-4 py-2 text-white transition hover:bg-gray-900">
-            Go to Home
-          </Link>
-        </div>
-      </SimpleLayout>
+      <div className="flex flex-col items-center">
+        <div className="text-lg font-semibold">Invalid Invite Link.</div>
+        <div className="text-md mb-4 text-center">Please check your invitation link or contact your administrator.</div>
+        <Link href="/" className="rounded bg-black px-4 py-2 text-white transition hover:bg-gray-900">
+          Go to Home
+        </Link>
+      </div>
     );
   }
 
   return (
-    <SimpleLayout>
+    <>
       <div className="flex flex-col items-center rounded-xl bg-white p-8 shadow-lg">
         <CheckCircleIcon className="mb-4 h-8 w-8 text-green-600" />
         <div className="text-md font-semibold">Verified</div>
@@ -104,6 +98,6 @@ export default function AcceptInvitationPage() {
       {acceptInviteMutation.isError ? (
         <div className="mt-2 text-sm text-red-600">{acceptInviteMutation.error.message}</div>
       ) : null}
-    </SimpleLayout>
+    </>
   );
 }
