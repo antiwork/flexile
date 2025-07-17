@@ -2,13 +2,14 @@
 
 class OnboardingState::Worker < OnboardingState::BaseUser
   def complete?
-    super
+    super && user.company_worker_for(company)&.role.present?
   end
 
   def redirect_path
     if !has_personal_details?
-      spa_company_worker_onboarding_path(company.external_id)
+      return spa_company_worker_onboarding_path(company.external_id)
     end
+    "/documents" unless user.company_worker_for(company)&.role.present?
   end
 
   def after_complete_onboarding_path

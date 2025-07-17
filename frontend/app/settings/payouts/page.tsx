@@ -107,7 +107,7 @@ const EquitySection = () => {
                 <div className="flex justify-between gap-2">
                   <div>Cash amount</div>
                   <div>
-                    {formatMoneyFromCents((equityPercentage * payRateInSubunits) / 100)}{" "}
+                    {formatMoneyFromCents(((100 - equityPercentage) * payRateInSubunits) / 100)}{" "}
                     <span className="text-gray-500">/ {worker.payRateType}</span>
                   </div>
                 </div>
@@ -115,7 +115,7 @@ const EquitySection = () => {
                 <div className="flex justify-between gap-2">
                   <div>Equity value</div>
                   <div>
-                    {formatMoneyFromCents(((100 - equityPercentage) * payRateInSubunits) / 100)}{" "}
+                    {formatMoneyFromCents((equityPercentage * payRateInSubunits) / 100)}{" "}
                     <span className="text-gray-500">/ {worker.payRateType}</span>
                   </div>
                 </div>
