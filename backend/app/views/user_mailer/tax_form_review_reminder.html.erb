@@ -10,7 +10,7 @@
 <% @tax_document_names.each do |tax_document_name| %>
   <p><strong>What is form <%= tax_document_name %>?</strong></p>
 
-  <% if tax_document_name == TaxDocument::FORM_1099_NEC %>
+  <% if tax_document_name == Document::FORM_1099_NEC %>
     <p>
       Form 1099-NEC is a tax form used to report money that someone paid you for work you did as an independent contractor.
       It shows how much money you earned from <%= @company.name %>, and we file it to the IRS every year.
