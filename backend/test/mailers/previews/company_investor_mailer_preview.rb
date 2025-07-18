@@ -3,7 +3,7 @@
 class CompanyInvestorMailerPreview < ActionMailer::Preview
   def dividend_payment_failed
     user = User.first
-    dividend_payment = FactoryBot.create(:dividend_payment)
+    dividend_payment = DividendPayment.last
 
     CompanyInvestorMailer.dividend_payment_failed(user, dividend_payment)
   end
