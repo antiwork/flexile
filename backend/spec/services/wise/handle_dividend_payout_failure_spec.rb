@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Wise::HandleDividendPayoutFailure, type: :service do
+RSpec.describe Wise::HandleDividendPayoutFailure do
   describe '.call' do
     subject(:call_service) { described_class.call(dividend_payment, {}) }
 
