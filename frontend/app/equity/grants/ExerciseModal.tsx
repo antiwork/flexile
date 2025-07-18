@@ -64,8 +64,7 @@ const ExerciseModal = ({
     new Decimal(0),
   );
 
-  // The percentage difference between the total exercise cost and the equity value.
-  // It's in form of percent decimal (e.g. 0.123, 1.654) as expected by the `Delta` component.
+
   const equityValueDeltaPercent = totalExerciseCost.eq(0)
     ? 0
     : new Decimal(optionsToExercise)
@@ -206,7 +205,7 @@ const ExerciseModal = ({
                       {formatMoney(new Decimal(optionsToExercise).mul(companySharePrice))}
                       <br />
                       <span className="flex justify-end text-sm">
-                        <Delta percentDiff={equityValueDeltaPercent} />
+                        <Delta diff={equityValueDeltaPercent} />
                       </span>
                     </div>
                   </div>

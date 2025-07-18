@@ -1,8 +1,8 @@
 import React from "react";
 
-const Delta = ({ percentDiff }: { percentDiff: number | bigint }) => (
-  <span className={percentDiff > 0 ? "text-green" : percentDiff < 0 ? "text-red" : "text-gray-500"}>
-    {percentDiff.toLocaleString(undefined, { style: "percent", maximumFractionDigits: 2 })}
+const Delta = ({ diff }: { diff: number | bigint }) => (
+  <span className={diff > 0 ? "text-green" : diff < 0 ? "text-red" : "text-gray-500"}>
+    {diff.toLocaleString(undefined, { style: "percent", maximumFractionDigits: 2 })}
   </span>
 );
 
