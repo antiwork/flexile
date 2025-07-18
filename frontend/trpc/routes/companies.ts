@@ -46,132 +46,37 @@ export const companiesRouter = createRouter({
     return pick(ctx.company, ["taxId", "brandColor", "website", "name", "phoneNumber"]);
   }),
 
-  listUsersWithRoles: companyProcedure.input(z.object({ companyId: z.string() })).query(async ({ ctx }) => {
+  listAdministrators: companyProcedure.input(z.object({ companyId: z.string() })).query(async ({ ctx }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-    // Fetch all users who have any relationship with the company
-    const [admins, contractors, investors, lawyers] = await Promise.all([
-      db.query.companyAdministrators.findMany({
-        where: eq(companyAdministrators.companyId, ctx.company.id),
-        with: { user: true },
-        orderBy: companyAdministrators.id, // Order by ID to match Rails primary_admin logic
-      }),
-      db.query.companyContractors.findMany({
-        where: eq(companyContractors.companyId, ctx.company.id),
-        with: { user: true },
-      }),
-      db.query.companyInvestors.findMany({
-        where: eq(companyInvestors.companyId, ctx.company.id),
-        with: { user: true },
-      }),
-      db.query.companyLawyers.findMany({
-        where: eq(companyLawyers.companyId, ctx.company.id),
-        with: { user: true },
-      }),
-    ]);
+    // Fetch only administrators for this company
+    const admins = await db.query.companyAdministrators.findMany({
+      where: eq(companyAdministrators.companyId, ctx.company.id),
+      with: { user: true },
+      orderBy: companyAdministrators.id, // Order by ID to match Rails primary_admin logic
+    });
 
     // Get the primary admin (owner) - first admin by ID (matches Rails primary_admin logic)
     const primaryAdmin = admins.length > 0 ? admins[0] : null;
 
-    // Create a map to store user relationships and roles
-    const usersMap = new Map<
-      bigint,
-      {
-        user: typeof users.$inferSelect;
-        isAdmin: boolean;
-        contractorRole?: string;
-        isInvestor: boolean;
-        isLawyer: boolean;
-      }
-    >();
-
-    // Add contractors
-    contractors.forEach((contractor) => {
-      usersMap.set(contractor.user.id, {
-        user: contractor.user,
-        isAdmin: false,
-        contractorRole: contractor.role,
-        isInvestor: false,
-        isLawyer: false,
-      });
-    });
-
-    // Add investors
-    investors.forEach((investor) => {
-      const existing = usersMap.get(investor.user.id);
-      if (existing) {
-        existing.isInvestor = true;
-      } else {
-        usersMap.set(investor.user.id, {
-          user: investor.user,
-          isAdmin: false,
-          isInvestor: true,
-          isLawyer: false,
-        });
-      }
-    });
-
-    // Add lawyers
-    lawyers.forEach((lawyer) => {
-      const existing = usersMap.get(lawyer.user.id);
-      if (existing) {
-        existing.isLawyer = true;
-      } else {
-        usersMap.set(lawyer.user.id, {
-          user: lawyer.user,
-          isAdmin: false,
-          isInvestor: false,
-          isLawyer: true,
-        });
-      }
-    });
-
-    // Add admins (they override the isAdmin flag)
-    admins.forEach((admin) => {
-      const existing = usersMap.get(admin.user.id);
-      if (existing) {
-        existing.isAdmin = true;
-      } else {
-        usersMap.set(admin.user.id, {
-          user: admin.user,
-          isAdmin: true,
-          isInvestor: false,
-          isLawyer: false,
-        });
-      }
-    });
-
-    // Convert to array and format with proper role determination
-    const results = Array.from(usersMap.values()).map(({ user, isAdmin, contractorRole, isInvestor, isLawyer }) => {
-      // Role priority: Owner > Admin > Lawyer > Investor > Contractor
-      let role: string | null = null;
-      const isOwner = primaryAdmin?.userId === user.id;
-
-      if (isAdmin) {
-        role = isOwner ? "Owner" : "Admin";
-      } else if (isLawyer) {
-        role = "Lawyer";
-      } else if (isInvestor) {
-        role = "Investor";
-      } else if (contractorRole) {
-        role = contractorRole;
-      }
+    // Format the admin users
+    const results = admins.map((admin) => {
+      const isOwner = primaryAdmin?.userId === admin.user.id;
 
       return {
-        id: user.externalId,
-        email: user.email,
-        name: user.legalName || user.preferredName || user.email,
-        isAdmin,
-        role,
+        id: admin.user.externalId,
+        email: admin.user.email,
+        name: admin.user.legalName || admin.user.preferredName || admin.user.email,
+        isAdmin: true,
+        role: isOwner ? "Owner" : "Admin",
         isOwner,
       };
     });
 
-    // Sort results: Owner first, then maintain original order
+    // Owner first, then by name
     return results.sort((a, b) => {
-      if (a.isOwner && !b.isOwner) return -1;
-      if (!a.isOwner && b.isOwner) return 1;
-      return 0;
+      if (a.isOwner !== b.isOwner) return a.isOwner ? -1 : 1;
+      return a.name.localeCompare(b.name);
     });
   }),
   update: companyProcedure
@@ -260,8 +165,8 @@ export const companiesRouter = createRouter({
       }
     }),
 
-  toggleAdminRole: companyProcedure
-    .input(z.object({ companyId: z.string(), userId: z.string(), isAdmin: z.boolean() }))
+  revokeAdminRole: companyProcedure
+    .input(z.object({ companyId: z.string(), userId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
@@ -273,40 +178,31 @@ export const companiesRouter = createRouter({
 
       const targetUserId = targetUser.id;
 
-      if (BigInt(ctx.userId) === targetUserId && !input.isAdmin) {
+      // Check if trying to remove own admin role
+      if (BigInt(ctx.userId) === targetUserId) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "You cannot remove your own admin role",
         });
       }
 
+      // Check if this would remove the last administrator
       const currentAdmins = await db.query.companyAdministrators.findMany({
         where: eq(companyAdministrators.companyId, ctx.company.id),
       });
 
-      if (!input.isAdmin && currentAdmins.length === 1 && currentAdmins[0]?.userId === targetUserId) {
+      if (currentAdmins.length === 1 && currentAdmins[0]?.userId === targetUserId) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Cannot remove the last administrator",
         });
       }
 
-      if (input.isAdmin) {
-        const existing = currentAdmins.find((admin) => admin.userId === targetUserId);
-        if (!existing) {
-          await db.insert(companyAdministrators).values({
-            userId: targetUserId,
-            companyId: ctx.company.id,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          });
-        }
-      } else {
-        await db
-          .delete(companyAdministrators)
-          .where(
-            and(eq(companyAdministrators.userId, targetUserId), eq(companyAdministrators.companyId, ctx.company.id)),
-          );
-      }
+      // Remove admin role
+      await db
+        .delete(companyAdministrators)
+        .where(
+          and(eq(companyAdministrators.userId, targetUserId), eq(companyAdministrators.companyId, ctx.company.id)),
+        );
     }),
 });

@@ -3,47 +3,37 @@
 import { useMemo } from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import TableSkeleton from "@/components/TableSkeleton";
-import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
-import { cn } from "@/utils";
 
 export default function AdminsPage() {
   const company = useCurrentCompany();
   const currentUser = useCurrentUser();
-  const { data: users = [], isLoading } = trpc.companies.listUsersWithRoles.useQuery({ companyId: company.id });
+  const { data: users = [], isLoading } = trpc.companies.listAdministrators.useQuery({ companyId: company.id });
 
   const trpcUtils = trpc.useUtils();
 
-  const toggleAdminMutation = trpc.companies.toggleAdminRole.useMutation({
-    onMutate: async ({ userId, isAdmin }) => {
-      // Optimistic update
-      await trpcUtils.companies.listUsersWithRoles.cancel({ companyId: company.id });
-      const previousUsers = trpcUtils.companies.listUsersWithRoles.getData({ companyId: company.id });
+  const revokeAdminMutation = trpc.companies.revokeAdminRole.useMutation({
+    onMutate: async ({ userId }) => {
+      // Optimistic update - remove the user from the list
+      await trpcUtils.companies.listAdministrators.cancel({ companyId: company.id });
+      const previousUsers = trpcUtils.companies.listAdministrators.getData({ companyId: company.id });
 
-      trpcUtils.companies.listUsersWithRoles.setData({ companyId: company.id }, (old) => {
+      trpcUtils.companies.listAdministrators.setData({ companyId: company.id }, (old) => {
         if (!old) return old;
-        return old.map((user) => {
-          if (user.id === userId) {
-            return {
-              ...user,
-              isAdmin,
-              role: isAdmin ? "Admin" : null,
-            };
-          }
-          return user;
-        });
+        return old.filter((user) => user.id !== userId);
       });
 
       return { previousUsers };
     },
     onError: (_error, _variables, context) => {
       if (context?.previousUsers) {
-        trpcUtils.companies.listUsersWithRoles.setData({ companyId: company.id }, context.previousUsers);
+        trpcUtils.companies.listAdministrators.setData({ companyId: company.id }, context.previousUsers);
       }
     },
     onSettled: async () => {
-      await trpcUtils.companies.listUsersWithRoles.invalidate();
+      await trpcUtils.companies.listAdministrators.invalidate();
     },
   });
 
@@ -71,36 +61,37 @@ export default function AdminsPage() {
         cell: (info) => info.getValue() || "-",
       }),
       columnHelper.display({
-        id: "active",
-        header: "Active",
+        id: "actions",
+        header: "Action",
         cell: (info) => {
           const user = info.row.original;
           const isCurrentUserRow = currentUser.email === user.email;
-          const isLoadingToggle = toggleAdminMutation.isPending && toggleAdminMutation.variables.userId === user.id;
+          const isLoadingRevoke = revokeAdminMutation.isPending && revokeAdminMutation.variables?.userId === user.id;
+          const adminCount = users.filter(u => u.isAdmin).length;
+          const isLastAdmin = adminCount === 1 && user.isAdmin;
 
           return (
-            <Switch
-              checked={user.isAdmin}
-              onCheckedChange={(checked) => {
-                if (isCurrentUserRow) return;
-                toggleAdminMutation.mutate({
-                  companyId: company.id,
-                  userId: user.id,
-                  isAdmin: checked,
-                });
-              }}
-              disabled={isCurrentUserRow || isLoadingToggle}
-              aria-label={`Toggle admin status for ${user.name || user.email}`}
-              className={cn(
-                isCurrentUserRow && "cursor-not-allowed opacity-50",
-                isLoadingToggle && "pointer-events-none opacity-70",
-              )}
-            />
+            <div className="text-left">
+              <Button
+                variant="destructive"
+                size="small"
+                onClick={() => {
+                  revokeAdminMutation.mutate({
+                    companyId: company.id,
+                    userId: user.id,
+                  });
+                }}
+                disabled={isCurrentUserRow || isLoadingRevoke || isLastAdmin}
+                aria-label={`Revoke admin access for ${user.name || user.email}`}
+              >
+                Revoke Admin
+              </Button>
+            </div>
           );
         },
       }),
     ],
-    [currentUser.email, company.id, toggleAdminMutation],
+    [currentUser.email, company.id, revokeAdminMutation, users],
   );
 
   const table = useTable({
@@ -111,11 +102,11 @@ export default function AdminsPage() {
   return (
     <div className="grid gap-8">
       <hgroup>
-        <h2 className="mb-1 text-xl font-bold">Admins</h2>
-        <p className="text-muted-foreground text-base">Manage access for users with admin roles in your workspace.</p>
+        <h2 className="mb-1 text-xl font-bold">Workspace Administrators</h2>
+        <p className="text-muted-foreground text-base">View and revoke administrator access for your workspace.</p>
       </hgroup>
       {/* override default padding to align table content with page header */}
-      <div className="[&_td:first-child]:pl-0 [&_th:first-child]:pl-0">
+      <div className="-mx-3 [&_th:first-child]:!pl-0 [&_td:first-child]:!pl-0 [&_th:last-child]:!pr-0 [&_td:last-child]:!pr-0">
         {isLoading ? <TableSkeleton columns={3} /> : <DataTable table={table} />}
       </div>
     </div>

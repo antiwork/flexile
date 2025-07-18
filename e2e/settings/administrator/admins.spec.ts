@@ -1,6 +1,7 @@
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
+// These are still needed for test setup even though we don't display these users anymore
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { companyLawyersFactory } from "@test/factories/companyLawyers";
@@ -10,7 +11,7 @@ import { expect, test } from "@test/index";
 import { and, eq } from "drizzle-orm";
 import { companies, companyAdministrators, users } from "@/db/schema";
 
-test.describe("Admin Management", () => {
+test.describe("Admin Revoke Management", () => {
   let company: typeof companies.$inferSelect;
   let primaryAdmin: typeof users.$inferSelect;
   let secondAdmin: typeof users.$inferSelect;
@@ -56,18 +57,18 @@ test.describe("Admin Management", () => {
   });
 
   test.describe("Admin List Display", () => {
-    test("displays all users with correct roles and owner first", async ({ page }) => {
+    test("displays only administrators with owner first", async ({ page }) => {
       await login(page, primaryAdmin);
       await page.goto("/settings/administrator/admins");
 
       // Check page title and description
-      await expect(page.getByRole("heading", { name: "Admins" })).toBeVisible();
-      await expect(page.getByText("Manage access for users with admin roles in your workspace.")).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Workspace Administrators" })).toBeVisible();
+      await expect(page.getByText("View and revoke administrator access for your workspace.")).toBeVisible();
 
       // Check table headers
       await expect(page.getByRole("columnheader", { name: "Name" })).toBeVisible();
       await expect(page.getByRole("columnheader", { name: "Role" })).toBeVisible();
-      await expect(page.getByRole("columnheader", { name: "Active" })).toBeVisible();
+      await expect(page.getByRole("columnheader", { name: "Actions" })).toBeVisible();
 
       // Check that primary admin is first and marked as Owner
       const firstRow = page.getByRole("row").nth(1); // Skip header row
@@ -79,32 +80,29 @@ test.describe("Admin Management", () => {
       await expect(page.getByText(secondAdmin.legalName!)).toBeVisible();
       await expect(page.getByText("Admin").nth(1)).toBeVisible(); // nth(1) because Owner might also contain "Admin"
 
-      // Check that multi-role user shows as Admin (priority over other roles)
+      // Check that multi-role user shows as Admin
       await expect(page.getByText(multiRoleUser.legalName!)).toBeVisible();
       const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName!) });
       await expect(multiRoleRow.getByText("Admin")).toBeVisible();
 
-      // Check other users are displayed with correct roles
-      await expect(page.getByText(contractorUser.legalName!)).toBeVisible();
-      await expect(page.getByText("Senior Developer")).toBeVisible();
-
-      await expect(page.getByText(investorUser.legalName!)).toBeVisible();
-      await expect(page.getByText("Investor")).toBeVisible();
-
-      await expect(page.getByText(lawyerUser.legalName!)).toBeVisible();
-      await expect(page.getByText("Lawyer")).toBeVisible();
+      // Verify non-admin users are NOT displayed
+      await expect(page.getByText(contractorUser.legalName!)).not.toBeVisible();
+      await expect(page.getByText("Senior Developer")).not.toBeVisible();
+      await expect(page.getByText(investorUser.legalName!)).not.toBeVisible();
+      await expect(page.getByText("Investor")).not.toBeVisible();
+      await expect(page.getByText(lawyerUser.legalName!)).not.toBeVisible();
+      await expect(page.getByText("Lawyer")).not.toBeVisible();
     });
 
-    test("displays user names correctly (legal_name over preferred_name)", async ({ page }) => {
-      // Create user with both legal_name and preferred_name
-      const { user: userWithBothNames } = await usersFactory.create({
+    test("displays admin names correctly (legal_name over preferred_name)", async ({ page }) => {
+      // Create admin user with both legal_name and preferred_name
+      const { user: adminWithBothNames } = await usersFactory.create({
         legalName: "John Legal Name",
         preferredName: "Johnny Preferred",
       });
-      await companyContractorsFactory.create({
-        userId: userWithBothNames.id,
+      await companyAdministratorsFactory.create({
+        userId: adminWithBothNames.id,
         companyId: company.id,
-        role: "Developer",
       });
 
       await login(page, primaryAdmin);
@@ -115,82 +113,45 @@ test.describe("Admin Management", () => {
       await expect(page.getByText("Johnny Preferred")).not.toBeVisible();
     });
 
-    test("shows email when no legal name is available", async ({ page }) => {
-      // Create user with no legal name
-      const { user: userWithoutName } = await usersFactory.create({
+    test("shows email when admin has no legal name", async ({ page }) => {
+      // Create admin user with no legal name
+      const { user: adminWithoutName } = await usersFactory.create({
         legalName: null,
         preferredName: null,
       });
-      await companyContractorsFactory.create({
-        userId: userWithoutName.id,
+      await companyAdministratorsFactory.create({
+        userId: adminWithoutName.id,
         companyId: company.id,
-        role: "Developer",
       });
 
       await login(page, primaryAdmin);
       await page.goto("/settings/administrator/admins");
 
       // Should display email as fallback
-      await expect(page.getByText(userWithoutName.email)).toBeVisible();
+      await expect(page.getByText(adminWithoutName.email)).toBeVisible();
     });
   });
 
-  test.describe("Admin Role Toggle", () => {
-    test("allows promoting non-admin to admin", async ({ page }) => {
+  test.describe("Admin Role Revoke", () => {
+    test("allows revoking admin access", async ({ page }) => {
       await login(page, primaryAdmin);
       await page.goto("/settings/administrator/admins");
 
-      // Find contractor row and toggle admin switch
-      const contractorRow = page.getByRole("row", { name: new RegExp(contractorUser.legalName!) });
-      const adminSwitch = contractorRow.getByRole("switch", { name: new RegExp(contractorUser.legalName!) });
-
-      // Initially not admin
-      await expect(adminSwitch).not.toBeChecked();
-
-      // Toggle to admin
-      await adminSwitch.click();
-
-      // Should be checked now
-      await expect(adminSwitch).toBeChecked();
-
-      // Verify in database
-      const adminRecord = await db.query.companyAdministrators.findFirst({
-        where: and(
-          eq(companyAdministrators.userId, contractorUser.id),
-          eq(companyAdministrators.companyId, company.id),
-        ),
-      });
-      expect(adminRecord).toBeTruthy();
-
-      // Role should change from "Senior Developer" to "Admin"
-      await expect(contractorRow.getByText("Admin")).toBeVisible();
-    });
-
-    test("allows demoting admin to non-admin", async ({ page }) => {
-      await login(page, primaryAdmin);
-      await page.goto("/settings/administrator/admins");
-
-      // Find second admin row and toggle admin switch
+      // Find second admin row and revoke button
       const secondAdminRow = page.getByRole("row", { name: new RegExp(secondAdmin.legalName!) });
-      const adminSwitch = secondAdminRow.getByRole("switch", { name: new RegExp(secondAdmin.legalName!) });
+      const revokeButton = secondAdminRow.getByRole("button", { name: /Revoke.*admin/i });
 
-      // Initially admin
-      await expect(adminSwitch).toBeChecked();
+      // Click revoke button
+      await revokeButton.click();
 
-      // Toggle to remove admin
-      await adminSwitch.click();
-
-      // Should not be checked now
-      await expect(adminSwitch).not.toBeChecked();
+      // Wait for row to be removed (optimistic update)
+      await expect(page.getByText(secondAdmin.legalName!)).not.toBeVisible();
 
       // Verify in database
       const adminRecord = await db.query.companyAdministrators.findFirst({
         where: and(eq(companyAdministrators.userId, secondAdmin.id), eq(companyAdministrators.companyId, company.id)),
       });
       expect(adminRecord).toBeFalsy();
-
-      // Role should change from "Admin" to "-" (no role)
-      await expect(secondAdminRow.getByText("-")).toBeVisible();
     });
 
     test("prevents removing own admin role", async ({ page }) => {
@@ -199,10 +160,10 @@ test.describe("Admin Management", () => {
 
       // Find own row (marked with "You")
       const ownRow = page.getByRole("row", { name: new RegExp(primaryAdmin.legalName!) });
-      const adminSwitch = ownRow.getByRole("switch", { name: new RegExp(primaryAdmin.legalName!) });
+      const revokeButton = ownRow.getByRole("button", { name: /Revoke.*admin/i });
 
-      // Switch should be disabled for own row
-      await expect(adminSwitch).toBeDisabled();
+      // Button should be disabled for own row
+      await expect(revokeButton).toBeDisabled();
     });
 
     test("prevents removing last administrator", async ({ page }) => {
@@ -219,28 +180,28 @@ test.describe("Admin Management", () => {
       await login(page, primaryAdmin);
       await page.goto("/settings/administrator/admins");
 
-      // Primary admin switch should be disabled when they're the only admin
+      // Primary admin button should be disabled when they're the only admin
       const ownRow = page.getByRole("row", { name: new RegExp(primaryAdmin.legalName!) });
-      const adminSwitch = ownRow.getByRole("switch", { name: new RegExp(primaryAdmin.legalName!) });
+      const revokeButton = ownRow.getByRole("button", { name: /Revoke.*admin/i });
 
-      await expect(adminSwitch).toBeDisabled();
+      await expect(revokeButton).toBeDisabled();
     });
 
-    test("shows loading state during role toggle", async ({ page }) => {
+    test("shows button state during revoke", async ({ page }) => {
       await login(page, primaryAdmin);
       await page.goto("/settings/administrator/admins");
 
-      const contractorRow = page.getByRole("row", { name: new RegExp(contractorUser.legalName!) });
-      const adminSwitch = contractorRow.getByRole("switch", { name: new RegExp(contractorUser.legalName!) });
+      const secondAdminRow = page.getByRole("row", { name: new RegExp(secondAdmin.legalName!) });
+      const revokeButton = secondAdminRow.getByRole("button", { name: /Revoke.*admin/i });
 
-      // Switch should be enabled initially
-      await expect(adminSwitch).toBeEnabled();
+      // Button should be enabled initially
+      await expect(revokeButton).toBeEnabled();
 
-      // Click and verify the switch responds
-      await adminSwitch.click();
+      // Click and verify the admin is removed
+      await revokeButton.click();
 
-      // After successful toggle, should be checked
-      await expect(adminSwitch).toBeChecked();
+      // Row should be removed from the list
+      await expect(page.getByText(secondAdmin.legalName!)).not.toBeVisible();
     });
   });
 
@@ -257,24 +218,22 @@ test.describe("Admin Management", () => {
       await page.goto("/settings/administrator/admins");
 
       // Should be able to access the page
-      await expect(page.getByRole("heading", { name: "Admins" })).toBeVisible();
-      await expect(page.getByText("Manage access for users with admin roles in your workspace.")).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Workspace Administrators" })).toBeVisible();
+      await expect(page.getByText("View and revoke administrator access for your workspace.")).toBeVisible();
     });
   });
 
   test.describe("Multi-role Users", () => {
-    test("prioritizes admin role over other roles in display", async ({ page }) => {
+    test("shows multi-role users as Admin when they have admin role", async ({ page }) => {
       await login(page, primaryAdmin);
       await page.goto("/settings/administrator/admins");
 
-      // Multi-role user should show "Admin" not "Lawyer" or "Investor"
+      // Multi-role user should show "Admin" role
       const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName!) });
       await expect(multiRoleRow.getByText("Admin")).toBeVisible();
-      await expect(multiRoleRow.getByText("Lawyer")).not.toBeVisible();
-      await expect(multiRoleRow.getByText("Investor")).not.toBeVisible();
     });
 
-    test("removing admin role reveals next highest priority role", async ({ page }) => {
+    test("removes multi-role user from list when admin role is revoked", async ({ page }) => {
       await login(page, primaryAdmin);
       await page.goto("/settings/administrator/admins");
 
@@ -282,13 +241,12 @@ test.describe("Admin Management", () => {
       const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName!) });
       await expect(multiRoleRow.getByText("Admin")).toBeVisible();
 
-      // Remove admin role
-      const adminSwitch = multiRoleRow.getByRole("switch", { name: new RegExp(multiRoleUser.legalName!) });
-      await adminSwitch.click();
+      // Revoke admin role
+      const revokeButton = multiRoleRow.getByRole("button", { name: /Revoke.*admin/i });
+      await revokeButton.click();
 
-      // Should now show "Lawyer" (next priority after Admin)
-      await expect(multiRoleRow.getByText("Lawyer")).toBeVisible();
-      await expect(multiRoleRow.getByText("Admin")).not.toBeVisible();
+      // User should be removed from the admin list entirely
+      await expect(page.getByText(multiRoleUser.legalName!)).not.toBeVisible();
     });
   });
 });
