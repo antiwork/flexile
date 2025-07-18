@@ -1,6 +1,6 @@
 "use client";
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel, type Table } from "@tanstack/react-table";
 import { CheckIcon, Download, InboxIcon, InfoIcon, LucideCircleDollarSign, Trash2, XIcon } from "lucide-react";
 import Link from "next/link";
@@ -8,35 +8,26 @@ import { useParams } from "next/navigation";
 import React, { useMemo, useState } from "react";
 import { z } from "zod";
 import { type Buyback, type BuybackBid, buybackBidSchema, buybackSchema } from "@/app/equity/buybacks";
-import ConfirmPaymentModal from "@/app/equity/buybacks/ConfirmPaymentModal";
+import CancelBidModal from "@/app/equity/buybacks/CancelBidModal";
 import FinalizeBuybackModal from "@/app/equity/buybacks/FinalizeBuybackModal";
 import PlaceBidModal from "@/app/equity/buybacks/PlaceBidModal";
-import ReviewInvestorsModal from "@/app/equity/buybacks/ReviewInvestorsModal";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
-import Status from "@/components/Status";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { download } from "@/utils";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
-import {
-  company_tender_offer_bid_path,
-  company_tender_offer_bids_path,
-  company_tender_offer_path,
-  finalize_company_tender_offer_path,
-} from "@/utils/routes";
+import { company_tender_offer_bids_path, company_tender_offer_path } from "@/utils/routes";
 import EquityLayout from "../../Layout";
 
 type BuybackActionsProps = {
   buyback: Buyback;
   user: ReturnType<typeof useCurrentUser>;
   bids: BuybackBid[];
-  onSetActiveModal: (modal: "place" | "summary" | "review" | "confirm" | null) => void;
+  onSetActiveModal: (modal: "place" | "finalize" | "cancel" | null) => void;
   table?: Table<BuybackBid>;
 };
 
@@ -82,11 +73,11 @@ const BuybackActions = ({ buyback, user, bids, onSetActiveModal, table }: Buybac
         </Button>
       ) : null}
       {user.roles.administrator && !buyback.open && bids.length && !buyback.equity_buyback_round_count ? (
-        <Button size="small" onClick={() => onSetActiveModal("summary")}>
+        <Button size="small" onClick={() => onSetActiveModal("finalize")}>
           Finalize buyback
         </Button>
       ) : null}
-      {buyback.open ? (
+      {buyback.open && !buyback.equity_buyback_round_count ? (
         <Button size="small" onClick={() => onSetActiveModal("place")}>
           Place bid
         </Button>
@@ -142,39 +133,7 @@ export default function BuybackView() {
 
   const [selectedBid, setSelectedBid] = useState<BuybackBid | null>(null);
 
-  const [activeModal, setActiveModal] = useState<"place" | "summary" | "review" | "confirm" | "cancel" | null>(null);
-
-  const destroyMutation = useMutation({
-    mutationFn: async ({ bidId }: { bidId: string }) => {
-      await request({
-        method: "DELETE",
-        url: company_tender_offer_bid_path(company.id, id, bidId),
-        accept: "json",
-        assertOk: true,
-      });
-    },
-    onSuccess: async () => {
-      handleBidAction(null);
-      await refetchBids();
-    },
-  });
-
-  const finalizeMutation = useMutation({
-    mutationFn: async () => {
-      await request({
-        method: "POST",
-        url: finalize_company_tender_offer_path(company.id, id),
-        accept: "json",
-        assertOk: true,
-        jsonData: {},
-      });
-    },
-    onSuccess: async () => {
-      setActiveModal(null);
-      await refetchBuyback();
-      await refetchBids();
-    },
-  });
+  const [activeModal, setActiveModal] = useState<"place" | "finalize" | "cancel" | null>(null);
 
   const handleBidAction = (bid: BuybackBid | null, action?: "cancel") => {
     setSelectedBid(bid);
@@ -365,57 +324,34 @@ export default function BuybackView() {
         <Placeholder icon={LucideCircleDollarSign}>Place your first bid to participate in the buyback.</Placeholder>
       )}
 
-      {selectedBid ? (
-        <Dialog open={activeModal === "cancel"} onOpenChange={() => handleBidAction(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Cancel bid?</DialogTitle>
-            </DialogHeader>
-            <p>Are you sure you want to cancel this bid?</p>
-            <p>
-              Share class: {selectedBid.share_class}
-              <br />
-              Number of shares: {selectedBid.number_of_shares.toLocaleString()}
-              <br />
-              BuybackBid price: {formatMoneyFromCents(selectedBid.share_price_cents)}
-            </p>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => handleBidAction(null)}>
-                No, keep bid
-              </Button>
-              <MutationButton mutation={destroyMutation} param={{ bidId: selectedBid.id }} loadingText="Canceling...">
-                Yes, cancel bid
-              </MutationButton>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      ) : null}
+      <CancelBidModal
+        isOpen={activeModal === "cancel"}
+        onClose={() => {
+          handleBidAction(null);
+          void refetchBids();
+        }}
+        buyback={buyback}
+        bid={selectedBid}
+      />
 
-      <PlaceBidModal isOpen={activeModal === "place"} onClose={() => setActiveModal(null)} buyback={buyback} />
+      <PlaceBidModal
+        isOpen={activeModal === "place"}
+        onClose={() => {
+          setActiveModal(null);
+          void refetchBids();
+        }}
+        buyback={buyback}
+      />
 
       <FinalizeBuybackModal
-        isOpen={activeModal === "summary"}
-        onClose={() => setActiveModal(null)}
-        onNext={() => setActiveModal("review")}
+        isOpen={activeModal === "finalize"}
+        onClose={() => {
+          setActiveModal(null);
+          void refetchBuyback();
+          void refetchBids();
+        }}
         buyback={buyback}
         bids={bids}
-      />
-
-      <ReviewInvestorsModal
-        isOpen={activeModal === "review"}
-        onClose={() => setActiveModal(null)}
-        onNext={() => setActiveModal("confirm")}
-        onBack={() => setActiveModal("summary")}
-        bids={bids}
-      />
-
-      <ConfirmPaymentModal
-        isOpen={activeModal === "confirm"}
-        onClose={() => setActiveModal(null)}
-        onBack={() => setActiveModal("review")}
-        bids={bids}
-        mutation={finalizeMutation}
-        buyback={buyback}
       />
     </EquityLayout>
   );

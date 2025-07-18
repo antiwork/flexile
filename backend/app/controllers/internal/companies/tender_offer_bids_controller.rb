@@ -19,9 +19,7 @@ class Internal::Companies::TenderOfferBidsController < Internal::Companies::Base
   end
 
   def create
-    authorize TenderOfferBid
-
-    @bid = @buyback.bids.build(
+    authorize @bid = @buyback.bids.build(
       company_investor: Current.company_investor,
       **bid_params
     )

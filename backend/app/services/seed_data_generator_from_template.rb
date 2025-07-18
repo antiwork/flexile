@@ -317,9 +317,12 @@ class SeedDataGeneratorFromTemplate
         result = CreateTenderOffer.new(
           company:,
           attributes: tender_offer_data.reverse_merge(
+            buyback_type: "tender_offer",
+            name: "Demo Tender Offer",
             starts_at:,
             ends_at: 3.months.from_now,
-            attachment: create_temporary_zip_file
+            attachment: create_temporary_zip_file,
+            letter_of_transmittal: create_temporary_pdf_file
           )
         ).perform
         if !result[:success]
@@ -867,8 +870,9 @@ class SeedDataGeneratorFromTemplate
         text "Generated at: #{Time.current}"
       end
 
+      File.open(temp_file.path)
+    ensure
       temp_file.close
-      temp_file.open # Reopen in read mode
-      temp_file
+      temp_file.unlink
     end
 end

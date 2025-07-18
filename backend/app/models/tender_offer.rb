@@ -5,6 +5,11 @@ class TenderOffer < ApplicationRecord
 
   VESTED_SHARES_CLASS = "Vested shares from equity grants"
 
+  enum :buyback_type, {
+    single_stock: "single_stock",
+    tender_offer: "tender_offer"
+  }
+
   belongs_to :company
   has_many :bids, class_name: "TenderOfferBid"
   has_many :equity_buyback_rounds
@@ -12,7 +17,7 @@ class TenderOffer < ApplicationRecord
   has_one_attached :attachment
   has_one_attached :letter_of_transmittal
 
-  validates :type, presence: true
+  validates :buyback_type, presence: true
   validates :name, presence: true
   validates :attachment, presence: true
   validates :letter_of_transmittal, presence: true, on: :create
@@ -28,6 +33,7 @@ class TenderOffer < ApplicationRecord
 
   validate :ends_at_must_be_after_starts_at
   validate :correct_attachment_mime_type
+  validate :single_stock_must_have_only_one_investor
 
   def open?
     Time.current.utc.between?(starts_at, ends_at)
@@ -70,5 +76,12 @@ class TenderOffer < ApplicationRecord
       if letter_of_transmittal.attached? && !letter_of_transmittal.content_type.in?(%w(application/pdf))
         errors.add(:letter_of_transmittal, "must be a PDF file")
       end
+    end
+
+    def single_stock_must_have_only_one_investor
+      return unless buyback_type == "single_stock"
+      return if tender_offer_investors.count <= 1
+
+      errors.add(:buyback_type, "Single stock repurchases can only have one investor")
     end
 end

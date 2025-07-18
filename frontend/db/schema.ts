@@ -54,6 +54,7 @@ export const equityGrantsVestingTrigger = pgEnum("equity_grants_vesting_trigger"
 export const integrationStatus = pgEnum("integration_status", ["initialized", "active", "out_of_sync", "deleted"]);
 export const taxDocumentsStatus = pgEnum("tax_documents_status", ["initialized", "submitted", "deleted"]);
 export const invoicesInvoiceType = pgEnum("invoices_invoice_type", ["services", "other"]);
+export const tenderOfferType = pgEnum("tender_offer_buyback_type", ["single_stock", "tender_offer"]);
 export const activeStorageVariantRecords = pgTable(
   "active_storage_variant_records",
   {
@@ -1287,6 +1288,8 @@ export const tenderOffers = pgTable(
       .notNull()
       .$onUpdate(() => new Date()),
     acceptedPriceCents: integer("accepted_price_cents"),
+    startingPricePerShareCents: integer("starting_price_per_share_cents"),
+    buybackType: tenderOfferType().notNull().default("tender_offer"),
   },
   (table) => [
     index("index_tender_offers_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),

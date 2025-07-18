@@ -1,10 +1,9 @@
 "use client";
 import { utc } from "@date-fns/utc";
-import { getLocalTimeZone } from "@internationalized/date";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import { isFuture, isPast } from "date-fns";
-import { Circle, CircleCheck, DollarSign, Plus, XIcon } from "lucide-react";
+import { CircleCheck, DollarSign, Plus, XIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
@@ -136,7 +135,7 @@ export default function Buybacks() {
         id: "actions",
         cell: (info) => (
           <>
-            {info.row.original.open ? (
+            {info.row.original.open && !info.row.original.equity_buyback_round_count ? (
               <Button
                 size="small"
                 variant="outline"
@@ -216,7 +215,13 @@ export default function Buybacks() {
         buyback={selectedBuyback}
       />
 
-      <NewBuybackModal isOpen={activeModal === "new-buyback"} onClose={() => setActiveModal(null)} />
+      <NewBuybackModal
+        isOpen={activeModal === "new-buyback"}
+        onClose={() => {
+          setActiveModal(null);
+          void refetch();
+        }}
+      />
     </EquityLayout>
   );
 }

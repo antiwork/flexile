@@ -8,11 +8,6 @@ class TenderOffers::FinalizeBuyback
   def perform
     ApplicationRecord.transaction do
       unless tender_offer.accepted_price_cents
-        TenderOffers::CalculateEquilibriumPrice.new(tender_offer: tender_offer).perform
-        tender_offer.reload
-      end
-
-      unless tender_offer.accepted_price_cents
         raise "No equilibrium price could be calculated. Please check if there are any bids or if the tender offer constraints are valid."
       end
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_16_023114) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_17_120834) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -24,6 +24,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_16_023114) do
   create_enum "integration_status", ["initialized", "active", "out_of_sync", "deleted"]
   create_enum "invoices_invoice_type", ["services", "other"]
   create_enum "tax_documents_status", ["initialized", "submitted", "deleted"]
+  create_enum "tender_offer_buyback_type", ["single_stock", "tender_offer"]
 
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
@@ -944,6 +945,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_16_023114) do
     t.datetime "updated_at", null: false
     t.integer "accepted_price_cents"
     t.string "name"
+    t.integer "starting_price_per_share_cents"
+    t.enum "buyback_type", default: "tender_offer", null: false, enum_type: "tender_offer_buyback_type"
     t.index ["company_id"], name: "index_tender_offers_on_company_id"
     t.index ["external_id"], name: "index_tender_offers_on_external_id", unique: true
   end

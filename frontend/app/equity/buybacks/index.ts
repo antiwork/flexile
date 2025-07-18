@@ -6,7 +6,7 @@ export const VESTED_SHARES_CLASS = "Vested shares from equity grants";
 export const buybackSchema = z.object({
   id: z.string(),
   name: z.string(),
-  type: z.enum(["single", "tender"]).optional(),
+  buyback_type: z.enum(["single_stock", "tender_offer"]).optional(),
   starts_at: z.string(),
   ends_at: z.string(),
   minimum_valuation: z.number(),
@@ -35,7 +35,7 @@ export const buybackSchema = z.object({
 export type Buyback = z.infer<typeof buybackSchema>;
 
 export const createBuybackSchema = buybackSchema
-  .pick({ type: true, name: true, starts_at: true, ends_at: true, minimum_valuation: true })
+  .pick({ buyback_type: true, name: true, starts_at: true, ends_at: true, minimum_valuation: true })
   .extend({
     total_amount_in_cents: z.number(),
     starting_price_per_share_cents: z.number(),

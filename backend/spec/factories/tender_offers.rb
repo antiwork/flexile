@@ -8,5 +8,6 @@ FactoryBot.define do
     starts_at { 20.days.ago }
     ends_at { 10.days.from_now }
     minimum_valuation { 100_000 }
+    buyback_type { "tender_offer" }
   end
 end

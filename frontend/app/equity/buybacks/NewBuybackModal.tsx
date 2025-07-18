@@ -1,12 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarDate, getLocalTimeZone } from "@internationalized/date";
+import { CalendarDate } from "@internationalized/date";
 import { useMutation, type UseMutationResult } from "@tanstack/react-query";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { ChevronDown, CloudUpload, Link2, PencilLine, Search, Trash2 } from "lucide-react";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { createBuybackSchema } from "@/app/equity/buybacks";
+import ComboBox from "@/components/ComboBox";
 import DatePicker from "@/components/DatePicker";
 import { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
@@ -14,10 +15,10 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogStackContent,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -73,18 +74,38 @@ const SimpleRichTextEditor = ({
 
 const buybackFormSchema = z
   .object({
-    type: z.enum(["single", "tender"]),
+    buyback_type: z.enum(["single_stock", "tender_offer"]),
     name: z.string().min(1, "Buyback name is required"),
+    investor_id: z.string().optional(),
     start_date: z.instanceof(CalendarDate, { message: "Start date is required" }),
     end_date: z.instanceof(CalendarDate, { message: "End date is required" }),
-    minimum_valuation: z.number().min(0, "Starting valuation must be positive"),
+    minimum_valuation: z.number().min(0, "Starting valuation must be positive").optional(),
     starting_price: z.number().min(0, "Starting price must be positive"),
     total_amount: z.number().min(0, "Target buyback value must be positive"),
     attachment: z.instanceof(File, { message: "Buyback documents are required" }),
   })
-  .refine((data) => data.start_date.compare(data.end_date) < 0, {
-    message: "End date must be after start date",
-    path: ["end_date"],
+  .superRefine((data, ctx) => {
+    if (data.start_date.compare(data.end_date) >= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "End date must be after start date",
+        path: ["end_date"],
+      });
+    }
+    if (data.buyback_type === "single_stock" && !data.investor_id) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Investor is required for single stock repurchase",
+        path: ["investor_id"],
+      });
+    }
+    if (data.buyback_type === "tender_offer" && (data.minimum_valuation === undefined || data.minimum_valuation <= 0)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Starting valuation is required for tender offers",
+        path: ["minimum_valuation"],
+      });
+    }
   });
 
 const letterOfTransmittalFormSchema = z
@@ -114,25 +135,31 @@ type NewBuybackModalProps = {
   onClose: () => void;
 };
 
-type BuybackFormSectionProps = {
-  isActive: boolean;
-  onNext: (data: BuybackFormValues) => void;
+type BaseSectionProps<T = unknown> = {
+  mutation?: UseMutationResult<unknown, unknown, void> | undefined;
+  onNext?: (data: T) => void;
+  onBack?: () => void;
 };
 
-type CreateLetterOfTransmittalSectionProps = {
-  isActive: boolean;
+type BuybackFormSectionProps = BaseSectionProps<BuybackFormValues> & {
+  onNext: (data: BuybackFormValues) => void;
+  onSelectType: (type: "single_stock" | "tender_offer") => void;
+};
+
+type CreateLetterOfTransmittalSectionProps = BaseSectionProps<LetterOfTransmittalFormValues> & {
   onNext: (data: LetterOfTransmittalFormValues) => void;
   onBack: () => void;
 };
 
-type SelectInvestorsModalProps = {
-  isActive: boolean;
+type SelectInvestorsModalProps = BaseSectionProps<string[]> & {
   onBack: () => void;
   onNext: (data: string[]) => void;
-  mutation: UseMutationResult<unknown, unknown, void>;
 };
 
-type ActiveSection = "buyback-details" | "letter-of-transmittal" | "select-investors";
+type SectionNextButtonProps = React.ComponentProps<typeof Button> & {
+  mutation?: UseMutationResult<unknown, unknown, void> | undefined;
+  children?: React.ReactNode;
+};
 
 const NewBuybackModal = ({ isOpen, onClose }: NewBuybackModalProps) => {
   const company = useCurrentCompany();
@@ -148,11 +175,8 @@ const NewBuybackModal = ({ isOpen, onClose }: NewBuybackModalProps) => {
 
   const createUploadUrl = trpc.files.createDirectUploadUrl.useMutation();
 
-  const handleInvestorsBack = () => {
-    setActiveSection("letter-of-transmittal");
-  };
-
-  const [activeSection, setActiveSection] = useState<ActiveSection>("buyback-details");
+  const [currentStep, setCurrentStep] = useState(0);
+  const [type, setType] = useState<"single_stock" | "tender_offer">("tender_offer");
 
   const createBuybackMutation = useMutation({
     mutationFn: async () => {
@@ -196,7 +220,7 @@ const NewBuybackModal = ({ isOpen, onClose }: NewBuybackModalProps) => {
       });
     },
     onSuccess: () => {
-      setActiveSection("buyback-details");
+      setCurrentStep(0);
       setBuybackData(null);
       setLetterData(null);
       setInvestorsData([]);
@@ -206,51 +230,112 @@ const NewBuybackModal = ({ isOpen, onClose }: NewBuybackModalProps) => {
       // TODO: Add proper error handling/toast notification
     },
   });
+
+  const handleBuybackFormNext = ({
+    start_date,
+    end_date,
+    total_amount,
+    starting_price,
+    investor_id,
+    minimum_valuation,
+    ...data
+  }: BuybackFormValues) => {
+    const buybackData = {
+      ...data,
+      minimum_valuation: minimum_valuation ?? 0,
+      starts_at: start_date.toString(),
+      ends_at: end_date.toString(),
+      total_amount_in_cents: total_amount * 100,
+      starting_price_per_share_cents: starting_price * 100,
+    };
+    setBuybackData(buybackData);
+
+    if (type === "single_stock") {
+      setInvestorsData(investor_id ? [investor_id] : []);
+    }
+    goToNextStep();
+  };
+
+  const handleLetterOfTransmittalNext = (data: LetterOfTransmittalFormValues) => {
+    setLetterData(data);
+    goToNextStep();
+  };
+
+  const handleSelectInvestorsNext = (data: string[]) => {
+    setInvestorsData(data);
+    goToNextStep();
+  };
+
+  const goToNextStep = () => {
+    if (!sections[currentStep + 1]) {
+      createBuybackMutation.mutate();
+      return;
+    }
+    setCurrentStep(Math.min(sections.length - 1, currentStep + 1));
+  };
+
+  const goToPreviousStep = () => {
+    setCurrentStep(Math.max(0, currentStep - 1));
+  };
+
+  const sections =
+    type === "single_stock"
+      ? [
+          <BuybackFormSection key="buyback-form" onNext={handleBuybackFormNext} onSelectType={setType} />,
+          <CreateLetterOfTransmittalSection
+            key="letter-of-transmittal"
+            onNext={handleLetterOfTransmittalNext}
+            onBack={goToPreviousStep}
+            mutation={createBuybackMutation}
+          />,
+        ]
+      : [
+          <BuybackFormSection key="buyback-form" onNext={handleBuybackFormNext} onSelectType={setType} />,
+          <CreateLetterOfTransmittalSection
+            key="letter-of-transmittal"
+            onNext={handleLetterOfTransmittalNext}
+            onBack={goToPreviousStep}
+          />,
+          <SelectInvestorsSection
+            key="select-investors"
+            onBack={goToPreviousStep}
+            onNext={handleSelectInvestorsNext}
+            mutation={createBuybackMutation}
+          />,
+        ];
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <BuybackFormSection
-        isActive={activeSection === "buyback-details"}
-        onNext={({ start_date, end_date, total_amount, starting_price, ...data }) => {
-          setBuybackData({
-            ...data,
-            starts_at: start_date.toString(),
-            ends_at: end_date.toString(),
-            total_amount_in_cents: total_amount * 100,
-            starting_price_per_share_cents: starting_price * 100,
-          });
-          setActiveSection("letter-of-transmittal");
-        }}
-      />
-      <CreateLetterOfTransmittalSection
-        isActive={activeSection === "letter-of-transmittal"}
-        onNext={(data) => {
-          setLetterData(data);
-          setActiveSection("select-investors");
-        }}
-        onBack={() => {
-          setActiveSection("buyback-details");
-        }}
-      />
-      <SelectInvestorsSection
-        isActive={activeSection === "select-investors"}
-        onBack={handleInvestorsBack}
-        onNext={(data) => {
-          setInvestorsData(data);
-          setActiveSection("select-investors");
-          createBuybackMutation.mutate();
-        }}
-        mutation={createBuybackMutation}
-      />
+      <DialogStackContent step={currentStep}>{sections}</DialogStackContent>
     </Dialog>
   );
 };
 
-const BuybackFormSection = ({ isActive, onNext }: BuybackFormSectionProps) => {
+const BuybackFormSection = ({ onNext, onSelectType, mutation }: BuybackFormSectionProps) => {
   const [dragActive, setDragActive] = useState(false);
+  const company = useCurrentCompany();
 
   const form = useForm<BuybackFormValues>({
     resolver: zodResolver(buybackFormSchema),
+    defaultValues: {
+      buyback_type: "tender_offer",
+    },
   });
+
+  const selectedType = form.watch("buyback_type");
+
+  useEffect(() => {
+    onSelectType(selectedType);
+  }, [selectedType]);
+
+  const { data: capTable } = trpc.capTable.show.useQuery(
+    {
+      companyId: company.id,
+    },
+    {
+      enabled: selectedType === "single_stock",
+    },
+  );
 
   const handleSubmit = form.handleSubmit((values) => onNext(values));
 
@@ -287,12 +372,8 @@ const BuybackFormSection = ({ isActive, onNext }: BuybackFormSectionProps) => {
 
   const watchedFile = form.watch("attachment");
 
-  if (!isActive) {
-    return null;
-  }
-
   return (
-    <DialogContent>
+    <div>
       <DialogHeader>
         <DialogTitle>Start a new buyback</DialogTitle>
         <DialogDescription>
@@ -301,19 +382,19 @@ const BuybackFormSection = ({ isActive, onNext }: BuybackFormSectionProps) => {
       </DialogHeader>
 
       <Form {...form}>
-        <form onSubmit={(e) => void handleSubmit(e)} className="max-h-[60vh] space-y-4 overflow-y-auto px-1 py-1">
+        <form onSubmit={(e) => void handleSubmit(e)} className="max-h-[65vh] space-y-4 overflow-y-auto px-1 py-1">
           <FormField
             control={form.control}
-            name="type"
+            name="buyback_type"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Type of buyback</FormLabel>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={() => field.onChange("single")}
+                    onClick={() => field.onChange("single_stock")}
                     className={`rounded-sm border p-3 text-left text-sm transition-colors ${
-                      field.value === "single"
+                      field.value === "single_stock"
                         ? "border-blue-500 bg-blue-50 text-blue-900"
                         : "border-gray-200 hover:border-gray-300"
                     }`}
@@ -322,9 +403,9 @@ const BuybackFormSection = ({ isActive, onNext }: BuybackFormSectionProps) => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => field.onChange("tender")}
+                    onClick={() => field.onChange("tender_offer")}
                     className={`rounded-sm border p-3 text-left text-sm transition-colors ${
-                      field.value === "tender"
+                      field.value === "tender_offer"
                         ? "border-blue-500 bg-blue-50 text-blue-900"
                         : "border-gray-200 hover:border-gray-300"
                     }`}
@@ -351,7 +432,32 @@ const BuybackFormSection = ({ isActive, onNext }: BuybackFormSectionProps) => {
             )}
           />
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {selectedType === "single_stock" && (
+            <FormField
+              control={form.control}
+              name="investor_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Investor</FormLabel>
+                  <FormControl>
+                    <ComboBox
+                      {...field}
+                      placeholder="Select investor"
+                      options={(capTable?.investors || [])
+                        .filter((inv) => isInvestor(inv))
+                        .map((investor) => ({
+                          value: investor.id,
+                          label: investor.name,
+                        }))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2">
             <FormField
               control={form.control}
               name="start_date"
@@ -378,26 +484,28 @@ const BuybackFormSection = ({ isActive, onNext }: BuybackFormSectionProps) => {
             />
           </div>
 
-          <FormField
-            control={form.control}
-            name="minimum_valuation"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Starting valuation</FormLabel>
-                <FormControl>
-                  <NumberInput {...field} prefix="$" placeholder="0" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {selectedType === "tender_offer" && (
+            <FormField
+              control={form.control}
+              name="minimum_valuation"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Starting valuation</FormLabel>
+                  <FormControl>
+                    <NumberInput {...field} prefix="$" placeholder="0" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
 
           <FormField
             control={form.control}
             name="starting_price"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Starting price</FormLabel>
+                <FormLabel>{selectedType === "single_stock" ? "Price per share" : "Starting price"}</FormLabel>
                 <FormControl>
                   <NumberInput {...field} prefix="$" placeholder="0" />
                 </FormControl>
@@ -416,7 +524,14 @@ const BuybackFormSection = ({ isActive, onNext }: BuybackFormSectionProps) => {
                   <NumberInput {...field} prefix="$" placeholder="0" />
                 </FormControl>
                 <FormDescription className="text-xs">
-                  Total amount of money you intend to spend on this buyback.
+                  {selectedType === "single_stock"
+                    ? (() => {
+                        const price = form.watch("starting_price") || 0;
+                        const total = form.watch("total_amount") || 0;
+                        const shares = price > 0 ? Math.round(total / price) : 0;
+                        return `This equals ${shares.toLocaleString()} shares at $${price.toFixed(2)} per share.`;
+                      })()
+                    : "Total amount of money you intend to spend on this buyback."}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -487,16 +602,14 @@ const BuybackFormSection = ({ isActive, onNext }: BuybackFormSectionProps) => {
         </form>
       </Form>
 
-      <DialogFooter>
-        <Button onClick={() => void handleSubmit()} className="w-full sm:w-auto">
-          Continue
-        </Button>
+      <DialogFooter className="mt-4">
+        <SectionNextButton onClick={() => void handleSubmit()} className="w-full sm:w-auto" mutation={mutation} />
       </DialogFooter>
-    </DialogContent>
+    </div>
   );
 };
 
-const CreateLetterOfTransmittalSection = ({ isActive, onNext, onBack }: CreateLetterOfTransmittalSectionProps) => {
+const CreateLetterOfTransmittalSection = ({ onNext, onBack, mutation }: CreateLetterOfTransmittalSectionProps) => {
   const form = useForm<LetterOfTransmittalFormValues>({
     resolver: zodResolver(letterOfTransmittalFormSchema),
     defaultValues: { type: "link", data: "" },
@@ -513,12 +626,8 @@ const CreateLetterOfTransmittalSection = ({ isActive, onNext, onBack }: CreateLe
     onNext(data);
   });
 
-  if (!isActive) {
-    return null;
-  }
-
   return (
-    <DialogContent>
+    <div>
       <DialogHeader>
         <DialogTitle>Letter of transmittal</DialogTitle>
         <DialogDescription>
@@ -584,24 +693,17 @@ const CreateLetterOfTransmittalSection = ({ isActive, onNext, onBack }: CreateLe
         </div>
       </div>
 
-      <DialogFooter className="flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-2">
+      <DialogFooter className="mt-4 flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-2">
         <Button variant="outline" onClick={onBack} className="w-full sm:w-24">
           Back
         </Button>
-        <Button
-          onClick={() => {
-            void handleSubmit();
-          }}
-          className="w-full sm:w-24"
-        >
-          Continue
-        </Button>
+        <SectionNextButton onClick={() => void handleSubmit()} className="w-full sm:w-auto" mutation={mutation} />
       </DialogFooter>
-    </DialogContent>
+    </div>
   );
 };
 
-const SelectInvestorsSection = ({ isActive, onBack, onNext, mutation }: SelectInvestorsModalProps) => {
+const SelectInvestorsSection = ({ onBack, onNext, mutation }: SelectInvestorsModalProps) => {
   const company = useCurrentCompany();
   const [searchTerm, setSearchTerm] = useState("");
   const [shareClassFilter, setShareClassFilter] = useState("All share classes");
@@ -654,12 +756,8 @@ const SelectInvestorsSection = ({ isActive, onBack, onNext, mutation }: SelectIn
     onNext(Array.from(selectedInvestors));
   };
 
-  if (!isActive) {
-    return null;
-  }
-
   return (
-    <DialogContent>
+    <div>
       <DialogHeader>
         <DialogTitle>Select who can join this buyback</DialogTitle>
         <DialogDescription>
@@ -744,21 +842,31 @@ const SelectInvestorsSection = ({ isActive, onBack, onNext, mutation }: SelectIn
         </div>
       </div>
 
-      <DialogFooter className="flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-2">
+      <DialogFooter className="mt-4 flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-2">
         <Button variant="outline" onClick={onBack} className="w-full sm:w-24">
           Back
         </Button>
-        <MutationStatusButton
+        <SectionNextButton
           onClick={handleNext}
           mutation={mutation}
           className="w-full sm:w-auto"
           disabled={selectedInvestors.size === 0}
-        >
-          Create buyback
-        </MutationStatusButton>
+        />
       </DialogFooter>
-    </DialogContent>
+    </div>
   );
+};
+
+const SectionNextButton = ({ mutation, children, ...props }: SectionNextButtonProps) => {
+  if (mutation) {
+    return (
+      <MutationStatusButton mutation={mutation} {...props}>
+        {children || "Create buyback"}
+      </MutationStatusButton>
+    );
+  }
+
+  return <Button {...props}>{children || "Continue"}</Button>;
 };
 
 export default NewBuybackModal;
