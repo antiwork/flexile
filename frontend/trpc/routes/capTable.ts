@@ -16,6 +16,25 @@ import {
 import type { CapTableInvestor, CapTableInvestorForAdmin } from "@/models/investor";
 import { companyProcedure, createRouter } from "@/trpc";
 
+function groupShareClassHoldings(
+  investor: (typeof companyInvestors.$inferSelect | typeof companyInvestorEntities.$inferSelect) & {
+    shareHoldings: (typeof shareHoldings.$inferSelect & { shareClass: { name: string } })[];
+  },
+) {
+  return investor.shareHoldings.reduce<{ shareClassName: string; numberOfShares: number }[]>((acc, holding) => {
+    const existing = acc.find((h) => h.shareClassName === holding.shareClass.name);
+    if (existing) {
+      existing.numberOfShares += holding.numberOfShares;
+    } else {
+      acc.push({
+        shareClassName: holding.shareClass.name,
+        numberOfShares: holding.numberOfShares,
+      });
+    }
+    return acc;
+  }, []);
+}
+
 export const capTableRouter = createRouter({
   show: companyProcedure.input(z.object({ newSchema: z.boolean().optional() })).query(async ({ ctx, input }) => {
     const isAdminOrLawyer = !!(ctx.companyAdministrator || ctx.companyLawyer);
@@ -24,7 +43,11 @@ export const capTableRouter = createRouter({
 
     let outstandingShares = BigInt(0);
 
-    const investors: (CapTableInvestor | CapTableInvestorForAdmin)[] = [];
+    type InvestorWithHoldings = (CapTableInvestor | CapTableInvestorForAdmin) & {
+      shareClassHoldings: { shareClassName: string; numberOfShares: number }[];
+    };
+
+    const investors: InvestorWithHoldings[] = [];
     const investorsConditions = (relation: typeof companyInvestorEntities | typeof companyInvestors) =>
       and(
         eq(relation.companyId, ctx.company.id),
@@ -33,44 +56,61 @@ export const capTableRouter = createRouter({
 
     if (input.newSchema) {
       (
-        await db
-          .select({
-            id: companyInvestorEntities.externalId,
-            name: companyInvestorEntities.name,
-            outstandingShares: companyInvestorEntities.totalShares,
-            fullyDilutedShares: sql<bigint>`${companyInvestorEntities.totalShares} + ${companyInvestorEntities.totalOptions}`,
-            notes: companyInvestorEntities.capTableNotes,
-            email: companyInvestorEntities.email,
-          })
-          .from(companyInvestorEntities)
-          .where(investorsConditions(companyInvestorEntities))
-          .orderBy(desc(companyInvestorEntities.totalShares), desc(companyInvestorEntities.totalOptions))
+        await db.query.companyInvestorEntities.findMany({
+          where: investorsConditions(companyInvestorEntities),
+          with: {
+            shareHoldings: {
+              with: {
+                shareClass: true,
+              },
+            },
+          },
+          orderBy: [desc(companyInvestorEntities.totalShares), desc(companyInvestorEntities.totalOptions)],
+        })
       ).forEach((investor) => {
-        outstandingShares += investor.outstandingShares;
-        investors.push({
-          ...(isAdminOrLawyer ? investor : omit(investor, "email")),
-        });
+        outstandingShares += investor.totalShares;
+
+        const investorData = {
+          id: investor.externalId,
+          name: investor.name,
+          outstandingShares: investor.totalShares,
+          fullyDilutedShares: investor.totalShares + investor.totalOptions,
+          notes: investor.capTableNotes,
+          email: investor.email,
+          shareClassHoldings: groupShareClassHoldings(investor),
+        };
+
+        investors.push(isAdminOrLawyer ? investorData : omit(investorData, "email"));
       });
     } else {
       (
-        await db
-          .select({
-            id: companyInvestors.externalId,
-            userId: users.externalId,
-            name: sql<string>`COALESCE(${users.legalName}, '')`,
-            outstandingShares: companyInvestors.totalShares,
-            fullyDilutedShares: companyInvestors.fullyDilutedShares,
-            notes: companyInvestors.capTableNotes,
-
-            email: users.email,
-          })
-          .from(companyInvestors)
-          .innerJoin(users, eq(companyInvestors.userId, users.id))
-          .where(investorsConditions(companyInvestors))
-          .orderBy(desc(companyInvestors.totalShares), desc(companyInvestors.totalOptions))
+        await db.query.companyInvestors.findMany({
+          where: investorsConditions(companyInvestors),
+          with: {
+            user: true,
+            shareHoldings: {
+              with: {
+                shareClass: true,
+              },
+            },
+          },
+          orderBy: [desc(companyInvestors.totalShares), desc(companyInvestors.totalOptions)],
+        })
       ).forEach((investor) => {
-        outstandingShares += investor.outstandingShares;
-        investors.push(isAdminOrLawyer ? investor : omit(investor, "email"));
+        outstandingShares += investor.totalShares;
+
+        const investorData = {
+          id: investor.externalId,
+          userId: investor.user.externalId,
+          name: investor.user.legalName || "",
+          outstandingShares: investor.totalShares,
+          fullyDilutedShares: investor.fullyDilutedShares,
+          notes: investor.capTableNotes,
+          email: investor.user.email,
+          shareClassHoldings: groupShareClassHoldings(investor),
+        };
+
+        investors.push(isAdminOrLawyer ? investorData : omit(investorData, "email"));
       });
     }
 
@@ -83,7 +123,10 @@ export const capTableRouter = createRouter({
         .where(eq(convertibleInvestments.companyId, ctx.company.id))
         .orderBy(desc(convertibleInvestments.impliedShares))
     ).forEach((investment) => {
-      investors.push(investment);
+      investors.push({
+        ...investment,
+        shareClassHoldings: [],
+      });
     });
 
     const pools = await db

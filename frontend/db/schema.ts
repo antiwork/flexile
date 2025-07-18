@@ -54,6 +54,7 @@ export const equityGrantsVestingTrigger = pgEnum("equity_grants_vesting_trigger"
 export const integrationStatus = pgEnum("integration_status", ["initialized", "active", "out_of_sync", "deleted"]);
 export const taxDocumentsStatus = pgEnum("tax_documents_status", ["initialized", "submitted", "deleted"]);
 export const invoicesInvoiceType = pgEnum("invoices_invoice_type", ["services", "other"]);
+export const tenderOfferType = pgEnum("tender_offer_buyback_type", ["single_stock", "tender_offer"]);
 export const activeStorageVariantRecords = pgTable(
   "active_storage_variant_records",
   {
@@ -1275,6 +1276,7 @@ export const tenderOffers = pgTable(
     id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
     companyId: bigint("company_id", { mode: "bigint" }).notNull(),
     externalId: varchar("external_id").$default(nanoid).notNull(),
+    name: varchar(),
     startsAt: timestamp("starts_at", { precision: 6, mode: "date" }).notNull(),
     endsAt: timestamp("ends_at", { precision: 6, mode: "date" }).notNull(),
     minimumValuation: bigint("minimum_valuation", { mode: "bigint" }).notNull(),
@@ -1286,10 +1288,37 @@ export const tenderOffers = pgTable(
       .notNull()
       .$onUpdate(() => new Date()),
     acceptedPriceCents: integer("accepted_price_cents"),
+    startingPricePerShareCents: integer("starting_price_per_share_cents"),
+    buybackType: tenderOfferType().notNull().default("tender_offer"),
   },
   (table) => [
     index("index_tender_offers_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
     index("index_tender_offers_on_external_id").using("btree", table.externalId.asc().nullsLast().op("text_ops")),
+  ],
+);
+
+export const tenderOfferInvestors = pgTable(
+  "tender_offer_investors",
+  {
+    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
+    externalId: varchar("external_id").$default(nanoid).notNull(),
+    tenderOfferId: bigint("tender_offer_id", { mode: "bigint" }).notNull(),
+    companyInvestorId: bigint("company_investor_id", { mode: "bigint" }).notNull(),
+    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("index_tender_offer_investors_on_external_id").using(
+      "btree",
+      table.externalId.asc().nullsLast().op("text_ops"),
+    ),
+    index("idx_tender_offer_investors_unique").using(
+      "btree",
+      table.tenderOfferId.asc().nullsLast().op("int8_ops"),
+      table.companyInvestorId.asc().nullsLast().op("int8_ops"),
+    ),
   ],
 );
 
@@ -2422,6 +2451,19 @@ export const tenderOffersRelations = relations(tenderOffers, ({ one, many }) => 
     references: [companies.id],
   }),
   bids: many(tenderOfferBids),
+  equityBuybackRounds: many(equityBuybackRounds),
+  tenderOfferInvestors: many(tenderOfferInvestors),
+}));
+
+export const tenderOfferInvestorsRelations = relations(tenderOfferInvestors, ({ one }) => ({
+  tenderOffer: one(tenderOffers, {
+    fields: [tenderOfferInvestors.tenderOfferId],
+    references: [tenderOffers.id],
+  }),
+  companyInvestor: one(companyInvestors, {
+    fields: [tenderOfferInvestors.companyInvestorId],
+    references: [companyInvestors.id],
+  }),
 }));
 
 export const tosAgreementsRelations = relations(tosAgreements, ({ one }) => ({
@@ -2458,6 +2500,7 @@ export const companyInvestorsRelations = relations(companyInvestors, ({ one, man
   equityGrants: many(equityGrants),
   shareHoldings: many(shareHoldings),
   tenderBids: many(tenderOfferBids),
+  tenderOfferInvestors: many(tenderOfferInvestors),
   convertibleSecurities: many(convertibleSecurities),
   dividendComputationOutputs: many(dividendComputationOutputs),
   dividends: many(dividends),
@@ -2526,6 +2569,18 @@ export const equityBuybackPaymentsRelations = relations(equityBuybackPayments, (
   }),
 }));
 
+export const equityBuybackRoundsRelations = relations(equityBuybackRounds, ({ one, many }) => ({
+  company: one(companies, {
+    fields: [equityBuybackRounds.companyId],
+    references: [companies.id],
+  }),
+  tenderOffer: one(tenderOffers, {
+    fields: [equityBuybackRounds.tenderOfferId],
+    references: [tenderOffers.id],
+  }),
+  equityBuybacks: many(equityBuybacks),
+}));
+
 export const equityBuybacksRelations = relations(equityBuybacks, ({ one, many }) => ({
   company: one(companies, {
     fields: [equityBuybacks.companyId],
@@ -2534,6 +2589,10 @@ export const equityBuybacksRelations = relations(equityBuybacks, ({ one, many })
   companyInvestor: one(companyInvestors, {
     fields: [equityBuybacks.companyInvestorId],
     references: [companyInvestors.id],
+  }),
+  equityBuybackRound: one(equityBuybackRounds, {
+    fields: [equityBuybacks.equityBuybackRoundId],
+    references: [equityBuybackRounds.id],
   }),
   equityBuybacksEquityBuybackPayments: many(equityBuybacksEquityBuybackPayments),
 }));

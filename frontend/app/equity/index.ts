@@ -28,7 +28,7 @@ export const navLinks = (user: CurrentUser, company: Company): TabLink[] => {
         ? { label: "Dividends", route: "/equity/dividend_rounds" }
         : null,
     company.flags.includes("tender_offers") && (isAdmin || isInvestor)
-      ? { label: "Buybacks", route: "/equity/tender_offers" }
+      ? { label: "Buybacks", route: "/equity/buybacks" }
       : null,
   ];
   return links.filter((link) => !!link);
