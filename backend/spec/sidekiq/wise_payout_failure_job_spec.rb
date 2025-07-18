@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe WisePayoutFailureJob, type: :job do
+RSpec.describe WisePayoutFailureJob do
   describe '#perform' do
     subject(:perform_job) { described_class.new.perform(webhook_params) }
 
