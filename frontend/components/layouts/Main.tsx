@@ -19,7 +19,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useMemo } from "react";
 import type { ReactNode } from "react";
-import React from "react";
 import { navLinks as equityNavLinks } from "@/app/equity";
 import { useIsActionable } from "@/app/invoices";
 import { GettingStarted } from "@/components/GettingStarted";
