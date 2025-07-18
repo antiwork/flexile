@@ -1,16 +1,15 @@
-import React from "react";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { PayRateType, trpc } from "@/trpc/client";
-import { useFormContext } from "react-hook-form";
-import RadioButtons from "@/components/RadioButtons";
-import NumberInput from "@/components/NumberInput";
-import { useUserStore } from "@/global";
-import { Popover, PopoverContent } from "@/components/ui/popover";
-import { PopoverTrigger } from "@radix-ui/react-popover";
-import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
-import { Input } from "@/components/ui/input";
 import { skipToken } from "@tanstack/react-query";
+import React, { useState } from "react";
+import { useFormContext } from "react-hook-form";
 import { z } from "zod";
+import NumberInput from "@/components/NumberInput";
+import RadioButtons from "@/components/RadioButtons";
+import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
+import { useUserStore } from "@/global";
+import { PayRateType, trpc } from "@/trpc/client";
 
 export const schema = z.object({
   payRateType: z.nativeEnum(PayRateType),
@@ -18,14 +17,19 @@ export const schema = z.object({
   role: z.string(),
 });
 
+const defaultRoles = ["Software Engineer", "Designer", "Product Manager", "Data Analyst"];
+
 export default function FormFields() {
   const form = useFormContext<z.infer<typeof schema>>();
   const payRateType = form.watch("payRateType");
   const companyId = useUserStore((state) => state.user?.currentCompanyId);
   const { data: workers } = trpc.contractors.list.useQuery(companyId ? { companyId, excludeAlumni: true } : skipToken);
 
-  const uniqueRoles = workers ? [...new Set(workers.map((worker) => worker.role))].sort() : [];
+  const [rolePopoverOpen, setRolePopoverOpen] = useState(false);
   const roleRegex = new RegExp(form.watch("role"), "iu");
+  const filteredRoles = workers
+    ? [...new Set(workers.map((worker) => worker.role))].sort().filter((value) => roleRegex.test(value))
+    : defaultRoles;
 
   return (
     <>
@@ -35,13 +39,23 @@ export default function FormFields() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Role</FormLabel>
-            <Command shouldFilter={false} value={uniqueRoles.find((role) => roleRegex.test(role)) ?? ""}>
-              <Popover>
-                <PopoverTrigger asChild>
+            <Command shouldFilter={false}>
+              <Popover open={!!rolePopoverOpen && filteredRoles.length > 0}>
+                <PopoverAnchor asChild>
                   <FormControl>
-                    <Input {...field} type="text" />
+                    <Input
+                      {...field}
+                      type="text"
+                      autoComplete="off"
+                      onFocus={() => setRolePopoverOpen(true)}
+                      onBlur={() => setRolePopoverOpen(false)}
+                      onChange={(e) => {
+                        field.onChange(e);
+                        setRolePopoverOpen(true);
+                      }}
+                    />
                   </FormControl>
-                </PopoverTrigger>
+                </PopoverAnchor>
                 <PopoverContent
                   onOpenAutoFocus={(e) => e.preventDefault()}
                   className="p-0"
@@ -49,8 +63,15 @@ export default function FormFields() {
                 >
                   <CommandList>
                     <CommandGroup>
-                      {uniqueRoles.map((option) => (
-                        <CommandItem key={option} value={option} onSelect={(e) => field.onChange(e)}>
+                      {filteredRoles.map((option) => (
+                        <CommandItem
+                          key={option}
+                          value={option}
+                          onSelect={(e) => {
+                            field.onChange(e);
+                            setRolePopoverOpen(false);
+                          }}
+                        >
                           {option}
                         </CommandItem>
                       ))}
@@ -72,6 +93,7 @@ export default function FormFields() {
             <FormLabel>Type</FormLabel>
             <FormControl>
               <RadioButtons
+                className="grid-flow-col"
                 {...field}
                 options={[
                   { label: "Hourly", value: PayRateType.Hourly },

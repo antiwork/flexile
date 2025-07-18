@@ -1,21 +1,26 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { CalendarDate, parseDate } from "@internationalized/date";
 import { useMutation, type UseMutationResult, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { iso31662 } from "iso-3166";
-import { Eye, EyeOff, AlertTriangle, Info, ArrowUpRightFromSquare } from "lucide-react";
+import { AlertTriangle, ArrowUpRightFromSquare, Eye, EyeOff, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import ComboBox from "@/components/ComboBox";
 import DatePicker from "@/components/DatePicker";
-import { CalendarDate, parseDate } from "@internationalized/date";
+import { linkClasses } from "@/components/Link";
+import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import RadioButtons from "@/components/RadioButtons";
 import Status from "@/components/Status";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { BusinessType, TaxClassification } from "@/db/enums";
 import { useCurrentUser } from "@/global";
 import { countries } from "@/models/constants";
@@ -23,12 +28,6 @@ import { trpc } from "@/trpc/client";
 import { getTinName } from "@/utils/legal";
 import { request } from "@/utils/request";
 import { settings_tax_path } from "@/utils/routes";
-import SettingsLayout from "@/app/settings/Layout";
-import ComboBox from "@/components/ComboBox";
-import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { linkClasses } from "@/components/Link";
-import { Label } from "@/components/ui/label";
 
 const dataSchema = z.object({
   birth_date: z.string().nullable(),
@@ -43,7 +42,7 @@ const dataSchema = z.object({
   is_foreign: z.boolean(),
   is_tax_information_confirmed: z.boolean(),
   legal_name: z.string(),
-  signature: z.string(),
+  signature: z.string().nullable(),
   state: z.string().nullable(),
   street_address: z.string().nullable(),
   tax_id: z.string().nullable(),
@@ -180,7 +179,7 @@ export default function TaxPage() {
   });
 
   return (
-    <SettingsLayout>
+    <>
       <Form {...form}>
         <form onSubmit={(e) => void submit(e)} className="grid gap-8">
           <hgroup>
@@ -508,7 +507,7 @@ export default function TaxPage() {
         isBusiness={formValues.business_entity}
         mutation={saveMutation}
       />
-    </SettingsLayout>
+    </>
   );
 }
 
@@ -555,11 +554,10 @@ const LegalCertificationModal = ({
         {isForeignUser ? (
           <>
             <div>
-              The provided information will be included in the {certificateType} form required by the U.S. tax laws to
-              confirm your taxpayer status. If you're eligible for 1042-S forms, you'll receive an email with a download
-              link once available.
+              This information will be used in the {certificateType} form to confirm your U.S. taxpayer status. If
+              you're eligible for a 1042-S form, you'll receive a download link by email when it's ready.
             </div>
-            <div className="flex gap-1">
+            <div className="flex items-center gap-1">
               <ArrowUpRightFromSquare className="size-4" />
               <a
                 target="_blank"
@@ -574,11 +572,10 @@ const LegalCertificationModal = ({
         ) : (
           <>
             <div>
-              The information you provided will be included in the W-9 form required by the U.S. tax laws to confirm
-              your taxpayer status. If you're eligible for 1099 forms, you'll receive an email with a download link once
-              available.
+              This information will be used in the W-9 form to confirm your U.S. taxpayer status. If you're eligible for
+              1099 forms, you'll receive a download link by email when it's ready.
             </div>
-            <div className="flex gap-1">
+            <div className="flex items-center gap-1">
               <ArrowUpRightFromSquare className="size-4" />
               <a
                 target="_blank"
@@ -592,7 +589,7 @@ const LegalCertificationModal = ({
           </>
         )}
 
-        <div className="prose h-[25em] overflow-y-auto rounded-md border p-4">
+        <div className="prose border-muted min-h-0 grow overflow-y-auto rounded-md border p-4 text-black">
           <b>{certificateType} Certification</b>
           <br />
           <br />
@@ -692,18 +689,20 @@ const LegalCertificationModal = ({
           </ol>
         </div>
 
-        <Label htmlFor={uid}>Your signature</Label>
-        <Input
-          id={uid}
-          value={signature}
-          onChange={(e) => setSignature(e.target.value)}
-          className="font-signature text-xl"
-          aria-label="Signature"
-        />
-        <p className="text-muted-foreground text-sm">
-          I agree that the signature will be the electronic representation of my signature and for all purposes when I
-          use them on documents just the same as a pen-and-paper signature.
-        </p>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor={uid}>Your signature</Label>
+          <Input
+            id={uid}
+            value={signature}
+            onChange={(e) => setSignature(e.target.value)}
+            className="font-signature text-xl"
+            aria-label="Signature"
+          />
+          <p className="text-muted-foreground text-xs">
+            I agree that the signature will be the electronic representation of my signature and for all purposes when I
+            use them on documents just the same as a pen-and-paper signature.
+          </p>
+        </div>
 
         <DialogFooter>
           <MutationButton mutation={signMutation} loadingText="Saving..." disabled={!signature}>

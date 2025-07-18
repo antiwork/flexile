@@ -1,6 +1,6 @@
-import React from "react";
-import { generateHelperAuth, HelperProvider } from "@helperai/react";
 import { currentUser } from "@clerk/nextjs/server";
+import { generateHelperAuth, HelperProvider } from "@helperai/react";
+import React from "react";
 import env from "@/env";
 
 interface HelperWrapperProps {

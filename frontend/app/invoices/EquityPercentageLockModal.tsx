@@ -1,3 +1,5 @@
+import MutationButton from "@/components/MutationButton";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -6,10 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { trpc } from "@/trpc/client";
-import MutationButton from "@/components/MutationButton";
 import { useCurrentCompany } from "@/global";
+import { trpc } from "@/trpc/client";
 
 const EquityPercentageLockModal = ({
   open,

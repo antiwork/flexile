@@ -53,6 +53,8 @@ class User < ApplicationRecord
 
   has_one_attached :avatar
 
+  belongs_to :signup_invite_link, class_name: "CompanyInviteLink", optional: true
+
   validates :email, presence: true, length: { minimum: MIN_EMAIL_LENGTH }
   validates :legal_name,
             format: { with: /\S+\s+\S+/, message: "requires at least two parts", allow_nil: true }
@@ -145,6 +147,10 @@ class User < ApplicationRecord
 
   def company_investor_for?(company)
     company_investor_for(company).present?
+  end
+
+  def company_worker_invitation_for?(company)
+    signup_invite_link.present? && signup_invite_link.company == company
   end
 
   def build_compliance_info(attributes)

@@ -1,25 +1,28 @@
 import { SignOutButton } from "@clerk/nextjs";
 import { signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
-import {
-  Rss,
-  ChevronsUpDown,
-  ReceiptIcon,
-  Files,
-  Users,
-  BookUser,
-  Settings,
-  ChartPie,
-  CircleDollarSign,
-  LogOut,
-  ChevronRight,
-} from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { skipToken, useQueryClient } from "@tanstack/react-query";
+import {
+  ChartPie,
+  ChevronRight,
+  ChevronsUpDown,
+  Files,
+  LogOut,
+  ReceiptIcon,
+  Settings,
+  Users,
+} from "lucide-react";
+import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useMemo } from "react";
 import type { ReactNode } from "react";
+import React from "react";
+import { navLinks as equityNavLinks } from "@/app/equity";
+import { useIsActionable } from "@/app/invoices";
+import { GettingStarted } from "@/components/GettingStarted";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -45,15 +48,10 @@ import {
 } from "@/components/ui/sidebar";
 import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
 import defaultCompanyLogo from "@/images/default-company-logo.svg";
+import { storageKeys } from "@/models/constants";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
-import type { Route } from "next";
-import { useIsActionable } from "@/app/invoices";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
-import { navLinks as equityNavLinks } from "@/app/equity";
-import { GettingStarted } from "@/components/GettingStarted";
-import { storageKeys } from "@/models/constants";
 
 // Custom logout component that handles both OTP and Clerk logout
 const LogoutButton = ({ children }: { children: React.ReactNode }) => {

@@ -4,14 +4,16 @@ import { redirect, RedirectType } from "next/navigation";
 import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect, RedirectType } from "next/navigation";
+import { useEffect } from "react";
 import type { ReactNode } from "react";
+import { useUserStore } from "@/global";
 import logo from "@/public/flexile-logo.svg";
 import { cn } from "@/utils";
-import { useUserStore } from "@/global";
 import iconClock from "./icon-clock.svg";
 import iconDiamond from "./icon-diamond.svg";
-import iconGlobe from "./icon-globe.svg";
 import iconEye from "./icon-eye.svg";
+import iconGlobe from "./icon-globe.svg";
 
 const buttonClasses = "flex justify-center items-center rounded-full transition-all duration-400 no-underline";
 

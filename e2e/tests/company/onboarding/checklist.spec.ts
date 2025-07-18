@@ -1,12 +1,12 @@
+import { faker } from "@faker-js/faker";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyStripeAccountsFactory } from "@test/factories/companyStripeAccounts";
 import { usersFactory } from "@test/factories/users";
+import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { companies, users } from "@/db/schema";
-import { faker } from "@faker-js/faker";
-import { selectComboboxOption } from "@test/helpers";
 
 test.describe.serial("Onboarding checklist", () => {
   let company: typeof companies.$inferSelect;
@@ -37,7 +37,6 @@ test.describe.serial("Onboarding checklist", () => {
     await expect(page.getByText("Send your first payment")).toBeVisible();
 
     await page.getByText("Add company details").click();
-    await expect(page).toHaveURL(/\/administrator\/settings\/details/u);
     await page.getByLabel("Company's legal name").fill(faker.company.name());
     await page.getByLabel("EIN").fill(faker.string.numeric(9));
     await page.getByLabel("Phone number").fill(faker.phone.number());
@@ -52,7 +51,7 @@ test.describe.serial("Onboarding checklist", () => {
     await expect(page.getByText("25%")).toBeVisible();
 
     await page.getByText("Add bank account").click();
-    await expect(page).toHaveURL(/\/administrator\/settings\/billing/u);
+    await expect(page.getByRole("heading", { name: "Billing", exact: true })).toBeVisible();
     await companyStripeAccountsFactory.create({
       companyId: company.id,
     });
@@ -61,9 +60,8 @@ test.describe.serial("Onboarding checklist", () => {
     await expect(page.getByText("50%")).toBeVisible();
 
     await page.getByText("Invite a contractor").click();
-    await expect(page).toHaveURL(/\/people/u);
     await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
-    await page.getByRole("button", { name: "Invite contractor" }).click();
+    await page.getByRole("button", { name: "Add contractor" }).click();
 
     await withinModal(
       async (modal) => {
@@ -153,9 +151,8 @@ test.describe.serial("Onboarding checklist", () => {
     await page.getByRole("link", { name: "Back to app" }).click();
 
     await expect(page.getByText("You are all set!")).toBeVisible();
-
-    await expect(page.getByRole("button", { name: "X" })).toBeVisible();
     await expect(page.getByText("You are ready to send your first invoice.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Close" })).toBeVisible();
   });
 
   test("hides onboarding checklist after completion and allows worker to send first invoice", async ({ page }) => {
@@ -182,7 +179,7 @@ test.describe.serial("Onboarding checklist", () => {
     await page.getByRole("row").getByText("Pay now").click();
 
     await expect(page.getByText("You are all set!")).toBeVisible();
-    await expect(page.getByRole("button", { name: "X" })).toBeVisible();
     await expect(page.getByText("Everything is in place. Time to flex.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Close" })).toBeVisible();
   });
 });
