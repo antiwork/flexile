@@ -102,7 +102,7 @@ module SetCurrent
     end
 
     def authorization_header
-      request.headers["FAuthorization"]
+      request.headers["x-flexile-auth"]
     end
 
     def jwt_secret
