@@ -106,7 +106,7 @@ export default function AdminsPage() {
         <p className="text-muted-foreground text-base">View and revoke administrator access for your workspace.</p>
       </hgroup>
       {/* override default padding to align table content with page header */}
-      <div className="-mx-3 [&_th:first-child]:!pl-0 [&_td:first-child]:!pl-0 [&_th:last-child]:!pr-0 [&_td:last-child]:!pr-0">
+      <div className="[&_th:first-child]:!pl-0 [&_td:first-child]:!pl-0 [&_th:last-child]:!pr-0 [&_td:last-child]:!pr-0">
         {isLoading ? <TableSkeleton columns={3} /> : <DataTable table={table} />}
       </div>
     </div>
