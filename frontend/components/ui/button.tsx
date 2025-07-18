@@ -16,7 +16,7 @@ const buttonVariants = cva(
         destructive: "bg-transparent text-inherit border-muted hover:text-destructive hover:*:text-destructive",
         dashed: "bg-transparent text-inherit border-dashed border-current hover:text-blue-600",
         ghost: "border-transparent hover:bg-accent hover:text-accent-foreground",
-        link: "gap-1 border-none underline hover:text-blue-600 !py-0 justify-start px-0",
+        link: "gap-1 border-none text-blue-600 hover:underline !py-0 justify-start px-0",
       },
       size: {
         default: "py-2",

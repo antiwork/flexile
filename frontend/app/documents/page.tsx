@@ -20,6 +20,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import DocusealForm, { customCss } from "@/app/documents/DocusealForm";
+import { FinishOnboarding } from "@/app/documents/FinishOnboarding";
 import DataTable, { createColumnHelper, filterValueSchema, useTable } from "@/components/DataTable";
 import MainLayout from "@/components/layouts/Main";
 import { linkClasses } from "@/components/Link";
@@ -209,6 +210,10 @@ export default function DocumentsPage() {
   const isCompanyRepresentative = !!user.roles.administrator || !!user.roles.lawyer;
   const userId = isCompanyRepresentative ? null : user.id;
   const canSign = user.address.street_address || isCompanyRepresentative;
+
+  const [forceWorkerOnboarding, setForceWorkerOnboarding] = useState<boolean>(
+    user.roles.worker ? !user.roles.worker.role : false,
+  );
 
   const currentYear = new Date().getFullYear();
   const { data: documents = [], isLoading } = trpc.documents.list.useQuery({ companyId: company.id, userId });
@@ -427,6 +432,7 @@ export default function DocumentsPage() {
           </Form>
         </DialogContent>
       </Dialog>
+      {forceWorkerOnboarding ? <FinishOnboarding handleComplete={() => setForceWorkerOnboarding(false)} /> : null}
     </MainLayout>
   );
 }

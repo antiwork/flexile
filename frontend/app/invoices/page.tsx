@@ -21,7 +21,6 @@ import Link from "next/link";
 import React, { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import StripeMicrodepositVerification from "@/app/administrator/settings/StripeMicrodepositVerification";
 import {
   ApproveButton,
   DeleteModal,
@@ -34,6 +33,7 @@ import {
   useIsPayable,
 } from "@/app/invoices/index";
 import Status, { StatusDetails } from "@/app/invoices/Status";
+import StripeMicrodepositVerification from "@/app/settings/administrator/StripeMicrodepositVerification";
 import { ContextMenuActions } from "@/components/actions/ContextMenuActions";
 import { SelectionActions } from "@/components/actions/SelectionActions";
 import type { ActionConfig, ActionContext } from "@/components/actions/types";

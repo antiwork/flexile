@@ -21,7 +21,7 @@ QuickBooks API documentation can be found [here](https://developer.intuit.com/ap
 
 - [ ] Ensure you have access to the [Flexile QuickBooks sandbox account](https://app.sandbox.qbo.intuit.com/app/homepage)
   - If you don't have access, ask Sahil or Raul to add you as a team member to the [Intuit Developer account](https://developer.intuit.com/app/developer/dashboard)
-- [ ] Login to your local Flexile app as a Gumroad company administrator (i.e.: `sahil@example.com`) and navigate to [`/companies/_/administrator/settings`](https://flexile.dev/companies/_/administrator/settings)
+- [ ] Login to your local Flexile app as a Gumroad company administrator (i.e.: `sahil@example.com`) and navigate to [`/companies/_/settings/administrator`](https://flexile.dev/companies/_/settings/administrator)
   - You should see an **Integrations** section and the **QuickBooks** box with a **Connect** button
 - [ ] Click the **Connect** button and follow the instructions to connect to the QuickBooks sandbox account
   - You will be redirected to the QuickBooks sandbox account and asked to login
@@ -157,7 +157,7 @@ Flexile's QuickBooks integration automates the process of recording financial da
 1. **Access Flexile Settings**:
 
    - Log in to your Flexile account as a company administrator
-   - Navigate to the company settings page (e.g., `/companies/_/administrator/settings`)
+   - Navigate to the company settings page (e.g., `/companies/_/settings/administrator`)
 
 2. **Connect to QuickBooks**:
 

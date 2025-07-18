@@ -17,7 +17,7 @@ RSpec.describe "New Contractor" do
     sign_in user
     visit root_path
     click_on "People"
-    click_on "Invite contractor"
+    click_on "Add contractor"
     expect(page).to have_text("Who's joining?")
   end
 

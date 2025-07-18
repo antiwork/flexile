@@ -17,6 +17,8 @@ export const schema = z.object({
   role: z.string(),
 });
 
+const defaultRoles = ["Software Engineer", "Designer", "Product Manager", "Data Analyst"];
+
 export default function FormFields() {
   const form = useFormContext<z.infer<typeof schema>>();
   const payRateType = form.watch("payRateType");
@@ -27,7 +29,7 @@ export default function FormFields() {
   const roleRegex = new RegExp(form.watch("role"), "iu");
   const filteredRoles = workers
     ? [...new Set(workers.map((worker) => worker.role))].sort().filter((value) => roleRegex.test(value))
-    : [];
+    : defaultRoles;
 
   return (
     <>
@@ -91,6 +93,7 @@ export default function FormFields() {
             <FormLabel>Type</FormLabel>
             <FormControl>
               <RadioButtons
+                className="grid-flow-col"
                 {...field}
                 options={[
                   { label: "Hourly", value: PayRateType.Hourly },

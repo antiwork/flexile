@@ -2,7 +2,6 @@
 
 import React from "react";
 import { useForm } from "react-hook-form";
-import SettingsLayout from "@/app/settings/Layout";
 import { MutationStatusButton } from "@/components/MutationButton";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -11,14 +10,6 @@ import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
 import { trpc } from "@/trpc/client";
 
 export default function SettingsPage() {
-  return (
-    <SettingsLayout>
-      <DetailsSection />
-    </SettingsLayout>
-  );
-}
-
-const DetailsSection = () => {
   const user = useCurrentUser();
   const form = useForm({
     defaultValues: {
@@ -75,4 +66,4 @@ const DetailsSection = () => {
       </form>
     </Form>
   );
-};
+}
