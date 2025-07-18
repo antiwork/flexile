@@ -30,3 +30,6 @@ tmp
 # IDE
 .vscode
 .idea
+
+# Certificates
+docker/certs

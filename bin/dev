@@ -23,6 +23,19 @@ kill_process_listening_on_port 3000
 kill_process_listening_on_port 3001
 kill_process_listening_on_port 8288 # inngest
 
-export NODE_EXTRA_CA_CERTS="$(node docker/createCertificate.js)"
+default_cert_file=$(ruby -ropenssl -e 'puts OpenSSL::X509::DEFAULT_CERT_FILE')
+mkcert_root_ca_file="$(mkcert -CAROOT)/rootCA.pem"
+combined_cert_file="tmp/combined_ca_certs.pem"
+
+if [ -f "$default_cert_file" ] && [ -f "$mkcert_root_ca_file" ]; then
+  cat "$default_cert_file" "$mkcert_root_ca_file" > "$combined_cert_file"
+  echo "Combined certificates created at $combined_cert_file"
+  export SSL_CERT_FILE="$combined_cert_file"
+else
+  echo "Warning: Could not create combined cert file. Using default certificates."
+fi
+
+export NODE_EXTRA_CA_CERTS="$mkcert_root_ca_file"
+
 make local
 foreman start -f Procfile.dev "$@"
