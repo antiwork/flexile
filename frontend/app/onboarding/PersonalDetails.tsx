@@ -1,18 +1,21 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { Check, ChevronsUpDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import ComboBox from "@/components/ComboBox";
 import { MutationStatusButton } from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useCurrentUser } from "@/global";
 import { countries, sanctionedCountries } from "@/models/constants";
+import { cn } from "@/utils";
 import { request } from "@/utils/request";
 import { onboarding_path } from "@/utils/routes";
 
@@ -22,6 +25,65 @@ const formSchema = z.object({
   country_code: z.string().min(1, "This field is required"),
   citizenship_country_code: z.string().min(1, "This field is required"),
 });
+
+const CountrySelector = ({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}) => {
+  const [open, setOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+
+  const countryOptions = [...countries].map(([code, name]) => ({ value: code, label: name }));
+  const getLabel = (value: string) => countryOptions.find((o) => o.value === value)?.label;
+
+  const filteredOptions = searchValue
+    ? countryOptions.filter(
+        (option) =>
+          option.label.toLowerCase().includes(searchValue.toLowerCase()) ||
+          option.value.toLowerCase().includes(searchValue.toLowerCase()),
+      )
+    : countryOptions;
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="small" role="combobox" aria-expanded={open} className="justify-between">
+          <div className="truncate">{value ? getLabel(value) : placeholder}</div>
+          <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="p-0" style={{ width: "var(--radix-popover-trigger-width)" }}>
+        <Command shouldFilter={false}>
+          <CommandInput placeholder="Search..." value={searchValue} onValueChange={setSearchValue} />
+          <CommandList>
+            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandGroup>
+              {filteredOptions.map((option) => (
+                <CommandItem
+                  key={option.value}
+                  value={option.value}
+                  onSelect={(currentValue) => {
+                    onChange(currentValue);
+                    setOpen(false);
+                    setSearchValue("");
+                  }}
+                >
+                  <Check className={cn("mr-2 h-4 w-4", option.value === value ? "opacity-100" : "opacity-0")} />
+                  {option.label}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+};
 
 const PersonalDetails = () => {
   const user = useCurrentUser();
@@ -76,8 +138,6 @@ const PersonalDetails = () => {
     save.mutate();
   });
 
-  const countryOptions = [...countries].map(([code, name]) => ({ value: code, label: name }));
-
   return (
     <>
       <Form {...form}>
@@ -118,7 +178,7 @@ const PersonalDetails = () => {
                 <FormItem>
                   <FormLabel>Country of residence</FormLabel>
                   <FormControl>
-                    <ComboBox {...field} placeholder="Select country" options={countryOptions} />
+                    <CountrySelector {...field} placeholder="Select country" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -132,7 +192,7 @@ const PersonalDetails = () => {
                 <FormItem>
                   <FormLabel>Country of citizenship</FormLabel>
                   <FormControl>
-                    <ComboBox {...field} placeholder="Select country" options={countryOptions} />
+                    <CountrySelector {...field} placeholder="Select country" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
