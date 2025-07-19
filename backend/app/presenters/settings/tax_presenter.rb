@@ -23,13 +23,13 @@ class Settings::TaxPresenter
       is_foreign: !requires_w9?,
       is_tax_information_confirmed: tax_information_confirmed_at.present?,
       legal_name:,
-      signature: signature || "",
+      signature:,
       state:,
       street_address:,
       tax_id:,
       tax_id_status:,
       zip_code:,
-      contractor_for_companies: user.company_workers.where(contract_signed_elsewhere: false).map(&:company).map(&:display_name),
+      contractor_for_companies: user.company_workers.includes(:company).where(contract_signed_elsewhere: false).filter_map(&:company).filter_map(&:display_name),
     }
   end
 

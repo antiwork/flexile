@@ -3,6 +3,7 @@ import { CircleCheck } from "lucide-react";
 import React from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
+import TableSkeleton from "@/components/TableSkeleton";
 import { Progress } from "@/components/ui/progress";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -27,13 +28,15 @@ const columns = [
 
 export default function OptionPools() {
   const company = useCurrentCompany();
-  const [data] = trpc.optionPools.list.useSuspenseQuery({ companyId: company.id });
+  const { data = [], isLoading } = trpc.optionPools.list.useQuery({ companyId: company.id });
 
   const table = useTable({ columns, data });
 
   return (
     <EquityLayout>
-      {data.length > 0 ? (
+      {isLoading ? (
+        <TableSkeleton columns={5} />
+      ) : data.length > 0 ? (
         <DataTable table={table} />
       ) : (
         <Placeholder icon={CircleCheck}>The company does not have any option pools.</Placeholder>

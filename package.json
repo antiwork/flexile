@@ -49,7 +49,8 @@
     "typecheck:watch": "pnpm run typecheck --watch --preserveWatchOutput",
     "setup": "cd backend && bundle exec rails js:routes:typescript",
     "lint-fast": "DISABLE_TYPE_CHECKED=1 pnpm eslint",
-    "build-next": "pnpm next build frontend --no-lint"
+    "build-next": "pnpm next build frontend --no-lint",
+    "prepare": "git config --local core.hooksPath .githooks"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.688.0",
