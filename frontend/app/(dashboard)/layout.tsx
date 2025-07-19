@@ -198,7 +198,7 @@ const NavLinks = () => {
     { refetchInterval: 30_000 },
   );
   const updatesPath = company.routes.find((route) => route.label === "Updates")?.name;
-  const equityLinks = equityNavLinks(user, company);
+  const equityLinks = equityNavLinks(user);
 
   const [isOpen, setIsOpen] = React.useState(() => localStorage.getItem(storageKeys.EQUITY_MENU_STATE) === "open");
 
