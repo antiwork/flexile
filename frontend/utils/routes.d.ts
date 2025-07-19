@@ -1304,30 +1304,6 @@ export const connect_company_quickbooks_path: ((
 
 /**
  * Generates rails route to
- * /internal/demo/companies/:id(.:format)
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const demo_company_url: ((
-  id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/demo/companies/:id(.:format)
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const demo_company_path: ((
-  id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /internal/companies/:company_id/administrator/quickbooks/disconnect(.:format)
  * @param {any} company_id
  * @param {object | undefined} options

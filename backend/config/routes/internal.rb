@@ -2,10 +2,6 @@
 
 # Note: Route helpers don't have `internal_` prefix
 scope path: :internal, module: :internal do
-  namespace :demo do
-    resources :companies, only: :show
-  end
-
   namespace :settings do
     resource :dividend, only: [:show, :update], controller: "dividend"
     resource :tax, only: [:show, :update], controller: "tax"
