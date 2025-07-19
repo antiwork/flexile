@@ -67,7 +67,7 @@ export default function AdminsPage() {
           const user = info.row.original;
           const isCurrentUserRow = currentUser.email === user.email;
           const isLoadingRevoke = revokeAdminMutation.isPending && revokeAdminMutation.variables?.userId === user.id;
-          const adminCount = users.filter(u => u.isAdmin).length;
+          const adminCount = users.filter((u) => u.isAdmin).length;
           const isLastAdmin = adminCount === 1 && user.isAdmin;
 
           return (
@@ -84,7 +84,7 @@ export default function AdminsPage() {
                 disabled={isCurrentUserRow || isLoadingRevoke || isLastAdmin}
                 aria-label={`Revoke admin access for ${user.name || user.email}`}
               >
-                Revoke Admin
+                Remove admin status
               </Button>
             </div>
           );
@@ -106,7 +106,7 @@ export default function AdminsPage() {
         <p className="text-muted-foreground text-base">View and revoke administrator access for your workspace.</p>
       </hgroup>
       {/* override default padding to align table content with page header */}
-      <div className="[&_th:first-child]:!pl-0 [&_td:first-child]:!pl-0 [&_th:last-child]:!pr-0 [&_td:last-child]:!pr-0">
+      <div className="[&_td:first-child]:!pl-0 [&_td:last-child]:!pr-0 [&_th:first-child]:!pl-0 [&_th:last-child]:!pr-0">
         {isLoading ? <TableSkeleton columns={3} /> : <DataTable table={table} />}
       </div>
     </div>
