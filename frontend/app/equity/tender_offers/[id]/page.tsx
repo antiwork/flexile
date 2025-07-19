@@ -27,6 +27,7 @@ import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatServerDate } from "@/utils/time";
 import { VESTED_SHARES_CLASS } from "../";
 import LetterOfTransmissal from "./LetterOfTransmissal";
+import TableSkeleton from "@/components/TableSkeleton";
 type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
 
 const formSchema = z.object({
@@ -42,11 +43,13 @@ export default function BuybackView() {
   const [data] = trpc.tenderOffers.get.useSuspenseQuery({ companyId: company.id, id });
   const isOpen = isPast(utc(data.startsAt)) && isFuture(utc(data.endsAt));
   const investorId = user.roles.investor?.id;
-  const [bids, { refetch: refetchBids }] = trpc.tenderOffers.bids.list.useSuspenseQuery({
+  const { data: bids = [], isLoading, refetch: refetchBids} = trpc.tenderOffers.bids.list.useQuery(
+    {
     companyId: company.id,
     tenderOfferId: id,
     investorId: user.roles.administrator ? undefined : investorId,
-  });
+    }
+  );
   const { data: ownShareHoldings } = trpc.shareHoldings.sumByShareClass.useQuery(
     { companyId: company.id, investorId },
     { enabled: !!investorId },
@@ -274,7 +277,7 @@ export default function BuybackView() {
         </>
       ) : null}
 
-      {bids.length > 0 ? <DataTable table={bidsTable} /> : null}
+      {isLoading ? <TableSkeleton columns={5} /> : bids && bids.length > 0 ? <DataTable table={bidsTable} /> : null}
 
       {cancelingBid ? (
         <Dialog open onOpenChange={() => setCancelingBid(null)}>

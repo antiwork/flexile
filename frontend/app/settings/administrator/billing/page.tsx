@@ -25,6 +25,7 @@ import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_administrator_settings_bank_accounts_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
+import TableSkeleton from "@/components/TableSkeleton";
 
 const columnHelper = createColumnHelper<RouterOutput["consolidatedInvoices"]["list"][number]>();
 const columns = [
@@ -124,7 +125,7 @@ export default function Billing() {
         .parse(await response.json());
     },
   });
-  const [data] = trpc.consolidatedInvoices.list.useSuspenseQuery({ companyId: company.id });
+  const { data = [], isLoading } = trpc.consolidatedInvoices.list.useQuery({ companyId: company.id });
 
   const table = useTable({ columns, data });
 
@@ -187,7 +188,9 @@ export default function Billing() {
           additional verification steps.
         </AlertDescription>
       </Alert>
-      {data.length > 0 ? (
+      {isLoading ? (
+        <TableSkeleton columns={6} />
+      ) : data.length > 0 ? (
         <DataTable table={table} />
       ) : (
         <Placeholder icon={CircleDollarSign}>Invoices will appear here.</Placeholder>
