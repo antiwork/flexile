@@ -2,8 +2,6 @@
 
 class EquityAllocationPolicy < ApplicationPolicy
   def show?
-    return false unless company.equity_compensation_enabled?
-
     authorized_to(:create?, Invoice)
   end
 

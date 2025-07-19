@@ -21,13 +21,11 @@ export const calculateInvoiceEquity = async ({
   companyContractor,
   serviceAmountCents,
   invoiceYear,
-  equityCompensationEnabled,
   providedEquityPercentage,
 }: {
   companyContractor: CompanyContext["companyContractor"];
   serviceAmountCents: number | bigint;
   invoiceYear: number;
-  equityCompensationEnabled: boolean;
   providedEquityPercentage?: number;
 }): Promise<CalculateEquityResult> => {
   if (companyContractor === undefined) {
@@ -48,7 +46,7 @@ export const calculateInvoiceEquity = async ({
     selectedPercentage = providedEquityPercentage;
   }
   // Otherwise, get equity percentage from database
-  else if (equityCompensationEnabled) {
+  else {
     equityAllocation = await db.query.equityAllocations.findFirst({
       where: and(
         eq(equityAllocations.companyContractorId, companyContractor.id),
@@ -132,7 +130,6 @@ export const equityCalculationsRouter = createRouter({
         companyContractor: ctx.companyContractor,
         serviceAmountCents: input.servicesInCents,
         invoiceYear: input.invoiceYear,
-        equityCompensationEnabled: ctx.company.equityCompensationEnabled,
         ...(input.selectedPercentage ? { providedEquityPercentage: input.selectedPercentage } : {}),
       });
 

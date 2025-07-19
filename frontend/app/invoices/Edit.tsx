@@ -301,32 +301,30 @@ const Edit = () => {
         </Alert>
       ) : null}
 
-      {company.equityCompensationEnabled ? (
-        <section className="mb-6">
-          <Card>
-            <CardContent>
-              <div className="grid gap-2">
-                <Label htmlFor={`${uid}-equity-split`}>Confirm your equity split for {invoiceYear}</Label>
-                <RangeInput
-                  id={`${uid}-equity-split`}
-                  value={equityPercentage}
-                  onChange={setEquityPercent}
-                  min={0}
-                  max={MAX_EQUITY_PERCENTAGE}
-                  aria-label="Cash vs equity split"
-                  unit="%"
-                />
-              </div>
-              <p className="mt-4">
-                By submitting this invoice, your current equity selection will be locked for all {invoiceYear}.{" "}
-                <strong>
-                  You won't be able to choose a different allocation until the next options grant for {invoiceYear + 1}.
-                </strong>
-              </p>
-            </CardContent>
-          </Card>
-        </section>
-      ) : null}
+      <section className="mb-6">
+        <Card>
+          <CardContent>
+            <div className="grid gap-2">
+              <Label htmlFor={`${uid}-equity-split`}>Confirm your equity split for {invoiceYear}</Label>
+              <RangeInput
+                id={`${uid}-equity-split`}
+                value={equityPercentage}
+                onChange={setEquityPercent}
+                min={0}
+                max={MAX_EQUITY_PERCENTAGE}
+                aria-label="Cash vs equity split"
+                unit="%"
+              />
+            </div>
+            <p className="mt-4">
+              By submitting this invoice, your current equity selection will be locked for all {invoiceYear}.{" "}
+              <strong>
+                You won't be able to choose a different allocation until the next options grant for {invoiceYear + 1}.
+              </strong>
+            </p>
+          </CardContent>
+        </Card>
+      </section>
 
       <section>
         <div className="grid gap-4">

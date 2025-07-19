@@ -25,8 +25,6 @@ RSpec.describe "Equity section navigation" do
     end
 
     it "shows the expected nav link and tabs if feature dividends is enabled" do
-      Flipper.enable(:cap_table, company) if equity_path == spa_company_cap_table_path(company.external_id)
-
       visit root_path
 
       click_on "Equity"
@@ -40,11 +38,7 @@ RSpec.describe "Equity section navigation" do
     end
 
     it "shows the expected nav link and tabs if all features are enabled" do
-      Flipper.enable(:cap_table, company)
-      company.update!(equity_grants_enabled: true)
-
       visit root_path
-
       click_on "Equity"
       expect(page).to have_current_path(spa_company_cap_table_path(company.external_id))
       expect(page).to have_link("Options", href: spa_company_equity_grants_path(company.external_id))
@@ -64,12 +58,8 @@ RSpec.describe "Equity section navigation" do
 
     it "shows the expected nav link and tabs if the tender_offers feature is enabled" do
       sign_in user
-      Flipper.enable(:cap_table, company)
-      company.update!(tender_offers_enabled: true)
-
       visit root_path
       click_on "Equity"
-
       expect(page).to have_link("Tender offers", href: spa_company_tender_offers_path(company.external_id))
     end
   end
@@ -85,10 +75,7 @@ RSpec.describe "Equity section navigation" do
     before { sign_in company_worker.user }
 
     it "does not show the nav link irrespective of enabled features" do
-      company.update!(equity_grants_enabled: true)
-
       visit root_path
-
       expect(page).to_not have_link("Equity")
     end
   end
@@ -108,10 +95,7 @@ RSpec.describe "Equity section navigation" do
     end
 
     it "shows the expected nav link and tabs if the equity_grants and tender_offers features are enabled" do
-      company.update!(equity_grants_enabled: true, tender_offers_enabled: true)
-
       visit root_path
-
       click_on "Equity"
       expect(page).to have_current_path(spa_company_dividends_path(company.external_id))
       expect(page).to have_link("Options", href: spa_company_equity_grants_path(company.external_id))
