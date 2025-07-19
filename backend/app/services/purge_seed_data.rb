@@ -166,7 +166,6 @@ class PurgeSeedData
 
     def purge_company_worker!(company_worker)
       company_worker.contracts.each(&:destroy!)
-      company_worker.equity_allocations.each(&:destroy!)
       company_worker.destroy!
     end
 

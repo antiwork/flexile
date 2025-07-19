@@ -8,25 +8,23 @@ import { List } from "immutable";
 import { CircleAlert } from "lucide-react";
 import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useId, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import DatePicker from "@/components/DatePicker";
 import MainLayout from "@/components/layouts/Main";
+import { linkClasses } from "@/components/Link";
 import NumberInput from "@/components/NumberInput";
-import RangeInput from "@/components/RangeInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { useCurrentCompany } from "@/global";
-import { MAX_EQUITY_PERCENTAGE } from "@/models";
+import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
-import { assertDefined } from "@/utils/assert";
+import { assert, assertDefined } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import {
@@ -78,7 +76,6 @@ const dataSchema = z.object({
         pay_rate_in_subunits: z.number(),
       }),
     ),
-    equity_amount_in_cents: z.number(),
     expenses: z.array(
       z.object({
         id: z.string().optional(),
@@ -89,7 +86,6 @@ const dataSchema = z.object({
       }),
     ),
   }),
-  equity_allocation: z.object({ percentage: z.number().nullable(), is_locked: z.boolean().nullable() }).optional(),
 });
 type Data = z.infer<typeof dataSchema>;
 
@@ -97,15 +93,17 @@ type InvoiceFormLineItem = Data["invoice"]["line_items"][number] & { errors?: st
 type InvoiceFormExpense = Data["invoice"]["expenses"][number] & { errors?: string[] | null; blob?: File | null };
 
 const Edit = () => {
+  const user = useCurrentUser();
   const company = useCurrentCompany();
   const { canSubmitInvoices } = useCanSubmitInvoices();
-  const uid = useId();
   if (!canSubmitInvoices) throw redirect("/invoices");
   const { id } = useParams<{ id: string }>();
   const searchParams = useSearchParams();
   const [errorField, setErrorField] = useState<string | null>(null);
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
+  const worker = user.roles.worker;
+  assert(worker != null);
 
   const { data } = useSuspenseQuery({
     queryKey: ["invoice", id],
@@ -144,15 +142,6 @@ const Edit = () => {
   const [expenses, setExpenses] = useState(List<InvoiceFormExpense>(data.invoice.expenses));
   const showExpensesTable = showExpenses || expenses.size > 0;
 
-  const [equityAllocation, { refetch: refetchEquityAllocation }] = trpc.equityAllocations.get.useSuspenseQuery({
-    companyId: company.id,
-    year: invoiceYear,
-  });
-  const [equityPercentage, setEquityPercent] = useState(
-    parseInt(searchParams.get("split") ?? "", 10) || equityAllocation?.equityPercentage || 0,
-  );
-
-  const equityPercentageMutation = trpc.equityAllocations.update.useMutation();
   const validate = () => {
     setErrorField(null);
     if (invoiceNumber.length === 0) setErrorField("invoiceNumber");
@@ -191,9 +180,6 @@ const Edit = () => {
       }
       if (notes.length) formData.append("invoice[notes]", notes);
 
-      if (equityPercentage !== data.equity_allocation?.percentage) {
-        await equityPercentageMutation.mutateAsync({ companyId: company.id, equityPercentage, year: invoiceYear });
-      }
       await request({
         method: id ? "PATCH" : "POST",
         url: id ? company_invoice_path(company.id, id) : company_invoices_path(company.id),
@@ -244,7 +230,6 @@ const Edit = () => {
     companyId: company.id,
     servicesInCents: totalServicesAmountInCents,
     invoiceYear,
-    selectedPercentage: equityPercentage,
   });
   const updateLineItem = (index: number, update: Partial<InvoiceFormLineItem>) =>
     setLineItems((lineItems) =>
@@ -267,10 +252,6 @@ const Edit = () => {
         return updated;
       }),
     );
-
-  useEffect(() => {
-    setEquityPercent(equityAllocation?.equityPercentage ?? 0);
-  }, [equityAllocation]);
 
   return (
     <MainLayout
@@ -299,33 +280,6 @@ const Edit = () => {
             {data.user.project_based ? "project" : "hour"}. Please check before submitting.
           </AlertDescription>
         </Alert>
-      ) : null}
-
-      {company.equityCompensationEnabled ? (
-        <section className="mb-6">
-          <Card>
-            <CardContent>
-              <div className="grid gap-2">
-                <Label htmlFor={`${uid}-equity-split`}>Confirm your equity split for {invoiceYear}</Label>
-                <RangeInput
-                  id={`${uid}-equity-split`}
-                  value={equityPercentage}
-                  onChange={setEquityPercent}
-                  min={0}
-                  max={MAX_EQUITY_PERCENTAGE}
-                  aria-label="Cash vs equity split"
-                  unit="%"
-                />
-              </div>
-              <p className="mt-4">
-                By submitting this invoice, your current equity selection will be locked for all {invoiceYear}.{" "}
-                <strong>
-                  You won't be able to choose a different allocation until the next options grant for {invoiceYear + 1}.
-                </strong>
-              </p>
-            </CardContent>
-          </Card>
-        </section>
       ) : null}
 
       <section>
@@ -359,7 +313,6 @@ const Edit = () => {
                 value={issueDate}
                 onChange={(date) => {
                   if (date) setIssueDate(date);
-                  void refetchEquityAllocation();
                 }}
                 aria-invalid={errorField === "issueDate"}
                 label="Invoice date"
@@ -542,7 +495,7 @@ const Edit = () => {
               className="w-full lg:w-96"
             />
             <div className="flex flex-col gap-2 md:self-start lg:items-end">
-              {showExpensesTable || equityCalculation.amountInCents > 0 ? (
+              {showExpensesTable || company.equityCompensationEnabled ? (
                 <div className="flex flex-col items-end">
                   <span>Total services</span>
                   <span className="numeric text-xl">{formatMoneyFromCents(totalServicesAmountInCents)}</span>
@@ -554,17 +507,21 @@ const Edit = () => {
                   <span className="numeric text-xl">{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
                 </div>
               ) : null}
-              {equityCalculation.amountInCents > 0 ? (
+              {company.equityCompensationEnabled ? (
                 <>
                   <div className="flex flex-col items-end">
-                    <span>Swapped for equity (not paid in cash)</span>
-                    <span className="numeric text-xl">{formatMoneyFromCents(equityCalculation.amountInCents)}</span>
+                    <span>
+                      <Link href="/settings/payouts" className={linkClasses}>
+                        Swapped for equity (not paid in cash)
+                      </Link>
+                    </span>
+                    <span className="numeric text-xl">{formatMoneyFromCents(equityCalculation.equityCents)}</span>
                   </div>
                   <Separator />
                   <div className="flex flex-col items-end">
                     <span>Net amount in cash</span>
                     <span className="numeric text-3xl">
-                      {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.amountInCents)}
+                      {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.equityCents)}
                     </span>
                   </div>
                 </>

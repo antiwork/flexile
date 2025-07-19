@@ -4,7 +4,6 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { documentTemplatesFactory } from "@test/factories/documentTemplates";
-import { equityAllocationsFactory } from "@test/factories/equityAllocations";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { optionPoolsFactory } from "@test/factories/optionPools";
 import { usersFactory } from "@test/factories/users";
@@ -28,25 +27,15 @@ test.describe("New Contractor", () => {
     let submitters = { "Company Representative": adminUser, Signer: contractorUser };
     const { mockForm } = mockDocuseal(next, { submitters: () => submitters });
     await mockForm(page);
-    const { companyContractor } = await companyContractorsFactory.create({
+    await companyContractorsFactory.create({
       companyId: company.id,
       userId: contractorUser.id,
     });
-    await equityAllocationsFactory.create({
-      companyContractorId: companyContractor.id,
-      equityPercentage: 50,
-      locked: true,
-    });
     await companyContractorsFactory.createCustom({ companyId: company.id });
     const { user: projectBasedUser } = await usersFactory.create();
-    const { companyContractor: projectBasedContractor } = await companyContractorsFactory.createCustom({
+    await companyContractorsFactory.createCustom({
       companyId: company.id,
       userId: projectBasedUser.id,
-    });
-    await equityAllocationsFactory.create({
-      companyContractorId: projectBasedContractor.id,
-      equityPercentage: 10,
-      locked: true,
     });
     await optionPoolsFactory.create({ companyId: company.id });
     await login(page, adminUser);

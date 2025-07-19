@@ -22,16 +22,11 @@ FactoryBot.define do
     transient do
       without_contract { false }
       with_unsigned_contract { false }
-      equity_percentage { nil }
     end
 
     after :create do |company_worker, evaluator|
       unless evaluator.without_contract
         create(:document, company: company_worker.company, signed: !evaluator.with_unsigned_contract, signatories: [company_worker.user])
-      end
-
-      if evaluator.equity_percentage
-        create(:equity_allocation, company_worker:, equity_percentage: evaluator.equity_percentage)
       end
     end
   end

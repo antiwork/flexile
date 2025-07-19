@@ -1,18 +1,18 @@
 import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
-import { equityAllocationsFactory } from "@test/factories/equityAllocations";
+import { companyInvestorsFactory } from "@test/factories/companyInvestors";
+import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { desc, eq } from "drizzle-orm";
-import { companies, companyContractors, invoices, users } from "@/db/schema";
+import { companies, invoices, users } from "@/db/schema";
 
 test.describe("quick invoicing", () => {
   let company: typeof companies.$inferSelect;
   let contractorUser: typeof users.$inferSelect;
-  let companyContractor: typeof companyContractors.$inferSelect;
 
   test.beforeEach(async () => {
     company = (await companiesFactory.createCompletedOnboarding()).company;
@@ -22,13 +22,12 @@ test.describe("quick invoicing", () => {
         streetAddress: "1st St.",
       })
     ).user;
-    companyContractor = (
-      await companyContractorsFactory.create({
-        companyId: company.id,
-        userId: contractorUser.id,
-        payRateInSubunits: 6000,
-      })
-    ).companyContractor;
+    await companyContractorsFactory.create({
+      companyId: company.id,
+      userId: contractorUser.id,
+      payRateInSubunits: 6000,
+      equityPercentage: 20,
+    });
   });
 
   test("allows submitting a quick invoice", async ({ page }) => {
@@ -65,80 +64,32 @@ test.describe("quick invoicing", () => {
     });
   });
 
-  test.describe("equity compensation", () => {
-    test.beforeEach(async () => {
-      await db.update(companies).set({ equityCompensationEnabled: true }).where(eq(companies.id, company.id));
-    });
+  test("handles equity compensation", async ({ page }) => {
+    const companyInvestor = (await companyInvestorsFactory.create({ userId: contractorUser.id, companyId: company.id }))
+      .companyInvestor;
+    await equityGrantsFactory.createActive(
+      { companyInvestorId: companyInvestor.id, sharePriceUsd: "100" },
+      { year: 2024 },
+    );
+    await db.update(companies).set({ equityCompensationEnabled: true }).where(eq(companies.id, company.id));
+    await login(page, contractorUser);
+    await page.getByLabel("Hours / Qty").fill("10:30");
+    await fillDatePicker(page, "Date", "08/08/2024");
 
-    test("handles equity compensation when allocation is set", async ({ page }) => {
-      await equityAllocationsFactory.create({
-        companyContractorId: companyContractor.id,
-        equityPercentage: 20,
-        year: 2024,
-      });
+    await expect(page.getByText("($504 cash + $126 equity)")).toBeVisible();
+    await expect(page.getByText("$630", { exact: true })).toBeVisible();
 
-      await login(page, contractorUser);
-      await page.getByLabel("Hours / Qty").fill("10:30");
-      await fillDatePicker(page, "Date", "08/08/2024");
-      await page.getByRole("textbox", { name: "Cash vs equity split" }).fill("20");
+    await page.getByRole("button", { name: "Send for approval" }).click();
 
-      await expect(page.getByText("($504 cash + $126 equity)")).toBeVisible();
-      await expect(page.getByText("$630", { exact: true })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "Aug 8, 2024" })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "$630" })).toBeVisible();
 
-      await page.getByRole("button", { name: "Send for approval" }).click();
-
-      await expect(page.getByText("Lock 20% in equity for all 2024?")).toBeVisible();
-      await expect(
-        page.getByText("By submitting this invoice, your current equity selection of 20% will be locked for all 2024"),
-      ).toBeVisible();
-      await expect(
-        page.getByText("You won't be able to choose a different allocation until the next options grant for 2025"),
-      ).toBeVisible();
-      await page.getByRole("button", { name: "Confirm 20% equity selection" }).click();
-
-      await expect(page.getByRole("cell", { name: "Aug 8, 2024" })).toBeVisible();
-      await expect(page.getByRole("cell", { name: "$630" })).toBeVisible();
-
-      const invoice = await db.query.invoices
-        .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
-        .then(takeOrThrow);
-      expect(invoice.totalAmountInUsdCents).toBe(63000n);
-      expect(invoice.cashAmountInCents).toBe(50400n);
-      expect(invoice.equityAmountInCents).toBe(12600n);
-      expect(invoice.equityPercentage).toBe(20);
-    });
-
-    test("handles equity compensation when no allocation is set", async ({ page }) => {
-      await login(page, contractorUser);
-      await page.getByLabel("Hours").fill("10:30");
-      await fillDatePicker(page, "Date", "08/08/2024");
-
-      await expect(page.getByRole("textbox", { name: "Cash vs equity split" })).toHaveValue("0");
-
-      await expect(page.getByText("($630 cash + $0 equity)")).toBeVisible();
-      await expect(page.getByText("$630", { exact: true })).toBeVisible();
-
-      await page.getByRole("button", { name: "Send for approval" }).click();
-
-      await expect(page.getByText("Lock 0% in equity for all 2024?")).toBeVisible();
-      await expect(
-        page.getByText("By submitting this invoice, your current equity selection of 0% will be locked for all 2024"),
-      ).toBeVisible();
-      await expect(
-        page.getByText("You won't be able to choose a different allocation until the next options grant for 2025"),
-      ).toBeVisible();
-      await page.getByRole("button", { name: "Confirm 0% equity selection" }).click();
-
-      await expect(page.getByRole("cell", { name: "Aug 8, 2024" })).toBeVisible();
-      await expect(page.getByRole("cell", { name: "$630" })).toBeVisible();
-
-      const invoice = await db.query.invoices
-        .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
-        .then(takeOrThrow);
-      expect(invoice.totalAmountInUsdCents).toBe(63000n);
-      expect(invoice.cashAmountInCents).toBe(63000n);
-      expect(invoice.equityAmountInCents).toBe(0n);
-      expect(invoice.equityPercentage).toBe(0);
-    });
+    const invoice = await db.query.invoices
+      .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
+      .then(takeOrThrow);
+    expect(invoice.totalAmountInUsdCents).toBe(63000n);
+    expect(invoice.cashAmountInCents).toBe(50400n);
+    expect(invoice.equityAmountInCents).toBe(12600n);
+    expect(invoice.equityPercentage).toBe(20);
   });
 });

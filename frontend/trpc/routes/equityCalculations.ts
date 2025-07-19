@@ -1,76 +1,26 @@
 import Bugsnag from "@bugsnag/js";
 import { TRPCError } from "@trpc/server";
 import { Decimal } from "decimal.js";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { companies, equityAllocations } from "@/db/schema";
-import { type CompanyContext, companyProcedure, createRouter } from "@/trpc";
+import { companies, companyContractors } from "@/db/schema";
+import { companyProcedure, createRouter } from "@/trpc";
 import { getUniqueUnvestedEquityGrantForYear } from "@/trpc/routes/equityGrants";
-
-type CalculateEquityResult = {
-  equityCents: number;
-  equityOptions: number;
-  selectedPercentage: number | null;
-  equityPercentage: number;
-  isEquityAllocationLocked: boolean | null;
-} | null;
 
 // If you make changes here, update the ruby class InvoiceEquityCalculator
 export const calculateInvoiceEquity = async ({
   companyContractor,
   serviceAmountCents,
   invoiceYear,
-  equityCompensationEnabled,
   providedEquityPercentage,
 }: {
-  companyContractor: CompanyContext["companyContractor"];
-  serviceAmountCents: number | bigint;
+  companyContractor: typeof companyContractors.$inferSelect;
+  serviceAmountCents: number;
   invoiceYear: number;
-  equityCompensationEnabled: boolean;
   providedEquityPercentage?: number;
-}): Promise<CalculateEquityResult> => {
-  if (companyContractor === undefined) {
-    Bugsnag.notify(`calculateInvoiceEquity: Company contractor not found for user`);
-    return null;
-  }
-  let isEquityAllocationLocked = null;
-  let selectedPercentage = null;
-  let equityPercentage = 0;
-  let equityAllocation = null;
-
-  const serviceAmountCentsNumber =
-    typeof serviceAmountCents === "bigint" ? Number(serviceAmountCents) : serviceAmountCents;
-
-  // If providedEquityPercentage is given, use it directly
-  if (providedEquityPercentage !== undefined) {
-    equityPercentage = providedEquityPercentage;
-    selectedPercentage = providedEquityPercentage;
-  }
-  // Otherwise, get equity percentage from database
-  else if (equityCompensationEnabled) {
-    equityAllocation = await db.query.equityAllocations.findFirst({
-      where: and(
-        eq(equityAllocations.companyContractorId, companyContractor.id),
-        eq(equityAllocations.year, invoiceYear),
-      ),
-    });
-    isEquityAllocationLocked = equityAllocation?.locked ?? null;
-    if (equityAllocation?.equityPercentage) {
-      selectedPercentage = equityAllocation.equityPercentage;
-      equityPercentage = equityAllocation.equityPercentage;
-    } else {
-      const lastYearEquityAllocation = await db.query.equityAllocations.findFirst({
-        where: and(
-          eq(equityAllocations.companyContractorId, companyContractor.id),
-          eq(equityAllocations.year, invoiceYear - 1),
-        ),
-      });
-      isEquityAllocationLocked = lastYearEquityAllocation?.locked ?? null;
-      selectedPercentage = lastYearEquityAllocation?.equityPercentage ?? null;
-      equityPercentage = selectedPercentage ?? 0;
-    }
-  }
+}) => {
+  let equityPercentage = providedEquityPercentage ?? companyContractor.equityPercentage;
 
   const unvestedGrant = await getUniqueUnvestedEquityGrantForYear(companyContractor, invoiceYear);
   let sharePriceUsd = unvestedGrant?.sharePriceUsd ?? 0;
@@ -89,7 +39,7 @@ export const calculateInvoiceEquity = async ({
     }
   }
 
-  let equityAmountInCents = Decimal.mul(serviceAmountCentsNumber, equityPercentage).div(100).round().toNumber();
+  let equityAmountInCents = Decimal.mul(serviceAmountCents, equityPercentage).div(100).round().toNumber();
   let equityAmountInOptions = 0;
 
   if (equityPercentage !== 0 && sharePriceUsd !== 0) {
@@ -105,9 +55,7 @@ export const calculateInvoiceEquity = async ({
   return {
     equityCents: equityAmountInCents,
     equityOptions: equityAmountInOptions,
-    selectedPercentage,
     equityPercentage,
-    isEquityAllocationLocked,
   };
 };
 
@@ -132,7 +80,6 @@ export const equityCalculationsRouter = createRouter({
         companyContractor: ctx.companyContractor,
         serviceAmountCents: input.servicesInCents,
         invoiceYear: input.invoiceYear,
-        equityCompensationEnabled: ctx.company.equityCompensationEnabled,
         ...(input.selectedPercentage ? { providedEquityPercentage: input.selectedPercentage } : {}),
       });
 
@@ -143,10 +90,6 @@ export const equityCalculationsRouter = createRouter({
         });
       }
 
-      return {
-        amountInCents: result.equityCents,
-        isEquityAllocationLocked: result.isEquityAllocationLocked,
-        selectedPercentage: result.selectedPercentage,
-      };
+      return result;
     }),
 });

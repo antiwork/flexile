@@ -5,7 +5,6 @@ RSpec.describe CompanyWorker do
     it { is_expected.to belong_to(:company) }
     it { is_expected.to belong_to(:user) }
     it { is_expected.to have_many(:contracts) }
-    it { is_expected.to have_many(:equity_allocations) }
     it { is_expected.to have_many(:integration_records) }
     it { is_expected.to have_many(:invoices) }
     it { is_expected.to have_one(:quickbooks_integration_record) }
@@ -465,10 +464,10 @@ RSpec.describe CompanyWorker do
 
     context "when the email has already been sent" do
       it "does not send the email" do
-        create(:equity_allocation, company_worker: contractor, year:, sent_equity_percent_selection_email: true)
+        contractor.update!(sent_equity_percent_selection_email: true)
 
         expect do
-          contractor.send_equity_percent_selection_email(year)
+          contractor.send_equity_percent_selection_email
         end.not_to have_enqueued_mail(CompanyWorkerMailer, :equity_percent_selection)
       end
     end
@@ -476,44 +475,9 @@ RSpec.describe CompanyWorker do
     context "when the email has not been sent" do
       it "sends the email and sets the relevant flag" do
         expect do
-          contractor.send_equity_percent_selection_email(year)
+          contractor.send_equity_percent_selection_email
         end.to have_enqueued_mail(CompanyWorkerMailer, :equity_percent_selection).with(contractor.id)
-           .and change { contractor.equity_allocation_for(year)&.sent_equity_percent_selection_email? }.from(nil).to(true)
-      end
-    end
-  end
-
-  describe "#equity_percentage" do
-    let(:contractor) { create(:company_worker, equity_percentage: 10) }
-    let(:year) { Date.current.year }
-
-    context "when the equity allocation exists" do
-      it "returns the equity percentage" do
-        expect(contractor.equity_percentage(year)).to eq(10)
-      end
-    end
-
-    context "when the equity allocation does not exist" do
-      it "returns nil" do
-        expect(contractor.equity_percentage(year + 1)).to be_nil
-      end
-    end
-  end
-
-  describe "#equity_allocation_for" do
-    let(:contractor) { create(:company_worker) }
-    let(:year) { Date.current.year }
-    let!(:equity_allocation) { create(:equity_allocation, company_worker: contractor, year:) }
-
-    context "when the equity allocation exists" do
-      it "returns the equity allocation" do
-        expect(contractor.equity_allocation_for(year)).to eq(equity_allocation)
-      end
-    end
-
-    context "when the equity allocation does not exist" do
-      it "returns nil" do
-        expect(contractor.equity_allocation_for(year + 1)).to be_nil
+           .and change { contractor.sent_equity_percent_selection_email? }.from(false).to(true)
       end
     end
   end

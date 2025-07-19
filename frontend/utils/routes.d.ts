@@ -2520,6 +2520,26 @@ export const settings_dividend_path: ((
 
 /**
  * Generates rails route to
+ * /internal/settings/equity(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const settings_equity_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/settings/equity(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const settings_equity_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /internal/settings/tax(.:format)
  * @param {object | undefined} options
  * @returns {string} route path

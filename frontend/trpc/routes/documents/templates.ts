@@ -9,7 +9,7 @@ import { pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
 import { DocumentTemplateType, DocumentType, PayRateType } from "@/db/enums";
-import { companyContractors, documents, documentTemplates, equityAllocations, users } from "@/db/schema";
+import { companyContractors, documents, documentTemplates, users } from "@/db/schema";
 import env from "@/env";
 import { countries } from "@/models/constants";
 import { companyProcedure, createRouter, type ProtectedContext, protectedProcedure } from "@/trpc";
@@ -103,9 +103,6 @@ export const templatesRouter = createRouter({
             user: {
               with: {
                 companyContractors: {
-                  with: {
-                    equityAllocations: { where: eq(equityAllocations.year, new Date().getFullYear()) },
-                  },
                   where: eq(companyContractors.companyId, ctx.company.id),
                 },
               },
@@ -153,7 +150,6 @@ export const templatesRouter = createRouter({
       const contractor = assertDefined(
         document.signatures.find((s) => s.title === "Signer")?.user.companyContractors[0],
       );
-      const equityPercentage = contractor.equityAllocations[0]?.equityPercentage;
       const startDate = max([contractor.startedAt, contractor.updatedAt]);
       Object.assign(values, {
         __role: contractor.role,
@@ -163,7 +159,6 @@ export const templatesRouter = createRouter({
           ? `${(contractor.payRateInSubunits / 100).toLocaleString()} per ${contractor.payRateType === PayRateType.Hourly ? "hour" : "project"}`
           : "",
       });
-      if (equityPercentage) values.__signerEquityPercentage = equityPercentage.toString();
     } else if (document.type === DocumentType.EquityPlanContract) {
       const equityGrant = document.equityGrant;
       if (!equityGrant) throw new TRPCError({ code: "NOT_FOUND" });

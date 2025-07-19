@@ -658,33 +658,6 @@ export const equityGrantExercises = pgTable(
   ],
 );
 
-export const equityAllocations = pgTable(
-  "equity_allocations",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    companyContractorId: bigint("company_contractor_id", { mode: "bigint" }).notNull(),
-    equityPercentage: integer("equity_percentage"),
-    year: integer().notNull(),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-    locked: boolean().notNull().default(false),
-    sentEquityPercentSelectionEmail: boolean("sent_equity_percent_selection_email").notNull().default(false),
-  },
-  (table) => [
-    index("index_equity_allocations_on_company_contractor_id").using(
-      "btree",
-      table.companyContractorId.asc().nullsLast().op("int8_ops"),
-    ),
-    uniqueIndex("index_equity_allocations_on_company_contractor_id_and_year").using(
-      "btree",
-      table.companyContractorId.asc().nullsLast().op("int4_ops"),
-      table.year.asc().nullsLast().op("int4_ops"),
-    ),
-  ],
-);
-
 export const integrationRecords = pgTable(
   "integration_records",
   {
@@ -1719,10 +1692,10 @@ export const companyContractors = pgTable(
     role: varchar("role").notNull(),
     externalId: varchar("external_id").$default(nanoid).notNull(),
     payRateType: integer("pay_rate_type").$type<PayRateType>().default(PayRateType.Hourly).notNull(),
-    sentEquityPercentSelectionEmail: boolean("sent_equity_percent_selection_email").notNull().default(false),
     payRateInSubunits: integer("pay_rate_in_subunits"),
     payRateCurrency: varchar("pay_rate_currency").default("usd").notNull(),
     contractSignedElsewhere: boolean("contract_signed_elsewhere").notNull().default(false),
+    equityPercentage: integer("equity_percentage").default(0).notNull(),
   },
   (table) => [
     index("index_company_contractors_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
@@ -2050,14 +2023,6 @@ export const companyContractorsRelations = relations(companyContractors, ({ one,
   contracts: many(contracts),
   documents: many(documents),
   invoices: many(invoices),
-  equityAllocations: many(equityAllocations),
-}));
-
-export const equityAllocationsRelations = relations(equityAllocations, ({ one }) => ({
-  companyContractor: one(companyContractors, {
-    fields: [equityAllocations.companyContractorId],
-    references: [companyContractors.id],
-  }),
 }));
 
 export const documentsRelations = relations(documents, ({ one, many }) => ({

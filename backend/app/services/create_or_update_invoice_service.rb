@@ -64,14 +64,14 @@ class CreateOrUpdateInvoiceService
         company_worker: contractor,
         company: invoice.company,
         service_amount_cents: services_in_cents,
-        invoice_year:
+        invoice_year:,
       ).calculate
       if equity_calculation_result.nil?
         error = "Something went wrong. Please contact the company administrator."
         raise ActiveRecord::Rollback
       end
 
-      equity_calculation_result => { equity_cents:, equity_options:, equity_percentage:, selected_percentage: }
+      equity_calculation_result => { equity_cents:, equity_options:, equity_percentage: }
       invoice.equity_percentage = equity_percentage
       invoice.cash_amount_in_cents = invoice.total_amount_in_usd_cents - equity_cents
       invoice.equity_amount_in_cents = equity_cents
@@ -81,10 +81,6 @@ class CreateOrUpdateInvoiceService
       unless invoice.save
         error = invoice.errors.full_messages.to_sentence
         raise ActiveRecord::Rollback
-      end
-
-      if selected_percentage.present?
-        contractor.equity_allocation_for(invoice_year).update!(status: EquityAllocation.statuses[:pending_grant_creation], locked: true)
       end
     end
     if error.present?
@@ -104,7 +100,7 @@ class CreateOrUpdateInvoiceService
     attr_reader :params, :invoice, :contractor, :user
 
     def invoice_params
-      params.permit(invoice: [:invoice_date, :invoice_number, :notes])[:invoice]
+      params.permit(invoice: [:invoice_date, :invoice_number, :notes, :equity_percentage])[:invoice]
     end
 
     def invoice_line_items_params

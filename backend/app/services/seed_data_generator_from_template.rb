@@ -604,9 +604,6 @@ class SeedDataGeneratorFromTemplate
 
             if OnboardingState::Worker.new(user: contractor.reload, company:).complete?
               create_company_worker_invoices!(company_worker, ended_at:)
-              if company_worker_data.key?("equity_allocation_attributes")
-                company_worker.equity_allocations.create!(**company_worker_data.fetch("equity_allocation_attributes"), year: Date.current.year)
-              end
             end
 
             if company_worker_data.key?("equity_grants")
@@ -725,10 +722,6 @@ class SeedDataGeneratorFromTemplate
           company_worker,
           board_approval_date: option_pool_created_at,
         ).process
-        CreateOrUpdateEquityAllocation.new(
-          company_worker,
-          equity_percentage: equity_grant_data.fetch("equity_allocation").fetch("equity_percentage")
-        ).perform!
       end
     end
 

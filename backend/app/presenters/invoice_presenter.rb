@@ -16,7 +16,7 @@ class InvoicePresenter
 
   def new_form_props(contractor:)
     new_invoice_date = DefaultInvoiceDate.new(user, contractor.company).generate
-    props = {
+    {
       user: user_props(contractor:),
       company: InvoicePresenter.company_props(company),
       invoice: {
@@ -34,18 +34,10 @@ class InvoicePresenter
         expenses:,
       },
     }
-    if company.equity_compensation_enabled?
-      equity_allocation = contractor.equity_allocation_for(new_invoice_date.year)
-      props[:equity_allocation] = {
-        percentage: equity_allocation&.equity_percentage,
-        is_locked: equity_allocation&.locked?,
-      }
-    end
-    props
   end
 
   def edit_form_props(contractor:)
-    props = new_form_props(contractor:).merge(
+    new_form_props(contractor:).merge(
       {
         invoice: {
           id: external_id,
@@ -68,14 +60,6 @@ class InvoicePresenter
         },
       }
     )
-    if props[:equity_allocation]
-      equity_allocation = contractor.equity_allocation_for(invoice_date.year)
-      props[:equity_allocation] = {
-        percentage: equity_allocation&.equity_percentage,
-        is_locked: equity_allocation&.locked?,
-      }
-    end
-    props
   end
 
   private

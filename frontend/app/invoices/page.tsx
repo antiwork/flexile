@@ -18,7 +18,7 @@ import {
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
-import React, { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import React, { Fragment, useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import {
@@ -44,7 +44,6 @@ import { linkClasses } from "@/components/Link";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import Placeholder from "@/components/Placeholder";
-import RangeInput from "@/components/RangeInput";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -54,7 +53,6 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
-import { MAX_EQUITY_PERCENTAGE } from "@/models";
 import type { RouterOutput } from "@/trpc";
 import { PayRateType, trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
@@ -62,7 +60,6 @@ import { pluralize } from "@/utils/pluralize";
 import { request } from "@/utils/request";
 import { company_invoices_path, export_company_invoices_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
-import EquityPercentageLockModal from "./EquityPercentageLockModal";
 import QuantityInput from "./QuantityInput";
 import { useCanSubmitInvoices } from ".";
 
@@ -605,7 +602,6 @@ const quickInvoiceSchema = z.object({
   rate: z.number().min(0.01),
   quantity: z.object({ quantity: z.number().min(1), hourly: z.boolean() }),
   date: z.instanceof(CalendarDate, { message: "This field is required." }),
-  invoiceEquityPercent: z.number().min(0).max(100),
 });
 
 const QuickInvoicesSection = () => {
@@ -625,22 +621,18 @@ const QuickInvoicesSection = () => {
       rate: payRateInSubunits ? payRateInSubunits / 100 : 0,
       quantity: { quantity: isHourly ? 60 : 1, hourly: isHourly },
       date: today(getLocalTimeZone()),
-      invoiceEquityPercent: 0,
     },
     disabled: !canSubmitInvoices,
   });
 
-  const [lockModalOpen, setLockModalOpen] = useState(false);
   const date = form.watch("date");
   const quantity = form.watch("quantity").quantity;
   const hourly = form.watch("quantity").hourly;
   const rate = form.watch("rate") * 100;
   const totalAmountInCents = Math.ceil((quantity / (hourly ? 60 : 1)) * rate);
-  const invoiceEquityPercent = form.watch("invoiceEquityPercent");
   const newCompanyInvoiceRoute = () => {
     const params = new URLSearchParams({
       date: date.toString(),
-      split: String(invoiceEquityPercent),
       rate: rate.toString(),
       quantity: quantity.toString(),
       hourly: hourly.toString(),
@@ -648,24 +640,16 @@ const QuickInvoicesSection = () => {
     return `/invoices/new?${params.toString()}` as const;
   };
 
-  const [equityAllocation] = trpc.equityAllocations.get.useSuspenseQuery({
-    companyId: company.id,
-    year: date.year,
-  });
-
   const { data: equityCalculation } = trpc.equityCalculations.calculate.useQuery({
     companyId: company.id,
     invoiceYear: date.year,
     servicesInCents: totalAmountInCents,
-    selectedPercentage: invoiceEquityPercent,
   });
-  const equityAmountCents = equityCalculation?.amountInCents ?? 0;
+  const equityAmountCents = equityCalculation?.equityCents ?? 0;
   const cashAmountCents = totalAmountInCents - equityAmountCents;
 
   const submit = useMutation({
     mutationFn: async () => {
-      setLockModalOpen(false);
-
       await request({
         method: "POST",
         url: company_invoices_path(company.id),
@@ -683,19 +667,7 @@ const QuickInvoicesSection = () => {
     },
   });
 
-  const handleSubmit = form.handleSubmit(() => {
-    if (company.equityCompensationEnabled && !equityAllocation?.locked) {
-      setLockModalOpen(true);
-    } else {
-      submit.mutate();
-    }
-  });
-
-  useEffect(() => {
-    if (equityAllocation?.equityPercentage) {
-      form.setValue("invoiceEquityPercent", equityAllocation.equityPercentage);
-    }
-  }, [equityAllocation, form]);
+  const handleSubmit = form.handleSubmit(() => submit.mutate());
 
   return (
     <Card className={canSubmitInvoices ? "" : "opacity-50"}>
@@ -741,28 +713,6 @@ const QuickInvoicesSection = () => {
                   </FormItem>
                 )}
               />
-
-              {company.equityCompensationEnabled ? (
-                <FormField
-                  control={form.control}
-                  name="invoiceEquityPercent"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>How much of your rate would you like to swap for equity?</FormLabel>
-                      <FormControl>
-                        <RangeInput
-                          {...field}
-                          min={0}
-                          max={MAX_EQUITY_PERCENTAGE}
-                          unit="%"
-                          disabled={!canSubmitInvoices}
-                          aria-label="Cash vs equity split"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              ) : null}
             </div>
 
             <Separator orientation="horizontal" className="block w-full lg:hidden" />
@@ -774,7 +724,11 @@ const QuickInvoicesSection = () => {
                 <div className="text-3xl font-bold">{formatMoneyFromCents(totalAmountInCents)}</div>
                 {company.equityCompensationEnabled ? (
                   <div className="mt-1 text-sm text-gray-500">
-                    ({formatMoneyFromCents(cashAmountCents)} cash + {formatMoneyFromCents(equityAmountCents)} equity)
+                    ({formatMoneyFromCents(cashAmountCents)} cash +{" "}
+                    <Link href="/settings/payouts" className={linkClasses}>
+                      {formatMoneyFromCents(equityAmountCents)} equity
+                    </Link>
+                    )
                   </div>
                 ) : null}
               </div>
@@ -793,15 +747,6 @@ const QuickInvoicesSection = () => {
                 >
                   Send for approval
                 </MutationStatusButton>
-                {company.equityCompensationEnabled && !equityAllocation?.locked ? (
-                  <EquityPercentageLockModal
-                    open={lockModalOpen}
-                    onClose={() => setLockModalOpen(false)}
-                    percentage={invoiceEquityPercent}
-                    year={date.year}
-                    onComplete={() => submit.mutate()}
-                  />
-                ) : null}
               </div>
             </div>
           </form>
