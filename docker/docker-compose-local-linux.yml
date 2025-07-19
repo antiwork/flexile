@@ -25,7 +25,7 @@ services:
     network_mode: host
     volumes:
       - ./flexile_dev.conf:/etc/nginx/conf.d/default.conf
-      - ../certificates:/etc/ssl/certs/
+      - ./certs:/etc/ssl/certs/
     extra_hosts:
       - "host.docker.internal:127.0.0.1"
     command: >

@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Api::Helper::BaseController < Api::BaseController
+  skip_before_action :verify_api_token
+  skip_before_action :authenticate_with_jwt
   before_action :authorize!
 
   HMAC_EXPIRATION = 1.minute

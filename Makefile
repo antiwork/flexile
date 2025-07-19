@@ -6,7 +6,7 @@ LOCAL_DETACHED ?= true
 LOCAL_DOCKER_COMPOSE_CONFIG = $(if $(and $(filter Linux,$(shell uname -s)),$(shell test ! -e /proc/sys/fs/binfmt_misc/WSLInterop && echo true)),docker-compose-local-linux.yml,docker-compose-local.yml)
 
 local: .setup
-	node docker/createCertificate.js
+	bin/generate_ssl_certificates
 	COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) \
 		$(DOCKER_COMPOSE_CMD) -f docker/$(LOCAL_DOCKER_COMPOSE_CONFIG) up $(if $(filter true,$(LOCAL_DETACHED)),-d)
 
@@ -17,6 +17,7 @@ stop_local:
 .setup:
 	mkdir -p docker/tmp/postgres
 	mkdir -p docker/tmp/redis
+	mkdir -p docker/certs
 
 .PHONY: ghpr
 ghpr:

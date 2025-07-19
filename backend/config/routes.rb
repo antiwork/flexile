@@ -66,6 +66,13 @@ Rails.application.routes.draw do
     constraints api_domain_constraint do
       namespace :v1 do
         resources :user_leads, only: :create
+        resources :login, only: :create
+        resources :email_otp, only: :create
+        resources :example, only: [] do
+          collection do
+            get :protected_action
+          end
+        end
       end
       namespace :helper do
         resource :users, only: :show

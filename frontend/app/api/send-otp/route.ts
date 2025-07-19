@@ -1,0 +1,39 @@
+import { NextRequest, NextResponse } from "next/server";
+import { sendOtpEmail } from "@/lib/auth";
+import { z } from "zod";
+
+const sendOtpSchema = z.object({
+  email: z.string().email(),
+});
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const validation = sendOtpSchema.safeParse(body);
+
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: "Invalid email address" },
+        { status: 400 }
+      );
+    }
+
+    const result = await sendOtpEmail(validation.data.email);
+
+    return NextResponse.json(result, { status: 200 });
+  } catch (error) {
+    console.error("Error sending OTP:", error);
+
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: "Failed to send OTP" },
+      { status: 500 }
+    );
+  }
+}

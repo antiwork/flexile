@@ -15,6 +15,8 @@ import { eq } from "drizzle-orm";
 import { cache } from "react";
 import superjson from "superjson";
 import { z } from "zod";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { companies, users } from "@/db/schema";
 import env from "@/env";
@@ -40,8 +42,28 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
     accept: "application/json",
     ...(csrfToken ? { "x-csrf-token": csrfToken } : {}),
   };
-  const response = await fetch(internal_userid_url({ host }), { headers });
-  const userId = response.ok ? z.object({ id: z.number() }).parse(await response.json()).id : null;
+
+  let userId: number | null = null;
+
+  // First try to get userId from NextAuth JWT session
+  const session = await getServerSession(authOptions);
+  if (session?.user && 'jwt' in session.user) {
+    // Extract user ID from JWT token
+    try {
+      const jwt = (session.user as any).jwt;
+      const base64Payload = jwt.split('.')[1];
+      const payload = JSON.parse(Buffer.from(base64Payload, 'base64').toString());
+      userId = payload.user_id;
+    } catch (error) {
+      console.error("Error parsing JWT token:", error);
+    }
+  }
+
+  // If no JWT session, fall back to Clerk authentication
+  if (!userId) {
+    const response = await fetch(internal_userid_url({ host }), { headers });
+    userId = response.ok ? z.object({ id: z.number() }).parse(await response.json()).id : null;
+  }
 
   return {
     userId,

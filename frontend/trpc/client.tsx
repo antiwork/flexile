@@ -1,5 +1,6 @@
 "use client";
 import { useAuth } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import { type QueryClient } from "@tanstack/react-query";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
@@ -15,26 +16,53 @@ import { createClient } from "./shared";
 export const trpc = createTRPCReact<AppRouter>();
 
 const GetUserData = ({ children }: { children: React.ReactNode }) => {
-  const { isSignedIn, userId } = useAuth();
+  const { isSignedIn, userId } = useAuth(); // Clerk
+  const { data: session } = useSession(); // NextAuth
   const { user, login, logout } = useUserStore();
+
+  // Prioritize OTP authentication over Clerk
+  const isOtpAuthenticated = !!session?.user;
+  const isClerkAuthenticated = isSignedIn && !isOtpAuthenticated; // Only use Clerk if no OTP session
+  const isAuthenticated = isOtpAuthenticated || isClerkAuthenticated;
+  const authId = isOtpAuthenticated ? session?.user?.email : userId;
+
   const { data } = useQuery({
-    queryKey: ["currentUser", userId],
+    queryKey: ["currentUser", authId, isOtpAuthenticated ? "otp" : "clerk"],
     queryFn: async (): Promise<unknown> => {
-      const response = await request({
-        url: internal_current_user_data_path(),
-        accept: "json",
-        method: "GET",
-        assertOk: true,
-      });
-      return await response.json();
+      // Prioritize NextAuth session over Clerk
+      if (isOtpAuthenticated && session?.user && 'jwt' in session.user) {
+        const response = await request({
+          url: "/api/user-data",
+          method: "POST",
+          accept: "json",
+          jsonData: { jwt: (session.user as any).jwt },
+          assertOk: true,
+        });
+        return await response.json();
+      }
+
+      // Fall back to Clerk authentication only if no OTP session
+      if (isClerkAuthenticated) {
+        const response = await request({
+          url: internal_current_user_data_path(),
+          accept: "json",
+          method: "GET",
+          assertOk: true,
+        });
+        return await response.json();
+      }
+
+      throw new Error("No authentication method available");
     },
-    enabled: !!isSignedIn,
+    enabled: !!isAuthenticated,
   });
+
   useEffect(() => {
-    if (isSignedIn && data) login(data);
+    if (isAuthenticated && data) login(data);
     else logout();
-  }, [isSignedIn, data]);
-  if (isSignedIn == null || (isSignedIn && !user)) return null;
+  }, [isAuthenticated, data, login, logout]);
+
+  if (isAuthenticated == null || (isAuthenticated && !user)) return null;
   return children;
 };
 
