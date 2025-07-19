@@ -34,13 +34,11 @@ class InvoicePresenter
         expenses:,
       },
     }
-    if company.equity_compensation_enabled?
-      equity_allocation = contractor.equity_allocation_for(new_invoice_date.year)
-      props[:equity_allocation] = {
-        percentage: equity_allocation&.equity_percentage,
-        is_locked: equity_allocation&.locked?,
-      }
-    end
+    equity_allocation = contractor.equity_allocation_for(new_invoice_date.year)
+    props[:equity_allocation] = {
+      percentage: equity_allocation&.equity_percentage,
+      is_locked: equity_allocation&.locked?,
+    }
     props
   end
 

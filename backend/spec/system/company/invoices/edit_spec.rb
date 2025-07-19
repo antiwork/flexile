@@ -4,9 +4,7 @@ RSpec.describe "Invoice update flow" do
   let(:date) { "2022-01-03" }
   let(:user) { create(:user, zip_code: "22222", street_address: "1st St.") }
   let(:company) do
-    company = create(:company)
-    company.update!(equity_compensation_enabled: true)
-    company
+    create(:company)
   end
   let!(:expense_category) { create(:expense_category, company:) }
   let(:year) { Date.current.year }

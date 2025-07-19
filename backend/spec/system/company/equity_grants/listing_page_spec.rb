@@ -4,8 +4,6 @@ RSpec.describe "Equity Grants list page" do
   let(:company) { create(:company) }
 
   shared_examples "an administrator with access" do
-    before { company.update!(equity_grants_enabled: true) }
-
     context "when records exist" do
       before do
         create(:equity_grant, year: 2018,
@@ -160,7 +158,6 @@ RSpec.describe "Equity Grants list page" do
                             accepted_at: nil)
 
       sign_in user
-      company.update!(equity_grants_enabled: true)
       Flipper.enable(:option_exercising, company)
     end
 

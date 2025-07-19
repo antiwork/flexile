@@ -245,18 +245,10 @@ RSpec.describe "Company Settings" do
         expect(QuickbooksIntegrationSyncScheduleJob).to have_enqueued_sidekiq_job(company.id)
       end
 
-      context "when equity compensation flag is enabled" do
-        it "allows setting an expense account for equity compensation" do
-          click_on "Connect"
-          wait_for_ajax
-          expect(page).to_not have_text("Expense account for equity compensation")
-
-          company.update!(equity_compensation_enabled: true)
-          visit spa_company_administrator_settings_path(company.external_id)
-          click_on "Connect"
-          wait_for_ajax
-          expect(page).to have_text("Expense account for equity compensation")
-        end
+      it "allows setting an expense account for equity compensation" do
+        click_on "Connect"
+        wait_for_ajax
+        expect(page).to have_text("Expense account for equity compensation")
       end
     end
 

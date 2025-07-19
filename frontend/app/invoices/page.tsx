@@ -684,7 +684,7 @@ const QuickInvoicesSection = () => {
   });
 
   const handleSubmit = form.handleSubmit(() => {
-    if (company.equityCompensationEnabled && !equityAllocation?.locked) {
+    if (!equityAllocation?.locked) {
       setLockModalOpen(true);
     } else {
       submit.mutate();
@@ -742,27 +742,25 @@ const QuickInvoicesSection = () => {
                 )}
               />
 
-              {company.equityCompensationEnabled ? (
-                <FormField
-                  control={form.control}
-                  name="invoiceEquityPercent"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>How much of your rate would you like to swap for equity?</FormLabel>
-                      <FormControl>
-                        <RangeInput
-                          {...field}
-                          min={0}
-                          max={MAX_EQUITY_PERCENTAGE}
-                          unit="%"
-                          disabled={!canSubmitInvoices}
-                          aria-label="Cash vs equity split"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              ) : null}
+              <FormField
+                control={form.control}
+                name="invoiceEquityPercent"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>How much of your rate would you like to swap for equity?</FormLabel>
+                    <FormControl>
+                      <RangeInput
+                        {...field}
+                        min={0}
+                        max={MAX_EQUITY_PERCENTAGE}
+                        unit="%"
+                        disabled={!canSubmitInvoices}
+                        aria-label="Cash vs equity split"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
             </div>
 
             <Separator orientation="horizontal" className="block w-full lg:hidden" />
@@ -772,11 +770,9 @@ const QuickInvoicesSection = () => {
               <div className="mt-2 mb-2 pt-2 text-right lg:mt-16 lg:mb-3 lg:pt-0">
                 <span className="text-sm text-gray-500">Total amount</span>
                 <div className="text-3xl font-bold">{formatMoneyFromCents(totalAmountInCents)}</div>
-                {company.equityCompensationEnabled ? (
-                  <div className="mt-1 text-sm text-gray-500">
-                    ({formatMoneyFromCents(cashAmountCents)} cash + {formatMoneyFromCents(equityAmountCents)} equity)
-                  </div>
-                ) : null}
+                <div className="mt-1 text-sm text-gray-500">
+                  ({formatMoneyFromCents(cashAmountCents)} cash + {formatMoneyFromCents(equityAmountCents)} equity)
+                </div>
               </div>
               <div className="flex flex-wrap items-center justify-end gap-3">
                 <Button variant="outline" className="grow sm:grow-0" asChild disabled={!canSubmitInvoices}>
@@ -793,7 +789,7 @@ const QuickInvoicesSection = () => {
                 >
                   Send for approval
                 </MutationStatusButton>
-                {company.equityCompensationEnabled && !equityAllocation?.locked ? (
+                {!equityAllocation?.locked ? (
                   <EquityPercentageLockModal
                     open={lockModalOpen}
                     onClose={() => setLockModalOpen(false)}

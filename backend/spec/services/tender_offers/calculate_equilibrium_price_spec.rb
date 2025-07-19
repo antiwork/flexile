@@ -116,12 +116,12 @@ RSpec.describe TenderOffers::CalculateEquilibriumPrice do
           # Class B allocated = (1,158) / (3,000) = 38.6%
           expect(tender_offer.bids.where(company_investor: company_investor_2).pluck(:share_class, :accepted_shares, :share_price_cents))
             .to match_array([
+                              ["Class A", 0.0, 13_38],
+                              ["Class A", 0.0, 11_38],
+                              ["Class B", 0.0, 22_00],
+                              ["Class B", 772.to_d, 11_38],
                               ["Class A", 500.to_d, 10_00],
-                              ["Class A", 0.to_d, 11_38],
-                              ["Class A", 0.to_d, 13_38],
-                              ["Class A", 3_554.to_d, 11_38],
-                              ["Class B", 0.to_d, 22_00],
-                              ["Class B", 772.to_d, 11_38]
+                              ["Class A", 3554.to_d, 11_38]
                             ])
           # Class A allocated = (3,554 + 500) / 10,500 = 38.60%
           # Class B allocated = 772 / 2,000 = 38.60%

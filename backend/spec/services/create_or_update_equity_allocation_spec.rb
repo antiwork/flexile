@@ -10,22 +10,6 @@ RSpec.describe CreateOrUpdateEquityAllocation do
   let(:equity_percentage) { 25 }
   subject(:service) { described_class.new(company_worker, equity_percentage:) }
 
-  before do
-    company.update!(equity_compensation_enabled: true)
-  end
-
-  context "when the feature is not enabled" do
-    before do
-      company.update!(equity_compensation_enabled: false)
-    end
-
-    it "raises an error" do
-      expect do
-        service.perform!
-      end.to raise_error(described_class::Error, "Feature is not enabled.")
-    end
-  end
-
   context "when the contractor doesn't have an equity grant for the year" do
     before do
       equity_grant.destroy!

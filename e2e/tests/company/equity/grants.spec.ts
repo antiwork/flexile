@@ -20,8 +20,6 @@ import { assertDefined } from "@/utils/assert";
 test.describe("New Contractor", () => {
   test("allows issuing equity grants", async ({ page, next }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
-      equityGrantsEnabled: true,
-      equityCompensationEnabled: true,
       conversionSharePriceUsd: "1",
     });
     const { user: contractorUser } = await usersFactory.create();
@@ -151,7 +149,6 @@ test.describe("New Contractor", () => {
 
   test("allows cancelling a grant", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
-      equityGrantsEnabled: true,
       conversionSharePriceUsd: "1",
     });
     const { companyInvestor } = await companyInvestorsFactory.create({ companyId: company.id });
@@ -182,7 +179,6 @@ test.describe("New Contractor", () => {
 
   test("allows exercising options", async ({ page, next }) => {
     const { company } = await companiesFactory.createCompletedOnboarding({
-      equityGrantsEnabled: true,
       conversionSharePriceUsd: "1",
       jsonData: { flags: ["option_exercising"] },
     });

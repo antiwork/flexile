@@ -46,30 +46,7 @@ test.describe("quick invoicing", () => {
     expect(invoice.totalAmountInUsdCents).toBe(52500n);
   });
 
-  test.describe("when equity compensation is disabled", () => {
-    test("allows filling out the form and previewing the invoice", async ({ page }) => {
-      await login(page, contractorUser);
-      await page.getByLabel("Hours / Qty").fill("10:30");
-      await page.getByLabel("Rate").fill("50");
-      await fillDatePicker(page, "Date", "08/08/2024");
-      await page.getByRole("link", { name: "Add more info" }).click();
-
-      await expect(page.getByRole("group", { name: "Date" })).toHaveText("8/8/2024");
-      await expect(page.getByRole("row")).toHaveCount(3); // Line items header + 1 row + footer
-      const row = page.getByRole("row").nth(1);
-      await expect(row.getByPlaceholder("Description")).toHaveValue("");
-      await expect(row.getByLabel("Hours / Qty")).toHaveValue("10:30");
-      await expect(page.getByLabel("Rate")).toHaveValue("50");
-      await expect(row.getByText("$525")).toBeVisible();
-      await expect(page.getByText("Total$525")).toBeVisible();
-    });
-  });
-
   test.describe("equity compensation", () => {
-    test.beforeEach(async () => {
-      await db.update(companies).set({ equityCompensationEnabled: true }).where(eq(companies.id, company.id));
-    });
-
     test("handles equity compensation when allocation is set", async ({ page }) => {
       await equityAllocationsFactory.create({
         companyContractorId: companyContractor.id,

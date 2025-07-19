@@ -2,9 +2,7 @@
 
 RSpec.describe "Invoice creation flow" do
   let(:company) do
-    company = create(:company)
-    company.update!(equity_compensation_enabled: true)
-    company
+    create(:company)
   end
   let(:user) do
     create(:user, :without_compliance_info, zip_code: "22222", street_address: "1st St.").tap do |user|

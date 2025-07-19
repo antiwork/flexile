@@ -10,10 +10,10 @@ class InvoiceEquityCalculator
   end
 
   def calculate
-    is_equity_allocation_locked = nil
+    nil
     selected_percentage = nil
-    equity_allocation = nil
-    equity_percentage = if company.equity_compensation_enabled?
+    nil
+    equity_percentage = (
       equity_allocation = company_worker.equity_allocation_for(invoice_year)
       is_equity_allocation_locked = equity_allocation&.locked?
       if equity_allocation&.equity_percentage
@@ -24,9 +24,7 @@ class InvoiceEquityCalculator
         selected_percentage = last_year_equity_allocation&.equity_percentage
         last_year_equity_allocation&.equity_percentage || 0
       end
-    else
-      0
-    end
+    )
     unvested_grant = company_worker.unique_unvested_equity_grant_for_year(invoice_year)
     share_price_usd = unvested_grant&.share_price_usd || company.fmv_per_share_in_usd
     if equity_percentage.nonzero? && share_price_usd.nil?

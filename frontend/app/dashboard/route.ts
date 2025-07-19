@@ -25,6 +25,6 @@ export async function GET(req: Request) {
   if (user.roles.worker) {
     return redirect("/invoices");
   }
-  const company = assertDefined(user.companies.find((company) => company.id === user.currentCompanyId));
-  return redirect(assertDefined(equityNavLinks(user, company)[0]?.route));
+  assertDefined(user.companies.find((company) => company.id === user.currentCompanyId));
+  return redirect(assertDefined(equityNavLinks(user)[0]?.route));
 }
