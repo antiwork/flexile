@@ -356,7 +356,7 @@ const BuybackFormSection = ({ onNext, onSelectType, mutation }: BuybackFormSecti
 
     if (e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
-      if (file.type === "application/zip" || file.name.endsWith(".zip")) {
+      if (file.type === "application/zip" || file.name.toLowerCase().endsWith(".zip")) {
         form.setValue("attachment", file);
         form.clearErrors("attachment");
       }
@@ -373,7 +373,7 @@ const BuybackFormSection = ({ onNext, onSelectType, mutation }: BuybackFormSecti
   const watchedFile = form.watch("attachment");
 
   return (
-    <div>
+    <div className="space-y-4">
       <DialogHeader>
         <DialogTitle>Start a new buyback</DialogTitle>
         <DialogDescription>
@@ -627,7 +627,7 @@ const CreateLetterOfTransmittalSection = ({ onNext, onBack, mutation }: CreateLe
   });
 
   return (
-    <div>
+    <div className="space-y-4">
       <DialogHeader>
         <DialogTitle>Letter of transmittal</DialogTitle>
         <DialogDescription>
@@ -757,7 +757,7 @@ const SelectInvestorsSection = ({ onBack, onNext, mutation }: SelectInvestorsMod
   };
 
   return (
-    <div>
+    <div className="space-y-4">
       <DialogHeader>
         <DialogTitle>Select who can join this buyback</DialogTitle>
         <DialogDescription>

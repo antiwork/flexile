@@ -79,6 +79,11 @@ process_tender_offer_equilibrium_price_job:
   class: ProcessTenderOfferEquilibriumPriceJob
   description: Calculates equilibrium prices for ended tender offers
 
+tender_offer_reminder_job:
+  cron: "0 10 * * *" # Every day at UTC 10:00
+  class: TenderOfferReminderJob
+  description: Sends reminder emails to investors about open tender offers they haven't participated in
+
 dividend_report_csv_email_job:
   cron: "0 16 1 * *" # The 1st day of every month at UTC 16:00
   class: DividendReportCsvEmailJob

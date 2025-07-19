@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class TenderOfferPresenter
-  delegate :external_id, :name, :starts_at, :ends_at, :minimum_valuation, :implied_valuation,
-           :accepted_price_cents, :open?, :attachment, :letter_of_transmittal, to: :buyback
+  delegate :external_id, :name, :starts_at, :ends_at, :minimum_valuation, :total_amount_in_cents, :implied_valuation, :buyback_type,
+           :accepted_price_cents, :open?, :attachment, :letter_of_transmittal, :starting_price_per_share_cents, to: :buyback
 
   def initialize(buyback)
     @buyback = buyback
@@ -12,9 +12,11 @@ class TenderOfferPresenter
     {
       id: external_id,
       name: name,
+      buyback_type: buyback_type,
       starts_at: starts_at,
       ends_at: ends_at,
       minimum_valuation: minimum_valuation,
+      total_amount_in_cents: total_amount_in_cents,
       # implied_valuation: implied_valuation,
       accepted_price_cents: accepted_price_cents,
       open: open?,
@@ -24,6 +26,7 @@ class TenderOfferPresenter
       attachment: attachment_data,
       letter_of_transmittal: letter_of_transmittal_data,
       equity_buyback_round_count: equity_buyback_round_count(),
+      starting_price_per_share_cents: starting_price_per_share_cents,
     }
   end
 
@@ -40,7 +43,7 @@ class TenderOfferPresenter
       if user.company_administrator_for?(company)
         buyback.bids.count
       elsif user.company_investor_for?(company)
-        buyback.bids.where(company_investor: user.company_investor).count
+        buyback.bids.where(company_investor: user.company_investor_for(company)).count
       else
         0
       end
@@ -51,12 +54,11 @@ class TenderOfferPresenter
     end
 
     def participation(user: user, company: company)
+      return 0 if buyback.accepted_price_cents.nil?
       if user.company_administrator_for?(company)
-        buyback.bids.sum { |bid| bid.accepted_shares.to_i * buyback.accepted_price_cents.to_i / 100 }
+        buyback.bids.sum("COALESCE(accepted_shares, 0) * #{buyback.accepted_price_cents} / 100.0")
       elsif user.company_investor_for?(company)
-        buyback.bids
-          .where(company_investor: user.company_investor)
-          .sum { |bid| bid.accepted_shares.to_i * buyback.accepted_price_cents.to_i / 100 }
+        buyback.bids.where(company_investor: user.company_investor_for(company)).sum("COALESCE(accepted_shares, 0) * #{buyback.accepted_price_cents} / 100.0")
       else
         0
       end

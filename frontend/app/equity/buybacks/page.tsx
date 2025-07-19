@@ -113,11 +113,16 @@ export default function Buybacks() {
                 <span className="bg-green h-4 w-4 rounded-full text-white" />
                 {info.getValue()}
               </div>
-            ) : ["Reviewing", "Closed"].includes(info.getValue()) ? (
+            ) : info.getValue() === "Closed" ? (
               <div className="inline-flex items-center gap-2">
                 <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-gray-300 text-white">
                   <XIcon className="h-3 w-3" />
                 </span>
+                {info.getValue()}
+              </div>
+            ) : info.getValue() === "Reviewing" ? (
+              <div className="inline-flex items-center gap-2">
+                <span className="h-4 w-4 rounded-full bg-gray-300 text-white" />
                 {info.getValue()}
               </div>
             ) : (
@@ -166,7 +171,7 @@ export default function Buybacks() {
         ),
       }),
     ],
-    [company.fullyDilutedShares],
+    [company.fullyDilutedShares, user.roles.administrator],
   );
 
   const table = useTable({

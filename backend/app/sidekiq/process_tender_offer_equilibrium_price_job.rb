@@ -2,6 +2,7 @@
 
 class ProcessTenderOfferEquilibriumPriceJob
   include Sidekiq::Job
+  sidekiq_options retry: 5
 
   def perform
     tender_offers = TenderOffer

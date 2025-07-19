@@ -5,7 +5,7 @@ class Internal::Companies::TenderOfferBidsController < Internal::Companies::Base
   before_action :load_bid!, only: [:destroy]
 
   def index
-    authorize TenderOfferBid
+    authorize @buyback
 
     bids_query = @buyback.bids
     unless Current.company_administrator?
@@ -36,8 +36,11 @@ class Internal::Companies::TenderOfferBidsController < Internal::Companies::Base
   def destroy
     authorize @bid
 
-    @bid.destroy!
-    head :no_content
+    if @bid.destroy
+      head :no_content
+    else
+      render json: { success: false, error_message: @bid.errors.full_messages.to_sentence }, status: :unprocessable_entity
+    end
   end
 
   private
@@ -50,6 +53,12 @@ class Internal::Companies::TenderOfferBidsController < Internal::Companies::Base
     end
 
     def bid_params
-      params.permit(:number_of_shares, :share_price_cents, :share_class)
+      permitted_params = params.permit(:number_of_shares, :share_price_cents, :share_class)
+
+      if @buyback.buyback_type == "single_stock" && permitted_params[:share_price_cents].blank?
+        permitted_params[:share_price_cents] = @buyback.starting_price_per_share_cents
+      end
+
+      permitted_params
     end
 end

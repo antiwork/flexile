@@ -20,6 +20,8 @@ class CreateTenderOffer
 
     tender_offer.save!
 
+    send_investor_notifications(tender_offer)
+
     { success: true, tender_offer: }
   rescue ActiveRecord::RecordInvalid => e
     { success: false, error_message: e.record.errors.full_messages.to_sentence }
@@ -27,4 +29,13 @@ class CreateTenderOffer
 
   private
     attr_reader :company, :attributes
+
+    def send_investor_notifications(tender_offer)
+      tender_offer.tender_offer_investors.includes(:company_investor).each do |tender_offer_investor|
+        CompanyInvestorMailer.tender_offer_opened(
+          tender_offer_investor.company_investor.id,
+          tender_offer_id: tender_offer.id
+        ).deliver_now
+      end
+    end
 end

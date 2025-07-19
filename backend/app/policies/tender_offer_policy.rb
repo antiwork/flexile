@@ -2,11 +2,11 @@
 
 class TenderOfferPolicy < ApplicationPolicy
   def index?
-    company.tender_offers_enabled? && (company_administrator? || eligible_investor?)
+    company.tender_offers_enabled? && (company_administrator? || company_investor?)
   end
 
   def show?
-    index?
+    company.tender_offers_enabled? && (company_administrator? || eligible_investor?)
   end
 
   def create?

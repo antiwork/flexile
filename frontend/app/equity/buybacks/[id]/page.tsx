@@ -57,7 +57,7 @@ const BuybackActions = ({ buyback, user, bids, onSetActiveModal, table }: Buybac
   };
 
   return (
-    <>
+    <div className="flex flex-wrap items-center gap-2">
       {buyback.attachment ? (
         <Button asChild size="small" variant="outline">
           <Link href={`/download/${buyback.attachment.key}/${buyback.attachment.filename}`}>
@@ -72,7 +72,7 @@ const BuybackActions = ({ buyback, user, bids, onSetActiveModal, table }: Buybac
           Download CSV
         </Button>
       ) : null}
-      {user.roles.administrator && !buyback.open && bids.length && !buyback.equity_buyback_round_count ? (
+      {user.roles.administrator && buyback.accepted_price_cents && !buyback.equity_buyback_round_count ? (
         <Button size="small" onClick={() => onSetActiveModal("finalize")}>
           Finalize buyback
         </Button>
@@ -82,7 +82,7 @@ const BuybackActions = ({ buyback, user, bids, onSetActiveModal, table }: Buybac
           Place bid
         </Button>
       ) : null}
-    </>
+    </div>
   );
 };
 
@@ -284,7 +284,19 @@ export default function BuybackView() {
         <Alert>
           <InfoIcon />
           <AlertDescription>
-            This buyback is now under review. The company is finalizing bids, and you'll be notified once it's settled.
+            <span className="font-semibold"> This buyback is now under review.</span> The company is finalizing bids,
+            and you'll be notified once it's settled.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {user.roles.administrator && buyback.accepted_price_cents && !buyback.equity_buyback_round_count ? (
+        <Alert>
+          <InfoIcon />
+          <AlertDescription>
+            <span className="font-semibold">Buyback window has ended.</span> All accepted bids cleared at{" "}
+            <span className="font-semibold">{formatMoneyFromCents(buyback.accepted_price_cents)} per share</span>.
+            Review and confirm to begin processing payouts.
           </AlertDescription>
         </Alert>
       ) : null}
@@ -293,9 +305,9 @@ export default function BuybackView() {
         <Alert>
           <InfoIcon />
           <AlertDescription>
-            This buyback has been settled. All accepted bids cleared at{" "}
-            {formatMoneyFromCents(buyback.accepted_price_cents)}
-            per share, and payouts have been processed.
+            <span className="font-semibold">This buyback has been settled.</span> All accepted bids cleared at{" "}
+            <span className="font-semibold">{formatMoneyFromCents(buyback.accepted_price_cents)} per share</span>, and
+            payouts have been processed.
           </AlertDescription>
         </Alert>
       ) : null}

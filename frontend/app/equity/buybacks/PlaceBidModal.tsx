@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, type UseMutationResult } from "@tanstack/react-query";
 import { Download } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -22,6 +21,7 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
+import { cn } from "@/utils";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_tender_offer_bids_path } from "@/utils/routes";
@@ -113,56 +113,89 @@ const PlaceBidModal = ({ isOpen, onClose, buyback }: PlaceBidModalProps) => {
   );
 };
 
-const ConfirmationSection = ({ onNext, buyback }: ConfirmationSectionProps) => (
-  <div>
-    <DialogHeader>
-      <DialogTitle>Buyback confirmation</DialogTitle>
-      <DialogDescription>Review the buyback terms below and continue to confirm your participation.</DialogDescription>
-    </DialogHeader>
+const ConfirmationSection = ({ onNext, buyback }: ConfirmationSectionProps) => {
+  const company = useCurrentCompany();
+  return (
+    <div className="space-y-4">
+      <DialogHeader>
+        <DialogTitle>Buyback confirmation</DialogTitle>
+        <DialogDescription>
+          Review the buyback terms below and continue to confirm your participation.
+        </DialogDescription>
+      </DialogHeader>
 
-    <div className="space-y-0">
-      <div className="flex justify-between border-b border-gray-200 py-4">
-        <span className="font-medium">Start date</span>
-        <span>{formatServerDate(new Date(buyback.starts_at))}</span>
-      </div>
-
-      <div className="flex justify-between border-b border-gray-200 py-4">
-        <span className="font-medium">End date</span>
-        <span>{formatServerDate(new Date(buyback.ends_at))}</span>
-      </div>
-
-      <div className="flex justify-between border-b border-gray-200 py-4">
-        <span className="font-medium">Starting valuation</span>
-        <span>{formatMoney(buyback.minimum_valuation)}</span>
-      </div>
-
-      {buyback.starting_price_per_share_cents ? (
-        <div className="flex justify-between border-b border-gray-200 py-4">
-          <span className="font-medium">Starting price per share</span>
-          <span>{formatMoneyFromCents(buyback.starting_price_per_share_cents)}</span>
+      <div className="space-y-0">
+        <div className="flex justify-between border-b border-gray-200 pb-4">
+          <span className="font-medium">Start date</span>
+          <span>{formatServerDate(new Date(buyback.starts_at))}</span>
         </div>
-      ) : null}
 
-      {buyback.attachment ? (
         <div className="flex justify-between border-b border-gray-200 py-4">
-          <span className="font-medium">Buyback documents</span>
-          <Button asChild variant="outline" size="small">
-            <Link href={`/download/${buyback.attachment.key}/${buyback.attachment.filename}`}>
-              <Download className="size-4" />
-              Download
-            </Link>
-          </Button>
+          <span className="font-medium">End date</span>
+          <span>{formatServerDate(new Date(buyback.ends_at))}</span>
         </div>
-      ) : null}
+
+        {buyback.buyback_type === "tender_offer" ? (
+          <div className="flex justify-between border-b border-gray-200 py-4">
+            <span className="font-medium">Starting valuation</span>
+            <span>{formatMoney(buyback.minimum_valuation)}</span>
+          </div>
+        ) : null}
+
+        {buyback.buyback_type === "single_stock" && company.valuationInDollars ? (
+          <div className="flex justify-between border-b border-gray-200 py-4">
+            <span className="font-medium">Company valuation</span>
+            <span>{formatMoney(company.valuationInDollars)}</span>
+          </div>
+        ) : null}
+
+        {buyback.starting_price_per_share_cents && buyback.buyback_type === "tender_offer" ? (
+          <div className="flex justify-between border-b border-gray-200 py-4">
+            <span className="font-medium">Starting price per share</span>
+            <span>{formatMoneyFromCents(buyback.starting_price_per_share_cents)}</span>
+          </div>
+        ) : null}
+
+        {buyback.starting_price_per_share_cents &&
+        buyback.total_amount_in_cents &&
+        buyback.buyback_type === "single_stock" ? (
+          <>
+            <div className="flex justify-between border-b border-gray-200 py-4">
+              <span className="font-medium">Price per share</span>
+              <span>{formatMoneyFromCents(buyback.starting_price_per_share_cents)}</span>
+            </div>
+            <div className="flex justify-between border-b border-gray-200 py-4">
+              <span className="font-medium">Allocation limit</span>
+              <span>{buyback.total_amount_in_cents / buyback.starting_price_per_share_cents}</span>
+            </div>
+            <div className="flex justify-between border-b border-gray-200 py-4">
+              <span className="font-medium">Maximum payout</span>
+              <span>{formatMoneyFromCents(buyback.total_amount_in_cents)}</span>
+            </div>
+          </>
+        ) : null}
+
+        {buyback.attachment ? (
+          <div className="flex justify-between border-b border-gray-200 py-4">
+            <span className="font-medium">Buyback documents</span>
+            <Button asChild variant="outline" size="small">
+              <Link href={`/download/${buyback.attachment.key}/${buyback.attachment.filename}`}>
+                <Download className="size-4" />
+                Download
+              </Link>
+            </Button>
+          </div>
+        ) : null}
+      </div>
+
+      <DialogFooter className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-0">
+        <Button onClick={onNext} className="w-full sm:w-auto">
+          Continue
+        </Button>
+      </DialogFooter>
     </div>
-
-    <DialogFooter className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-0">
-      <Button onClick={onNext} className="w-full sm:w-auto">
-        Continue
-      </Button>
-    </DialogFooter>
-  </div>
-);
+  );
+};
 
 const LetterOfTransmittalSection = ({ onBack, onNext, buyback }: LetterOfTransmittalSectionProps) => {
   const user = useCurrentUser();
@@ -183,8 +216,8 @@ const LetterOfTransmittalSection = ({ onBack, onNext, buyback }: LetterOfTransmi
     : null;
 
   return (
-    <div>
-      <DialogHeader className="shrink-0">
+    <div className="space-y-4">
+      <DialogHeader>
         <DialogTitle>Letter of transmittal</DialogTitle>
         <DialogDescription>
           Review and sign the Letter of Transmittal to confirm your participation in this buyback.
@@ -259,7 +292,7 @@ const LetterOfTransmittalSection = ({ onBack, onNext, buyback }: LetterOfTransmi
   );
 };
 
-const SubmitBidSection = ({ onBack, mutation }: SubmitBidSectionProps) => {
+const SubmitBidSection = ({ onBack, mutation, buyback }: SubmitBidSectionProps) => {
   const company = useCurrentCompany();
   const user = useCurrentUser();
   const investorId = user.roles.investor?.id;
@@ -288,15 +321,25 @@ const SubmitBidSection = ({ onBack, mutation }: SubmitBidSectionProps) => {
     resolver: zodResolver(formSchema),
   });
 
+  useEffect(() => {
+    if (buyback.buyback_type === "single_stock" && buyback.starting_price_per_share_cents) {
+      form.setValue("share_price", buyback.starting_price_per_share_cents / 100);
+    }
+  }, [buyback.buyback_type, buyback.starting_price_per_share_cents]);
+
   const numberOfShares = form.watch("number_of_shares");
   const pricePerShare = form.watch("share_price");
   const shareClass = form.watch("share_class");
   const maxShares = holdings.find((h) => h.className === shareClass)?.count || 0;
 
   const handleSubmit = form.handleSubmit((values) => {
-    if (values.number_of_shares > maxShares) {
+    const allocationLimit =
+      buyback.buyback_type === "single_stock" && buyback.total_amount_in_cents && buyback.starting_price_per_share_cents
+        ? Math.min(buyback.total_amount_in_cents / buyback.starting_price_per_share_cents, maxShares)
+        : maxShares;
+    if (values.number_of_shares > allocationLimit) {
       return form.setError("number_of_shares", {
-        message: `Number of shares must be between 1 and ${maxShares.toLocaleString()}`,
+        message: `Number of shares must be between 1 and ${allocationLimit.toLocaleString()}`,
       });
     }
     mutation.mutate(values);
@@ -306,8 +349,8 @@ const SubmitBidSection = ({ onBack, mutation }: SubmitBidSectionProps) => {
   const totalAmount = numberOfShares * pricePerShare;
 
   return (
-    <div>
-      <DialogHeader className="shrink-0">
+    <div className="space-y-4">
+      <DialogHeader>
         <DialogTitle>Place a bid</DialogTitle>
         <DialogDescription>Submit an offer to sell your shares in this buyback event.</DialogDescription>
       </DialogHeader>
@@ -338,7 +381,11 @@ const SubmitBidSection = ({ onBack, mutation }: SubmitBidSectionProps) => {
             )}
           />
 
-          <div className="grid grid-cols-2 items-start gap-4 sm:grid-cols-2">
+          <div
+            className={cn(
+              buyback.buyback_type === "tender_offer" && "grid grid-cols-2 items-start gap-4 sm:grid-cols-2",
+            )}
+          >
             <FormField
               control={form.control}
               name="number_of_shares"
@@ -353,26 +400,30 @@ const SubmitBidSection = ({ onBack, mutation }: SubmitBidSectionProps) => {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="share_price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Price per share</FormLabel>
-                  <FormControl>
-                    <NumberInput {...field} decimal prefix="$" placeholder="$ 0" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {buyback.buyback_type === "tender_offer" ? (
+              <FormField
+                control={form.control}
+                name="share_price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Price per share</FormLabel>
+                    <FormControl>
+                      <NumberInput {...field} decimal prefix="$" placeholder="$ 0" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : null}
           </div>
 
           <div className="mt-4 space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="font-medium">Implied company valuation</span>
-              <span>{formatMoney(impliedValuation)}</span>
-            </div>
+            {buyback.buyback_type === "tender_offer" ? (
+              <div className="flex justify-between text-sm">
+                <span className="font-medium">Implied company valuation</span>
+                <span>{formatMoney(impliedValuation)}</span>
+              </div>
+            ) : null}
             <div className="flex justify-between text-sm">
               <span className="font-medium">Total amount</span>
               <span>{formatMoney(totalAmount)}</span>

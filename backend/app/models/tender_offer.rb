@@ -7,7 +7,7 @@ class TenderOffer < ApplicationRecord
 
   enum :buyback_type, {
     single_stock: "single_stock",
-    tender_offer: "tender_offer"
+    tender_offer: "tender_offer",
   }
 
   belongs_to :company
@@ -33,7 +33,7 @@ class TenderOffer < ApplicationRecord
 
   validate :ends_at_must_be_after_starts_at
   validate :correct_attachment_mime_type
-  validate :single_stock_must_have_only_one_investor
+  validate :validate_investor_requirements
 
   def open?
     Time.current.utc.between?(starts_at, ends_at)
@@ -78,10 +78,14 @@ class TenderOffer < ApplicationRecord
       end
     end
 
-    def single_stock_must_have_only_one_investor
-      return unless buyback_type == "single_stock"
-      return if tender_offer_investors.count <= 1
+    def validate_investor_requirements
+      if tender_offer_investors.size == 0
+        errors.add(:base, "At least one investor must be selected")
+        return
+      end
 
-      errors.add(:buyback_type, "Single stock repurchases can only have one investor")
+      if buyback_type == "single_stock" && tender_offer_investors.size != 1
+        errors.add(:buyback_type, "Single stock repurchases can only have one investor")
+      end
     end
 end

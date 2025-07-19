@@ -30,6 +30,7 @@ export const buybackSchema = z.object({
     })
     .nullable(),
   starting_price_per_share_cents: z.number().optional().nullable(),
+  total_amount_in_cents: z.number().optional().nullable(),
 });
 
 export type Buyback = z.infer<typeof buybackSchema>;

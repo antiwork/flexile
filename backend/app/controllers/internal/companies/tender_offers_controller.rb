@@ -8,7 +8,13 @@ class Internal::Companies::TenderOffersController < Internal::Companies::BaseCon
   def index
     authorize TenderOffer
 
-    buybacks = Current.company.tender_offers.order(created_at: :desc)
+    buybacks_query = Current.company.tender_offers
+    unless Current.company_administrator?
+      buybacks_query = buybacks_query.joins(:tender_offer_investors).where(tender_offer_investors: { company_investor: Current.company_investor })
+    end
+
+    buybacks = buybacks_query.order(created_at: :desc)
+
     render json: {
       buybacks: buybacks.map { |buyback| TenderOfferPresenter.new(buyback).props(user: Current.user, company: Current.company) },
     }
