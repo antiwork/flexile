@@ -184,4 +184,14 @@ class CompanyInvestorMailer < ApplicationMailer
     mail(to: user.email,
          subject: "🔴 Equity buyback payment failed: re-enter your bank details")
   end
+
+  def dividend_payment_failed(user, dividend_payment)
+    @user = user
+    @payment = dividend_payment
+
+    mail(
+      to: @user.email,
+      subject: "🔴 Action required: Your dividend payment failed"
+    )
+  end
 end

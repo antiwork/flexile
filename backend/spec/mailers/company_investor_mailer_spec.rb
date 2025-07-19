@@ -52,4 +52,25 @@ RSpec.describe CompanyInvestorMailer do
       end
     end
   end
+
+  describe "#dividend_payment_failed" do
+    let(:company) { create(:company, name: "Flexile") }
+    let(:investor) { create(:company_investor, company:) }
+    let(:user) { investor.user }
+    let(:dividend_payment) { create(:dividend_payment, dividends: [create(:dividend, company_investor: investor)]) }
+    let(:mail) { described_class.dividend_payment_failed(user, dividend_payment) }
+
+    it "sends the failure email with correct attributes" do
+      plaintext = ActionView::Base.full_sanitizer.sanitize(mail.body.encoded).gsub("\r\n", " ").gsub(/\s+/, " ").strip
+
+      expect(mail.subject).to eq("🔴 Action required: Your dividend payment failed")
+      expect(mail.to).to eq([user.email])
+      default_from_email = Mail::Address.new(described_class.default[:from]).address
+      expect(mail.from).to eq([default_from_email])
+      expect(plaintext).to include("Hi #{user.name},")
+      expect(plaintext).to include("we were unable to process your recent dividend payment.")
+      expect(plaintext).to include("To resolve this, please log in to your Flexile account and add a new, valid bank account.")
+      expect(plaintext).to include("For your security, the previous bank account details have been removed.")
+    end
+  end
 end
