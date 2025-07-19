@@ -178,52 +178,34 @@ RSpec.describe "New Contractor" do
     )
   end
 
-  context "when equity compensation is disabled" do
-    before do
-      company.update!(equity_compensation_enabled: false)
-      refresh # Ensure the page is reloaded with the feature flag disabled
-    end
-
-    it "excludes the paragraphs regarding equity" do
-      expect(page).to have_field("Start date", with: Date.current.strftime("%F"))
-
-      fill_in_form
-      select "United States", from: "Country of residence"
-
-      expect(page).to have_selector("h1", text: "Consulting agreement")
-      expect(page).to_not have_selector("h1", text: "CONSULTANT EQUITY ELECTION FORM")
-      expect(page).to have_selector("h1", text: "ASSIGNMENT OF COPYRIGHT")
-      expect(page).to have_selector("span", text: "United States", count: 4)
-      expect(page).to_not have_text("Cash and Equity Combination")
-      expect(page).to have_text("Noninterference with Business")
-      expect(page).to have_text("Fee: $#{role.pay_rate_usd}")
-      expect(page).to have_text("Target Annual Hours: 1,100")
-      expect(page).to_not have_text("by an amount equal to the value per share of the Company's common stock")
-    end
+  it "excludes the paragraphs regarding equity" do
+    expect(page).to have_field("Start date", with: Date.current.strftime("%F"))
+    fill_in_form
+    select "United States", from: "Country of residence"
+    expect(page).to have_selector("h1", text: "Consulting agreement")
+    expect(page).to have_selector("h1", text: "CONSULTANT EQUITY ELECTION FORM")
+    expect(page).to have_selector("h1", text: "ASSIGNMENT OF COPYRIGHT")
+    expect(page).to have_selector("span", text: "United States", count: 6)
+    expect(page).to have_text("Cash and Equity Combination")
+    expect(page).to have_text("Noninterference with Business")
+    expect(page).to have_text("Fee: $#{role.pay_rate_usd}")
+    expect(page).to have_text("Target Annual Hours: 1,100")
+    expect(page).to have_text("by an amount equal to the value per share of the Company's common stock")
   end
 
-  context "when equity compensation is enabled" do
-    before do
-      company.update!(equity_compensation_enabled: true)
-      refresh # Ensure the page is reloaded with the new feature flag
-    end
-
-    it "renders the the contract content with equity compensation" do
-      expect(page).to have_field("Start date", with: Date.current.strftime("%F"))
-
-      fill_in_form
-      select "United States", from: "Country of residence"
-
-      expect(page).to have_selector("h1", text: "Consulting agreement")
-      expect(page).to have_selector("h1", text: "CONSULTANT EQUITY ELECTION FORM")
-      expect(page).to have_selector("h1", text: "ASSIGNMENT OF COPYRIGHT")
-      expect(page).to have_selector("span", text: "United States", count: 6)
-      expect(page).to have_text("Cash and Equity Combination")
-      expect(page).to have_text("Noninterference with Business")
-      expect(page).to have_text("Fee: $#{role.pay_rate_usd}")
-      expect(page).to have_text("Target Annual Hours: 1,100")
-      expect(page).to have_text("by an amount equal to the value per share of the Company's common stock")
-    end
+  it "renders the the contract content with equity compensation" do
+    expect(page).to have_field("Start date", with: Date.current.strftime("%F"))
+    fill_in_form
+    select "United States", from: "Country of residence"
+    expect(page).to have_selector("h1", text: "Consulting agreement")
+    expect(page).to have_selector("h1", text: "CONSULTANT EQUITY ELECTION FORM")
+    expect(page).to have_selector("h1", text: "ASSIGNMENT OF COPYRIGHT")
+    expect(page).to have_selector("span", text: "United States", count: 6)
+    expect(page).to have_text("Cash and Equity Combination")
+    expect(page).to have_text("Noninterference with Business")
+    expect(page).to have_text("Fee: $#{role.pay_rate_usd}")
+    expect(page).to have_text("Target Annual Hours: 1,100")
+    expect(page).to have_text("by an amount equal to the value per share of the Company's common stock")
   end
 
   it "pre-fills the form with the last-used hourly contractor values" do

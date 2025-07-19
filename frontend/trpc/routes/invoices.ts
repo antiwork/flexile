@@ -138,29 +138,27 @@ export const invoicesRouter = createRouter({
     const { userExternalId, description, totalAmountCents, ...values } = input;
     const dateToday = new Date();
 
-    if (ctx.company.equityCompensationEnabled) {
-      const equityResult = await calculateInvoiceEquity({
-        companyContractor: companyWorker,
-        serviceAmountCents: Number(totalAmountCents),
-        invoiceYear: dateToday.getFullYear(),
-        providedEquityPercentage: values.equityPercentage,
+    const equityResult = await calculateInvoiceEquity({
+      companyContractor: companyWorker,
+      serviceAmountCents: Number(totalAmountCents),
+      invoiceYear: dateToday.getFullYear(),
+      providedEquityPercentage: values.equityPercentage,
+    });
+
+    if (!equityResult) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Recipient has insufficient unvested equity",
       });
-
-      if (!equityResult) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Recipient has insufficient unvested equity",
-        });
-      }
-
-      if (equityResult.equityPercentage !== values.equityPercentage) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "No options would be granted" });
-      }
-
-      equityAmountInCents = BigInt(equityResult.equityCents);
-      equityAmountInOptions = equityResult.equityOptions;
-      equityPercentage = equityResult.equityPercentage;
     }
+
+    if (equityResult.equityPercentage !== values.equityPercentage) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "No options would be granted" });
+    }
+
+    equityAmountInCents = BigInt(equityResult.equityCents);
+    equityAmountInOptions = equityResult.equityOptions;
+    equityPercentage = equityResult.equityPercentage;
 
     const cashAmountInCents = totalAmountCents - equityAmountInCents;
 

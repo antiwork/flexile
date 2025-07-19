@@ -18,7 +18,7 @@ const dataSchema = createInsertSchema(tenderOffers)
 
 export const tenderOffersRouter = createRouter({
   create: companyProcedure.input(dataSchema.required()).mutation(async ({ ctx, input }) => {
-    if (!ctx.company.tenderOffersEnabled || !ctx.companyAdministrator) {
+    if (!ctx.companyAdministrator) {
       throw new TRPCError({ code: "FORBIDDEN" });
     }
 
@@ -47,8 +47,7 @@ export const tenderOffersRouter = createRouter({
   }),
 
   list: companyProcedure.query(async ({ ctx }) => {
-    if (!ctx.company.tenderOffersEnabled || (!ctx.companyAdministrator && !ctx.companyInvestor))
-      throw new TRPCError({ code: "FORBIDDEN" });
+    if (!ctx.companyAdministrator && !ctx.companyInvestor) throw new TRPCError({ code: "FORBIDDEN" });
 
     return await db
       .select({
@@ -62,8 +61,7 @@ export const tenderOffersRouter = createRouter({
   }),
 
   get: companyProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
-    if (!ctx.company.tenderOffersEnabled || (!ctx.companyAdministrator && !ctx.companyInvestor))
-      throw new TRPCError({ code: "FORBIDDEN" });
+    if (!ctx.companyAdministrator && !ctx.companyInvestor) throw new TRPCError({ code: "FORBIDDEN" });
 
     const tenderOffer = await db.query.tenderOffers.findFirst({
       columns: { id: true, startsAt: true, endsAt: true, minimumValuation: true },

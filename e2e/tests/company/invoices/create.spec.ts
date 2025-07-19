@@ -17,11 +17,7 @@ test.describe("invoice creation", () => {
   let companyContractor: typeof companyContractors.$inferSelect;
 
   test.beforeEach(async () => {
-    company = (
-      await companiesFactory.createCompletedOnboarding({
-        equityCompensationEnabled: true,
-      })
-    ).company;
+    company = (await companiesFactory.createCompletedOnboarding()).company;
 
     contractorUser = (
       await usersFactory.createWithBusinessEntity({
@@ -98,15 +94,6 @@ test.describe("invoice creation", () => {
     await page.waitForTimeout(100);
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByRole("cell", { name: "Awaiting approval (0/2)" })).toBeVisible();
-  });
-
-  test("does not show equity split if equity compensation is disabled", async ({ page }) => {
-    await db.update(companies).set({ equityCompensationEnabled: false }).where(eq(companies.id, company.id));
-
-    await login(page, contractorUser);
-    await page.goto("/invoices/new");
-    await expect(page.getByText("Total")).toBeVisible();
-    await expect(page.getByText("Swapped for equity")).not.toBeVisible();
   });
 
   test("creates an invoice with only expenses, no line items", async ({ page }) => {

@@ -40,7 +40,6 @@ RSpec.describe CreateOrUpdateInvoiceService do
   end
   let(:expected_total_amount_in_cents) { 14100 }
 
-  before { company.update!(equity_compensation_enabled: true) }
 
   shared_examples "common invoice failure specs" do |expected_invoices_count:|
     it "allows creating an invoice with empty notes" do
@@ -148,18 +147,20 @@ RSpec.describe CreateOrUpdateInvoiceService do
 
       it "does not apply an equity split if the feature is not enabled" do
         contractor.update!(equity_percentage: 60)
-        company.update!(equity_compensation_enabled: false)
 
         expect do
           result = invoice_service.process
           expect(result[:success]).to be(true)
           invoice = result[:invoice]
           expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents)
-          expect(invoice.equity_percentage).to eq(0)
-          expect(invoice.cash_amount_in_cents).to eq(expected_total_amount_in_cents)
-          expect(invoice.flexile_fee_cents).to eq(50 + (1.5 * expected_total_amount_in_cents / 100).round)
-          expect(invoice.equity_amount_in_cents).to eq(0)
-          expect(invoice.equity_amount_in_options).to eq(0)
+          expect(invoice.equity_percentage).to eq(60)
+          expected_equity_cents = 8460
+          expect(invoice.equity_amount_in_cents).to eq(expected_equity_cents)
+          expected_cash_cents = 5640
+          expect(invoice.cash_amount_in_cents).to eq(expected_cash_cents)
+          expect(invoice.flexile_fee_cents).to eq(50 + (1.5 * expected_total_amount_in_cents / 100.0).round)
+          expected_options = 36 # (expected_equity_cents / (company.share_price_in_usd * 100)).round
+          expect(invoice.equity_amount_in_options).to eq(expected_options)
           expect(invoice.notes).to eq("Tax ID: 123efjo32r")
         end.to change { user.invoices.count }.by(1)
       end

@@ -19,10 +19,7 @@ export const tenderOffersBidsRouter = createRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      if (
-        !ctx.company.tenderOffersEnabled ||
-        (!ctx.companyAdministrator && (!ctx.companyInvestor || ctx.companyInvestor.externalId !== input.investorId))
-      )
+      if (!ctx.companyAdministrator && (!ctx.companyInvestor || ctx.companyInvestor.externalId !== input.investorId))
         throw new TRPCError({ code: "FORBIDDEN" });
 
       const where = and(
@@ -56,7 +53,7 @@ export const tenderOffersBidsRouter = createRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.company.tenderOffersEnabled || !ctx.companyInvestor) throw new TRPCError({ code: "FORBIDDEN" });
+      if (!ctx.companyInvestor) throw new TRPCError({ code: "FORBIDDEN" });
 
       const tenderOffer = await db.query.tenderOffers.findFirst({
         where: and(
@@ -96,7 +93,7 @@ export const tenderOffersBidsRouter = createRouter({
     }),
 
   destroy: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    if (!ctx.company.tenderOffersEnabled || !ctx.companyInvestor) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!ctx.companyInvestor) throw new TRPCError({ code: "FORBIDDEN" });
 
     const result = await db
       .delete(tenderOfferBids)

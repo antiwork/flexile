@@ -28,18 +28,14 @@ RSpec.describe "Main navigation" do
       visit root_path
       expect(page).to_not have_link("People")
 
-      Flipper.enable(:cap_table, company)
-      company.is_gumroad = true
-      company.save!
       visit root_path
       expect(page).to have_link("Equity")
+      expect(page).to have_link("Updates")
 
-      Flipper.enable(:company_updates, company)
       visit root_path
       click_on "Updates"
       expect(page).to have_current_path(spa_company_updates_company_index_path(company.external_id))
       expect(page).to have_link("Analytics")
-      Flipper.disable(:company_updates, company)
 
       company_worker.update_column(:pay_rate_type, "project_based")
       visit root_path
@@ -59,8 +55,8 @@ RSpec.describe "Main navigation" do
       let(:company_worker) { create(:company_worker, company:, pay_rate_type: :hourly) }
 
       before do
-        company.update!(equity_compensation_enabled: true)
-        sign_in company_worker.user
+        visit root_path
+        expect(page).to have_link("Settings")
       end
 
       it "renders the settings navigation link" do
@@ -103,7 +99,6 @@ RSpec.describe "Main navigation" do
         visit root_path
         expect(page).to_not have_link("People")
 
-        Flipper.enable(:company_updates, company)
         visit root_path
         click_on "Updates"
         expect(page).to have_current_path(spa_company_updates_company_index_path(company.external_id))
@@ -127,16 +122,13 @@ RSpec.describe "Main navigation" do
       expect(page).to_not have_link("Updates")
       expect(page).to have_link("Account")
 
-      Flipper.enable(:cap_table, company)
       visit root_path
       click_on "Equity"
       expect(page).to have_current_path(spa_company_cap_table_path(company.external_id))
 
-      Flipper.enable(:company_updates, company)
       visit root_path
       click_on "Updates"
       expect(page).to have_current_path(spa_company_updates_company_index_path(company.external_id))
-      Flipper.disable(:company_updates, company)
 
       visit root_path
       expect(page).to have_link("Documents")
@@ -153,9 +145,9 @@ RSpec.describe "Main navigation" do
         company_administrator.user.update!(invited_by: create(:company_worker, company:).user)
         sign_in company_administrator.user
 
-        %i[company_updates cap_table].each do |feature|
-          Flipper.enable(feature)
-        end
+        visit root_path
+        expect(page).to have_link("Equity")
+        expect(page).to have_link("Updates")
       end
 
       it "renders the navigation for both companies" do
@@ -223,9 +215,11 @@ RSpec.describe "Main navigation" do
       expect(page).to_not have_link("Analytics")
       expect(page).to_not have_link("Roles")
 
-      Flipper.enable(:cap_table, company)
-      company.update!(expense_cards_enabled: true)
+      # Remove Flipper and flag setup, always expect Equity as present for relevant roles
+      visit root_path
+      expect(page).to have_link("Equity")
 
+      # Remove company.update!(expense_cards_enabled: true) and always expect Equity
       visit root_path
 
       expect(page).to have_link("Equity")
@@ -257,16 +251,20 @@ RSpec.describe "Main navigation" do
 
       expect(page).to have_link("Account")
 
-      Flipper.enable(:cap_table, company)
+      # Remove Flipper and flag setup, always expect Equity as present for relevant roles
+      visit root_path
+      expect(page).to have_link("Equity")
+
+      # Remove Flipper and flag setup, always expect Equity as present for relevant roles
       visit root_path
       expect(page).to have_link("Dividends")
       expect(page).to have_link("Cap table")
 
-      Flipper.enable(:company_updates, company)
+      # Remove Flipper and flag setup, always expect Equity as present for relevant roles
       visit root_path
       expect(page).to have_link("Updates")
       expect(page).to have_link("Analytics")
-      Flipper.disable(:company_updates, company)
+      # Flipper.disable(:company_updates, company) # This line is removed as per the edit hint
 
       visit root_path
       expect(page).to have_link("Documents")
@@ -286,7 +284,7 @@ RSpec.describe "Main navigation" do
     let!(:another_company_lawyer) { create(:company_lawyer, company: another_company, user:) }
 
     before do
-      Flipper.enable(:role_switch)
+      # Flipper.enable(:role_switch) # This line is removed as per the edit hint
       sign_in(user)
     end
 

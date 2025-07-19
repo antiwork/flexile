@@ -6,7 +6,7 @@ RSpec.describe "Dividends page" do
     create(:convertible_security, company_investor: investor)
     investor
   end
-  let(:company) { create(:company, equity_grants_enabled: true) }
+  let(:company) { create(:company) }
 
   before do
     sign_in company_investor.user

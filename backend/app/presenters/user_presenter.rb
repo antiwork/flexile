@@ -87,17 +87,7 @@ class UserPresenter
 
     {
       companies: user.all_companies.compact.map do |company|
-        flags = %w[company_updates].filter { Flipper.enabled?(_1, company) }
-        flags.push("equity_compensation") if company.equity_compensation_enabled?
-        flags.push("equity_grants") if company.equity_grants_enabled?
-        flags.push("dividends")
-        flags.push("quickbooks") if company.quickbooks_enabled?
-        flags.push("tender_offers") if company.tender_offers_enabled?
-        flags.push("cap_table") if company.cap_table_enabled?
-        flags.push("lawyers") if company.lawyers_enabled?
-        flags.push("expenses") if company.expenses_enabled?
-        flags.push("equity_compensation") if company.equity_compensation_enabled?
-        flags.push("option_exercising") if company.json_flag?("option_exercising")
+        flags = %w[company_updates dividends quickbooks expenses option_exercising cap_table equity_grants tender_offers lawyers equity_compensation]
         can_view_financial_data = user.company_administrator_for?(company) || user.company_investor_for?(company)
         {
           **company_navigation_props(
@@ -112,7 +102,6 @@ class UserPresenter
             country: ISO3166::Country[company.country_code].common_name,
           },
           flags:,
-          equityCompensationEnabled: company.equity_compensation_enabled,
           requiredInvoiceApprovals: company.required_invoice_approval_count,
           paymentProcessingDays: company.contractor_payment_processing_time_in_days,
           createdAt: company.created_at.iso8601,
@@ -165,15 +154,14 @@ class UserPresenter
       result[:has_documents] = documents.not_consulting_contract.or(documents.unsigned).exists?
       if company_worker.present?
         if company_worker.active?
-          result[:flags][:cap_table] = true if company.is_gumroad? && company.cap_table_enabled?
+          result[:flags][:cap_table] = true if company.is_gumroad?
         end
       end
       if company_investor.present?
-        result[:flags][:cap_table] ||= true if company.cap_table_enabled?
-        result[:flags][:option_exercising] = company.json_flag?("option_exercising")
-        result[:flags][:equity_grants] = company.equity_grants_enabled?
-
-        result[:flags][:tender_offers] ||= company.tender_offers_enabled?
+        result[:flags][:cap_table] = true
+        result[:flags][:option_exercising] = true
+        result[:flags][:equity_grants] = true
+        result[:flags][:tender_offers] = true
       end
       result
     end
@@ -192,12 +180,11 @@ class UserPresenter
     def common_admin_props
       {
         flags: {
-          equity_grants: company.equity_grants_enabled?,
-          cap_table: company.cap_table_enabled?,
-
-          tender_offers: company.tender_offers_enabled?,
+          equity_grants: true,
+          cap_table: true,
+          tender_offers: true,
           dividends: true,
-          company_updates: company.company_updates_enabled?,
+          company_updates: true,
         },
       }
     end

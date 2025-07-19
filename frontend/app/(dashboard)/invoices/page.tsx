@@ -724,7 +724,6 @@ const QuickInvoicesSection = () => {
               <div className="mt-2 mb-2 pt-2 text-right lg:mt-16 lg:mb-3 lg:pt-0">
                 <span className="text-sm text-gray-500">Total amount</span>
                 <div className="text-3xl font-bold">{formatMoneyFromCents(totalAmountInCents)}</div>
-                {company.equityCompensationEnabled ? (
                   <div className="mt-1 text-sm text-gray-500">
                     ({formatMoneyFromCents(cashAmountCents)} cash +{" "}
                     <Link href="/settings/payouts" className={linkClasses}>
@@ -732,7 +731,6 @@ const QuickInvoicesSection = () => {
                     </Link>
                     )
                   </div>
-                ) : null}
               </div>
               <div className="flex flex-wrap items-center justify-end gap-3">
                 <Button variant="outline" className="grow sm:grow-0" asChild disabled={!canSubmitInvoices}>

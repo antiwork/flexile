@@ -497,7 +497,7 @@ const Edit = () => {
               className="w-full lg:w-96"
             />
             <div className="flex flex-col gap-2 md:self-start lg:items-end">
-              {showExpensesTable || company.equityCompensationEnabled ? (
+              {showExpensesTable ? (
                 <div className="flex flex-col items-end">
                   <span>Total services</span>
                   <span className="numeric text-xl">{formatMoneyFromCents(totalServicesAmountInCents)}</span>
@@ -509,7 +509,6 @@ const Edit = () => {
                   <span className="numeric text-xl">{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
                 </div>
               ) : null}
-              {company.equityCompensationEnabled ? (
                 <>
                   <div className="flex flex-col items-end">
                     <span>
@@ -527,12 +526,6 @@ const Edit = () => {
                     </span>
                   </div>
                 </>
-              ) : (
-                <div className="flex flex-col gap-1 lg:items-end">
-                  <span>Total</span>
-                  <span className="numeric text-3xl">{formatMoneyFromCents(totalInvoiceAmountInCents)}</span>
-                </div>
-              )}
             </div>
           </footer>
         </div>

@@ -67,7 +67,6 @@ class SeedDataGeneratorFromTemplate
       Timecop.scale(3600 * 24 * 30) do # 1 second = 1 month
         update_primary_administrator!(company, company_data.fetch("primary_administrator"))
         create_bank_account!(company)
-        enable_feature_flags!(company, company_data.fetch("feature_flags"))
         create_convertible_investments!(company, company_data)
         create_dividend_rounds!(company, company_data)
         create_tender_offer!(company, company_data.fetch("tender_offer"))
@@ -310,8 +309,6 @@ class SeedDataGeneratorFromTemplate
     end
 
     def create_tender_offer!(company, tender_offer_data)
-      return unless company.tender_offers_enabled?
-
       starts_at = current_time - 1.week
       Timecop.travel(starts_at) do
         result = CreateTenderOffer.new(
@@ -524,21 +521,6 @@ class SeedDataGeneratorFromTemplate
             tax_information_confirmed_at: user.created_at
           )
       )
-    end
-
-    def enable_feature_flags!(company, feature_flags)
-      feature_flags.each do |feature_name, enabled|
-        if enabled
-          Flipper.enable(feature_name.to_sym, company)
-        else
-          Flipper.disable(feature_name.to_sym, company)
-        end
-      end
-      enabled_flags = feature_flags.select { _1.last }.keys
-      disabled_flags = feature_flags.reject { _1.last }.keys
-
-      print_message("Enabled feature flags: #{enabled_flags.join(", ")}") if enabled_flags.any?
-      print_message("Disabled feature flags: #{disabled_flags.join(", ")}") if disabled_flags.any?
     end
 
     def create_expense_categories!(company, categories)
