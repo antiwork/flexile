@@ -6,11 +6,12 @@ import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { and, eq } from "drizzle-orm";
-import { companies, companyContractors, users } from "@/db/schema";
+import { companies, companyContractors, companyInviteLinks, users } from "@/db/schema";
 
 test.describe("Contractor Invite Link Joining flow", () => {
   let company: typeof companies.$inferSelect;
   let admin: typeof users.$inferSelect;
+  let inviteLink: typeof companyInviteLinks.$inferSelect | undefined;
 
   test.beforeEach(async () => {
     const result = await companiesFactory.create({
@@ -30,36 +31,29 @@ test.describe("Contractor Invite Link Joining flow", () => {
       companyId: company.id,
       userId: admin.id,
     });
+
+    await db.insert(companyInviteLinks).values({
+      companyId: company.id,
+      documentTemplateId: null,
+      token: encodeURIComponent(crypto.randomUUID()),
+      createdAt: new Date(),
+    });
+
+    inviteLink = await db.query.companyInviteLinks.findFirst({
+      where: eq(companyInviteLinks.companyId, company.id),
+    });
   });
 
   test("invite link flow for unauthenticated user", async ({ page, context }) => {
-    await login(page, admin);
-    await page.getByRole("link", { name: "People" }).click();
-    await page.getByRole("button", { name: "Invite link" }).click();
-
-    await expect(page.getByRole("button", { name: "Copy" })).toBeEnabled();
-    const inviteLink = await page.getByRole("textbox", { name: "Link" }).inputValue();
-    expect(inviteLink).toBeTruthy();
-
-    await clerk.signOut({ page });
-
-    await page.goto(`https://${inviteLink}`);
+    await page.goto(`/invite/${inviteLink?.token}`);
     await expect(page).toHaveURL(/signup/iu);
 
     const cookies = await context.cookies();
     const invitationCookie = cookies.find((c) => c.name === "invitation_token");
-    expect(inviteLink).toContain(invitationCookie?.value);
+    expect(inviteLink?.token).toContain(invitationCookie?.value);
   });
 
   test("invite link flow for authenticated user", async ({ page }) => {
-    await login(page, admin);
-    await page.getByRole("link", { name: "People" }).click();
-    await page.getByRole("button", { name: "Invite link" }).click();
-
-    await expect(page.getByRole("button", { name: "Copy" })).toBeEnabled();
-    const inviteLink = await page.getByRole("textbox", { name: "Link" }).inputValue();
-    expect(inviteLink).toBeTruthy();
-
     const { user: contractor } = await usersFactory.create();
     const result = await companiesFactory.create();
     const existingCompany = result.company;
@@ -68,10 +62,9 @@ test.describe("Contractor Invite Link Joining flow", () => {
       userId: contractor.id,
     });
 
-    await clerk.signOut({ page });
     await login(page, contractor);
 
-    await page.goto(`https://${inviteLink}`);
+    await page.goto(`/invite/${inviteLink?.token}`);
     await expect(page).toHaveURL(/documents/iu);
 
     const createdCompayContractor = await db.query.companyContractors.findFirst({
