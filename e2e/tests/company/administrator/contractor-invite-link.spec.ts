@@ -33,8 +33,7 @@ test.describe("Contractor Invite Link", () => {
     await expect(page.getByRole("heading", { name: "Invite Link" })).toBeVisible();
 
     await expect(page.getByRole("button", { name: "Copy" })).toBeEnabled();
-    const inviteLink = await page.getByRole("textbox", { name: "Link" }).inputValue();
-    expect(inviteLink).toBeTruthy();
+    await expect(page.getByRole("textbox", { name: "Link" })).toBeVisible();
 
     await page.evaluate(() => {
       Object.defineProperty(navigator, "clipboard", {
@@ -47,6 +46,11 @@ test.describe("Contractor Invite Link", () => {
 
     await page.getByRole("button", { name: "Copy" }).click();
     await expect(page.getByText("Copied!")).toBeVisible();
+
+    const defaultInviteLink = await db.query.companyInviteLinks.findFirst({
+      where: and(eq(companyInviteLinks.companyId, company.id), isNull(companyInviteLinks.documentTemplateId)),
+    });
+    expect(defaultInviteLink).toBeDefined();
   });
 
   test("shows different invite links for different templates and contract signed elsewhere switch", async ({
@@ -77,14 +81,12 @@ test.describe("Contractor Invite Link", () => {
     await switchButton.click({ force: true });
     await expect(switchButton).not.toHaveAttribute("aria-checked", "true");
 
-    await page.locator('[id^="template-"]').click();
+    await page.getByRole("combobox").click();
     await expect(page.getByRole("option", { name: "Default Contract" })).toBeVisible();
     await page.getByRole("option", { name: "Default Contract" }).click();
 
     await expect(page.getByRole("button", { name: "Copy" })).toBeEnabled();
-    await page.route("**/trpc/contractors.list", (route) => {
-      void route.fulfill({ status: 200, body: JSON.stringify([]) });
-    });
+
     const defaultInviteLink = await db.query.companyInviteLinks.findFirst({
       where: and(eq(companyInviteLinks.companyId, company.id), isNull(companyInviteLinks.documentTemplateId)),
     });
