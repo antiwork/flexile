@@ -6,6 +6,7 @@ import { httpBatchLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
 import { useEffect, useState } from "react";
 import superjson from "superjson";
+import Error from "@/app/error";
 import { useUserStore } from "@/global";
 import { request } from "@/utils/request";
 import { internal_current_user_data_path } from "@/utils/routes";
@@ -17,7 +18,7 @@ export const trpc = createTRPCReact<AppRouter>();
 const GetUserData = ({ children }: { children: React.ReactNode }) => {
   const { isSignedIn, userId } = useAuth();
   const { user, login, logout } = useUserStore();
-  const { data } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["currentUser", userId],
     queryFn: async (): Promise<unknown> => {
       const response = await request({
@@ -34,6 +35,9 @@ const GetUserData = ({ children }: { children: React.ReactNode }) => {
     if (isSignedIn && data) login(data);
     else logout();
   }, [isSignedIn, data]);
+
+  if (isLoading) return null;
+  if (isError) return <Error error={error} />;
   if (isSignedIn == null || (isSignedIn && !user)) return null;
   return children;
 };
