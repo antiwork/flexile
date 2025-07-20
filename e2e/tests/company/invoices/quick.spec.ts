@@ -37,6 +37,15 @@ test.describe("quick invoicing", () => {
     await page.getByLabel("Rate").fill("50");
     await expect(page.getByText("Total amount$525")).toBeVisible();
     await page.getByRole("button", { name: "Send for approval" }).click();
+
+    await expect(page.getByText("Lock 0% in equity for all 2025?")).toBeVisible();
+    await expect(
+      page.getByText("By submitting this invoice, your current equity selection of 0% will be locked for all 2025"),
+    ).toBeVisible();
+    await expect(
+      page.getByText("You won't be able to choose a different allocation until the next options grant for 2026"),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Confirm 0% equity selection" }).click();
     await expect(page.getByRole("row").getByText("$525")).toBeVisible();
 
     const invoice = await db.query.invoices
