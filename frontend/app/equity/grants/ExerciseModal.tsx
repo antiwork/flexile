@@ -64,14 +64,9 @@ const ExerciseModal = ({
     new Decimal(0),
   );
 
-
   const equityValueDelta = totalExerciseCost.eq(0)
     ? 0
-    : new Decimal(optionsToExercise)
-        .mul(companySharePrice)
-        .sub(totalExerciseCost)
-        .div(totalExerciseCost)
-        .toNumber();
+    : new Decimal(optionsToExercise).mul(companySharePrice).sub(totalExerciseCost).div(totalExerciseCost).toNumber();
 
   const trpcUtils = trpc.useUtils();
   const submitMutation = useMutation({
