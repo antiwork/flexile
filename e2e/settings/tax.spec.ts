@@ -1,7 +1,9 @@
 import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
+import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
+import { companyLawyersFactory } from "@test/factories/companyLawyers";
 import { userComplianceInfosFactory } from "@test/factories/userComplianceInfos";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker, selectComboboxOption } from "@test/helpers";
@@ -479,6 +481,38 @@ test.describe("Tax settings", () => {
       const updatedUser = await db.query.users.findFirst({ where: eq(users.id, user.id) }).then(takeOrThrow);
       expect(updatedUser.legalName).toBe("John Middle Doe");
     });
+
+    test.describe("null data handling", () => {
+      test("handles null company name gracefully when user has complete profile", async ({ page }) => {
+        await db.update(companies).set({ name: null }).where(eq(companies.id, company.id));
+
+        await login(page, user);
+        await page.goto("/settings/tax");
+
+        await expect(
+          page.getByText("These details will be included in your invoices and applicable tax forms."),
+        ).toBeVisible();
+        await expect(page.getByLabel("Individual")).toBeChecked();
+      });
+
+      test("redirects to onboarding when contractor has multiple null fields", async ({ page }) => {
+        await db.update(companies).set({ name: null }).where(eq(companies.id, company.id));
+        await db
+          .update(users)
+          .set({
+            preferredName: null,
+            legalName: null,
+            citizenshipCountryCode: null,
+            countryCode: null,
+          })
+          .where(eq(users.id, user.id));
+
+        await login(page, user);
+        await page.goto("/settings/tax");
+
+        await expect(page).toHaveURL(new RegExp(`^.*/companies/${company.externalId}/worker/onboarding$`, "u"));
+      });
+    });
   });
 
   test.describe("as an investor", () => {
@@ -492,6 +526,102 @@ test.describe("Tax settings", () => {
 
       await expect(page.getByText("These details will be included in your applicable tax forms.")).toBeVisible();
       await expect(page.getByText("Changes to your tax information may trigger a new contract.")).not.toBeVisible();
+    });
+
+    test("allows editing tax information", async ({ page }) => {
+      await login(page, user);
+      await page.goto("/settings/tax");
+
+      await expect(page.getByText("Confirm your tax information")).toBeVisible();
+      await expect(page.getByLabel("Individual")).toBeChecked();
+
+      await page.getByLabel("Full legal name (must match your ID)").fill("Janet Investor");
+      await page.getByLabel("Tax ID (SSN or ITIN)").fill("123456789");
+      await page.getByLabel("Residential address (street name, number, apartment)").fill("123 Investment St");
+      await page.getByLabel("City").fill("Investment City");
+      await page.getByLabel("ZIP code").fill("12345");
+
+      await page.getByRole("button", { name: "Save changes" }).click();
+
+      await expect(page.getByText("W-9 Certification and Tax Forms Delivery")).toBeVisible();
+      await expect(page.getByLabel("Signature")).toHaveValue("Janet Investor");
+
+      await page.getByRole("button", { name: "Save", exact: true }).click();
+
+      await expect(page.getByText("W-9 Certification and Tax Forms Delivery")).not.toBeVisible();
+
+      const updatedUser = await db.query.users
+        .findFirst({
+          where: eq(users.id, user.id),
+          with: {
+            userComplianceInfos: true,
+          },
+        })
+        .then(takeOrThrow);
+      expect(updatedUser.userComplianceInfos).toHaveLength(1);
+      expect(updatedUser.userComplianceInfos[0]?.taxInformationConfirmedAt).not.toBeNull();
+      expect(updatedUser.userComplianceInfos[0]?.deletedAt).toBeNull();
+    });
+
+    test("redirects to onboarding when investor has multiple null fields", async ({ page }) => {
+      await db.update(companies).set({ name: null }).where(eq(companies.id, company.id));
+      await db
+        .update(users)
+        .set({
+          preferredName: null,
+          legalName: null,
+          citizenshipCountryCode: null,
+          countryCode: null,
+        })
+        .where(eq(users.id, user.id));
+
+      await login(page, user);
+      await page.goto("/settings/tax");
+
+      await expect(page).toHaveURL(new RegExp(`^.*/companies/${company.externalId}/investor/onboarding$`, "u"));
+    });
+  });
+
+  test.describe("Access control", () => {
+    test.describe("as a company administrator", () => {
+      test.beforeEach(async () => {
+        await companyAdministratorsFactory.create({ userId: user.id, companyId: company.id });
+      });
+
+      test("shows access denied page", async ({ page }) => {
+        await login(page, user);
+        await page.goto("/settings/tax");
+
+        await expect(page.getByText("Access denied")).toBeVisible();
+        await expect(page.getByText("You are not allowed to perform this action.")).toBeVisible();
+        await expect(page.getByRole("link", { name: "Go home?" })).toBeVisible();
+      });
+    });
+
+    test.describe("as a company lawyer", () => {
+      test.beforeEach(async () => {
+        await companyLawyersFactory.create({ userId: user.id, companyId: company.id });
+      });
+
+      test("shows access denied page", async ({ page }) => {
+        await login(page, user);
+        await page.goto("/settings/tax");
+
+        await expect(page.getByText("Access denied")).toBeVisible();
+        await expect(page.getByText("You are not allowed to perform this action.")).toBeVisible();
+        await expect(page.getByRole("link", { name: "Go home?" })).toBeVisible();
+      });
+    });
+
+    test.describe("as a user without any roles", () => {
+      test("shows access denied page", async ({ page }) => {
+        await login(page, user);
+        await page.goto("/settings/tax");
+
+        await expect(page.getByText("Access denied")).toBeVisible();
+        await expect(page.getByText("You are not allowed to perform this action.")).toBeVisible();
+        await expect(page.getByRole("link", { name: "Go home?" })).toBeVisible();
+      });
     });
   });
 });
