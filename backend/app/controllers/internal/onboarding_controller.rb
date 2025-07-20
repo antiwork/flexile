@@ -22,7 +22,10 @@ class Internal::OnboardingController < Internal::BaseController
     update_params = params_for_update
     error_message = UpdateUser.new(user: Current.user, update_params:).process
     if error_message.blank?
-      render json: { success: true }
+      render json: {
+        success: true,
+        after_complete_onboarding_path: onboarding_service.after_complete_onboarding_path
+      }
     else
       render json: { success: false, error_message: Current.user.errors.full_messages.join(". ") }
     end
