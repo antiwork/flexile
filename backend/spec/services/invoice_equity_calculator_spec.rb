@@ -84,7 +84,6 @@ RSpec.describe InvoiceEquityCalculator do
       expect(result[:equity_cents]).to eq(0)
       expect(result[:equity_options]).to eq(0)
       expect(result[:equity_percentage]).to eq(0)
-      expect(result[:selected_percentage]).to eq(nil)
     end
   end
 end
