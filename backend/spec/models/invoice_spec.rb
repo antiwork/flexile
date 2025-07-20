@@ -1161,7 +1161,7 @@ RSpec.describe Invoice do
 
     context "when the invoice does not have an equity component" do
       it "updates the status to paid and performs the appropriate processes" do
-        expect_any_instance_of(CompanyWorker).not_to receive(:send_equity_percent_selection_email)
+        expect_any_instance_of(CompanyWorker).to receive(:send_equity_percent_selection_email).with(invoice.invoice_date.year).once
 
         expect do
           invoice.mark_as_paid!(timestamp: timestamp, payment_id: payment.id)
