@@ -9,11 +9,9 @@ scope path: :internal, module: :internal do
   namespace :settings do
     resource :dividend, only: [:show, :update], controller: "dividend"
     resource :tax, only: [:show, :update], controller: "tax"
-    resources :bank_accounts, only: [:index, :update]
+    resources :bank_accounts, only: [:index, :create, :update]
   end
-  resource :onboarding, controller: "onboarding", only: [:show, :update] do
-    patch :save_bank_account
-  end
+  resource :onboarding, controller: "onboarding", only: [:show, :update]
 
   resources :roles, only: [:index, :show]
 
