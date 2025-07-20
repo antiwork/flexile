@@ -1,19 +1,15 @@
 # frozen_string_literal: true
 
 class Settings::BankAccountPolicy < ApplicationPolicy
-  def show?
+  def index?
     company_worker.present? || company_investor.present?
   end
 
-  def index?
-    show?
-  end
-
   def create?
-    show?
+    index?
   end
 
   def update?
-    show?
+    index?
   end
 end
