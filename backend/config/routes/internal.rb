@@ -12,7 +12,6 @@ scope path: :internal, module: :internal do
     resources :bank_accounts, only: [:index, :update]
   end
   resource :onboarding, controller: "onboarding", only: [:show, :update] do
-    get :bank_account
     patch :save_bank_account
   end
 
