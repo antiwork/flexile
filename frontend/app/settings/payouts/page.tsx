@@ -11,7 +11,7 @@ import NumberInput from "@/components/NumberInput";
 import RangeInput from "@/components/RangeInput";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -76,73 +76,69 @@ const EquitySection = () => {
   const submit = form.handleSubmit((values) => saveMutation.mutate(values));
 
   return (
-    <Card className="border-none">
-      <CardHeader className="p-0">
-        <CardTitle>Equity</CardTitle>
-      </CardHeader>
-      <CardContent className="px-0">
-        <Form {...form}>
-          <form onSubmit={(e) => void submit(e)}>
-            <FormField
-              control={form.control}
-              name="equityPercentage"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>How much of your rate would you like to swap for equity?</FormLabel>
-                  <FormControl>
-                    <RangeInput
-                      {...field}
-                      min={0}
-                      max={MAX_EQUITY_PERCENTAGE}
-                      aria-label="Cash vs equity split"
-                      unit="%"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            {worker.payRateInSubunits != null ? (
-              <div className="py-6">
-                <div className="flex justify-between gap-2">
-                  <div>Cash amount</div>
-                  <div>
-                    {formatMoneyFromCents(((100 - equityPercentage) * payRateInSubunits) / 100)}{" "}
-                    <span className="text-gray-500">/ {worker.payRateType}</span>
-                  </div>
-                </div>
-                <Separator />
-                <div className="flex justify-between gap-2">
-                  <div>Equity value</div>
-                  <div>
-                    {formatMoneyFromCents((equityPercentage * payRateInSubunits) / 100)}{" "}
-                    <span className="text-gray-500">/ {worker.payRateType}</span>
-                  </div>
-                </div>
-                <Separator />
-                <div className="flex justify-between gap-2">
-                  <div>Total amount</div>
-                  <div>
-                    {formatMoneyFromCents(payRateInSubunits)}{" "}
-                    <span className="text-gray-500">/ {worker.payRateType}</span>
-                  </div>
+    <div className="grid gap-4">
+      <h2 className="font-bold">Equity</h2>
+      <Form {...form}>
+        <form onSubmit={(e) => void submit(e)}>
+          <FormField
+            control={form.control}
+            name="equityPercentage"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>How much of your rate would you like to swap for equity?</FormLabel>
+                <FormControl>
+                  <RangeInput
+                    {...field}
+                    min={0}
+                    max={MAX_EQUITY_PERCENTAGE}
+                    aria-label="Cash vs equity split"
+                    unit="%"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          {worker.payRateInSubunits != null ? (
+            <div className="py-6">
+              <div className="flex justify-between gap-2">
+                <div>Cash amount</div>
+                <div>
+                  {formatMoneyFromCents(((100 - equityPercentage) * payRateInSubunits) / 100)}{" "}
+                  <span className="text-gray-500">/ {worker.payRateType}</span>
                 </div>
               </div>
-            ) : null}
-            <div className="justify-start p-0">
-              <MutationStatusButton
-                type="submit"
-                mutation={saveMutation}
-                loadingText="Saving..."
-                successText="Saved!"
-                className="justify-self-end"
-              >
-                Save changes
-              </MutationStatusButton>
+              <Separator />
+              <div className="flex justify-between gap-2">
+                <div>Equity value</div>
+                <div>
+                  {formatMoneyFromCents((equityPercentage * payRateInSubunits) / 100)}{" "}
+                  <span className="text-gray-500">/ {worker.payRateType}</span>
+                </div>
+              </div>
+              <Separator />
+              <div className="flex justify-between gap-2">
+                <div>Total amount</div>
+                <div>
+                  {formatMoneyFromCents(payRateInSubunits)}{" "}
+                  <span className="text-gray-500">/ {worker.payRateType}</span>
+                </div>
+              </div>
             </div>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+          ) : null}
+          <div className="justify-start p-0">
+            <MutationStatusButton
+              type="submit"
+              mutation={saveMutation}
+              loadingText="Saving..."
+              successText="Saved!"
+              className="justify-self-end"
+            >
+              Save changes
+            </MutationStatusButton>
+          </div>
+        </form>
+      </Form>
+    </div>
   );
 };
 
@@ -197,51 +193,47 @@ const DividendSection = () => {
   const submit = form.handleSubmit((values) => saveMutation.mutate(values));
 
   return (
-    <Card className="border-none">
-      <CardHeader className="grid gap-2 p-0">
-        <CardTitle>Dividends</CardTitle>
-      </CardHeader>
-      <CardContent className="px-0">
-        <Form {...form}>
-          <form onSubmit={(e) => void submit(e)} className="grid gap-4">
-            <FormField
-              control={form.control}
-              name="minimumDividendPaymentAmount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Minimum dividend payout amount</FormLabel>
-                  <FormControl>
-                    <NumberInput
-                      {...field}
-                      max={data.max_minimum_dividend_payment_in_cents / 100}
-                      min={data.min_minimum_dividend_payment_in_cents / 100}
-                      step={0.01}
-                      placeholder="10"
-                      prefix="$"
-                    />
-                  </FormControl>
-                  <FormMessage>
-                    Payments below this threshold will be retained. This change will affect all companies you invested
-                    in through Flexile.
-                  </FormMessage>
-                </FormItem>
-              )}
-            />
-            <div className="justify-start p-0">
-              <MutationStatusButton
-                type="submit"
-                mutation={saveMutation}
-                loadingText="Saving..."
-                successText="Saved!"
-                className="justify-self-end"
-              >
-                Save changes
-              </MutationStatusButton>
-            </div>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+    <div className="grid gap-4">
+      <h2 className="font-bold">Dividends</h2>
+      <Form {...form}>
+        <form onSubmit={(e) => void submit(e)} className="grid gap-4">
+          <FormField
+            control={form.control}
+            name="minimumDividendPaymentAmount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Minimum dividend payout amount</FormLabel>
+                <FormControl>
+                  <NumberInput
+                    {...field}
+                    max={data.max_minimum_dividend_payment_in_cents / 100}
+                    min={data.min_minimum_dividend_payment_in_cents / 100}
+                    step={0.01}
+                    placeholder="10"
+                    prefix="$"
+                  />
+                </FormControl>
+                <FormMessage>
+                  Payments below this threshold will be retained. This change will affect all companies you invested in
+                  through Flexile.
+                </FormMessage>
+              </FormItem>
+            )}
+          />
+          <div className="justify-start p-0">
+            <MutationStatusButton
+              type="submit"
+              mutation={saveMutation}
+              loadingText="Saving..."
+              successText="Saved!"
+              className="justify-self-end"
+            >
+              Save changes
+            </MutationStatusButton>
+          </div>
+        </form>
+      </Form>
+    </div>
   );
 };
 
