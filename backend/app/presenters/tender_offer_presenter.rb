@@ -26,6 +26,7 @@ class TenderOfferPresenter
       attachment: attachment_data,
       letter_of_transmittal: letter_of_transmittal_data,
       equity_buyback_round_count: equity_buyback_round_count(),
+      equity_buyback_payments_count: equity_buyback_payments_count(),
       starting_price_per_share_cents: starting_price_per_share_cents,
     }
   end
@@ -51,6 +52,10 @@ class TenderOfferPresenter
 
     def equity_buyback_round_count
       buyback.equity_buyback_rounds.count
+    end
+
+    def equity_buyback_payments_count
+      buyback.equity_buyback_payments.count
     end
 
     def participation(user: user, company: company)

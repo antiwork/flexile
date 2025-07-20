@@ -5,6 +5,8 @@ RSpec.describe TenderOffer do
     it { is_expected.to belong_to(:company) }
     it { is_expected.to have_many(:bids).class_name("TenderOfferBid") }
     it { is_expected.to have_many(:equity_buyback_rounds) }
+    it { is_expected.to have_many(:equity_buybacks).through(:equity_buyback_rounds) }
+    it { is_expected.to have_many(:equity_buyback_payments).through(:equity_buybacks) }
   end
 
   describe "validations" do

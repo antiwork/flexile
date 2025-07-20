@@ -342,6 +342,11 @@ const SubmitBidSection = ({ onBack, mutation, buyback }: SubmitBidSectionProps) 
         message: `Number of shares must be between 1 and ${allocationLimit.toLocaleString()}`,
       });
     }
+    if (buyback.starting_price_per_share_cents && values.share_price < buyback.starting_price_per_share_cents / 100) {
+      return form.setError("share_price", {
+        message: `Price per share must be at least ${formatMoneyFromCents(buyback.starting_price_per_share_cents)}`,
+      });
+    }
     mutation.mutate(values);
   });
 

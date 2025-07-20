@@ -31,7 +31,7 @@ class TenderOffers::FinalizeBuyback
     attr_reader :tender_offer
 
     def process_payments(equity_buyback_round)
-      delay = 0
+      delay = 1
       equity_buyback_round.equity_buybacks.each do |equity_buyback|
         investor = equity_buyback.company_investor
         user = investor.user
@@ -42,7 +42,7 @@ class TenderOffers::FinalizeBuyback
                 user.tax_information_confirmed_at.nil? ||
                 !investor.completed_onboarding?
 
-        InvestorEquityBuybacksPaymentJob.perform_in((delay * 2).seconds, equity_buyback.id)
+        InvestorEquityBuybacksPaymentJob.perform_in((delay * 2).seconds, investor.id)
         delay += 1
       end
     end

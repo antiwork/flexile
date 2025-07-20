@@ -434,7 +434,7 @@ const SingleBuybackReviewSection = ({ buyback, bids, mutation, onBack }: SingleB
   };
 
   return (
-    <div>
+    <div className="space-y-4">
       <DialogHeader>
         <DialogTitle>Review investor's sale</DialogTitle>
         <DialogDescription>

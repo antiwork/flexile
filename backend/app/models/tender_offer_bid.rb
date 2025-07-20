@@ -11,7 +11,7 @@ class TenderOfferBid < ApplicationRecord
   validates :share_price_cents, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :share_class, presence: true
   validate :tender_offer_must_be_open, on: [:create]
-  validate :share_price_must_match_starting_price_for_single_stock, on: [:create]
+  validate :share_price_must_be_valid, on: [:create]
   validate :single_stock_bids_must_not_exceed_total_amount, on: [:create, :update]
   before_destroy do
     tender_offer_must_be_open
@@ -38,12 +38,16 @@ class TenderOfferBid < ApplicationRecord
       end
     end
 
-    def share_price_must_match_starting_price_for_single_stock
-      return unless tender_offer&.buyback_type == "single_stock"
-      return if tender_offer.starting_price_per_share_cents.nil?
-      return if share_price_cents == tender_offer.starting_price_per_share_cents
+    def share_price_must_be_valid
+      return if tender_offer.nil? || tender_offer.starting_price_per_share_cents.nil?
 
-      errors.add(:share_price_cents, "Must match the starting price for single stock repurchases")
+      if tender_offer.buyback_type == "single_stock"
+        return if share_price_cents == tender_offer.starting_price_per_share_cents
+        errors.add(:share_price_cents, "Must match the starting price for single stock repurchases")
+      else
+        return if share_price_cents >= tender_offer.starting_price_per_share_cents
+        errors.add(:share_price_cents, "Must be equal to or greater than the starting price")
+      end
     end
 
     def single_stock_bids_must_not_exceed_total_amount

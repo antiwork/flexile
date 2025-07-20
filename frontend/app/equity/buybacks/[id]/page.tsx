@@ -1,8 +1,17 @@
 "use client";
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel, type Table } from "@tanstack/react-table";
-import { CheckIcon, Download, InboxIcon, InfoIcon, LucideCircleDollarSign, Trash2, XIcon } from "lucide-react";
+import {
+  CheckIcon,
+  CircleCheckIcon,
+  Download,
+  InboxIcon,
+  InfoIcon,
+  LucideCircleDollarSign,
+  Trash2,
+  XIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import React, { useMemo, useState } from "react";
@@ -13,6 +22,7 @@ import FinalizeBuybackModal from "@/app/equity/buybacks/FinalizeBuybackModal";
 import PlaceBidModal from "@/app/equity/buybacks/PlaceBidModal";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
+import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -112,9 +122,10 @@ export default function BuybackView() {
   });
 
   const {
-    data: { bids },
+    isLoading: isLoadingBids,
+    data: { bids } = { bids: [] },
     refetch: refetchBids,
-  } = useSuspenseQuery({
+  } = useQuery({
     queryKey: ["buybacks", "bids", company.id, id],
     queryFn: async () => {
       const response = await request({
@@ -171,7 +182,7 @@ export default function BuybackView() {
               cell: (info) =>
                 info.row.original.accepted_shares && buyback.accepted_price_cents
                   ? formatMoneyFromCents(buyback.accepted_price_cents)
-                  : "-",
+                  : "—",
               footer: buyback.accepted_price_cents ? formatMoneyFromCents(buyback.accepted_price_cents) : "",
             })
           : null,
@@ -180,7 +191,11 @@ export default function BuybackView() {
           id: "total",
           header: "Total",
           cell: (info) =>
-            formatMoneyFromCents(Number(info.row.original.number_of_shares) * info.row.original.share_price_cents), // TODO confirm this calculation
+            buyback.accepted_price_cents
+              ? info.row.original.accepted_shares
+                ? formatMoneyFromCents(Number(info.row.original.accepted_shares) * buyback.accepted_price_cents)
+                : "—"
+              : formatMoneyFromCents(Number(info.row.original.number_of_shares) * info.row.original.share_price_cents),
           footer: buyback.accepted_price_cents
             ? formatMoneyFromCents(
                 bids.reduce(
@@ -258,9 +273,14 @@ export default function BuybackView() {
       pageTitle={
         <div className="gap-2">
           {buyback.name}
-          {buyback.equity_buyback_round_count ? (
+          {buyback.equity_buyback_round_count && buyback.equity_buyback_payments_count ? (
             <Badge variant="outline" className="border-muted text-muted-foreground ml-4 rounded-full">
               Closed and Settled
+            </Badge>
+          ) : null}
+          {buyback.equity_buyback_round_count && !buyback.equity_buyback_payments_count ? (
+            <Badge variant="outline" className="border-muted text-muted-foreground ml-4 rounded-full">
+              Closed
             </Badge>
           ) : null}
         </div>
@@ -301,6 +321,18 @@ export default function BuybackView() {
         </Alert>
       ) : null}
 
+      {user.roles.administrator &&
+      buyback.accepted_price_cents &&
+      buyback.equity_buyback_round_count &&
+      !buyback.equity_buyback_payments_count ? (
+        <Alert variant="success">
+          <CircleCheckIcon />
+          <AlertDescription>
+            <span className="font-semibold">Buyback successfully closed and settled.</span> Payouts are being processed.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       {!user.roles.administrator && buyback.accepted_price_cents && buyback.equity_buyback_round_count ? (
         <Alert>
           <InfoIcon />
@@ -312,7 +344,9 @@ export default function BuybackView() {
         </Alert>
       ) : null}
 
-      {bids.length > 0 ? (
+      {isLoadingBids ? (
+        <TableSkeleton columns={columns.length} />
+      ) : bids.length > 0 ? (
         <DataTable
           table={bidsTable}
           searchColumn={user.roles.administrator ? "investor" : undefined}

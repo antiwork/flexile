@@ -1,6 +1,6 @@
 "use client";
 import { utc } from "@date-fns/utc";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import { isFuture, isPast } from "date-fns";
 import { CircleCheck, DollarSign, Plus, XIcon } from "lucide-react";
@@ -13,6 +13,7 @@ import NewBuybackModal from "@/app/equity/buybacks/NewBuybackModal";
 import PlaceBidModal from "@/app/equity/buybacks/PlaceBidModal";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
+import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { formatMoney } from "@/utils/formatMoney";
@@ -28,7 +29,11 @@ export default function Buybacks() {
   const router = useRouter();
   const user = useCurrentUser();
 
-  const { data, refetch } = useSuspenseQuery({
+  const {
+    data = { buybacks: [] },
+    refetch,
+    isLoading,
+  } = useQuery({
     queryKey: ["buybacks", company.id],
     queryFn: async () => {
       const response = await request({
@@ -192,7 +197,9 @@ export default function Buybacks() {
         ) : null
       }
     >
-      {data.buybacks.length ? (
+      {isLoading ? (
+        <TableSkeleton columns={columns.length} />
+      ) : data.buybacks.length ? (
         <DataTable
           searchColumn={user.roles.administrator ? "name" : undefined}
           table={table}
