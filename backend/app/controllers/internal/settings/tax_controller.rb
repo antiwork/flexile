@@ -43,7 +43,6 @@ class Internal::Settings::TaxController < Internal::Settings::BaseController
   private
     def update_params
       permitted_params = params.permit(
-        :birth_date,
         :business_entity,
         :business_name,
         :business_type,
@@ -57,10 +56,12 @@ class Internal::Settings::TaxController < Internal::Settings::BaseController
         :street_address,
         :tax_id,
         :zip_code,
+        birth_date: [:year, :month, :day],
       )
 
       if permitted_params[:birth_date].present?
-        permitted_params[:birth_date] = Date.parse(permitted_params[:birth_date])
+        date_parts = permitted_params[:birth_date]
+        permitted_params[:birth_date] = Date.new(date_parts[:year].to_i, date_parts[:month].to_i, date_parts[:day].to_i)
       end
 
       permitted_params
