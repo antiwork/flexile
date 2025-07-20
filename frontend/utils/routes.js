@@ -84,7 +84,7 @@ const __jsr = (
         },
         NIL: {
             define() {
-                // Defined using const __jsr =
+                // Defined using const __jsr = 
             },
             isSupported() {
                 return true;
@@ -932,7 +932,6 @@ export const admin_users_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[
  * @returns {string} route path
  */
 export const admin_users_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"admin"],[2,[7,"/"],[2,[6,"users"],[1,[2,[8,"."],[3,"format"]]]]]]]);
-
 
 /**
  * Generates rails route to

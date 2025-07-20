@@ -67,4 +67,29 @@ RSpec.describe OnboardingState::Investor do
       expect(service.redirect_path).to eq(nil)
     end
   end
+
+  describe "#after_complete_onboarding_path" do
+    context "when investor has dividends" do
+      it "redirects to the dividends page" do
+        create(:dividend, company_investor:)
+
+        expect(service.after_complete_onboarding_path).to eq("/equity/dividends")
+      end
+    end
+
+    context "when investor does not have dividends" do
+      it "redirects to the dashboard" do
+        expect(service.after_complete_onboarding_path).to eq("/dashboard")
+      end
+    end
+
+    context "when user has no company investor record" do
+      let(:user_without_investment) { create(:user) }
+      let(:service_without_investment) { described_class.new(user: user_without_investment, company:) }
+
+      it "redirects to the dashboard" do
+        expect(service_without_investment.after_complete_onboarding_path).to eq("/dashboard")
+      end
+    end
+  end
 end
