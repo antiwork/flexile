@@ -1,33 +1,30 @@
 # frozen_string_literal: true
 
 class TenderOfferPresenter
-  delegate :external_id, :name, :starts_at, :ends_at, :minimum_valuation, :total_amount_in_cents, :implied_valuation, :buyback_type,
-           :accepted_price_cents, :open?, :attachment, :letter_of_transmittal, :starting_price_per_share_cents, to: :buyback
-
   def initialize(buyback)
     @buyback = buyback
   end
 
   def props(user:, company:)
     {
-      id: external_id,
-      name: name,
-      buyback_type: buyback_type,
-      starts_at: starts_at,
-      ends_at: ends_at,
-      minimum_valuation: minimum_valuation,
-      total_amount_in_cents: total_amount_in_cents,
+      id: buyback.external_id,
+      name: buyback.name,
+      buyback_type: buyback.buyback_type,
+      starts_at: buyback.starts_at,
+      ends_at: buyback.ends_at,
+      minimum_valuation: buyback.minimum_valuation,
+      total_amount_in_cents: buyback.total_amount_in_cents,
       # implied_valuation: implied_valuation,
-      accepted_price_cents: accepted_price_cents,
-      open: open?,
+      accepted_price_cents: buyback.accepted_price_cents,
+      open: buyback.open?,
+      attachment: attachment_data,
+      letter_of_transmittal: letter_of_transmittal_data,
+      starting_price_per_share_cents: buyback.starting_price_per_share_cents,
       bid_count: bid_count(user: user, company: company),
       investor_count: investor_count(user: user, company: company),
       participation: participation(user: user, company: company),
-      attachment: attachment_data,
-      letter_of_transmittal: letter_of_transmittal_data,
       equity_buyback_round_count: equity_buyback_round_count(),
       equity_buyback_payments_count: equity_buyback_payments_count(),
-      starting_price_per_share_cents: starting_price_per_share_cents,
     }
   end
 
@@ -70,20 +67,20 @@ class TenderOfferPresenter
     end
 
     def attachment_data
-      return nil unless attachment&.attached?
+      return nil unless buyback.attachment&.attached?
 
       {
-        key: attachment.key,
-        filename: attachment.filename.to_s,
+        key: buyback.attachment.key,
+        filename: buyback.attachment.filename.to_s,
       }
     end
 
     def letter_of_transmittal_data
-      return nil unless letter_of_transmittal&.attached?
+      return nil unless buyback.letter_of_transmittal&.attached?
 
       {
-        key: letter_of_transmittal.key,
-        filename: letter_of_transmittal.filename.to_s,
+        key: buyback.letter_of_transmittal.key,
+        filename: buyback.letter_of_transmittal.filename.to_s,
       }
     end
 end

@@ -12,10 +12,11 @@ export const buybackSchema = z.object({
   minimum_valuation: z.number(),
   implied_valuation: z.number().nullable().optional(),
   accepted_price_cents: z.number().nullable(),
-  participation: z.number().nullable(),
+  participation: z.number({ coerce: true }).nullable(),
   bid_count: z.number().nullable(),
   investor_count: z.number().nullable(),
   equity_buyback_round_count: z.number().nullable(),
+  equity_buyback_payments_count: z.number().nullable().optional(),
   open: z.boolean(),
   attachment: z
     .object({

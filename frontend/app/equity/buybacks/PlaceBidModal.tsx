@@ -25,11 +25,10 @@ import { cn } from "@/utils";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_tender_offer_bids_path } from "@/utils/routes";
-import { formatServerDate } from "@/utils/time";
+import { formatDate } from "@/utils/time";
 import { type Buyback, placeBuybackBidSchema, VESTED_SHARES_CLASS } from ".";
 
 type PlaceBidModalProps = {
-  isOpen: boolean;
   onClose: () => void;
   buyback: Buyback | null;
 };
@@ -62,7 +61,7 @@ const formSchema = placeBuybackBidSchema
 
 type BuybackBidFormValues = z.infer<typeof formSchema>;
 
-const PlaceBidModal = ({ isOpen, onClose, buyback }: PlaceBidModalProps) => {
+const PlaceBidModal = ({ onClose, buyback }: PlaceBidModalProps) => {
   const company = useCurrentCompany();
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -101,7 +100,7 @@ const PlaceBidModal = ({ isOpen, onClose, buyback }: PlaceBidModalProps) => {
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open onOpenChange={onClose}>
       <DialogStackContent step={currentStep}>
         <ConfirmationSection buyback={buyback} onNext={goToNextStep} />
 
@@ -116,9 +115,9 @@ const PlaceBidModal = ({ isOpen, onClose, buyback }: PlaceBidModalProps) => {
 const ConfirmationSection = ({ onNext, buyback }: ConfirmationSectionProps) => {
   const company = useCurrentCompany();
   return (
-    <div className="space-y-4">
+    <>
       <DialogHeader>
-        <DialogTitle>Buyback confirmation</DialogTitle>
+        <DialogTitle>Buyback details</DialogTitle>
         <DialogDescription>
           Review the buyback terms below and continue to confirm your participation.
         </DialogDescription>
@@ -127,12 +126,12 @@ const ConfirmationSection = ({ onNext, buyback }: ConfirmationSectionProps) => {
       <div className="space-y-0">
         <div className="flex justify-between border-b border-gray-200 pb-4">
           <span className="font-medium">Start date</span>
-          <span>{formatServerDate(new Date(buyback.starts_at))}</span>
+          <span>{formatDate(buyback.starts_at)}</span>
         </div>
 
         <div className="flex justify-between border-b border-gray-200 py-4">
           <span className="font-medium">End date</span>
-          <span>{formatServerDate(new Date(buyback.ends_at))}</span>
+          <span>{formatDate(buyback.ends_at)}</span>
         </div>
 
         {buyback.buyback_type === "tender_offer" ? (
@@ -193,7 +192,7 @@ const ConfirmationSection = ({ onNext, buyback }: ConfirmationSectionProps) => {
           Continue
         </Button>
       </DialogFooter>
-    </div>
+    </>
   );
 };
 
@@ -216,7 +215,7 @@ const LetterOfTransmittalSection = ({ onBack, onNext, buyback }: LetterOfTransmi
     : null;
 
   return (
-    <div className="space-y-4">
+    <>
       <DialogHeader>
         <DialogTitle>Letter of transmittal</DialogTitle>
         <DialogDescription>
@@ -288,7 +287,7 @@ const LetterOfTransmittalSection = ({ onBack, onNext, buyback }: LetterOfTransmi
           Continue
         </Button>
       </DialogFooter>
-    </div>
+    </>
   );
 };
 
@@ -354,7 +353,7 @@ const SubmitBidSection = ({ onBack, mutation, buyback }: SubmitBidSectionProps) 
   const totalAmount = numberOfShares * pricePerShare;
 
   return (
-    <div className="space-y-4">
+    <>
       <DialogHeader>
         <DialogTitle>Place a bid</DialogTitle>
         <DialogDescription>Submit an offer to sell your shares in this buyback event.</DialogDescription>
@@ -450,7 +449,7 @@ const SubmitBidSection = ({ onBack, mutation, buyback }: SubmitBidSectionProps) 
           Submit bid
         </MutationStatusButton>
       </DialogFooter>
-    </div>
+    </>
   );
 };
 

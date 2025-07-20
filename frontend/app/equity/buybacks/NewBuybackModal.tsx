@@ -1,7 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarDate } from "@internationalized/date";
+import { CalendarDate, getLocalTimeZone } from "@internationalized/date";
 import { useMutation, type UseMutationResult } from "@tanstack/react-query";
 import { EditorContent, useEditor } from "@tiptap/react";
+import { formatISO } from "date-fns";
 import { ChevronDown, CloudUpload, Link2, PencilLine, Search, Trash2 } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -131,7 +132,6 @@ type LetterOfTransmittalFormValues = z.infer<typeof letterOfTransmittalFormSchem
 type BuybackFormValues = z.infer<typeof buybackFormSchema>;
 
 type NewBuybackModalProps = {
-  isOpen: boolean;
   onClose: () => void;
 };
 
@@ -161,7 +161,7 @@ type SectionNextButtonProps = React.ComponentProps<typeof Button> & {
   children?: React.ReactNode;
 };
 
-const NewBuybackModal = ({ isOpen, onClose }: NewBuybackModalProps) => {
+const NewBuybackModal = ({ onClose }: NewBuybackModalProps) => {
   const company = useCurrentCompany();
 
   const [buybackData, setBuybackData] = useState<Omit<
@@ -243,8 +243,8 @@ const NewBuybackModal = ({ isOpen, onClose }: NewBuybackModalProps) => {
     const buybackData = {
       ...data,
       minimum_valuation: minimum_valuation ?? 0,
-      starts_at: start_date.toString(),
-      ends_at: end_date.toString(),
+      starts_at: formatISO(start_date.toDate(getLocalTimeZone())),
+      ends_at: formatISO(end_date.toDate(getLocalTimeZone())),
       total_amount_in_cents: total_amount * 100,
       starting_price_per_share_cents: starting_price * 100,
     };
@@ -305,7 +305,7 @@ const NewBuybackModal = ({ isOpen, onClose }: NewBuybackModalProps) => {
         ];
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open onOpenChange={onClose}>
       <DialogStackContent step={currentStep}>{sections}</DialogStackContent>
     </Dialog>
   );
@@ -373,7 +373,7 @@ const BuybackFormSection = ({ onNext, onSelectType, mutation }: BuybackFormSecti
   const watchedFile = form.watch("attachment");
 
   return (
-    <div className="space-y-4">
+    <>
       <DialogHeader>
         <DialogTitle>Start a new buyback</DialogTitle>
         <DialogDescription>
@@ -382,7 +382,7 @@ const BuybackFormSection = ({ onNext, onSelectType, mutation }: BuybackFormSecti
       </DialogHeader>
 
       <Form {...form}>
-        <form onSubmit={(e) => void handleSubmit(e)} className="max-h-[65vh] space-y-4 overflow-y-auto px-1 py-1">
+        <form onSubmit={(e) => void handleSubmit(e)} className="-m-1 max-h-[65vh] space-y-4 overflow-y-auto p-1">
           <FormField
             control={form.control}
             name="buyback_type"
@@ -602,10 +602,10 @@ const BuybackFormSection = ({ onNext, onSelectType, mutation }: BuybackFormSecti
         </form>
       </Form>
 
-      <DialogFooter className="mt-4">
+      <DialogFooter>
         <SectionNextButton onClick={() => void handleSubmit()} className="w-full sm:w-auto" mutation={mutation} />
       </DialogFooter>
-    </div>
+    </>
   );
 };
 
@@ -627,7 +627,7 @@ const CreateLetterOfTransmittalSection = ({ onNext, onBack, mutation }: CreateLe
   });
 
   return (
-    <div className="space-y-4">
+    <>
       <DialogHeader>
         <DialogTitle>Letter of transmittal</DialogTitle>
         <DialogDescription>
@@ -699,7 +699,7 @@ const CreateLetterOfTransmittalSection = ({ onNext, onBack, mutation }: CreateLe
         </Button>
         <SectionNextButton onClick={() => void handleSubmit()} className="w-full sm:w-auto" mutation={mutation} />
       </DialogFooter>
-    </div>
+    </>
   );
 };
 
@@ -757,7 +757,7 @@ const SelectInvestorsSection = ({ onBack, onNext, mutation }: SelectInvestorsMod
   };
 
   return (
-    <div className="space-y-4">
+    <>
       <DialogHeader>
         <DialogTitle>Select who can join this buyback</DialogTitle>
         <DialogDescription>
@@ -806,7 +806,7 @@ const SelectInvestorsSection = ({ onBack, onNext, mutation }: SelectInvestorsMod
                 setSelectedInvestors(allIds);
               }
             }}
-            className="data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600"
+            className="size-4 data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600"
           />
           <label htmlFor="all-investors" className="text-sm font-medium">
             {allSelected ? "All" : selectedInvestors.size} investors selected
@@ -818,8 +818,8 @@ const SelectInvestorsSection = ({ onBack, onNext, mutation }: SelectInvestorsMod
               <div
                 key={investor.id}
                 className={cn(
-                  "flex w-full items-center justify-between border-t border-gray-200 py-3 pr-3",
-                  selectedInvestors.has(investor.id) && "bg-blue-50",
+                  "flex w-full items-center justify-between border-t border-gray-100 py-3 pr-3",
+                  selectedInvestors.has(investor.id) && "bg-blue-600/5",
                 )}
               >
                 <div className="flex items-center space-x-3">
@@ -827,7 +827,7 @@ const SelectInvestorsSection = ({ onBack, onNext, mutation }: SelectInvestorsMod
                     id={investor.id}
                     checked={selectedInvestors.has(investor.id)}
                     onCheckedChange={() => handleInvestorToggle(investor.id)}
-                    className="h-4 w-4 data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600"
+                    className="size-4 data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600"
                   />
                   <label htmlFor={investor.id} className="cursor-pointer text-sm">
                     {investor.name}
@@ -853,7 +853,7 @@ const SelectInvestorsSection = ({ onBack, onNext, mutation }: SelectInvestorsMod
           disabled={selectedInvestors.size === 0}
         />
       </DialogFooter>
-    </div>
+    </>
   );
 };
 

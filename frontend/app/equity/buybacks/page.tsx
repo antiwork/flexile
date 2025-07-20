@@ -217,23 +217,25 @@ export default function Buybacks() {
         <Placeholder icon={CircleCheck}>There are no buybacks yet.</Placeholder>
       )}
 
-      <PlaceBidModal
-        isOpen={activeModal === "place-bid"}
-        onClose={() => {
-          setActiveModal(null);
-          setSelectedBuyback(null);
-          void refetch();
-        }}
-        buyback={selectedBuyback}
-      />
+      {activeModal === "place-bid" ? (
+        <PlaceBidModal
+          onClose={() => {
+            setActiveModal(null);
+            setSelectedBuyback(null);
+            void refetch();
+          }}
+          buyback={selectedBuyback}
+        />
+      ) : null}
 
-      <NewBuybackModal
-        isOpen={activeModal === "new-buyback"}
-        onClose={() => {
-          setActiveModal(null);
-          void refetch();
-        }}
-      />
+      {activeModal === "new-buyback" ? (
+        <NewBuybackModal
+          onClose={() => {
+            setActiveModal(null);
+            void refetch();
+          }}
+        />
+      ) : null}
     </EquityLayout>
   );
 }

@@ -290,6 +290,17 @@ export default function BuybackView() {
           <BuybackActions buyback={buyback} user={user} bids={bids} onSetActiveModal={setActiveModal} />
         ) : null
       }
+      footer={
+        user.roles.administrator ? (
+          <div className="flex justify-center border-t border-gray-100 p-3">
+            <span>
+              <span className="font-semibold">{buyback.bid_count}</span> bid{buyback.bid_count === 1 ? "" : "s"} from{" "}
+              <span className="font-semibold">{buyback.investor_count} </span>investor
+              {buyback.investor_count === 1 ? "" : "s"}
+            </span>
+          </div>
+        ) : null
+      }
     >
       {user.roles.investor?.investedInAngelListRuv ? (
         <Alert variant="destructive">
@@ -370,35 +381,38 @@ export default function BuybackView() {
         <Placeholder icon={LucideCircleDollarSign}>Place your first bid to participate in the buyback.</Placeholder>
       )}
 
-      <CancelBidModal
-        isOpen={activeModal === "cancel"}
-        onClose={() => {
-          handleBidAction(null);
-          void refetchBids();
-        }}
-        buyback={buyback}
-        bid={selectedBid}
-      />
+      {activeModal === "cancel" ? (
+        <CancelBidModal
+          onClose={() => {
+            handleBidAction(null);
+            void refetchBids();
+          }}
+          buyback={buyback}
+          bid={selectedBid}
+        />
+      ) : null}
 
-      <PlaceBidModal
-        isOpen={activeModal === "place"}
-        onClose={() => {
-          setActiveModal(null);
-          void refetchBids();
-        }}
-        buyback={buyback}
-      />
+      {activeModal === "place" ? (
+        <PlaceBidModal
+          onClose={() => {
+            setActiveModal(null);
+            void refetchBids();
+          }}
+          buyback={buyback}
+        />
+      ) : null}
 
-      <FinalizeBuybackModal
-        isOpen={activeModal === "finalize"}
-        onClose={() => {
-          setActiveModal(null);
-          void refetchBuyback();
-          void refetchBids();
-        }}
-        buyback={buyback}
-        bids={bids}
-      />
+      {activeModal === "finalize" ? (
+        <FinalizeBuybackModal
+          onClose={() => {
+            setActiveModal(null);
+            void refetchBuyback();
+            void refetchBids();
+          }}
+          buyback={buyback}
+          bids={bids}
+        />
+      ) : null}
     </EquityLayout>
   );
 }

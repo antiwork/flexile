@@ -20,7 +20,6 @@ import { request } from "@/utils/request";
 import { finalize_company_tender_offer_path } from "@/utils/routes";
 
 type FinalizeBuybackModalProps = {
-  isOpen: boolean;
   onClose: () => void;
   buyback: Buyback;
   bids: BuybackBid[];
@@ -59,7 +58,7 @@ type SingleBuybackReviewSectionProps = {
   onBack: () => void;
 };
 
-const FinalizeBuybackModal = ({ isOpen, onClose, buyback, bids }: FinalizeBuybackModalProps) => {
+const FinalizeBuybackModal = ({ onClose, buyback, bids }: FinalizeBuybackModalProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const company = useCurrentCompany();
 
@@ -87,7 +86,7 @@ const FinalizeBuybackModal = ({ isOpen, onClose, buyback, bids }: FinalizeBuybac
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open onOpenChange={onClose}>
       <DialogStackContent step={currentStep}>
         {buyback.buyback_type === "single_stock"
           ? [
@@ -139,7 +138,7 @@ const ConfirmationSection = ({ buyback, bids, onNext }: ConfirmationSectionProps
   const impliedValuation = company.fullyDilutedShares ? Number(company.fullyDilutedShares) * clearingPrice : 0;
 
   return (
-    <div className="space-y-4">
+    <>
       <DialogHeader>
         <DialogTitle>Tender offer summary</DialogTitle>
         <DialogDescription>Review the buyback details before finalizing the settlement.</DialogDescription>
@@ -183,7 +182,7 @@ const ConfirmationSection = ({ buyback, bids, onNext }: ConfirmationSectionProps
           Continue
         </Button>
       </DialogFooter>
-    </div>
+    </>
   );
 };
 
@@ -205,7 +204,7 @@ const ReviewInvestorsSection = ({ onNext, onBack, bids }: ReviewInvestorsSection
   };
 
   return (
-    <div className="space-y-4">
+    <>
       <DialogHeader>
         <DialogTitle>Review investors</DialogTitle>
         <DialogDescription>
@@ -263,7 +262,7 @@ const ReviewInvestorsSection = ({ onNext, onBack, bids }: ReviewInvestorsSection
           Continue
         </Button>
       </DialogFooter>
-    </div>
+    </>
   );
 };
 
@@ -284,7 +283,7 @@ const SubmitSection = ({ onBack, buyback, bids, mutation }: SubmitSectionProps) 
   };
 
   return (
-    <div className="space-y-4">
+    <>
       <DialogHeader>
         <DialogTitle>Confirm and process payment</DialogTitle>
         <DialogDescription>
@@ -339,7 +338,7 @@ const SubmitSection = ({ onBack, buyback, bids, mutation }: SubmitSectionProps) 
           Finalize buyback
         </MutationStatusButton>
       </DialogFooter>
-    </div>
+    </>
   );
 };
 
@@ -355,7 +354,7 @@ const SingleBuybackConfirmationSection = ({ buyback, bids, onNext }: SingleBuyba
   const investor = acceptedBids[0].investor;
 
   return (
-    <div className="space-y-4">
+    <>
       <DialogHeader>
         <DialogTitle>Single stock repurchase summary</DialogTitle>
         <DialogDescription>
@@ -391,7 +390,7 @@ const SingleBuybackConfirmationSection = ({ buyback, bids, onNext }: SingleBuyba
           Continue
         </Button>
       </DialogFooter>
-    </div>
+    </>
   );
 };
 
@@ -434,7 +433,7 @@ const SingleBuybackReviewSection = ({ buyback, bids, mutation, onBack }: SingleB
   };
 
   return (
-    <div className="space-y-4">
+    <>
       <DialogHeader>
         <DialogTitle>Review investor's sale</DialogTitle>
         <DialogDescription>
@@ -510,7 +509,7 @@ const SingleBuybackReviewSection = ({ buyback, bids, mutation, onBack }: SingleB
           Confirm and pay
         </MutationStatusButton>
       </DialogFooter>
-    </div>
+    </>
   );
 };
 

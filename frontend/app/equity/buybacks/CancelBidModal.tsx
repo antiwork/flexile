@@ -9,13 +9,12 @@ import { request } from "@/utils/request";
 import { company_tender_offer_bid_path } from "@/utils/routes";
 
 type CancelBidModalProps = {
-  isOpen: boolean;
   onClose: () => void;
   bid: BuybackBid | null;
   buyback: Buyback;
 };
 
-const CancelBidModal = ({ isOpen, onClose, bid, buyback }: CancelBidModalProps) => {
+const CancelBidModal = ({ onClose, bid, buyback }: CancelBidModalProps) => {
   const company = useCurrentCompany();
   const destroyMutation = useMutation({
     mutationFn: async ({ bidId }: { bidId: string }) => {
@@ -36,7 +35,7 @@ const CancelBidModal = ({ isOpen, onClose, bid, buyback }: CancelBidModalProps) 
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Cancel bid?</DialogTitle>

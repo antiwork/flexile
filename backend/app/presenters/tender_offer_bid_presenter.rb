@@ -1,22 +1,19 @@
 # frozen_string_literal: true
 
 class TenderOfferBidPresenter
-  delegate :external_id, :number_of_shares, :share_price_cents, :share_class,
-           :accepted_shares, :created_at, to: :bid
-
   def initialize(bid)
     @bid = bid
   end
 
   def props
     {
-      id: external_id,
-      number_of_shares: number_of_shares,
-      share_price_cents: share_price_cents,
-      share_class: share_class,
-      accepted_shares: accepted_shares,
+      id: bid.external_id,
+      number_of_shares: bid.number_of_shares,
+      share_price_cents: bid.share_price_cents,
+      share_class: bid.share_class,
+      accepted_shares: bid.accepted_shares,
       investor: investor_info,
-      created_at: created_at,
+      created_at: bid.created_at,
     }
   end
 

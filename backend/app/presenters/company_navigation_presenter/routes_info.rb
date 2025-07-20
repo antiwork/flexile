@@ -70,6 +70,8 @@ class CompanyNavigationPresenter::RoutesInfo
           "company_equity_grants"
         elsif Pundit.policy!(current_context, DividendRound).index?
           "company_dividend_rounds"
+        elsif Pundit.policy!(current_context, TenderOffer).index?
+          "company_buybacks"
         end
       return unless name
 

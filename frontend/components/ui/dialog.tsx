@@ -133,22 +133,20 @@ function DialogStackContent({ step, children, className, ...props }: DialogStack
             <DialogPrimitive.Content
               data-slot="dialog-content"
               className={cn(
-                "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 relative z-50 grid w-full content-start gap-4 rounded-lg p-6 shadow-[0_6px_24px_rgba(0,0,0,0.10),_0_9px_48px_rgba(0,0,0,0.08)] duration-200",
+                "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 relative z-50 w-full content-start rounded-lg p-8 shadow-[0_6px_24px_rgba(0,0,0,0.10),_0_9px_48px_rgba(0,0,0,0.08)] duration-200",
                 className,
               )}
               {...props}
             >
               {childrenArray.map((child, index) => (
-                <div
-                  key={index}
-                  style={{
-                    display: index === step ? "contents" : "none",
-                  }}
-                >
+                <div key={index} className={cn("grid gap-4", index === step ? "grid" : "hidden")}>
                   {child}
                 </div>
               ))}
-              <DialogPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4">
+              <DialogPrimitive.Close
+                data-slot="dialog-close"
+                className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+              >
                 <XIcon />
                 <span className="sr-only">Close</span>
               </DialogPrimitive.Close>

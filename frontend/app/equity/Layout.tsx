@@ -15,10 +15,12 @@ const Layout = ({
   children,
   headerActions,
   pageTitle,
+  footer,
 }: {
   children: React.ReactNode;
   headerActions?: React.ReactNode;
   pageTitle?: React.ReactNode | string | null;
+  footer?: React.ReactNode;
 }) => {
   const pathname = usePathname();
   const user = useCurrentUser();
@@ -57,7 +59,7 @@ const Layout = ({
   );
 
   return (
-    <MainLayout title={title} headerActions={headerActions}>
+    <MainLayout title={title} headerActions={headerActions} footer={footer}>
       {children}
     </MainLayout>
   );
