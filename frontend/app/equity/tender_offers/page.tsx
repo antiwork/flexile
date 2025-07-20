@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
+import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -17,7 +18,7 @@ export default function Buybacks() {
   const company = useCurrentCompany();
   const router = useRouter();
   const user = useCurrentUser();
-  const [data] = trpc.tenderOffers.list.useSuspenseQuery({ companyId: company.id });
+  const { data = [], isLoading } = trpc.tenderOffers.list.useQuery({ companyId: company.id });
 
   const columnHelper = createColumnHelper<RouterOutput["tenderOffers"]["list"][number]>();
   const columns = [
@@ -44,7 +45,9 @@ export default function Buybacks() {
         ) : null
       }
     >
-      {data.length ? (
+      {isLoading ? (
+        <TableSkeleton columns={3} />
+      ) : data.length ? (
         <DataTable table={table} onRowClicked={(row) => router.push(`/equity/tender_offers/${row.id}`)} />
       ) : (
         <Placeholder icon={CircleCheck}>There are no buybacks yet.</Placeholder>

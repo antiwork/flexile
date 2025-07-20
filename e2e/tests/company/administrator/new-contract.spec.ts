@@ -45,7 +45,7 @@ test.describe("New Contractor", () => {
     const date = addMonths(new Date(), 1);
     await login(page, user);
     await page.getByRole("link", { name: "People" }).click();
-    await page.getByRole("button", { name: "Invite contractor" }).click();
+    await page.getByRole("button", { name: "Add contractor" }).click();
     await expect(page.getByText("Who's joining?")).toBeVisible();
     await page.getByLabel("Email").fill(email);
     await fillDatePicker(page, "Start date", format(date, "MM/dd/yyyy"));
@@ -187,7 +187,7 @@ test.describe("New Contractor", () => {
     });
     await login(page, user);
     await page.goto("/people");
-    await page.getByRole("button", { name: "Invite contractor" }).click();
+    await page.getByRole("button", { name: "Add contractor" }).click();
     await expect(page.getByLabel("Role")).toHaveValue("Hourly Role 1");
     await expect(page.getByLabel("Rate")).toHaveValue("100");
     await expect(page.getByLabel("Already signed contract elsewhere")).toBeChecked();
