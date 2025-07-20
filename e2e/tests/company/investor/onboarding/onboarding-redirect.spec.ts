@@ -73,7 +73,6 @@ test.describe("Investor onboarding - lands on correct page after onboarding comp
 
     await expect(page.getByText("Please provide your legal details so we can pay you.")).toBeVisible();
 
-    // Verify the table is visible and contains the correct dividend amount and status
     await expect(page.getByRole("table")).toBeVisible();
     await expect(page.getByRole("cell", { name: "$750" })).toBeVisible();
   });
