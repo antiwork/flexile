@@ -42,7 +42,7 @@ class Internal::Settings::TaxController < Internal::Settings::BaseController
 
   private
     def update_params
-      params.permit(
+      permitted_params = params.permit(
         :birth_date,
         :business_entity,
         :business_name,
@@ -58,5 +58,11 @@ class Internal::Settings::TaxController < Internal::Settings::BaseController
         :tax_id,
         :zip_code,
       )
+
+      if permitted_params[:birth_date].present?
+        permitted_params[:birth_date] = Date.parse(permitted_params[:birth_date])
+      end
+
+      permitted_params
     end
 end
