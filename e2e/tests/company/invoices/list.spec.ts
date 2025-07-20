@@ -12,7 +12,10 @@ import { companies, companyContractors, consolidatedInvoices, invoiceApprovals, 
 import { assert } from "@/utils/assert";
 
 const setupCompany = async ({ trusted = true }: { trusted?: boolean } = {}) => {
-  const { company } = await companiesFactory.create({ isTrusted: trusted, requiredInvoiceApprovalCount: 2 });
+  const { company } = await companiesFactory.create(
+    { isTrusted: trusted, requiredInvoiceApprovalCount: 2 },
+    { withoutBankAccount: true },
+  );
   const { administrator } = await companyAdministratorsFactory.create({ companyId: company.id });
   const user = await db.query.users.findFirst({ where: eq(users.id, administrator.userId) });
   assert(user !== undefined);
@@ -52,7 +55,6 @@ test.describe("Invoices admin flow", () => {
   test.describe("account statuses", () => {
     test("when payment method setup is incomplete, it shows the correct status message", async ({ page }) => {
       const { company, user } = await setupCompany();
-      await companyStripeAccountsFactory.createProcessing({ companyId: company.id });
       await invoicesFactory.create({ companyId: company.id });
 
       await login(page, user);
@@ -221,6 +223,7 @@ test.describe("Invoices admin flow", () => {
     test.describe("with sufficient Flexile account balance", () => {
       test("allows approving invoices and paying invoices awaiting final approval immediately", async ({ page }) => {
         const { company, user: adminUser } = await setupCompany();
+        await companyStripeAccountsFactory.create({ companyId: company.id });
         await invoicesFactory.create({ companyId: company.id });
         await invoicesFactory.create({ companyId: company.id });
         const { invoice } = await invoicesFactory.create({
