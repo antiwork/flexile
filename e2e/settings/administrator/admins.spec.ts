@@ -1,7 +1,6 @@
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
-// These are still needed for test setup even though we don't display these users anymore
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { companyLawyersFactory } from "@test/factories/companyLawyers";
@@ -11,7 +10,7 @@ import { expect, test } from "@test/index";
 import { and, eq } from "drizzle-orm";
 import { companies, companyAdministrators, users } from "@/db/schema";
 
-test.describe("Admin Revoke Management", () => {
+test.describe("Manage admin access", () => {
   let company: typeof companies.$inferSelect;
   let primaryAdmin: typeof users.$inferSelect;
   let secondAdmin: typeof users.$inferSelect;
@@ -61,13 +60,19 @@ test.describe("Admin Revoke Management", () => {
       await login(page, primaryAdmin);
       await page.goto("/settings/administrator/admins");
 
+      // Wait for the page to be fully loaded
+      await page.waitForLoadState("networkidle");
+
+      // Add a more specific wait for the table to appear
+      await page.waitForSelector("table", { timeout: 10000 });
+
       // Check page title and description
       await expect(page.getByRole("heading", { name: "Workspace admins" })).toBeVisible();
       await expect(page.getByText("Manage access for users with admin roles in your workspace.")).toBeVisible();
 
-      // Check table headers
-      await expect(page.getByRole("columnheader", { name: "Name" })).toBeVisible();
-      await expect(page.getByRole("columnheader", { name: "Role" })).toBeVisible();
+      // Check table headers - use more flexible selectors
+      await expect(page.locator('th:has-text("Name")')).toBeVisible();
+      await expect(page.locator('th:has-text("Role")')).toBeVisible();
 
       // Check that primary admin is first and marked as Owner
       const firstRow = page.getByRole("row").nth(1); // Skip header row
@@ -126,8 +131,8 @@ test.describe("Admin Revoke Management", () => {
       await login(page, primaryAdmin);
       await page.goto("/settings/administrator/admins");
 
-      // Should display email as fallback
-      await expect(page.getByText(adminWithoutName.email)).toBeVisible();
+      // Should display email as fallback (use first occurrence)
+      await expect(page.getByText(adminWithoutName.email).first()).toBeVisible();
     });
   });
 
@@ -146,11 +151,21 @@ test.describe("Admin Revoke Management", () => {
 
       // Confirm in modal
       await expect(page.getByRole("dialog")).toBeVisible();
-      await expect(page.getByText("Remove admin access?")).toBeVisible();
+      await expect(page.getByText(/Remove admin access for/u)).toBeVisible();
+
+      // Set up promise to wait for the tRPC mutation response
+      const responsePromise = page.waitForResponse(
+        (response) => response.url().includes("trpc/companies.revokeAdminRole") && response.status() === 200,
+      );
+
+      // Click the button
       await page.getByRole("button", { name: "Remove admin" }).click();
 
       // Wait for row to be removed (optimistic update)
       await expect(page.getByText(secondAdmin.legalName || "")).not.toBeVisible();
+
+      // Wait for the actual backend response
+      await responsePromise;
 
       // Verify in database
       const adminRecord = await db.query.companyAdministrators.findFirst({
