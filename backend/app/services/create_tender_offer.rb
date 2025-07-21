@@ -35,7 +35,7 @@ class CreateTenderOffer
         CompanyInvestorMailer.tender_offer_opened(
           tender_offer_investor.company_investor.id,
           tender_offer_id: tender_offer.id
-        ).deliver_now
+        ).deliver_later
       end
     end
 end

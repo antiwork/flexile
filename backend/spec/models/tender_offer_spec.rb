@@ -7,9 +7,14 @@ RSpec.describe TenderOffer do
     it { is_expected.to have_many(:equity_buyback_rounds) }
     it { is_expected.to have_many(:equity_buybacks).through(:equity_buyback_rounds) }
     it { is_expected.to have_many(:equity_buyback_payments).through(:equity_buybacks) }
+    it { is_expected.to have_many(:tender_offer_investors) }
+    it { is_expected.to have_one_attached(:attachment) }
+    it { is_expected.to have_one_attached(:letter_of_transmittal) }
   end
 
   describe "validations" do
+    it { is_expected.to validate_presence_of(:name) }
+    it { is_expected.to validate_presence_of(:buyback_type) }
     it { is_expected.to validate_presence_of(:attachment) }
     it { is_expected.to validate_presence_of(:starts_at) }
     it { is_expected.to validate_presence_of(:ends_at) }
@@ -19,6 +24,11 @@ RSpec.describe TenderOffer do
     it { is_expected.to validate_numericality_of(:number_of_shareholders).only_integer.is_greater_than(0).allow_nil }
     it { is_expected.to validate_numericality_of(:total_amount_in_cents).only_integer.is_greater_than(0).allow_nil }
     it { is_expected.to validate_numericality_of(:accepted_price_cents).only_integer.is_greater_than(0).allow_nil }
+    it { is_expected.to validate_numericality_of(:implied_valuation).only_integer.is_greater_than_or_equal_to(0).allow_nil }
+
+    context "on create" do
+      it { is_expected.to validate_presence_of(:letter_of_transmittal).on(:create) }
+    end
 
     describe "#ends_at_must_be_after_starts_at" do
       it "is valid when ends_at is after starts_at" do
@@ -39,20 +49,70 @@ RSpec.describe TenderOffer do
     describe "attachment validation" do
       it "allows ZIP file attachments" do
         tender_offer = build(:tender_offer)
-        zip_file = fixture_file_upload("sample.zip", "application/zip")
-        tender_offer.attachment.attach(zip_file)
 
         expect(tender_offer).to be_valid
       end
 
       it "does not allow non-ZIP file attachments" do
-        tender_offer = build(:tender_offer)
+        tender_offer = build(:tender_offer, :without_attachments)
         pdf_file = fixture_file_upload("sample.pdf", "application/pdf")
         tender_offer.attachment.attach(pdf_file)
 
         expect(tender_offer).not_to be_valid
         expect(tender_offer.errors[:attachment]).to include("must be a ZIP file")
       end
+    end
+
+    describe "letter_of_transmittal validation" do
+      it "allows PDF file attachments" do
+        tender_offer = build(:tender_offer)
+
+        expect(tender_offer).to be_valid
+      end
+
+      it "does not allow non-PDF file attachments" do
+        tender_offer = build(:tender_offer, :without_attachments)
+        zip_file = fixture_file_upload("sample.zip", "application/zip")
+        tender_offer.letter_of_transmittal.attach(zip_file)
+
+        expect(tender_offer).not_to be_valid
+        expect(tender_offer.errors[:letter_of_transmittal]).to include("must be a PDF file")
+      end
+    end
+
+    describe "#validate_investor_requirements" do
+      it "is invalid when no investors are selected" do
+        tender_offer = build(:tender_offer, :without_investors)
+
+        expect(tender_offer).not_to be_valid
+        expect(tender_offer.errors[:base]).to include("At least one investor must be selected")
+      end
+
+      it "is invalid when single_stock has multiple investors" do
+        tender_offer = build(:tender_offer, :with_tender_offer, buyback_type: "single_stock")
+
+        expect(tender_offer).not_to be_valid
+        expect(tender_offer.errors[:buyback_type]).to include("Single stock repurchases can only have one investor")
+      end
+
+      it "is valid when single_stock has exactly one investor" do
+        tender_offer = build(:tender_offer, :with_single_stock)
+
+        expect(tender_offer).to be_valid
+      end
+
+      it "is valid when tender_offer has multiple investors" do
+        tender_offer = build(:tender_offer, :with_tender_offer)
+
+        expect(tender_offer).to be_valid
+      end
+    end
+  end
+
+  describe "enums" do
+    it "defines buyback_type values" do
+      expect(TenderOffer.new(buyback_type: "single_stock").buyback_type).to eq("single_stock")
+      expect(TenderOffer.new(buyback_type: "tender_offer").buyback_type).to eq("tender_offer")
     end
   end
 

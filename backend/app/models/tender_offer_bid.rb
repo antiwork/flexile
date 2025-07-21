@@ -48,7 +48,8 @@ class TenderOfferBid < ApplicationRecord
       if tender_offer.minimum_valuation
         starting_price_cents = (tender_offer.minimum_valuation * 100) / tender_offer.company.fully_diluted_shares
         if share_price_cents < starting_price_cents
-          errors.add(:share_price_cents, "Must be equal to or greater than #{cents_format(starting_price_cents)}")
+          formatted_price = Money.from_cents(starting_price_cents, :usd).format(symbol: true)
+          errors.add(:share_price_cents, "Must be equal to or greater than #{formatted_price}")
         end
       end
     end

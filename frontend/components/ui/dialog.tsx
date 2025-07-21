@@ -103,11 +103,15 @@ function DialogStackContent({ step, children, className, ...props }: DialogStack
   const totalSteps = childrenArray.length;
 
   // Generate stack layers dynamically based on totalSteps
-  // Last layer: { scaleX: 0.95, offsetY: 20 }
-  // Each previous layer: reduce scaleX by 0.05, increase offsetY by 20
+  // Last layer: { scaleX: BASE_SCALE, offsetY: BASE_OFFSET }
+  // Each previous layer: reduce scaleX by SCALE_STEP, increase offsetY by OFFSET_STEP
+  const BASE_SCALE = 0.95;
+  const SCALE_STEP = 0.05;
+  const BASE_OFFSET = 20;
+  const OFFSET_STEP = 20;
   const stackLayers: LayerConfig[] = Array.from({ length: totalSteps - 1 }, (_, i) => ({
-    scaleX: 0.95 - (totalSteps - 2 - i) * 0.05,
-    offsetY: 20 + (totalSteps - 2 - i) * 20,
+    scaleX: BASE_SCALE - (totalSteps - 2 - i) * SCALE_STEP,
+    offsetY: BASE_OFFSET + (totalSteps - 2 - i) * OFFSET_STEP,
   }));
 
   const layersToShow = stackLayers.slice(step);

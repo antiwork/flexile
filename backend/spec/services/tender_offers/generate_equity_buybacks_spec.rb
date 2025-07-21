@@ -33,14 +33,14 @@ RSpec.describe TenderOffers::GenerateEquityBuybacks do
       let!(:share_holding3_3) { create(:share_holding, company_investor: company_investor3, share_class: share_class_b, number_of_shares: 150, originally_acquired_at: 1.year.ago) }
 
       # Bids
-      let!(:bid1) { create(:tender_offer_bid, tender_offer:, company_investor: company_investor1, share_class: TenderOffer::VESTED_SHARES_CLASS, accepted_shares: 120) }
-      let!(:bid2) { create(:tender_offer_bid, tender_offer:, company_investor: company_investor1, share_class: "Class A", number_of_shares: 40, accepted_shares: 40) }
-      let!(:bid3) { create(:tender_offer_bid, tender_offer:, company_investor: company_investor1, share_class: "Class B", number_of_shares: 20, accepted_shares: 20) }
-      let!(:bid4) { create(:tender_offer_bid, tender_offer:, company_investor: company_investor2, share_class: TenderOffer::VESTED_SHARES_CLASS, accepted_shares: 250) }
-      let!(:bid5) { create(:tender_offer_bid, tender_offer:, company_investor: company_investor2, share_class: "Class A", number_of_shares: 60, accepted_shares: 60) }
-      let!(:bid6) { create(:tender_offer_bid, tender_offer:, company_investor: company_investor2, share_class: "Class B", number_of_shares: 40, accepted_shares: 40) }
-      let!(:bid7) { create(:tender_offer_bid, tender_offer:, company_investor: company_investor3, share_class: "Class A", number_of_shares: 150, accepted_shares: 150) }
-      let!(:bid8) { create(:tender_offer_bid, tender_offer:, company_investor: company_investor3, share_class: "Class B", number_of_shares: 100, accepted_shares: 100) }
+      let!(:bid1) { create(:tender_offer_bid, tender_offer:, company_investor: company_investor1, share_class: TenderOffer::VESTED_SHARES_CLASS, number_of_shares: 120, accepted_shares: 120, share_price_cents: 10_00) }
+      let!(:bid2) { create(:tender_offer_bid, tender_offer:, company_investor: company_investor1, share_class: "Class A", number_of_shares: 40, accepted_shares: 40, share_price_cents: 10_00) }
+      let!(:bid3) { create(:tender_offer_bid, tender_offer:, company_investor: company_investor1, share_class: "Class B", number_of_shares: 20, accepted_shares: 20, share_price_cents: 10_00) }
+      let!(:bid4) { create(:tender_offer_bid, tender_offer:, company_investor: company_investor2, share_class: TenderOffer::VESTED_SHARES_CLASS, number_of_shares: 250, accepted_shares: 250, share_price_cents: 10_00) }
+      let!(:bid5) { create(:tender_offer_bid, tender_offer:, company_investor: company_investor2, share_class: "Class A", number_of_shares: 60, accepted_shares: 60, share_price_cents: 10_00) }
+      let!(:bid6) { create(:tender_offer_bid, tender_offer:, company_investor: company_investor2, share_class: "Class B", number_of_shares: 40, accepted_shares: 40, share_price_cents: 10_00) }
+      let!(:bid7) { create(:tender_offer_bid, tender_offer:, company_investor: company_investor3, share_class: "Class A", number_of_shares: 150, accepted_shares: 150, share_price_cents: 10_00) }
+      let!(:bid8) { create(:tender_offer_bid, tender_offer:, company_investor: company_investor3, share_class: "Class B", number_of_shares: 100, accepted_shares: 100, share_price_cents: 10_00) }
 
       it "creates EquityBuyback records for each company investor and type of holding" do
         expect { service.perform }.to change(EquityBuyback, :count).by(11)
