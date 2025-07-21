@@ -24,7 +24,7 @@ class CompanyWorker < ApplicationRecord
   validates :role, presence: true, on: :update
   validates :started_at, presence: true
   validates :pay_rate_in_subunits, numericality: { only_integer: true, greater_than: 0, allow_nil: true }
-  validates :equity_percentage, allow_nil: true, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: MAX_EQUITY_PERCENTAGE }
+  validates :equity_percentage, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: MAX_EQUITY_PERCENTAGE }
 
   scope :active, -> { where(ended_at: nil) }
   scope :active_as_of, ->(date) { active.or(where("ended_at > ?", date)) }
