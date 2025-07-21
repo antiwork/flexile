@@ -24,7 +24,7 @@ services:
     image: openresty/openresty:alpine-fat
     volumes:
       - ./flexile_dev.conf:/etc/nginx/conf.d/default.conf
-      - ./certs:/etc/ssl/certs/
+      - ../certificates:/etc/ssl/certs/
     ports:
       - 80:80
       - 443:443
