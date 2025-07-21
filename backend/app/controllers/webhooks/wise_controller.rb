@@ -18,12 +18,7 @@ class Webhooks::WiseController < ApplicationController
 
   private
     def validate_webhook
-      return true if Rails.env.development?
-
-      return if Wise::WebhookValidator.new(
-        request.headers["X-Signature-SHA256"],
-        request.raw_post
-      ).valid?
+      return if Wise::WebhookValidator.new(request.headers["X-Signature-SHA256"], request.raw_post).valid?
 
       render json: { success: false }, status: :bad_request
     end
