@@ -6,6 +6,7 @@ import { shareHoldingsFactory } from "@test/factories/shareHoldings";
 import { tenderOfferInvestorsFactory } from "@test/factories/tenderOfferInvestors";
 import { tenderOffersFactory } from "@test/factories/tenderOffers";
 import { login } from "@test/helpers/auth";
+import { formatMoney } from "@test/helpers/money";
 import { expect, test, withinModal } from "@test/index";
 import { eq } from "drizzle-orm";
 import { companies, companyInvestors, users } from "@/db/schema";
@@ -62,6 +63,16 @@ test.describe("Tender offer place bid", () => {
 
     await withinModal(
       async (modal) => {
+        await expect(modal.getByText("Buyback details")).toBeVisible();
+        await expect(modal.getByText("Start date")).toBeVisible();
+        await expect(modal.getByText("End date")).toBeVisible();
+        await expect(modal.getByText("Price per share")).toBeVisible();
+        await expect(modal.getByText(formatMoney(sharePrice))).toBeVisible();
+        await expect(modal.getByText("Allocation limit")).toBeVisible();
+        await expect(modal.getByText(`${maxShares}`)).toBeVisible();
+        await expect(modal.getByText("Maximum payout")).toBeVisible();
+        await expect(modal.getByText(formatMoney(sharePrice * maxShares))).toBeVisible();
+
         await modal.getByRole("button", { name: "Continue" }).click();
         await modal.getByRole("button", { name: "Add your signature" }).click();
         await modal.getByRole("checkbox", { name: /I've reviewed the/u }).click();
@@ -84,7 +95,7 @@ test.describe("Tender offer place bid", () => {
 
   test("allows investor to place bid on tender offer", async ({ page }) => {
     const minimumValuation = 1000000;
-    const numberOfShares = 5;
+    const numberOfShares = 50;
     const bidPrice = 20;
 
     const { tenderOffer } = await tenderOffersFactory.create({
@@ -112,6 +123,13 @@ test.describe("Tender offer place bid", () => {
 
     await withinModal(
       async (modal) => {
+        await expect(modal.getByText("Buyback details")).toBeVisible();
+        await expect(modal.getByText("Start date")).toBeVisible();
+        await expect(modal.getByText("End date")).toBeVisible();
+        await expect(modal.getByText("Starting valuation")).toBeVisible();
+        await expect(modal.getByText(formatMoney(minimumValuation))).toBeVisible();
+        await expect(modal.getByText("Starting price per share")).toBeVisible();
+
         await modal.getByRole("button", { name: "Continue" }).click();
         await modal.getByRole("button", { name: "Add your signature" }).click();
         await modal.getByRole("checkbox", { name: /I've reviewed the/u }).click();
@@ -128,7 +146,7 @@ test.describe("Tender offer place bid", () => {
 
     await expect(
       page.getByRole("row", {
-        name: new RegExp(`${numberOfShares}.*\\$${bidPrice}.*\\$${bidPrice * numberOfShares}`, "u"),
+        name: new RegExp(`${numberOfShares}.*\\$${bidPrice}.*\\${formatMoney(bidPrice * numberOfShares)}`, "u"),
       }),
     ).toBeVisible();
   });

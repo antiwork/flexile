@@ -139,7 +139,11 @@ function DialogStackContent({ step, children, className, ...props }: DialogStack
               {...props}
             >
               {childrenArray.map((child, index) => (
-                <div key={index} className={cn("grid gap-4", index === step ? "grid" : "hidden")}>
+                <div
+                  key={index}
+                  className={cn("grid gap-4", index === step ? "grid" : "hidden")}
+                  data-slot="dialog-section"
+                >
                   {child}
                 </div>
               ))}
