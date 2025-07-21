@@ -10,13 +10,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_07_204710) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_09_211708) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   # Custom types defined in this database.
   # Note that some types may not work with other database engines. Be careful if changing database.
-  create_enum "equity_allocations_status", ["pending_confirmation", "pending_grant_creation", "pending_approval", "approved"]
   create_enum "equity_grant_transactions_transaction_type", ["scheduled_vesting", "vesting_post_invoice_payment", "exercise", "cancellation", "manual_adjustment", "end_of_period_forfeiture"]
   create_enum "equity_grants_issue_date_relationship", ["employee", "consultant", "investor", "founder", "officer", "executive", "board_member"]
   create_enum "equity_grants_option_grant_type", ["iso", "nso"]
@@ -143,6 +142,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_07_204710) do
     t.string "pay_rate_currency", default: "usd", null: false
     t.string "role"
     t.boolean "contract_signed_elsewhere", default: false, null: false
+    t.integer "equity_percentage", default: 0, null: false
     t.index ["company_id"], name: "index_company_contractors_on_company_id"
     t.index ["external_id"], name: "index_company_contractors_on_external_id", unique: true
     t.index ["user_id", "company_id"], name: "index_company_contractors_on_user_id_and_company_id", unique: true
@@ -488,19 +488,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_07_204710) do
     t.index ["docuseal_submission_id"], name: "index_documents_on_docuseal_submission_id"
     t.index ["equity_grant_id"], name: "index_documents_on_equity_grant_id"
     t.index ["user_compliance_info_id"], name: "index_documents_on_user_compliance_info_id"
-  end
-
-  create_table "equity_allocations", force: :cascade do |t|
-    t.bigint "company_contractor_id", null: false
-    t.integer "equity_percentage"
-    t.integer "year", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.boolean "locked", default: false, null: false
-    t.boolean "sent_equity_percent_selection_email", default: false, null: false
-    t.enum "status", default: "pending_confirmation", null: false, enum_type: "equity_allocations_status"
-    t.index ["company_contractor_id", "year"], name: "index_equity_allocations_on_company_contractor_id_and_year", unique: true
-    t.index ["company_contractor_id"], name: "index_equity_allocations_on_company_contractor_id"
   end
 
   create_table "equity_buyback_payments", force: :cascade do |t|

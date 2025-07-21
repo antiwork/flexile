@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { and, desc, eq, exists, gte, lte, sum } from "drizzle-orm";
 import { pick } from "lodash-es";
 import { z } from "zod";
-import { VESTED_SHARES_CLASS } from "@/app/equity/tender_offers";
+import { VESTED_SHARES_CLASS } from "@/app/(dashboard)/equity/tender_offers";
 import { byExternalId, db } from "@/db";
 import { companyInvestors, shareClasses, shareHoldings, tenderOfferBids, tenderOffers } from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
