@@ -19,21 +19,8 @@ class WiseTransferUpdateJob
     if payment.nil?
       if (equity_buyback_payment = EquityBuybackPayment.wise.find_by(transfer_id:))
         EquityBuybackPaymentTransferUpdate.new(equity_buyback_payment, params).process
-
       elsif (dividend_payment = DividendPayment.wise.find_by(transfer_id:))
-        if current_state == Payments::Wise::FUNDS_REFUNDED
-          Rails.logger.info("Processing payout failure for transfer_id: #{transfer_id} due to funds_refunded state.")
-          user = dividend_payment.dividends.first&.company_investor&.user
-
-          if user
-            user.bank_account_for_dividends&.mark_deleted!
-            dividend_payment.dividends.update!(status: "Issued", paid_at: nil)
-            CompanyInvestorMailer.dividend_payment_failed(user, dividend_payment).deliver_later
-          end
-        else
-          DividendPaymentTransferUpdate.new(dividend_payment, params).process
-        end
-
+        DividendPaymentTransferUpdate.new(dividend_payment, params).process
       else
         Rails.logger.info("No payment found for Wise Transfer webhook: #{params}")
       end
