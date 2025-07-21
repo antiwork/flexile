@@ -1,16 +1,32 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
+import { MoreHorizontal } from "lucide-react";
 
 export default function AdminsPage() {
   const company = useCurrentCompany();
   const currentUser = useCurrentUser();
   const { data: users = [], isLoading } = trpc.companies.listAdministrators.useQuery({ companyId: company.id });
+  const [confirmRevokeUser, setConfirmRevokeUser] = useState<(typeof users)[number] | null>(null);
 
   const trpcUtils = trpc.useUtils();
 
@@ -62,7 +78,7 @@ export default function AdminsPage() {
       }),
       columnHelper.display({
         id: "actions",
-        header: "Action",
+        header: "",
         cell: (info) => {
           const user = info.row.original;
           const isCurrentUserRow = currentUser.email === user.email;
@@ -72,20 +88,27 @@ export default function AdminsPage() {
 
           return (
             <div className="text-left">
-              <Button
-                variant="destructive"
-                size="small"
-                onClick={() => {
-                  revokeAdminMutation.mutate({
-                    companyId: company.id,
-                    userId: user.id,
-                  });
-                }}
-                disabled={isCurrentUserRow || isLoadingRevoke || isLastAdmin}
-                aria-label={`Revoke admin access for ${user.name || user.email}`}
-              >
-                Remove admin status
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="small"
+                    className="h-8 w-8 p-0"
+                    disabled={isCurrentUserRow || isLoadingRevoke || isLastAdmin}
+                  >
+                    <span className="sr-only">Open menu</span>
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={() => setConfirmRevokeUser(user)}
+                  >
+                    Remove admin
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           );
         },
@@ -100,15 +123,50 @@ export default function AdminsPage() {
   });
 
   return (
-    <div className="grid gap-8">
-      <hgroup>
-        <h2 className="mb-1 text-xl font-bold">Workspace Administrators</h2>
-        <p className="text-muted-foreground text-base">View and revoke administrator access for your workspace.</p>
-      </hgroup>
-      {/* override default padding to align table content with page header */}
-      <div className="[&_td:first-child]:!pl-0 [&_td:last-child]:!pr-0 [&_th:first-child]:!pl-0 [&_th:last-child]:!pr-0">
-        {isLoading ? <TableSkeleton columns={3} /> : <DataTable table={table} />}
+    <>
+      <div className="grid gap-8">
+        <hgroup>
+          <h2 className="mb-1 text-xl font-bold">Workspace admins</h2>
+          <p className="text-muted-foreground text-base">Manage access for users with admin roles in your workspace.</p>
+        </hgroup>
+        {/* override default padding to align table content with page header */}
+        <div className="[&_td:first-child]:!pl-0 [&_td:last-child]:!pr-0 [&_th:first-child]:!pl-0 [&_th:last-child]:!pr-0">
+          {isLoading ? <TableSkeleton columns={3} /> : <DataTable table={table} />}
+        </div>
       </div>
-    </div>
+
+      <Dialog open={!!confirmRevokeUser} onOpenChange={() => setConfirmRevokeUser(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              Remove admin access for{" "}
+              <span className="font-medium">{confirmRevokeUser?.name || confirmRevokeUser?.email}</span>?
+            </DialogTitle>
+            <DialogDescription>
+              This will revoke their admin privileges. They'll still be a member of the workspace.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmRevokeUser(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="critical"
+              onClick={() => {
+                if (confirmRevokeUser) {
+                  revokeAdminMutation.mutate({
+                    companyId: company.id,
+                    userId: confirmRevokeUser.id,
+                  });
+                  setConfirmRevokeUser(null);
+                }
+              }}
+            >
+              Remove admin
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
