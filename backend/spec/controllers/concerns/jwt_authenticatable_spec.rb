@@ -33,7 +33,7 @@ RSpec.describe JwtAuthenticatable, type: :controller do
         }
         token = JWT.encode(payload, jwt_secret, "HS256")
 
-        request.headers["Authorization"] = "Bearer #{token}"
+        request.headers["x-flexile-auth"] = "Bearer #{token}"
         get :test_action
 
         expect(response).to have_http_status(:ok)
@@ -51,7 +51,7 @@ RSpec.describe JwtAuthenticatable, type: :controller do
         }
         token = JWT.encode(payload, jwt_secret, "HS256")
 
-        request.headers["Authorization"] = "Bearer #{token}"
+        request.headers["x-flexile-auth"] = "Bearer #{token}"
         get :test_action
 
         expect(response).to have_http_status(:unauthorized)
@@ -60,7 +60,7 @@ RSpec.describe JwtAuthenticatable, type: :controller do
 
     context "with invalid JWT token" do
       it "returns unauthorized" do
-        request.headers["Authorization"] = "Bearer invalid_token"
+        request.headers["x-flexile-auth"] = "Bearer invalid_token"
         get :test_action
 
         expect(response).to have_http_status(:unauthorized)
@@ -76,7 +76,7 @@ RSpec.describe JwtAuthenticatable, type: :controller do
         }
         token = JWT.encode(payload, jwt_secret, "HS256")
 
-        request.headers["Authorization"] = "Bearer #{token}"
+        request.headers["x-flexile-auth"] = "Bearer #{token}"
         get :test_action
 
         expect(response).to have_http_status(:unauthorized)

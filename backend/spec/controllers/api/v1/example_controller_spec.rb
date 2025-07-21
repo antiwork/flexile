@@ -13,13 +13,13 @@ RSpec.describe Api::V1::ExampleController, type: :controller do
         payload = {
           user_id: user.id,
           email: user.email,
-          exp: 1.month.from_now.to_i
+          exp: 1.month.from_now.to_i,
         }
         JWT.encode(payload, jwt_secret, "HS256")
       end
 
       before do
-        request.headers["Authorization"] = "Bearer #{jwt_token}"
+        request.headers["x-flexile-auth"] = "Bearer #{jwt_token}"
       end
 
       it "returns user data when properly authenticated" do
@@ -33,8 +33,6 @@ RSpec.describe Api::V1::ExampleController, type: :controller do
         expect(json_response["user"]["email"]).to eq(user.email)
         expect(json_response["user"]["name"]).to eq(user.name)
       end
-
-
     end
 
     context "with invalid API token" do
@@ -42,13 +40,13 @@ RSpec.describe Api::V1::ExampleController, type: :controller do
         payload = {
           user_id: user.id,
           email: user.email,
-          exp: 1.month.from_now.to_i
+          exp: 1.month.from_now.to_i,
         }
         JWT.encode(payload, jwt_secret, "HS256")
       end
 
       before do
-        request.headers["Authorization"] = "Bearer #{jwt_token}"
+        request.headers["x-flexile-auth"] = "Bearer #{jwt_token}"
       end
 
       it "returns unauthorized when API token is invalid" do
@@ -81,13 +79,13 @@ RSpec.describe Api::V1::ExampleController, type: :controller do
 
     context "with valid API token but invalid JWT token" do
       it "raises NoMethodError when JWT token is missing (Current.user is nil)" do
-        expect {
+        expect do
           get :protected_action, params: { token: api_token }
-        }.to raise_error(NoMethodError, /undefined method.*id.*for nil/)
+        end.to raise_error(NoMethodError, /undefined method.*id.*for nil/)
       end
 
       it "returns unauthorized when JWT token is invalid" do
-        request.headers["Authorization"] = "Bearer invalid_jwt_token"
+        request.headers["x-flexile-auth"] = "Bearer invalid_jwt_token"
 
         get :protected_action, params: { token: api_token }
 
@@ -101,10 +99,10 @@ RSpec.describe Api::V1::ExampleController, type: :controller do
         expired_payload = {
           user_id: user.id,
           email: user.email,
-          exp: 1.hour.ago.to_i
+          exp: 1.hour.ago.to_i,
         }
         expired_jwt_token = JWT.encode(expired_payload, jwt_secret, "HS256")
-        request.headers["Authorization"] = "Bearer #{expired_jwt_token}"
+        request.headers["x-flexile-auth"] = "Bearer #{expired_jwt_token}"
 
         get :protected_action, params: { token: api_token }
 
@@ -118,10 +116,10 @@ RSpec.describe Api::V1::ExampleController, type: :controller do
         payload = {
           user_id: user.id,
           email: user.email,
-          exp: 1.month.from_now.to_i
+          exp: 1.month.from_now.to_i,
         }
         invalid_jwt_token = JWT.encode(payload, "wrong_secret", "HS256")
-        request.headers["Authorization"] = "Bearer #{invalid_jwt_token}"
+        request.headers["x-flexile-auth"] = "Bearer #{invalid_jwt_token}"
 
         get :protected_action, params: { token: api_token }
 
@@ -135,10 +133,10 @@ RSpec.describe Api::V1::ExampleController, type: :controller do
         non_existent_user_payload = {
           user_id: 999999,
           email: "nonexistent@example.com",
-          exp: 1.month.from_now.to_i
+          exp: 1.month.from_now.to_i,
         }
         jwt_token = JWT.encode(non_existent_user_payload, jwt_secret, "HS256")
-        request.headers["Authorization"] = "Bearer #{jwt_token}"
+        request.headers["x-flexile-auth"] = "Bearer #{jwt_token}"
 
         get :protected_action, params: { token: api_token }
 
@@ -149,19 +147,19 @@ RSpec.describe Api::V1::ExampleController, type: :controller do
       end
 
       it "raises NoMethodError when Authorization header is malformed (JWT auth skipped)" do
-        request.headers["Authorization"] = "InvalidFormat jwt_token"
+        request.headers["x-flexile-auth"] = "InvalidFormat jwt_token"
 
-        expect {
+        expect do
           get :protected_action, params: { token: api_token }
-        }.to raise_error(NoMethodError, /undefined method.*id.*for nil/)
+        end.to raise_error(NoMethodError, /undefined method.*id.*for nil/)
       end
 
       it "raises NoMethodError when Authorization header is empty (JWT auth skipped)" do
-        request.headers["Authorization"] = ""
+        request.headers["x-flexile-auth"] = ""
 
-        expect {
+        expect do
           get :protected_action, params: { token: api_token }
-        }.to raise_error(NoMethodError, /undefined method.*id.*for nil/)
+        end.to raise_error(NoMethodError, /undefined method.*id.*for nil/)
       end
     end
 
@@ -170,10 +168,10 @@ RSpec.describe Api::V1::ExampleController, type: :controller do
         payload = {
           user_id: user.id,
           email: user.email,
-          exp: 1.month.from_now.to_i
+          exp: 1.month.from_now.to_i,
         }
         jwt_token = JWT.encode(payload, jwt_secret, "HS256")
-        request.headers["Authorization"] = "Bearer #{jwt_token}"
+        request.headers["x-flexile-auth"] = "Bearer #{jwt_token}"
 
         get :protected_action, params: { token: api_token }
 
@@ -183,10 +181,10 @@ RSpec.describe Api::V1::ExampleController, type: :controller do
       it "rejects JWT token with missing user_id" do
         payload = {
           email: user.email,
-          exp: 1.month.from_now.to_i
+          exp: 1.month.from_now.to_i,
         }
         jwt_token = JWT.encode(payload, jwt_secret, "HS256")
-        request.headers["Authorization"] = "Bearer #{jwt_token}"
+        request.headers["x-flexile-auth"] = "Bearer #{jwt_token}"
 
         get :protected_action, params: { token: api_token }
 
@@ -196,10 +194,10 @@ RSpec.describe Api::V1::ExampleController, type: :controller do
       it "accepts JWT token with missing exp (JWT library default behavior)" do
         payload = {
           user_id: user.id,
-          email: user.email
+          email: user.email,
         }
         jwt_token = JWT.encode(payload, jwt_secret, "HS256")
-        request.headers["Authorization"] = "Bearer #{jwt_token}"
+        request.headers["x-flexile-auth"] = "Bearer #{jwt_token}"
 
         get :protected_action, params: { token: api_token }
 

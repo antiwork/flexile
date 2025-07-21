@@ -799,14 +799,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_09_211708) do
     t.index ["user_id"], name: "index_invoices_on_user_id"
   end
 
-  create_table "jwt_denylists", force: :cascade do |t|
-    t.string "jti"
-    t.datetime "exp"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["jti"], name: "index_jwt_denylists_on_jti"
-  end
-
   create_table "option_pools", force: :cascade do |t|
     t.bigint "company_id", null: false
     t.string "name", null: false
