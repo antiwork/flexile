@@ -175,6 +175,7 @@ export default function PeoplePage() {
       ) : (
         <Placeholder icon={Users}>Contractors will show up here.</Placeholder>
       )}
+      {company.id ? <InviteLinkModal open={showInviteLinkModal} onOpenChange={setShowInviteLinkModal} /> : null}
       <Dialog open={showInviteModal} onOpenChange={setShowInviteModal}>
         <DialogContent>
           <DialogHeader>

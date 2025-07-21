@@ -51,7 +51,11 @@ const InviteLinkModal = ({ open, onOpenChange }: InviteLinkModalProps) => {
     documentTemplateId: !contractSignedElsewhere ? (documentTemplateId ?? null) : null,
   };
 
-  const { data: invite, refetch } = trpc.companyInviteLinks.get.useQuery(queryParams, {
+  const {
+    data: invite,
+    refetch,
+    isLoading,
+  } = trpc.companyInviteLinks.get.useQuery(queryParams, {
     enabled: !!company.id,
   });
 
@@ -76,13 +80,23 @@ const InviteLinkModal = ({ open, onOpenChange }: InviteLinkModalProps) => {
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-2">
-            <Input
-              id="contractor-invite-link"
-              className="text-foreground text-sm"
-              readOnly
-              value={invite?.invite_link}
-              aria-label="Link"
-            />
+            {isLoading ? (
+              <div className="flex h-10 items-center justify-center">
+                <span className="text-muted-foreground animate-pulse">Generating link…</span>
+              </div>
+            ) : invite?.invite_link ? (
+              <Input
+                id="contractor-invite-link"
+                className="text-foreground text-sm"
+                readOnly
+                value={invite.invite_link}
+                aria-label="Link"
+              />
+            ) : (
+              <div className="text-destructive flex h-10 items-center justify-center text-sm">
+                Could not generate invite link
+              </div>
+            )}
             <Form {...form}>
               <FormField
                 control={form.control}
@@ -115,10 +129,15 @@ const InviteLinkModal = ({ open, onOpenChange }: InviteLinkModalProps) => {
               onClick={() => {
                 setShowResetLinkModal(true);
               }}
+              disabled={isLoading || !invite?.invite_link}
             >
               Reset link
             </Button>
-            <CopyButton aria-label="Copy" copyText={invite?.invite_link || ""}>
+            <CopyButton
+              aria-label="Copy"
+              copyText={invite?.invite_link || ""}
+              disabled={isLoading || !invite?.invite_link}
+            >
               <Copy className="size-4" />
               <span>Copy</span>
             </CopyButton>

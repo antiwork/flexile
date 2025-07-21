@@ -51,10 +51,23 @@ export const companyInviteLinksRouter = createRouter({
       headers: { ...ctx.headers },
     });
     if (!response.ok) {
-      throw new TRPCError({ code: "BAD_REQUEST", message: "Failed to get invite link" });
+      let errorMessage = "Failed to get invite link";
+      try {
+        const errorJson: unknown = await response.json();
+        const parsed = z.object({ error: z.string().optional() }).safeParse(errorJson);
+        if (parsed.success && parsed.data.error) {
+          errorMessage = parsed.data.error;
+        }
+      } catch {
+        // ignore, use default error message
+      }
+      throw new TRPCError({ code: "BAD_REQUEST", message: errorMessage });
     }
-    const data = z.object({ invite_link: z.string(), success: z.boolean() }).parse(await response.json());
-    return { invite_link: `${ctx.host}/invite/${data.invite_link}` };
+    const data = z.object({ invite_link: z.string(), success: z.boolean() }).safeParse(await response.json());
+    if (!data.success || !data.data.invite_link) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Failed to generate invite link" });
+    }
+    return { invite_link: `${ctx.host}/invite/${data.data.invite_link}` };
   }),
 
   reset: companyProcedure
