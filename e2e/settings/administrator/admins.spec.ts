@@ -62,35 +62,34 @@ test.describe("Admin Revoke Management", () => {
       await page.goto("/settings/administrator/admins");
 
       // Check page title and description
-      await expect(page.getByRole("heading", { name: "Workspace Administrators" })).toBeVisible();
-      await expect(page.getByText("View and revoke administrator access for your workspace.")).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Workspace admins" })).toBeVisible();
+      await expect(page.getByText("Manage access for users with admin roles in your workspace.")).toBeVisible();
 
       // Check table headers
       await expect(page.getByRole("columnheader", { name: "Name" })).toBeVisible();
       await expect(page.getByRole("columnheader", { name: "Role" })).toBeVisible();
-      await expect(page.getByRole("columnheader", { name: "Actions" })).toBeVisible();
 
       // Check that primary admin is first and marked as Owner
       const firstRow = page.getByRole("row").nth(1); // Skip header row
-      await expect(firstRow.getByText(primaryAdmin.legalName!)).toBeVisible();
+      await expect(firstRow.getByText(primaryAdmin.legalName || "")).toBeVisible();
       await expect(firstRow.getByText("Owner")).toBeVisible();
       await expect(firstRow.getByText("(You)")).toBeVisible();
 
       // Check that second admin shows as Admin
-      await expect(page.getByText(secondAdmin.legalName!)).toBeVisible();
+      await expect(page.getByText(secondAdmin.legalName || "")).toBeVisible();
       await expect(page.getByText("Admin").nth(1)).toBeVisible(); // nth(1) because Owner might also contain "Admin"
 
       // Check that multi-role user shows as Admin
-      await expect(page.getByText(multiRoleUser.legalName!)).toBeVisible();
-      const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName!) });
+      await expect(page.getByText(multiRoleUser.legalName || "")).toBeVisible();
+      const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
       await expect(multiRoleRow.getByText("Admin")).toBeVisible();
 
       // Verify non-admin users are NOT displayed
-      await expect(page.getByText(contractorUser.legalName!)).not.toBeVisible();
+      await expect(page.getByText(contractorUser.legalName || "")).not.toBeVisible();
       await expect(page.getByText("Senior Developer")).not.toBeVisible();
-      await expect(page.getByText(investorUser.legalName!)).not.toBeVisible();
+      await expect(page.getByText(investorUser.legalName || "")).not.toBeVisible();
       await expect(page.getByText("Investor")).not.toBeVisible();
-      await expect(page.getByText(lawyerUser.legalName!)).not.toBeVisible();
+      await expect(page.getByText(lawyerUser.legalName || "")).not.toBeVisible();
       await expect(page.getByText("Lawyer")).not.toBeVisible();
     });
 
@@ -137,15 +136,21 @@ test.describe("Admin Revoke Management", () => {
       await login(page, primaryAdmin);
       await page.goto("/settings/administrator/admins");
 
-      // Find second admin row and revoke button
-      const secondAdminRow = page.getByRole("row", { name: new RegExp(secondAdmin.legalName!) });
-      const revokeButton = secondAdminRow.getByRole("button", { name: /Revoke.*admin/i });
+      // Find second admin row and click ellipsis menu
+      const secondAdminRow = page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "", "u") });
+      const ellipsisButton = secondAdminRow.getByRole("button", { name: "Open menu" });
+      await ellipsisButton.click();
 
-      // Click revoke button
-      await revokeButton.click();
+      // Click "Remove admin" in dropdown
+      await page.getByRole("menuitem", { name: "Remove admin" }).click();
+
+      // Confirm in modal
+      await expect(page.getByRole("dialog")).toBeVisible();
+      await expect(page.getByText("Remove admin access?")).toBeVisible();
+      await page.getByRole("button", { name: "Remove admin" }).click();
 
       // Wait for row to be removed (optimistic update)
-      await expect(page.getByText(secondAdmin.legalName!)).not.toBeVisible();
+      await expect(page.getByText(secondAdmin.legalName || "")).not.toBeVisible();
 
       // Verify in database
       const adminRecord = await db.query.companyAdministrators.findFirst({
@@ -158,50 +163,61 @@ test.describe("Admin Revoke Management", () => {
       await login(page, primaryAdmin);
       await page.goto("/settings/administrator/admins");
 
+      // Owner role should not have any action button
+      const ownRow = page.getByRole("row", { name: new RegExp(primaryAdmin.legalName || "", "u") });
+      await expect(ownRow.getByRole("button", { name: "Open menu" })).not.toBeVisible();
+    });
+
+    test("disables action for non-owner current user", async ({ page }) => {
+      await login(page, secondAdmin);
+      await page.goto("/settings/administrator/admins");
+
       // Find own row (marked with "You")
-      const ownRow = page.getByRole("row", { name: new RegExp(primaryAdmin.legalName!) });
-      const revokeButton = ownRow.getByRole("button", { name: /Revoke.*admin/i });
+      const ownRow = page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "", "u") });
+      const ellipsisButton = ownRow.getByRole("button", { name: "Open menu" });
 
       // Button should be disabled for own row
-      await expect(revokeButton).toBeDisabled();
+      await expect(ellipsisButton).toBeDisabled();
     });
 
     test("prevents removing last administrator", async ({ page }) => {
-      // Remove all admins except primary admin
-      await db
-        .delete(companyAdministrators)
-        .where(and(eq(companyAdministrators.companyId, company.id), eq(companyAdministrators.userId, secondAdmin.id)));
+      // Remove all admins except primary admin and second admin
       await db
         .delete(companyAdministrators)
         .where(
           and(eq(companyAdministrators.companyId, company.id), eq(companyAdministrators.userId, multiRoleUser.id)),
         );
 
-      await login(page, primaryAdmin);
+      await login(page, secondAdmin);
       await page.goto("/settings/administrator/admins");
 
-      // Primary admin button should be disabled when they're the only admin
-      const ownRow = page.getByRole("row", { name: new RegExp(primaryAdmin.legalName!) });
-      const revokeButton = ownRow.getByRole("button", { name: /Revoke.*admin/i });
+      // Primary admin (owner) should not have action button
+      const ownerRow = page.getByRole("row", { name: new RegExp(primaryAdmin.legalName || "", "u") });
+      await expect(ownerRow.getByRole("button", { name: "Open menu" })).not.toBeVisible();
 
-      await expect(revokeButton).toBeDisabled();
+      // Second admin should have disabled button when they would be removing the last non-owner admin
+      const secondAdminRow = page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "", "u") });
+      const ellipsisButton = secondAdminRow.getByRole("button", { name: "Open menu" });
+      await expect(ellipsisButton).toBeDisabled();
     });
 
     test("shows button state during revoke", async ({ page }) => {
       await login(page, primaryAdmin);
       await page.goto("/settings/administrator/admins");
 
-      const secondAdminRow = page.getByRole("row", { name: new RegExp(secondAdmin.legalName!) });
-      const revokeButton = secondAdminRow.getByRole("button", { name: /Revoke.*admin/i });
+      const secondAdminRow = page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "", "u") });
+      const ellipsisButton = secondAdminRow.getByRole("button", { name: "Open menu" });
 
       // Button should be enabled initially
-      await expect(revokeButton).toBeEnabled();
+      await expect(ellipsisButton).toBeEnabled();
 
-      // Click and verify the admin is removed
-      await revokeButton.click();
+      // Click menu and remove admin
+      await ellipsisButton.click();
+      await page.getByRole("menuitem", { name: "Remove admin" }).click();
+      await page.getByRole("button", { name: "Remove admin" }).click();
 
       // Row should be removed from the list
-      await expect(page.getByText(secondAdmin.legalName!)).not.toBeVisible();
+      await expect(page.getByText(secondAdmin.legalName || "")).not.toBeVisible();
     });
   });
 
@@ -218,8 +234,8 @@ test.describe("Admin Revoke Management", () => {
       await page.goto("/settings/administrator/admins");
 
       // Should be able to access the page
-      await expect(page.getByRole("heading", { name: "Workspace Administrators" })).toBeVisible();
-      await expect(page.getByText("View and revoke administrator access for your workspace.")).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Workspace admins" })).toBeVisible();
+      await expect(page.getByText("Manage access for users with admin roles in your workspace.")).toBeVisible();
     });
   });
 
@@ -229,7 +245,7 @@ test.describe("Admin Revoke Management", () => {
       await page.goto("/settings/administrator/admins");
 
       // Multi-role user should show "Admin" role
-      const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName!) });
+      const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
       await expect(multiRoleRow.getByText("Admin")).toBeVisible();
     });
 
@@ -238,15 +254,17 @@ test.describe("Admin Revoke Management", () => {
       await page.goto("/settings/administrator/admins");
 
       // Multi-role user currently shows as Admin
-      const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName!) });
+      const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
       await expect(multiRoleRow.getByText("Admin")).toBeVisible();
 
       // Revoke admin role
-      const revokeButton = multiRoleRow.getByRole("button", { name: /Revoke.*admin/i });
-      await revokeButton.click();
+      const ellipsisButton = multiRoleRow.getByRole("button", { name: "Open menu" });
+      await ellipsisButton.click();
+      await page.getByRole("menuitem", { name: "Remove admin" }).click();
+      await page.getByRole("button", { name: "Remove admin" }).click();
 
       // User should be removed from the admin list entirely
-      await expect(page.getByText(multiRoleUser.legalName!)).not.toBeVisible();
+      await expect(page.getByText(multiRoleUser.legalName || "")).not.toBeVisible();
     });
   });
 });
