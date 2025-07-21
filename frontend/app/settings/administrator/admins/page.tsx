@@ -1,5 +1,6 @@
 "use client";
 
+import { MoreHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import TableSkeleton from "@/components/TableSkeleton";
@@ -20,7 +21,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
-import { MoreHorizontal } from "lucide-react";
 
 export default function AdminsPage() {
   const company = useCurrentCompany();
@@ -81,6 +81,12 @@ export default function AdminsPage() {
         header: "",
         cell: (info) => {
           const user = info.row.original;
+
+          // Don't show any action button for owners
+          if (user.role === "Owner") {
+            return null;
+          }
+
           const isCurrentUserRow = currentUser.email === user.email;
           const isLoadingRevoke = revokeAdminMutation.isPending && revokeAdminMutation.variables?.userId === user.id;
           const adminCount = users.filter((u) => u.isAdmin).length;
@@ -102,7 +108,7 @@ export default function AdminsPage() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
+                    className="focus:text-destructive hover:text-destructive"
                     onClick={() => setConfirmRevokeUser(user)}
                   >
                     Remove admin
