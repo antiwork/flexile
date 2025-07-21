@@ -6,14 +6,7 @@ import { pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
 import { DocumentTemplateType, DocumentType, PayRateType } from "@/db/enums";
-import {
-  companyContractors,
-  documents,
-  documentSignatures,
-  documentTemplates,
-  equityAllocations,
-  users,
-} from "@/db/schema";
+import { companyContractors, documents, documentSignatures, documentTemplates, users } from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 import { createSubmission } from "@/trpc/routes/documents/templates";
 import { assertDefined } from "@/utils/assert";
@@ -70,15 +63,11 @@ export const contractorsRouter = createRouter({
         eq(companyContractors.companyId, ctx.company.id),
         eq(companyContractors.userId, byExternalId(users, input.userId)),
       ),
-      with: {
-        equityAllocations: { where: eq(equityAllocations.year, new Date().getFullYear()) },
-      },
     });
     if (!contractor) throw new TRPCError({ code: "NOT_FOUND" });
     return {
-      ...pick(contractor, ["payRateInSubunits", "endedAt", "role", "payRateType"]),
+      ...pick(contractor, ["payRateInSubunits", "endedAt", "role", "payRateType", "equityPercentage"]),
       id: contractor.externalId,
-      equityPercentage: contractor.equityAllocations[0]?.equityPercentage ?? 0,
     };
   }),
   create: companyProcedure
