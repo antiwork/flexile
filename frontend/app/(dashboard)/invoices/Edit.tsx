@@ -509,23 +509,21 @@ const Edit = () => {
                   <span className="numeric text-xl">{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
                 </div>
               ) : null}
-                <>
-                  <div className="flex flex-col items-end">
-                    <span>
-                      <Link href="/settings/payouts" className={linkClasses}>
-                        Swapped for equity (not paid in cash)
-                      </Link>
-                    </span>
-                    <span className="numeric text-xl">{formatMoneyFromCents(equityCalculation.equityCents)}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex flex-col items-end">
-                    <span>Net amount in cash</span>
-                    <span className="numeric text-3xl">
-                      {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.equityCents)}
-                    </span>
-                  </div>
-                </>
+              <div className="flex flex-col items-end">
+                <span>
+                  <Link href="/settings/payouts" className={linkClasses}>
+                    Swapped for equity (not paid in cash)
+                  </Link>
+                </span>
+                <span className="numeric text-xl">{formatMoneyFromCents(equityCalculation.equityCents)}</span>
+              </div>
+              <Separator />
+              <div className="flex flex-col items-end">
+                <span>Net amount in cash</span>
+                <span className="numeric text-3xl">
+                  {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.equityCents)}
+                </span>
+              </div>
             </div>
           </footer>
         </div>
