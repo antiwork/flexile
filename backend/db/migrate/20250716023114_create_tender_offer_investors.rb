@@ -8,6 +8,8 @@ class CreateTenderOfferInvestors < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
+    change_column_default :tender_offer_investors, :created_at, from: nil, to: -> { "CURRENT_TIMESTAMP" }
+
     add_index :tender_offer_investors, :external_id, unique: true
     add_index :tender_offer_investors, [:tender_offer_id, :company_investor_id], unique: true, name: "idx_tender_offer_investors_unique"
   end

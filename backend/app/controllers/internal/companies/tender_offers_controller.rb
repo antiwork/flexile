@@ -91,26 +91,24 @@ class Internal::Companies::TenderOffersController < Internal::Companies::BaseCon
     else
       render json: { success: false, error_message: result[:error_message] }, status: :unprocessable_entity
     end
-  rescue StandardError => e
-    render json: { success: false, error_message: e.message }, status: :unprocessable_entity
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { success: false, error_message: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
   end
 
   def finalize
     authorize @buyback
 
-    result = TenderOffers::FinalizeBuyback.new(tender_offer: @buyback).perform
-
-    if result[:success]
-      render json: {
-        success: true,
-        buyback: TenderOfferPresenter.new(@buyback.reload).props(user: Current.user, company: Current.company),
-      }
-    else
-      render json: {
+    unless @buyback.accepted_price_cents
+      return render json: {
         success: false,
-        error_message: result[:error_message],
+        error_message: "No equilibrium price could be calculated. Please check if there are any bids or if the tender offer constraints are valid.",
       }, status: :unprocessable_entity
     end
+
+    TenderOffers::FinalizeBuyback.new(tender_offer: @buyback).perform
+
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { success: false, error_message: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
   end
 
   private

@@ -1289,7 +1289,7 @@ export const tenderOffers = pgTable(
       .$onUpdate(() => new Date()),
     acceptedPriceCents: integer("accepted_price_cents"),
     impliedValuation: bigint("implied_valuation", { mode: "bigint" }),
-    buybackType: tenderOfferType().notNull().default("tender_offer"),
+    buybackType: tenderOfferType("buyback_type").notNull().default("tender_offer"),
   },
   (table) => [
     index("index_tender_offers_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),

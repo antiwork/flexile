@@ -7,10 +7,6 @@ class TenderOffers::FinalizeBuyback
 
   def perform
     ApplicationRecord.transaction do
-      unless tender_offer.accepted_price_cents
-        raise "No equilibrium price could be calculated. Please check if there are any bids or if the tender offer constraints are valid."
-      end
-
       TenderOffers::GenerateEquityBuybacks.new(tender_offer: tender_offer).perform
 
       tender_offer.update!(implied_valuation: (tender_offer.accepted_price_cents / 100) * tender_offer.company.fully_diluted_shares)
@@ -23,10 +19,6 @@ class TenderOffers::FinalizeBuyback
     end
 
     send_investor_notifications
-
-    { success: true }
-  rescue => e
-    { success: false, error_message: e.message }
   end
 
   private

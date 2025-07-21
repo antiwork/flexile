@@ -936,7 +936,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_17_120834) do
     t.string "external_id", null: false
     t.bigint "tender_offer_id", null: false
     t.bigint "company_investor_id", null: false
-    t.datetime "created_at", null: false
+    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.index ["company_investor_id"], name: "index_tender_offer_investors_on_company_investor_id"
     t.index ["external_id"], name: "index_tender_offer_investors_on_external_id", unique: true
@@ -957,7 +957,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_17_120834) do
     t.datetime "updated_at", null: false
     t.integer "accepted_price_cents"
     t.string "name"
-    t.integer "implied_valuation"
+    t.bigint "implied_valuation"
     t.enum "buyback_type", default: "tender_offer", null: false, enum_type: "tender_offer_buyback_type"
     t.index ["company_id"], name: "index_tender_offers_on_company_id"
     t.index ["external_id"], name: "index_tender_offers_on_external_id", unique: true

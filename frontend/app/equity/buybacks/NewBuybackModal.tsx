@@ -590,6 +590,7 @@ const BuybackFormSection = ({ onNext, onSelectType, mutation }: BuybackFormSecti
                         <label className="cursor-pointer text-blue-600 hover:text-blue-500">
                           <span>click to browse</span>
                           <input
+                            name="attachment"
                             type="file"
                             accept=".zip,application/zip"
                             onChange={handleFileChange}
