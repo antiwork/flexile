@@ -11,7 +11,6 @@ import {
   optionPools,
   shareClasses,
   shareHoldings,
-  users,
 } from "@/db/schema";
 import type { CapTableInvestor, CapTableInvestorForAdmin } from "@/models/investor";
 import { companyProcedure, createRouter } from "@/trpc";

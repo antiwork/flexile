@@ -1288,7 +1288,7 @@ export const tenderOffers = pgTable(
       .notNull()
       .$onUpdate(() => new Date()),
     acceptedPriceCents: integer("accepted_price_cents"),
-    startingPricePerShareCents: integer("starting_price_per_share_cents"),
+    impliedValuation: bigint("implied_valuation", { mode: "bigint" }),
     buybackType: tenderOfferType().notNull().default("tender_offer"),
   },
   (table) => [

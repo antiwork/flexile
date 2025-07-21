@@ -16,7 +16,13 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import React, { useMemo, useState } from "react";
 import { z } from "zod";
-import { type Buyback, type BuybackBid, buybackBidSchema, buybackSchema } from "@/app/equity/buybacks";
+import {
+  type Buyback,
+  type BuybackBid,
+  buybackBidSchema,
+  buybackSchema,
+  getBuybackStatus,
+} from "@/app/equity/buybacks";
 import CancelBidModal from "@/app/equity/buybacks/CancelBidModal";
 import FinalizeBuybackModal from "@/app/equity/buybacks/FinalizeBuybackModal";
 import PlaceBidModal from "@/app/equity/buybacks/PlaceBidModal";
@@ -82,12 +88,12 @@ const BuybackActions = ({ buyback, user, bids, onSetActiveModal, table }: Buybac
           Download CSV
         </Button>
       ) : null}
-      {user.roles.administrator && buyback.accepted_price_cents && !buyback.equity_buyback_round_count ? (
+      {user.roles.administrator && getBuybackStatus(buyback) === "Reviewing" ? (
         <Button size="small" onClick={() => onSetActiveModal("finalize")}>
           Finalize buyback
         </Button>
       ) : null}
-      {buyback.open && !buyback.equity_buyback_round_count ? (
+      {getBuybackStatus(buyback) === "Open" ? (
         <Button size="small" onClick={() => onSetActiveModal("place")}>
           Place bid
         </Button>
@@ -160,30 +166,31 @@ export default function BuybackView() {
               id: "investor",
               header: "Investor",
               cell: (info) => info.getValue(),
-              footer: buyback.accepted_price_cents ? "Total payout" : "",
+              footer: getBuybackStatus(buyback) !== "Open" ? "Total payout" : "",
             })
           : null,
         columnHelper.simple("share_class", "Share class"),
         columnHelper.simple("number_of_shares", "Shares", (value) => value.toLocaleString()),
-        user.roles.administrator || buyback.accepted_price_cents
+        user.roles.administrator || getBuybackStatus(buyback) !== "Open"
           ? columnHelper.accessor("accepted_shares", {
               id: "accepted_shares",
               header: "Accepted",
               cell: (info) => Number(info.getValue() || 0).toLocaleString(),
-              footer: buyback.accepted_price_cents
-                ? bids.reduce((sum, bid) => sum + Number(bid.accepted_shares), 0).toLocaleString()
-                : "",
+              footer:
+                getBuybackStatus(buyback) !== "Open"
+                  ? bids.reduce((sum, bid) => sum + Number(bid.accepted_shares), 0).toLocaleString()
+                  : "",
             })
           : null,
-        user.roles.administrator || buyback.accepted_price_cents
+        user.roles.administrator || getBuybackStatus(buyback) !== "Open"
           ? columnHelper.display({
               id: "clearing_price",
               header: "Clearing Price",
               cell: (info) =>
-                info.row.original.accepted_shares && buyback.accepted_price_cents
+                info.row.original.accepted_shares && getBuybackStatus(buyback) !== "Open"
                   ? formatMoneyFromCents(buyback.accepted_price_cents)
                   : "—",
-              footer: buyback.accepted_price_cents ? formatMoneyFromCents(buyback.accepted_price_cents) : "",
+              footer: getBuybackStatus(buyback) !== "Open" ? formatMoneyFromCents(buyback.accepted_price_cents) : "",
             })
           : null,
         columnHelper.simple("share_price_cents", "Bid price", formatMoneyFromCents),
@@ -191,21 +198,22 @@ export default function BuybackView() {
           id: "total",
           header: "Total",
           cell: (info) =>
-            buyback.accepted_price_cents
+            getBuybackStatus(buyback) !== "Open"
               ? info.row.original.accepted_shares
                 ? formatMoneyFromCents(Number(info.row.original.accepted_shares) * buyback.accepted_price_cents)
                 : "—"
               : formatMoneyFromCents(Number(info.row.original.number_of_shares) * info.row.original.share_price_cents),
-          footer: buyback.accepted_price_cents
-            ? formatMoneyFromCents(
-                bids.reduce(
-                  (sum, bid) => sum + Number(bid.accepted_shares || 0) * (buyback.accepted_price_cents || 0),
-                  0,
-                ),
-              )
-            : "",
+          footer:
+            getBuybackStatus(buyback) !== "Open"
+              ? formatMoneyFromCents(
+                  bids.reduce(
+                    (sum, bid) => sum + Number(bid.accepted_shares || 0) * (buyback.accepted_price_cents || 0),
+                    0,
+                  ),
+                )
+              : "",
         }),
-        buyback.accepted_price_cents
+        getBuybackStatus(buyback) !== "Open"
           ? columnHelper.accessor(
               (row) =>
                 Number(row.accepted_shares) === Number(row.number_of_shares)
@@ -242,7 +250,7 @@ export default function BuybackView() {
               },
             )
           : null,
-        buyback.open
+        getBuybackStatus(buyback) === "Open"
           ? columnHelper.display({
               id: "actions",
               cell: (info) =>
@@ -258,7 +266,7 @@ export default function BuybackView() {
             })
           : null,
       ].filter((column) => !!column),
-    [user.roles.administrator, user.roles.investor?.id, buyback.open, buyback.accepted_price_cents, bids],
+    [user.roles.administrator, user.roles.investor?.id, buyback, bids],
   );
 
   const bidsTable = useTable({
@@ -273,12 +281,12 @@ export default function BuybackView() {
       pageTitle={
         <div className="gap-2">
           {buyback.name}
-          {buyback.equity_buyback_round_count && buyback.equity_buyback_payments_count ? (
+          {getBuybackStatus(buyback) === "Settled" ? (
             <Badge variant="outline" className="border-muted text-muted-foreground ml-4 rounded-full">
               Closed and Settled
             </Badge>
           ) : null}
-          {buyback.equity_buyback_round_count && !buyback.equity_buyback_payments_count ? (
+          {getBuybackStatus(buyback) === "Closed" ? (
             <Badge variant="outline" className="border-muted text-muted-foreground ml-4 rounded-full">
               Closed
             </Badge>
@@ -311,7 +319,7 @@ export default function BuybackView() {
           </AlertDescription>
         </Alert>
       ) : null}
-      {!user.roles.administrator && buyback.accepted_price_cents && !buyback.equity_buyback_round_count ? (
+      {!user.roles.administrator && getBuybackStatus(buyback) === "Reviewing" ? (
         <Alert>
           <InfoIcon />
           <AlertDescription>
@@ -321,7 +329,7 @@ export default function BuybackView() {
         </Alert>
       ) : null}
 
-      {user.roles.administrator && buyback.accepted_price_cents && !buyback.equity_buyback_round_count ? (
+      {user.roles.administrator && buyback.accepted_price_cents && getBuybackStatus(buyback) === "Reviewing" ? (
         <Alert>
           <InfoIcon />
           <AlertDescription>
@@ -332,10 +340,7 @@ export default function BuybackView() {
         </Alert>
       ) : null}
 
-      {user.roles.administrator &&
-      buyback.accepted_price_cents &&
-      buyback.equity_buyback_round_count &&
-      !buyback.equity_buyback_payments_count ? (
+      {user.roles.administrator && getBuybackStatus(buyback) === "Closed" ? (
         <Alert variant="success">
           <CircleCheckIcon />
           <AlertDescription>
@@ -344,7 +349,7 @@ export default function BuybackView() {
         </Alert>
       ) : null}
 
-      {!user.roles.administrator && buyback.accepted_price_cents && buyback.equity_buyback_round_count ? (
+      {!user.roles.administrator && buyback.accepted_price_cents && getBuybackStatus(buyback) === "Settled" ? (
         <Alert>
           <InfoIcon />
           <AlertDescription>

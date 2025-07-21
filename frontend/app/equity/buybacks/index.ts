@@ -1,3 +1,5 @@
+import { utc } from "@date-fns/utc";
+import { isFuture } from "date-fns";
 import { z } from "zod";
 
 // TODO replace this with a better representation, at least in the DB
@@ -16,7 +18,7 @@ export const buybackSchema = z.object({
   bid_count: z.number().nullable(),
   investor_count: z.number().nullable(),
   equity_buyback_round_count: z.number().nullable(),
-  equity_buyback_payments_count: z.number().nullable().optional(),
+  equity_buyback_payment_count: z.number().nullable().optional(),
   open: z.boolean(),
   attachment: z
     .object({
@@ -30,17 +32,22 @@ export const buybackSchema = z.object({
       filename: z.string(),
     })
     .nullable(),
-  starting_price_per_share_cents: z.number().optional().nullable(),
   total_amount_in_cents: z.number().optional().nullable(),
 });
 
 export type Buyback = z.infer<typeof buybackSchema>;
 
 export const createBuybackSchema = buybackSchema
-  .pick({ buyback_type: true, name: true, starts_at: true, ends_at: true, minimum_valuation: true })
+  .pick({
+    buyback_type: true,
+    name: true,
+    starts_at: true,
+    ends_at: true,
+    minimum_valuation: true,
+    accepted_price_cents: true,
+  })
   .extend({
     total_amount_in_cents: z.number(),
-    starting_price_per_share_cents: z.number(),
     letter_of_transmittal: z.object({
       type: z.enum(["link", "text"]),
       data: z.string(),
@@ -69,3 +76,10 @@ export const placeBuybackBidSchema = buybackBidSchema.pick({
 });
 
 export type BuybackBid = z.infer<typeof buybackBidSchema>;
+
+export const getBuybackStatus = (buyback: Buyback) => {
+  if (buyback.equity_buyback_payment_count) return "Settled";
+  if (buyback.equity_buyback_round_count) return "Closed";
+  if (isFuture(utc(buyback.ends_at)) || buyback.open) return "Open";
+  return "Reviewing";
+};

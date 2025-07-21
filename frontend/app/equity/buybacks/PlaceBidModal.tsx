@@ -148,24 +148,22 @@ const ConfirmationSection = ({ onNext, buyback }: ConfirmationSectionProps) => {
           </div>
         ) : null}
 
-        {buyback.starting_price_per_share_cents && buyback.buyback_type === "tender_offer" ? (
+        {buyback.buyback_type === "tender_offer" && company.fullyDilutedShares ? (
           <div className="flex justify-between border-b border-gray-200 py-4">
             <span className="font-medium">Starting price per share</span>
-            <span>{formatMoneyFromCents(buyback.starting_price_per_share_cents)}</span>
+            <span>{formatMoneyFromCents(buyback.minimum_valuation / company.fullyDilutedShares)}</span>
           </div>
         ) : null}
 
-        {buyback.starting_price_per_share_cents &&
-        buyback.total_amount_in_cents &&
-        buyback.buyback_type === "single_stock" ? (
+        {buyback.accepted_price_cents && buyback.total_amount_in_cents && buyback.buyback_type === "single_stock" ? (
           <>
             <div className="flex justify-between border-b border-gray-200 py-4">
               <span className="font-medium">Price per share</span>
-              <span>{formatMoneyFromCents(buyback.starting_price_per_share_cents)}</span>
+              <span>{formatMoneyFromCents(buyback.accepted_price_cents)}</span>
             </div>
             <div className="flex justify-between border-b border-gray-200 py-4">
               <span className="font-medium">Allocation limit</span>
-              <span>{buyback.total_amount_in_cents / buyback.starting_price_per_share_cents}</span>
+              <span>{buyback.total_amount_in_cents / buyback.accepted_price_cents}</span>
             </div>
             <div className="flex justify-between border-b border-gray-200 py-4">
               <span className="font-medium">Maximum payout</span>
@@ -321,10 +319,10 @@ const SubmitBidSection = ({ onBack, mutation, buyback }: SubmitBidSectionProps) 
   });
 
   useEffect(() => {
-    if (buyback.buyback_type === "single_stock" && buyback.starting_price_per_share_cents) {
-      form.setValue("share_price", buyback.starting_price_per_share_cents / 100);
+    if (buyback.buyback_type === "single_stock" && buyback.accepted_price_cents) {
+      form.setValue("share_price", buyback.accepted_price_cents / 100);
     }
-  }, [buyback.buyback_type, buyback.starting_price_per_share_cents]);
+  }, [buyback.buyback_type, buyback.accepted_price_cents]);
 
   const numberOfShares = form.watch("number_of_shares");
   const pricePerShare = form.watch("share_price");
@@ -333,17 +331,17 @@ const SubmitBidSection = ({ onBack, mutation, buyback }: SubmitBidSectionProps) 
 
   const handleSubmit = form.handleSubmit((values) => {
     const allocationLimit =
-      buyback.buyback_type === "single_stock" && buyback.total_amount_in_cents && buyback.starting_price_per_share_cents
-        ? Math.min(buyback.total_amount_in_cents / buyback.starting_price_per_share_cents, maxShares)
+      buyback.buyback_type === "single_stock" && buyback.total_amount_in_cents && buyback.accepted_price_cents
+        ? Math.min(buyback.total_amount_in_cents / buyback.accepted_price_cents, maxShares)
         : maxShares;
     if (values.number_of_shares > allocationLimit) {
       return form.setError("number_of_shares", {
         message: `Number of shares must be between 1 and ${allocationLimit.toLocaleString()}`,
       });
     }
-    if (buyback.starting_price_per_share_cents && values.share_price < buyback.starting_price_per_share_cents / 100) {
+    if (buyback.minimum_valuation && company.fullyDilutedShares && impliedValuation < buyback.minimum_valuation) {
       return form.setError("share_price", {
-        message: `Price per share must be at least ${formatMoneyFromCents(buyback.starting_price_per_share_cents)}`,
+        message: `Price per share must be at least ${formatMoneyFromCents(buyback.minimum_valuation / company.fullyDilutedShares)}`,
       });
     }
     mutation.mutate(values);

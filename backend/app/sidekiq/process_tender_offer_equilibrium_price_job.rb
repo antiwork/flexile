@@ -6,8 +6,8 @@ class ProcessTenderOfferEquilibriumPriceJob
 
   def perform
     tender_offers = TenderOffer
-      .where("ends_at < ?", Time.current)
-      .where(accepted_price_cents: nil)
+      .where("ends_at < ? AND ? < ends_at + INTERVAL '3 days'", Time.current, Time.current)
+      .where.not(id: TenderOfferBid.select(:tender_offer_id).where("accepted_shares > 0"))
 
     Rails.logger.info "Processing #{tender_offers.count} ended tender offer(s) for equilibrium price calculation"
 

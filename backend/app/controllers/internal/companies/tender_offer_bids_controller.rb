@@ -56,7 +56,7 @@ class Internal::Companies::TenderOfferBidsController < Internal::Companies::Base
       permitted_params = params.permit(:number_of_shares, :share_price_cents, :share_class)
 
       if @buyback.buyback_type == "single_stock" && permitted_params[:share_price_cents].blank?
-        permitted_params[:share_price_cents] = @buyback.starting_price_per_share_cents
+        permitted_params[:share_price_cents] = @buyback.accepted_price_cents
       end
 
       permitted_params

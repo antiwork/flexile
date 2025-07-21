@@ -14,17 +14,16 @@ class TenderOfferPresenter
       ends_at: buyback.ends_at,
       minimum_valuation: buyback.minimum_valuation,
       total_amount_in_cents: buyback.total_amount_in_cents,
-      # implied_valuation: implied_valuation,
+      implied_valuation: buyback.implied_valuation,
       accepted_price_cents: buyback.accepted_price_cents,
       open: buyback.open?,
       attachment: attachment_data,
       letter_of_transmittal: letter_of_transmittal_data,
-      starting_price_per_share_cents: buyback.starting_price_per_share_cents,
       bid_count: bid_count(user: user, company: company),
       investor_count: investor_count(user: user, company: company),
       participation: participation(user: user, company: company),
       equity_buyback_round_count: equity_buyback_round_count(),
-      equity_buyback_payments_count: equity_buyback_payments_count(),
+      equity_buyback_payment_count: equity_buyback_payment_count(),
     }
   end
 
@@ -51,7 +50,7 @@ class TenderOfferPresenter
       buyback.equity_buyback_rounds.count
     end
 
-    def equity_buyback_payments_count
+    def equity_buyback_payment_count
       buyback.equity_buyback_payments.count
     end
 

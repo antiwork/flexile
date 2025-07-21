@@ -81,7 +81,7 @@ const buybackFormSchema = z
     start_date: z.instanceof(CalendarDate, { message: "Start date is required" }),
     end_date: z.instanceof(CalendarDate, { message: "End date is required" }),
     minimum_valuation: z.number().min(0, "Starting valuation must be positive").optional(),
-    starting_price: z.number().min(0, "Starting price must be positive"),
+    accepted_price: z.number().min(0, "Share price must be positive").optional(),
     total_amount: z.number().min(0, "Target buyback value must be positive"),
     attachment: z.instanceof(File, { message: "Buyback documents are required" }),
   })
@@ -100,7 +100,14 @@ const buybackFormSchema = z
         path: ["investor_id"],
       });
     }
-    if (data.buyback_type === "tender_offer" && (data.minimum_valuation === undefined || data.minimum_valuation <= 0)) {
+    if (data.buyback_type === "single_stock" && (!data.accepted_price || data.accepted_price <= 0)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Share price is required for single stock repurchase",
+        path: ["accepted_price"],
+      });
+    }
+    if (data.buyback_type === "tender_offer" && (!data.minimum_valuation || data.minimum_valuation <= 0)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Starting valuation is required for tender offers",
@@ -226,16 +233,13 @@ const NewBuybackModal = ({ onClose }: NewBuybackModalProps) => {
       setInvestorsData([]);
       onClose();
     },
-    onError: (error) => {
-      // TODO: Add proper error handling/toast notification
-    },
   });
 
   const handleBuybackFormNext = ({
     start_date,
     end_date,
     total_amount,
-    starting_price,
+    accepted_price,
     investor_id,
     minimum_valuation,
     ...data
@@ -246,7 +250,7 @@ const NewBuybackModal = ({ onClose }: NewBuybackModalProps) => {
       starts_at: formatISO(start_date.toDate(getLocalTimeZone())),
       ends_at: formatISO(end_date.toDate(getLocalTimeZone())),
       total_amount_in_cents: total_amount * 100,
-      starting_price_per_share_cents: starting_price * 100,
+      accepted_price_cents: accepted_price ? accepted_price * 100 : null,
     };
     setBuybackData(buybackData);
 
@@ -500,19 +504,21 @@ const BuybackFormSection = ({ onNext, onSelectType, mutation }: BuybackFormSecti
             />
           )}
 
-          <FormField
-            control={form.control}
-            name="starting_price"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{selectedType === "single_stock" ? "Price per share" : "Starting price"}</FormLabel>
-                <FormControl>
-                  <NumberInput {...field} prefix="$" placeholder="0" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {selectedType === "single_stock" ? (
+            <FormField
+              control={form.control}
+              name="accepted_price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Price per share</FormLabel>
+                  <FormControl>
+                    <NumberInput {...field} prefix="$" placeholder="0" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          ) : null}
 
           <FormField
             control={form.control}
@@ -526,7 +532,7 @@ const BuybackFormSection = ({ onNext, onSelectType, mutation }: BuybackFormSecti
                 <FormDescription className="text-xs">
                   {selectedType === "single_stock"
                     ? (() => {
-                        const price = form.watch("starting_price") || 0;
+                        const price = form.watch("accepted_price") || 0;
                         const total = form.watch("total_amount") || 0;
                         const shares = price > 0 ? Math.round(total / price) : 0;
                         return `This equals ${shares.toLocaleString()} shares at $${price.toFixed(2)} per share.`;

@@ -957,7 +957,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_17_120834) do
     t.datetime "updated_at", null: false
     t.integer "accepted_price_cents"
     t.string "name"
-    t.integer "starting_price_per_share_cents"
+    t.integer "implied_valuation"
     t.enum "buyback_type", default: "tender_offer", null: false, enum_type: "tender_offer_buyback_type"
     t.index ["company_id"], name: "index_tender_offers_on_company_id"
     t.index ["external_id"], name: "index_tender_offers_on_external_id", unique: true

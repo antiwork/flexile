@@ -1,14 +1,12 @@
 "use client";
-import { utc } from "@date-fns/utc";
 import { useQuery } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import { isFuture, isPast } from "date-fns";
 import { CircleCheck, DollarSign, Plus, XIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
 import { z } from "zod";
-import { type Buyback, buybackSchema } from "@/app/equity/buybacks";
+import { type Buyback, buybackSchema, getBuybackStatus } from "@/app/equity/buybacks";
 import NewBuybackModal from "@/app/equity/buybacks/NewBuybackModal";
 import PlaceBidModal from "@/app/equity/buybacks/PlaceBidModal";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
@@ -73,12 +71,7 @@ export default function Buybacks() {
         header: "Implied valuation",
         cell: (info) => {
           const value = info.getValue();
-          if (!value) {
-            // TODO: Need to store fullyDilutedShares at tender offer creation time
-            // Using current fullyDilutedShares gives incorrect historical valuations
-            // See backend TODO in company_investor_mailer/tender_offer_closed.html.erb
-            return "—";
-          }
+          if (!value) return "—";
           return formatMoney(value);
         },
       }),
@@ -100,14 +93,11 @@ export default function Buybacks() {
             cell: (info) => info.getValue(),
           }),
       columnHelper.accessor(
-        (row) =>
-          row.equity_buyback_round_count
-            ? "Settled"
-            : isFuture(utc(row.ends_at))
-              ? "Open"
-              : user.roles.administrator
-                ? "Closed"
-                : "Reviewing",
+        (row) => {
+          const status = getBuybackStatus(row);
+          if (!user.roles.administrator && status === "Closed") return "Reviewing";
+          return status;
+        },
         {
           id: "status",
           header: "Status",
@@ -145,7 +135,7 @@ export default function Buybacks() {
         id: "actions",
         cell: (info) => (
           <>
-            {info.row.original.open && !info.row.original.equity_buyback_round_count ? (
+            {getBuybackStatus(info.row.original) === "Open" ? (
               <Button
                 size="small"
                 variant="outline"
@@ -158,9 +148,7 @@ export default function Buybacks() {
                 Place bid
               </Button>
             ) : null}
-            {user.roles.administrator &&
-            isPast(utc(info.row.original.ends_at)) &&
-            !info.row.original.equity_buyback_round_count ? (
+            {user.roles.administrator && getBuybackStatus(info.row.original) === "Reviewing" ? (
               <Button
                 size="small"
                 className="fill-black"

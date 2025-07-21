@@ -119,6 +119,6 @@ class Internal::Companies::TenderOffersController < Internal::Companies::BaseCon
     end
 
     def buyback_params
-      params.permit(:name, :buyback_type, :starts_at, :ends_at, :minimum_valuation, :starting_price_per_share_cents, :total_amount_in_cents, :attachment_key, investors: [], letter_of_transmittal: [:type, :data])
+      params.permit(:name, :buyback_type, :starts_at, :ends_at, :minimum_valuation, :accepted_price_cents, :total_amount_in_cents, :attachment_key, investors: [], letter_of_transmittal: [:type, :data])
     end
 end

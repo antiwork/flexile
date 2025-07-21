@@ -13,6 +13,8 @@ class TenderOffers::FinalizeBuyback
 
       TenderOffers::GenerateEquityBuybacks.new(tender_offer: tender_offer).perform
 
+      tender_offer.update!(implied_valuation: (tender_offer.accepted_price_cents / 100) * tender_offer.company.fully_diluted_shares)
+
       equity_buyback_round = tender_offer.equity_buyback_rounds.sole
 
       TenderOffers::UpdateCapTable.new(equity_buyback_round: equity_buyback_round).perform

@@ -39,14 +39,17 @@ class TenderOfferBid < ApplicationRecord
     end
 
     def share_price_must_be_valid
-      return if tender_offer.nil? || tender_offer.starting_price_per_share_cents.nil?
+      return if tender_offer.nil?
 
-      if tender_offer.buyback_type == "single_stock"
-        return if share_price_cents == tender_offer.starting_price_per_share_cents
-        errors.add(:share_price_cents, "Must match the starting price for single stock repurchases")
-      else
-        return if share_price_cents >= tender_offer.starting_price_per_share_cents
-        errors.add(:share_price_cents, "Must be equal to or greater than the starting price")
+      if tender_offer.accepted_price_cents && share_price_cents != tender_offer.accepted_price_cents
+        errors.add(:share_price_cents, "Must match the accepted share price")
+      end
+
+      if tender_offer.minimum_valuation
+        starting_price_cents = (tender_offer.minimum_valuation * 100) / tender_offer.company.fully_diluted_shares
+        if share_price_cents < starting_price_cents
+          errors.add(:share_price_cents, "Must be equal to or greater than #{cents_format(starting_price_cents)}")
+        end
       end
     end
 
