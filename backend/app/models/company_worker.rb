@@ -9,7 +9,6 @@ class CompanyWorker < ApplicationRecord
   belongs_to :user
 
   has_many :contracts, foreign_key: :company_contractor_id
-  has_many :equity_allocations, foreign_key: :company_contractor_id
   has_many :invoices, foreign_key: :company_contractor_id
   has_many :integration_records, as: :integratable
 
@@ -25,6 +24,7 @@ class CompanyWorker < ApplicationRecord
   validates :role, presence: true, on: :update
   validates :started_at, presence: true
   validates :pay_rate_in_subunits, numericality: { only_integer: true, greater_than: 0, allow_nil: true }
+  validates :equity_percentage, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: MAX_EQUITY_PERCENTAGE }
 
   scope :active, -> { where(ended_at: nil) }
   scope :active_as_of, ->(date) { active.or(where("ended_at > ?", date)) }
@@ -78,14 +78,6 @@ class CompanyWorker < ApplicationRecord
 
   after_commit :notify_rate_updated, on: :update, if: -> { saved_change_to_pay_rate_in_subunits? }
 
-  def equity_allocation_for(year)
-    equity_allocations.find_by(year:)
-  end
-
-  def equity_percentage(year)
-    equity_allocations.find_by(year:)&.equity_percentage
-  end
-
   def active? = ended_at.nil?
 
   def alumni?
@@ -131,12 +123,11 @@ class CompanyWorker < ApplicationRecord
     grants.first
   end
 
-  def send_equity_percent_selection_email(year)
-    equity_allocation = equity_allocations.find_or_initialize_by(year:)
-    return if equity_allocation.equity_percentage? || equity_allocation.sent_equity_percent_selection_email?
+  def send_equity_percent_selection_email
+    return if equity_percentage? || sent_equity_percent_selection_email?
 
     CompanyWorkerMailer.equity_percent_selection(id).deliver_later
-    equity_allocation.update!(sent_equity_percent_selection_email: true)
+    update!(sent_equity_percent_selection_email: true)
   end
 
   private

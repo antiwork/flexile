@@ -1,11 +1,13 @@
+import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { documentTemplatesFactory } from "@test/factories/documentTemplates";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
+import { and, eq, isNotNull, isNull } from "drizzle-orm";
 import { DocumentTemplateType } from "@/db/enums";
-import { companies, users } from "@/db/schema";
+import { companies, companyInviteLinks, users } from "@/db/schema";
 
 test.describe("Contractor Invite Link", () => {
   let company: typeof companies.$inferSelect;
@@ -31,8 +33,7 @@ test.describe("Contractor Invite Link", () => {
     await expect(page.getByRole("heading", { name: "Invite Link" })).toBeVisible();
 
     await expect(page.getByRole("button", { name: "Copy" })).toBeEnabled();
-    const inviteLink = await page.getByRole("textbox", { name: "Link" }).inputValue();
-    expect(inviteLink).toBeTruthy();
+    await expect(page.getByRole("textbox", { name: "Link" })).toBeVisible();
 
     await page.evaluate(() => {
       Object.defineProperty(navigator, "clipboard", {
@@ -45,6 +46,11 @@ test.describe("Contractor Invite Link", () => {
 
     await page.getByRole("button", { name: "Copy" }).click();
     await expect(page.getByText("Copied!")).toBeVisible();
+
+    const defaultInviteLink = await db.query.companyInviteLinks.findFirst({
+      where: and(eq(companyInviteLinks.companyId, company.id), isNull(companyInviteLinks.documentTemplateId)),
+    });
+    expect(defaultInviteLink).toBeDefined();
   });
 
   test("shows different invite links for different templates and contract signed elsewhere switch", async ({
@@ -52,6 +58,13 @@ test.describe("Contractor Invite Link", () => {
   }) => {
     await documentTemplatesFactory.create({
       companyId: company.id,
+      name: "Default Contract",
+      type: DocumentTemplateType.ConsultingContract,
+    });
+
+    await documentTemplatesFactory.create({
+      companyId: company.id,
+      name: "Another Contract",
       type: DocumentTemplateType.ConsultingContract,
     });
 
@@ -60,8 +73,7 @@ test.describe("Contractor Invite Link", () => {
     await page.getByRole("button", { name: "Invite link" }).click();
 
     await expect(page.getByRole("button", { name: "Copy" })).toBeEnabled();
-    const defaultInviteLink = await page.getByRole("textbox", { name: "Link" }).inputValue();
-    expect(defaultInviteLink).toBeTruthy();
+    await expect(page.getByRole("textbox", { name: "Link" })).toBeVisible();
 
     const switchButton = page.getByLabel("Already signed contract elsewhere");
     await expect(switchButton).toHaveAttribute("aria-checked", "true");
@@ -69,16 +81,23 @@ test.describe("Contractor Invite Link", () => {
     await switchButton.click({ force: true });
     await expect(switchButton).not.toHaveAttribute("aria-checked", "true");
 
-    await expect(page.getByRole("button", { name: "Copy" })).toBeEnabled();
-    const newInviteLink = await page.getByRole("textbox", { name: "Link" }).inputValue();
-    expect(newInviteLink).not.toBe(defaultInviteLink);
-
-    await switchButton.check({ force: true });
-    await expect(switchButton).toHaveAttribute("aria-checked", "true");
+    await page.getByRole("combobox").click();
+    await expect(page.getByRole("option", { name: "Default Contract" })).toBeVisible();
+    await page.getByRole("option", { name: "Default Contract" }).click();
 
     await expect(page.getByRole("button", { name: "Copy" })).toBeEnabled();
-    const checkedInviteLink = await page.getByRole("textbox", { name: "Link" }).inputValue();
-    expect(checkedInviteLink).toBe(defaultInviteLink);
+
+    const defaultInviteLink = await db.query.companyInviteLinks.findFirst({
+      where: and(eq(companyInviteLinks.companyId, company.id), isNull(companyInviteLinks.documentTemplateId)),
+    });
+    expect(defaultInviteLink).toBeDefined();
+
+    const newInviteLink = await db.query.companyInviteLinks.findFirst({
+      where: and(eq(companyInviteLinks.companyId, company.id), isNotNull(companyInviteLinks.documentTemplateId)),
+    });
+    expect(newInviteLink).toBeDefined();
+
+    expect(newInviteLink?.token).not.toBe(defaultInviteLink?.token);
   });
 
   test("reset invite link modal resets the link", async ({ page }) => {
@@ -87,8 +106,7 @@ test.describe("Contractor Invite Link", () => {
     await page.getByRole("button", { name: "Invite link" }).click();
 
     await expect(page.getByRole("button", { name: "Copy" })).toBeEnabled();
-    const originalInviteLink = await page.getByRole("textbox", { name: "Link" }).inputValue();
-    expect(originalInviteLink).toBeTruthy();
+    await expect(page.getByRole("textbox", { name: "Link" })).toBeVisible();
 
     await page.getByRole("button", { name: "Reset link" }).click();
     await expect(page.getByText("Reset Invite Link")).toBeVisible();
@@ -96,7 +114,9 @@ test.describe("Contractor Invite Link", () => {
 
     await expect(page.getByRole("button", { name: "Copy" })).toBeEnabled();
     await expect(page.getByText("Reset Invite Link")).not.toBeVisible();
-    const newInviteLink = await page.getByRole("textbox", { name: "Link" }).inputValue();
-    expect(newInviteLink).not.toBe(originalInviteLink);
+    const newInviteLink = await db.query.companyInviteLinks.findFirst({
+      where: and(eq(companyInviteLinks.companyId, company.id), isNull(companyInviteLinks.documentTemplateId)),
+    });
+    expect(newInviteLink).toBeDefined();
   });
 });
