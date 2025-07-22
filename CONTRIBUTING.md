@@ -45,6 +45,7 @@ pnpm playwright test
 - For API endpoints, test response status, format, and content
 - Use factories for test data instead of creating objects directly
 - Test both happy path and edge cases
+- Please include specific performance benchmarks for any optimizations
 
 ## Pull Request
 

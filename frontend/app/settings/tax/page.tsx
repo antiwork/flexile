@@ -42,7 +42,7 @@ const dataSchema = z.object({
   is_foreign: z.boolean(),
   is_tax_information_confirmed: z.boolean(),
   legal_name: z.string(),
-  signature: z.string(),
+  signature: z.string().nullable(),
   state: z.string().nullable(),
   street_address: z.string().nullable(),
   tax_id: z.string().nullable(),
