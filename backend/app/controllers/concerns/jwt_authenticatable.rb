@@ -37,6 +37,16 @@ module JwtAuthenticatable
       request.headers["x-flexile-auth"]
     end
 
+    def generate_jwt_token(user)
+      payload = {
+        user_id: user.id,
+        email: user.email,
+        exp: 1.month.from_now.to_i,
+      }
+
+      JWT.encode(payload, jwt_secret, "HS256")
+    end
+
     def jwt_secret
       GlobalConfig.get("JWT_SECRET", Rails.application.secret_key_base)
     end

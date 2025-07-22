@@ -1,26 +1,19 @@
 # frozen_string_literal: true
 
 class Api::V1::EmailOtpController < Api::BaseController
+  include OtpValidation
+
   skip_before_action :authenticate_with_jwt
 
   def create
     email = params[:email]
 
-    if email.blank?
-      return render json: { error: "Email is required" }, status: :bad_request
-    end
+    return unless validate_email_param(email)
 
-    user = User.find_by(email: email)
-    unless user
-      return render json: { error: "User not found" }, status: :not_found
-    end
+    user = find_user_by_email(email)
+    return unless user
 
-    if user.otp_rate_limited?
-      return render json: {
-        error: "Too many OTP attempts. Please wait before trying again.",
-        retry_after: 10.minutes.to_i,
-      }, status: :too_many_requests
-    end
+    return unless check_otp_rate_limit(user)
 
     UserMailer.otp_code(user.id).deliver_later
 

@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
 class Api::V1::SignupController < Api::BaseController
+  include OtpValidation, UserDataSerialization
+
   skip_before_action :authenticate_with_jwt
 
   def send_otp
     email = params[:email]
 
-    if email.blank?
-      return render json: { error: "Email is required" }, status: :bad_request
-    end
+    return unless validate_email_param(email)
 
     # Check if user already exists
     existing_user = User.find_by(email: email)
@@ -20,12 +20,7 @@ class Api::V1::SignupController < Api::BaseController
     temp_user = User.new(email: email)
     temp_user.save!(validate: false) # Skip validations for temp user
 
-    if temp_user.otp_rate_limited?
-      return render json: {
-        error: "Too many OTP attempts. Please wait before trying again.",
-        retry_after: 10.minutes.to_i,
-      }, status: :too_many_requests
-    end
+    return unless check_otp_rate_limit(temp_user)
 
     UserMailer.otp_code(temp_user.id).deliver_later
 
@@ -37,25 +32,13 @@ class Api::V1::SignupController < Api::BaseController
     otp_code = params[:otp_code]
     temp_user_id = params[:temp_user_id]
 
-    if email.blank? || otp_code.blank? || temp_user_id.blank?
-      return render json: { error: "Email, OTP code, and temp user ID are required" }, status: :bad_request
-    end
+    return unless validate_signup_params(email, otp_code, temp_user_id)
 
-    temp_user = User.find_by(id: temp_user_id, email: email)
-    unless temp_user
-      return render json: { error: "Invalid signup session" }, status: :not_found
-    end
+    temp_user = find_temp_user(temp_user_id, email)
+    return unless temp_user
 
-    if temp_user.otp_rate_limited?
-      return render json: {
-        error: "Too many OTP attempts. Please wait before trying again.",
-        retry_after: 10.minutes.to_i,
-      }, status: :too_many_requests
-    end
-
-    unless temp_user.verify_otp(otp_code)
-      return render json: { error: "Invalid or expired OTP code" }, status: :unauthorized
-    end
+    return unless check_otp_rate_limit(temp_user)
+    return unless verify_user_otp(temp_user, otp_code)
 
     # Check again if user was created in the meantime
     existing_user = User.find_by(email: email)
@@ -68,15 +51,32 @@ class Api::V1::SignupController < Api::BaseController
     result = complete_user_signup(temp_user)
 
     if result[:success]
-      user = result[:user]
-      jwt_token = generate_jwt_token(user)
-      render json: { jwt: jwt_token, user: user_data(user) }, status: :created
+      created_response_with_jwt(result[:user])
     else
       render json: { error: result[:error_message] }, status: :unprocessable_entity
     end
   end
 
   private
+    def validate_signup_params(email, otp_code, temp_user_id)
+      if email.blank? || otp_code.blank? || temp_user_id.blank?
+        render json: { error: "Email, OTP code, and temp user ID are required" }, status: :bad_request
+        return false
+      end
+
+      true
+    end
+
+    def find_temp_user(temp_user_id, email)
+      temp_user = User.find_by(id: temp_user_id, email: email)
+      unless temp_user
+        render json: { error: "Invalid signup session" }, status: :not_found
+        return nil
+      end
+
+      temp_user
+    end
+
     def complete_user_signup(temp_user)
       ApplicationRecord.transaction do
         # Complete the user setup
@@ -109,29 +109,5 @@ class Api::V1::SignupController < Api::BaseController
       end
     rescue ActiveRecord::RecordInvalid => e
       { success: false, error_message: e.record.errors.full_messages.to_sentence }
-    end
-
-    def generate_jwt_token(user)
-      payload = {
-        user_id: user.id,
-        email: user.email,
-        exp: 1.month.from_now.to_i,
-      }
-
-      JWT.encode(payload, jwt_secret, "HS256")
-    end
-
-    def jwt_secret
-      GlobalConfig.get("JWT_SECRET", Rails.application.secret_key_base)
-    end
-
-    def user_data(user)
-      {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        legal_name: user.legal_name,
-        preferred_name: user.preferred_name,
-      }
     end
 end
