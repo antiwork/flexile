@@ -70,13 +70,15 @@ class SeedDataGeneratorFromTemplate
         enable_feature_flags!(company, company_data.fetch("feature_flags"))
         create_convertible_investments!(company, company_data)
         create_dividend_rounds!(company, company_data)
-        create_tender_offer!(company, company_data.fetch("tender_offer"))
-        create_equity_buyback_rounds!(company, company_data)
         create_expense_categories!(company, company_data.fetch("expense_categories"))
         create_other_administrators!(company, company_data.fetch("other_administrators"))
         create_lawyers!(company, company_data.fetch("lawyers"))
         create_company_investor_and_data!(company, company.primary_admin.user, company_data.fetch("primary_administrator"))
         create_investors!(company, company_data.fetch("investors"))
+        create_tender_offer!(company, company_data.fetch("tender_offer"))
+        create_equity_buyback_rounds!(company, company_data)
+        create_investor_equity_buybacks!(company, company.primary_admin.user, company_data.fetch("primary_administrator"))
+        create_investor_equity_buybacks_for_all!(company, company_data.fetch("investors"))
         create_company_updates!(company, company_data.fetch("company_updates"))
         create_company_contractors!(
           company,
@@ -322,7 +324,8 @@ class SeedDataGeneratorFromTemplate
             starts_at:,
             ends_at: 3.months.from_now,
             attachment: create_temporary_zip_file,
-            letter_of_transmittal: create_temporary_pdf_file
+            letter_of_transmittal: create_temporary_pdf_file,
+            investors: company.company_investors.pluck(:external_id)
           )
         ).perform
         if !result[:success]
@@ -449,34 +452,13 @@ class SeedDataGeneratorFromTemplate
       share_class = company.share_classes.find_by!(
         name: company_user_data.fetch("share_holding_data").fetch("share_class").fetch("name")
       )
-      share_holding = company_investor.share_holdings.create!(
+      company_investor.share_holdings.create!(
         share_class:,
         **company_user_data.fetch("share_holding_data").fetch("model_attributes").reverse_merge(
           share_holder_name: user.legal_name,
         )
       )
-      common_attrs = {
-        equity_buyback_round: company.equity_buyback_rounds.last!,
-        company_investor:,
-        paid_at: 1.day.ago,
-        share_class: share_holding.share_class.name,
-        security: share_holding,
-      }
-      if company_user_data.key?("equity_buybacks")
-        company_user_data.fetch("equity_buybacks").each do |equity_buyback_data|
-          company.equity_buybacks.create!(common_attrs.merge(equity_buyback_data))
-        end
-        EquityBuybackPayment.create!(
-          {
-            equity_buybacks: [company.equity_buybacks.first, company.equity_buybacks.last],
-            status: Payment::SUCCEEDED,
-            processor_uuid: SecureRandom.uuid,
-            processor_name: DividendPayment::PROCESSOR_WISE,
-            recipient_last4: "5678",
-            wise_credential: WiseCredential.flexile_credential,
-          }
-        )
-      end
+
       if company_user_data.key?("dividend_attributes")
         dividend_round = company.dividend_rounds.last!
         dividend = company_investor.dividends.create!(
@@ -867,5 +849,45 @@ class SeedDataGeneratorFromTemplate
     ensure
       temp_file.close
       temp_file.unlink
+    end
+
+    def create_investor_equity_buybacks!(company, user, company_user_data)
+      return unless company_user_data.key?("equity_buybacks")
+
+      company_investor = company.company_investors.find_by!(user:)
+      share_holding = company_investor.share_holdings.first!
+
+      common_attrs = {
+        equity_buyback_round: company.equity_buyback_rounds.last!,
+        company_investor:,
+        paid_at: 1.day.ago,
+        share_class: share_holding.share_class.name,
+        security: share_holding,
+      }
+
+      company_user_data.fetch("equity_buybacks").each do |equity_buyback_data|
+        company.equity_buybacks.create!(common_attrs.merge(equity_buyback_data))
+      end
+
+      EquityBuybackPayment.create!(
+        {
+          equity_buybacks: [company.equity_buybacks.first, company.equity_buybacks.last],
+          status: Payment::SUCCEEDED,
+          processor_uuid: SecureRandom.uuid,
+          processor_name: DividendPayment::PROCESSOR_WISE,
+          recipient_last4: "5678",
+          wise_credential: WiseCredential.flexile_credential,
+        }
+      )
+    end
+
+    def create_investor_equity_buybacks_for_all!(company, company_users_data)
+      return if company_users_data.none?
+
+      company_users_data.each do |company_user_data|
+        user_attributes = company_user_data.fetch("model_attributes")
+        user = User.find_by!(email: generate_user_email(user_attributes))
+        create_investor_equity_buybacks!(company, user, company_user_data)
+      end
     end
 end

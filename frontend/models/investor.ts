@@ -7,12 +7,14 @@ type Investor = SAFEInvestor & {
   userId: string;
   notes: string | null;
   outstandingShares: bigint;
+  outstandingOptions: bigint;
   fullyDilutedShares: bigint;
 };
 type InvestorEntity = SAFEInvestor & {
   id: string;
   notes: string | null;
   outstandingShares: bigint;
+  outstandingOptions: bigint;
   fullyDilutedShares: bigint;
 };
 type InvestorForAdmin = (Investor | InvestorEntity) & { email: string };

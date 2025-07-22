@@ -36,7 +36,27 @@ import { cn, md5Checksum } from "@/utils";
 import { request } from "@/utils/request";
 import { richTextExtensions } from "@/utils/richText";
 import { company_tender_offers_path } from "@/utils/routes";
-import { createBuybackSchema } from "../buybacks";
+import { buybackSchema } from "../buybacks";
+
+export const createBuybackSchema = buybackSchema
+  .pick({
+    buyback_type: true,
+    name: true,
+    starts_at: true,
+    ends_at: true,
+    minimum_valuation: true,
+    accepted_price_cents: true,
+  })
+  .extend({
+    total_amount_in_cents: z.number(),
+    letter_of_transmittal: z.object({
+      type: z.enum(["link", "text"]),
+      data: z.string(),
+    }),
+    investors: z.array(z.string()),
+    attachment: z.instanceof(File).optional(),
+    attachment_key: z.string().optional(),
+  });
 
 const SimpleRichTextEditor = ({
   value,
@@ -720,7 +740,7 @@ const SelectInvestorsSection = ({ onBack, onNext, mutation }: SelectInvestorsMod
   const [capTable] = trpc.capTable.show.useSuspenseQuery({ companyId: company.id });
 
   const investors = capTable.investors.filter((inv) => isInvestor(inv));
-  const allShareClasses = ["All share classes", ...capTable.shareClasses.map((sc) => sc.name)];
+  const allShareClasses = ["All share classes", "Common", "Equity Grant"];
 
   const filteredInvestors = useMemo(
     () =>
@@ -731,7 +751,8 @@ const SelectInvestorsSection = ({ onBack, onNext, mutation }: SelectInvestorsMod
 
         const matchesShareClass =
           shareClassFilter === "All share classes" ||
-          investor.shareClassHoldings.some((holding) => holding.shareClassName === shareClassFilter);
+          (investor.outstandingShares && shareClassFilter === "Common") ||
+          (investor.outstandingOptions && shareClassFilter === "Equity Grant");
 
         return matchesSearch && matchesShareClass;
       }),
@@ -841,7 +862,9 @@ const SelectInvestorsSection = ({ onBack, onNext, mutation }: SelectInvestorsMod
                   </label>
                 </div>
                 <div className="text-sm text-gray-500">
-                  {investor.shareClassHoldings.map((holding) => holding.shareClassName).join(", ")}
+                  {[investor.outstandingShares ? "Common" : null, investor.outstandingOptions ? "Equity Grant" : null]
+                    .filter(Boolean)
+                    .join(", ")}
                 </div>
               </div>
             ))}

@@ -55,13 +55,13 @@ class TenderOfferPresenter
     end
 
     def participation(user: user, company: company)
-      return 0 if buyback.accepted_price_cents.nil?
+      return "0" if buyback.accepted_price_cents.nil?
       if user.company_administrator_for?(company)
         buyback.bids.sum("COALESCE(accepted_shares, 0) * #{buyback.accepted_price_cents} / 100.0")
       elsif user.company_investor_for?(company)
         buyback.bids.where(company_investor: user.company_investor_for(company)).sum("COALESCE(accepted_shares, 0) * #{buyback.accepted_price_cents} / 100.0")
       else
-        0
+        "0"
       end
     end
 

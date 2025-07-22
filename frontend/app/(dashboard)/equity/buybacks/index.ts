@@ -14,7 +14,7 @@ export const buybackSchema = z.object({
   minimum_valuation: z.number(),
   implied_valuation: z.number().nullable().optional(),
   accepted_price_cents: z.number().nullable(),
-  participation: z.number({ coerce: true }).nullable(),
+  participation: z.string().nullable(),
   bid_count: z.number().nullable(),
   investor_count: z.number().nullable(),
   equity_buyback_round_count: z.number().nullable(),
@@ -37,42 +37,16 @@ export const buybackSchema = z.object({
 
 export type Buyback = z.infer<typeof buybackSchema>;
 
-export const createBuybackSchema = buybackSchema
-  .pick({
-    buyback_type: true,
-    name: true,
-    starts_at: true,
-    ends_at: true,
-    minimum_valuation: true,
-    accepted_price_cents: true,
-  })
-  .extend({
-    total_amount_in_cents: z.number(),
-    letter_of_transmittal: z.object({
-      type: z.enum(["link", "text"]),
-      data: z.string(),
-    }),
-    investors: z.array(z.string()),
-    attachment: z.instanceof(File).optional(),
-    attachment_key: z.string().optional(),
-  });
-
 export const buybackBidSchema = z.object({
   id: z.string(),
   share_class: z.string(),
-  number_of_shares: z.number({ coerce: true }).min(0),
-  accepted_shares: z.number({ coerce: true }).optional(),
-  share_price_cents: z.number().min(0),
+  number_of_shares: z.string(),
+  accepted_shares: z.string(),
+  share_price_cents: z.number(),
   investor: z.object({
     id: z.string(),
     name: z.string(),
   }),
-});
-
-export const placeBuybackBidSchema = buybackBidSchema.pick({
-  share_class: true,
-  number_of_shares: true,
-  share_price_cents: true,
 });
 
 export type BuybackBid = z.infer<typeof buybackBidSchema>;

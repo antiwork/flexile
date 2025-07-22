@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCurrentCompany } from "@/global";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
+import { formatNumber } from "@/utils/numbers";
 import { request } from "@/utils/request";
 import { company_tender_offer_bid_path } from "@/utils/routes";
 import type { Buyback, BuybackBid } from "../buybacks";
@@ -44,7 +45,7 @@ const CancelBidModal = ({ onClose, bid, buyback }: CancelBidModalProps) => {
         <p>
           Share class: {bid.share_class}
           <br />
-          Number of shares: {bid.number_of_shares.toLocaleString()}
+          Number of shares: {formatNumber(bid.number_of_shares)}
           <br />
           BuybackBid price: {formatMoneyFromCents(bid.share_price_cents)}
         </p>

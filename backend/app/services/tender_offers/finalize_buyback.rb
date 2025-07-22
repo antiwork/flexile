@@ -7,6 +7,8 @@ class TenderOffers::FinalizeBuyback
 
   def perform
     ApplicationRecord.transaction do
+      tender_offer.lock!
+
       TenderOffers::GenerateEquityBuybacks.new(tender_offer: tender_offer).perform
 
       tender_offer.update!(implied_valuation: (tender_offer.accepted_price_cents / 100) * tender_offer.company.fully_diluted_shares)

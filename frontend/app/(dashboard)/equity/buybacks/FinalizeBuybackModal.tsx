@@ -1,4 +1,5 @@
 import { useMutation, type UseMutationResult } from "@tanstack/react-query";
+import Decimal from "decimal.js";
 import { Download } from "lucide-react";
 import React, { useState } from "react";
 import { MutationStatusButton } from "@/components/MutationButton";
@@ -15,6 +16,7 @@ import {
 import { useCurrentCompany } from "@/global";
 import { download } from "@/utils";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
+import { formatNumber } from "@/utils/numbers";
 import { request } from "@/utils/request";
 import { finalize_company_tender_offer_path } from "@/utils/routes";
 import type { Buyback, BuybackBid } from "../buybacks";
@@ -34,6 +36,7 @@ type ConfirmationSectionProps = {
 type ReviewInvestorsSectionProps = {
   onNext: () => void;
   onBack: () => void;
+  buyback: Buyback;
   bids: BuybackBid[];
 };
 
@@ -109,6 +112,7 @@ const FinalizeBuybackModal = ({ onClose, buyback, bids }: FinalizeBuybackModalPr
               <ConfirmationSection key="confirmation" buyback={buyback} bids={bids} onNext={goToNextStep} />,
               <ReviewInvestorsSection
                 key="review-investors"
+                buyback={buyback}
                 onNext={goToNextStep}
                 onBack={goToPreviousStep}
                 bids={bids}
@@ -128,12 +132,11 @@ const FinalizeBuybackModal = ({ onClose, buyback, bids }: FinalizeBuybackModalPr
 
 const ConfirmationSection = ({ buyback, bids, onNext }: ConfirmationSectionProps) => {
   const company = useCurrentCompany();
-  const acceptedBids = bids.filter((bid) => Number(bid.accepted_shares) > 0);
-  const totalAcceptedShares = acceptedBids.reduce((sum, bid) => sum + Number(bid.accepted_shares), 0);
+  const acceptedBids = bids.filter((bid) => new Decimal(bid.accepted_shares).gt(0));
+  const totalAcceptedShares = acceptedBids.reduce((sum, bid) => sum.plus(bid.accepted_shares), new Decimal(0));
 
   const clearingPrice = buyback.accepted_price_cents || 0;
-
-  const totalPayout = totalAcceptedShares * clearingPrice;
+  const totalPayout = totalAcceptedShares.mul(clearingPrice);
 
   const impliedValuation = company.fullyDilutedShares ? Number(company.fullyDilutedShares) * clearingPrice : 0;
 
@@ -167,7 +170,7 @@ const ConfirmationSection = ({ buyback, bids, onNext }: ConfirmationSectionProps
 
         <div className="flex justify-between border-b border-gray-200 py-4">
           <span className="font-medium">Accepted shares</span>
-          <span>{totalAcceptedShares.toLocaleString()}</span>
+          <span>{formatNumber(totalAcceptedShares)}</span>
         </div>
 
         <div className="flex justify-between py-4">
@@ -185,17 +188,18 @@ const ConfirmationSection = ({ buyback, bids, onNext }: ConfirmationSectionProps
   );
 };
 
-const ReviewInvestorsSection = ({ onNext, onBack, bids }: ReviewInvestorsSectionProps) => {
-  const acceptedBids = bids.filter((bid) => Number(bid.accepted_shares) > 0);
-  const totalShares = acceptedBids.reduce((sum, bid) => sum + Number(bid.accepted_shares), 0);
-  const totalPayout = acceptedBids.reduce((sum, bid) => sum + Number(bid.accepted_shares) * bid.share_price_cents, 0);
+const ReviewInvestorsSection = ({ onNext, onBack, buyback, bids }: ReviewInvestorsSectionProps) => {
+  const acceptedBids = bids.filter((bid) => new Decimal(bid.accepted_shares).gt(0));
+  const totalAcceptedShares = acceptedBids.reduce((sum, bid) => sum.plus(bid.accepted_shares), new Decimal(0));
+  const clearingPrice = buyback.accepted_price_cents || 0;
+  const totalPayout = totalAcceptedShares.mul(clearingPrice);
 
   const handleDownloadCSV = () => {
     const csvHeader = "Investor,Shares,Total\n";
     const csvRows = acceptedBids
       .map(
         (bid) =>
-          `"${bid.investor.name}",${Number(bid.accepted_shares)},"${formatMoneyFromCents(Number(bid.accepted_shares) * bid.share_price_cents)}"`,
+          `"${bid.investor.name}",${bid.accepted_shares},"${new Decimal(bid.accepted_shares).mul(buyback.accepted_price_cents || 0).toString()}"`,
       )
       .join("\n");
 
@@ -232,9 +236,9 @@ const ReviewInvestorsSection = ({ onNext, onBack, bids }: ReviewInvestorsSection
               acceptedBids.map((bid) => (
                 <div key={bid.id} className="grid grid-cols-3 gap-4 border-t border-gray-200 px-2 py-3 text-sm">
                   <span className="font-medium">{bid.investor.name}</span>
-                  <span className="text-right">{Number(bid.accepted_shares).toLocaleString()}</span>
+                  <span className="text-right">{formatNumber(bid.accepted_shares)}</span>
                   <span className="text-right">
-                    {formatMoneyFromCents(Number(bid.accepted_shares) * bid.share_price_cents)}
+                    {formatMoneyFromCents(new Decimal(bid.accepted_shares).mul(buyback.accepted_price_cents || 0))}
                   </span>
                 </div>
               ))
@@ -247,7 +251,7 @@ const ReviewInvestorsSection = ({ onNext, onBack, bids }: ReviewInvestorsSection
         {acceptedBids.length > 0 ? (
           <div className="grid grid-cols-3 gap-4 border-t border-gray-200 bg-gray-50 px-2 py-3 text-sm font-bold">
             <span>Total payout</span>
-            <span className="text-right">{totalShares.toLocaleString()}</span>
+            <span className="text-right">{formatNumber(totalAcceptedShares)}</span>
             <span className="text-right">{formatMoneyFromCents(totalPayout)}</span>
           </div>
         ) : null}
@@ -268,12 +272,12 @@ const ReviewInvestorsSection = ({ onNext, onBack, bids }: ReviewInvestorsSection
 const SubmitSection = ({ onBack, buyback, bids, mutation }: SubmitSectionProps) => {
   const [confirmed, setConfirmed] = useState(false);
 
-  const acceptedBids = bids.filter((bid) => Number(bid.accepted_shares) > 0);
-  const totalShares = acceptedBids.reduce((sum, bid) => sum + Number(bid.accepted_shares), 0);
+  const acceptedBids = bids.filter((bid) => new Decimal(bid.accepted_shares).gt(0));
+  const totalShares = acceptedBids.reduce((sum, bid) => sum.plus(bid.accepted_shares), new Decimal(0));
 
   const clearingPrice = buyback.accepted_price_cents || 0;
 
-  const totalPayout = totalShares * clearingPrice;
+  const totalPayout = totalShares.mul(clearingPrice);
 
   const handleFinalize = () => {
     if (confirmed) {
@@ -303,7 +307,7 @@ const SubmitSection = ({ onBack, buyback, bids, mutation }: SubmitSectionProps) 
 
         <div className="flex justify-between border-t border-gray-200 py-4">
           <span className="font-medium">Accepted shares</span>
-          <span>{totalShares.toLocaleString()}</span>
+          <span>{formatNumber(totalShares)}</span>
         </div>
 
         <div className="flex justify-between border-t border-gray-200 pt-4">
@@ -342,8 +346,8 @@ const SubmitSection = ({ onBack, buyback, bids, mutation }: SubmitSectionProps) 
 };
 
 const SingleBuybackConfirmationSection = ({ buyback, bids, onNext }: SingleBuybackConfirmationSectionProps) => {
-  const acceptedBids = bids.filter((bid) => Number(bid.accepted_shares) > 0);
-  const totalAcceptedShares = acceptedBids.reduce((sum, bid) => sum + Number(bid.accepted_shares), 0);
+  const acceptedBids = bids.filter((bid) => new Decimal(bid.accepted_shares).gt(0));
+  const totalAcceptedShares = acceptedBids.reduce((sum, bid) => sum.plus(bid.accepted_shares), new Decimal(0));
   const clearingPrice = buyback.accepted_price_cents || 0;
 
   if (!acceptedBids[0]) {
@@ -380,7 +384,7 @@ const SingleBuybackConfirmationSection = ({ buyback, bids, onNext }: SingleBuyba
 
         <div className="flex justify-between py-4">
           <span className="font-medium">Allocation limit</span>
-          <span>{totalAcceptedShares.toLocaleString()}</span>
+          <span>{formatNumber(totalAcceptedShares)}</span>
         </div>
       </div>
 
@@ -396,30 +400,30 @@ const SingleBuybackConfirmationSection = ({ buyback, bids, onNext }: SingleBuyba
 const SingleBuybackReviewSection = ({ buyback, bids, mutation, onBack }: SingleBuybackReviewSectionProps) => {
   const [confirmed, setConfirmed] = useState(false);
 
-  const acceptedBids = bids.filter((bid) => Number(bid.accepted_shares) > 0);
+  const acceptedBids = bids.filter((bid) => new Decimal(bid.accepted_shares).gt(0));
   const clearingPrice = buyback.accepted_price_cents || 0;
 
   // Group bids by share class
-  const bidsByShareClass = acceptedBids.reduce<Record<string, { shares: number; total: number }>>((acc, bid) => {
+  const bidsByShareClass = acceptedBids.reduce<Record<string, { shares: Decimal; total: Decimal }>>((acc, bid) => {
     const shareClass = bid.share_class;
     if (!acc[shareClass]) {
-      acc[shareClass] = { shares: 0, total: 0 };
+      acc[shareClass] = { shares: new Decimal(0), total: new Decimal(0) };
     }
-    acc[shareClass].shares += Number(bid.accepted_shares);
-    acc[shareClass].total += Number(bid.accepted_shares) * clearingPrice;
+    acc[shareClass].shares = acc[shareClass].shares.plus(bid.accepted_shares);
+    acc[shareClass].total = acc[shareClass].total.plus(new Decimal(bid.accepted_shares).mul(clearingPrice));
     return acc;
   }, {});
 
-  const totalShares = Object.values(bidsByShareClass).reduce((sum, item) => sum + item.shares, 0);
-  const totalAmount = Object.values(bidsByShareClass).reduce((sum, item) => sum + item.total, 0);
+  const totalShares = Object.values(bidsByShareClass).reduce((sum, item) => sum.plus(item.shares), new Decimal(0));
+  const totalAmount = Object.values(bidsByShareClass).reduce((sum, item) => sum.plus(item.total), new Decimal(0));
 
   const handleDownloadCSV = () => {
     const csvData = [
       "Share class,Shares,Total",
       ...Object.entries(bidsByShareClass).map(
-        ([shareClass, data]) => `"${shareClass}",${data.shares},"${formatMoneyFromCents(data.total)}"`,
+        ([shareClass, data]) => `"${shareClass}",${data.shares.toString()},"${data.total.toString()}"`,
       ),
-      `"Total",${totalShares},"${formatMoneyFromCents(totalAmount)}"`,
+      `"Total",${totalShares.toString()},"${totalAmount.toString()}"`,
     ];
 
     download("text/csv", "InvestorSale.csv", csvData.join("\n"));
@@ -466,14 +470,14 @@ const SingleBuybackReviewSection = ({ buyback, bids, mutation, onBack }: SingleB
               {Object.entries(bidsByShareClass).map(([shareClass, data]) => (
                 <div key={shareClass} className="grid grid-cols-3 gap-4 border-t border-gray-200 px-2 py-3 text-sm">
                   <span className="font-medium">{shareClass}</span>
-                  <span className="text-right">{data.shares.toLocaleString()}</span>
+                  <span className="text-right">{formatNumber(data.shares)}</span>
                   <span className="text-right">{formatMoneyFromCents(data.total)}</span>
                 </div>
               ))}
 
               <div className="grid grid-cols-3 gap-4 border-t border-gray-200 bg-gray-50 px-2 py-3 text-sm font-bold">
                 <span></span>
-                <span className="text-right">{totalShares.toLocaleString()}</span>
+                <span className="text-right">{formatNumber(totalShares)}</span>
                 <span className="text-right">{formatMoneyFromCents(totalAmount)}</span>
               </div>
             </>

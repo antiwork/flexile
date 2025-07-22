@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, type UseMutationResult } from "@tanstack/react-query";
+import Decimal from "decimal.js";
 import { Download } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -19,6 +20,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { cn } from "@/utils";
@@ -26,7 +28,7 @@ import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_tender_offer_bids_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
-import { type Buyback, placeBuybackBidSchema, VESTED_SHARES_CLASS } from ".";
+import { type Buyback, buybackBidSchema, VESTED_SHARES_CLASS } from ".";
 
 type PlaceBidModalProps = {
   onClose: () => void;
@@ -50,13 +52,19 @@ type SubmitBidSectionProps = {
   mutation: UseMutationResult<unknown, unknown, BuybackBidFormValues>;
 };
 
+const placeBuybackBidSchema = buybackBidSchema.pick({
+  share_class: true,
+  number_of_shares: true,
+  share_price_cents: true,
+});
+
 const formSchema = placeBuybackBidSchema
   .pick({
     share_class: true,
     number_of_shares: true,
   })
   .extend({
-    share_price: z.number({ coerce: true }).min(0),
+    share_price: z.number().min(0),
   });
 
 type BuybackBidFormValues = z.infer<typeof formSchema>;
@@ -75,7 +83,7 @@ const PlaceBidModal = ({ onClose, buyback }: PlaceBidModalProps) => {
         url: company_tender_offer_bids_path(company.id, buyback.id),
         accept: "json",
         jsonData: placeBuybackBidSchema.parse({
-          number_of_shares: Number(data.number_of_shares),
+          number_of_shares: data.number_of_shares,
           share_price_cents: Math.round(Number(data.share_price) * 100),
           share_class: data.share_class,
         }),
@@ -151,7 +159,7 @@ const ConfirmationSection = ({ onNext, buyback }: ConfirmationSectionProps) => {
         {buyback.buyback_type === "tender_offer" && company.fullyDilutedShares ? (
           <div className="flex justify-between border-b border-gray-200 py-4">
             <span className="font-medium">Starting price per share</span>
-            <span>{formatMoneyFromCents(buyback.minimum_valuation / company.fullyDilutedShares)}</span>
+            <span>{formatMoney(buyback.minimum_valuation / company.fullyDilutedShares)}</span>
           </div>
         ) : null}
 
@@ -305,16 +313,15 @@ const SubmitBidSection = ({ onBack, mutation, buyback }: SubmitBidSectionProps) 
 
   const holdings = useMemo(
     () =>
-      ownShareHoldings
-        ? ownTotalVestedShares
-          ? [...ownShareHoldings, { className: VESTED_SHARES_CLASS, count: ownTotalVestedShares }]
-          : ownShareHoldings
-        : [],
+      [
+        ...(ownShareHoldings || []),
+        ...(ownTotalVestedShares ? [{ className: VESTED_SHARES_CLASS, count: ownTotalVestedShares }] : []),
+      ].filter(Boolean),
     [ownShareHoldings, ownTotalVestedShares],
   );
 
   const form = useForm<BuybackBidFormValues>({
-    defaultValues: { share_class: holdings[0]?.className ?? "", share_price: 0, number_of_shares: 0 },
+    defaultValues: { share_class: holdings[0]?.className ?? "", share_price: 0, number_of_shares: "0" },
     resolver: zodResolver(formSchema),
   });
 
@@ -324,8 +331,8 @@ const SubmitBidSection = ({ onBack, mutation, buyback }: SubmitBidSectionProps) 
     }
   }, [buyback.buyback_type, buyback.accepted_price_cents]);
 
-  const numberOfShares = form.watch("number_of_shares");
-  const pricePerShare = form.watch("share_price");
+  const numberOfShares = form.watch("number_of_shares") || 0;
+  const pricePerShare = form.watch("share_price") || 0;
   const shareClass = form.watch("share_class");
   const maxShares = holdings.find((h) => h.className === shareClass)?.count || 0;
 
@@ -334,21 +341,21 @@ const SubmitBidSection = ({ onBack, mutation, buyback }: SubmitBidSectionProps) 
       buyback.buyback_type === "single_stock" && buyback.total_amount_in_cents && buyback.accepted_price_cents
         ? Math.min(buyback.total_amount_in_cents / buyback.accepted_price_cents, maxShares)
         : maxShares;
-    if (values.number_of_shares > allocationLimit) {
+    if (new Decimal(values.number_of_shares).gt(allocationLimit)) {
       return form.setError("number_of_shares", {
         message: `Number of shares must be between 1 and ${allocationLimit.toLocaleString()}`,
       });
     }
     if (buyback.minimum_valuation && company.fullyDilutedShares && impliedValuation < buyback.minimum_valuation) {
       return form.setError("share_price", {
-        message: `Price per share must be at least ${formatMoneyFromCents(buyback.minimum_valuation / company.fullyDilutedShares)}`,
+        message: `Price per share must be at least ${formatMoney(buyback.minimum_valuation / company.fullyDilutedShares)}`,
       });
     }
     mutation.mutate(values);
   });
 
   const impliedValuation = company.fullyDilutedShares ? company.fullyDilutedShares * pricePerShare : 0;
-  const totalAmount = numberOfShares * pricePerShare;
+  const totalAmount = new Decimal(numberOfShares).mul(pricePerShare || 0);
 
   return (
     <>
@@ -385,7 +392,7 @@ const SubmitBidSection = ({ onBack, mutation, buyback }: SubmitBidSectionProps) 
 
           <div
             className={cn(
-              buyback.buyback_type === "tender_offer" && "grid grid-cols-2 items-start gap-4 sm:grid-cols-2",
+              buyback.buyback_type === "tender_offer" && "grid grid-cols-1 items-start gap-3 sm:grid-cols-2",
             )}
           >
             <FormField
@@ -395,7 +402,7 @@ const SubmitBidSection = ({ onBack, mutation, buyback }: SubmitBidSectionProps) 
                 <FormItem>
                   <FormLabel>Number of shares</FormLabel>
                   <FormControl>
-                    <NumberInput {...field} placeholder="0" />
+                    <Input {...field} placeholder="0" type="number" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

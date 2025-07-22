@@ -2,6 +2,7 @@
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel, type Table } from "@tanstack/react-table";
+import Decimal from "decimal.js";
 import {
   CheckIcon,
   CircleCheckIcon,
@@ -26,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { download } from "@/utils";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
+import { formatNumber } from "@/utils/numbers";
 import { request } from "@/utils/request";
 import { company_tender_offer_bids_path, company_tender_offer_path } from "@/utils/routes";
 import { type Buyback, type BuybackBid, buybackBidSchema, buybackSchema, getBuybackStatus } from "../../buybacks";
@@ -164,24 +166,26 @@ export default function BuybackView() {
             })
           : null,
         columnHelper.simple("share_class", "Share class"),
-        columnHelper.simple("number_of_shares", "Shares", (value) => value.toLocaleString()),
+        columnHelper.simple("number_of_shares", "Shares", (value) => formatNumber(value)),
         user.roles.administrator || getBuybackStatus(buyback) !== "Open"
           ? columnHelper.accessor("accepted_shares", {
               id: "accepted_shares",
               header: "Accepted",
-              cell: (info) => Number(info.getValue() || 0).toLocaleString(),
+              cell: (info) => formatNumber(info.getValue()),
               footer:
                 getBuybackStatus(buyback) !== "Open"
-                  ? bids.reduce((sum, bid) => sum + Number(bid.accepted_shares), 0).toLocaleString()
+                  ? formatNumber(bids.reduce((sum, bid) => sum.plus(bid.accepted_shares), new Decimal(0)))
                   : "",
             })
           : null,
-        user.roles.administrator || getBuybackStatus(buyback) !== "Open"
+        (user.roles.administrator || getBuybackStatus(buyback) !== "Open") && buyback.accepted_price_cents
           ? columnHelper.display({
               id: "clearing_price",
               header: "Clearing Price",
               cell: (info) =>
-                info.row.original.accepted_shares && getBuybackStatus(buyback) !== "Open"
+                info.row.original.accepted_shares &&
+                getBuybackStatus(buyback) !== "Open" &&
+                buyback.accepted_price_cents
                   ? formatMoneyFromCents(buyback.accepted_price_cents)
                   : "—",
               footer: getBuybackStatus(buyback) !== "Open" ? formatMoneyFromCents(buyback.accepted_price_cents) : "",
@@ -192,17 +196,19 @@ export default function BuybackView() {
           id: "total",
           header: "Total",
           cell: (info) =>
-            getBuybackStatus(buyback) !== "Open"
+            getBuybackStatus(buyback) !== "Open" && buyback.accepted_price_cents
               ? info.row.original.accepted_shares
-                ? formatMoneyFromCents(Number(info.row.original.accepted_shares) * buyback.accepted_price_cents)
+                ? formatMoneyFromCents(new Decimal(info.row.original.accepted_shares).mul(buyback.accepted_price_cents))
                 : "—"
-              : formatMoneyFromCents(Number(info.row.original.number_of_shares) * info.row.original.share_price_cents),
+              : formatMoneyFromCents(
+                  new Decimal(info.row.original.number_of_shares).mul(info.row.original.share_price_cents),
+                ),
           footer:
-            getBuybackStatus(buyback) !== "Open"
+            getBuybackStatus(buyback) !== "Open" && buyback.accepted_price_cents
               ? formatMoneyFromCents(
                   bids.reduce(
-                    (sum, bid) => sum + Number(bid.accepted_shares || 0) * (buyback.accepted_price_cents || 0),
-                    0,
+                    (sum, bid) => sum.plus(new Decimal(bid.accepted_shares).mul(buyback.accepted_price_cents || 0)),
+                    new Decimal(0),
                   ),
                 )
               : "",
@@ -210,9 +216,9 @@ export default function BuybackView() {
         getBuybackStatus(buyback) !== "Open"
           ? columnHelper.accessor(
               (row) =>
-                Number(row.accepted_shares) === Number(row.number_of_shares)
+                new Decimal(row.accepted_shares).eq(row.number_of_shares)
                   ? "Accepted"
-                  : Number(row.accepted_shares)
+                  : new Decimal(row.accepted_shares).gt(0)
                     ? "Partially accepted"
                     : "Excluded",
               {
@@ -394,17 +400,6 @@ export default function BuybackView() {
           buyback={buyback}
           bids={bids}
         />
-      ) : null}
-      {user.roles.administrator ? (
-        <div className="mt-auto">
-          <div className="flex justify-center border-t border-gray-100 p-3">
-            <span>
-              <span className="font-semibold">{buyback.bid_count}</span> bid{buyback.bid_count === 1 ? "" : "s"} from{" "}
-              <span className="font-semibold">{buyback.investor_count} </span>investor
-              {buyback.investor_count === 1 ? "" : "s"}
-            </span>
-          </div>
-        </div>
       ) : null}
     </>
   );
