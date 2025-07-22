@@ -11,53 +11,10 @@ RSpec.describe InvoiceLineItem do
 
   describe "validations" do
     it { is_expected.to validate_presence_of(:description) }
-
-    describe "pay_rate_in_subunits" do
-      let(:invoice_line_item) { build(:invoice_line_item) }
-
-      it "requires pay_rate_in_subunits to be present" do
-        invoice_line_item.pay_rate_in_subunits = nil
-        expect(invoice_line_item).to be_invalid
-        expect(invoice_line_item.errors[:pay_rate_in_subunits]).to include("can't be blank")
-      end
-
-      it "requires pay_rate_in_subunits to be greater than 0" do
-        invoice_line_item.pay_rate_in_subunits = 0
-        expect(invoice_line_item).to be_invalid
-        expect(invoice_line_item.errors[:pay_rate_in_subunits]).to include("must be greater than 0")
-      end
-
-      it "requires pay_rate_in_subunits to be an integer" do
-        invoice_line_item.pay_rate_in_subunits = 1.5
-        expect(invoice_line_item).to be_invalid
-        expect(invoice_line_item.errors[:pay_rate_in_subunits]).to include("must be an integer")
-      end
-    end
-
-    describe "quantity validations" do
-      let(:invoice_line_item) { build(:invoice_line_item) }
-
-      it "requires quantity to be present" do
-        invoice_line_item.quantity = nil
-        expect(invoice_line_item).to be_invalid
-        expect(invoice_line_item.errors[:quantity]).to include("can't be blank")
-      end
-
-      it "accepts decimal quantity greater than or equal to 0.01" do
-        [0.01, 0.5, 1, 2.5, 100.99].each do |qty|
-          invoice_line_item.quantity = qty
-          expect(invoice_line_item).to be_valid
-        end
-      end
-
-      it "rejects quantities less than 0.01" do
-        [0, 0.001, 0.004, -1, -2.3].each do |qty|
-          invoice_line_item.quantity = qty
-          expect(invoice_line_item).to be_invalid
-          expect(invoice_line_item.errors[:quantity]).to include("must be greater than or equal to 0.01")
-        end
-      end
-    end
+    it { is_expected.to validate_presence_of(:pay_rate_in_subunits) }
+    it { is_expected.to validate_numericality_of(:pay_rate_in_subunits).only_integer.is_greater_than(0) }
+    it { is_expected.to validate_presence_of(:quantity) }
+    it { is_expected.to validate_numericality_of(:quantity).is_greater_than_or_equal_to(0.01) }
   end
 
   describe "#cash_amount_in_cents" do

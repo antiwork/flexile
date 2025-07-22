@@ -252,12 +252,12 @@ test.describe("invoice creation", () => {
     await expect(page.getByText("This invoice includes rates above your default")).not.toBeVisible();
   });
 
-  test("supports decimal quantities for hours", async ({ page }) => {
+  test("supports decimal quantities", async ({ page }) => {
     await login(page, contractorUser);
     await page.goto("/invoices/new");
 
     await page.getByLabel("Hours").fill("2.5");
-    await page.getByPlaceholder("Description").fill("Development work with decimal hours");
+    await page.getByPlaceholder("Description").fill("Development work with decimal quantities");
     await fillDatePicker(page, "Date", "12/15/2024");
 
     await expect(page.getByText("Total services$150")).toBeVisible();
