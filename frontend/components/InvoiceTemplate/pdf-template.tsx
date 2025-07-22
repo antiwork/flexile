@@ -106,20 +106,25 @@ export function PdfTemplate({ invoice }: { invoice: InvoiceData }) {
         <LineItems
           lineItems={invoice.lineItems.map((item) => {
             const cashFactor = 1 - invoice.equityPercentage / 100;
-            const normalizedQuantity = item.hourly ? item.quantity / 60 : item.quantity;
+            // Match the page logic exactly: Math.ceil((lineItem.quantity / (lineItem.hourly ? 60 : 1)) * lineItem.payRateInSubunits)
+            const lineItemTotal = Math.ceil((item.quantity / (item.hourly ? 60 : 1)) * item.payRateInSubunits);
 
             return {
               name: item.description,
-              quantity: item.hourly ? item.quantity : item.quantity,
-              price: (item.payRateInSubunits * cashFactor) / 100,
+              quantity: item.quantity,
+              price: item.payRateInSubunits,
               unit: item.hourly ? "hour" : "item",
               _displayPrice: item.payRateInSubunits
                 ? `${formatMoneyFromCents(item.payRateInSubunits * cashFactor)}${item.hourly ? " / hour" : ""}`
                 : "",
-              // Override the calculation to match the invoice page logic
-              _calculatedTotal: Math.ceil(normalizedQuantity * item.payRateInSubunits) * cashFactor,
-              // Format quantity for display like the invoice page
-              _displayQuantity: item.hourly ? (item.quantity / 60).toFixed(2) : item.quantity.toString(),
+              // Use the exact same calculation as the page
+              _calculatedTotal: lineItemTotal * cashFactor,
+              // Format quantity for display like the page: formatDuration for hourly, raw for non-hourly
+              _displayQuantity: item.hourly
+                ? `${Math.floor(item.quantity / 60)
+                    .toString()
+                    .padStart(2, "0")}:${(item.quantity % 60).toString().padStart(2, "0")}`
+                : item.quantity.toString(),
             };
           })}
           currency="USD"
@@ -127,8 +132,6 @@ export function PdfTemplate({ invoice }: { invoice: InvoiceData }) {
           quantityLabel="Qty / Hours"
           priceLabel="Rate"
           totalLabel="Amount"
-          locale="en-US"
-          includeDecimals
           includeUnits
         />
 
@@ -176,8 +179,11 @@ export function PdfTemplate({ invoice }: { invoice: InvoiceData }) {
                 {formatMoneyFromCents(
                   invoice.lineItems.reduce((acc, lineItem) => {
                     const cashFactor = 1 - invoice.equityPercentage / 100;
-                    const normalizedQuantity = lineItem.hourly ? lineItem.quantity / 60 : lineItem.quantity;
-                    return acc + Math.ceil(normalizedQuantity * lineItem.payRateInSubunits) * cashFactor;
+                    // Match the page logic exactly: Math.ceil((lineItem.quantity / (lineItem.hourly ? 60 : 1)) * lineItem.payRateInSubunits)
+                    const lineItemTotal = Math.ceil(
+                      (lineItem.quantity / (lineItem.hourly ? 60 : 1)) * lineItem.payRateInSubunits,
+                    );
+                    return acc + lineItemTotal * cashFactor;
                   }, 0),
                 )}
               </Text>

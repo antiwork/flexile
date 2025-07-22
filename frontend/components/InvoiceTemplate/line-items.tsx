@@ -1,8 +1,7 @@
 import { Text, View } from "@react-pdf/renderer";
 import React from "react";
+import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { Description } from "./description";
-import { calculateLineItemTotal } from "./utils/calculate";
-import { formatCurrencyForPDF } from "./utils/pdf-format";
 
 type LineItem = {
   name: string;
@@ -21,8 +20,6 @@ type Props = {
   quantityLabel: string;
   priceLabel: string;
   totalLabel: string;
-  locale: string;
-  includeDecimals?: boolean;
   includeUnits?: boolean;
 };
 
@@ -33,12 +30,8 @@ export function LineItems({
   quantityLabel,
   priceLabel,
   totalLabel,
-  locale,
-  includeDecimals,
   includeUnits,
 }: Props) {
-  const maximumFractionDigits = includeDecimals ? 2 : 0;
-
   return (
     <View style={{ marginTop: 20 }}>
       <View
@@ -80,31 +73,12 @@ export function LineItems({
           <Text style={{ flex: 1, fontSize: 9 }}>{item._displayQuantity ?? item.quantity.toString()}</Text>
 
           <Text style={{ flex: 1, fontSize: 9 }}>
-            {item._displayPrice ||
-              (currency &&
-                formatCurrencyForPDF({
-                  amount: item.price,
-                  currency,
-                  locale,
-                  maximumFractionDigits,
-                }))}
+            {item._displayPrice || (currency && formatMoneyFromCents(item.price))}
             {includeUnits && item.unit ? ` / ${item.unit}` : null}
           </Text>
 
           <Text style={{ flex: 1, fontSize: 9, textAlign: "right" }}>
-            {currency
-              ? formatCurrencyForPDF({
-                  amount:
-                    item._calculatedTotal ??
-                    calculateLineItemTotal({
-                      price: item.price,
-                      quantity: item.quantity,
-                    }),
-                  currency,
-                  locale,
-                  maximumFractionDigits,
-                })
-              : null}
+            {currency ? formatMoneyFromCents(item._calculatedTotal ?? 0) : null}
           </Text>
         </View>
       ))}
