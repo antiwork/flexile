@@ -21,6 +21,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
+import { useIsDocumentSignatureRequired } from "@/app/(dashboard)/documents";
 import { navLinks as equityNavLinks } from "@/app/(dashboard)/equity";
 import { useIsActionable } from "@/app/(dashboard)/invoices";
 import { GettingStarted } from "@/components/GettingStarted";
@@ -191,12 +192,12 @@ const NavLinks = () => {
     { refetchInterval: 30_000 },
   );
   const isInvoiceActionable = useIsActionable();
+  const isDocumentSignatureRequired = useIsDocumentSignatureRequired();
   const { data: documentsData } = trpc.documents.list.useQuery(
-    user.currentCompanyId && user.id
-      ? { companyId: user.currentCompanyId, userId: user.id, signable: true }
-      : skipToken,
+    user.currentCompanyId && user.id ? { companyId: user.currentCompanyId, userId: user.id } : skipToken,
     { refetchInterval: 30_000 },
   );
+
   const updatesPath = company.routes.find((route) => route.label === "Updates")?.name;
   const equityLinks = equityNavLinks(user, company);
 
@@ -233,7 +234,7 @@ const NavLinks = () => {
           href="/documents"
           icon={Files}
           active={pathname.startsWith("/documents") || pathname.startsWith("/document_templates")}
-          badge={documentsData?.length}
+          badge={documentsData?.filter(isDocumentSignatureRequired).length}
         >
           Documents
         </NavLink>
