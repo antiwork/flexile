@@ -22,7 +22,7 @@ import { companies, users } from "@/db/schema";
 import env from "@/env";
 import { assertDefined } from "@/utils/assert";
 import { richTextExtensions } from "@/utils/richText";
-import { internal_userid_url } from "@/utils/routes";
+
 import { latestUserComplianceInfo, withRoles } from "./routes/users/helpers";
 import { type AppRouter } from "./server";
 

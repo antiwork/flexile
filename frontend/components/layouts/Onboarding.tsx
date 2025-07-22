@@ -1,13 +1,13 @@
 "use client";
 
-import { SignOutButton } from "@clerk/nextjs";
+import { signOut } from "next-auth/react";
 import { CheckIcon } from "@heroicons/react/16/solid";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useCurrentUser } from "@/global";
+import { useCurrentUser, useUserStore } from "@/global";
 import logo from "@/images/flexile-logo.svg";
 
 const OnboardingLayout = ({
@@ -24,6 +24,13 @@ const OnboardingLayout = ({
   children: React.ReactNode;
 }) => {
   const user = useCurrentUser();
+  const { logout } = useUserStore();
+
+  const handleLogout = async () => {
+    await signOut({ redirect: false });
+    logout();
+    window.location.href = "/login";
+  };
 
   return (
     <div className="flex h-screen flex-col">
@@ -49,9 +56,9 @@ const OnboardingLayout = ({
         )}
         <div className="hidden justify-self-end text-sm md:block">
           Signing up as {user.email}.{" "}
-          <SignOutButton>
-            <Button variant="link">Logout</Button>
-          </SignOutButton>
+          <Button variant="link" onClick={handleLogout}>
+            Logout
+          </Button>
         </div>
       </header>
       <div className="flex h-full flex-col">
