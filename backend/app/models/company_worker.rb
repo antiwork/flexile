@@ -23,7 +23,7 @@ class CompanyWorker < ApplicationRecord
   validates :user_id, uniqueness: { scope: :company_id }
   validates :role, presence: true, on: :update
   validates :started_at, presence: true
-  validates :pay_rate_in_subunits, numericality: { only_integer: true, greater_than: 0, allow_nil: true }
+  validates :pay_rate_in_subunits, numericality: { only_integer: true, greater_than: 0, allow_nil: true, message: "Please enter a rate above $0." }
   validates :equity_percentage, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: MAX_EQUITY_PERCENTAGE }
 
   scope :active, -> { where(ended_at: nil) }
