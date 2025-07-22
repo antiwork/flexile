@@ -28,7 +28,7 @@ test.describe("Contractor for multiple companies", () => {
 
     await login(page, adminUser);
     await page.getByRole("link", { name: "People" }).click();
-    await page.getByRole("button", { name: "Invite contractor" }).click();
+    await page.getByRole("button", { name: "Add contractor" }).click();
 
     await page.getByLabel("Email").fill(contractorUser.email);
     await fillDatePicker(page, "Start date", "08/08/2025");

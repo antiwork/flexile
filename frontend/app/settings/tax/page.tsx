@@ -42,7 +42,7 @@ const dataSchema = z.object({
   is_foreign: z.boolean(),
   is_tax_information_confirmed: z.boolean(),
   legal_name: z.string(),
-  signature: z.string(),
+  signature: z.string().nullable(),
   state: z.string().nullable(),
   street_address: z.string().nullable(),
   tax_id: z.string().nullable(),
@@ -554,11 +554,10 @@ const LegalCertificationModal = ({
         {isForeignUser ? (
           <>
             <div>
-              The provided information will be included in the {certificateType} form required by the U.S. tax laws to
-              confirm your taxpayer status. If you're eligible for 1042-S forms, you'll receive an email with a download
-              link once available.
+              This information will be used in the {certificateType} form to confirm your U.S. taxpayer status. If
+              you're eligible for a 1042-S form, you'll receive a download link by email when it's ready.
             </div>
-            <div className="flex gap-1">
+            <div className="flex items-center gap-1">
               <ArrowUpRightFromSquare className="size-4" />
               <a
                 target="_blank"
@@ -573,11 +572,10 @@ const LegalCertificationModal = ({
         ) : (
           <>
             <div>
-              The information you provided will be included in the W-9 form required by the U.S. tax laws to confirm
-              your taxpayer status. If you're eligible for 1099 forms, you'll receive an email with a download link once
-              available.
+              This information will be used in the W-9 form to confirm your U.S. taxpayer status. If you're eligible for
+              1099 forms, you'll receive a download link by email when it's ready.
             </div>
-            <div className="flex gap-1">
+            <div className="flex items-center gap-1">
               <ArrowUpRightFromSquare className="size-4" />
               <a
                 target="_blank"
@@ -591,7 +589,7 @@ const LegalCertificationModal = ({
           </>
         )}
 
-        <div className="prose h-[25em] overflow-y-auto rounded-md border p-4">
+        <div className="prose border-muted min-h-0 grow overflow-y-auto rounded-md border p-4 text-black">
           <b>{certificateType} Certification</b>
           <br />
           <br />
@@ -691,18 +689,20 @@ const LegalCertificationModal = ({
           </ol>
         </div>
 
-        <Label htmlFor={uid}>Your signature</Label>
-        <Input
-          id={uid}
-          value={signature}
-          onChange={(e) => setSignature(e.target.value)}
-          className="font-signature text-xl"
-          aria-label="Signature"
-        />
-        <p className="text-muted-foreground text-sm">
-          I agree that the signature will be the electronic representation of my signature and for all purposes when I
-          use them on documents just the same as a pen-and-paper signature.
-        </p>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor={uid}>Your signature</Label>
+          <Input
+            id={uid}
+            value={signature}
+            onChange={(e) => setSignature(e.target.value)}
+            className="font-signature text-xl"
+            aria-label="Signature"
+          />
+          <p className="text-muted-foreground text-xs">
+            I agree that the signature will be the electronic representation of my signature and for all purposes when I
+            use them on documents just the same as a pen-and-paper signature.
+          </p>
+        </div>
 
         <DialogFooter>
           <MutationButton mutation={signMutation} loadingText="Saving..." disabled={!signature}>

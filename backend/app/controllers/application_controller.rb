@@ -4,7 +4,7 @@ require "clerk/authenticatable"
 
 class ApplicationController < ActionController::Base
   include Clerk::Authenticatable
-  include PunditAuthorization, SetCurrent, HelperWidget
+  include PunditAuthorization, SetCurrent
 
   before_action :force_onboarding, if: -> { clerk.user? }, except: [:userid, :current_user_data]
   before_action :set_paper_trail_whodunnit

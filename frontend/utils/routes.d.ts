@@ -88,6 +88,26 @@ export const serialize: RouterExposedMethods['serialize'];
 
 /**
  * Generates rails route to
+ * /internal/invite_links/accept(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const accept_invite_links_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/invite_links/accept(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const accept_invite_links_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /admin/companies(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
@@ -983,6 +1003,30 @@ export const company_invitations_url: ((
  * @returns {string} route path
  */
 export const company_invitations_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/invite_links(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_invite_links_url: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/invite_links(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_invite_links_path: ((
+  company_id: RequiredRouteParameter,
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
@@ -2296,6 +2340,30 @@ export const resend_company_equity_grant_exercise_path: ((
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/invite_links/reset(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const reset_company_invite_links_url: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/invite_links/reset(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const reset_company_invite_links_path: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /internal/roles/:id(.:format)
  * @param {any} id
  * @param {object | undefined} options
@@ -2447,6 +2515,26 @@ export const settings_dividend_url: ((
  * @returns {string} route path
  */
 export const settings_dividend_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/settings/equity(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const settings_equity_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/settings/equity(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const settings_equity_path: ((
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
@@ -2935,6 +3023,26 @@ export const update_rails_disk_service_url: ((
  */
 export const update_rails_disk_service_path: ((
   encoded_token: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/invite_links/verify(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const verify_invite_links_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/invite_links/verify(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const verify_invite_links_path: ((
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
