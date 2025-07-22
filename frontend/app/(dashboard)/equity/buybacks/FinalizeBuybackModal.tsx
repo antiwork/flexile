@@ -1,7 +1,6 @@
 import { useMutation, type UseMutationResult } from "@tanstack/react-query";
 import { Download } from "lucide-react";
 import React, { useState } from "react";
-import type { Buyback, BuybackBid } from "@/app/equity/buybacks";
 import { MutationStatusButton } from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -18,6 +17,7 @@ import { download } from "@/utils";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { finalize_company_tender_offer_path } from "@/utils/routes";
+import type { Buyback, BuybackBid } from "../buybacks";
 
 type FinalizeBuybackModalProps = {
   onClose: () => void;

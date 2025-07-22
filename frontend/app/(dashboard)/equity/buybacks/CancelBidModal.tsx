@@ -1,5 +1,4 @@
 import { useMutation } from "@tanstack/react-query";
-import type { Buyback, BuybackBid } from "@/app/equity/buybacks";
 import MutationButton from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -7,6 +6,7 @@ import { useCurrentCompany } from "@/global";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_tender_offer_bid_path } from "@/utils/routes";
+import type { Buyback, BuybackBid } from "../buybacks";
 
 type CancelBidModalProps = {
   onClose: () => void;

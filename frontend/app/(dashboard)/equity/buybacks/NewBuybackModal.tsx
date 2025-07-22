@@ -7,7 +7,6 @@ import { ChevronDown, CloudUpload, Link2, PencilLine, Search, Trash2 } from "luc
 import React, { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { createBuybackSchema } from "@/app/equity/buybacks";
 import ComboBox from "@/components/ComboBox";
 import DatePicker from "@/components/DatePicker";
 import { MutationStatusButton } from "@/components/MutationButton";
@@ -37,6 +36,7 @@ import { cn, md5Checksum } from "@/utils";
 import { request } from "@/utils/request";
 import { richTextExtensions } from "@/utils/richText";
 import { company_tender_offers_path } from "@/utils/routes";
+import { createBuybackSchema } from "../buybacks";
 
 const SimpleRichTextEditor = ({
   value,
