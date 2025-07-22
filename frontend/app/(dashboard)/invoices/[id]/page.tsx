@@ -55,6 +55,27 @@ export default function InvoicePage() {
     invoice.requiresAcceptanceByPayee && searchParams.get("accept") === "true",
   );
   const acceptPayment = trpc.invoices.acceptPayment.useMutation();
+  const downloadInvoice = trpc.invoices.downloadInvoice.useMutation({
+    onSuccess: (data) => {
+      // Convert base64 to blob
+      const byteCharacters = atob(data.pdf);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: data.mimeType });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = data.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    },
+  });
   const defaultEquityPercentage = invoice.minAllowedEquityPercentage ?? invoice.equityPercentage;
   const [equityPercentage, setEquityPercentageElected] = useState(defaultEquityPercentage);
 
@@ -83,6 +104,10 @@ export default function InvoicePage() {
 
   assert(!!invoice.invoiceDate); // must be defined due to model checks in rails
 
+  const handleDownloadInvoice = () => {
+    downloadInvoice.mutate({ id, companyId: company.id });
+  };
+
   return (
     <>
       <DashboardHeader
@@ -106,6 +131,11 @@ export default function InvoicePage() {
 
                 <ApproveButton invoice={invoice} onApprove={() => router.push(`/invoices`)} />
               </>
+            ) : null}
+            {user.id === invoice.userId ? (
+              <Button variant="outline" onClick={handleDownloadInvoice}>
+                Download invoice
+              </Button>
             ) : null}
             {user.id === invoice.userId ? (
               <>

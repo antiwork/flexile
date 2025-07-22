@@ -1,9 +1,11 @@
+import { renderToBuffer } from "@react-pdf/renderer";
 import { TRPCError } from "@trpc/server";
 import { formatISO } from "date-fns";
 import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
+import { PdfTemplate } from "@/components/InvoiceTemplate/pdf-template";
 import { byExternalId, db } from "@/db";
 import { invoiceStatuses } from "@/db/enums";
 import {
@@ -22,6 +24,60 @@ import { calculateInvoiceEquity } from "@/trpc/routes/equityCalculations";
 import OneOffInvoiceCreated from "@/trpc/routes/OneOffInvoiceCreated";
 import { latestUserComplianceInfo, simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
+
+const getInvoice = async ({
+  id,
+  companyId,
+  companyAdministrator,
+  companyContractorId,
+}: {
+  id: string;
+  companyId: bigint;
+  companyAdministrator: boolean;
+  companyContractorId: bigint | undefined;
+}) =>
+  await db.query.invoices.findFirst({
+    where: and(
+      eq(invoices.externalId, id),
+      eq(invoices.companyId, companyId),
+      isNull(invoices.deletedAt),
+      !companyAdministrator ? eq(invoices.companyContractorId, assertDefined(companyContractorId)) : undefined,
+    ),
+    with: {
+      lineItems: { columns: { description: true, quantity: true, hourly: true, payRateInSubunits: true } },
+      expenses: {
+        columns: { id: true, totalAmountInCents: true, description: true, expenseCategoryId: true },
+        with: {
+          expenseCategory: { columns: { name: true } },
+        },
+      },
+      contractor: {
+        with: {
+          user: {
+            columns: { externalId: true },
+            with: {
+              userComplianceInfos: {
+                ...latestUserComplianceInfo,
+                columns: { taxInformationConfirmedAt: true, businessEntity: true, legalName: true },
+              },
+            },
+          },
+        },
+      },
+      rejector: { columns: simpleUser.columns },
+      approvals: { with: { approver: { columns: simpleUser.columns } } },
+      company: {
+        columns: {
+          name: true,
+          streetAddress: true,
+          city: true,
+          state: true,
+          zipCode: true,
+          countryCode: true,
+        },
+      },
+    },
+  });
 
 const requiresAcceptanceByPayee = (
   invoice: Pick<typeof invoices.$inferSelect, "createdById" | "userId" | "acceptedAt">,
@@ -227,6 +283,61 @@ export const invoicesRouter = createRouter({
     return invoice;
   }),
 
+  downloadInvoice: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
+    if (!ctx.companyAdministrator && !ctx.companyContractor) throw new TRPCError({ code: "FORBIDDEN" });
+
+    const invoice = await getInvoice({
+      id: input.id,
+      companyId: ctx.company.id,
+      companyAdministrator: !!ctx.companyAdministrator,
+      companyContractorId: ctx.companyContractor?.id,
+    });
+
+    if (!invoice) throw new TRPCError({ code: "NOT_FOUND" });
+
+    // Generate PDF
+    const buffer = await renderToBuffer(
+      PdfTemplate({
+        invoice: {
+          invoiceNumber: invoice.invoiceNumber,
+          invoiceDate: invoice.invoiceDate,
+          paidAt: invoice.paidAt ? invoice.paidAt.toISOString() : null,
+          billFrom: invoice.billFrom,
+          billTo: invoice.billTo,
+          notes: invoice.notes,
+          totalAmountInUsdCents: invoice.totalAmountInUsdCents,
+          cashAmountInCents: invoice.cashAmountInCents,
+          equityAmountInCents: invoice.equityAmountInCents,
+          equityPercentage: invoice.equityPercentage,
+          streetAddress: invoice.streetAddress,
+          city: invoice.city,
+          state: invoice.state,
+          zipCode: invoice.zipCode,
+          countryCode: invoice.countryCode,
+          company: {
+            name: invoice.company.name || "",
+            streetAddress: invoice.company.streetAddress,
+            city: invoice.company.city,
+            state: invoice.company.state,
+            zipCode: invoice.company.zipCode,
+            countryCode: invoice.company.countryCode,
+          },
+          lineItems: invoice.lineItems,
+          expenses: invoice.expenses,
+        },
+      }),
+    );
+
+    // Convert buffer to base64 for transfer
+    const base64 = Buffer.from(buffer).toString("base64");
+
+    return {
+      pdf: base64,
+      filename: `invoice-${invoice.invoiceNumber}.pdf`,
+      mimeType: "application/pdf",
+    };
+  }),
+
   acceptPayment: companyProcedure
     .input(
       z.object({
@@ -374,34 +485,11 @@ export const invoicesRouter = createRouter({
   get: companyProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
     if (!ctx.companyAdministrator && !ctx.companyContractor) throw new TRPCError({ code: "FORBIDDEN" });
 
-    const invoice = await db.query.invoices.findFirst({
-      where: and(
-        eq(invoices.externalId, input.id),
-        eq(invoices.companyId, ctx.company.id),
-        isNull(invoices.deletedAt),
-        !ctx.companyAdministrator
-          ? eq(invoices.companyContractorId, assertDefined(ctx.companyContractor).id)
-          : undefined,
-      ),
-      with: {
-        lineItems: { columns: { description: true, quantity: true, hourly: true, payRateInSubunits: true } },
-        expenses: { columns: { id: true, totalAmountInCents: true, description: true, expenseCategoryId: true } },
-        contractor: {
-          with: {
-            user: {
-              columns: { externalId: true },
-              with: {
-                userComplianceInfos: {
-                  ...latestUserComplianceInfo,
-                  columns: { taxInformationConfirmedAt: true, businessEntity: true, legalName: true },
-                },
-              },
-            },
-          },
-        },
-        rejector: { columns: simpleUser.columns },
-        approvals: { with: { approver: { columns: simpleUser.columns } } },
-      },
+    const invoice = await getInvoice({
+      id: input.id,
+      companyId: ctx.company.id,
+      companyAdministrator: !!ctx.companyAdministrator,
+      companyContractorId: ctx.companyContractor?.id,
     });
 
     if (!invoice) throw new TRPCError({ code: "NOT_FOUND" });
