@@ -50,6 +50,7 @@ import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
 import defaultCompanyLogo from "@/images/default-company-logo.svg";
 import { storageKeys } from "@/models/constants";
 import { trpc } from "@/trpc/client";
+import { isSignableDocument } from "@/utils/documents";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
 
@@ -233,7 +234,7 @@ const NavLinks = () => {
           href="/documents"
           icon={Files}
           active={pathname.startsWith("/documents") || pathname.startsWith("/document_templates")}
-          badge={documentsData?.length}
+          badge={documentsData?.filter((doc) => isSignableDocument(doc, user)).length}
         >
           Documents
         </NavLink>

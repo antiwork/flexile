@@ -39,9 +39,10 @@ import { storageKeys } from "@/models/constants";
 import type { RouterOutput } from "@/trpc";
 import { DocumentTemplateType, DocumentType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
+import { isSignableDocument } from "@/utils/documents";
 import { formatDate } from "@/utils/time";
 
-type Document = RouterOutput["documents"]["list"][number];
+export type Document = RouterOutput["documents"]["list"][number];
 type SignableDocument = Document & { docusealSubmissionId: number };
 
 const typeLabels = {
@@ -236,19 +237,15 @@ export default function DocumentsPage() {
   );
   const [signDocumentParam] = useQueryState("sign");
   const [signDocumentId, setSignDocumentId] = useState<bigint | null>(null);
-  const isSignable = (document: Document): document is SignableDocument =>
-    !!document.docusealSubmissionId &&
-    document.signatories.some(
-      (signatory) =>
-        !signatory.signedAt &&
-        (signatory.id === user.id || (signatory.title === "Company Representative" && isCompanyRepresentative)),
-    );
   const signDocument = signDocumentId
-    ? documents.find((document): document is SignableDocument => document.id === signDocumentId && isSignable(document))
+    ? documents.find(
+        (document): document is SignableDocument =>
+          document.id === signDocumentId && isSignableDocument(document, user),
+      )
     : null;
   useEffect(() => {
     const document = signDocumentParam ? documents.find((document) => document.id === BigInt(signDocumentParam)) : null;
-    if (canSign && document && isSignable(document)) setSignDocumentId(document.id);
+    if (canSign && document && isSignableDocument(document, user)) setSignDocumentId(document.id);
   }, [documents, signDocumentParam]);
   useEffect(() => {
     if (downloadUrl) window.location.href = downloadUrl;
@@ -292,7 +289,7 @@ export default function DocumentsPage() {
             const document = info.row.original;
             return (
               <>
-                {isSignable(document) ? (
+                {isSignableDocument(document, user) ? (
                   <Button
                     variant="outline"
                     size="small"
