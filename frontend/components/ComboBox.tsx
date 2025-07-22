@@ -1,6 +1,6 @@
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { Check, ChevronsUpDown } from "lucide-react";
-import React from "react";
+import React, { useRef, useState } from "react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent } from "@/components/ui/popover";
 import { cn } from "@/utils";
@@ -20,8 +20,18 @@ const ComboBox = ({
   | { multiple?: false; value: string | null | undefined; onChange: (value: string) => void }
 ) &
   Omit<React.ComponentProps<typeof Button>, "value" | "onChange">) => {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  const listRef = useRef<HTMLDivElement>(null);
   const getLabel = (value: string) => options.find((o) => o.value === value)?.label;
+
+  const filteredOptions = searchValue
+    ? options.filter(
+        (option) =>
+          option.label.toLowerCase().includes(searchValue.toLowerCase()) ||
+          option.value.toLowerCase().includes(searchValue.toLowerCase()),
+      )
+    : options;
 
   return (
     <Popover open={open} onOpenChange={setOpen} modal={modal || false}>
@@ -41,16 +51,26 @@ const ComboBox = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0" style={{ width: "var(--radix-popover-trigger-width)" }}>
-        <Command>
-          <CommandInput placeholder="Search..." />
-          <CommandList>
+        <Command shouldFilter={false}>
+          <CommandInput
+            placeholder="Search..."
+            value={searchValue}
+            onValueChange={(value) => {
+              setSearchValue(value);
+              requestAnimationFrame(() => {
+                if (listRef.current) {
+                  listRef.current.scrollTop = 0;
+                }
+              });
+            }}
+          />
+          <CommandList ref={listRef}>
             <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup>
-              {options.map((option) => (
+              {filteredOptions.map((option) => (
                 <CommandItem
                   key={option.value}
                   value={option.value}
-                  keywords={[option.label]}
                   onSelect={(currentValue) => {
                     if (multiple) {
                       onChange(
@@ -61,6 +81,7 @@ const ComboBox = ({
                     } else {
                       onChange(currentValue);
                       setOpen(false);
+                      setSearchValue("");
                     }
                   }}
                 >

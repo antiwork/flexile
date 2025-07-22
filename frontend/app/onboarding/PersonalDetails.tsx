@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { CountrySelector } from "@/components/CountrySelector";
+import ComboBox from "@/components/ComboBox";
 import { MutationStatusButton } from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useCurrentUser } from "@/global";
-import { sanctionedCountries } from "@/models/constants";
+import { countries, sanctionedCountries } from "@/models/constants";
 import { request } from "@/utils/request";
 import { onboarding_path } from "@/utils/routes";
 
@@ -76,6 +76,8 @@ const PersonalDetails = () => {
     save.mutate();
   });
 
+  const countryOptions = [...countries].map(([code, name]) => ({ value: code, label: name }));
+
   return (
     <>
       <Form {...form}>
@@ -116,7 +118,7 @@ const PersonalDetails = () => {
                 <FormItem>
                   <FormLabel>Country of residence</FormLabel>
                   <FormControl>
-                    <CountrySelector {...field} placeholder="Select country" />
+                    <ComboBox {...field} placeholder="Select country" options={countryOptions} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -130,7 +132,7 @@ const PersonalDetails = () => {
                 <FormItem>
                   <FormLabel>Country of citizenship</FormLabel>
                   <FormControl>
-                    <CountrySelector {...field} placeholder="Select country" />
+                    <ComboBox {...field} placeholder="Select country" options={countryOptions} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
