@@ -34,12 +34,6 @@ importers:
       '@bugsnag/js':
         specifier: ^8.0.0
         version: 8.2.0
-      '@clerk/nextjs':
-        specifier: ^6.9.9
-        version: 6.12.5(next@15.2.4(patch_hash=b88b2148998305bbdabddd07fbda67d9c9f6010995b25120053815e04bd5330b)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      '@clerk/testing':
-        specifier: ^1.4.6
-        version: 1.4.27(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@date-fns/utc':
         specifier: ^2.1.0
         version: 2.1.0
@@ -553,21 +547,6 @@ packages:
     resolution: {integrity: sha512-habBg77Nss4xhN+hvw3pbNxjRdEdKIUINpLRo2kHrvg7ZcKIux+75H283yQPE728hTwaKGxUnIEISgH4NLjeQw==}
     engines: {node: '>=18.17.0'}
 
-  '@clerk/clerk-react@5.24.2':
-    resolution: {integrity: sha512-gWYhuC8K4GOw+jtYEEs4y7ypT6W6Pk3SkxPwW8GXtrBvqGyJKapq+d2EHFYMZvQCnFKAW4hE+nsTyy7NqP9RJg==}
-    engines: {node: '>=18.17.0'}
-    peerDependencies:
-      react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
-      react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-0
-
-  '@clerk/nextjs@6.12.5':
-    resolution: {integrity: sha512-MhpQRMHG9g7SzrhWQP/8BtgZ+Z59txyoxkesQOKOO6/LmKAU6YIQDMMjdJmQk/xNACkJIOqz0m5yOEueJzkq1g==}
-    engines: {node: '>=18.17.0'}
-    peerDependencies:
-      next: ^13.5.4 || ^14.0.3 || ^15.0.0
-      react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
-      react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-0
-
   '@clerk/shared@3.0.1':
     resolution: {integrity: sha512-WGyzVQuwAr8/P4fhMGq8G4IVKxXZtPEVe6RVE9EEMjAHtD77MF9Bu/0Dfb8jHYeyHOGsJm73I7aaDbgDZDkJzw==}
     engines: {node: '>=18.17.0'}
@@ -578,18 +557,6 @@ packages:
       react:
         optional: true
       react-dom:
-        optional: true
-
-  '@clerk/testing@1.4.27':
-    resolution: {integrity: sha512-LfkY4ORKuRRd2aRju/SG5+jcHP1DQQ+GxiVQDg0nXLl1G3AaKL5cvI9VGCWhzBNDVLcP90HnBJESRN65AQn+8g==}
-    engines: {node: '>=18.17.0'}
-    peerDependencies:
-      '@playwright/test': ^1
-      cypress: ^13
-    peerDependenciesMeta:
-      '@playwright/test':
-        optional: true
-      cypress:
         optional: true
 
   '@clerk/types@4.48.0':
@@ -3897,10 +3864,6 @@ packages:
   dot-case@3.0.4:
     resolution: {integrity: sha512-Kv5nKlh6yRrdrGvxeJ2e5y2eRUpkUosIW4A2AS38zwSz27zu7ufDwQPi5Jhs3XAlGNetl3bmnGhQsMtkKJnj3w==}
 
-  dotenv@16.4.7:
-    resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
-    engines: {node: '>=12'}
-
   drizzle-kit@0.30.5:
     resolution: {integrity: sha512-l6dMSE100u7sDaTbLczibrQZjA35jLsHNqIV+jmhNVO3O8jzM6kywMOmV9uOz9ZVSCMPQhAZEFjL/qDPVrqpUA==}
     hasBin: true
@@ -6826,26 +6789,6 @@ snapshots:
       - react
       - react-dom
 
-  '@clerk/clerk-react@5.24.2(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
-    dependencies:
-      '@clerk/shared': 3.0.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      '@clerk/types': 4.48.0
-      react: 19.0.0
-      react-dom: 19.0.0(react@19.0.0)
-      tslib: 2.4.1
-
-  '@clerk/nextjs@6.12.5(next@15.2.4(patch_hash=b88b2148998305bbdabddd07fbda67d9c9f6010995b25120053815e04bd5330b)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
-    dependencies:
-      '@clerk/backend': 1.25.2(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      '@clerk/clerk-react': 5.24.2(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      '@clerk/shared': 3.0.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      '@clerk/types': 4.48.0
-      next: 15.2.4(patch_hash=b88b2148998305bbdabddd07fbda67d9c9f6010995b25120053815e04bd5330b)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      react: 19.0.0
-      react-dom: 19.0.0(react@19.0.0)
-      server-only: 0.0.1(patch_hash=c309df846d8ba07c09bca5bcd66640e3f66fb295d7a5a9e9309c5628104b666f)
-      tslib: 2.4.1
-
   '@clerk/shared@3.0.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@clerk/types': 4.48.0
@@ -6857,18 +6800,6 @@ snapshots:
     optionalDependencies:
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
-
-  '@clerk/testing@1.4.27(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
-    dependencies:
-      '@clerk/backend': 1.25.2(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      '@clerk/shared': 3.0.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      '@clerk/types': 4.48.0
-      dotenv: 16.4.7
-    optionalDependencies:
-      '@playwright/test': 1.51.0
-    transitivePeerDependencies:
-      - react
-      - react-dom
 
   '@clerk/types@4.48.0':
     dependencies:
@@ -10560,8 +10491,6 @@ snapshots:
     dependencies:
       no-case: 3.0.4
       tslib: 2.4.1
-
-  dotenv@16.4.7: {}
 
   drizzle-kit@0.30.5:
     dependencies:

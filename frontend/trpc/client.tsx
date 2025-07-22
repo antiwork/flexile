@@ -1,5 +1,4 @@
 "use client";
-import { useAuth } from "@clerk/nextjs";
 import { useSession } from "next-auth/react";
 import { type QueryClient } from "@tanstack/react-query";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
@@ -9,44 +8,28 @@ import { useEffect, useState } from "react";
 import superjson from "superjson";
 import { useUserStore } from "@/global";
 import { request } from "@/utils/request";
-import { internal_current_user_data_path } from "@/utils/routes";
 import { type AppRouter } from "./server";
 import { createClient } from "./shared";
 
 export const trpc = createTRPCReact<AppRouter>();
 
 const GetUserData = ({ children }: { children: React.ReactNode }) => {
-  const { isSignedIn, userId } = useAuth(); // Clerk
   const { data: session } = useSession(); // NextAuth
   const { user, login, logout } = useUserStore();
 
-  // Prioritize OTP authentication over Clerk
-  const isOtpAuthenticated = !!session?.user;
-  const isClerkAuthenticated = isSignedIn && !isOtpAuthenticated; // Only use Clerk if no OTP session
-  const isAuthenticated = isOtpAuthenticated || isClerkAuthenticated;
-  const authId = isOtpAuthenticated ? session?.user?.email : userId;
+  // Only use OTP authentication
+  const isAuthenticated = !!session?.user;
+  const authId = session?.user?.email;
 
   const { data } = useQuery({
-    queryKey: ["currentUser", authId, isOtpAuthenticated ? "otp" : "clerk"],
+    queryKey: ["currentUser", authId, "otp"],
     queryFn: async (): Promise<unknown> => {
-      // Prioritize NextAuth session over Clerk
-      if (isOtpAuthenticated && session?.user && 'jwt' in session.user) {
+      if (isAuthenticated && session?.user && 'jwt' in session.user) {
         const response = await request({
           url: "/api/user-data",
           method: "POST",
           accept: "json",
           jsonData: { jwt: (session.user as any).jwt },
-          assertOk: true,
-        });
-        return await response.json();
-      }
-
-      // Fall back to Clerk authentication only if no OTP session
-      if (isClerkAuthenticated) {
-        const response = await request({
-          url: internal_current_user_data_path(),
-          accept: "json",
-          method: "GET",
           assertOk: true,
         });
         return await response.json();

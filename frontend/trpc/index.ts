@@ -38,14 +38,14 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
   const headers: Record<string, string> = {
     cookie,
     "user-agent": userAgent,
-    referer: "x" /* work around a Clerk limitation */,
+    referer: "x",
     accept: "application/json",
     ...(csrfToken ? { "x-csrf-token": csrfToken } : {}),
   };
 
   let userId: number | null = null;
 
-  // First try to get userId from NextAuth JWT session
+  // Get userId from NextAuth JWT session
   const session = await getServerSession(authOptions);
   if (session?.user && 'jwt' in session.user) {
     // Extract user ID from JWT token
@@ -57,12 +57,6 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
     } catch (error) {
       console.error("Error parsing JWT token:", error);
     }
-  }
-
-  // If no JWT session, fall back to Clerk authentication
-  if (!userId) {
-    const response = await fetch(internal_userid_url({ host }), { headers });
-    userId = response.ok ? z.object({ id: z.number() }).parse(await response.json()).id : null;
   }
 
   return {

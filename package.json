@@ -56,8 +56,6 @@
     "@aws-sdk/client-s3": "^3.688.0",
     "@aws-sdk/s3-request-presigner": "^3.691.0",
     "@bugsnag/js": "^8.0.0",
-    "@clerk/nextjs": "^6.9.9",
-    "@clerk/testing": "^1.4.6",
     "@date-fns/utc": "^2.1.0",
     "@docuseal/api": "^1.0.13",
     "@docuseal/react": "^1.0.63",

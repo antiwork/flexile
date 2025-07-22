@@ -16,36 +16,18 @@ module SetCurrent
   def set_current
     user = nil
 
-    # First try Clerk authentication
-    if clerk&.user_id
-      user = User.find_by(clerk_id: clerk.user_id)
-      if !user && !Rails.env.test?
-        email = clerk.user.email_addresses.find { |item| item.id == clerk.user.primary_email_address_id }.email_address
-        user = User.find_by(email:) if Rails.env.development?
-        if user
-          user.update!(clerk_id: clerk.user_id)
-        else
-          user = User.create!(clerk_id: clerk.user_id, email:)
-          user.tos_agreements.create!(ip_address: request.remote_ip)
-        end
-      end
-
-      if clerk.user? && clerk.session_claims["iat"] != user.current_sign_in_at.to_i
-        user.update!(current_sign_in_at: Time.zone.at(clerk.session_claims["iat"]))
-      end
-
-      invited_company = nil
-      if cookies["invitation_token"].present?
-        invite_link = CompanyInviteLink.find_by(token: cookies["invitation_token"])
-        invited_company = invite_link&.company
-        user.update!(signup_invite_link: invite_link) if invite_link
-        cookies.delete("invitation_token")
-      end
+    # Try JWT authentication
+    if jwt_token_present?
+      user = authenticate_with_jwt_user
     end
 
-    # If no Clerk user, try JWT authentication
-    if user.nil? && jwt_token_present?
-      user = authenticate_with_jwt_user
+    # Handle invite links for authenticated users
+    invited_company = nil
+    if user && cookies["invitation_token"].present?
+      invite_link = CompanyInviteLink.find_by(token: cookies["invitation_token"])
+      invited_company = invite_link&.company
+      user.update!(signup_invite_link: invite_link) if invite_link
+      cookies.delete("invitation_token")
     end
 
     Current.user = user

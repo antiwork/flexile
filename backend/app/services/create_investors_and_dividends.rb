@@ -79,7 +79,7 @@ class CreateInvestorsAndDividends
             user.company_investors.create!(company:, investment_amount_in_cents:)
           end
         else
-          # Respect Clerk's rate limit
+          # Rate limit for API calls
           if request_count >= 10
             elapsed = Time.current - start_time
             if elapsed < 11.seconds

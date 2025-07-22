@@ -1,6 +1,5 @@
 "use client";
 
-import { SignOutButton } from "@clerk/nextjs";
 import { signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
@@ -52,13 +51,12 @@ import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
 
-// Custom logout component that handles both OTP and Clerk logout
+// Custom logout component that handles OTP logout
 const LogoutButton = ({ children }: { children: React.ReactNode }) => {
   const { data: session } = useSession();
   const { logout } = useUserStore();
 
   const handleLogout = async () => {
-    // Prioritize OTP logout
     if (session?.user) {
       await signOut({ redirect: false });
     }
@@ -68,18 +66,11 @@ const LogoutButton = ({ children }: { children: React.ReactNode }) => {
     window.location.href = "/login";
   };
 
-  const isOtpUser = !!session?.user;
-
-  if (isOtpUser) {
-    return (
-      <button onClick={handleLogout} className="w-full">
-        {children}
-      </button>
-    );
-  }
-
-  // Fallback to Clerk logout for users who might still be signed in via Clerk
-  return <SignOutButton>{children}</SignOutButton>;
+  return (
+    <button onClick={handleLogout} className="w-full">
+      {children}
+    </button>
+  );
 };
 
 const NavLinks = () => {
