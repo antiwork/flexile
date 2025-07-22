@@ -10,20 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_11_103237) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_14_091500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   # Custom types defined in this database.
   # Note that some types may not work with other database engines. Be careful if changing database.
-  create_enum "equity_allocations_status", ["pending_confirmation", "pending_grant_creation", "pending_approval", "approved"]
   create_enum "equity_grant_transactions_transaction_type", ["scheduled_vesting", "vesting_post_invoice_payment", "exercise", "cancellation", "manual_adjustment", "end_of_period_forfeiture"]
   create_enum "equity_grants_issue_date_relationship", ["employee", "consultant", "investor", "founder", "officer", "executive", "board_member"]
   create_enum "equity_grants_option_grant_type", ["iso", "nso"]
   create_enum "equity_grants_vesting_trigger", ["scheduled", "invoice_paid"]
   create_enum "integration_status", ["initialized", "active", "out_of_sync", "deleted"]
   create_enum "invoices_invoice_type", ["services", "other"]
-  create_enum "tax_documents_status", ["initialized", "submitted", "deleted"]
 
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
@@ -143,6 +141,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_11_103237) do
     t.string "pay_rate_currency", default: "usd", null: false
     t.string "role"
     t.boolean "contract_signed_elsewhere", default: false, null: false
+    t.integer "equity_percentage", default: 0, null: false
     t.index ["company_id"], name: "index_company_contractors_on_company_id"
     t.index ["external_id"], name: "index_company_contractors_on_external_id", unique: true
     t.index ["user_id", "company_id"], name: "index_company_contractors_on_user_id_and_company_id", unique: true
@@ -488,19 +487,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_11_103237) do
     t.index ["docuseal_submission_id"], name: "index_documents_on_docuseal_submission_id"
     t.index ["equity_grant_id"], name: "index_documents_on_equity_grant_id"
     t.index ["user_compliance_info_id"], name: "index_documents_on_user_compliance_info_id"
-  end
-
-  create_table "equity_allocations", force: :cascade do |t|
-    t.bigint "company_contractor_id", null: false
-    t.integer "equity_percentage"
-    t.integer "year", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.boolean "locked", default: false, null: false
-    t.boolean "sent_equity_percent_selection_email", default: false, null: false
-    t.enum "status", default: "pending_confirmation", null: false, enum_type: "equity_allocations_status"
-    t.index ["company_contractor_id", "year"], name: "index_equity_allocations_on_company_contractor_id_and_year", unique: true
-    t.index ["company_contractor_id"], name: "index_equity_allocations_on_company_contractor_id"
   end
 
   create_table "equity_buyback_payments", force: :cascade do |t|
@@ -898,23 +884,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_11_103237) do
     t.index ["company_investor_id"], name: "index_share_holdings_on_company_investor_id"
     t.index ["equity_grant_id"], name: "index_share_holdings_on_equity_grant_id"
     t.index ["share_class_id"], name: "index_share_holdings_on_share_class_id"
-  end
-
-  create_table "tax_documents", force: :cascade do |t|
-    t.string "name", null: false
-    t.integer "tax_year", null: false
-    t.enum "status", default: "initialized", null: false, enum_type: "tax_documents_status"
-    t.datetime "submitted_at"
-    t.datetime "emailed_at"
-    t.datetime "deleted_at"
-    t.bigint "user_compliance_info_id", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.bigint "company_id", null: false
-    t.index ["company_id"], name: "index_tax_documents_on_company_id"
-    t.index ["name", "tax_year", "user_compliance_info_id"], name: "idx_on_name_tax_year_user_compliance_info_id_a24b2e6c51", unique: true, where: "(status <> 'deleted'::tax_documents_status)"
-    t.index ["status"], name: "index_tax_documents_on_status"
-    t.index ["user_compliance_info_id"], name: "index_tax_documents_on_user_compliance_info_id"
   end
 
   create_table "tender_offer_bids", force: :cascade do |t|
