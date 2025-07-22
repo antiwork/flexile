@@ -22,7 +22,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_14_091500) do
   create_enum "equity_grants_vesting_trigger", ["scheduled", "invoice_paid"]
   create_enum "integration_status", ["initialized", "active", "out_of_sync", "deleted"]
   create_enum "invoices_invoice_type", ["services", "other"]
-  create_enum "tax_documents_status", ["initialized", "submitted", "accepted", "rejected", "deleted"]
+  create_enum "tax_documents_status", ["initialized", "submitted", "deleted"]
 
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
