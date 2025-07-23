@@ -141,9 +141,8 @@ export const invoicesRouter = createRouter({
     if (ctx.company.equityCompensationEnabled) {
       const equityResult = await calculateInvoiceEquity({
         companyContractor: companyWorker,
-        serviceAmountCents: totalAmountCents,
+        serviceAmountCents: Number(totalAmountCents),
         invoiceYear: dateToday.getFullYear(),
-        equityCompensationEnabled: true,
         providedEquityPercentage: values.equityPercentage,
       });
 
@@ -260,9 +259,8 @@ export const invoicesRouter = createRouter({
 
       const equityResult = await calculateInvoiceEquity({
         companyContractor: ctx.companyContractor,
-        serviceAmountCents: invoice.totalAmountInUsdCents,
+        serviceAmountCents: Number(invoice.totalAmountInUsdCents),
         invoiceYear: new Date(invoice.invoiceDate).getFullYear(),
-        equityCompensationEnabled: ctx.company.equityCompensationEnabled,
         providedEquityPercentage: input.equityPercentage,
       });
 
@@ -303,6 +301,7 @@ export const invoicesRouter = createRouter({
       z.object({
         contractorId: z.string().optional(),
         status: z.array(z.enum(invoiceStatuses)).optional(),
+        limit: z.number().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -336,6 +335,7 @@ export const invoicesRouter = createRouter({
           input.status ? inArray(invoices.status, input.status) : undefined,
         ),
         orderBy: [desc(invoices.invoiceDate), desc(invoices.createdAt)],
+        limit: input.limit,
       });
       return rows.map((invoice) => ({
         ...pick(
