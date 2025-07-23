@@ -30,13 +30,13 @@ class TenderOfferPresenter
   private
     attr_reader :buyback
 
-    def investor_count(user: user, company: company)
+    def investor_count(user:, company:)
       return nil unless user.company_administrator_for?(company)
 
       buyback.bids.select(:company_investor_id).distinct.count
     end
 
-    def bid_count(user: user, company: company)
+    def bid_count(user:, company:)
       if user.company_administrator_for?(company)
         buyback.bids.count
       elsif user.company_investor_for?(company)
@@ -54,15 +54,18 @@ class TenderOfferPresenter
       buyback.equity_buyback_payments.count
     end
 
-    def participation(user: user, company: company)
+    def participation(user:, company:)
       return "0" if buyback.accepted_price_cents.nil?
-      if user.company_administrator_for?(company)
-        buyback.bids.sum("COALESCE(accepted_shares, 0) * #{buyback.accepted_price_cents} / 100.0")
+
+      bids = if user.company_administrator_for?(company)
+        buyback.bids
       elsif user.company_investor_for?(company)
-        buyback.bids.where(company_investor: user.company_investor_for(company)).sum("COALESCE(accepted_shares, 0) * #{buyback.accepted_price_cents} / 100.0")
+        buyback.bids.where(company_investor: user.company_investor_for(company))
       else
-        "0"
+        return "0"
       end
+
+      bids.sum("COALESCE(accepted_shares, 0) * #{buyback.accepted_price_cents.to_d} / 100.0")
     end
 
     def attachment_data

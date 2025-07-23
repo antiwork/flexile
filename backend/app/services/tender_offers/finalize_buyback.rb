@@ -6,6 +6,8 @@ class TenderOffers::FinalizeBuyback
   end
 
   def perform
+    raise ArgumentError, "Accepted price must be set before finalizing" if tender_offer.accepted_price_cents.nil?
+
     ApplicationRecord.transaction do
       tender_offer.lock!
 

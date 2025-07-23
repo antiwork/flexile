@@ -216,7 +216,9 @@ const ReviewInvestorsSection = ({ onNext, onBack, buyback, bids }: ReviewInvesto
       </DialogHeader>
 
       <div className="mb-4 flex items-center justify-between">
-        <span className="font-medium">{acceptedBids.length} investors</span>
+        <span className="font-medium">
+          {acceptedBids.length} investor{acceptedBids.length > 1 ? "s" : ""}
+        </span>
         <Button variant="outline" size="small" onClick={handleDownloadCSV} disabled={acceptedBids.length === 0}>
           <Download className="mr-2 h-4 w-4" />
           Download CSV

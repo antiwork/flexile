@@ -1287,7 +1287,7 @@ export const tenderOfferInvestors = pgTable(
       "btree",
       table.externalId.asc().nullsLast().op("text_ops"),
     ),
-    index("idx_tender_offer_investors_unique").using(
+    uniqueIndex("idx_tender_offer_investors_unique").using(
       "btree",
       table.tenderOfferId.asc().nullsLast().op("int8_ops"),
       table.companyInvestorId.asc().nullsLast().op("int8_ops"),

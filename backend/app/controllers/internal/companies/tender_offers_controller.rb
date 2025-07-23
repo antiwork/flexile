@@ -69,7 +69,7 @@ class Internal::Companies::TenderOffersController < Internal::Companies::BaseCon
         file_size = 0
 
         uri = URI.parse(url)
-        Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https") do |http|
+        Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https", open_timeout: 5, read_timeout: 10) do |http|
           response = http.get(uri.request_uri) do |chunk|
             file_size += chunk.bytesize
             if file_size > max_file_size
@@ -123,6 +123,8 @@ class Internal::Companies::TenderOffersController < Internal::Companies::BaseCon
     else
       render json: { success: false, error_message: result[:error_message] }, status: :unprocessable_entity
     end
+  rescue Resolv::ResolvError
+    render json: { success: false, error_message: "Failed to resolve IP address for URL" }, status: :unprocessable_entity
   rescue ActiveRecord::RecordInvalid => e
     render json: { success: false, error_message: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
   end

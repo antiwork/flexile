@@ -47,7 +47,7 @@ const CancelBidModal = ({ onClose, bid, buyback }: CancelBidModalProps) => {
           <br />
           Number of shares: {formatNumber(bid.number_of_shares)}
           <br />
-          BuybackBid price: {formatMoneyFromCents(bid.share_price_cents)}
+          Bid price: {formatMoneyFromCents(bid.share_price_cents)}
         </p>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>

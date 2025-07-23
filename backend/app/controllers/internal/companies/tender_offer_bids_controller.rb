@@ -36,7 +36,8 @@ class Internal::Companies::TenderOfferBidsController < Internal::Companies::Base
   def destroy
     authorize @bid
 
-    if @bid.destroy
+    @bid.destroy
+    if @bid.destroyed?
       head :no_content
     else
       render json: { success: false, error_message: @bid.errors.full_messages.to_sentence }, status: :unprocessable_entity

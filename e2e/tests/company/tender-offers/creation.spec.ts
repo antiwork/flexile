@@ -6,6 +6,7 @@ import { shareHoldingsFactory } from "@test/factories/shareHoldings";
 import { fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
+import { addDays, formatDate } from "date-fns";
 import { eq } from "drizzle-orm";
 import { companies, companyInvestors, users } from "@/db/schema";
 
@@ -33,6 +34,9 @@ test.describe("Buyback creation", () => {
   });
 
   test("allows creating a new tender offer buyback", async ({ page }) => {
+    const startDate = addDays(new Date(), 1);
+    const endDate = addDays(new Date(), 30);
+
     await login(page, adminUser);
 
     await page.getByRole("button", { name: "Equity" }).click();
@@ -42,8 +46,8 @@ test.describe("Buyback creation", () => {
     await withinModal(
       async (modal) => {
         await modal.getByLabel("Buyback name").fill("Tender offer buyback");
-        await fillDatePicker(page, "Start date", "08/08/2024");
-        await fillDatePicker(page, "End date", "09/09/2025");
+        await fillDatePicker(page, "Start date", startDate.toLocaleDateString());
+        await fillDatePicker(page, "End date", endDate.toLocaleDateString());
         await modal.getByLabel("Starting valuation").fill("100000000");
         await modal.getByLabel("Target buyback value").fill("5000000");
         await modal.locator('input[name="attachment"]').setInputFiles("e2e/samples/sample.zip");
@@ -63,12 +67,18 @@ test.describe("Buyback creation", () => {
 
     await expect(
       page.getByRole("row", {
-        name: /Tender offer buyback.*Sep 9, 2025.*\$100,000,000.*Open|Closed|Reviewing/u,
+        name: new RegExp(
+          `Tender offer buyback.*${formatDate(endDate, "MMM d, yyyy")}.*\\$100,000,000.*Open|Closed|Reviewing`,
+          "u",
+        ),
       }),
     ).toBeVisible();
   });
 
   test("allows creating a single stock repurchase", async ({ page }) => {
+    const startDate = addDays(new Date(), 1);
+    const endDate = addDays(new Date(), 30);
+
     await login(page, adminUser);
 
     await page.getByRole("button", { name: "Equity" }).click();
@@ -84,8 +94,8 @@ test.describe("Buyback creation", () => {
         await modal.getByRole("combobox", { name: "Investor" }).click();
         await modal.getByRole("option").first().click();
 
-        await fillDatePicker(page, "Start date", "08/08/2024");
-        await fillDatePicker(page, "End date", "09/09/2025");
+        await fillDatePicker(page, "Start date", startDate.toLocaleDateString());
+        await fillDatePicker(page, "End date", endDate.toLocaleDateString());
 
         await modal.getByLabel("Price per share").fill("10.50");
         await modal.getByLabel("Target buyback value").fill("1000000");
@@ -106,7 +116,10 @@ test.describe("Buyback creation", () => {
 
     await expect(
       page.getByRole("row", {
-        name: /Single stock repurchase test.*Sep 9, 2025.*Open|Closed|Reviewing/u,
+        name: new RegExp(
+          `Single stock repurchase test.*${formatDate(endDate, "MMM d, yyyy")}.*Open|Closed|Reviewing`,
+          "u",
+        ),
       }),
     ).toBeVisible();
   });

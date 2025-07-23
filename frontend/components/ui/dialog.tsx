@@ -119,7 +119,7 @@ function DialogStackContent({ step, children, className, ...props }: DialogStack
   return (
     <DialogPrimitive.Portal data-slot="dialog-portal">
       <DialogPrimitive.Overlay data-slot="dialog-overlay" className="fixed inset-0 z-40 overflow-auto bg-black/80">
-        <div className="mt-18 mb-10 flex w-full justify-center px-4">
+        <div className="mt-16 mb-10 flex w-full justify-center px-4">
           <div className="relative w-full max-w-lg">
             {layersToShow.map((layer, i) => (
               <div

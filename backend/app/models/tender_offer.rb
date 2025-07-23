@@ -30,7 +30,7 @@ class TenderOffer < ApplicationRecord
   validates :number_of_shareholders, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :total_amount_in_cents, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :accepted_price_cents, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
-  validates :implied_valuation, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :implied_valuation, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
 
   validate :ends_at_must_be_after_starts_at
   validate :correct_attachment_mime_type

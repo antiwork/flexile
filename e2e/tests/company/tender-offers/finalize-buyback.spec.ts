@@ -185,7 +185,7 @@ test.describe("Tender offer finalize", () => {
         await reviewSection.waitFor({ state: "visible" });
 
         await expect(reviewSection.getByText("Review investors", { exact: true })).toBeVisible();
-        await expect(reviewSection.getByText("1 investors", { exact: true })).toBeVisible();
+        await expect(reviewSection.getByText("1 investor", { exact: true })).toBeVisible();
         await expect(reviewSection.getByText("Investor", { exact: true })).toBeVisible();
         await expect(
           reviewSection.getByText(investorUser.preferredName || investorUser.legalName || investorUser.email).nth(0),

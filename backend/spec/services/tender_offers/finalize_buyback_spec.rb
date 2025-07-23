@@ -111,7 +111,7 @@ RSpec.describe TenderOffers::FinalizeBuyback do
       let(:tender_offer) { create(:tender_offer, company: company, accepted_price_cents: nil) }
 
       it "raises an error during implied valuation calculation" do
-        expect { service.perform }.to raise_error(NoMethodError)
+        expect { service.perform }.to raise_error(ArgumentError, "Accepted price must be set before finalizing")
       end
 
       it "does not send notification emails" do

@@ -59,9 +59,9 @@ class TenderOfferBid < ApplicationRecord
       return if tender_offer.total_amount_in_cents.nil?
       return if number_of_shares.nil? || share_price_cents.nil?
 
-      current_bid_amount = number_of_shares * share_price_cents
+      current_bid_amount = number_of_shares.to_d * share_price_cents.to_d
 
-      existing_total = tender_offer.bids.where.not(id: id).sum("number_of_shares * share_price_cents")
+      existing_total = tender_offer.bids.sum("number_of_shares * share_price_cents")
 
       total_bid_amount = existing_total + current_bid_amount
 
