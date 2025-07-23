@@ -17,7 +17,7 @@ const visibleDocuments = (companyId: bigint, userId: bigint | SQLWrapper | undef
   and(
     eq(documents.companyId, companyId),
     isNull(documents.deletedAt),
-    userId ? eq(documentSignatures.userId, userId) : eq(documentSignatures.role, "Company Representative"),
+    userId ? eq(documentSignatures.userId, userId) : eq(documentSignatures.title, "Company Representative"),
   );
 export const documentsRouter = createRouter({
   list: companyProcedure
