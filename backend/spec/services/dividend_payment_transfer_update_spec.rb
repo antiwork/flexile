@@ -2,9 +2,9 @@
 
 RSpec.describe DividendPaymentTransferUpdate do
   let(:user) { create(:user) }
-  let(:investor) { create(:company_investor, user: user) }
-  let(:dividend1) { create(:dividend, company_investor: investor) }
-  let(:dividend2) { create(:dividend, company_investor: investor) }
+  let(:company_investor) { create(:company_investor, user:) }
+  let(:dividend1) { create(:dividend, company_investor:) }
+  let(:dividend2) { create(:dividend, company_investor:) }
   let(:dividend_payment) do
     create(:dividend_payment, dividends: [dividend1, dividend2], transfer_id: SecureRandom.hex)
   end
@@ -94,7 +94,7 @@ RSpec.describe DividendPaymentTransferUpdate do
     end
 
     before do
-      [dividend1, dividend2].each { |d| d.update!(status: 'Processing', paid_at: Time.current) }
+      [dividend1, dividend2].each { _1.update!(status: 'Processing', paid_at: Time.current) }
     end
 
     it "marks the user's bank account as deleted" do
@@ -115,6 +115,11 @@ RSpec.describe DividendPaymentTransferUpdate do
       expect do
         described_class.new(dividend_payment, refunded_payload).process
       end.to have_enqueued_mail(CompanyInvestorMailer, :dividend_payment_failed).with(user, dividend_payment)
+    end
+
+    it "marks the dividend payment as failed" do
+      described_class.new(dividend_payment, refunded_payload).process
+      expect(dividend_payment.reload.status).to eq(Payment::FAILED)
     end
   end
 end
