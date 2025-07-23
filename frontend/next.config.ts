@@ -1,5 +1,10 @@
 import NextBundleAnalyzer from "@next/bundle-analyzer";
 import type { NextConfig } from "next";
+import { config } from "dotenv";
+import { resolve } from "path";
+
+// Load environment variables from the root .env file
+config({ path: resolve(__dirname, "../.env") });
 
 const nextConfig: NextConfig = {
   webpack: (config) => {
@@ -13,7 +18,7 @@ const nextConfig: NextConfig = {
     typedRoutes: true,
     testProxy: true,
     serverActions: {
-      allowedOrigins: [process.env.DOMAIN, process.env.APP_DOMAIN].filter((x) => x),
+      allowedOrigins: [process.env.DOMAIN, process.env.APP_DOMAIN].filter((x): x is string => Boolean(x)),
     },
   },
   images: {

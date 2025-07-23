@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { AuthAlerts } from "@/components/auth/AuthAlerts";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useAuthApi } from "@/hooks/useAuthApi";
 import { useOtpFlowState } from "@/hooks/useOtpFlowState";
 
-export default function SignUpPage() {
+function SignUpContent() {
   const searchParams = useSearchParams();
   const invitationToken = searchParams.get("invitation_token");
 
@@ -94,5 +95,13 @@ export default function SignUpPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SignUpContent />
+    </Suspense>
   );
 }

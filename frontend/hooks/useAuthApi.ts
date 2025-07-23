@@ -1,5 +1,5 @@
 import { getSession, signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useUserStore } from "../global";
 import type { OtpFlowState, OtpFlowActions } from "./useOtpFlowState";
 
@@ -12,7 +12,6 @@ export interface AuthApiConfig {
 
 export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: OtpFlowActions) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { login } = useUserStore();
 
   const handleSendOtp = async (e: React.FormEvent) => {
@@ -115,7 +114,7 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
       }
 
       // Handle redirect
-      const redirectUrl = searchParams.get("redirect_url");
+      const redirectUrl = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect_url") : null;
       const targetUrl =
         redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "/dashboard";
 

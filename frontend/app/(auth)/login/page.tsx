@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,7 @@ import { AuthAlerts } from "@/components/auth/AuthAlerts";
 import { useOtpFlowState } from "@/hooks/useOtpFlowState";
 import { useAuthApi } from "@/hooks/useAuthApi";
 
-export default function LoginPage() {
+function LoginContent() {
   const [state, actions] = useOtpFlowState();
   const { handleSendOtp, handleAuthenticate } = useAuthApi(
     {
@@ -89,5 +90,13 @@ export default function LoginPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }
