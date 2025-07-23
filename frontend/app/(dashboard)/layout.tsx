@@ -5,12 +5,15 @@ import { useSession } from "next-auth/react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { skipToken, useQueryClient } from "@tanstack/react-query";
 import {
+  BookUser,
   ChartPie,
   ChevronRight,
   ChevronsUpDown,
+  CircleDollarSign,
   Files,
   LogOut,
   ReceiptIcon,
+  Rss,
   Settings,
   Users,
 } from "lucide-react";
@@ -48,6 +51,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
 import defaultCompanyLogo from "@/images/default-company-logo.svg";
+import { storageKeys } from "@/models/constants";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
@@ -74,139 +78,6 @@ const LogoutButton = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-const NavLinks = () => {
-  const user = useCurrentUser();
-  const company = useCurrentCompany();
-  const pathname = usePathname();
-
-  // Use a simple invoices query that exists
-  const { data: invoicesData } = trpc.invoices.list.useQuery(
-    user.currentCompanyId && user.roles.administrator
-      ? { companyId: user.currentCompanyId, status: ["received", "approved", "failed"] }
-      : skipToken,
-    { refetchInterval: 30_000 },
-  );
-
-  const isInvoiceActionable = useIsActionable();
-  const actionableInvoices = invoicesData?.filter(isInvoiceActionable).length || 0;
-
-  const companyNavLinks = useMemo(() => {
-    const links: Array<{
-      name: string;
-      route: Route;
-      icon: React.ElementType;
-      badge?: ReactNode;
-      children?: Array<{ name: string; route: Route }>;
-    }> = [];
-
-    if (user.roles.administrator || user.roles.worker) {
-      links.push({
-        name: "Invoices",
-        route: "/invoices" as Route,
-        icon: ReceiptIcon,
-        badge: actionableInvoices > 0 ? (
-          <Badge variant="destructive" className="h-auto px-1 py-0.5 text-xs leading-none">
-            {actionableInvoices}
-          </Badge>
-        ) : undefined,
-      });
-    }
-
-    if (user.roles.lawyer) {
-      links.push({
-        name: "Documents",
-        route: "/documents" as Route,
-        icon: Files,
-      });
-    }
-
-    if (user.roles.administrator) {
-      links.push({
-        name: "People",
-        route: "/people" as Route,
-        icon: Users,
-      });
-    }
-
-    if (user.currentCompanyId) {
-      const equityLinks = equityNavLinks(user, company);
-      if (equityLinks.length > 0) {
-        links.push({
-          name: "Equity",
-          route: "/equity" as Route,
-          icon: ChartPie,
-          children: equityLinks.map((link) => ({
-            name: link.label,
-            route: link.route,
-          })),
-        });
-      }
-    }
-
-    if (user.roles.administrator) {
-      links.push({
-        name: "Settings",
-        route: "/settings" as Route,
-        icon: Settings,
-        children: [
-          { name: "General", route: "/settings" as Route },
-          { name: "Equity", route: "/settings/equity" as Route },
-          { name: "Tax", route: "/settings/tax" as Route },
-        ],
-      });
-    }
-
-    return links;
-  }, [user, company, actionableInvoices]);
-
-  return (
-    <SidebarMenu>
-      {companyNavLinks.map((link) =>
-        link.children ? (
-          <Collapsible
-            key={link.name}
-            asChild
-            open={link.children.some((child) => pathname.startsWith(child.route))}
-            className="group/collapsible"
-          >
-            <SidebarMenuItem>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton>
-                  <link.icon className="size-5" />
-                  <span>{link.name}</span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  {link.children.map((child) => (
-                    <SidebarMenuSubItem key={child.name}>
-                      <SidebarMenuSubButton asChild isActive={pathname.startsWith(child.route)}>
-                        <Link href={child.route}>
-                          <span>{child.name}</span>
-                        </Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  ))}
-                </SidebarMenuSub>
-              </CollapsibleContent>
-            </SidebarMenuItem>
-          </Collapsible>
-        ) : (
-          <SidebarMenuItem key={link.name}>
-            <SidebarMenuButton asChild isActive={pathname.startsWith(link.route)}>
-              <Link href={link.route}>
-                <link.icon className="size-5" />
-                <span>{link.name}</span>
-                {link.badge}
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ),
-      )}
-    </SidebarMenu>
-  );
-};
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = useCurrentUser();
@@ -314,24 +185,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </SidebarProvider>
   );
 }
-
-const CompanyName = () => {
-  const company = useCurrentCompany();
-  return (
-    <>
-      {company.name ? (
-        <Link href="/settings" className="relative size-6">
-          <Image src={company.logo_url || defaultCompanyLogo} fill className="rounded-sm" alt="" />
-        </Link>
-      ) : null}
-      <div>
-        <span className="line-clamp-1 text-sm font-bold" title={company.name ?? ""}>
-          {company.name}
-        </span>
-      </div>
-    </>
-  );
-};
 
 const NavLinks = () => {
   const user = useCurrentUser();
