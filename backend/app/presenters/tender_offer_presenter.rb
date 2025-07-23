@@ -21,7 +21,7 @@ class TenderOfferPresenter
       letter_of_transmittal: letter_of_transmittal_data,
       bid_count: bid_count(user: user, company: company),
       investor_count: investor_count(user: user, company: company),
-      participation: participation(user: user, company: company),
+      participation: participation(user: user, company: company).to_s,
       equity_buyback_round_count: equity_buyback_round_count(),
       equity_buyback_payment_count: equity_buyback_payment_count(),
     }

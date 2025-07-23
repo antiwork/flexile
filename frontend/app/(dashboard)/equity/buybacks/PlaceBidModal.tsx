@@ -3,8 +3,11 @@ import { useMutation, type UseMutationResult } from "@tanstack/react-query";
 import Decimal from "decimal.js";
 import { Download } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { Document as PdfDocument, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import { MutationStatusButton } from "@/components/MutationButton";
@@ -29,6 +32,8 @@ import { request } from "@/utils/request";
 import { company_tender_offer_bids_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import { type Buyback, buybackBidSchema, VESTED_SHARES_CLASS } from ".";
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
 
 type PlaceBidModalProps = {
   onClose: () => void;
@@ -207,6 +212,24 @@ const LetterOfTransmittalSection = ({ onBack, onNext, buyback }: LetterOfTransmi
   const [hasReviewed, setHasReviewed] = useState(false);
   const [hasSigned, setHasSigned] = useState(false);
   const [showDocument, setShowDocument] = useState(false);
+  const [numPages, setNumPages] = useState<number | null>(null);
+
+  const [containerWidth, setContainerWidth] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width);
+      }
+    });
+
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => resizeObserver.disconnect();
+  }, []);
 
   const handleContinue = () => {
     if (hasReviewed && hasSigned) {
@@ -229,15 +252,36 @@ const LetterOfTransmittalSection = ({ onBack, onNext, buyback }: LetterOfTransmi
         </DialogDescription>
       </DialogHeader>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden" ref={containerRef}>
         {showDocument && pdfUrl ? (
-          <div className="mb-4 flex-1">
-            {/* eslint-disable-next-line -- can't use sandbox for pdf embeds */}
-            <iframe
-              src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
-              className="h-full min-h-105 w-full border-none bg-white"
-              title="Letter of Transmittal"
-            />
+          <div className="mb-4 flex-1 overflow-auto rounded-sm border border-gray-300">
+            <PdfDocument
+              file={pdfUrl}
+              onLoadSuccess={({ numPages }) => {
+                setNumPages(numPages);
+              }}
+              loading={
+                <div className="flex h-[45vh] w-full items-center justify-center bg-white">
+                  <p className="text-sm text-gray-600">Loading document...</p>
+                </div>
+              }
+              error={
+                <div className="flex h-[45vh] w-full items-center justify-center bg-white">
+                  <p className="text-sm text-gray-600">Error loading document</p>
+                </div>
+              }
+              className="h-[45vh] w-full border-none bg-white"
+            >
+              {Array.from(new Array(numPages), (_, index) => (
+                <Page
+                  key={`page_${index + 1}`}
+                  pageNumber={index + 1}
+                  renderTextLayer={false}
+                  width={Math.max(containerWidth, 440)}
+                  renderAnnotationLayer={false}
+                />
+              ))}
+            </PdfDocument>
           </div>
         ) : null}
 

@@ -73,7 +73,14 @@ export default function Buybacks() {
         },
       }),
       columnHelper.simple("ends_at", "End date", formatDate),
-      columnHelper.simple("minimum_valuation", "Starting valuation", formatMoney),
+      columnHelper.accessor("minimum_valuation", {
+        header: "Starting valuation",
+        cell: (info) => {
+          const value = info.getValue();
+          if (!value) return "—";
+          return formatMoney(value);
+        },
+      }),
       columnHelper.accessor("implied_valuation", {
         header: "Implied valuation",
         cell: (info) => {

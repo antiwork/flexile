@@ -49,10 +49,41 @@ class Internal::Companies::TenderOffersController < Internal::Companies::BaseCon
           return render json: { success: false, error_message: "Invalid URL" }, status: :unprocessable_entity
         end
 
-        file = URI.open(url)
-        content_type = file.content_type
+        url = url.to_s
+        url = "https:#{url}" if url.starts_with?("//")
+        url = Addressable::URI.escape(url) unless URI::ABS_URI.match?(url)
+        url = URI.parse(url)
+        unless url.scheme.in?(["http", "https"])
+          return render json: { success: false, error_message: "URL must be a web URL" }, status: :unprocessable_entity
+        end
+        unless url.host === DOMAIN
+          ip = IPAddr.new(Resolv.getaddress(url.host))
+          if ip.private? || ip.loopback? || ip.link_local?
+            return render json: { success: false, error_message: "URL must be a public web URL" }, status: :unprocessable_entity
+          end
+        end
+        url = url.to_s
 
-        unless content_type == "application/pdf"
+        max_file_size = 10.megabytes
+        file_data = StringIO.new
+        file_size = 0
+
+        uri = URI.parse(url)
+        Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https") do |http|
+          response = http.get(uri.request_uri) do |chunk|
+            file_size += chunk.bytesize
+            if file_size > max_file_size
+              return render json: { success: false, error_message: "File size exceeds maximum allowed size of #{max_file_size / 1.megabyte}MB" }, status: :unprocessable_entity
+            end
+            file_data.write(chunk)
+          end
+
+          file_data.rewind
+          file = file_data
+          content_type = response["content-type"]
+        end
+
+        unless content_type&.start_with?("application/pdf")
           return render json: { success: false, error_message: "URL must point to a PDF file" }, status: :unprocessable_entity
         end
       end
