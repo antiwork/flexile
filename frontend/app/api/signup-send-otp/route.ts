@@ -10,6 +10,7 @@ if (!API_SECRET_TOKEN) {
 
 const sendOtpSchema = z.object({
   email: z.string().email(),
+  invitation_token: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -19,9 +20,19 @@ export async function POST(request: NextRequest) {
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: "Invalid email address" },
+        { error: "Invalid input data" },
         { status: 400 }
       );
+    }
+
+    const requestBody: any = {
+      email: validation.data.email,
+      token: API_SECRET_TOKEN,
+    };
+
+    // Add invitation token if provided
+    if (validation.data.invitation_token) {
+      requestBody.invitation_token = validation.data.invitation_token;
     }
 
     const response = await fetch(`${API_BASE_URL}/v1/signup/send_otp`, {
@@ -29,10 +40,7 @@ export async function POST(request: NextRequest) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        email: validation.data.email,
-        token: API_SECRET_TOKEN,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {

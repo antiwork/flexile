@@ -6,6 +6,7 @@ import type { OtpFlowState, OtpFlowActions } from "./useOtpFlowState";
 export interface AuthApiConfig {
   type: "login" | "signup";
   sendOtpEndpoint: string;
+  invitationToken?: string;
   onSuccess?: () => void;
 }
 
@@ -20,12 +21,19 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
     actions.clearMessages();
 
     try {
+      const requestBody: any = { email: state.email };
+
+      // Add invitation token if provided (for signup only)
+      if (config.type === "signup" && config.invitationToken) {
+        requestBody.invitation_token = config.invitationToken;
+      }
+
       const response = await fetch(config.sendOtpEndpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email: state.email }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();

@@ -7,6 +7,7 @@ class Api::V1::SignupController < Api::BaseController
 
   def send_otp
     email = params[:email]
+    invitation_token = params[:invitation_token]
 
     return unless validate_email_param(email)
 
@@ -18,6 +19,15 @@ class Api::V1::SignupController < Api::BaseController
 
     # Create a temporary user record for OTP verification
     temp_user = User.new(email: email)
+
+    # Handle invite link if invitation_token is provided
+    if invitation_token.present?
+      invite_link = CompanyInviteLink.find_by(token: invitation_token)
+      if invite_link
+        temp_user.signup_invite_link = invite_link
+      end
+    end
+
     temp_user.save!(validate: false) # Skip validations for temp user
 
     return unless check_otp_rate_limit(temp_user)
@@ -86,16 +96,7 @@ class Api::V1::SignupController < Api::BaseController
         )
         temp_user.tos_agreements.create!(ip_address: request.remote_ip)
 
-        # Handle invite links if present
-        if cookies["invitation_token"].present?
-          invite_link = CompanyInviteLink.find_by(token: cookies["invitation_token"])
-          if invite_link
-            temp_user.update!(signup_invite_link: invite_link)
-            cookies.delete("invitation_token")
-          end
-        end
-
-        # Create default company if no invite link
+        # Create default company if no invite link was set during send_otp
         unless temp_user.signup_invite_link
           company = Company.create!(
             email: temp_user.email,

@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,11 +10,15 @@ import { useOtpFlowState } from "@/hooks/useOtpFlowState";
 import { useAuthApi } from "@/hooks/useAuthApi";
 
 export default function SignUpPage() {
+  const searchParams = useSearchParams();
+  const invitationToken = searchParams.get("invitation_token");
+
   const [state, actions] = useOtpFlowState();
   const { handleSendOtp, handleAuthenticate } = useAuthApi(
     {
       type: "signup",
       sendOtpEndpoint: "/api/signup-send-otp",
+      invitationToken: invitationToken || undefined,
     },
     state,
     actions
