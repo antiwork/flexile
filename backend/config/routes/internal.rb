@@ -11,6 +11,7 @@ scope path: :internal, module: :internal do
     resource :tax, only: [:show, :update], controller: "tax"
     resources :bank_accounts, only: [:index, :update]
     resource :equity, only: [:update], controller: "equity"
+    resource :users, only: [:update], controller: "users"
   end
   resource :onboarding, controller: "onboarding", only: [:show, :update] do
     get :bank_account

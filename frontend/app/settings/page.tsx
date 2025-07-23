@@ -1,13 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import { MutationStatusButton } from "@/components/MutationButton";
+import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useCurrentUser } from "@/global";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
-import { trpc } from "@/trpc/client";
 
 export default function SettingsPage() {
   const user = useCurrentUser();
@@ -18,10 +17,45 @@ export default function SettingsPage() {
     },
   });
 
-  const saveMutation = trpc.users.update.useMutation({
-    onSuccess: () => setTimeout(() => saveMutation.reset(), 2000),
-  });
-  const submit = form.handleSubmit((values) => saveMutation.mutate(values));
+  const [isLoading, setIsLoading] = useState(false);
+  const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
+
+  const updateUser = async (values: { email: string; preferredName: string }) => {
+    setIsLoading(true);
+    setStatus("idle");
+    try {
+      const response = await fetch("/internal/settings/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+
+      if (!response.ok) {
+        let errorMessage = "Failed to update user";
+        try {
+          const errorData: unknown = await response.json();
+          if (typeof errorData === "object" && errorData !== null && "error_message" in errorData) {
+            if (typeof errorData === "object" && "error_message" in errorData) {
+              const errorValue = errorData.error_message;
+              if (typeof errorValue === "string") {
+                errorMessage = errorValue;
+              }
+            }
+          }
+        } catch {}
+        throw new Error(errorMessage);
+      }
+
+      setStatus("success");
+      setTimeout(() => setStatus("idle"), 2000);
+    } catch (_error) {
+      setStatus("error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const submit = form.handleSubmit((values) => updateUser(values));
 
   return (
     <Form {...form}>
@@ -54,15 +88,14 @@ export default function SettingsPage() {
             </FormItem>
           )}
         />
-        <MutationStatusButton
+        <Button
           className="w-fit"
           type="submit"
-          mutation={saveMutation}
-          loadingText="Saving..."
-          successText="Saved!"
+          disabled={isLoading || status === "success"}
+          variant={status === "success" ? "success" : status === "error" ? "critical" : undefined}
         >
-          Save
-        </MutationStatusButton>
+          {isLoading ? "Saving..." : status === "success" ? "Saved!" : "Save"}
+        </Button>
       </form>
     </Form>
   );
