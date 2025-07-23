@@ -191,10 +191,10 @@ const NavLinks = () => {
     { refetchInterval: 30_000 },
   );
   const isInvoiceActionable = useIsActionable();
-  const isCompanyRepresentative = !!user.roles.administrator || !!user.roles.lawyer;
-  const userId = isCompanyRepresentative ? null : user.id;
   const { data: documentsData } = trpc.documents.list.useQuery(
-    user.currentCompanyId && user.id ? { companyId: user.currentCompanyId, userId, signable: true } : skipToken,
+    user.currentCompanyId && user.id
+      ? { companyId: user.currentCompanyId, userId: user.id, signable: true }
+      : skipToken,
     { refetchInterval: 30_000 },
   );
   const updatesPath = company.routes.find((route) => route.label === "Updates")?.name;
