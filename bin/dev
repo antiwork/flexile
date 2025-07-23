@@ -22,6 +22,7 @@ echo "Starting application services"
 kill_process_listening_on_port 3000
 kill_process_listening_on_port 3001
 kill_process_listening_on_port 8288 # inngest
+rm -f backend/tmp/pids/server.pid
 
 export NODE_EXTRA_CA_CERTS="$(node docker/createCertificate.js)"
 make local

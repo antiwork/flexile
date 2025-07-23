@@ -54,7 +54,10 @@ class InviteWorker
       else
         user
       end
-      { success: false, error_message: error_object.errors.full_messages.to_sentence }
+      error_message = error_object.errors.full_messages.to_sentence
+      # Transform technical validation messages to user-friendly ones
+      error_message = error_message.gsub("Pay rate in subunits must be greater than 0", "Please enter a rate above $0.")
+      { success: false, error_message: }
     end
   end
 end
