@@ -188,10 +188,6 @@ class User < ApplicationRecord
     end
   end
 
-  def create_clerk_invitation
-    Clerk::SDK.new.invitations.create_invitation(create_invitation_request: { email_address: email, expires_in_days: 365, ignore_existing: true }).url
-  end
-
   private
     def update_associated_pg_search_documents
       associated_records = [invoices, company_workers, company_investors, company_administrators]
