@@ -6,20 +6,18 @@ interface AuthAlertsProps {
   success?: string;
 }
 
-export const AuthAlerts = ({ error, success }: AuthAlertsProps) => {
-  return (
-    <>
-      {error ? (
-        <Alert variant="destructive" className="mb-4">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      ) : null}
+export const AuthAlerts = ({ error, success }: AuthAlertsProps) => (
+  <>
+    {error ? (
+      <Alert variant="destructive" className="mb-4">
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    ) : null}
 
-      {success ? (
-        <Alert className="mb-4">
-          <AlertDescription>{success}</AlertDescription>
-        </Alert>
-      ) : null}
-    </>
-  );
-};
+    {success ? (
+      <Alert className="mb-4">
+        <AlertDescription>{success}</AlertDescription>
+      </Alert>
+    ) : null}
+  </>
+);

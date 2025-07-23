@@ -1,13 +1,13 @@
 "use client";
 import Link from "next/link";
 import { Suspense } from "react";
+import { AuthAlerts } from "@/components/auth/AuthAlerts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AuthAlerts } from "@/components/auth/AuthAlerts";
-import { useOtpFlowState } from "@/hooks/useOtpFlowState";
 import { useAuthApi } from "@/hooks/useAuthApi";
+import { useOtpFlowState } from "@/hooks/useOtpFlowState";
 
 function LoginContent() {
   const [state, actions] = useOtpFlowState();
@@ -17,7 +17,7 @@ function LoginContent() {
       sendOtpEndpoint: "/api/send-otp",
     },
     state,
-    actions
+    actions,
   );
 
   return (

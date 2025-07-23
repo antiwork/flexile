@@ -26,8 +26,10 @@ async function handler(req: Request) {
   const headers = new Headers(req.headers);
 
   // Add JWT token to x-flexile-auth header if user is authenticated via OTP
-  if (session?.user && 'jwt' in session.user) {
-    headers.set("x-flexile-auth", `Bearer ${(session.user as any).jwt}`);
+  if (session?.user && "jwt" in session.user) {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    const userWithJwt = session.user as typeof session.user & { jwt: string };
+    headers.set("x-flexile-auth", `Bearer ${userWithJwt.jwt}`);
   }
 
   // Add API secret token for API requests

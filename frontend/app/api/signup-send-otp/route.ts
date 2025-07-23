@@ -19,20 +19,19 @@ export async function POST(request: NextRequest) {
     const validation = sendOtpSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: "Invalid input data" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid input data" }, { status: 400 });
     }
 
-    const requestBody: any = {
+    const requestBody: Record<string, string> = {
       email: validation.data.email,
-      token: API_SECRET_TOKEN,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      token: API_SECRET_TOKEN!,
     };
 
     // Add invitation token if provided
     if (validation.data.invitation_token) {
-      requestBody.invitation_token = validation.data.invitation_token;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      requestBody.invitation_token = validation.data.invitation_token!;
     }
 
     const response = await fetch(`${API_BASE_URL}/v1/signup/send_otp`, {
@@ -45,25 +44,16 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorData = await response.json();
-      return NextResponse.json(
-        { error: errorData.error || "Failed to send OTP" },
-        { status: response.status }
-      );
+      return NextResponse.json({ error: errorData.error || "Failed to send OTP" }, { status: response.status });
     }
 
     const data = await response.json();
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
     if (error instanceof Error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json(
-      { error: "Failed to send OTP" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to send OTP" }, { status: 500 });
   }
 }

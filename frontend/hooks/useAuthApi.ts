@@ -1,7 +1,6 @@
 import { getSession, signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useUserStore } from "../global";
-import type { OtpFlowState, OtpFlowActions } from "./useOtpFlowState";
+import type { OtpFlowActions, OtpFlowState } from "./useOtpFlowState";
 
 export interface AuthApiConfig {
   type: "login" | "signup";
@@ -11,7 +10,6 @@ export interface AuthApiConfig {
 }
 
 export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: OtpFlowActions) {
-  const router = useRouter();
   const { login } = useUserStore();
 
   const handleSendOtp = async (e: React.FormEvent) => {
@@ -20,7 +18,7 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
     actions.clearMessages();
 
     try {
-      const requestBody: any = { email: state.email };
+      const requestBody: Record<string, string> = { email: state.email };
 
       // Add invitation token if provided (for signup only)
       if (config.type === "signup" && config.invitationToken) {
@@ -90,7 +88,9 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
       });
 
       if (result?.error) {
-        throw new Error(config.type === "signup" ? "Failed to sign in after signup" : "Invalid OTP code or login failed");
+        throw new Error(
+          config.type === "signup" ? "Failed to sign in after signup" : "Invalid OTP code or login failed",
+        );
       }
 
       // Get the session to access the JWT
@@ -114,13 +114,16 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
       }
 
       // Handle redirect
-      const redirectUrl = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect_url") : null;
+      const redirectUrl =
+        typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect_url") : null;
       const targetUrl =
         redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "/dashboard";
 
-      router.push(targetUrl as any);
+      window.location.href = targetUrl;
     } catch (error) {
-      actions.setError(error instanceof Error ? error.message : `${config.type === "signup" ? "Signup" : "Login"} failed`);
+      actions.setError(
+        error instanceof Error ? error.message : `${config.type === "signup" ? "Signup" : "Login"} failed`,
+      );
     } finally {
       actions.setLoading(false);
     }

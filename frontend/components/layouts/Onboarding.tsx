@@ -1,9 +1,9 @@
 "use client";
 
-import { signOut } from "next-auth/react";
 import { CheckIcon } from "@heroicons/react/16/solid";
 import Image from "next/image";
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

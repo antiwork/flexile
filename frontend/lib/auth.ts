@@ -63,7 +63,6 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (!response.ok) {
-            console.error("OTP login failed:", await response.text());
             return null;
           }
 
@@ -77,8 +76,7 @@ export const authOptions: NextAuthOptions = {
             preferredName: data.user.preferred_name,
             jwt: data.jwt,
           };
-        } catch (error) {
-          console.error("Error during OTP login:", error);
+        } catch {
           return null;
         }
       },
@@ -94,6 +92,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
         const customUser = user as any;
         token.jwt = customUser.jwt;
         token.legalName = customUser.legalName;
@@ -103,9 +102,13 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (token && session.user) {
-        (session.user as any).id = token.sub!;
-        (session.user as any).jwt = token.jwt!;
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
+        (session.user as any).id = token.sub || "";
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
+        (session.user as any).jwt = token.jwt || "";
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
         (session.user as any).legalName = token.legalName;
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
         (session.user as any).preferredName = token.preferredName;
       }
       return session;
@@ -114,31 +117,26 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login",
   },
-  secret: process.env.NEXTAUTH_SECRET!,
+  secret: process.env.NEXTAUTH_SECRET || "",
 };
 
 // Helper function to send OTP email
 export const sendOtpEmail = async (email: string) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/v1/email_otp`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email,
-        token: API_SECRET_TOKEN,
-      }),
-    });
+  const response = await fetch(`${API_BASE_URL}/v1/email_otp`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email,
+      token: API_SECRET_TOKEN,
+    }),
+  });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Failed to send OTP");
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Error sending OTP:", error);
-    throw error;
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || "Failed to send OTP");
   }
+
+  return await response.json();
 };

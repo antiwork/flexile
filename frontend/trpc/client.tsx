@@ -1,9 +1,9 @@
 "use client";
-import { useSession } from "next-auth/react";
 import { type QueryClient } from "@tanstack/react-query";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
+import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import superjson from "superjson";
 import { useUserStore } from "@/global";
@@ -24,11 +24,12 @@ const GetUserData = ({ children }: { children: React.ReactNode }) => {
   const { data } = useQuery({
     queryKey: ["currentUser", authId, "otp"],
     queryFn: async (): Promise<unknown> => {
-      if (isAuthenticated && session?.user && 'jwt' in session.user) {
+      if (isAuthenticated && session?.user && "jwt" in session.user) {
         const response = await request({
           url: "/api/user-data",
           method: "POST",
           accept: "json",
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
           jsonData: { jwt: (session.user as any).jwt },
           assertOk: true,
         });

@@ -13,10 +13,7 @@ export async function POST(request: NextRequest) {
     const validation = userDataSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: "JWT token is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "JWT token is required" }, { status: 400 });
     }
 
     // Make request to backend to get full user data
@@ -29,20 +26,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (!response.ok) {
-      return NextResponse.json(
-        { error: "Failed to fetch user data" },
-        { status: response.status }
-      );
+      return NextResponse.json({ error: "Failed to fetch user data" }, { status: response.status });
     }
 
     const userData = await response.json();
     return NextResponse.json(userData, { status: 200 });
-  } catch (error) {
-    console.error("Error fetching user data:", error);
-
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

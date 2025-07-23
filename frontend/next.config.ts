@@ -1,7 +1,7 @@
-import NextBundleAnalyzer from "@next/bundle-analyzer";
-import type { NextConfig } from "next";
-import { config } from "dotenv";
 import { resolve } from "path";
+import NextBundleAnalyzer from "@next/bundle-analyzer";
+import { config } from "dotenv";
+import type { NextConfig } from "next";
 
 // Load environment variables from the root .env file
 config({ path: resolve(__dirname, "../.env") });

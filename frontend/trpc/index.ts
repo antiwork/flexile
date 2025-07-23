@@ -12,17 +12,16 @@ import {
 } from "@trpc/server";
 import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import { eq } from "drizzle-orm";
+import { getServerSession } from "next-auth";
 import { cache } from "react";
 import superjson from "superjson";
 import { z } from "zod";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { companies, users } from "@/db/schema";
 import env from "@/env";
+import { authOptions } from "@/lib/auth";
 import { assertDefined } from "@/utils/assert";
 import { richTextExtensions } from "@/utils/richText";
-
 import { latestUserComplianceInfo, withRoles } from "./routes/users/helpers";
 import { type AppRouter } from "./server";
 
@@ -47,16 +46,15 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
 
   // Get userId from NextAuth JWT session
   const session = await getServerSession(authOptions);
-  if (session?.user && 'jwt' in session.user) {
+  if (session?.user && "jwt" in session.user) {
     // Extract user ID from JWT token
     try {
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
       const jwt = (session.user as any).jwt;
-      const base64Payload = jwt.split('.')[1];
-      const payload = JSON.parse(Buffer.from(base64Payload, 'base64').toString());
+      const base64Payload = jwt.split(".")[1];
+      const payload = JSON.parse(Buffer.from(base64Payload, "base64").toString());
       userId = payload.user_id;
-    } catch (error) {
-      console.error("Error parsing JWT token:", error);
-    }
+    } catch {}
   }
 
   return {

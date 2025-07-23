@@ -20,17 +20,14 @@ export async function POST(request: NextRequest) {
     const validation = verifySignupSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: "Invalid input data" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid input data" }, { status: 400 });
     }
 
     const response = await fetch(`${API_BASE_URL}/v1/signup/verify_and_create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Cookie": request.headers.get("cookie") || "",
+        Cookie: request.headers.get("cookie") || "",
       },
       body: JSON.stringify({
         email: validation.data.email,
@@ -42,27 +39,16 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorData = await response.json();
-      return NextResponse.json(
-        { error: errorData.error || "Signup verification failed" },
-        { status: response.status }
-      );
+      return NextResponse.json({ error: errorData.error || "Signup verification failed" }, { status: response.status });
     }
 
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
-    console.error("Error verifying signup:", error);
-
     if (error instanceof Error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json(
-      { error: "Signup verification failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Signup verification failed" }, { status: 500 });
   }
 }
