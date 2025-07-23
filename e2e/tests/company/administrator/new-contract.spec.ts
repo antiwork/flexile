@@ -3,18 +3,18 @@ import { faker } from "@faker-js/faker";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
+import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
+import { fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { mockDocuseal as mockDocusealHelper } from "@test/helpers/docuseal";
-import { fillDatePicker } from "@test/helpers";
 import { expect, type Page, test, withinModal } from "@test/index";
 import { addMonths, format } from "date-fns";
 import { desc, eq } from "drizzle-orm";
 import type { NextFixture } from "next/experimental/testmode/playwright";
+import { PayRateType } from "@/db/enums";
 import { companies, companyContractors, users } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
-import { companyContractorsFactory } from "@test/factories/companyContractors";
-import { PayRateType } from "@/db/enums";
 
 test.describe("New Contractor", () => {
   let company: typeof companies.$inferSelect;
@@ -45,7 +45,7 @@ test.describe("New Contractor", () => {
     const date = addMonths(new Date(), 1);
     await login(page, user);
     await page.getByRole("link", { name: "People" }).click();
-    await page.getByRole("button", { name: "Invite contractor" }).click();
+    await page.getByRole("button", { name: "Add contractor" }).click();
     await expect(page.getByText("Who's joining?")).toBeVisible();
     await page.getByLabel("Email").fill(email);
     await fillDatePicker(page, "Start date", format(date, "MM/dd/yyyy"));
@@ -187,7 +187,7 @@ test.describe("New Contractor", () => {
     });
     await login(page, user);
     await page.goto("/people");
-    await page.getByRole("button", { name: "Invite contractor" }).click();
+    await page.getByRole("button", { name: "Add contractor" }).click();
     await expect(page.getByLabel("Role")).toHaveValue("Hourly Role 1");
     await expect(page.getByLabel("Rate")).toHaveValue("100");
     await expect(page.getByLabel("Already signed contract elsewhere")).toBeChecked();

@@ -5,7 +5,7 @@ import { companiesRouter } from "@/trpc/routes/companies";
 import { equityCalculationsRouter } from "@/trpc/routes/equityCalculations";
 import { filesRouter } from "@/trpc/routes/files";
 import { investorEntitiesRouter } from "@/trpc/routes/investorEntities";
-
+import { companyInviteLinksRouter } from "./routes/companyInviteLinks";
 import { companyUpdatesRouter } from "./routes/companyUpdates";
 import { consolidatedInvoicesRouter } from "./routes/consolidatedInvoices";
 import { contractorsRouter } from "./routes/contractors";
@@ -13,11 +13,9 @@ import { convertibleSecuritiesRouter } from "./routes/convertibleSecurities";
 import { dividendRoundsRouter } from "./routes/dividendRounds";
 import { dividendsRouter } from "./routes/dividends";
 import { documentsRouter } from "./routes/documents";
-import { equityAllocationsRouter } from "./routes/equityAllocations";
 import { equityGrantExercisesRouter } from "./routes/equityGrantExercises";
 import { equityGrantsRouter } from "./routes/equityGrants";
 import { expenseCategoriesRouter } from "./routes/expenseCategories";
-
 import { investorsRouter } from "./routes/investors";
 import { invoicesRouter } from "./routes/invoices";
 import { lawyersRouter } from "./routes/lawyers";
@@ -53,9 +51,9 @@ export const appRouter = createRouter({
   files: filesRouter,
   expenseCategories: expenseCategoriesRouter,
   investorEntities: investorEntitiesRouter,
-  equityAllocations: equityAllocationsRouter,
   equityCalculations: equityCalculationsRouter,
   lawyers: lawyersRouter,
+  companyInviteLinks: companyInviteLinksRouter,
 });
 export type AppRouter = typeof appRouter;
 

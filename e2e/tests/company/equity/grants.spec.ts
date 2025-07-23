@@ -4,11 +4,10 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { documentTemplatesFactory } from "@test/factories/documentTemplates";
-import { equityAllocationsFactory } from "@test/factories/equityAllocations";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { optionPoolsFactory } from "@test/factories/optionPools";
 import { usersFactory } from "@test/factories/users";
-import { selectComboboxOption, fillDatePicker } from "@test/helpers";
+import { fillDatePicker, selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
@@ -28,25 +27,15 @@ test.describe("New Contractor", () => {
     let submitters = { "Company Representative": adminUser, Signer: contractorUser };
     const { mockForm } = mockDocuseal(next, { submitters: () => submitters });
     await mockForm(page);
-    const { companyContractor } = await companyContractorsFactory.create({
+    await companyContractorsFactory.create({
       companyId: company.id,
       userId: contractorUser.id,
     });
-    await equityAllocationsFactory.create({
-      companyContractorId: companyContractor.id,
-      equityPercentage: 50,
-      locked: true,
-    });
     await companyContractorsFactory.createCustom({ companyId: company.id });
     const { user: projectBasedUser } = await usersFactory.create();
-    const { companyContractor: projectBasedContractor } = await companyContractorsFactory.createCustom({
+    await companyContractorsFactory.createCustom({
       companyId: company.id,
       userId: projectBasedUser.id,
-    });
-    await equityAllocationsFactory.create({
-      companyContractorId: projectBasedContractor.id,
-      equityPercentage: 10,
-      locked: true,
     });
     await optionPoolsFactory.create({ companyId: company.id });
     await login(page, adminUser);
@@ -201,8 +190,11 @@ test.describe("New Contractor", () => {
     await withinModal(
       async (modal) => {
         await modal.getByLabel("Options to exercise").fill("10");
-        await expect(modal.getByText("Exercise cost$50")).toBeVisible();
-        await expect(modal.getByText("Options valueBased on 2M valuation$1,000")).toBeVisible();
+        await expect(modal.getByText("Exercise cost$50")).toBeVisible(); // 10 * $5 (exercise price)
+        // Option value $1000 = 10 * $100 (option value)
+        // Option value diff 1,900% = 1000 / 50 - 1 = 19x
+        await expect(modal.getByText("Options valueBased on 2M valuation$1,0001,900%")).toBeVisible();
+
         await modal.getByRole("button", { name: "Proceed" }).click();
         await modal.getByRole("button", { name: "Sign now" }).click();
         await modal.getByRole("link", { name: "Type" }).click();

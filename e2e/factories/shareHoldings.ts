@@ -1,9 +1,9 @@
-import { companyInvestors, shareClasses, shareHoldings } from "@/db/schema";
-import { assert } from "@/utils/assert";
 import { db, takeOrThrow } from "@test/db";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { shareClassesFactory } from "@test/factories/shareClasses";
 import { eq } from "drizzle-orm";
+import { companyInvestors, shareClasses, shareHoldings } from "@/db/schema";
+import { assert } from "@/utils/assert";
 
 export const shareHoldingsFactory = {
   create: async (overrides: Partial<typeof shareHoldings.$inferInsert> = {}) => {

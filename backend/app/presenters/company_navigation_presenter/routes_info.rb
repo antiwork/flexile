@@ -85,11 +85,6 @@ class CompanyNavigationPresenter::RoutesInfo
           label: "Settings",
           name: "company_administrator_settings",
         }
-      elsif Pundit.policy!(current_context, EquityAllocation).show?
-        {
-          label: "Settings",
-          name: "company_settings_equity",
-        }
       end
     end
 end
