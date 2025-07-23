@@ -1,13 +1,13 @@
 "use client";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { AuthAlerts } from "@/components/auth/AuthAlerts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AuthAlerts } from "@/components/auth/AuthAlerts";
-import { useOtpFlowState } from "@/hooks/useOtpFlowState";
 import { useAuthApi } from "@/hooks/useAuthApi";
+import { useOtpFlowState } from "@/hooks/useOtpFlowState";
 
 export default function SignUpPage() {
   const searchParams = useSearchParams();
@@ -18,10 +18,10 @@ export default function SignUpPage() {
     {
       type: "signup",
       sendOtpEndpoint: "/api/signup-send-otp",
-      invitationToken: invitationToken || undefined,
+      ...(invitationToken && { invitationToken }),
     },
     state,
-    actions
+    actions,
   );
 
   return (

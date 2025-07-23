@@ -1,7 +1,5 @@
 "use client";
 
-import { signOut } from "next-auth/react";
-import { useSession } from "next-auth/react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { skipToken, useQueryClient } from "@tanstack/react-query";
 import {
@@ -21,8 +19,8 @@ import type { Route } from "next";
 import Image from "next/image";
 import Link, { type LinkProps } from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useMemo } from "react";
-import type { ReactNode } from "react";
+import { signOut, useSession } from "next-auth/react";
+import React from "react";
 import { navLinks as equityNavLinks } from "@/app/(dashboard)/equity";
 import { useIsActionable } from "@/app/(dashboard)/invoices";
 import { GettingStarted } from "@/components/GettingStarted";
@@ -78,7 +76,6 @@ const LogoutButton = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = useCurrentUser();
 
@@ -97,7 +94,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <SidebarProvider>
       <Sidebar collapsible="offcanvas">
-        <SidebarHeader className="border-b border-sidebar-border">
+        <SidebarHeader className="border-sidebar-border border-b">
           <SidebarMenu>
             <SidebarMenuItem>
               <DropdownMenu>
@@ -106,11 +103,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     size="lg"
                     className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                   >
-                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                    <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                       <Image src={defaultCompanyLogo} className="size-6" alt="" />
                     </div>
                     <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">{user.companies.find(c => c.id === user.currentCompanyId)?.name ?? "Personal"}</span>
+                      <span className="truncate font-semibold">
+                        {user.companies.find((c) => c.id === user.currentCompanyId)?.name ?? "Personal"}
+                      </span>
                       <span className="truncate text-xs">{user.email}</span>
                     </div>
                     <ChevronsUpDown className="ml-auto" />
@@ -123,11 +122,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   sideOffset={4}
                 >
                   {user.companies.map((company) => (
-                    <DropdownMenuItem
-                      key={company.id}
-                      onClick={() => switchCompany(company.id)}
-                      className="gap-2 p-2"
-                    >
+                    <DropdownMenuItem key={company.id} onClick={() => switchCompany(company.id)} className="gap-2 p-2">
                       <div className="flex size-6 items-center justify-center rounded-sm border">
                         <Image src={defaultCompanyLogo} className="size-4 shrink-0" alt="" />
                       </div>
