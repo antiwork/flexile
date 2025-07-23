@@ -1,7 +1,7 @@
 "use client";
 
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { InformationCircleIcon, PaperClipIcon, PencilIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { InformationCircleIcon, PaperClipIcon, PencilIcon, PrinterIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { CircleAlert, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -85,64 +85,131 @@ export default function InvoicePage() {
 
   return (
     <>
-      <DashboardHeader
-        title={`Invoice ${invoice.invoiceNumber}`}
-        headerActions={
-          <>
-            <InvoiceStatus aria-label="Status" invoice={invoice} />
-            {user.roles.administrator && isActionable(invoice) ? (
-              <>
-                <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
-                  <XMarkIcon className="size-4" />
-                  Reject
-                </Button>
+      <style jsx>{`
+        @media print {
+          /* Chrome sometimes clips shadows/borders – reset them */
+          * {
+            box-shadow: none !important;
+          }
 
-                <RejectModal
-                  open={rejectModalOpen}
-                  onClose={() => setRejectModalOpen(false)}
-                  onReject={() => router.push(`/invoices`)}
-                  ids={[invoice.id]}
-                />
+          /* Set A4 page size with 1cm margins */
+          @page {
+            size: A4;
+            margin: 1cm;
+          }
 
-                <ApproveButton invoice={invoice} onApprove={() => router.push(`/invoices`)} />
-              </>
-            ) : null}
-            {user.id === invoice.userId ? (
-              <>
-                {invoice.requiresAcceptanceByPayee ? (
-                  <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
-                ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
-                  <Button variant="default" asChild>
-                    <Link href={`/invoices/${invoice.id}/edit`}>
-                      {invoice.status !== "rejected" && <PencilIcon className="h-4 w-4" />}
-                      {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
-                    </Link>
-                  </Button>
-                ) : null}
+          /* Hide non-invoice UI elements */
+          .dashboard-header,
+          nav,
+          aside,
+          .print\\:hidden,
+          [data-testid="dashboard-header"] {
+            display: none !important;
+          }
 
-                {isDeletable(invoice) ? (
-                  <>
-                    <Button
-                      variant="outline"
-                      onClick={() => setDeleteModalOpen(true)}
-                      className="hover:text-destructive"
-                    >
-                      <Trash2 className="size-4" />
-                      <span>Delete</span>
-                    </Button>
-                    <DeleteModal
-                      open={deleteModalOpen}
-                      onClose={() => setDeleteModalOpen(false)}
-                      onDelete={() => router.push(`/invoices`)}
-                      invoices={[invoice]}
-                    />
-                  </>
-                ) : null}
-              </>
-            ) : null}
-          </>
+          /* Ensure full-width invoice content */
+          body,
+          html {
+            font-size: 12px;
+            line-height: 1.4;
+          }
+
+          /* Table improvements for printing */
+          table {
+            width: 100%;
+            border-collapse: collapse;
+          }
+
+          thead {
+            display: table-header-group;
+          }
+
+          tbody tr {
+            page-break-inside: avoid;
+          }
+
+          /* Page break rules */
+          .invoice-section {
+            page-break-inside: avoid;
+          }
+
+          /* Ensure text wraps properly */
+          td,
+          th {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+          }
+
+          /* Footer/totals section */
+          footer {
+            page-break-inside: avoid;
+          }
         }
-      />
+      `}</style>
+      <div className="print:hidden">
+        <DashboardHeader
+          title={`Invoice ${invoice.invoiceNumber}`}
+          headerActions={
+            <>
+              <Button variant="outline" onClick={() => window.print()} className="print:hidden">
+                <PrinterIcon className="size-4" />
+                Download PDF
+              </Button>
+              <InvoiceStatus aria-label="Status" invoice={invoice} />
+              {user.roles.administrator && isActionable(invoice) ? (
+                <>
+                  <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
+                    <XMarkIcon className="size-4" />
+                    Reject
+                  </Button>
+
+                  <RejectModal
+                    open={rejectModalOpen}
+                    onClose={() => setRejectModalOpen(false)}
+                    onReject={() => router.push(`/invoices`)}
+                    ids={[invoice.id]}
+                  />
+
+                  <ApproveButton invoice={invoice} onApprove={() => router.push(`/invoices`)} />
+                </>
+              ) : null}
+              {user.id === invoice.userId ? (
+                <>
+                  {invoice.requiresAcceptanceByPayee ? (
+                    <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
+                  ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
+                    <Button variant="default" asChild>
+                      <Link href={`/invoices/${invoice.id}/edit`}>
+                        {invoice.status !== "rejected" && <PencilIcon className="h-4 w-4" />}
+                        {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
+                      </Link>
+                    </Button>
+                  ) : null}
+
+                  {isDeletable(invoice) ? (
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={() => setDeleteModalOpen(true)}
+                        className="hover:text-destructive"
+                      >
+                        <Trash2 className="size-4" />
+                        <span>Delete</span>
+                      </Button>
+                      <DeleteModal
+                        open={deleteModalOpen}
+                        onClose={() => setDeleteModalOpen(false)}
+                        onDelete={() => router.push(`/invoices`)}
+                        invoices={[invoice]}
+                      />
+                    </>
+                  ) : null}
+                </>
+              ) : null}
+            </>
+          }
+        />
+      </div>
 
       {invoice.requiresAcceptanceByPayee && user.id === invoice.userId ? (
         <Dialog open={acceptPaymentModalOpen} onOpenChange={setAcceptPaymentModalOpen}>
@@ -246,7 +313,7 @@ export default function InvoicePage() {
         </Alert>
       ) : null}
 
-      <section>
+      <section className="invoice-section">
         <form>
           <div className="grid gap-4">
             <div className="grid auto-cols-fr gap-3 md:grid-flow-col print:grid-flow-col">
@@ -284,7 +351,7 @@ export default function InvoicePage() {
             </div>
 
             {invoice.lineItems.length > 0 ? (
-              <Table>
+              <Table className="print-table">
                 <TableHeader>
                   <TableRow>
                     <TableHead>
@@ -317,7 +384,7 @@ export default function InvoicePage() {
             ) : null}
 
             {invoice.expenses.length > 0 && (
-              <Card>
+              <Card className="invoice-section">
                 <CardContent>
                   <div className="flex justify-between gap-2">
                     <div>Expense</div>
@@ -344,7 +411,7 @@ export default function InvoicePage() {
               </Card>
             )}
 
-            <footer className="flex justify-between">
+            <footer className="invoice-section flex justify-between">
               <div>
                 {invoice.notes ? (
                   <div>
