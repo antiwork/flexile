@@ -3,6 +3,19 @@
 import { SignOutButton } from "@clerk/nextjs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { skipToken, useQueryClient } from "@tanstack/react-query";
+import {
+  BookUser,
+  ChartPie,
+  ChevronRight,
+  ChevronsUpDown,
+  CircleDollarSign,
+  Files,
+  LogOut,
+  ReceiptIcon,
+  Rss,
+  Settings,
+  Users,
+} from "lucide-react";
 import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -39,19 +52,6 @@ import { storageKeys } from "@/models/constants";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
-import {
-  BookUser,
-  ChartPie,
-  ChevronRight,
-  ChevronsUpDown,
-  CircleDollarSign,
-  Files,
-  LogOut,
-  ReceiptIcon,
-  Rss,
-  Settings,
-  Users,
-} from "lucide-react";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = useCurrentUser();
