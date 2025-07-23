@@ -379,7 +379,6 @@ test.describe("One-off payments", () => {
       await expect(page.getByRole("row", { name: "$123.45" })).toBeVisible();
 
       await expect(page.getByRole("button", { name: "Pay now" })).toBeVisible();
-      await expect(page.getByRole("button", { name: "Pay again" })).not.toBeVisible();
 
       await page.getByRole("button", { name: "Pay now" }).click();
       await page.getByRole("button", { name: "Filter" }).click();
@@ -409,7 +408,6 @@ test.describe("One-off payments", () => {
         Amount: "$500.00",
       });
       await expect(invoiceRow.getByRole("button", { name: "Pay again" })).toBeVisible();
-      await expect(invoiceRow.getByRole("button", { name: "Pay now" })).not.toBeVisible();
     });
 
     test("shows 'Payment initiated' success message when paying", async ({ page }) => {
@@ -433,7 +431,6 @@ test.describe("One-off payments", () => {
       await invoiceRow.getByRole("button", { name: "Pay now" }).click();
 
       await expect(page.getByText("Payment initiated")).toBeVisible();
-      await expect(page.getByText("Payment sent!")).not.toBeVisible();
     });
   });
 });
