@@ -21,17 +21,8 @@ const ComboBox = ({
 ) &
   Omit<React.ComponentProps<typeof Button>, "value" | "onChange">) => {
   const [open, setOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
   const getLabel = (value: string) => options.find((o) => o.value === value)?.label;
-
-  const filteredOptions = searchValue
-    ? options.filter(
-        (option) =>
-          option.label.toLowerCase().includes(searchValue.toLowerCase()) ||
-          option.value.toLowerCase().includes(searchValue.toLowerCase()),
-      )
-    : options;
 
   return (
     <Popover open={open} onOpenChange={setOpen} modal={modal || false}>
@@ -51,12 +42,10 @@ const ComboBox = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0" style={{ width: "var(--radix-popover-trigger-width)" }}>
-        <Command shouldFilter={false}>
+        <Command>
           <CommandInput
             placeholder="Search..."
-            value={searchValue}
-            onValueChange={(value) => {
-              setSearchValue(value);
+            onValueChange={() => {
               requestAnimationFrame(() => {
                 if (listRef.current) {
                   listRef.current.scrollTop = 0;
@@ -67,7 +56,7 @@ const ComboBox = ({
           <CommandList ref={listRef}>
             <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup>
-              {filteredOptions.map((option) => (
+              {options.map((option) => (
                 <CommandItem
                   key={option.value}
                   value={option.value}
@@ -81,7 +70,6 @@ const ComboBox = ({
                     } else {
                       onChange(currentValue);
                       setOpen(false);
-                      setSearchValue("");
                     }
                   }}
                 >
