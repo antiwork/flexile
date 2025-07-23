@@ -144,7 +144,7 @@ RSpec.describe InviteWorker do
 
     it "returns contractor specific validation error messages" do
       expect do
-        expect(invite_contractor).to eq({ success: false, error_message: "Role can't be blank and Pay rate in subunits must be greater than 0" })
+        expect(invite_contractor).to eq({ success: false, error_message: "Please enter a rate above $0." })
       end.to change { User.count }.by(0)
          .and change { CompanyWorker.count }.by(0)
          .and change { Document.count }.by(0)
