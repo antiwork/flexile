@@ -237,7 +237,7 @@ const NavLinks = () => {
           href="/documents"
           icon={Files}
           active={pathname.startsWith("/documents") || pathname.startsWith("/document_templates")}
-          badge={documentsData?.length}
+          badge={documentsData.length}
         >
           Documents
         </NavLink>
