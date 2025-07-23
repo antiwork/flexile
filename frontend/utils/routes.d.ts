@@ -2560,6 +2560,26 @@ export const settings_tax_path: ((
 
 /**
  * Generates rails route to
+ * /internal/settings/users(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const settings_users_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/settings/users(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const settings_users_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /internal/companies/:company_id/dividends/:id/sign(.:format)
  * @param {any} company_id
  * @param {any} id

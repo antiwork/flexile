@@ -94,7 +94,7 @@ RSpec.describe DividendPaymentTransferUpdate do
     end
 
     before do
-      [dividend1, dividend2].each { _1.update!(status: 'Processing', paid_at: Time.current) }
+      [dividend1, dividend2].each { _1.update!(status: "Processing", paid_at: Time.current) }
     end
 
     it "marks the user's bank account as deleted" do
@@ -105,9 +105,9 @@ RSpec.describe DividendPaymentTransferUpdate do
 
     it "reverts the dividend status to 'Issued' and clears paid_at" do
       described_class.new(dividend_payment, refunded_payload).process
-      expect(dividend1.reload.status).to eq('Issued')
+      expect(dividend1.reload.status).to eq("Issued")
       expect(dividend1.reload.paid_at).to be_nil
-      expect(dividend2.reload.status).to eq('Issued')
+      expect(dividend2.reload.status).to eq("Issued")
       expect(dividend2.reload.paid_at).to be_nil
     end
 
