@@ -12,15 +12,15 @@ RSpec.describe CreateTenderOffer do
       minimum_valuation: 1_000_000.to_s,
       attachment: fixture_file_upload("sample.zip"),
       letter_of_transmittal: fixture_file_upload("sample.pdf"),
-      investors: [company_investor1.external_id, company_investor2.external_id],
     }
   end
 
   describe "#perform" do
-    subject(:result) { described_class.new(company:, attributes:).perform }
+    subject(:result) { described_class.new(company:, attributes:, investor_ids:).perform }
 
     context "with valid attributes" do
       let(:attributes) { valid_attributes }
+      let(:investor_ids) { [company_investor1.external_id, company_investor2.external_id] }
 
       it "creates a new tender offer" do
         expect { result }.to change(company.tender_offers, :count).by(1)
@@ -62,7 +62,8 @@ RSpec.describe CreateTenderOffer do
     end
 
     context "with non-existent investors" do
-      let(:attributes) { valid_attributes.except(:investors).merge(investors: ["nonexistent-id"]) }
+      let(:attributes) { valid_attributes.except(:investors, ["nonexistent-id"]) }
+      let(:investor_ids) { ["nonexistent-id"] }
 
       it "fails to create tender offer due to no valid investors" do
         expect { result }.not_to change(company.tender_offers, :count)
@@ -77,6 +78,7 @@ RSpec.describe CreateTenderOffer do
 
     context "without investor selection" do
       let(:attributes) { valid_attributes.except(:investors) }
+      let(:investor_ids) { [] }
 
       it "fails to create tender offer due to validation" do
         expect { result }.not_to change(company.tender_offers, :count)
@@ -91,6 +93,7 @@ RSpec.describe CreateTenderOffer do
 
     context "with invalid attributes" do
       let(:attributes) { valid_attributes.merge(starts_at: nil) }
+      let(:investor_ids) { [company_investor1.external_id, company_investor2.external_id] }
 
       it "does not create a new tender offer" do
         expect { result }.not_to change(company.tender_offers, :count)
@@ -112,6 +115,7 @@ RSpec.describe CreateTenderOffer do
 
     context "when validation fails after investor setup" do
       let(:attributes) { valid_attributes.merge(starts_at: Date.new(2024, 12, 30).to_s, ends_at: Date.new(2024, 12, 15).to_s) }
+      let(:investor_ids) { [company_investor1.external_id, company_investor2.external_id] }
 
       it "does not create tender offer or investors" do
         expect { result }.not_to change(company.tender_offers, :count)

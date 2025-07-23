@@ -1,19 +1,22 @@
 # frozen_string_literal: true
 
 class CreateTenderOffer
-  def initialize(company:, attributes:)
+  def initialize(company:, attributes:, investor_ids: nil)
     @company = company
     @attributes = attributes
+    @investor_ids = investor_ids
   end
 
   def perform
-    investors = attributes.delete(:investors) || []
-
     tender_offer = @company.tender_offers.build(attributes)
 
-    if investors.present?
-      company_investors = @company.company_investors.where(external_id: investors)
+    if @investor_ids.present?
+      company_investors = @company.company_investors.where(external_id: @investor_ids)
       company_investors.each do |company_investor|
+        tender_offer.tender_offer_investors.build(company_investor: company_investor)
+      end
+    else
+      @company.company_investors.each do |company_investor|
         tender_offer.tender_offer_investors.build(company_investor: company_investor)
       end
     end

@@ -19,8 +19,8 @@ class TenderOffer < ApplicationRecord
   has_one_attached :attachment
   has_one_attached :letter_of_transmittal
 
-  validates :buyback_type, presence: true
-  validates :name, presence: true
+  validates :buyback_type, presence: true, on: :create
+  validates :name, presence: true, on: :create
   validates :attachment, presence: true
   validates :letter_of_transmittal, presence: true, on: :create
   validates :starts_at, presence: true
@@ -74,7 +74,7 @@ class TenderOffer < ApplicationRecord
     end
 
     def validate_investor_requirements
-      if tender_offer_investors.size == 0
+      if tender_offer_investors.blank?
         errors.add(:base, "At least one investor must be selected")
         return
       end
