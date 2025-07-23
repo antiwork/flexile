@@ -1,6 +1,3 @@
-import { Slot } from "@radix-ui/react-slot";
-import { cva, type VariantProps } from "class-variance-authority";
-import { PanelLeftIcon } from "lucide-react";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +6,9 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/utils";
 import { useIsMobile } from "@/utils/use-mobile";
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
+import { PanelLeftIcon } from "lucide-react";
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
@@ -464,8 +464,6 @@ function SidebarMenuButton({
   variant = "default",
   size = "default",
   className,
-  onClick,
-  closeOnMobileClick = true,
   ...props
 }: React.ComponentProps<"button"> & {
   asChild?: boolean;
@@ -473,14 +471,6 @@ function SidebarMenuButton({
   closeOnMobileClick?: boolean;
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const Comp = asChild ? Slot : "button";
-  const { isMobile, setOpenMobile } = useSidebar();
-
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    onClick?.(event);
-    if (isMobile && closeOnMobileClick) {
-      setOpenMobile(false);
-    }
-  };
 
   return (
     <Comp
@@ -488,7 +478,6 @@ function SidebarMenuButton({
       data-sidebar="menu-button"
       data-size={size}
       data-active={isActive}
-      onClick={handleClick}
       className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
       {...props}
     />
