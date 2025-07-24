@@ -66,7 +66,7 @@ pnpm playwright test
 <summary>Clerk</summary>
 
 1. Go to [clerk.com](https://clerk.com) and create a new app.
-2. Name it whatever you like and **disable all login methods except Email Addres and Google**.
+2. Name it whatever you like and **disable all login methods except Email Address and Google**.
    ![Clerk Sanbox Creation](https://github.com/user-attachments/assets/8d69def9-b55e-4103-9ae9-324549a2e2b5)
 3. Once created, copy the Publishable Key into `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and Secret Key into `CLERK_SECRET_KEY` in the .env file.
    ![Clerk Env Variables](https://github.com/user-attachments/assets/df3381e6-017a-4e01-8bd3-5793e5f5d31e)
