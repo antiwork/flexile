@@ -60,6 +60,44 @@ bundle exec rspec spec/system/roles/show_spec.rb:7 # Run a single spec
 pnpm playwright test
 ```
 
+### Services configuration
+
+<details>
+<summary>Clerk</summary>
+
+1. Go to [clerk.com](https://clerk.com) and create a new app.
+2. Name it whatever you like and **disable all login methods except Email Addres and Google**.
+   ![Clerk Sanbox Creation](https://github.com/user-attachments/assets/8d69def9-b55e-4103-9ae9-324549a2e2b5)
+3. Once created, copy the Publishable Key into `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and Secret Key into `CLERK_SECRET_KEY` in the .env file.
+   ![Clerk Env Variables](https://github.com/user-attachments/assets/df3381e6-017a-4e01-8bd3-5793e5f5d31e)
+
+</details>
+
+<details>
+<summary>Stripe</summary>
+
+1. Go to your `Developers` dashboard at [stripe.com](https://stripe.com).
+2. Turn on `Test mode`.
+3. Go to the `API Keys` tab and copy the Publishable Key into `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` and Secret Key into `STRIPE_SECRET_KEY` in the .env file.
+   ![Stripe Secret Key](https://github.com/user-attachments/assets/0830b226-f2c2-4b92-a28f-f4682ad03ec0)
+
+</details>
+
+<details>
+<summary>Wise</summary>
+
+1. Go to [sandbox.transferwise.tech](https://sandbox.transferwise.tech/) and make a brand new Wise account using the register option and following Wise instructions.
+2. Once you got your account set up click on your profile.
+   ![Wise Sandbox Page](https://github.com/user-attachments/assets/bb8da9f7-a2cc-4c92-906c-a01c62df9870)
+3. Copy your Membership number and paste it into `WISE_PROFILE_ID` in the .env file.
+   ![Wise Sandbox Profile Settings](https://github.com/user-attachments/assets/790a43be-e41f-47ef-8ef9-05b6c8117cfc)
+4. Go to Integrations and Tools and then to API tokens.
+5. Create a new API token making sure it is set to Full Access.
+6. Reveal the full API key and copy it into `WISE_API_KEY` in the .env file.
+   ![Wise Sandbox API Settings](https://github.com/user-attachments/assets/f20be40f-0790-4435-abe6-8077a6c86fc3)  
+
+</details>
+
 ## License
 
 Flexile is licensed under the [MIT License](LICENSE.md).
