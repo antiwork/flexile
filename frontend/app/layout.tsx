@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { HelperWrapper } from "@/components/HelperWrapper";
 import { TRPCProvider } from "@/trpc/client";
 
 const abcWhyte = localFont({
@@ -17,7 +16,7 @@ const abcWhyte = localFont({
 
 export const metadata: Metadata = {
   title: "Flexile",
-  description: "Equity for everyone",
+  description: "Contractor payments as easy as 1-2-3",
   icons: {
     icon: [
       {
@@ -72,11 +71,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             },
           }}
         >
-          <HelperWrapper>
-            <TRPCProvider>
-              <NuqsAdapter>{children}</NuqsAdapter>
-            </TRPCProvider>
-          </HelperWrapper>
+          <TRPCProvider>
+            <NuqsAdapter>{children}</NuqsAdapter>
+          </TRPCProvider>
         </ClerkProvider>
       </body>
     </html>
