@@ -60,7 +60,7 @@ bundle exec rspec spec/system/roles/show_spec.rb:7 # Run a single spec
 pnpm playwright test
 ```
 
-### Services configuration
+## Services configuration
 
 <details>
 <summary>Clerk</summary>
