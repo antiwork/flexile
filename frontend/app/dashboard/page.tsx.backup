@@ -1,0 +1,144 @@
+"use client";
+
+import { CircleDollarSign, TrendingUp, Clock } from "lucide-react";
+import React from "react";
+import MainLayout from "@/components/layouts/Main";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCurrentCompany, useCurrentUser } from "@/global";
+import { trpc } from "@/trpc/client";
+import { formatMoneyFromCents } from "@/utils/formatMoney";
+
+export default function DashboardPage() {
+  const user = useCurrentUser();
+  const company = useCurrentCompany();
+
+  const { data: monthlyStats } = trpc.dashboard.monthlyStats.useQuery({ companyId: company.id });
+  const { data: equityProgress } = trpc.dashboard.equityProgress.useQuery({ companyId: company.id });
+  const { data: workActivity } = trpc.dashboard.workActivity.useQuery({ companyId: company.id });
+
+  const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long' });
+
+  return (
+    <MainLayout title="Dashboard">
+      <div className="mx-auto max-w-6xl pt-16">
+        {/* Welcome Message */}
+        <div className="mb-10 text-left">
+          <h1 className="text-3xl font-bold mb-3">
+            Hi {user.preferredName || user.name}, welcome to Flexile
+          </h1>
+          <p className="text-black">
+            This {currentMonth} you've been making great progress. Here's your overview:
+          </p>
+        </div>
+
+                {/* Dashboard Cards */}
+        <div className="grid gap-8 md:grid-cols-3">
+          {/* Earnings Card */}
+          <Card className="p-2 min-h-[200px] aspect-square">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-base font-medium">Earnings</CardTitle>
+              <CircleDollarSign className="h-5 w-5 text-blue-600" />
+            </CardHeader>
+                                    <CardContent className="pb-6 flex flex-col justify-between h-full">
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
+                    monthlyStats?.paymentStatus === 'paid'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {monthlyStats?.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
+                  </span>
+                </div>
+                <div className="text-3xl font-bold">
+                  {formatMoneyFromCents(monthlyStats?.currentMonth.totalAmount || 0)}
+                </div>
+                <p className="text-sm text-gray-600 mt-2">
+                  {(monthlyStats?.currentMonth.totalAmount || 0) > (monthlyStats?.previousMonth.totalAmount || 0) ? '+' : ''}
+                  {formatMoneyFromCents((monthlyStats?.currentMonth.totalAmount || 0) - (monthlyStats?.previousMonth.totalAmount || 0))} from last month
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Equity Card */}
+          <Card className="p-2 min-h-[200px] aspect-square">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-base font-medium">Equity</CardTitle>
+              <TrendingUp className="h-5 w-5 text-blue-600" />
+            </CardHeader>
+            <CardContent className="pb-6 flex flex-col justify-between h-full">
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  {(equityProgress?.recentGrants || 0) > 0 ? (
+                    <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
+                      {equityProgress?.recentGrants || 0} new grant{(equityProgress?.recentGrants || 0) > 1 ? 's' : ''}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600">
+                      No new grants
+                    </span>
+                  )}
+                </div>
+                <div className="text-3xl font-bold">{equityProgress?.percentage || 0}%</div>
+                <p className="text-sm text-gray-600 mt-2">
+                  {formatMoneyFromCents(equityProgress?.vestedAmount || 0)} vested
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Activity Card */}
+          <Card className="p-2 min-h-[200px] aspect-square">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-base font-medium">Activity</CardTitle>
+              <Clock className="h-5 w-5 text-blue-600" />
+            </CardHeader>
+            <CardContent className="pb-6 flex flex-col justify-between h-full">
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  {(workActivity?.documentsToSign || 0) > 0 ? (
+                    <span className="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-sm font-medium text-orange-800">
+                      {workActivity?.documentsToSign || 0} document{(workActivity?.documentsToSign || 0) > 1 ? 's' : ''} to sign
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
+                      All caught up
+                    </span>
+                  )}
+                </div>
+                <div className="text-3xl font-bold">{workActivity?.hoursLogged || 0}h</div>
+                <p className="text-sm text-gray-600 mt-2">
+                  {workActivity?.invoicesSubmitted || 0} invoice{(workActivity?.invoicesSubmitted || 0) !== 1 ? 's' : ''} submitted
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="mt-12 text-left">
+          <p className="text-lg text-gray-600 mb-6">Ready to take action?</p>
+          <div className="flex gap-4">
+            {user.roles.worker && (
+              <a
+                href="/invoices/new"
+                className="inline-flex items-center rounded-md bg-black px-6 py-3 text-sm font-medium text-white hover:bg-gray-800"
+              >
+                Create new invoice
+              </a>
+            )}
+            {(workActivity?.documentsToSign || 0) > 0 && (
+              <a
+                href="/documents"
+                className="inline-flex items-center rounded-md border border-gray-300 px-6 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Sign documents
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    </MainLayout>
+  );
+}
