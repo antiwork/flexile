@@ -158,7 +158,7 @@ export default function Billing() {
             <div className="p-4">
               <div className="grid justify-items-center gap-4 p-6 text-center text-gray-700">
                 <CircleDollarSign className="-mb-2 size-10" />
-                <p>Connect a bank account to debit contractor payments and our monthly fee.</p>
+                <p>We'll use this account to debit contractor payments and our monthly fee.</p>
                 <Button onClick={() => setAddingBankAccount(true)} variant="outline">
                   <Plus className="size-4" />
                   Link your bank account

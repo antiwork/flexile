@@ -331,7 +331,7 @@ const BankAccountsSection = () => {
             <div className="p-4">
               <div className="grid justify-items-center gap-4 p-6 text-center text-gray-700">
                 <CircleDollarSign className="-mb-2 size-10" />
-                <p>Connect a bank account to debit contractor payments and our monthly fee.</p>
+                <p>Set up your bank account to receive payouts.</p>
                 <Button onClick={() => setAddingBankAccount(true)} variant="outline">
                   <Plus className="size-4" />
                   Add bank account
@@ -435,14 +435,6 @@ const BankAccountsSection = () => {
           ) : null}
         </CardContent>
       </Card>
-      {user.roles.investor || user.roles.worker ? (
-        <div>
-          <Button onClick={() => setAddingBankAccount(true)} variant="default">
-            <Plus className="size-4" />
-            Add bank account
-          </Button>
-        </div>
-      ) : null}
     </div>
   );
 };
