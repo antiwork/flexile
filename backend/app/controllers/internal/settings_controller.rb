@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class Internal::Settings::UsersController < Internal::Settings::BaseController
+class Internal::SettingsController < Internal::Settings::BaseController
   after_action :verify_authorized
 
   def update
@@ -8,21 +8,13 @@ class Internal::Settings::UsersController < Internal::Settings::BaseController
 
     error_message = UpdateUser.new(
       user: Current.user,
-      update_params: update_params
+      update_params: params.permit(:email, :preferred_name)
     ).process
 
     if error_message.nil?
-      render json: { success: true }
+      head :no_content
     else
       render json: { error_message: }, status: :unprocessable_entity
     end
   end
-
-  private
-    def update_params
-      params.permit(
-        :email,
-        :preferred_name
-      )
-    end
 end

@@ -1,12 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import React from "react";
 import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
+import { z } from "zod";
+import { MutationStatusButton } from "@/components/MutationButton";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useCurrentUser } from "@/global";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
+import { request } from "@/utils/request";
+import { settings_path } from "@/utils/routes";
 
 export default function SettingsPage() {
   const user = useCurrentUser();
@@ -17,45 +21,20 @@ export default function SettingsPage() {
     },
   });
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
-
-  const updateUser = async (values: { email: string; preferredName: string }) => {
-    setIsLoading(true);
-    setStatus("idle");
-    try {
-      const response = await fetch("/internal/settings/users", {
+  const saveMutation = useMutation({
+    mutationFn: async (values: { email: string; preferredName: string }) => {
+      const response = await request({
+        url: settings_path(),
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        accept: "json",
+        jsonData: { settings: values },
       });
-
-      if (!response.ok) {
-        let errorMessage = "Failed to update user";
-        try {
-          const errorData: unknown = await response.json();
-          if (typeof errorData === "object" && errorData !== null && "error_message" in errorData) {
-            if (typeof errorData === "object" && "error_message" in errorData) {
-              const errorValue = errorData.error_message;
-              if (typeof errorValue === "string") {
-                errorMessage = errorValue;
-              }
-            }
-          }
-        } catch {}
-        throw new Error(errorMessage);
-      }
-
-      setStatus("success");
-      setTimeout(() => setStatus("idle"), 2000);
-    } catch (_error) {
-      setStatus("error");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const submit = form.handleSubmit((values) => updateUser(values));
+      if (!response.ok)
+        throw new Error(z.object({ error_message: z.string() }).parse(await response.json()).error_message);
+    },
+    onSuccess: () => setTimeout(() => saveMutation.reset(), 2000),
+  });
+  const submit = form.handleSubmit((values) => saveMutation.mutate(values));
 
   return (
     <Form {...form}>
@@ -88,14 +67,16 @@ export default function SettingsPage() {
             </FormItem>
           )}
         />
-        <Button
+        {saveMutation.isError ? <p className="text-red-500">{saveMutation.error.message}</p> : null}
+        <MutationStatusButton
           className="w-fit"
           type="submit"
-          disabled={isLoading || status === "success"}
-          variant={status === "success" ? "success" : status === "error" ? "critical" : undefined}
+          mutation={saveMutation}
+          loadingText="Saving..."
+          successText="Saved!"
         >
-          {isLoading ? "Saving..." : status === "success" ? "Saved!" : "Save"}
-        </Button>
+          Save
+        </MutationStatusButton>
       </form>
     </Form>
   );

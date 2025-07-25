@@ -6,12 +6,11 @@ scope path: :internal, module: :internal do
     resources :companies, only: :show
   end
 
-  namespace :settings do
+  resource :settings, only: [:update] do
     resource :dividend, only: [:show, :update], controller: "dividend"
     resource :tax, only: [:show, :update], controller: "tax"
     resources :bank_accounts, only: [:index, :update]
     resource :equity, only: [:update], controller: "equity"
-    resource :users, only: [:update], controller: "users"
   end
   resource :onboarding, controller: "onboarding", only: [:show, :update] do
     get :bank_account
