@@ -27,7 +27,7 @@ export default function SettingsPage() {
         url: settings_path(),
         method: "PATCH",
         accept: "json",
-        jsonData: { settings: values },
+        jsonData: { settings: { email: values.email, preferred_name: values.preferredName } },
       });
       if (!response.ok)
         throw new Error(z.object({ error_message: z.string() }).parse(await response.json()).error_message);
