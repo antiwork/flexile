@@ -9,7 +9,7 @@ test.describe("Cap Table", () => {
   test("displays correct ownership percentages for investors", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
       capTableEnabled: true,
-      fullyDilutedShares: 1000000n,
+      fullyDilutedShares: BigInt(1000000),
     });
 
     const { user: investor1 } = await usersFactory.create({ legalName: "Alice Investor" });
@@ -51,7 +51,7 @@ test.describe("Cap Table", () => {
   test("recalculates ownership percentages when data changes", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
       capTableEnabled: true,
-      fullyDilutedShares: 1000000n,
+      fullyDilutedShares: BigInt(1000000),
     });
 
     const { user: investor } = await usersFactory.create({ legalName: "Test Investor" });
@@ -76,7 +76,7 @@ test.describe("Cap Table", () => {
   test("shows correct ownership percentages for both outstanding and fully diluted columns", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
       capTableEnabled: true,
-      fullyDilutedShares: 2000000n,
+      fullyDilutedShares: BigInt(2000000),
     });
 
     const { user: investor } = await usersFactory.create({ legalName: "Major Investor" });
