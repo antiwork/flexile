@@ -2147,7 +2147,7 @@ export const wiseRecipientsRelations = relations(wiseRecipients, ({ one, many })
   payments: many(payments),
 }));
 
-export const dividendsRelations = relations(dividends, ({ one }) => ({
+export const dividendsRelations = relations(dividends, ({ one, many }) => ({
   company: one(companies, {
     fields: [dividends.companyId],
     references: [companies.id],
@@ -2164,6 +2164,7 @@ export const dividendsRelations = relations(dividends, ({ one }) => ({
     fields: [dividends.dividendRoundId],
     references: [dividendRounds.id],
   }),
+  payments: many(dividendsDividendPayments),
 }));
 
 export const balanceTransactionsRelations = relations(balanceTransactions, ({ one }) => ({

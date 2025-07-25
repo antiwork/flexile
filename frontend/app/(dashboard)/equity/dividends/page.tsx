@@ -4,6 +4,7 @@ import { CircleCheck, Info } from "lucide-react";
 import Link from "next/link";
 import React, { useMemo, useState } from "react";
 import { z } from "zod";
+import DividendPaymentModal from "@/app/(dashboard)/equity/DividendPaymentModal";
 import DividendStatusIndicator from "@/app/(dashboard)/equity/DividendStatusIndicator";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
@@ -57,6 +58,7 @@ export default function Dividends() {
     id: bigint;
     state: "initial" | "signing" | "signed";
   } | null>(null);
+  const [selectedDividend, setSelectedDividend] = useState<Dividend | null>(null);
   const { data: dividendData } = useQuery({
     queryKey: ["dividend", signingDividend?.id],
     queryFn: signingDividend
@@ -169,7 +171,7 @@ export default function Dividends() {
       {isLoading ? (
         <TableSkeleton columns={7} />
       ) : data.length > 0 ? (
-        <DataTable table={table} />
+        <DataTable table={table} onRowClicked={(row: Dividend) => setSelectedDividend(row)} />
       ) : (
         <Placeholder icon={CircleCheck}>You have not been issued any dividends yet.</Placeholder>
       )}
@@ -269,6 +271,7 @@ export default function Dividends() {
           ) : null}
         </DialogContent>
       </Dialog>
+      <DividendPaymentModal dividend={selectedDividend} onClose={() => setSelectedDividend(null)} />
     </>
   );
 }

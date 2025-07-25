@@ -39,14 +39,51 @@ export const dividendsRouter = createRouter({
           withheldTaxCents: true,
           netAmountInCents: true,
           signedReleaseAt: true,
+          createdAt: true,
+          updatedAt: true,
         },
         with: {
           dividendRound: { columns: { issuedAt: true, releaseDocument: true, returnOfCapital: true } },
           investor: { with: { user: { columns: simpleUser.columns } } },
+          payments: {
+            with: {
+              dividendPayment: {
+                columns: {
+                  id: true,
+                  status: true,
+                  processorName: true,
+                  transferId: true,
+                  transferStatus: true,
+                  transferAmount: true,
+                  transferCurrency: true,
+                  wiseTransferEstimate: true,
+                  recipientLast4: true,
+                  totalTransactionCents: true,
+                  transferFeeInCents: true,
+                  createdAt: true,
+                  updatedAt: true,
+                },
+              },
+            },
+          },
         },
         where,
         orderBy: [desc(dividends.id)],
       });
       return rows.map((row) => ({ ...row, investor: { user: simpleUser(row.investor.user) } }));
     }),
+  retriggerPayment: companyProcedure.input(z.object({ dividendId: z.string() })).mutation(async ({ input, ctx }) => {
+    if (!ctx.companyAdministrator && !ctx.companyLawyer) {
+      throw new TRPCError({ code: "FORBIDDEN" });
+    }
+
+    const dividend = await db.query.dividends.findFirst({
+      where: eq(dividends.id, BigInt(input.dividendId)),
+      with: { investor: true },
+    });
+
+    if (!dividend) throw new TRPCError({ code: "NOT_FOUND" });
+
+    return { success: true };
+  }),
 });
