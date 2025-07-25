@@ -4,7 +4,7 @@ import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CircleDollarSign, Download, RefreshCw } from "lucide-react";
+import { CircleDollarSign, Download, Plus, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
 import { z } from "zod";
@@ -155,17 +155,16 @@ export default function Billing() {
               </CardHeader>
             </Card>
           ) : (
-            <Alert>
-              <InformationCircleIcon />
-              <AlertTitle>You currently do not have a bank account linked.</AlertTitle>
-              <AlertDescription className="flex items-center justify-between">
-                <div>
-                  <p>We'll use this account to debit contractor payments and our monthly fee.</p>
-                  <p>You won't be charged until the first payment.</p>
-                </div>
-                <Button onClick={() => setAddingBankAccount(true)}>Link your bank account</Button>
-              </AlertDescription>
-            </Alert>
+            <div className="p-4">
+              <div className="grid justify-items-center gap-4 p-6 text-center text-gray-700">
+                <CircleDollarSign className="-mb-2 size-10" />
+                <p>Connect a bank account to debit contractor payments and our monthly fee.</p>
+                <Button onClick={() => setAddingBankAccount(true)} variant="outline">
+                  <Plus className="size-4" />
+                  Link your bank account
+                </Button>
+              </div>
+            </div>
           )}
           <Elements
             stripe={stripePromise}
