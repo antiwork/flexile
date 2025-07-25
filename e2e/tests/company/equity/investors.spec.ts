@@ -5,7 +5,7 @@ import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 
-test.describe("Cap Table", () => {
+test.describe("Investors", () => {
   test("displays correct ownership percentages for investors", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
       capTableEnabled: true,
@@ -35,9 +35,9 @@ test.describe("Cap Table", () => {
     });
 
     await login(page, adminUser);
-    await page.goto("/equity/cap_table");
+    await page.goto("/equity/investors");
 
-    await expect(page.getByText("Cap table")).toBeVisible();
+    await expect(page.getByText("Investors")).toBeVisible();
     await expect(page.getByText("Alice Investor")).toBeVisible();
     await expect(page.getByText("Bob Investor")).toBeVisible();
 
@@ -66,7 +66,7 @@ test.describe("Cap Table", () => {
     });
 
     await login(page, adminUser);
-    await page.goto("/equity/cap_table");
+    await page.goto("/equity/investors");
 
     await expect(page.getByText("Test Investor")).toBeVisible();
     await expect(page.locator("tbody")).toContainText("20.00%");
@@ -91,7 +91,7 @@ test.describe("Cap Table", () => {
     });
 
     await login(page, adminUser);
-    await page.goto("/equity/cap_table");
+    await page.goto("/equity/investors");
 
     await expect(page.getByText("Major Investor")).toBeVisible();
     await expect(page.locator("tbody")).toContainText("15.00%");
