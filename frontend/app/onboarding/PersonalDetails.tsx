@@ -1,6 +1,7 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -56,14 +57,22 @@ const PersonalDetails = () => {
 
   const save = useMutation({
     mutationFn: async () => {
-      await request({
+      const response = await request({
         method: "PATCH",
         url: onboarding_path(),
         accept: "json",
         jsonData: { user: form.getValues() },
         assertOk: true,
       });
-      router.push("/dashboard");
+      const data = z
+        .object({
+          success: z.boolean(),
+          after_complete_onboarding_path: z.string().optional(),
+        })
+        .parse(await response.json());
+      const redirectPath = data.after_complete_onboarding_path || "/dashboard";
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- dynamic redirect path from backend
+      router.push(redirectPath as Route);
     },
   });
 
