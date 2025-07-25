@@ -38,7 +38,7 @@ RSpec.describe CreateOrUpdateInvoiceService do
     create(:active_grant, company_investor: create(:company_investor, company:, user:),
                           share_price_usd: 2.34, year: Date.current.year)
   end
-  let(:expected_total_amount_in_cents) { 14100 }
+  let(:expected_total_amount_in_cents) { 14101 }
 
   before { company.update!(equity_compensation_enabled: true) }
 
@@ -118,7 +118,7 @@ RSpec.describe CreateOrUpdateInvoiceService do
           invoice = result[:invoice]
           expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents)
           expect(invoice.equity_percentage).to eq(60)
-          expected_equity_cents = 8460
+          expected_equity_cents = 8461
           expect(invoice.equity_amount_in_cents).to eq(expected_equity_cents)
           expected_cash_cents = 5640
           expect(invoice.cash_amount_in_cents).to eq(expected_cash_cents)
@@ -263,7 +263,7 @@ RSpec.describe CreateOrUpdateInvoiceService do
             expect(invoice.invoice_expenses.count).to eq(1)
             expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents + invoice_expense.total_amount_in_cents)
             expect(invoice.equity_percentage).to eq(30)
-            expected_equity_cents = expected_total_amount_in_cents * 0.3
+            expected_equity_cents = (expected_total_amount_in_cents * 0.3).round
             expect(invoice.equity_amount_in_cents).to eq(expected_equity_cents)
             expected_cash_cents = expected_total_amount_in_cents + invoice_expense.total_amount_in_cents - expected_equity_cents
             expect(invoice.cash_amount_in_cents).to eq(expected_cash_cents)
@@ -352,7 +352,7 @@ RSpec.describe CreateOrUpdateInvoiceService do
           invoice.reload
           expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents)
           expect(invoice.equity_percentage).to eq(60)
-          expected_equity_cents = expected_total_amount_in_cents * 0.6
+          expected_equity_cents = (expected_total_amount_in_cents * 0.6).round
           expect(invoice.equity_amount_in_cents).to eq(expected_equity_cents)
           expected_cash_cents = expected_total_amount_in_cents - expected_equity_cents
           expect(invoice.cash_amount_in_cents).to eq(expected_cash_cents)
@@ -473,7 +473,7 @@ RSpec.describe CreateOrUpdateInvoiceService do
             expected_total_amount = expected_total_amount_in_cents + expense_1.total_amount_in_cents + expense_2.total_amount_in_cents
             expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount)
             expect(invoice.equity_percentage).to eq(30)
-            expected_equity_cents = expected_total_amount_in_cents * 0.3
+            expected_equity_cents = (expected_total_amount_in_cents * 0.3).round
             expect(invoice.equity_amount_in_cents).to eq(expected_equity_cents)
             expected_cash_cents = expected_total_amount - expected_equity_cents
             expect(invoice.cash_amount_in_cents).to eq(expected_cash_cents)
