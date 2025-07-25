@@ -5,6 +5,7 @@ import React from "react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
+import TableSkeleton from "@/components/TableSkeleton";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -30,7 +31,7 @@ const columns = [
 export default function Convertibles() {
   const company = useCurrentCompany();
   const user = useCurrentUser();
-  const [data] = trpc.convertibleSecurities.list.useSuspenseQuery({
+  const { data = { convertibleSecurities: [] }, isLoading } = trpc.convertibleSecurities.list.useQuery({
     companyId: company.id,
     investorId: user.roles.investor?.id ?? "",
   });
@@ -52,7 +53,10 @@ export default function Convertibles() {
           </Breadcrumb>
         }
       />
-      {data.convertibleSecurities.length > 0 ? (
+
+      {isLoading ? (
+        <TableSkeleton columns={4} />
+      ) : data.convertibleSecurities.length > 0 ? (
         <DataTable table={table} />
       ) : (
         <Placeholder icon={CircleCheck}>You do not hold any convertible securities.</Placeholder>
