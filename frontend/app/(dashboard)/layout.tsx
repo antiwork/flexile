@@ -10,6 +10,7 @@ import {
   ChevronsUpDown,
   CircleDollarSign,
   Files,
+  Home,
   LogOut,
   ReceiptIcon,
   Rss,
@@ -209,6 +210,9 @@ const NavLinks = () => {
 
   return (
     <SidebarMenu>
+      <NavLink href="/dashboard" icon={Home} active={pathname === "/dashboard"}>
+        Dashboard
+      </NavLink>
       {updatesPath ? (
         <NavItem href="/updates/company" icon={Rss} filledIcon={Rss} active={pathname.startsWith("/updates")}>
           Updates
