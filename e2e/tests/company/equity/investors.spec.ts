@@ -1,9 +1,12 @@
+import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { shareHoldingsFactory } from "@test/factories/shareHoldings";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
+import { eq } from "drizzle-orm";
+import { companyInvestors } from "@/db/schema";
 
 test.describe("Investors", () => {
   test("displays correct ownership percentages for investors", async ({ page }) => {
@@ -22,6 +25,10 @@ test.describe("Investors", () => {
       numberOfShares: 100000,
       shareHolderName: "Alice Investor",
     });
+    await db
+      .update(companyInvestors)
+      .set({ totalShares: BigInt(100000) })
+      .where(eq(companyInvestors.id, companyInvestor1.id));
 
     const { user: investor2 } = await usersFactory.create({ legalName: "Bob Investor" });
     const { companyInvestor: companyInvestor2 } = await companyInvestorsFactory.create({
@@ -33,6 +40,10 @@ test.describe("Investors", () => {
       numberOfShares: 50000,
       shareHolderName: "Bob Investor",
     });
+    await db
+      .update(companyInvestors)
+      .set({ totalShares: BigInt(50000) })
+      .where(eq(companyInvestors.id, companyInvestor2.id));
 
     await login(page, adminUser);
     await page.goto("/equity/investors");
@@ -64,6 +75,10 @@ test.describe("Investors", () => {
       numberOfShares: 200000,
       shareHolderName: "Test Investor",
     });
+    await db
+      .update(companyInvestors)
+      .set({ totalShares: BigInt(200000) })
+      .where(eq(companyInvestors.id, companyInvestor.id));
 
     await login(page, adminUser);
     await page.goto("/equity/investors");
@@ -89,6 +104,10 @@ test.describe("Investors", () => {
       numberOfShares: 300000,
       shareHolderName: "Major Investor",
     });
+    await db
+      .update(companyInvestors)
+      .set({ totalShares: BigInt(300000) })
+      .where(eq(companyInvestors.id, companyInvestor.id));
 
     await login(page, adminUser);
     await page.goto("/equity/investors");
