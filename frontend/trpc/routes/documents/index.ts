@@ -27,7 +27,11 @@ export const documentsRouter = createRouter({
         throw new TRPCError({ code: "FORBIDDEN" });
 
       const signable = assertDefined(
-        and(isNotNull(documents.docusealSubmissionId), isNull(documentSignatures.signedAt)),
+        and(
+          isNotNull(documents.docusealSubmissionId),
+          isNull(documentSignatures.signedAt),
+          input.userId ? undefined : eq(documentSignatures.title, "Company Representative"),
+        ),
       );
       const where = and(
         visibleDocuments(ctx.company.id, input.userId ? byExternalId(users, input.userId) : undefined),

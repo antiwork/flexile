@@ -84,7 +84,7 @@ export const invoicesFactory = {
     await invoiceLineItemsFactory.create({
       invoiceId: invoice.id,
       payRateInSubunits: Number(invoice.totalAmountInUsdCents),
-      quantity: 1,
+      quantity: "1",
     });
 
     return { invoice };

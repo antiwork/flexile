@@ -11,6 +11,7 @@ import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import RichText from "@/components/RichText";
+import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -44,7 +45,11 @@ const columnHelper = createColumnHelper<Dividend>();
 export default function Dividends() {
   const company = useCurrentCompany();
   const user = useCurrentUser();
-  const [data, { refetch }] = trpc.dividends.list.useSuspenseQuery({
+  const {
+    data = [],
+    refetch,
+    isLoading,
+  } = trpc.dividends.list.useQuery({
     companyId: company.id,
     investorId: user.roles.investor?.id,
   });
@@ -161,7 +166,9 @@ export default function Dividends() {
           </AlertDescription>
         </Alert>
       ) : null}
-      {data.length > 0 ? (
+      {isLoading ? (
+        <TableSkeleton columns={7} />
+      ) : data.length > 0 ? (
         <DataTable table={table} />
       ) : (
         <Placeholder icon={CircleCheck}>You have not been issued any dividends yet.</Placeholder>
