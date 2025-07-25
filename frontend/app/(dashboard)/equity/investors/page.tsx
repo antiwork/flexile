@@ -147,7 +147,7 @@ export default function CapTable() {
               <BreadcrumbItem>Equity</BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>Cap table</BreadcrumbPage>
+                <BreadcrumbPage>Investors</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
