@@ -327,11 +327,11 @@ const BankAccountsSection = () => {
       <div className="text-base font-bold">Payout method</div>
       <Card>
         <CardContent className="px-0">
-          {bankAccounts.length === 0 && user.roles.investor ? (
+          {bankAccounts.length === 0 && (user.roles.investor || user.roles.worker) ? (
             <div className="p-4">
               <div className="grid justify-items-center gap-4 p-6 text-center text-gray-700">
                 <CircleDollarSign className="-mb-2 size-10" />
-                <p>Set up your bank account to receive payouts.</p>
+                <p>Connect a bank account to debit contractor payments and our monthly fee.</p>
                 <Button onClick={() => setAddingBankAccount(true)} variant="outline">
                   <Plus className="size-4" />
                   Add bank account
