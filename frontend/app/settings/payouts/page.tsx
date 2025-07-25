@@ -436,12 +436,14 @@ const BankAccountsSection = () => {
         </CardContent>
       </Card>
       {user.roles.investor || user.roles.worker ? (
-        <div>
-          <Button onClick={() => setAddingBankAccount(true)} variant="default">
-            <Plus className="size-4" />
-            Add bank account
-          </Button>
-        </div>
+        bankAccounts.length > 0 ? (
+          <div>
+            <Button onClick={() => setAddingBankAccount(true)} variant="default">
+              <Plus className="size-4" />
+              Add bank account
+            </Button>
+          </div>
+        ) : null
       ) : null}
     </div>
   );
