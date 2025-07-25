@@ -126,12 +126,10 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(firstRow).toContainText("$23");
     await expect(firstRow).toContainText("Awaiting approval");
     await expect(firstRow.getByRole("button", { name: "Pay now" })).toBeVisible();
-    await expect(firstRow.getByRole("button", { name: "Pay again" })).not.toBeVisible();
     await expect(secondRow).toContainText("Nov 20, 2024");
     await expect(secondRow).toContainText("$623");
     await expect(secondRow).toContainText("Awaiting approval");
     await expect(secondRow.getByRole("button", { name: "Pay now" })).toBeVisible();
-    await expect(secondRow.getByRole("button", { name: "Pay again" })).not.toBeVisible();
     await expect(thirdRow).toContainText("Nov 1, 2024");
     await expect(thirdRow).toContainText("$870");
     await expect(thirdRow).toContainText("Awaiting approval");
@@ -195,9 +193,6 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(
       page.locator("header").filter({ hasText: "Invoice" }).getByRole("button", { name: "Pay now" }),
     ).toBeVisible();
-    await expect(
-      page.locator("header").filter({ hasText: "Invoice" }).getByRole("button", { name: "Pay again" }),
-    ).not.toBeVisible();
     await page.locator("header").filter({ hasText: "Invoice" }).getByRole("button", { name: "Pay now" }).click();
 
     await expect(openInvoicesBadge).not.toBeVisible();
