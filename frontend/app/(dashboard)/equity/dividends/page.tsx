@@ -112,8 +112,8 @@ export default function Dividends() {
           <div className="flex min-h-8 justify-between gap-2">
             <DividendStatusIndicator dividend={info.row.original} />
             {info.row.original.investor.user.id === user.id &&
-            user.address.street_address &&
-            !!user.taxInformationConfirmedAt &&
+            user.hasPayoutMethodForDividends &&
+            user.legalName &&
             info.row.original.dividendRound.releaseDocument &&
             !info.row.original.signedReleaseAt ? (
               <Button size="small" onClick={() => setSigningDividend({ id: info.row.original.id, state: "initial" })}>
@@ -143,7 +143,7 @@ export default function Dividends() {
         }
       />
 
-      {!user.legalName ? (
+      {!user.address.street_address || !user.taxInformationConfirmedAt ? (
         <Alert>
           <Info />
           <AlertDescription>
