@@ -791,6 +791,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_17_153308) do
     t.datetime "accepted_at"
     t.datetime "deleted_at"
     t.index ["company_contractor_id"], name: "index_invoices_on_company_contractor_id"
+    t.index ["company_id", "invoice_date", "created_at"], name: "idx_invoices_company_alive_date_created", order: { invoice_date: :desc, created_at: :desc }, where: "(deleted_at IS NULL)"
     t.index ["company_id"], name: "index_invoices_on_company_id"
     t.index ["created_by_id"], name: "index_invoices_on_created_by_id"
     t.index ["equity_grant_id"], name: "index_invoices_on_equity_grant_id"
