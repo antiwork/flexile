@@ -6,7 +6,8 @@ scope path: :internal, module: :internal do
     resources :companies, only: :show
   end
 
-  resource :settings, only: [:update] do
+  resource :settings, only: [:update]
+  namespace :settings do
     resource :dividend, only: [:show, :update], controller: "dividend"
     resource :tax, only: [:show, :update], controller: "tax"
     resources :bank_accounts, only: [:index, :update]
