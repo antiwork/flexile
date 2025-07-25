@@ -11,7 +11,7 @@ class Settings::TaxPresenter
 
   def props
     {
-      birth_date: birth_date&.to_s,
+      birth_date: birth_date&.iso8601,
       business_name:,
       citizenship_country_code:,
       country_code:,
