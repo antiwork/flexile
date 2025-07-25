@@ -327,7 +327,7 @@ const BankAccountsSection = () => {
       <div className="text-base font-bold">Payout method</div>
       <Card>
         <CardContent className="px-0">
-          {bankAccounts.length === 0 && user.roles.investor ? (
+          {bankAccounts.length === 0 && (user.roles.investor || user.roles.worker) ? (
             <div className="p-4">
               <div className="grid justify-items-center gap-4 p-6 text-center text-gray-700">
                 <CircleDollarSign className="-mb-2 size-10" />
@@ -436,12 +436,14 @@ const BankAccountsSection = () => {
         </CardContent>
       </Card>
       {user.roles.investor || user.roles.worker ? (
-        <div>
-          <Button onClick={() => setAddingBankAccount(true)} variant="default">
-            <Plus className="size-4" />
-            Add bank account
-          </Button>
-        </div>
+        bankAccounts.length > 0 ? (
+          <div>
+            <Button onClick={() => setAddingBankAccount(true)} variant="default">
+              <Plus className="size-4" />
+              Add bank account
+            </Button>
+          </div>
+        ) : null
       ) : null}
     </div>
   );
