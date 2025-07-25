@@ -141,7 +141,7 @@ Flexile automatically generates and prefills IRS tax forms for contractors and i
    ```ruby
    # Create document record
    document = Document.create!(
-     name: TaxDocument::FORM_1099_NEC,
+     name: Document::FORM_1099_NEC,
      document_type: :tax_document,
      year: tax_year,
      company: company,
@@ -197,7 +197,7 @@ Flexile automatically generates and prefills IRS tax forms for contractors and i
    Document.where(
      company:,
      tax_year:,
-     name: TaxDocument::FORM_1099_NEC,
+     name: Document::FORM_1099_NEC,
    ).includes(user_compliance_info: :user).find_each do |document|
      document.signatures.create!(title: "Signer", user: document.user_compliance_info.user, signed_at: Time.current)
    end
