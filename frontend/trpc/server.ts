@@ -22,7 +22,6 @@ import { lawyersRouter } from "./routes/lawyers";
 import { optionPoolsRouter } from "./routes/optionPools";
 import { quickbooksRouter } from "./routes/quickbooks";
 import { shareHoldingsRouter } from "./routes/shareHoldings";
-import { tenderOffersRouter } from "./routes/tenderOffers";
 import { usersRouter } from "./routes/users";
 import { createClient } from "./shared";
 import { createCallerFactory, createRouter } from "./";
@@ -41,7 +40,6 @@ export const appRouter = createRouter({
   dividends: dividendsRouter,
   dividendRounds: dividendRoundsRouter,
   equityGrantExercises: equityGrantExercisesRouter,
-  tenderOffers: tenderOffersRouter,
 
   optionPools: optionPoolsRouter,
   companyUpdates: companyUpdatesRouter,

@@ -59,9 +59,9 @@ export const capTableRouter = createRouter({
             userId: users.externalId,
             name: sql<string>`COALESCE(${users.legalName}, '')`,
             outstandingShares: companyInvestors.totalShares,
+            outstandingOptions: companyInvestors.totalOptions,
             fullyDilutedShares: companyInvestors.fullyDilutedShares,
             notes: companyInvestors.capTableNotes,
-
             email: users.email,
           })
           .from(companyInvestors)

@@ -3,7 +3,7 @@
 class TenderOffers::CalculateEquilibriumPrice
   def initialize(tender_offer:, total_amount_cents: nil, total_shares: nil)
     @tender_offer = tender_offer
-    @total_shares = total_shares || tender_offer.number_of_shares
+    @total_shares = total_shares || tender_offer.number_of_shares || Float::INFINITY
     @total_amount = total_amount_cents || tender_offer.total_amount_in_cents
   end
 
