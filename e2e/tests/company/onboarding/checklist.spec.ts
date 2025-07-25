@@ -74,7 +74,7 @@ test.describe.serial("Onboarding checklist", () => {
         await modal.getByRole("button", { name: "Send invite" }).click();
         await modal.waitFor({ state: "detached" });
       },
-      { page },
+      { page, title: "Who's joining?" },
     );
 
     await expect(page.getByText("75%")).toBeVisible();
