@@ -150,7 +150,13 @@ export default function TaxPage() {
 
   const saveMutation = useMutation({
     mutationFn: async (signature: string) => {
-      const data = await updateTaxSettings.mutateAsync({ data: { ...form.getValues(), signature } });
+      const formValues = form.getValues();
+      const transformedData = {
+        ...formValues,
+        birth_date: formValues.birth_date ? formValues.birth_date.toString() : null,
+        signature,
+      };
+      const data = await updateTaxSettings.mutateAsync({ data: transformedData });
 
       setIsTaxInfoConfirmed(true);
       if (form.getFieldState("tax_id").isDirty) setTaxIdStatus(null);

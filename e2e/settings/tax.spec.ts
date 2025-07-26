@@ -482,6 +482,29 @@ test.describe("Tax settings", () => {
       expect(updatedUser.legalName).toBe("John Middle Doe");
     });
 
+    test("allows changing birth_date and verifies it is saved", async ({ page, sentEmails: _ }) => {
+      await login(page, user);
+      await page.goto("/settings/tax");
+
+      // Fill in required fields
+      await page.getByLabel("Full legal name (must match your ID)").fill("John Smith");
+      await page.getByLabel("Tax ID (SSN or ITIN)").fill("123456789");
+      await page.getByLabel("Residential address (street name, number, apartment)").fill("123 Main St");
+      await page.getByLabel("City").fill("New York");
+      await page.getByLabel("ZIP code").fill("12345");
+
+      // Change the birth_date
+      await fillDatePicker(page, "Date of birth", "06/15/1985");
+
+      await page.getByRole("button", { name: "Save changes" }).click();
+      await page.getByRole("button", { name: "Save", exact: true }).click();
+      await expect(page.getByText("W-9 Certification and Tax Forms Delivery")).not.toBeVisible();
+
+      // Verify the birth_date was updated
+      const updatedUser = await db.query.users.findFirst({ where: eq(users.id, user.id) }).then(takeOrThrow);
+      expect(updatedUser.birthDate).toBe("1985-06-15");
+    });
+
     test.describe("null data handling", () => {
       test("handles null company name gracefully when user has complete profile", async ({ page }) => {
         await db.update(companies).set({ name: null }).where(eq(companies.id, company.id));
