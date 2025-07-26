@@ -31,8 +31,7 @@
         "is_gumroad": true,
         "tender_offers_enabled": true,
         "cap_table_enabled": true,
-        "equity_compensation_enabled": true,
-        "company_updates_enabled": true
+        "equity_compensation_enabled": true
       },
       "feature_flags": {
         "company_updates": true,

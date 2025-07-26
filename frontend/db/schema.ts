@@ -1848,7 +1848,6 @@ export const companies = pgTable(
     isTrusted: boolean("is_trusted").notNull().default(false),
     equityGrantsEnabled: boolean("equity_grants_enabled").notNull().default(false),
     showAnalyticsToContractors: boolean("show_analytics_to_contractors").notNull().default(false),
-    companyUpdatesEnabled: boolean("company_updates_enabled").notNull().default(false),
     defaultCurrency: varchar("default_currency").default("usd").notNull(),
 
     tenderOffersEnabled: boolean("tender_offers_enabled").notNull().default(false),

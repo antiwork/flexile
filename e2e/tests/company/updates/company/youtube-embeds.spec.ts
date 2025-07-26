@@ -45,9 +45,7 @@ test.describe("Company Updates - YouTube Embeds", () => {
   let contractorUser: Awaited<ReturnType<typeof usersFactory.create>>["user"];
 
   test.beforeEach(async () => {
-    const result = await companiesFactory.createCompletedOnboarding({
-      companyUpdatesEnabled: true,
-    });
+    const result = await companiesFactory.createCompletedOnboarding();
     company = result.company;
     adminUser = result.adminUser;
     contractorUser = (await usersFactory.create()).user;
