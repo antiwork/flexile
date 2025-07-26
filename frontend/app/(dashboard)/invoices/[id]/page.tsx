@@ -77,11 +77,8 @@ export default function InvoicePage() {
     },
   });
 
-  const lineItemTotal = (lineItem: (typeof invoice.lineItems)[number]) => {
-    const quantity = Number(lineItem.quantity) || 0;
-    const rate = lineItem.payRateInSubunits || 0;
-    return Math.ceil((quantity / (lineItem.hourly ? 60 : 1)) * rate);
-  };
+  const lineItemTotal = (lineItem: (typeof invoice.lineItems)[number]) =>
+    Math.ceil((Number(lineItem.quantity) / (lineItem.hourly ? 60 : 1)) * lineItem.payRateInSubunits);
   const cashFactor = 1 - invoice.equityPercentage / 100;
 
   assert(!!invoice.invoiceDate); // must be defined due to model checks in rails
@@ -90,17 +87,11 @@ export default function InvoicePage() {
     <>
       <DashboardHeader
         title={`Invoice ${invoice.invoiceNumber}`}
-        className="print:hidden"
         headerActions={
           <>
-            <Button
-              onClick={() => window.print()}
-              variant="outline"
-              className="print:hidden"
-              title="Downloads as PDF. In print dialog, uncheck 'Headers and footers' for best results"
-            >
+            <Button onClick={() => window.print()} variant="outline" className="print:hidden">
               <PrinterIcon className="size-4" />
-              Download PDF
+              Print
             </Button>
             <InvoiceStatus aria-label="Status" invoice={invoice} />
             {user.roles.administrator && isActionable(invoice) ? (
@@ -259,159 +250,151 @@ export default function InvoicePage() {
         </Alert>
       ) : null}
 
-      <div className="invoice-print">
-        <section>
-          <form>
-            <div className="grid gap-4">
-              <div className="invoice-header grid auto-cols-fr gap-3 md:grid-flow-col print:grid-flow-col">
-                <div className="invoice-from">
-                  <span className="invoice-label">From</span>
-                  <br />
-                  <b>{invoice.billFrom}</b>
-                  <div>
-                    <Address address={invoice} />
-                  </div>
-                </div>
-                <div className="invoice-to">
-                  <span className="invoice-label">To</span>
-                  <br />
-                  <b>{invoice.billTo}</b>
-                  <div>
-                    <LegacyAddress address={company.address} />
-                  </div>
-                </div>
-                <div className="invoice-meta">
-                  <div className="invoice-number">
-                    <span className="invoice-label">Invoice ID</span>
-                    <br />
-                    <span className="invoice-value">{invoice.invoiceNumber}</span>
-                  </div>
-                  <div className="invoice-date">
-                    <span className="invoice-label">Sent on</span>
-                    <br />
-                    <span className="invoice-value">{formatDate(invoice.invoiceDate)}</span>
-                  </div>
-                  <div className="invoice-paid">
-                    Paid on
-                    <br />
-                    {invoice.paidAt ? formatDate(invoice.paidAt) : "-"}
-                  </div>
+      <section className="invoice-print">
+        <form>
+          <div className="grid gap-4">
+            <div className="grid auto-cols-fr gap-3 md:grid-flow-col print:grid-flow-col">
+              <div>
+                From
+                <br />
+                <b>{invoice.billFrom}</b>
+                <div>
+                  <Address address={invoice} />
                 </div>
               </div>
+              <div>
+                To
+                <br />
+                <b>{invoice.billTo}</b>
+                <div>
+                  <LegacyAddress address={company.address} />
+                </div>
+              </div>
+              <div>
+                Invoice ID
+                <br />
+                {invoice.invoiceNumber}
+              </div>
+              <div>
+                Sent on
+                <br />
+                {formatDate(invoice.invoiceDate)}
+              </div>
+              <div>
+                Paid on
+                <br />
+                {invoice.paidAt ? formatDate(invoice.paidAt) : "-"}
+              </div>
+            </div>
 
-              {invoice.lineItems.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>
-                        {complianceInfo?.businessEntity ? `Services (${complianceInfo.legalName})` : "Services"}
-                      </TableHead>
-                      <TableHead className="text-right">Qty / Hours</TableHead>
-                      <TableHead className="text-right">Cash rate</TableHead>
-                      <TableHead className="text-right">Line total</TableHead>
+            {invoice.lineItems.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>
+                      {complianceInfo?.businessEntity ? `Services (${complianceInfo.legalName})` : "Services"}
+                    </TableHead>
+                    <TableHead className="text-right">Qty / Hours</TableHead>
+                    <TableHead className="text-right">Cash rate</TableHead>
+                    <TableHead className="text-right">Line total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {invoice.lineItems.map((lineItem, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{lineItem.description}</TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {lineItem.hourly ? formatDuration(Number(lineItem.quantity)) : lineItem.quantity}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {lineItem.payRateInSubunits
+                          ? `${formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)}${lineItem.hourly ? " / hour" : ""}`
+                          : ""}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatMoneyFromCents(lineItemTotal(lineItem) * cashFactor)}
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {invoice.lineItems.map((lineItem, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{lineItem.description}</TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {lineItem.hourly ? formatDuration(Number(lineItem.quantity)) : lineItem.quantity}
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {lineItem.payRateInSubunits
-                            ? `${formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)}${lineItem.hourly ? " / hour" : ""}`
-                            : ""}
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {lineItem.payRateInSubunits ? formatMoneyFromCents(lineItemTotal(lineItem) * cashFactor) : ""}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : null}
+                  ))}
+                </TableBody>
+              </Table>
+            ) : null}
 
-              {invoice.expenses.length > 0 && (
-                <Card>
-                  <CardContent>
-                    <div className="flex justify-between gap-2">
-                      <div>Expense</div>
-                      <div>Amount</div>
-                    </div>
-                    {invoice.expenses.map((expense, i) => (
-                      <Fragment key={i}>
-                        <Separator />
-                        <div className="flex justify-between gap-2">
-                          <Link
-                            href={`/download/${expense.attachment?.key}/${expense.attachment?.filename}`}
-                            download
-                            className={linkClasses}
-                          >
-                            <PaperClipIcon className="inline size-4" />
-                            {
-                              expenseCategories.find((category) => category.id === expense.expenseCategoryId)?.name
-                            } – {expense.description}
-                          </Link>
-                          <span>{formatMoneyFromCents(expense.totalAmountInCents)}</span>
-                        </div>
-                      </Fragment>
-                    ))}
-                  </CardContent>
-                </Card>
-              )}
+            {invoice.expenses.length > 0 && (
+              <Card>
+                <CardContent>
+                  <div className="flex justify-between gap-2">
+                    <div>Expense</div>
+                    <div>Amount</div>
+                  </div>
+                  {invoice.expenses.map((expense, i) => (
+                    <Fragment key={i}>
+                      <Separator />
+                      <div className="flex justify-between gap-2">
+                        <Link
+                          href={`/download/${expense.attachment?.key}/${expense.attachment?.filename}`}
+                          download
+                          className={linkClasses}
+                        >
+                          <PaperClipIcon className="inline size-4" />
+                          {expenseCategories.find((category) => category.id === expense.expenseCategoryId)?.name} –{" "}
+                          {expense.description}
+                        </Link>
+                        <span>{formatMoneyFromCents(expense.totalAmountInCents)}</span>
+                      </div>
+                    </Fragment>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
 
-              <footer className="invoice-footer flex justify-between">
-                <div className="invoice-notes">
-                  {invoice.notes ? (
+            <footer className="flex justify-between">
+              <div>
+                {invoice.notes ? (
+                  <div>
+                    <b>Notes</b>
                     <div>
-                      <b>Notes</b>
-                      <div>
-                        <div className="text-xs">
-                          <p>{invoice.notes}</p>
-                        </div>
+                      <div className="text-xs">
+                        <p>{invoice.notes}</p>
                       </div>
                     </div>
-                  ) : null}
-                </div>
-                <Card className="invoice-totals">
-                  <CardContent>
-                    {invoice.lineItems.length > 0 && invoice.expenses.length > 0 && (
-                      <>
-                        <div className="flex justify-between gap-2">
-                          <strong>Total services</strong>
-                          <span>
-                            {formatMoneyFromCents(
-                              invoice.lineItems.reduce(
-                                (acc, lineItem) => acc + lineItemTotal(lineItem) * cashFactor,
-                                0,
-                              ),
-                            )}
-                          </span>
-                        </div>
-                        <Separator />
-                        <div className="flex justify-between gap-2">
-                          <strong>Total expenses</strong>
-                          <span>
-                            {formatMoneyFromCents(
-                              invoice.expenses.reduce((acc, expense) => acc + expense.totalAmountInCents, BigInt(0)),
-                            )}
-                          </span>
-                        </div>
-                        <Separator />
-                      </>
-                    )}
-                    <div className="flex justify-between gap-2">
-                      <strong>Total</strong>
-                      <span>{formatMoneyFromCents(invoice.cashAmountInCents)}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </footer>
-            </div>
-          </form>
-        </section>
-      </div>
+                  </div>
+                ) : null}
+              </div>
+              <Card>
+                <CardContent>
+                  {invoice.lineItems.length > 0 && invoice.expenses.length > 0 && (
+                    <>
+                      <div className="flex justify-between gap-2">
+                        <strong>Total services</strong>
+                        <span>
+                          {formatMoneyFromCents(
+                            invoice.lineItems.reduce((acc, lineItem) => acc + lineItemTotal(lineItem) * cashFactor, 0),
+                          )}
+                        </span>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between gap-2">
+                        <strong>Total expenses</strong>
+                        <span>
+                          {formatMoneyFromCents(
+                            invoice.expenses.reduce((acc, expense) => acc + expense.totalAmountInCents, BigInt(0)),
+                          )}
+                        </span>
+                      </div>
+                      <Separator />
+                    </>
+                  )}
+                  <div className="flex justify-between gap-2">
+                    <strong>Total</strong>
+                    <span>{formatMoneyFromCents(invoice.cashAmountInCents)}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </footer>
+          </div>
+        </form>
+      </section>
     </>
   );
 }

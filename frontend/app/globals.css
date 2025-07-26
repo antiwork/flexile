@@ -1,12 +1,19 @@
 @import "tailwindcss" source(none);
+
 @source "./";
+
 @source "../components";
 
 @custom-variant dark (&:is(.dark *));
+
 @plugin "tailwindcss-animate";
+
 @plugin "@tailwindcss/typography";
+
 @tailwind base;
+
 @tailwind components;
+
 @tailwind utilities;
 
 @theme {
@@ -144,10 +151,7 @@
   @page {
     /* Works in all Chromium & Firefox */
     size: A4;
-    margin-top: 1cm;
-    margin-bottom: 1cm;
-    margin-left: 1cm;
-    margin-right: 1cm;
+    margin: 2.5cm 1.5cm 2cm 1.5cm !important; /* More top space for header */
   }
 
   /* 1. Flatten the dashboard grid so only one column remains */
@@ -169,8 +173,12 @@
 
   html,
   body {
-    font-size: 12px;
-    line-height: 1.4;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 11pt !important; /* Slightly larger for professional polish */
+    line-height: 1.5 !important; /* More breathing room */
+    color: #000 !important;
+    margin: 0 !important; /* Ensure no extra body margins */
+    hyphens: none !important; /* Prevent awkward word breaks */
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     color-adjust: exact;
@@ -198,10 +206,11 @@
   .invoice-print table,
   .invoice-print .table {
     width: 100% !important;
-    border-collapse: collapse !important;
+    border-collapse: separate !important; /* Prevent merging */
     table-layout: fixed !important;
-    margin: 30px 0 30px 0 !important;
-    border: none !important;
+    margin: 0 0 1.5cm 0 !important;
+    border: none !important; /* Minimal, no outer border */
+    border-spacing: 0 0.9em !important;
     border-radius: 0 !important;
   }
 
@@ -213,74 +222,95 @@
   }
 
   /* Professional table cell styling */
-  .invoice-print td,
-  .invoice-print th {
-    padding: 12px 10px !important;
+  .invoice-print tbody td {
+    padding: 0.8em 1em !important;
     word-wrap: break-word !important;
     word-break: break-word !important;
-    vertical-align: middle !important;
+    vertical-align: top !important; /* Keep top for desc */
     overflow-wrap: break-word !important;
     hyphens: none !important;
     white-space: normal !important;
     line-height: 1.4 !important;
-    font-size: 13px !important;
+    font-size: 10pt !important;
+    border-bottom: 1px solid #eee !important;
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important; /* No verticals for clean look */
+  }
+
+  /* Bold numbers in table */
+  .invoice-print td:nth-child(2),
+  .invoice-print td:nth-child(3),
+  .invoice-print td:nth-child(4) {
+    font-weight: 700 !important; /* Stronger bold */
+  }
+
+  /* Fix potential header concatenation */
+  .invoice-print table thead th:nth-child(2) {
+    white-space: nowrap !important; /* Keep this one nowrap if short */
   }
 
   /* Professional header styling */
   .invoice-print thead th {
-    background-color: #f9fafb !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
-    border-bottom: 1px solid #000 !important;
+    background: transparent !important; /* No fill */
+    text-transform: uppercase !important; /* Uppercase for headers */
+    letter-spacing: 0.08em !important; /* Subtle tracking */
+    border-bottom: 1px solid #333 !important; /* Darker for contrast */
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important; /* No verticals for clean look */
     font-weight: 700 !important;
     text-align: left !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
-    box-shadow: inset 0 0 0 1000px #f9fafb !important;
-    font-size: 11px !important;
+    box-shadow: none !important;
+    font-size: 8.5pt !important; /* Tighter fit */
+    padding: 0.7em 1.8em !important; /* More padding */
+    white-space: nowrap !important; /* Revert to nowrap for headers */
+    overflow: visible !important;
+    text-overflow: clip !important; /* Clip cleanly if needed */
   }
 
   /* Professional body row styling */
-  .invoice-print tbody tr {
-    border-bottom: 1px solid #e5e7eb !important;
+  .invoice-print tbody tr:nth-child(even) {
+    padding-bottom: 0.5em !important; /* Subtle extra space */
   }
 
-  .invoice-print tbody tr:last-child {
-    border-bottom: none !important;
+  .invoice-print tbody tr:last-child td {
+    border-bottom: none !important; /* Clean end */
   }
 
   .invoice-print tbody td {
     background-color: #fff !important;
   }
 
-  /* Better column proportions */
+  /* Better column proportions - balanced for headers */
   .invoice-print table thead th:nth-child(1),
   .invoice-print table tbody td:nth-child(1) {
-    width: 45% !important;
+    width: 55% !important; /* Slightly less to balance headers */
     text-align: left !important;
-    padding-left: 12px !important;
+    white-space: normal !important; /* Allow wrap for long lorem text */
   }
 
   .invoice-print table thead th:nth-child(2),
   .invoice-print table tbody td:nth-child(2) {
-    width: 18% !important;
-    text-align: center !important;
+    width: 15% !important;
+    text-align: right !important;
   }
 
   .invoice-print table thead th:nth-child(3),
   .invoice-print table tbody td:nth-child(3) {
-    width: 18% !important;
+    width: 15% !important;
     text-align: right !important;
-    padding-right: 12px !important;
+    white-space: nowrap !important; /* Keep "$22 / hour" on one line */
   }
 
   .invoice-print table thead th:nth-child(4),
   .invoice-print table tbody td:nth-child(4) {
-    width: 19% !important;
+    width: 15% !important;
     text-align: right !important;
-    padding-right: 12px !important;
-    font-weight: 600 !important;
+    font-weight: 600 !important; /* Bold totals */
   }
 
   /* Keep totals section together */
@@ -302,38 +332,70 @@
     margin: 0;
   }
 
-  /* Force black text and remove shadows globally */
-  .invoice-print * {
+  /* Global cleanup for polish */
+  .invoice-print *,
+  .invoice-print *:before,
+  .invoice-print *:after {
+    box-shadow: none !important;
+    border-radius: 0 !important; /* Kill all rounding */
     color: #000 !important;
     text-shadow: none !important;
-    box-shadow: none !important;
+  }
+
+  .invoice-print * {
+    background: transparent !important; /* Reinforce everywhere */
   }
 
   /* ======================================================================
-     INVOICE PRINT TRANSFORMATIONS - CSS-only professional layout
+    INVOICE PRINT TRANSFORMATIONS - CSS-only professional layout
   ====================================================================== */
 
   /* Add print-only invoice header using CSS */
   .invoice-print::before {
-    content: "INVOICE";
-    position: absolute;
-    top: 4px;
-    left: 0;
-    font-size: 24px !important;
-    font-weight: bold !important;
+    content: "INVOICE" !important;
+    position: static !important;
+    display: block !important;
+    font-size: 24pt !important; /* Larger like second example */
+    font-weight: 900 !important; /* Extra bold */
+    text-align: left !important;
+    margin-bottom: 2cm !important; /* More space */
+    letter-spacing: 0.05em !important; /* Subtle tracking for professionalism */
+    border-bottom: none !important; /* No line for minimalism */
     color: #000 !important;
-    z-index: 1;
   }
 
   /* Grid layout for Bill From/To side by side */
   .invoice-print .invoice-header {
     display: grid !important;
-    grid-template-columns: 1fr 1fr auto !important;
-    gap: 24px !important;
-    grid-template-areas: "from to meta" !important;
-    margin-top: 60px !important;
-    margin-bottom: 30px !important;
+    grid-template-columns: 1fr 1fr !important; /* Just From/To */
+    gap: 3cm !important; /* Wider like second */
+    margin-top: 0.5cm !important;
+    margin-bottom: 1.5cm !important;
     position: relative !important;
+  }
+
+  /* Header grid wrapper styling */
+  .invoice-print .grid.auto-cols-fr {
+    grid-template-columns: 1fr 1fr auto auto auto !important; /* Dedicated columns for meta */
+    gap: 2em !important; /* Wider gaps */
+    align-items: start !important; /* Top-align content */
+    margin-bottom: 1.5cm !important; /* Space before table */
+  }
+
+  /* Bold labels in grid */
+  .invoice-print .grid > div > *:first-child {
+    font-weight: 600 !important; /* Bold labels */
+    margin-bottom: 0.3em !important;
+  }
+
+  /* Address line spacing */
+  .invoice-print .grid > div {
+    line-height: 1.7 !important;
+  }
+
+  .invoice-print .grid > div b {
+    display: block !important;
+    margin-bottom: 0.5em !important;
   }
 
   .invoice-print .invoice-from {
@@ -353,25 +415,23 @@
 
   /* Create clean labels */
   .invoice-print .invoice-from::before {
-    content: "Bill From" !important;
-    position: absolute !important;
-    top: -24px !important;
-    left: 0 !important;
-    font-size: 12px !important;
-    color: #6b7280 !important;
+    content: "Bill From: " !important;
+    font-weight: 700 !important;
+    color: #000 !important;
+    position: static !important;
     display: block !important;
-    font-weight: normal !important;
+    font-size: 11pt !important;
+    margin-bottom: 0.3em !important;
   }
 
   .invoice-print .invoice-to::before {
-    content: "Bill To" !important;
-    position: absolute !important;
-    top: -24px !important;
-    left: 0 !important;
-    font-size: 12px !important;
-    color: #6b7280 !important;
+    content: "Bill To: " !important;
+    font-weight: 700 !important;
+    color: #000 !important;
+    position: static !important;
     display: block !important;
-    font-weight: normal !important;
+    font-size: 11pt !important;
+    margin-bottom: 0.3em !important;
   }
 
   /* Hide original labels */
@@ -388,101 +448,197 @@
   .invoice-print .invoice-to b,
   .invoice-print .invoice-to div {
     color: #000 !important;
-    font-size: 14px !important;
+    font-size: 10pt !important;
+    font-weight: 600 !important;
     line-height: 1.4 !important;
     display: block !important;
-    margin-bottom: 2px !important;
+    margin: 0 !important;
   }
 
-  /* Clean invoice details */
+  /* Invoice meta section - like second image */
+  .invoice-print .invoice-meta {
+    display: flex !important;
+    justify-content: space-between !important; /* ID left, Sent right */
+    margin-top: 0.5cm !important; /* Space after title */
+    margin-bottom: 0.5em !important;
+    font-size: 10pt !important;
+  }
+
   .invoice-print .invoice-number,
   .invoice-print .invoice-date {
     position: static !important;
-    text-align: right !important;
-    font-size: 12px !important;
-    margin-bottom: 8px !important;
+    text-align: left !important;
+    font-size: 10pt !important;
+    font-weight: 600 !important;
+    margin-bottom: 0 !important;
+  }
+
+  .invoice-print .invoice-number::before {
+    content: "Invoice ID: " !important;
+    font-weight: 600 !important;
+  }
+
+  .invoice-print .invoice-date::before {
+    content: "Sent on: " !important;
+    font-weight: 600 !important;
   }
 
   .invoice-print .invoice-number .invoice-label,
   .invoice-print .invoice-date .invoice-label {
-    display: inline !important;
-    font-weight: bold !important;
+    display: none !important; /* Hide original labels */
   }
 
   .invoice-print .invoice-paid {
-    display: none !important;
+    display: none !important; /* Hide if not needed, as in second example */
   }
 
   /* Professional totals */
   .invoice-print .invoice-footer {
-    display: flex !important;
-    justify-content: flex-end !important;
-    flex-direction: column !important;
-    align-items: flex-end !important;
-    margin-top: auto !important;
+    display: block !important; /* Simplify layout */
+    text-align: right !important; /* Right-align everything */
+    margin-top: 1cm !important;
+    border-top: none !important;
+    padding-top: 0 !important;
   }
 
   .invoice-print .invoice-totals {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 0 0 auto !important;
+    width: 25% !important; /* Tighter like second */
+    float: right !important;
+  }
+
+  /* Stronger Card override with higher specificity */
+  .invoice-print .card,
+  .invoice-print [class*="card"],
+  .invoice-print [data-slot="card-content"] {
+    background: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
     padding: 0 !important;
     margin: 0 !important;
-    width: 300px !important;
-    margin-bottom: 20px !important;
   }
 
   .invoice-print .invoice-totals [data-slot="card-content"] {
     padding: 0 !important;
   }
 
+  .invoice-print .invoice-totals strong {
+    font-weight: 600 !important;
+    margin-right: 1em !important; /* Space between label and amount */
+  }
+
+  .invoice-print .invoice-totals span {
+    font-weight: 700 !important; /* For amount */
+  }
+
   .invoice-print .invoice-totals > div:last-child {
-    border-top: 1px solid #000 !important;
-    padding-top: 8px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    border-bottom: 1px dashed #000 !important; /* Dashed like second */
+    border-top: none !important;
+    padding: 0.4em 0 !important;
+    font-size: 11pt !important;
+    font-weight: 700 !important;
+    background: transparent !important;
     margin-top: 8px !important;
-    font-weight: bold !important;
-    font-size: 16px !important;
   }
 
   .invoice-print .invoice-totals [data-orientation="horizontal"] {
     display: none !important;
   }
 
+  /* Footer and notes styling */
+  .invoice-print footer {
+    page-break-inside: avoid !important; /* Keep totals on page */
+  }
+
   .invoice-print .invoice-notes {
     width: 100% !important;
-    border-top: 1px solid #e5e7eb !important;
-    padding-top: 16px !important;
-    margin-top: 20px !important;
-    font-size: 12px !important;
-    color: #6b7280 !important;
+    margin-top: 2cm !important; /* Space after total */
+    font-size: 9pt !important;
+    color: #666 !important;
+    font-style: italic !important; /* Subtle distinction */
+    border-top: none !important;
+    padding-top: 0 !important;
+    page-break-inside: avoid !important;
   }
 
   .invoice-print .invoice-notes b {
     font-weight: bold !important;
-    color: #374151 !important;
-    margin-bottom: 4px !important;
+    color: #666 !important;
+    font-size: 9pt !important;
+    margin-bottom: 0.5em !important;
     display: block !important;
+  }
+
+  /* Style section headers if present */
+  .invoice-print h2,
+  .invoice-print strong {
+    font-size: 11pt !important;
+    margin-bottom: 0.5em !important;
+    text-transform: uppercase !important;
+    color: #000 !important;
   }
 }
 
-/* 3. Let our invoice fill the page and control breaks */
+/* Screen: invoice-print has no styling impact */
 .invoice-print {
-  width: 100% !important;
-  max-width: none !important;
-  margin: 0 auto !important; /* centres if your page is letter */
-  padding: 0 !important;
-  overflow-wrap: break-word;
-  page-break-inside: avoid;
-  min-height: auto !important; /* Override min-height for print */
+  /* No styles on screen - maintains original dashboard layout */
 }
 
-/* Prevent any content from overflowing */
-.invoice-print * {
-  max-width: 100% !important;
-  box-sizing: border-box !important;
+/* Print: invoice-print gets professional formatting */
+@media print {
+  .invoice-print {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important; /* No internal padding if crowding */
+    border: none !important; /* Keep minimal, no outer border */
+    overflow-wrap: break-word;
+    page-break-inside: avoid !important;
+    min-height: auto !important;
+  }
 }
 
-/* Fix header grid layout for print */
-.invoice-print .print\:grid-cols-2 {
-  gap: 24px !important;
+/* Move content rules inside print media query */
+@media print {
+  /* Prevent any content from overflowing */
+  .invoice-print * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Fix header grid layout for print */
+  .invoice-print .print\:grid-cols-2 {
+    gap: 24px !important;
+  }
+
+  /* Global paragraph spacing */
+  .invoice-print p,
+  .invoice-print div {
+    margin-bottom: 0.5em !important;
+  }
+
+  /* General spacing between elements */
+  .invoice-print section,
+  .invoice-print div {
+    margin-bottom: 1em !important;
+  }
+
+  /* Space in header grid */
+  .invoice-print .grid {
+    row-gap: 1.5em !important;
+  }
+
+  /* Fill page if short */
+  .invoice-print {
+    padding: 0 !important;
+    min-height: 85vh !important;
+  }
 }
