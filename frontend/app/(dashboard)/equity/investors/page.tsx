@@ -138,39 +138,6 @@ export default function CapTable() {
     .filter((email): email is string => !!email)
     .join(", ");
 
-  const shareClassColumnHelper = createColumnHelper<Data["shareClasses"][number]>();
-  const shareClassesColumns = useMemo(
-    () => [
-      shareClassColumnHelper.simple("name", "Series"),
-      shareClassColumnHelper.simple("outstandingShares", "Outstanding shares", (v) => v.toLocaleString(), "numeric"),
-      shareClassColumnHelper.accessor((row) => row.outstandingShares, {
-        header: "Outstanding ownership",
-        cell: (info) => formatOwnershipPercentage(info.getValue() / Number(data.outstandingShares)),
-        meta: { numeric: true },
-      }),
-      shareClassColumnHelper.simple("fullyDilutedShares", "Fully diluted shares", (v) => v.toLocaleString(), "numeric"),
-      shareClassColumnHelper.accessor((row) => row.fullyDilutedShares, {
-        header: "Fully diluted ownership",
-        cell: (info) => formatOwnershipPercentage(info.getValue() / Number(data.fullyDilutedShares)),
-        meta: { numeric: true },
-      }),
-    ],
-    [data],
-  );
-
-  const shareClassesData = useMemo(
-    () => [
-      ...data.shareClasses,
-      ...data.optionPools.map((pool) => ({
-        name: `Options available (${pool.name})`,
-        outstandingShares: 0,
-        fullyDilutedShares: Number(pool.availableShares),
-      })),
-    ],
-    [data.shareClasses, data.optionPools],
-  );
-
-  const shareClassesTable = useTable({ data: shareClassesData, columns: shareClassesColumns });
   return (
     <>
       <DashboardHeader
@@ -180,7 +147,7 @@ export default function CapTable() {
               <BreadcrumbItem>Equity</BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>Cap table</BreadcrumbPage>
+                <BreadcrumbPage>Investors</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -202,21 +169,10 @@ export default function CapTable() {
         <TableSkeleton columns={6} />
       ) : data.investors.length > 0 ? (
         <div className="overflow-x-auto">
-          <DataTable table={investorsTable} caption="Investors" />
+          <DataTable table={investorsTable} />
         </div>
       ) : (
         <Placeholder icon={CircleCheck}>There are no active investors right now.</Placeholder>
-      )}
-
-      {isLoading ? (
-        <TableSkeleton columns={5} />
-      ) : (
-        data.investors.length > 0 &&
-        data.shareClasses.length > 0 && (
-          <div className="overflow-x-auto">
-            <DataTable table={shareClassesTable} caption="Share Classes" />
-          </div>
-        )
       )}
     </>
   );
