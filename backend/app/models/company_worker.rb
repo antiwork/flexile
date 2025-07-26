@@ -80,6 +80,11 @@ class CompanyWorker < ApplicationRecord
 
   def active? = ended_at.nil?
 
+  def active_contract?
+    now = Time.current
+    started_at <= now && (ended_at.nil? || ended_at > now)
+  end
+
   def alumni?
     ended_at?
   end
