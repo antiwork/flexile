@@ -25,11 +25,8 @@ import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
-import { pluralize } from "@/utils/pluralize";
 import { request } from "@/utils/request";
 import { resend_company_equity_grant_exercise_path } from "@/utils/routes";
-
-const pluralizeGrants = (number: number) => `${number} ${pluralize("stock option grant", number)}`;
 
 type EquityGrant = RouterOutput["equityGrants"]["list"][number];
 const investorGrantColumnHelper = createColumnHelper<EquityGrant>();
@@ -165,7 +162,7 @@ export default function OptionsPage() {
             </>
           )}
 
-          <DataTable table={table} caption={pluralizeGrants(data.length)} onRowClicked={setSelectedEquityGrant} />
+          <DataTable table={table} onRowClicked={setSelectedEquityGrant} />
 
           {selectedEquityGrant ? (
             <DetailsModal
