@@ -1,13 +1,14 @@
 "use client";
 
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid";
 import { EnvelopeIcon, UsersIcon } from "@heroicons/react/24/outline";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { useParams, useRouter } from "next/navigation";
-import React, { useState } from "react";
+import { FileScan } from "lucide-react";
+import { useParams, usePathname, useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import ViewUpdateDialog from "@/app/(dashboard)/updates/company/ViewUpdateDialog";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import { Editor as RichTextEditor } from "@/components/RichText";
@@ -29,6 +30,7 @@ const formSchema = z.object({
 type CompanyUpdate = RouterOutput["companyUpdates"]["get"];
 const Edit = ({ update }: { update?: CompanyUpdate }) => {
   const { id } = useParams<{ id?: string }>();
+  const pathname = usePathname();
   const company = useCurrentCompany();
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
@@ -43,6 +45,9 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
   });
 
   const [modalOpen, setModalOpen] = useState(false);
+  const navigatedFromNewPreview = sessionStorage.getItem("navigated-from-new-preview");
+  const [viewPreview, setViewPreview] = useState(!!navigatedFromNewPreview);
+
   const recipientCount = (company.contractorCount ?? 0) + (company.investorCount ?? 0);
 
   const createMutation = trpc.companyUpdates.create.useMutation();
@@ -64,140 +69,161 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
       if (!preview && !update?.sentAt) await publishMutation.mutateAsync({ companyId: company.id, id });
       void trpcUtils.companyUpdates.list.invalidate();
       if (preview) {
-        router.replace(`/updates/company/${id}/edit`);
-        window.open(`/updates/company/${id}`, "_blank");
+        if (pathname === "/updates/company/new") {
+          sessionStorage.setItem("navigated-from-new-preview", "yes");
+          router.replace(`/updates/company/${id}/edit`);
+        } else {
+          await trpcUtils.companyUpdates.get.invalidate({ companyId: company.id, id });
+          setViewPreview(true);
+        }
       } else {
-        router.push(`/updates/company/${id}`);
+        router.push(`/updates/company`);
       }
     },
   });
 
   const submit = form.handleSubmit(() => setModalOpen(true));
 
+  useEffect(() => {
+    if (navigatedFromNewPreview) {
+      sessionStorage.removeItem("navigated-from-new-preview");
+    }
+  }, []);
+
   return (
-    <Form {...form}>
-      <form onSubmit={(e) => void submit(e)}>
-        <DashboardHeader
-          title={id ? "Edit company update" : "New company update"}
-          headerActions={
-            update?.sentAt ? (
-              <Button type="submit">
-                <EnvelopeIcon className="size-4" />
-                Update
-              </Button>
-            ) : (
-              <>
-                <MutationStatusButton
-                  type="button"
-                  mutation={saveMutation}
-                  idleVariant="outline"
-                  loadingText="Saving..."
-                  onClick={() =>
-                    void form.handleSubmit((values) => saveMutation.mutateAsync({ values, preview: true }))()
-                  }
-                >
-                  <ArrowTopRightOnSquareIcon className="size-4" />
-                  Preview
-                </MutationStatusButton>
+    <>
+      <Form {...form}>
+        <form onSubmit={(e) => void submit(e)}>
+          <DashboardHeader
+            title={id ? "Edit company update" : "New company update"}
+            headerActions={
+              update?.sentAt ? (
                 <Button type="submit">
                   <EnvelopeIcon className="size-4" />
-                  Publish
+                  Update
                 </Button>
-              </>
-            )
-          }
-        />
-        <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_auto]">
-          <div className="grid gap-3">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Title</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              ) : (
+                <>
+                  <MutationStatusButton
+                    type="button"
+                    mutation={saveMutation}
+                    idleVariant="outline"
+                    loadingText="Saving..."
+                    onClick={() =>
+                      void form.handleSubmit((values) => saveMutation.mutateAsync({ values, preview: true }))()
+                    }
+                  >
+                    <FileScan className="size-4" />
+                    Preview
+                  </MutationStatusButton>
+                  <Button type="submit">
+                    <EnvelopeIcon className="size-4" />
+                    Publish
+                  </Button>
+                </>
+              )
+            }
+          />
+          <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_auto]">
+            <div className="grid gap-3">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="body"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Update</FormLabel>
-                  <FormControl>
-                    <RichTextEditor {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="videoUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Video URL (optional)</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="body"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Update</FormLabel>
+                    <FormControl>
+                      <RichTextEditor {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="videoUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Video URL (optional)</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="mb-1 text-xs text-gray-500 uppercase">Recipients ({recipientCount.toLocaleString()})</div>
+              {company.investorCount ? (
+                <div className="flex items-center gap-2">
+                  <UsersIcon className="size-4" />
+                  <span>
+                    {company.investorCount.toLocaleString()} {pluralize("investor", company.investorCount)}
+                  </span>
+                </div>
+              ) : null}
+              {company.contractorCount ? (
+                <div className="flex items-center gap-2">
+                  <UsersIcon className="size-4" />
+                  <span>
+                    {company.contractorCount.toLocaleString()} active {pluralize("contractor", company.contractorCount)}
+                  </span>
+                </div>
+              ) : null}
+            </div>
           </div>
-          <div className="flex flex-col gap-2">
-            <div className="mb-1 text-xs text-gray-500 uppercase">Recipients ({recipientCount.toLocaleString()})</div>
-            {company.investorCount ? (
-              <div className="flex items-center gap-2">
-                <UsersIcon className="size-4" />
-                <span>
-                  {company.investorCount.toLocaleString()} {pluralize("investor", company.investorCount)}
-                </span>
-              </div>
-            ) : null}
-            {company.contractorCount ? (
-              <div className="flex items-center gap-2">
-                <UsersIcon className="size-4" />
-                <span>
-                  {company.contractorCount.toLocaleString()} active {pluralize("contractor", company.contractorCount)}
-                </span>
-              </div>
-            ) : null}
-          </div>
-        </div>
-        <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Publish update?</DialogTitle>
-            </DialogHeader>
-            {update?.sentAt ? (
-              <p>Your update will be visible in Flexile. No new emails will be sent.</p>
-            ) : (
-              <p>Your update will be emailed to {recipientCount.toLocaleString()} stakeholders.</p>
-            )}
-            <DialogFooter>
-              <div className="grid auto-cols-fr grid-flow-col items-center gap-3">
-                <Button variant="outline" onClick={() => setModalOpen(false)}>
-                  No, cancel
-                </Button>
-                <MutationButton
-                  mutation={saveMutation}
-                  param={{ values: form.getValues(), preview: false }}
-                  loadingText="Sending..."
-                >
-                  Yes, {update?.sentAt ? "update" : "publish"}
-                </MutationButton>
-              </div>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </form>
-    </Form>
+          <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Publish update?</DialogTitle>
+              </DialogHeader>
+              {update?.sentAt ? (
+                <p>Your update will be visible in Flexile. No new emails will be sent.</p>
+              ) : (
+                <p>Your update will be emailed to {recipientCount.toLocaleString()} stakeholders.</p>
+              )}
+              <DialogFooter>
+                <div className="grid auto-cols-fr grid-flow-col items-center gap-3">
+                  <Button variant="outline" onClick={() => setModalOpen(false)}>
+                    No, cancel
+                  </Button>
+                  <MutationButton
+                    mutation={saveMutation}
+                    param={{ values: form.getValues(), preview: false }}
+                    loadingText="Sending..."
+                  >
+                    Yes, {update?.sentAt ? "update" : "publish"}
+                  </MutationButton>
+                </div>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </form>
+      </Form>
+      {viewPreview && id ? (
+        <ViewUpdateDialog
+          updateId={id}
+          onOpenChange={() => {
+            setViewPreview(false);
+          }}
+        />
+      ) : null}
+    </>
   );
 };
 
