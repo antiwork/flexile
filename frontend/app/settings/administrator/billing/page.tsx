@@ -12,6 +12,7 @@ import StripeMicrodepositVerification from "@/app/settings/administrator/StripeM
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
+import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +26,6 @@ import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_administrator_settings_bank_accounts_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
-import TableSkeleton from "@/components/TableSkeleton";
 
 const columnHelper = createColumnHelper<RouterOutput["consolidatedInvoices"]["list"][number]>();
 const columns = [
@@ -189,7 +189,7 @@ export default function Billing() {
         </AlertDescription>
       </Alert>
       {isLoading ? (
-        <TableSkeleton columns={6} />
+        <TableSkeleton columns={5} />
       ) : data.length > 0 ? (
         <DataTable table={table} />
       ) : (
