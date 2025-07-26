@@ -85,131 +85,74 @@ export default function InvoicePage() {
 
   return (
     <>
-      <style jsx>{`
-        @media print {
-          /* Chrome sometimes clips shadows/borders – reset them */
-          * {
-            box-shadow: none !important;
-          }
+      <DashboardHeader
+        title={`Invoice ${invoice.invoiceNumber}`}
+        className="print:hidden"
+        headerActions={
+          <>
+            <Button
+              onClick={() => window.print()}
+              variant="outline"
+              className="print:hidden"
+              title="In print dialog, uncheck 'Headers and footers' option for best results"
+            >
+              <PrinterIcon className="size-4" />
+              Download PDF
+            </Button>
+            <InvoiceStatus aria-label="Status" invoice={invoice} />
+            {user.roles.administrator && isActionable(invoice) ? (
+              <>
+                <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
+                  <XMarkIcon className="size-4" />
+                  Reject
+                </Button>
 
-          /* Set A4 page size with 1cm margins */
-          @page {
-            size: A4;
-            margin: 1cm;
-          }
+                <RejectModal
+                  open={rejectModalOpen}
+                  onClose={() => setRejectModalOpen(false)}
+                  onReject={() => router.push(`/invoices`)}
+                  ids={[invoice.id]}
+                />
 
-          /* Hide non-invoice UI elements */
-          .dashboard-header,
-          nav,
-          aside,
-          .print\\:hidden,
-          [data-testid="dashboard-header"] {
-            display: none !important;
-          }
-
-          /* Ensure full-width invoice content */
-          body,
-          html {
-            font-size: 12px;
-            line-height: 1.4;
-          }
-
-          /* Table improvements for printing */
-          table {
-            width: 100%;
-            border-collapse: collapse;
-          }
-
-          thead {
-            display: table-header-group;
-          }
-
-          tbody tr {
-            page-break-inside: avoid;
-          }
-
-          /* Page break rules */
-          .invoice-section {
-            page-break-inside: avoid;
-          }
-
-          /* Ensure text wraps properly */
-          td,
-          th {
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-          }
-
-          /* Footer/totals section */
-          footer {
-            page-break-inside: avoid;
-          }
-        }
-      `}</style>
-      <div className="print:hidden">
-        <DashboardHeader
-          title={`Invoice ${invoice.invoiceNumber}`}
-          headerActions={
-            <>
-              <Button variant="outline" onClick={() => window.print()} className="print:hidden">
-                <PrinterIcon className="size-4" />
-                Download PDF
-              </Button>
-              <InvoiceStatus aria-label="Status" invoice={invoice} />
-              {user.roles.administrator && isActionable(invoice) ? (
-                <>
-                  <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
-                    <XMarkIcon className="size-4" />
-                    Reject
+                <ApproveButton invoice={invoice} onApprove={() => router.push(`/invoices`)} />
+              </>
+            ) : null}
+            {user.id === invoice.userId ? (
+              <>
+                {invoice.requiresAcceptanceByPayee ? (
+                  <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
+                ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
+                  <Button variant="default" asChild>
+                    <Link href={`/invoices/${invoice.id}/edit`}>
+                      {invoice.status !== "rejected" && <PencilIcon className="h-4 w-4" />}
+                      {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
+                    </Link>
                   </Button>
+                ) : null}
 
-                  <RejectModal
-                    open={rejectModalOpen}
-                    onClose={() => setRejectModalOpen(false)}
-                    onReject={() => router.push(`/invoices`)}
-                    ids={[invoice.id]}
-                  />
-
-                  <ApproveButton invoice={invoice} onApprove={() => router.push(`/invoices`)} />
-                </>
-              ) : null}
-              {user.id === invoice.userId ? (
-                <>
-                  {invoice.requiresAcceptanceByPayee ? (
-                    <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
-                  ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
-                    <Button variant="default" asChild>
-                      <Link href={`/invoices/${invoice.id}/edit`}>
-                        {invoice.status !== "rejected" && <PencilIcon className="h-4 w-4" />}
-                        {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
-                      </Link>
+                {isDeletable(invoice) ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => setDeleteModalOpen(true)}
+                      className="hover:text-destructive"
+                    >
+                      <Trash2 className="size-4" />
+                      <span>Delete</span>
                     </Button>
-                  ) : null}
-
-                  {isDeletable(invoice) ? (
-                    <>
-                      <Button
-                        variant="outline"
-                        onClick={() => setDeleteModalOpen(true)}
-                        className="hover:text-destructive"
-                      >
-                        <Trash2 className="size-4" />
-                        <span>Delete</span>
-                      </Button>
-                      <DeleteModal
-                        open={deleteModalOpen}
-                        onClose={() => setDeleteModalOpen(false)}
-                        onDelete={() => router.push(`/invoices`)}
-                        invoices={[invoice]}
-                      />
-                    </>
-                  ) : null}
-                </>
-              ) : null}
-            </>
-          }
-        />
-      </div>
+                    <DeleteModal
+                      open={deleteModalOpen}
+                      onClose={() => setDeleteModalOpen(false)}
+                      onDelete={() => router.push(`/invoices`)}
+                      invoices={[invoice]}
+                    />
+                  </>
+                ) : null}
+              </>
+            ) : null}
+          </>
+        }
+      />
 
       {invoice.requiresAcceptanceByPayee && user.id === invoice.userId ? (
         <Dialog open={acceptPaymentModalOpen} onOpenChange={setAcceptPaymentModalOpen}>
@@ -313,108 +256,128 @@ export default function InvoicePage() {
         </Alert>
       ) : null}
 
-      <section className="invoice-section">
-        <form>
-          <div className="grid gap-4">
-            <div className="grid auto-cols-fr gap-3 md:grid-flow-col print:grid-flow-col">
-              <div>
-                From
-                <br />
-                <b>{invoice.billFrom}</b>
-                <div>
-                  <Address address={invoice} />
-                </div>
-              </div>
-              <div>
-                To
-                <br />
-                <b>{invoice.billTo}</b>
-                <div>
-                  <LegacyAddress address={company.address} />
-                </div>
-              </div>
-              <div>
-                Invoice ID
-                <br />
-                {invoice.invoiceNumber}
-              </div>
-              <div>
-                Sent on
-                <br />
-                {formatDate(invoice.invoiceDate)}
-              </div>
-              <div>
-                Paid on
-                <br />
-                {invoice.paidAt ? formatDate(invoice.paidAt) : "-"}
-              </div>
+      <div className="invoice-print flex min-h-[100vh] flex-col print:min-h-0">
+        {/* Print Header */}
+        <header className="print:page-break-inside-avoid hidden print:mb-8 print:flex print:items-start print:justify-between">
+          <h1 className="text-4xl font-bold">INVOICE</h1>
+          <div className="text-right text-sm">
+            <div>
+              <strong>Invoice #</strong> {invoice.invoiceNumber}
             </div>
+            <div>
+              <strong>Sent on</strong> {formatDate(invoice.invoiceDate)}
+            </div>
+          </div>
+        </header>
 
-            {invoice.lineItems.length > 0 ? (
-              <Table className="print-table">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>
-                      {complianceInfo?.businessEntity ? `Services (${complianceInfo.legalName})` : "Services"}
-                    </TableHead>
-                    <TableHead className="text-right">Qty / Hours</TableHead>
-                    <TableHead className="text-right">Cash rate</TableHead>
-                    <TableHead className="text-right">Line total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {invoice.lineItems.map((lineItem, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{lineItem.description}</TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {lineItem.hourly ? formatDuration(lineItem.quantity) : lineItem.quantity}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {lineItem.payRateInSubunits
-                          ? `${formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)}${lineItem.hourly ? " / hour" : ""}`
-                          : ""}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatMoneyFromCents(lineItemTotal(lineItem) * cashFactor)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : null}
-
-            {invoice.expenses.length > 0 && (
-              <Card className="invoice-section">
-                <CardContent>
-                  <div className="flex justify-between gap-2">
-                    <div>Expense</div>
-                    <div>Amount</div>
-                  </div>
-                  {invoice.expenses.map((expense, i) => (
-                    <Fragment key={i}>
-                      <Separator />
-                      <div className="flex justify-between gap-2">
-                        <Link
-                          href={`/download/${expense.attachment?.key}/${expense.attachment?.filename}`}
-                          download
-                          className={linkClasses}
-                        >
-                          <PaperClipIcon className="inline size-4" />
-                          {expenseCategories.find((category) => category.id === expense.expenseCategoryId)?.name} –{" "}
-                          {expense.description}
-                        </Link>
-                        <span>{formatMoneyFromCents(expense.totalAmountInCents)}</span>
-                      </div>
-                    </Fragment>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
-
-            <footer className="invoice-section flex justify-between">
-              <div>
-                {invoice.notes ? (
+        <div className="flex-1">
+          <section>
+            <form>
+              <div className="grid gap-4">
+                {/* Bill From/To Section */}
+                <div className="print:page-break-inside-avoid grid auto-cols-fr gap-3 md:grid-flow-col print:mb-8 print:grid-cols-2 print:gap-10">
                   <div>
+                    <div className="print:mb-2 print:font-bold">Bill From:</div>
+                    <b>{invoice.billFrom}</b>
+                    <div>
+                      <Address address={invoice} />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="print:mb-2 print:font-bold">Bill To:</div>
+                    <b>{invoice.billTo}</b>
+                    <div>
+                      <LegacyAddress address={company.address} />
+                    </div>
+                  </div>
+
+                  {/* Screen-only meta info */}
+                  <div className="grid auto-cols-fr gap-3 md:grid-flow-col print:hidden">
+                    <div>
+                      Invoice ID
+                      <br />
+                      {invoice.invoiceNumber}
+                    </div>
+                    <div>
+                      Sent on
+                      <br />
+                      {formatDate(invoice.invoiceDate)}
+                    </div>
+                    <div>
+                      Paid on
+                      <br />
+                      {invoice.paidAt ? formatDate(invoice.paidAt) : "-"}
+                    </div>
+                  </div>
+                </div>
+
+                {invoice.lineItems.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>
+                          {complianceInfo?.businessEntity ? `Services (${complianceInfo.legalName})` : "Services"}
+                        </TableHead>
+                        <TableHead className="text-right">Qty / Hours</TableHead>
+                        <TableHead className="text-right">Cash rate</TableHead>
+                        <TableHead className="text-right">Line total</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {invoice.lineItems.map((lineItem, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{lineItem.description}</TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {lineItem.hourly ? formatDuration(lineItem.quantity) : lineItem.quantity}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {lineItem.payRateInSubunits && lineItem.payRateInSubunits > 0
+                              ? `${formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)}${lineItem.hourly ? " / hour" : ""}`
+                              : "-"}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {lineItem.payRateInSubunits && lineItem.payRateInSubunits > 0
+                              ? formatMoneyFromCents(lineItemTotal(lineItem) * cashFactor)
+                              : "-"}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : null}
+
+                {invoice.expenses.length > 0 && (
+                  <Card>
+                    <CardContent>
+                      <div className="flex justify-between gap-2">
+                        <div>Expense</div>
+                        <div>Amount</div>
+                      </div>
+                      {invoice.expenses.map((expense, i) => (
+                        <Fragment key={i}>
+                          <Separator />
+                          <div className="flex justify-between gap-2">
+                            <Link
+                              href={`/download/${expense.attachment?.key}/${expense.attachment?.filename}`}
+                              download
+                              className={linkClasses}
+                            >
+                              <PaperClipIcon className="inline size-4" />
+                              {
+                                expenseCategories.find((category) => category.id === expense.expenseCategoryId)?.name
+                              } – {expense.description}
+                            </Link>
+                            <span>{formatMoneyFromCents(expense.totalAmountInCents)}</span>
+                          </div>
+                        </Fragment>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Notes section - move to content area */}
+                {invoice.notes ? (
+                  <div className="mt-4">
                     <b>Notes</b>
                     <div>
                       <div className="text-xs">
@@ -424,40 +387,44 @@ export default function InvoicePage() {
                   </div>
                 ) : null}
               </div>
-              <Card>
-                <CardContent>
-                  {invoice.lineItems.length > 0 && invoice.expenses.length > 0 && (
-                    <>
-                      <div className="flex justify-between gap-2">
-                        <strong>Total services</strong>
-                        <span>
-                          {formatMoneyFromCents(
-                            invoice.lineItems.reduce((acc, lineItem) => acc + lineItemTotal(lineItem) * cashFactor, 0),
-                          )}
-                        </span>
-                      </div>
-                      <Separator />
-                      <div className="flex justify-between gap-2">
-                        <strong>Total expenses</strong>
-                        <span>
-                          {formatMoneyFromCents(
-                            invoice.expenses.reduce((acc, expense) => acc + expense.totalAmountInCents, BigInt(0)),
-                          )}
-                        </span>
-                      </div>
-                      <Separator />
-                    </>
-                  )}
+            </form>
+          </section>
+        </div>
+
+        {/* Footer with totals - direct child of flex container */}
+        <footer className="print:page-break-inside-avoid mt-auto">
+          <Card className="ml-auto w-64 print:w-56">
+            <CardContent>
+              {invoice.lineItems.length > 0 && invoice.expenses.length > 0 && (
+                <>
                   <div className="flex justify-between gap-2">
-                    <strong>Total</strong>
-                    <span>{formatMoneyFromCents(invoice.cashAmountInCents)}</span>
+                    <strong>Total services</strong>
+                    <span>
+                      {formatMoneyFromCents(
+                        invoice.lineItems.reduce((acc, lineItem) => acc + lineItemTotal(lineItem) * cashFactor, 0),
+                      )}
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
-            </footer>
-          </div>
-        </form>
-      </section>
+                  <Separator />
+                  <div className="flex justify-between gap-2">
+                    <strong>Total expenses</strong>
+                    <span>
+                      {formatMoneyFromCents(
+                        invoice.expenses.reduce((acc, expense) => acc + expense.totalAmountInCents, BigInt(0)),
+                      )}
+                    </span>
+                  </div>
+                  <Separator />
+                </>
+              )}
+              <div className="flex justify-between gap-2">
+                <strong>Total</strong>
+                <span>{formatMoneyFromCents(invoice.cashAmountInCents)}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </footer>
+      </div>
     </>
   );
 }
