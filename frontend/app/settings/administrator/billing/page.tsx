@@ -12,6 +12,7 @@ import StripeMicrodepositVerification from "@/app/settings/administrator/StripeM
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
+import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -124,7 +125,7 @@ export default function Billing() {
         .parse(await response.json());
     },
   });
-  const [data] = trpc.consolidatedInvoices.list.useSuspenseQuery({ companyId: company.id });
+  const { data = [], isLoading } = trpc.consolidatedInvoices.list.useQuery({ companyId: company.id });
 
   const table = useTable({ columns, data });
 
@@ -187,7 +188,9 @@ export default function Billing() {
           additional verification steps.
         </AlertDescription>
       </Alert>
-      {data.length > 0 ? (
+      {isLoading ? (
+        <TableSkeleton columns={5} />
+      ) : data.length > 0 ? (
         <DataTable table={table} />
       ) : (
         <Placeholder icon={CircleDollarSign}>Invoices will appear here.</Placeholder>
