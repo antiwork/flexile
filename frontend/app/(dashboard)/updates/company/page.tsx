@@ -40,11 +40,7 @@ export default function CompanyUpdates() {
       />
 
       {isLoading ? (
-        user.roles.administrator ? (
-          <TableSkeleton columns={4} />
-        ) : (
-          <TableSkeleton columns={3} />
-        )
+        <TableSkeleton columns={user.roles.administrator ? 4 : 3} />
       ) : updates.length ? (
         user.roles.administrator ? (
           <AdminList />

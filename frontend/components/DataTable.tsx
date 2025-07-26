@@ -332,7 +332,7 @@ export default function DataTable<T extends RowData>({
               const rowContent = (
                 <TableRow
                   key={row.id}
-                  className={rowClasses}
+                  className={`${rowClasses} ${onRowClicked ? "cursor-pointer" : ""}`}
                   data-state={isSelected ? "selected" : undefined}
                   onClick={() => onRowClicked?.(row.original)}
                 >

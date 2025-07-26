@@ -10,8 +10,11 @@ import { trpc } from "@/trpc/client";
 
 function ViewUpdateDialog({ updateId, onOpenChange }: { updateId: string; onOpenChange: () => void }) {
   const company = useCurrentCompany();
-  const { data: update = { title: "", sentAt: null, body: "", videoUrl: null }, isLoading } =
-    trpc.companyUpdates.get.useQuery({ companyId: company.id, id: updateId });
+  const {
+    data: update = { title: "", sentAt: null, body: "", videoUrl: null },
+    isLoading,
+    isError,
+  } = trpc.companyUpdates.get.useQuery({ companyId: company.id, id: updateId });
   const sendTestEmail = trpc.companyUpdates.sendTestEmail.useMutation();
   const youtubeId = update.videoUrl && /(?:youtube\.com.*[?&]v=|youtu\.be\/)([\w-]+)/u.exec(update.videoUrl)?.[1];
 
@@ -22,6 +25,8 @@ function ViewUpdateDialog({ updateId, onOpenChange }: { updateId: string; onOpen
           <DialogTitle>
             {isLoading ? (
               <Skeleton className="h-7 max-w-80" />
+            ) : isError ? (
+              "Unable to load update"
             ) : (
               `${update.sentAt ? "" : "Previewing:"} ${update.title}`
             )}
@@ -43,6 +48,8 @@ function ViewUpdateDialog({ updateId, onOpenChange }: { updateId: string; onOpen
               <Skeleton className="aspect-video" />
               <Skeleton className="h-4 max-w-40" />
             </>
+          ) : isError ? (
+            "Something went wrong. Please try again later."
           ) : (
             <>
               <RichText content={update.body} />
@@ -69,7 +76,7 @@ function ViewUpdateDialog({ updateId, onOpenChange }: { updateId: string; onOpen
             </>
           )}
         </div>
-        {!update.sentAt && (
+        {!isLoading && !isError && !update.sentAt && (
           <DialogFooter>
             <DialogClose asChild>
               <Button variant="outline">Close</Button>
