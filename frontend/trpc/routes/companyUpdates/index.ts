@@ -20,10 +20,7 @@ const dataSchema = createInsertSchema(companyUpdates).pick({
 });
 export const companyUpdatesRouter = createRouter({
   list: companyProcedure.query(async ({ ctx }) => {
-    if (
-      !ctx.company.companyUpdatesEnabled ||
-      (!ctx.companyAdministrator && !isActive(ctx.companyContractor) && !ctx.companyInvestor)
-    )
+    if (!ctx.companyAdministrator && !isActive(ctx.companyContractor) && !ctx.companyInvestor)
       throw new TRPCError({ code: "FORBIDDEN" });
     const where = and(
       eq(companyUpdates.companyId, ctx.company.id),
@@ -41,10 +38,7 @@ export const companyUpdatesRouter = createRouter({
     return { updates };
   }),
   get: companyProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
-    if (
-      !ctx.company.companyUpdatesEnabled ||
-      (!ctx.companyAdministrator && !isActive(ctx.companyContractor) && !ctx.companyInvestor)
-    )
+    if (!ctx.companyAdministrator && !isActive(ctx.companyContractor) && !ctx.companyInvestor)
       throw new TRPCError({ code: "FORBIDDEN" });
     const update = await db.query.companyUpdates.findFirst({ where: byId(ctx, input.id) });
     if (!update) throw new TRPCError({ code: "NOT_FOUND" });

@@ -12,9 +12,7 @@ test.describe("company update creation", () => {
   let adminUser: Awaited<ReturnType<typeof companiesFactory.createCompletedOnboarding>>["adminUser"];
 
   test.beforeEach(async () => {
-    const result = await companiesFactory.createCompletedOnboarding({
-      companyUpdatesEnabled: true,
-    });
+    const result = await companiesFactory.createCompletedOnboarding();
     company = result.company;
     adminUser = result.adminUser;
   });
