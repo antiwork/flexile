@@ -14,30 +14,20 @@ module SetCurrent
   end
 
   def set_current
-    if clerk&.user_id
-      user = User.find_by(clerk_id: clerk.user_id)
-      if !user && !Rails.env.test?
-        email = clerk.user.email_addresses.find { |item| item.id == clerk.user.primary_email_address_id }.email_address
-        user = User.find_by(email:) if Rails.env.development?
-        if user
-          user.update!(clerk_id: clerk.user_id)
-        else
-          user = User.create!(clerk_id: clerk.user_id, email:)
-          user.tos_agreements.create!(ip_address: request.remote_ip)
-        end
-      end
+    user = nil
 
-      if clerk.user? && clerk.session_claims["iat"] != user.current_sign_in_at.to_i
-        user.update!(current_sign_in_at: Time.zone.at(clerk.session_claims["iat"]))
-      end
+    # Try JWT authentication
+    if jwt_token_present?
+      user = authenticate_with_jwt_user
+    end
 
-      invited_company = nil
-      if cookies["invitation_token"].present?
-        invite_link = CompanyInviteLink.find_by(token: cookies["invitation_token"])
-        invited_company = invite_link&.company
-        user.update!(signup_invite_link: invite_link) if invite_link
-        cookies.delete("invitation_token")
-      end
+    # Handle invite links for authenticated users
+    invited_company = nil
+    if user && cookies["invitation_token"].present?
+      invite_link = CompanyInviteLink.find_by(token: cookies["invitation_token"])
+      invited_company = invite_link&.company
+      user.update!(signup_invite_link: invite_link) if invite_link
+      cookies.delete("invitation_token")
     end
 
     Current.user = user
@@ -72,6 +62,35 @@ module SetCurrent
   end
 
   private
+    def jwt_token_present?
+      authorization_header.present? && authorization_header.start_with?("Bearer ")
+    end
+
+    def authenticate_with_jwt_user
+      token = extract_jwt_token
+      return nil unless token
+
+      begin
+        decoded_token = JWT.decode(token, jwt_secret, true, { algorithm: "HS256" })
+        payload = decoded_token[0]
+        User.find_by(id: payload["user_id"])
+      rescue JWT::DecodeError, JWT::ExpiredSignature, ActiveRecord::RecordNotFound
+        nil
+      end
+    end
+
+    def extract_jwt_token
+      authorization_header&.split(" ")&.last
+    end
+
+    def authorization_header
+      request.headers["x-flexile-auth"]
+    end
+
+    def jwt_secret
+      GlobalConfig.get("JWT_SECRET", Rails.application.secret_key_base)
+    end
+
     def company_from_param
       # TODO: Remove params[:companyId] once all URLs are updated
       company_id = params[:company_id] || params[:companyId] || cookies[current_user_selected_company_cookie_name]

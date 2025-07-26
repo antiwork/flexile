@@ -15,12 +15,14 @@ import { eq } from "drizzle-orm";
 import { cache } from "react";
 import superjson from "superjson";
 import { z } from "zod";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 import { companies, users } from "@/db/schema";
 import env from "@/env";
 import { assertDefined } from "@/utils/assert";
 import { richTextExtensions } from "@/utils/richText";
-import { internal_userid_url } from "@/utils/routes";
+
 import { latestUserComplianceInfo, withRoles } from "./routes/users/helpers";
 import { type AppRouter } from "./server";
 
@@ -36,12 +38,26 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
   const headers: Record<string, string> = {
     cookie,
     "user-agent": userAgent,
-    referer: "x" /* work around a Clerk limitation */,
+    referer: "x",
     accept: "application/json",
     ...(csrfToken ? { "x-csrf-token": csrfToken } : {}),
   };
-  const response = await fetch(internal_userid_url({ host }), { headers });
-  const userId = response.ok ? z.object({ id: z.number() }).parse(await response.json()).id : null;
+
+  let userId: number | null = null;
+
+  // Get userId from NextAuth JWT session
+  const session = await getServerSession(authOptions);
+  if (session?.user && 'jwt' in session.user) {
+    // Extract user ID from JWT token
+    try {
+      const jwt = (session.user as any).jwt;
+      const base64Payload = jwt.split('.')[1];
+      const payload = JSON.parse(Buffer.from(base64Payload, 'base64').toString());
+      userId = payload.user_id;
+    } catch (error) {
+      console.error("Error parsing JWT token:", error);
+    }
+  }
 
   return {
     userId,

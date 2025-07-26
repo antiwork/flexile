@@ -1,12 +1,8 @@
 # frozen_string_literal: true
 
-require "clerk/authenticatable"
-
 class ApplicationController < ActionController::Base
-  include Clerk::Authenticatable
   include PunditAuthorization, SetCurrent
-
-  before_action :force_onboarding, if: -> { clerk.user? }, except: [:userid, :current_user_data]
+  before_action :force_onboarding, if: -> { Current.user.present? }, except: [:userid, :current_user_data]
   before_action :set_paper_trail_whodunnit
   before_action :authenticate_user_json!, only: [:userid]
 
