@@ -1,19 +1,17 @@
 "use client";
-import { ArrowRight, CircleCheck, Trash } from "lucide-react";
+import { CircleCheck, Trash } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
+import ViewUpdateDialog from "@/app/(dashboard)/updates/company/ViewUpdateDialog";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
-import SkeletonList from "@/components/SkeletonList";
 import Status from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
@@ -45,9 +43,7 @@ export default function CompanyUpdates() {
         user.roles.administrator ? (
           <TableSkeleton columns={4} />
         ) : (
-          <SkeletonList>
-            <ViewCardSkeleton />
-          </SkeletonList>
+          <TableSkeleton columns={3} />
         )
       ) : updates.length ? (
         user.roles.administrator ? (
@@ -146,31 +142,28 @@ const AdminList = () => {
 
 const ViewList = () => {
   const { updates } = useData();
-  return updates.map((update) => (
-    <Link key={update.id} href={`/updates/company/${update.id}`}>
-      <Card>
-        <CardContent className="grid grid-cols-[1fr_auto] items-center">
-          <div className="grid gap-4">
-            <h4 className="text-xl font-bold">{update.title}</h4>
-            <p className="line-clamp-2">{update.summary}</p>
-          </div>
-          <ArrowRight className="size-7" />
-        </CardContent>
-      </Card>
-    </Link>
-  ));
-};
+  const [selectedUpdateId, setSelectedUpdateId] = useState<string | null>(null);
+  const columnHelper = createColumnHelper<(typeof updates)[number]>();
+  const columns = useMemo(
+    () => [
+      columnHelper.simple("title", "Title"),
+      columnHelper.accessor("summary", {
+        header: "Summary",
+        cell: (info) => <div className="whitespace-normal">{info.getValue()}</div>,
+      }),
+      columnHelper.simple("sentAt", "Published On", (v) => (v ? formatDate(v) : "-")),
+    ],
+    [],
+  );
+  const table = useTable({ columns, data: updates });
+  const handleRowClick = (row: { id: string }) => setSelectedUpdateId(row.id);
 
-const ViewCardSkeleton = () => (
-  <Card>
-    <CardContent className="grid grid-cols-[1fr_auto] items-center">
-      <div className="grid gap-4">
-        <Skeleton className="h-7 w-[55%] max-w-160" />
-        <div className="flex flex-col gap-2">
-          <Skeleton className="h-4" />
-          <Skeleton className="h-4" />
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-);
+  return (
+    <>
+      <DataTable table={table} onRowClicked={handleRowClick} />
+      {selectedUpdateId ? (
+        <ViewUpdateDialog updateId={selectedUpdateId} onOpenChange={() => setSelectedUpdateId(null)} />
+      ) : null}
+    </>
+  );
+};
