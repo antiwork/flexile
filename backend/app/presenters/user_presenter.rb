@@ -94,7 +94,7 @@ class UserPresenter
         flags.push("quickbooks") if company.quickbooks_enabled?
         flags.push("tender_offers") if company.tender_offers_enabled?
         flags.push("cap_table") if company.cap_table_enabled?
-        flags.push("lawyers") if company.lawyers_enabled?
+        flags.push("lawyers")
         flags.push("expenses") if company.expenses_enabled?
         flags.push("equity_compensation") if company.equity_compensation_enabled?
         flags.push("option_exercising") if company.json_flag?("option_exercising")

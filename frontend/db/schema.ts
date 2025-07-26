@@ -1853,7 +1853,6 @@ export const companies = pgTable(
 
     tenderOffersEnabled: boolean("tender_offers_enabled").notNull().default(false),
     capTableEnabled: boolean("cap_table_enabled").default(false).notNull(),
-    lawyersEnabled: boolean("lawyers_enabled").notNull().default(false),
     conversionSharePriceUsd: numeric("conversion_share_price_usd"),
     equityCompensationEnabled: boolean("equity_compensation_enabled").notNull().default(false),
     jsonData: jsonb("json_data").notNull().$type<{ flags: string[] }>().default({ flags: [] }),
