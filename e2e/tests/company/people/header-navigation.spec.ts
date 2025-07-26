@@ -26,7 +26,6 @@ test.describe("People header navigation", () => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
       tenderOffersEnabled: true,
       capTableEnabled: true,
-      equityGrantsEnabled: true,
     });
 
     await companyContractorsFactory.create({
