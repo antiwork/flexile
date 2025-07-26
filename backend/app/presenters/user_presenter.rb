@@ -89,7 +89,7 @@ class UserPresenter
       companies: user.all_companies.compact.map do |company|
         flags = %w[company_updates].filter { Flipper.enabled?(_1, company) }
         flags.push("equity_compensation") if company.equity_compensation_enabled?
-        flags.push("equity_grants") if company.equity_grants_enabled?
+        flags.push("equity_grants")
         flags.push("dividends")
         flags.push("quickbooks") if company.quickbooks_enabled?
         flags.push("tender_offers") if company.tender_offers_enabled?
@@ -171,7 +171,7 @@ class UserPresenter
       if company_investor.present?
         result[:flags][:cap_table] ||= true if company.cap_table_enabled?
         result[:flags][:option_exercising] = company.json_flag?("option_exercising")
-        result[:flags][:equity_grants] = company.equity_grants_enabled?
+        result[:flags][:equity_grants] = true
 
         result[:flags][:tender_offers] ||= company.tender_offers_enabled?
       end
@@ -192,7 +192,7 @@ class UserPresenter
     def common_admin_props
       {
         flags: {
-          equity_grants: company.equity_grants_enabled?,
+          equity_grants: true,
           cap_table: company.cap_table_enabled?,
 
           tender_offers: company.tender_offers_enabled?,
