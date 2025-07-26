@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_17_153308) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_24_120003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -109,7 +109,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_17_153308) do
     t.string "default_currency", default: "usd", null: false
     t.boolean "cap_table_enabled", default: false, null: false
     t.boolean "tender_offers_enabled", default: false, null: false
-    t.boolean "lawyers_enabled", default: false, null: false
     t.decimal "conversion_share_price_usd"
     t.boolean "equity_compensation_enabled", default: false, null: false
     t.jsonb "json_data", default: {"flags" => []}, null: false
