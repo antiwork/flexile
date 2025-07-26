@@ -124,5 +124,83 @@ RSpec.describe TenderOfferBid do
         expect(bid.valid?).to eq(true)
       end
     end
+
+    describe "#share_price_must_be_valid" do
+      let(:company) { create(:company, fully_diluted_shares: 1_000_000) }
+      let(:tender_offer) { create(:tender_offer, company: company, minimum_valuation: 10_000_000) }
+      let(:company_investor) { tender_offer.tender_offer_investors.first.company_investor }
+
+      before do
+        allow(tender_offer).to receive(:securities_available_for_purchase).and_return([
+                                                                                        { class_name: "Class A", count: 500 }
+                                                                                      ])
+      end
+
+      it "is invalid when share price is below minimum valuation price" do
+        bid = build(:tender_offer_bid, tender_offer: tender_offer, company_investor: company_investor, share_class: "Class A", share_price_cents: 500)
+
+        expect(bid.valid?).to eq(false)
+        expect(bid.errors[:share_price_cents]).to include("Must be equal to or greater than $10.00")
+      end
+
+      it "is valid when share price meets minimum valuation price" do
+        bid = build(:tender_offer_bid, tender_offer: tender_offer, company_investor: company_investor, share_class: "Class A", share_price_cents: 1000)
+
+        expect(bid.valid?).to eq(true)
+      end
+
+      it "is invalid when share price doesn't match accepted price" do
+        tender_offer.update!(accepted_price_cents: 1200)
+        bid = build(:tender_offer_bid, tender_offer: tender_offer, company_investor: company_investor, share_class: "Class A", share_price_cents: 1000)
+
+        expect(bid.valid?).to eq(false)
+        expect(bid.errors[:share_price_cents]).to include("Must match the accepted share price")
+      end
+
+      it "is valid when share price matches accepted price" do
+        tender_offer.update!(accepted_price_cents: 1200)
+        bid = build(:tender_offer_bid, tender_offer: tender_offer, company_investor: company_investor, share_class: "Class A", share_price_cents: 1200)
+
+        expect(bid.valid?).to eq(true)
+      end
+    end
+
+    describe "#single_stock_bids_must_not_exceed_total_amount" do
+      let(:tender_offer) { create(:tender_offer, :with_single_stock, total_amount_in_cents: 100_000) }
+      let(:company_investor) { tender_offer.tender_offer_investors.first.company_investor }
+
+      before do
+        allow(tender_offer).to receive(:securities_available_for_purchase).and_return([
+                                                                                        { class_name: "Class A", count: 1000 }
+                                                                                      ])
+      end
+
+      it "is valid when single stock bid total is within limit" do
+        bid = build(:tender_offer_bid, tender_offer: tender_offer, company_investor: company_investor, share_class: "Class A", number_of_shares: 50, share_price_cents: 1000)
+
+        expect(bid).to be_valid
+      end
+
+      it "is invalid when single stock bid total exceeds limit" do
+        bid = build(:tender_offer_bid, tender_offer: tender_offer, company_investor: company_investor, share_class: "Class A", number_of_shares: 200, share_price_cents: 1000)
+
+        expect(bid).not_to be_valid
+        expect(bid.errors[:number_of_shares]).to include("Total bid amount cannot exceed the tender offer's total amount")
+      end
+
+      it "is valid when bid exactly equals total amount" do
+        bid = build(:tender_offer_bid, tender_offer: tender_offer, company_investor: company_investor, share_class: "Class A", number_of_shares: 100, share_price_cents: 1000)
+
+        expect(bid).to be_valid
+      end
+
+      it "considers existing bids when validating total amount" do
+        create(:tender_offer_bid, tender_offer: tender_offer, company_investor: company_investor, share_class: "Class A", number_of_shares: 60, share_price_cents: 1000)
+        new_bid = build(:tender_offer_bid, tender_offer: tender_offer, company_investor: company_investor, share_class: "Class A", number_of_shares: 50, share_price_cents: 1000)
+
+        expect(new_bid).not_to be_valid
+        expect(new_bid.errors[:number_of_shares]).to include("Total bid amount cannot exceed the tender offer's total amount")
+      end
+    end
   end
 end

@@ -1,0 +1,26 @@
+# frozen_string_literal: true
+
+class ProcessTenderOfferEquilibriumPriceJob
+  include Sidekiq::Job
+  sidekiq_options retry: 5
+
+  def perform
+    tender_offers = TenderOffer
+      .where("ends_at < ? AND ? < ends_at + INTERVAL '3 days'", Time.current, Time.current)
+      .where.not(id: TenderOfferBid.select(:tender_offer_id).where("accepted_shares > 0"))
+
+    Rails.logger.info "Processing #{tender_offers.count} ended tender offer(s) for equilibrium price calculation"
+
+    tender_offers.find_each do |tender_offer|
+      Rails.logger.info "Calculating equilibrium price for tender offer #{tender_offer.id}"
+
+      equilibrium_price = TenderOffers::CalculateEquilibriumPrice.new(tender_offer: tender_offer).perform
+
+      if equilibrium_price
+        Rails.logger.info "Equilibrium price calculated for tender offer #{tender_offer.id}: #{equilibrium_price} cents"
+      else
+        Rails.logger.info "No equilibrium price calculated for tender offer #{tender_offer.id} (no bids or other constraints)"
+      end
+    end
+  end
+end

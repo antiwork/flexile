@@ -29,16 +29,22 @@ Company.find(COMPANY_ID).update!(stock_buybacks_allowed: true)
 
 ```ruby
 company = Company.find(COMPANY_ID)
-tender_offer = company.tender_offers.create!(
-  name: "Q4 2024 Stock Buyback",
-  description: "Quarterly stock buyback program",
-  start_date: Date.current,
-  end_date: 30.days.from_now,
-  total_amount_in_cents: 1_000_000_00,
-  number_of_shares: 100_000,
-  minimum_price_cents: 10_00,
-  maximum_price_cents: 15_00
-)
+result = CreateTenderOffer.new(
+  company: company,
+  attributes: {
+    buyback_type: "tender_offer", # tender_offer | single_stock
+    name: "Q4 2024 Stock Buyback",
+    starts_at: Date.current,
+    ends_at: 30.days.from_now,
+    total_amount_in_cents: 1_000_000_00,
+    number_of_shares: 100_000,
+    attachment: File.open(Rails.root.join("spec/fixtures/files/sample.zip")),
+    letter_of_transmittal: File.open(Rails.root.join("spec/fixtures/files/sample.pdf")),
+    minimum_valuation: 10_000_000_000
+  }
+).perform
+
+tender_offer = result[:tender_offer] if result[:success]
 ```
 
 ## Processing Tender Offers

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_17_153308) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_26_120834) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -23,6 +23,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_17_153308) do
   create_enum "integration_status", ["initialized", "active", "out_of_sync", "deleted"]
   create_enum "invoices_invoice_type", ["services", "other"]
   create_enum "tax_documents_status", ["initialized", "submitted", "deleted"]
+  create_enum "tender_offer_buyback_type", ["single_stock", "tender_offer"]
 
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
@@ -918,6 +919,18 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_17_153308) do
     t.index ["tender_offer_id"], name: "index_tender_offer_bids_on_tender_offer_id"
   end
 
+  create_table "tender_offer_investors", force: :cascade do |t|
+    t.string "external_id", null: false
+    t.bigint "tender_offer_id", null: false
+    t.bigint "company_investor_id", null: false
+    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_investor_id"], name: "index_tender_offer_investors_on_company_investor_id"
+    t.index ["external_id"], name: "index_tender_offer_investors_on_external_id", unique: true
+    t.index ["tender_offer_id", "company_investor_id"], name: "idx_tender_offer_investors_unique", unique: true
+    t.index ["tender_offer_id"], name: "index_tender_offer_investors_on_tender_offer_id"
+  end
+
   create_table "tender_offers", force: :cascade do |t|
     t.bigint "company_id", null: false
     t.string "external_id", null: false
@@ -930,6 +943,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_17_153308) do
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.integer "accepted_price_cents"
+    t.string "name"
+    t.bigint "implied_valuation"
+    t.enum "buyback_type", default: "tender_offer", null: false, enum_type: "tender_offer_buyback_type"
     t.index ["company_id"], name: "index_tender_offers_on_company_id"
     t.index ["external_id"], name: "index_tender_offers_on_external_id", unique: true
   end

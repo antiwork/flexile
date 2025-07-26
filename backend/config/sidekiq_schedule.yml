@@ -81,3 +81,13 @@ dividend_report_csv_email_job:
   args:
     - - "solson@earlygrowth.com"
       - "howard@antiwork.com"
+
+process_tender_offer_equilibrium_price_job:
+  cron: "0 2 * * *" # Every day at UTC 02:00
+  class: ProcessTenderOfferEquilibriumPriceJob
+  description: Calculates equilibrium prices for ended tender offers
+
+tender_offer_reminder_job:
+  cron: "0 10 * * *" # Every day at UTC 10:00
+  class: TenderOfferReminderJob
+  description: Sends reminder emails to investors about open tender offers they haven't participated in
