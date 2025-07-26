@@ -670,7 +670,7 @@ function OptionsTab({ investorId, userId }: { investorId: string; userId: string
   const [selectedEquityGrant, setSelectedEquityGrant] = useState<EquityGrant | null>(null);
 
   return isLoading ? (
-    <TableSkeleton columns={5} />
+    <TableSkeleton columns={6} />
   ) : equityGrants && equityGrants.length > 0 ? (
     <>
       <DataTable table={table} onRowClicked={setSelectedEquityGrant} />
@@ -736,7 +736,7 @@ function ExercisesTab({ investorId }: { investorId: string }) {
   const table = useTable({ data: exercises ?? [], columns });
 
   return isLoading ? (
-    <TableSkeleton columns={5} />
+    <TableSkeleton columns={7} />
   ) : exercises && exercises.length > 0 ? (
     <DataTable table={table} />
   ) : (
@@ -766,7 +766,7 @@ function ConvertiblesTab({ investorId }: { investorId: string }) {
   const table = useTable({ data: convertibles?.convertibleSecurities ?? [], columns: convertiblesColumns });
 
   return isLoading ? (
-    <TableSkeleton columns={6} />
+    <TableSkeleton columns={4} />
   ) : convertibles && convertibles.totalCount > 0 ? (
     <DataTable table={table} />
   ) : (
@@ -791,7 +791,7 @@ function DividendsTab({ investorId }: { investorId: string }) {
   const table = useTable({ data: dividends ?? [], columns: dividendsColumns });
 
   return isLoading ? (
-    <TableSkeleton columns={5} />
+    <TableSkeleton columns={4} />
   ) : dividends && dividends.length > 0 ? (
     <DataTable table={table} />
   ) : (
