@@ -1852,7 +1852,6 @@ export const companies = pgTable(
     defaultCurrency: varchar("default_currency").default("usd").notNull(),
 
     tenderOffersEnabled: boolean("tender_offers_enabled").notNull().default(false),
-    capTableEnabled: boolean("cap_table_enabled").default(false).notNull(),
     lawyersEnabled: boolean("lawyers_enabled").notNull().default(false),
     conversionSharePriceUsd: numeric("conversion_share_price_usd"),
     equityCompensationEnabled: boolean("equity_compensation_enabled").notNull().default(false),

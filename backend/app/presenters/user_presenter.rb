@@ -93,7 +93,7 @@ class UserPresenter
         flags.push("dividends")
         flags.push("quickbooks") if company.quickbooks_enabled?
         flags.push("tender_offers") if company.tender_offers_enabled?
-        flags.push("cap_table") if company.cap_table_enabled?
+        flags.push("cap_table")
         flags.push("lawyers") if company.lawyers_enabled?
         flags.push("expenses") if company.expenses_enabled?
         flags.push("equity_compensation") if company.equity_compensation_enabled?
@@ -165,11 +165,11 @@ class UserPresenter
       result[:has_documents] = documents.not_consulting_contract.or(documents.unsigned).exists?
       if company_worker.present?
         if company_worker.active?
-          result[:flags][:cap_table] = true if company.is_gumroad? && company.cap_table_enabled?
+          result[:flags][:cap_table] = true if company.is_gumroad?
         end
       end
       if company_investor.present?
-        result[:flags][:cap_table] ||= true if company.cap_table_enabled?
+        result[:flags][:cap_table] ||= true
         result[:flags][:option_exercising] = company.json_flag?("option_exercising")
         result[:flags][:equity_grants] = company.equity_grants_enabled?
 
@@ -193,7 +193,7 @@ class UserPresenter
       {
         flags: {
           equity_grants: company.equity_grants_enabled?,
-          cap_table: company.cap_table_enabled?,
+          cap_table: true,
 
           tender_offers: company.tender_offers_enabled?,
           dividends: true,
