@@ -256,15 +256,21 @@ test.describe("invoice creation", () => {
     await login(page, contractorUser);
     await page.goto("/invoices/new");
 
-    await page.getByLabel("Hours").fill("2.5");
+    await page.getByLabel("Hours").fill("2:30");
     await page.getByPlaceholder("Description").fill("Development work with decimal quantities");
     await fillDatePicker(page, "Date", "12/15/2024");
 
     await expect(page.getByText("Total services$150")).toBeVisible();
-    await expect(page.getByText("Net amount in cash$150")).toBeVisible();
+
+    // contractor has 20% equity, so $150 * 0.8 = $120
+    await expect(page.getByText("Net amount in cash$120")).toBeVisible();
 
     await page.getByRole("button", { name: "Send invoice" }).click();
 
+    // wait for navigation to invoice list
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+    // invoice list shows total amount ($150), not net cash amount
     await expect(page.locator("tbody")).toContainText("$150");
 
     const invoice = await db.query.invoices
@@ -277,6 +283,7 @@ test.describe("invoice creation", () => {
       .findFirst({ where: eq(invoiceLineItems.invoiceId, invoice.id) })
       .then(takeOrThrow);
 
-    expect(Number(lineItem.quantity)).toBe(2.5);
+    // quantity is stored in minutes for hourly contractors (2:30 = 150 minutes)
+    expect(Number(lineItem.quantity)).toBe(150);
   });
 });
