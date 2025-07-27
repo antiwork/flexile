@@ -11,7 +11,7 @@ if (!API_SECRET_TOKEN) {
 const verifySignupSchema = z.object({
   email: z.string().email(),
   otp_code: z.string().length(6),
-  temp_user_id: z.string(),
+  temp_user_id: z.number(),
 });
 
 export async function POST(request: NextRequest) {
