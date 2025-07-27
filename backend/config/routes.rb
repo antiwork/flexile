@@ -8,21 +8,8 @@ end
 require "sidekiq/cron/web"
 
 admin_constraint = lambda do |request|
-  #   # Extract JWT from cookie and verify admin access
-
-  #   cookie = request.env["HTTP_COOKIE"]
-  #   return false unless cookie
-
-  #   nil
-  #   cookie.split(";").each do |cookie_part|
-  #     if cookie_part.strip.start_with?("next-auth.session-token=")
-  #       # This is a simplified approach - in practice you'd need to properly decode the NextAuth session
-  #       # For now, we'll disable the constraint and handle admin auth in the controller
-  #       return true # Allow all requests through for now
-  #     end
-  #   end
-  #   false
-  false
+  user = JwtService.user_from_request(request)
+  user&.team_member?
 end
 
 api_domain_constraint = lambda do |request|

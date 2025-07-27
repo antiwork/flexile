@@ -17,8 +17,8 @@ module SetCurrent
     user = nil
 
     # Try JWT authentication
-    if jwt_token_present?
-      user = authenticate_with_jwt_user
+    if JwtService.token_present_in_request?(request)
+      user = JwtService.user_from_request(request)
     end
 
     # Handle invite links for authenticated users
@@ -62,35 +62,6 @@ module SetCurrent
   end
 
   private
-    def jwt_token_present?
-      authorization_header.present? && authorization_header.start_with?("Bearer ")
-    end
-
-    def authenticate_with_jwt_user
-      token = extract_jwt_token
-      return nil unless token
-
-      begin
-        decoded_token = JWT.decode(token, jwt_secret, true, { algorithm: "HS256" })
-        payload = decoded_token[0]
-        User.find_by(id: payload["user_id"])
-      rescue JWT::DecodeError, JWT::ExpiredSignature, ActiveRecord::RecordNotFound
-        nil
-      end
-    end
-
-    def extract_jwt_token
-      authorization_header&.split(" ")&.last
-    end
-
-    def authorization_header
-      request.headers["x-flexile-auth"]
-    end
-
-    def jwt_secret
-      GlobalConfig.get("JWT_SECRET", Rails.application.secret_key_base)
-    end
-
     def company_from_param
       # TODO: Remove params[:companyId] once all URLs are updated
       company_id = params[:company_id] || params[:companyId] || cookies[current_user_selected_company_cookie_name]
