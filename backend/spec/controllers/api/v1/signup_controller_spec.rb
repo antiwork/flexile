@@ -17,9 +17,9 @@ RSpec.describe Api::V1::SignupController, type: :controller do
         expect(response).to have_http_status(:ok)
         json_response = JSON.parse(response.body)
         expect(json_response["message"]).to eq("OTP sent successfully")
-        expect(json_response["temp_user_id"]).to be_present
 
-        temp_user = User.find(json_response["temp_user_id"])
+        temp_user = User.find_by(email: email)
+        expect(temp_user).to be_present
         expect(temp_user.email).to eq(email)
       end
     end
@@ -56,7 +56,6 @@ RSpec.describe Api::V1::SignupController, type: :controller do
         post :verify_and_create, params: {
           email: email,
           otp_code: valid_otp,
-          temp_user_id: temp_user.id,
           token: api_token,
         }
 
@@ -76,7 +75,6 @@ RSpec.describe Api::V1::SignupController, type: :controller do
           post :verify_and_create, params: {
             email: email,
             otp_code: valid_otp,
-            temp_user_id: temp_user.id,
             token: api_token,
           }
         end.to change(Company, :count).by(1)
@@ -92,7 +90,6 @@ RSpec.describe Api::V1::SignupController, type: :controller do
         post :verify_and_create, params: {
           email: email,
           otp_code: "000000",
-          temp_user_id: temp_user.id,
           token: api_token,
         }
 
@@ -102,12 +99,11 @@ RSpec.describe Api::V1::SignupController, type: :controller do
       end
     end
 
-    context "with invalid temp_user_id" do
+    context "with invalid email" do
       it "returns not found" do
         post :verify_and_create, params: {
-          email: email,
+          email: "nonexistent@example.com",
           otp_code: valid_otp,
-          temp_user_id: "invalid",
           token: api_token,
         }
 
@@ -123,7 +119,7 @@ RSpec.describe Api::V1::SignupController, type: :controller do
 
         expect(response).to have_http_status(:bad_request)
         json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Email, OTP code, and temp user ID are required")
+        expect(json_response["error"]).to eq("Email and OTP code are required")
       end
     end
   end

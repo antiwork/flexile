@@ -39,11 +39,6 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
         throw new Error(data.error || "Failed to send OTP");
       }
 
-      // For signup, we need to store the temp user ID
-      if (config.type === "signup" && data.temp_user_id) {
-        actions.setTempUserId(data.temp_user_id);
-      }
-
       actions.setSuccess("OTP sent successfully! Check your email.");
       actions.setStep("otp");
     } catch (error) {
@@ -69,7 +64,6 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
           body: JSON.stringify({
             email: state.email,
             otp_code: state.otp,
-            temp_user_id: state.tempUserId,
           }),
         });
 

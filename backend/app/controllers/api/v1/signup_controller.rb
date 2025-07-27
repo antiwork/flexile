@@ -34,17 +34,16 @@ class Api::V1::SignupController < Api::BaseController
 
     UserMailer.otp_code(temp_user.id).deliver_later
 
-    render json: { message: "OTP sent successfully", temp_user_id: temp_user.id }, status: :ok
+    render json: { message: "OTP sent successfully" }, status: :ok
   end
 
   def verify_and_create
     email = params[:email]
     otp_code = params[:otp_code]
-    temp_user_id = params[:temp_user_id]
 
-    return unless validate_signup_params(email, otp_code, temp_user_id)
+    return unless validate_signup_params(email, otp_code)
 
-    temp_user = find_temp_user(temp_user_id, email)
+    temp_user = find_temp_user(email)
     return unless temp_user
 
     return unless check_otp_rate_limit(temp_user)
@@ -68,17 +67,17 @@ class Api::V1::SignupController < Api::BaseController
   end
 
   private
-    def validate_signup_params(email, otp_code, temp_user_id)
-      if email.blank? || otp_code.blank? || temp_user_id.blank?
-        render json: { error: "Email, OTP code, and temp user ID are required" }, status: :bad_request
+    def validate_signup_params(email, otp_code)
+      if email.blank? || otp_code.blank?
+        render json: { error: "Email and OTP code are required" }, status: :bad_request
         return false
       end
 
       true
     end
 
-    def find_temp_user(temp_user_id, email)
-      temp_user = User.find_by(id: temp_user_id, email: email)
+    def find_temp_user(email)
+      temp_user = User.find_by(email: email)
       unless temp_user
         render json: { error: "Invalid signup session" }, status: :not_found
         return nil
