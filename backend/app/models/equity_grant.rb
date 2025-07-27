@@ -7,7 +7,6 @@ class EquityGrant < ApplicationRecord
   belongs_to :company_investor_entity, optional: true
   belongs_to :option_pool
   belongs_to :active_exercise, class_name: "EquityGrantExercise", optional: true
-  has_one :contract
   has_many :equity_grant_exercise_requests
   has_many :exercises, through: :equity_grant_exercise_requests, source: :equity_grant_exercise
 

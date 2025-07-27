@@ -3,6 +3,8 @@
 class Document < ApplicationRecord
   include Deletable
 
+  CONSULTING_CONTRACT_NAME = "Consulting agreement"
+
   belongs_to :company
   belongs_to :user_compliance_info, optional: true
   belongs_to :equity_grant, optional: true

@@ -46,7 +46,6 @@ class Company < ApplicationRecord
   has_one :primary_admin, -> { order(id: :asc) }, class_name: "CompanyAdministrator"
   has_many :company_workers
   has_many :company_investor_entities
-  has_many :contracts
   has_many :contractors, through: :company_workers, source: :user do
     def active
       merge(CompanyWorker.active)
