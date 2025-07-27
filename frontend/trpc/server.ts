@@ -22,6 +22,7 @@ import { lawyersRouter } from "./routes/lawyers";
 import { optionPoolsRouter } from "./routes/optionPools";
 import { quickbooksRouter } from "./routes/quickbooks";
 import { shareHoldingsRouter } from "./routes/shareHoldings";
+import { supportRouter } from "./routes/support";
 import { tenderOffersRouter } from "./routes/tenderOffers";
 import { usersRouter } from "./routes/users";
 import { createClient } from "./shared";
@@ -54,6 +55,7 @@ export const appRouter = createRouter({
   equityCalculations: equityCalculationsRouter,
   lawyers: lawyersRouter,
   companyInviteLinks: companyInviteLinksRouter,
+  support: supportRouter,
 });
 export type AppRouter = typeof appRouter;
 
