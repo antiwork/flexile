@@ -40,6 +40,12 @@ RSpec.shared_examples "company update show behavior" do |user_factory|
 end
 
 RSpec.describe "Company update page" do
+  let(:company) { create(:company) }
+  let!(:company_investor) { create(:company_investor, company:) }
+  let(:update) { create(:company_update, company:, title: "2023 update", body: "<h2>Section title</h2><p>This is the update body</p>") }
+
+  before { Flipper.enable(:company_updates, company) }
+
   [:company_worker, :company_investor, :company_administrator].each do |user_type|
     context "when user is a #{user_type}" do
       it_behaves_like "company update show behavior", user_type

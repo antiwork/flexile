@@ -4,6 +4,7 @@ RSpec.describe "Company update create flow" do
   let!(:company_administrator) { create(:company_administrator) }
   let(:user) { company_administrator.user }
   let(:company) { company_administrator.company }
+  let!(:company_investor) { create(:company_investor, company:) }
 
   before do
     Flipper.enable(:company_updates, company)

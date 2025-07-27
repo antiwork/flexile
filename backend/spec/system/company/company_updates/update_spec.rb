@@ -4,6 +4,7 @@ RSpec.describe "Company update edit flow" do
   let!(:company_administrator) { create(:company_administrator) }
   let(:user) { company_administrator.user }
   let(:company) { company_administrator.company }
+  let!(:company_investor) { create(:company_investor, company:) }
   let!(:company_update) { create(:company_update, company:, title: "April 2023", body: "Initial content", period: :month, period_started_on: Date.new(2023, 4, 1), show_revenue: true, show_net_income: false) }
   let!(:monthly_report_1) { create(:company_monthly_financial_report, company:, year: 2023, month: 1, revenue_cents: 1_01, net_income_cents: 10_01) }
   let!(:monthly_report_2) { create(:company_monthly_financial_report, company:, year: 2023, month: 2, revenue_cents: 2_02, net_income_cents: 20_02) }

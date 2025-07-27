@@ -4,10 +4,9 @@ import { createInsertSchema } from "drizzle-zod";
 import { pick, truncate } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
-import { companyUpdates } from "@/db/schema";
+import { companyInvestors, companyUpdates } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { type CompanyContext, companyProcedure, createRouter, renderTiptapToText } from "@/trpc";
-import { isActive } from "@/trpc/routes/contractors";
 import { assertDefined } from "@/utils/assert";
 
 const byId = (ctx: CompanyContext, id: string) =>
@@ -18,9 +17,18 @@ const dataSchema = createInsertSchema(companyUpdates).pick({
   body: true,
   videoUrl: true,
 });
+
+const checkHasInvestors = async (companyId: bigint) => {
+  const hasInvestors = await db.query.companyInvestors.findFirst({
+    where: eq(companyInvestors.companyId, companyId),
+  });
+  return !!hasInvestors;
+};
+
 export const companyUpdatesRouter = createRouter({
   list: companyProcedure.query(async ({ ctx }) => {
-    if (!ctx.companyAdministrator && !isActive(ctx.companyContractor) && !ctx.companyInvestor)
+    const hasInvestors = await checkHasInvestors(ctx.company.id);
+    if (!hasInvestors || (!ctx.companyAdministrator && !ctx.companyInvestor))
       throw new TRPCError({ code: "FORBIDDEN" });
     const where = and(
       eq(companyUpdates.companyId, ctx.company.id),
@@ -38,7 +46,8 @@ export const companyUpdatesRouter = createRouter({
     return { updates };
   }),
   get: companyProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
-    if (!ctx.companyAdministrator && !isActive(ctx.companyContractor) && !ctx.companyInvestor)
+    const hasInvestors = await checkHasInvestors(ctx.company.id);
+    if (!hasInvestors || (!ctx.companyAdministrator && !ctx.companyInvestor))
       throw new TRPCError({ code: "FORBIDDEN" });
     const update = await db.query.companyUpdates.findFirst({ where: byId(ctx, input.id) });
     if (!update) throw new TRPCError({ code: "NOT_FOUND" });
@@ -50,7 +59,8 @@ export const companyUpdatesRouter = createRouter({
     };
   }),
   create: companyProcedure.input(dataSchema.required()).mutation(async ({ ctx, input }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    const hasInvestors = await checkHasInvestors(ctx.company.id);
+    if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
     const [update] = await db
       .insert(companyUpdates)
@@ -66,7 +76,8 @@ export const companyUpdatesRouter = createRouter({
     return assertDefined(update).externalId;
   }),
   update: companyProcedure.input(dataSchema.extend({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    const hasInvestors = await checkHasInvestors(ctx.company.id);
+    if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
     const [update] = await db
       .update(companyUpdates)
       .set({
@@ -82,7 +93,8 @@ export const companyUpdatesRouter = createRouter({
     if (!update) throw new TRPCError({ code: "NOT_FOUND" });
   }),
   publish: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    const hasInvestors = await checkHasInvestors(ctx.company.id);
+    if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
     const [update] = await db
       .update(companyUpdates)
@@ -102,7 +114,8 @@ export const companyUpdatesRouter = createRouter({
     return update.externalId;
   }),
   sendTestEmail: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    const hasInvestors = await checkHasInvestors(ctx.company.id);
+    if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
     const update = await db.query.companyUpdates.findFirst({ where: byId(ctx, input.id) });
     if (!update) throw new TRPCError({ code: "NOT_FOUND" });
     await inngest.send({
@@ -114,7 +127,8 @@ export const companyUpdatesRouter = createRouter({
     });
   }),
   delete: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    const hasInvestors = await checkHasInvestors(ctx.company.id);
+    if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
     const result = await db.delete(companyUpdates).where(byId(ctx, input.id)).returning();
     if (result.length === 0) throw new TRPCError({ code: "NOT_FOUND" });
   }),
