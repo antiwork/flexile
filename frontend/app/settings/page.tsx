@@ -1,13 +1,16 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import React from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { MutationStatusButton } from "@/components/MutationButton";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useCurrentUser } from "@/global";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
-import { trpc } from "@/trpc/client";
+import { request } from "@/utils/request";
+import { settings_path } from "@/utils/routes";
 
 export default function SettingsPage() {
   const user = useCurrentUser();
@@ -18,7 +21,17 @@ export default function SettingsPage() {
     },
   });
 
-  const saveMutation = trpc.users.update.useMutation({
+  const saveMutation = useMutation({
+    mutationFn: async (values: { email: string; preferredName: string }) => {
+      const response = await request({
+        url: settings_path(),
+        method: "PATCH",
+        accept: "json",
+        jsonData: { settings: { email: values.email, preferred_name: values.preferredName } },
+      });
+      if (!response.ok)
+        throw new Error(z.object({ error_message: z.string() }).parse(await response.json()).error_message);
+    },
     onSuccess: () => setTimeout(() => saveMutation.reset(), 2000),
   });
   const submit = form.handleSubmit((values) => saveMutation.mutate(values));
@@ -54,6 +67,7 @@ export default function SettingsPage() {
             </FormItem>
           )}
         />
+        {saveMutation.isError ? <p className="text-red-500">{saveMutation.error.message}</p> : null}
         <MutationStatusButton
           className="w-fit"
           type="submit"
