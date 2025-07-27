@@ -56,6 +56,13 @@ function SignUpContent() {
               <Button type="submit" className="w-full" disabled={state.loading}>
                 {state.loading ? "Sending..." : "Send verification code"}
               </Button>
+
+              <div className="text-center text-sm text-gray-600">
+                Already have an account?{" "}
+                <Link href="/login" className="text-blue-600 hover:underline">
+                  Sign in here
+                </Link>
+              </div>
             </form>
           ) : (
             <div className="space-y-4">
