@@ -1,6 +1,5 @@
 import { expect, type Locator, test } from "@playwright/test";
 import { companiesFactory } from "@test/factories/companies";
-import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { companyUpdatesFactory } from "@test/factories/companyUpdates";
 import { usersFactory } from "@test/factories/users";
@@ -43,20 +42,17 @@ async function waitForIframeLoad(iframe: Locator): Promise<void> {
 test.describe("Company Updates - YouTube Embeds", () => {
   let company: Awaited<ReturnType<typeof companiesFactory.createCompletedOnboarding>>["company"];
   let adminUser: Awaited<ReturnType<typeof companiesFactory.createCompletedOnboarding>>["adminUser"];
-  let contractorUser: Awaited<ReturnType<typeof usersFactory.create>>["user"];
+  let investorUser: Awaited<ReturnType<typeof usersFactory.create>>["user"];
 
   test.beforeEach(async () => {
     const result = await companiesFactory.createCompletedOnboarding();
     company = result.company;
     adminUser = result.adminUser;
-    contractorUser = (await usersFactory.create()).user;
-    await companyContractorsFactory.create({
+    investorUser = (await usersFactory.create()).user;
+    await companyInvestorsFactory.create({
       companyId: company.id,
-      userId: contractorUser.id,
+      userId: investorUser.id,
     });
-
-    // Add an investor so company updates are available
-    await companyInvestorsFactory.create({ companyId: company.id });
   });
 
   test("should display YouTube embed for youtube.com URLs", async ({ page }) => {
@@ -67,7 +63,7 @@ test.describe("Company Updates - YouTube Embeds", () => {
       sentAt: new Date(),
     });
 
-    await login(page, contractorUser);
+    await login(page, investorUser);
     await page.goto(`/updates/company`);
 
     await page.getByRole("row").getByText(companyUpdate.title).first().click();
@@ -91,7 +87,7 @@ test.describe("Company Updates - YouTube Embeds", () => {
       sentAt: new Date(),
     });
 
-    await login(page, contractorUser);
+    await login(page, investorUser);
     await page.goto(`/updates/company`);
 
     await page.getByRole("row").getByText(companyUpdate.title).first().click();
@@ -114,7 +110,7 @@ test.describe("Company Updates - YouTube Embeds", () => {
       sentAt: new Date(),
     });
 
-    await login(page, contractorUser);
+    await login(page, investorUser);
     await page.goto(`/updates/company`);
 
     await page.getByRole("row").getByText(companyUpdate.title).first().click();
@@ -151,7 +147,7 @@ test.describe("Company Updates - YouTube Embeds", () => {
       sentAt: new Date(),
     });
 
-    await login(page, contractorUser);
+    await login(page, investorUser);
     await page.goto(`/updates/company`);
 
     await page.getByRole("row").getByText(companyUpdate.title).first().click();
@@ -175,7 +171,7 @@ test.describe("Company Updates - YouTube Embeds", () => {
       sentAt: new Date(),
     });
 
-    await login(page, contractorUser);
+    await login(page, investorUser);
     await page.goto(`/updates/company`);
 
     await page.getByRole("row").getByText(companyUpdate.title).first().click();
