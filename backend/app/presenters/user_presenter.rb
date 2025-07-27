@@ -148,7 +148,6 @@ class UserPresenter
         country: user.country_code && ISO3166::Country[user.country_code].common_name,
       },
       email: user.display_email,
-      onboardingPath: OnboardingState::User.new(user:, company:).redirect_path,
       taxInformationConfirmedAt: tax_information_confirmed_at&.iso8601,
     }
   end

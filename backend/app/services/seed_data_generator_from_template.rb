@@ -602,9 +602,7 @@ class SeedDataGeneratorFromTemplate
             end
             print_message("Created #{contractor.email} (#{contractor.bank_accounts.alive.any? ? "onboarded" : "not onboarded"})")
 
-            if OnboardingState::Worker.new(user: contractor.reload, company:).complete?
-              create_company_worker_invoices!(company_worker, ended_at:)
-            end
+            create_company_worker_invoices!(company_worker, ended_at:)
 
             if company_worker_data.key?("equity_grants")
               company_investor = company.company_investors.create!(

@@ -47,7 +47,6 @@ export const currentUserSchema = z.object({
   name: z.string(),
   address: addressSchema,
   currentCompanyId: z.string(),
-  onboardingPath: z.string().nullable(),
   companies: z.array(companySchema),
   email: z.string(),
   preferredName: z.string().nullable(),

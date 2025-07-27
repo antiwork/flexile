@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class Internal::Companies::InviteLinksController < Internal::BaseController
-  skip_before_action :force_onboarding
-
   def show
     authorize CompanyAdministrator
 

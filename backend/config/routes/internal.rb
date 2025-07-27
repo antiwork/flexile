@@ -10,12 +10,8 @@ scope path: :internal, module: :internal do
   namespace :settings do
     resource :dividend, only: [:show, :update], controller: "dividend"
     resource :tax, only: [:show, :update], controller: "tax"
-    resources :bank_accounts, only: [:index, :update]
+    resources :bank_accounts, only: [:index, :create, :update]
     resource :equity, only: [:update], controller: "equity"
-  end
-  resource :onboarding, controller: "onboarding", only: [:show, :update] do
-    get :bank_account
-    patch :save_bank_account
   end
 
   resources :roles, only: [:index, :show]

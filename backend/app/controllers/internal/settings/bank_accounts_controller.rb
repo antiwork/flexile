@@ -1,11 +1,23 @@
 # frozen_string_literal: true
 
 class Internal::Settings::BankAccountsController < Internal::Settings::BaseController
+  after_action :verify_authorized
   before_action :authenticate_user_json!
   before_action :load_bank_account!, only: [:update]
 
   def index
     render json: Settings::BankAccountsPresenter.new(Current.user).props
+  end
+
+  def create
+    authorize :onboarding
+
+    recipient_service = Recipient::CreateService.new(
+      user: Current.user,
+      params: params.require(:recipient).permit(:currency, :type, details: {}).to_h,
+      replace_recipient_id: params[:replace_recipient_id].presence
+    )
+    render json: recipient_service.process
   end
 
   def update
