@@ -104,7 +104,7 @@ export const ConversationsList: React.FC<ConversationsListProps> = ({ client, on
                         : new Date(conversation.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
-                      <Button variant="outline" size="sm" onClick={() => onSelectConversation(conversation.slug)}>
+                      <Button variant="outline" size="small" onClick={() => onSelectConversation(conversation.slug)}>
                         View
                       </Button>
                     </TableCell>
