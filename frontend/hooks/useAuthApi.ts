@@ -39,7 +39,6 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
         throw new Error(data.error || "Failed to send OTP");
       }
 
-      actions.setSuccess("OTP sent successfully! Check your email.");
       actions.setStep("otp");
     } catch (error) {
       actions.setError(error instanceof Error ? error.message : "Failed to send OTP");
@@ -82,9 +81,7 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
       });
 
       if (result?.error) {
-        throw new Error(
-          config.type === "signup" ? "Failed to sign in after signup" : "Invalid OTP code or login failed",
-        );
+        throw new Error("Invalid verification code, please try again.");
       }
 
       // Get the session to access the JWT

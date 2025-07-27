@@ -33,7 +33,7 @@ RSpec.describe Api::V1::LoginController, type: :controller do
         expect(response).to have_http_status(:unauthorized)
 
         json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Invalid or expired OTP code")
+        expect(json_response["error"]).to eq("Invalid verification code, please try again.")
       end
     end
 
@@ -48,7 +48,7 @@ RSpec.describe Api::V1::LoginController, type: :controller do
         expect(response).to have_http_status(:unauthorized)
 
         json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Invalid or expired OTP code")
+        expect(json_response["error"]).to eq("Invalid verification code, please try again.")
       end
     end
 
