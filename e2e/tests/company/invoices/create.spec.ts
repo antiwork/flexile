@@ -256,7 +256,7 @@ test.describe("invoice creation", () => {
     await login(page, contractorUser);
     await page.goto("/invoices/new");
 
-    await page.getByLabel("Hours").fill("2:30");
+    await page.getByLabel("Hours").fill("2.5");
     await page.getByPlaceholder("Description").fill("Development work with decimal quantities");
     await fillDatePicker(page, "Date", "12/15/2024");
 
@@ -282,7 +282,6 @@ test.describe("invoice creation", () => {
       .findFirst({ where: eq(invoiceLineItems.invoiceId, invoice.id) })
       .then(takeOrThrow);
 
-    // quantity is stored in minutes for hourly contractors (2:30 = 150 minutes)
-    expect(Number(lineItem.quantity)).toBe(150);
+    expect(Number(lineItem.quantity)).toBe(2.5);
   });
 });
