@@ -270,7 +270,6 @@ test.describe("invoice creation", () => {
     // wait for navigation to invoice list
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
-    // invoice list shows total amount ($150), not net cash amount
     await expect(page.locator("tbody")).toContainText("$150");
 
     const invoice = await db.query.invoices
