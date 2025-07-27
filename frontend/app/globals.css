@@ -370,32 +370,23 @@
     grid-template-columns: 1fr 1fr !important; /* Just From/To */
     gap: 3cm !important; /* Wider like second */
     margin-top: 0.5cm !important;
-    margin-bottom: 1.5cm !important;
+    margin-bottom: 1.25cm !important; /* MODIFIED: Breathing room below header */
     position: relative !important;
   }
 
   /* Header grid wrapper styling */
   .invoice-print .grid.auto-cols-fr {
-    grid-template-columns: 1fr 1fr auto auto auto !important; /* Dedicated columns for meta */
-    gap: 2em !important; /* Wider gaps */
+    grid-template-columns: 1fr 1fr auto auto auto !important; /* From, To, Invoice ID, Sent on, Paid on */
+    column-gap: 1.5rem !important; /* Even spacing between columns */
+    row-gap: 0.4rem !important; /* Minimal row gap */
     align-items: start !important; /* Top-align content */
     margin-bottom: 1.5cm !important; /* Space before table */
   }
 
-  /* Bold labels in grid */
-  .invoice-print .grid > div > *:first-child {
-    font-weight: 600 !important; /* Bold labels */
+  /* Labels should be normal weight, only company names bold - target header grid only */
+  .invoice-print .grid.auto-cols-fr > div > *:first-child {
+    font-weight: 400 !important; /* Normal weight for "From", "To", etc labels */
     margin-bottom: 0.3em !important;
-  }
-
-  /* Address line spacing */
-  .invoice-print .grid > div {
-    line-height: 1.7 !important;
-  }
-
-  .invoice-print .grid > div b {
-    display: block !important;
-    margin-bottom: 0.5em !important;
   }
 
   .invoice-print .invoice-from {
@@ -442,26 +433,34 @@
     display: none !important;
   }
 
-  /* Style addresses */
-  .invoice-print .invoice-from b,
-  .invoice-print .invoice-from div,
-  .invoice-print .invoice-to b,
-  .invoice-print .invoice-to div {
+  /* Style addresses - only target the header grid, not table */
+  .invoice-print .grid.auto-cols-fr > div {
+    font-weight: 400 !important; /* Normal weight for header content */
+    line-height: 1.45 !important; /* Tighter line spacing */
+  }
+
+  .invoice-print .grid.auto-cols-fr > div * {
     color: #000 !important;
     font-size: 10pt !important;
-    font-weight: 600 !important;
-    line-height: 1.4 !important;
-    display: block !important;
+    font-weight: 400 !important; /* Normal weight for all nested elements */
+    line-height: 1.45 !important;
     margin: 0 !important;
   }
 
-  /* Invoice meta section - like second image */
-  .invoice-print .invoice-meta {
-    display: flex !important;
-    justify-content: space-between !important; /* ID left, Sent right */
-    margin-top: 0.5cm !important; /* Space after title */
-    margin-bottom: 0.5em !important;
+  /* Keep bold only for company names (the <b> tags) in header */
+  .invoice-print .grid.auto-cols-fr > div b {
+    font-weight: 600 !important;
+    display: block !important;
+    margin-bottom: 0.3em !important;
+  }
+
+  /* Meta data (Invoice ID, Sent on, Paid on) alignment - target header grid only */
+  .invoice-print .grid.auto-cols-fr > div:nth-child(3),
+  .invoice-print .grid.auto-cols-fr > div:nth-child(4),
+  .invoice-print .grid.auto-cols-fr > div:nth-child(5) {
+    text-align: left !important;
     font-size: 10pt !important;
+    line-height: 1.4 !important;
   }
 
   .invoice-print .invoice-number,
