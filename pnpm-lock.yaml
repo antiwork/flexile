@@ -53,8 +53,8 @@ importers:
         specifier: ^1.0.63
         version: 1.0.63
       '@helperai/client':
-        specifier: ^0.2.0
-        version: 0.2.0
+        specifier: ^0.2.4
+        version: 0.2.4
       '@helperai/react':
         specifier: ^0.6.0
         version: 0.6.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -999,8 +999,8 @@ packages:
   '@formatjs/intl-localematcher@0.6.1':
     resolution: {integrity: sha512-ePEgLgVCqi2BBFnTMWPfIghu6FkbZnnBVhO2sSxvLfrdFw7wCHAHiDoM2h4NRgjbaY7+B7HgOLZGkK187pZTZg==}
 
-  '@helperai/client@0.2.0':
-    resolution: {integrity: sha512-ST+EIgBDnc8L9bJUC8TMsgHKWJ4UXocj83iqnsGtDccGQWBupHsFtZO6/HJydelXUbarQ9qUg0J37Bwk4681vQ==}
+  '@helperai/client@0.2.4':
+    resolution: {integrity: sha512-NAh7P0Ip3iJtWh4o08jXjJH2sB1CweKKgEO0vS09uHbIaMYfGgrglqNYvGXmrvgEtKGNJ/yQ6WGh8LrapfD7Vg==}
 
   '@helperai/react@0.6.0':
     resolution: {integrity: sha512-RdK+aocpGgoZmnnGc+Sohmuc75LbDOpsAq+Nz10G17nHn1rzRjqjbaPsnffRkBnk8rZyZk4p0UUmdlgDU0SHCQ==}
@@ -7184,7 +7184,7 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@helperai/client@0.2.0':
+  '@helperai/client@0.2.4':
     dependencies:
       '@supabase/supabase-js': 2.52.1
       superjson: 2.2.2

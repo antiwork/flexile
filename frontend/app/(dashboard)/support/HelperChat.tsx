@@ -1,26 +1,16 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { HelperClient } from "@helperai/client";
-import React, { useEffect, useState } from "react";
+import { type ConversationDetails, HelperClient } from "@helperai/client";
+import React, { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
 interface HelperChatProps {
   client: HelperClient;
-  conversation: {
-    slug: string;
-    subject: string | null;
-    messages: {
-      createdAt: string;
-      id: string;
-      content: string;
-      role: "user" | "staff" | "assistant";
-      staffName: string | null;
-    }[];
-  };
-  onConversationUpdate: (conversation: any) => void;
+  conversation: ConversationDetails;
+  onConversationUpdate: Dispatch<SetStateAction<ConversationDetails | null>>;
 }
 
 export const HelperChat: React.FC<HelperChatProps> = ({ client, conversation, onConversationUpdate }) => {
@@ -30,18 +20,12 @@ export const HelperChat: React.FC<HelperChatProps> = ({ client, conversation, on
 
   const [isListening, setIsListening] = useState(false);
 
-  // Initialize messages from conversation
-  useEffect(() => {
-    const formattedMessages = client.chat.messages(conversation.messages);
-    setMessages(formattedMessages);
-  }, [conversation.messages, client, setMessages]);
-
   // Set up real-time listeners
   useEffect(() => {
     setIsListening(true);
     const unlisten = client.conversations.listen(conversation.slug, {
       onSubjectChanged: (subject) => {
-        onConversationUpdate((prevConversation: any) => (prevConversation ? { ...prevConversation, subject } : null));
+        onConversationUpdate((prevConversation) => (prevConversation ? { ...prevConversation, subject } : null));
       },
       onHumanReply: (message) => {
         setMessages((prev) => [...prev, message]);
@@ -62,7 +46,7 @@ export const HelperChat: React.FC<HelperChatProps> = ({ client, conversation, on
             {messages.length === 0 ? (
               <div className="py-8 text-center text-gray-500">No messages yet. Start the conversation!</div>
             ) : (
-              messages.map((message, index) => {
+              client.chat.messages(messages).map((message, index) => {
                 const { content, role, staffName, createdAt } = message;
                 const isUser = role === "user";
 

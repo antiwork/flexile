@@ -1,6 +1,6 @@
 "use client";
 
-import { HelperClient } from "@helperai/client";
+import { type ConversationDetails, HelperClient } from "@helperai/client";
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,22 +10,6 @@ interface ConversationDetailProps {
   client: HelperClient;
   conversationSlug: string;
   onBack: () => void;
-}
-
-interface ConversationDetails {
-  slug: string;
-  subject: string | null;
-  isEscalated: boolean;
-  messages: {
-    createdAt: string;
-    id: string;
-    content: string;
-    role: "user" | "staff" | "assistant";
-    staffName: string | null;
-    reactionType: "thumbs-up" | "thumbs-down" | null;
-    reactionFeedback: string | null;
-    reactionCreatedAt: string | null;
-  }[];
 }
 
 export const ConversationDetail: React.FC<ConversationDetailProps> = ({ client, conversationSlug, onBack }) => {
