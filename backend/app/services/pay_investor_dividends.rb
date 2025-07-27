@@ -17,10 +17,9 @@ class PayInvestorDividends
 
   def process
     return if dividends.any? { !_1.status.in?([Dividend::ISSUED, Dividend::RETAINED]) } ||
-              !company_investor.completed_onboarding? ||
               user.tax_information_confirmed_at.nil? ||
               user.bank_account_for_dividends.nil?
-    return unless user.has_verified_tax_id?
+    return unless user.has_personal_details? && user.has_verified_tax_id?
 
     raise "Flexile balance insufficient to pay for dividends to investor #{company_investor.id}" unless Wise::AccountBalance.has_sufficient_flexile_balance?(net_amount_in_usd)
     raise "Unknown country for user #{user.id}" if user.country_code.blank?
