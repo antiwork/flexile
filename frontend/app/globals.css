@@ -151,7 +151,7 @@
   @page {
     /* Works in all Chromium & Firefox */
     size: A4;
-    margin: 2.5cm 1.5cm 2cm 1.5cm !important; /* More top space for header */
+    margin: 1.35cm 1.35cm 1.35cm 1.35cm !important; /* Perfectly balanced margins */
   }
 
   /* 1. Flatten the dashboard grid so only one column remains */
@@ -223,7 +223,7 @@
 
   /* Professional table cell styling */
   .invoice-print tbody td {
-    padding: 0.8em 1em !important;
+    padding: 0.5rem 1rem !important; /* py-2 equivalent - balanced with header py-3 */
     word-wrap: break-word !important;
     word-break: break-word !important;
     vertical-align: top !important; /* Keep top for desc */
@@ -232,10 +232,15 @@
     white-space: normal !important;
     line-height: 1.4 !important;
     font-size: 10pt !important;
-    border-bottom: 1px solid #eee !important;
+    border-bottom: 0.5px solid #eee !important; /* Hairline borders */
     border-top: none !important;
     border-left: none !important;
     border-right: none !important; /* No verticals for clean look */
+  }
+
+  /* First data row spacing after header - prevent kissing header border */
+  .invoice-print tbody tr:first-child td {
+    padding-top: 0.5rem !important; /* Consistent with header padding */
   }
 
   /* Bold numbers in table */
@@ -254,22 +259,22 @@
   .invoice-print thead th {
     background: transparent !important; /* No fill */
     text-transform: uppercase !important; /* Uppercase for headers */
-    letter-spacing: 0.08em !important; /* Subtle tracking */
-    border-bottom: 1px solid #333 !important; /* Darker for contrast */
+    letter-spacing: 0.5px !important; /* Wide tracking for scan-ability */
+    border-bottom: 1.25px solid #000 !important; /* Thicker border, darker color */
     border-top: none !important;
     border-left: none !important;
     border-right: none !important; /* No verticals for clean look */
-    font-weight: 700 !important;
+    font-weight: 500 !important; /* Medium weight for distinction */
     text-align: left !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
     box-shadow: none !important;
-    font-size: 8.5pt !important; /* Tighter fit */
-    padding: 0.7em 1.8em !important; /* More padding */
-    white-space: nowrap !important; /* Revert to nowrap for headers */
+    font-size: 7.5pt !important; /* text-xs equivalent */
+    padding: 0.75rem 1rem !important; /* py-3 equivalent */
+    white-space: nowrap !important;
     overflow: visible !important;
-    text-overflow: clip !important; /* Clip cleanly if needed */
+    text-overflow: clip !important;
   }
 
   /* Professional body row styling */
@@ -291,26 +296,32 @@
     width: 55% !important; /* Slightly less to balance headers */
     text-align: left !important;
     white-space: normal !important; /* Allow wrap for long lorem text */
+    max-width: 65ch !important; /* Prevent description overrun */
+    padding-right: 1.5rem !important; /* Extra space to prevent crowding */
   }
 
   .invoice-print table thead th:nth-child(2),
   .invoice-print table tbody td:nth-child(2) {
-    width: 15% !important;
+    width: 5rem !important; /* Fixed width w-20 equivalent */
     text-align: right !important;
+    font-variant-numeric: tabular-nums !important; /* Fixed-width numbers */
   }
 
   .invoice-print table thead th:nth-child(3),
   .invoice-print table tbody td:nth-child(3) {
-    width: 15% !important;
+    width: 6rem !important; /* Fixed width w-24 equivalent */
     text-align: right !important;
     white-space: nowrap !important; /* Keep "$22 / hour" on one line */
+    font-variant-numeric: tabular-nums !important; /* Fixed-width numbers */
   }
 
   .invoice-print table thead th:nth-child(4),
   .invoice-print table tbody td:nth-child(4) {
-    width: 15% !important;
+    width: 6rem !important; /* Fixed width w-24 equivalent for better alignment */
     text-align: right !important;
     font-weight: 600 !important; /* Bold totals */
+    font-variant-numeric: tabular-nums !important; /* Fixed-width numbers */
+    padding-right: 1rem !important; /* Match body cell padding exactly */
   }
 
   /* Keep totals section together */
@@ -356,10 +367,11 @@
     position: static !important;
     display: block !important;
     font-size: 24pt !important; /* Larger like second example */
-    font-weight: 900 !important; /* Extra bold */
+    font-weight: 700 !important; /* Reduced from 900 to prevent overpowering */
     text-align: left !important;
-    margin-bottom: 2cm !important; /* More space */
-    letter-spacing: 0.05em !important; /* Subtle tracking for professionalism */
+    margin-top: 0.5rem !important; /* Trim top padding to ~40px total */
+    margin-bottom: 1.5rem !important; /* 24px space below */
+    letter-spacing: 0.5px !important; /* Improved tracking */
     border-bottom: none !important; /* No line for minimalism */
     color: #000 !important;
   }
@@ -377,16 +389,20 @@
   /* Header grid wrapper styling */
   .invoice-print .grid.auto-cols-fr {
     grid-template-columns: 1fr 1fr auto auto auto !important; /* From, To, Invoice ID, Sent on, Paid on */
-    column-gap: 1.5rem !important; /* Even spacing between columns */
+    column-gap: 1.25rem !important; /* 20px breathing room between columns */
     row-gap: 0.4rem !important; /* Minimal row gap */
-    align-items: start !important; /* Top-align content */
-    margin-bottom: 1.5cm !important; /* Space before table */
+    align-items: start !important; /* Start align for proper baseline */
+    margin-bottom: 1.5rem !important; /* 24px gap before table */
+    line-height: 1.25 !important; /* Consistent row height */
   }
 
-  /* Labels should be normal weight, only company names bold - target header grid only */
+  /* Labels should be medium weight with tracking - target header grid only */
   .invoice-print .grid.auto-cols-fr > div > *:first-child {
-    font-weight: 400 !important; /* Normal weight for "From", "To", etc labels */
-    margin-bottom: 0.3em !important;
+    font-weight: 500 !important; /* Medium weight for better hierarchy */
+    margin-bottom: 0.25rem !important; /* 4px space below labels */
+    text-transform: uppercase !important; /* Small caps effect */
+    letter-spacing: 0.5px !important; /* Wide tracking for scan-ability */
+    font-size: 9pt !important; /* Slightly smaller for hierarchy */
   }
 
   .invoice-print .invoice-from {
@@ -436,14 +452,14 @@
   /* Style addresses - only target the header grid, not table */
   .invoice-print .grid.auto-cols-fr > div {
     font-weight: 400 !important; /* Normal weight for header content */
-    line-height: 1.45 !important; /* Tighter line spacing */
+    line-height: 1.4 !important; /* Consistent line spacing */
   }
 
   .invoice-print .grid.auto-cols-fr > div * {
     color: #000 !important;
     font-size: 10pt !important;
     font-weight: 400 !important; /* Normal weight for all nested elements */
-    line-height: 1.45 !important;
+    line-height: 1.4 !important; /* Consistent spacing */
     margin: 0 !important;
   }
 
@@ -460,7 +476,12 @@
   .invoice-print .grid.auto-cols-fr > div:nth-child(5) {
     text-align: left !important;
     font-size: 10pt !important;
-    line-height: 1.4 !important;
+    line-height: 1.2 !important; /* Tighter line-height for shared baseline */
+    align-self: start !important; /* Ensure all meta items align at same baseline */
+    vertical-align: top !important; /* Consistent vertical positioning */
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important; /* Start alignment for consistency */
   }
 
   .invoice-print .invoice-number,
@@ -506,9 +527,11 @@
     box-shadow: none !important;
     border-radius: 0 !important;
     padding: 0 !important;
+    padding-right: 0 !important; /* No right padding */
     margin: 0 0 0 auto !important;
-    width: 25% !important; /* Tighter like second */
+    width: 6rem !important; /* Match last column width exactly */
     float: right !important;
+    text-align: right !important; /* Right-align flush with last table column */
   }
 
   /* Stronger Card override with higher specificity */
@@ -542,10 +565,21 @@
     border-bottom: 1px dashed #000 !important; /* Dashed like second */
     border-top: none !important;
     padding: 0.4em 0 !important;
-    font-size: 11pt !important;
-    font-weight: 700 !important;
+    font-size: 11pt !important; /* Same as body text */
     background: transparent !important;
-    margin-top: 8px !important;
+    margin-top: 1.5rem !important; /* 24px breathing space */
+  }
+
+  /* Total label and amount styling */
+  .invoice-print .invoice-totals > div:last-child strong {
+    font-weight: 700 !important; /* Bold for "TOTAL" label */
+    text-transform: uppercase !important; /* Consistent with table headers */
+    letter-spacing: 0.5px !important; /* Subtle tracking */
+  }
+
+  .invoice-print .invoice-totals > div:last-child span {
+    font-weight: 700 !important; /* Bold for amount to match label */
+    font-variant-numeric: tabular-nums !important; /* Consistent number spacing */
   }
 
   .invoice-print .invoice-totals [data-orientation="horizontal"] {
@@ -635,9 +669,10 @@
     row-gap: 1.5em !important;
   }
 
-  /* Fill page if short */
+  /* Fill page if short with proper bottom margin */
   .invoice-print {
     padding: 0 !important;
+    padding-bottom: 2rem !important; /* 32px bottom margin so content never crowds page edge */
     min-height: 85vh !important;
   }
 }
