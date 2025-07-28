@@ -180,7 +180,6 @@ class PurgeSeedData
 
     def purge_user!(user)
       user.user_compliance_infos.each do |user_compliance_info|
-        user_compliance_info.tax_documents.each(&:destroy!)
         user_compliance_info.destroy!
       end
       WiseRecipient.where(user:).find_each do |wise_recipient|
