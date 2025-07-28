@@ -326,7 +326,16 @@ const BankAccountsSection = () => {
   return (
     <div className="grid gap-4">
       <div className="text-base font-bold">Payout method</div>
-      {bankAccounts.length === 0 && (user.roles.investor || user.roles.worker) ? (
+      {isFromSanctionedCountry ? (
+        <Alert variant="destructive">
+          <AlertTriangle className="size-4" />
+          <AlertTitle>Payouts are disabled</AlertTitle>
+          <AlertDescription>
+            Unfortunately, due to regulatory restrictions and compliance with international sanctions, individuals from
+            sanctioned countries are unable to receive payments through our platform.
+          </AlertDescription>
+        </Alert>
+      ) : bankAccounts.length === 0 && (user.roles.investor || user.roles.worker) ? (
         <Placeholder icon={CircleDollarSign}>
           <p>Set up your bank account to receive payouts.</p>
           <Button onClick={() => setAddingBankAccount(true)}>
@@ -338,89 +347,74 @@ const BankAccountsSection = () => {
         <>
           <Card>
             <CardContent className="px-0">
-              {isFromSanctionedCountry ? (
-                <div>
-                  <Alert variant="destructive">
-                    <AlertTriangle className="size-4" />
-                    <AlertTitle>Payouts are disabled</AlertTitle>
-                    <AlertDescription>
-                      Unfortunately, due to regulatory restrictions and compliance with international sanctions,
-                      individuals from sanctioned countries are unable to receive payments through our platform.
-                    </AlertDescription>
-                  </Alert>
-                </div>
-              ) : (
-                <>
-                  {bankAccounts.map((bankAccount, index) => (
-                    <Fragment key={bankAccount.id}>
-                      <div className="flex justify-between px-4">
-                        <div>
-                          <h2 className="text-base font-semibold">{bankAccount.currency} bank account</h2>
-                          <div className="text-sm">Ending in {bankAccount.last_four_digits}</div>
-                          {bankAccounts.length > 1 && bankAccountUsage(bankAccount)}
-                        </div>
-                        <div className="flex flex-wrap items-center gap-3">
-                          {bankAccounts.length > 1 ? (
-                            <>
-                              {bankAccount.id !== bankAccountForInvoices && (
-                                <MutationButton
-                                  size="small"
-                                  idleVariant="outline"
-                                  mutation={useBankAccountMutation}
-                                  param={{ bankAccountId: bankAccount.id, useFor: "invoices" as const }}
-                                  loadingText={
-                                    useBankAccountMutation.variables?.bankAccountId === bankAccount.id
-                                      ? "Updating..."
-                                      : undefined
-                                  }
-                                >
-                                  Use for invoices
-                                </MutationButton>
-                              )}
-
-                              {bankAccount.id !== bankAccountForDividends && user.roles.investor ? (
-                                <MutationButton
-                                  idleVariant="outline"
-                                  mutation={useBankAccountMutation}
-                                  param={{ bankAccountId: bankAccount.id, useFor: "dividends" as const }}
-                                  loadingText={
-                                    useBankAccountMutation.variables?.bankAccountId === bankAccount.id
-                                      ? "Updating..."
-                                      : undefined
-                                  }
-                                  size="small"
-                                >
-                                  Use for dividends
-                                </MutationButton>
-                              ) : null}
-                            </>
-                          ) : (
-                            <>
-                              <Button variant="outline" onClick={() => setEditingBankAccount(bankAccount)}>
-                                Edit
-                              </Button>
-                              {editingBankAccount ? (
-                                <BankAccountModal
-                                  open={!!editingBankAccount}
-                                  billingDetails={data}
-                                  bankAccount={editingBankAccount}
-                                  onClose={() => setEditingBankAccount(null)}
-                                  onComplete={(result) => {
-                                    Object.assign(editingBankAccount, result);
-                                    setEditingBankAccount(null);
-                                    void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-                                  }}
-                                />
-                              ) : null}
-                            </>
+              {bankAccounts.map((bankAccount, index) => (
+                <Fragment key={bankAccount.id}>
+                  <div className="flex justify-between px-4">
+                    <div>
+                      <h2 className="text-base font-semibold">{bankAccount.currency} bank account</h2>
+                      <div className="text-sm">Ending in {bankAccount.last_four_digits}</div>
+                      {bankAccounts.length > 1 && bankAccountUsage(bankAccount)}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      {bankAccounts.length > 1 ? (
+                        <>
+                          {bankAccount.id !== bankAccountForInvoices && (
+                            <MutationButton
+                              size="small"
+                              idleVariant="outline"
+                              mutation={useBankAccountMutation}
+                              param={{ bankAccountId: bankAccount.id, useFor: "invoices" as const }}
+                              loadingText={
+                                useBankAccountMutation.variables?.bankAccountId === bankAccount.id
+                                  ? "Updating..."
+                                  : undefined
+                              }
+                            >
+                              Use for invoices
+                            </MutationButton>
                           )}
-                        </div>
-                      </div>
-                      {index !== bankAccounts.length - 1 && <Separator />}
-                    </Fragment>
-                  ))}
-                </>
-              )}
+
+                          {bankAccount.id !== bankAccountForDividends && user.roles.investor ? (
+                            <MutationButton
+                              idleVariant="outline"
+                              mutation={useBankAccountMutation}
+                              param={{ bankAccountId: bankAccount.id, useFor: "dividends" as const }}
+                              loadingText={
+                                useBankAccountMutation.variables?.bankAccountId === bankAccount.id
+                                  ? "Updating..."
+                                  : undefined
+                              }
+                              size="small"
+                            >
+                              Use for dividends
+                            </MutationButton>
+                          ) : null}
+                        </>
+                      ) : (
+                        <>
+                          <Button variant="outline" onClick={() => setEditingBankAccount(bankAccount)}>
+                            Edit
+                          </Button>
+                          {editingBankAccount ? (
+                            <BankAccountModal
+                              open={!!editingBankAccount}
+                              billingDetails={data}
+                              bankAccount={editingBankAccount}
+                              onClose={() => setEditingBankAccount(null)}
+                              onComplete={(result) => {
+                                Object.assign(editingBankAccount, result);
+                                setEditingBankAccount(null);
+                                void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+                              }}
+                            />
+                          ) : null}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  {index !== bankAccounts.length - 1 && <Separator />}
+                </Fragment>
+              ))}
               {addingBankAccount ? (
                 <BankAccountModal
                   open={addingBankAccount}
