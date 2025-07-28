@@ -43,6 +43,65 @@
 
 - When adding new rules: Always update both `.cursorrules` and `.github/copilot-instructions.md` to keep them synchronized
 
+- When building UI, use existing components from `frontend/components/` when available:
+
+## UI Components (Shadcn/UI primitives)
+- `Button` - Primary action buttons with variants (default, primary, critical, success, outline, ghost, link)
+- `Input` - Standard text input with prefix/suffix support
+- `Textarea` - Multi-line text input with auto-sizing
+- `Checkbox` - Checkbox input with indeterminate state support
+- `Switch` - Toggle switch component
+- `Badge` - Small status/category indicators
+- `Card` - Container component with header, content, footer sections
+- `Dialog` - Modal dialogs and overlays
+- `Popover` - Floating content containers
+- `DropdownMenu` - Context menus and action menus
+- `Alert` - Status messages and notifications
+- `Progress` - Progress bars and loading indicators
+- `Skeleton` - Loading placeholders
+- `Separator` - Visual dividers
+- `Avatar` - User profile images with fallbacks
+- `Calendar` - Date picker calendar component
+- `Command` - Command palette and search interfaces
+- `Table` - Basic table structure (use DataTable for advanced features)
+- `Form`, `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormMessage` - Form building blocks with validation
+
+## Custom Form Components
+- `ComboBox` - Searchable dropdown with single/multiple selection
+- `NumberInput` - Numeric input with decimal support and formatting
+- `DatePicker` - Date selection with calendar popup
+- `RangeInput` - Range/slider input component
+- `RadioButtons` - Radio button groups
+- `ColorPicker` - Color selection component
+
+## Data Display Components
+- `DataTable` - Feature-rich table with sorting, filtering, pagination, row selection, and context menus
+- `Placeholder` - Empty state component with optional icon and content
+- `Status` - Status indicators with color coding
+- `Delta` - Value change indicators (up/down arrows with colors)
+- `CircularProgress` - Circular progress indicators
+
+## Action Components
+- `MutationButton` - Button that shows loading/success/error states for mutations
+- `CopyButton` - Button that copies content to clipboard
+- `Link` - Enhanced link component with proper styling
+
+## Layout Components
+- `DashboardHeader` - Standard page header for dashboard pages
+- `Tabs` - Tab navigation component
+- `Sidebar` - Navigation sidebar with collapsible sections
+- `Breadcrumb` - Navigation breadcrumbs
+
+## Specialized Components
+- `RichText` - Rich text editor component
+- `GettingStarted` - Onboarding/getting started flows
+- `TableSkeleton` - Loading skeleton specifically for tables
+- `SkeletonList` - Loading skeleton for lists
+
+## Context Menu Actions
+- `ContextMenuActions` - Reusable context menu actions
+- `SelectionActions` - Bulk action components for selected items
+
 - Database schema synchronization:
   - Any changes to the database schema via Rails migrations in `backend/db/migrate/` must be reflected in `frontend/db/schema.ts`
   - The frontend schema file should be updated to match the Rails schema structure for type safety
