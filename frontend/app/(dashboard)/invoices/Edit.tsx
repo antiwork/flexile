@@ -131,7 +131,7 @@ const Edit = () => {
     return List([
       {
         description: "",
-        quantity: (parseInt(searchParams.get("quantity") ?? "", 10) || (data.user.project_based ? 1 : 60)).toString(),
+        quantity: (parseFloat(searchParams.get("quantity") ?? "") || (data.user.project_based ? 1 : 60)).toString(),
         hourly: searchParams.has("hourly") ? searchParams.get("hourly") === "true" : !data.user.project_based,
         pay_rate_in_subunits: parseInt(searchParams.get("rate") ?? "", 10) || (payRateInSubunits ?? 0),
       },
@@ -221,10 +221,13 @@ const Edit = () => {
     );
   };
 
+  const parseQuantity = (value: string | null | undefined) => {
+    const parsed = value ? Number.parseFloat(value) : NaN;
+    return Number.isNaN(parsed) ? 0 : parsed;
+  };
+
   const lineItemTotal = (lineItem: InvoiceFormLineItem) =>
-    Math.ceil(
-      ((parseFloat(lineItem.quantity ?? "0") || 0) / (lineItem.hourly ? 60 : 1)) * lineItem.pay_rate_in_subunits,
-    );
+    Math.ceil((parseQuantity(lineItem.quantity) / (lineItem.hourly ? 60 : 1)) * lineItem.pay_rate_in_subunits);
   const totalExpensesAmountInCents = expenses.reduce((acc, expense) => acc + expense.total_amount_in_cents, 0);
   const totalServicesAmountInCents = lineItems.reduce((acc, lineItem) => acc + lineItemTotal(lineItem), 0);
   const totalInvoiceAmountInCents = totalServicesAmountInCents + totalExpensesAmountInCents;
@@ -239,7 +242,7 @@ const Edit = () => {
         const updated = { ...assertDefined(lineItem), ...update };
         updated.errors = [];
         if (updated.description.length === 0) updated.errors.push("description");
-        if (!updated.quantity || parseFloat(updated.quantity) < 0.01) updated.errors.push("quantity");
+        if (!updated.quantity || parseQuantity(updated.quantity) < 0.01) updated.errors.push("quantity");
         return updated;
       }),
     );
@@ -348,7 +351,7 @@ const Edit = () => {
                   </TableCell>
                   <TableCell>
                     <QuantityInput
-                      value={item.quantity ? { quantity: parseFloat(item.quantity), hourly: item.hourly } : null}
+                      value={item.quantity ? { quantity: parseQuantity(item.quantity), hourly: item.hourly } : null}
                       aria-label="Hours / Qty"
                       aria-invalid={item.errors?.includes("quantity")}
                       onChange={(value) =>
