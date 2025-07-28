@@ -415,18 +415,6 @@ const BankAccountsSection = () => {
                   {index !== bankAccounts.length - 1 && <Separator />}
                 </Fragment>
               ))}
-              {addingBankAccount ? (
-                <BankAccountModal
-                  open={addingBankAccount}
-                  billingDetails={data}
-                  onClose={() => setAddingBankAccount(false)}
-                  onComplete={(result) => {
-                    setBankAccounts((prev) => [...prev, result]);
-                    setAddingBankAccount(false);
-                    void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-                  }}
-                />
-              ) : null}
             </CardContent>
           </Card>
           {user.roles.investor || user.roles.worker ? (
@@ -438,6 +426,19 @@ const BankAccountsSection = () => {
             </div>
           ) : null}
         </>
+      ) : null}
+
+      {addingBankAccount ? (
+        <BankAccountModal
+          open={addingBankAccount}
+          billingDetails={data}
+          onClose={() => setAddingBankAccount(false)}
+          onComplete={(result) => {
+            setBankAccounts((prev) => [...prev, result]);
+            setAddingBankAccount(false);
+            void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+          }}
+        />
       ) : null}
     </div>
   );
