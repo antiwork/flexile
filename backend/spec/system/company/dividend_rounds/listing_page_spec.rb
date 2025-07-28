@@ -53,7 +53,7 @@ RSpec.describe "Dividend Rounds listing page" do
     end
 
     it "shows the 'Grants' tab when the relevant feature is enabled" do
-      company.update!(equity_grants_enabled: true)
+      company.update!(equity_enabled: true)
       sign_in user
 
       visit spa_company_dividend_rounds_path(company.external_id)

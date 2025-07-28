@@ -40,7 +40,7 @@ RSpec.describe CreateOrUpdateInvoiceService do
   end
   let(:expected_total_amount_in_cents) { 14101 }
 
-  before { company.update!(equity_compensation_enabled: true) }
+  before { company.update!(equity_enabled: true) }
 
   shared_examples "common invoice failure specs" do |expected_invoices_count:|
     it "allows creating an invoice with empty notes" do
@@ -148,7 +148,7 @@ RSpec.describe CreateOrUpdateInvoiceService do
 
       it "does not apply an equity split if the feature is not enabled" do
         contractor.update!(equity_percentage: 60)
-        company.update!(equity_compensation_enabled: false)
+        company.update!(equity_enabled: false)
 
         expect do
           result = invoice_service.process

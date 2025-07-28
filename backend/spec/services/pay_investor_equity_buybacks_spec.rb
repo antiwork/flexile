@@ -2,7 +2,7 @@
 
 RSpec.describe PayInvestorEquityBuybacks, :vcr do
   let(:company) do
-    create(:company, tender_offers_enabled: true)
+    create(:company, equity_enabled: true)
   end
   let(:user) { create(:user, :without_compliance_info) }
   let!(:user_compliance_info) { create(:user_compliance_info, user:, tax_id_status: UserComplianceInfo::TAX_ID_STATUS_VERIFIED, tax_information_confirmed_at: 1.day.ago) }
@@ -75,7 +75,7 @@ RSpec.describe PayInvestorEquityBuybacks, :vcr do
   end
 
   it "raises an exception if the company does not have access to the feature" do
-    company.update!(tender_offers_enabled: false)
+    company.update!(equity_enabled: false)
 
     expect do
       described_class.new(company_investor, equity_buybacks).process
