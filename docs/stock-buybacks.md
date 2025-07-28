@@ -6,8 +6,8 @@
 - [Creating Tender Offers](#creating-tender-offers)
 - [Processing Tender Offers](#processing-tender-offers)
   - [Calculating Equilibrium Price](#calculating-equilibrium-price)
-  - [Generating Equity Buybacks](#generating-equity-buybacks)
-  - [Notifying Investors](#notifying-investors)
+  - [Viewing Buyback Results](#viewing-buyback-results)
+  - [Finalizing Equity Buybacks](#finalizing-equity-buybacks)
 
 ## Getting Started
 
@@ -25,14 +25,17 @@ heroku run rails console -a flexile
 Company.find(COMPANY_ID).update!(stock_buybacks_allowed: true)
 ```
 
-### Create a New Tender Offer
+### Create a New Buyback
+
+#### Tender Offer
 
 ```ruby
 company = Company.find(COMPANY_ID)
+investors = company.company_investors.joins(:user).where(users: { email: [INVESTOR_EMAIL] }).pluck(:external_id)
 result = CreateTenderOffer.new(
   company: company,
   attributes: {
-    buyback_type: "tender_offer", # tender_offer | single_stock
+    buyback_type: "tender_offer",
     name: "Q4 2024 Stock Buyback",
     starts_at: Date.current,
     ends_at: 30.days.from_now,
@@ -41,7 +44,33 @@ result = CreateTenderOffer.new(
     attachment: File.open(Rails.root.join("spec/fixtures/files/sample.zip")),
     letter_of_transmittal: File.open(Rails.root.join("spec/fixtures/files/sample.pdf")),
     minimum_valuation: 10_000_000_000
-  }
+  },
+  investor_ids: investors
+).perform
+
+tender_offer = result[:tender_offer] if result[:success]
+```
+
+#### Single Stock Repurchase
+
+```ruby
+company = Company.find(COMPANY_ID)
+investor = company.company_investors.joins(:user).find_by(users: { email: INVESTOR_EMAIL })&.external_id
+
+result = CreateTenderOffer.new(
+  company: company,
+  attributes: {
+    buyback_type: "single_stock",
+    name: "Single stock purchase from Investor",
+    starts_at: Date.current,
+    ends_at: 30.days.from_now,
+    total_amount_in_cents: 1_000_000_00,
+    number_of_shares: 100_000,
+    attachment: File.open(Rails.root.join("spec/fixtures/files/sample.zip")),
+    letter_of_transmittal: File.open(Rails.root.join("spec/fixtures/files/sample.pdf")),
+    minimum_valuation: 10_000_000_000
+  },
+  investor_ids: [investor].compact
 ).perform
 
 tender_offer = result[:tender_offer] if result[:success]
@@ -74,52 +103,7 @@ equilibrium_price = calculator.perform
 - Updates `accepted_shares` for each bid
 - Sets the `accepted_price_cents` on the tender offer
 
-### Generating Equity Buybacks
-
-**Manual step**:
-
-After calculating the equilibrium price, generate the equity buybacks:
-
-```ruby
-tender_offer = TenderOffer.find(TENDER_OFFER_ID)
-generator = TenderOffers::GenerateEquityBuybacks.new(tender_offer: tender_offer)
-generator.perform
-```
-
-**What this does**:
-
-- Creates an `equity_buyback_round` for the tender offer
-- For each accepted bid, creates `equity_buyback` records
-- Marks securities as sold in the system
-
-### Notifying Investors
-
-**Manual step**:
-
-Send the closing notification emails:
-
-```ruby
-tender_offer = TenderOffer.find(TENDER_OFFER_ID)
-company_investors_with_bids = CompanyInvestor.joins(:tender_offer_bids)
-                                            .where(tender_offer_bids: { tender_offer_id: tender_offer.id })
-                                            .distinct
-
-company_investors_with_bids.each do |investor|
-  CompanyInvestorMailer.tender_offer_closed(
-    investor.id,
-    tender_offer_id: tender_offer.id
-  ).deliver_now
-end
-```
-
-**What investors receive**:
-
-- Email with results of the tender offer
-- Number of shares sold
-- Price per share
-- Total amount received
-
-### Viewing Tender Offer Results
+### Viewing Buyback Results
 
 ```ruby
 tender_offer = TenderOffer.find(TENDER_OFFER_ID)
@@ -129,24 +113,44 @@ puts "Total Bids: #{tender_offer.bids.count}"
 puts "Accepted Bids: #{tender_offer.bids.where('accepted_shares > 0').count}"
 ```
 
-### Processing Payments
+### Finalizing Equity Buybacks
+
+After equilibrium price has been calculated, run the finalize service:
 
 ```ruby
 tender_offer = TenderOffer.find(TENDER_OFFER_ID)
-equity_buyback_round = tender_offer.equity_buyback_round
-
-delay = 0
-equity_buyback_round.equity_buybacks.each do |equity_buyback|
-  investor = equity_buyback.company_investor
-  user = investor.user
-
-  next if !user.has_verified_tax_id? ||
-          user.restricted_payout_country_resident? ||
-          user.sanctioned_country_resident? ||
-          user.tax_information_confirmed_at.nil? ||
-          !investor.completed_onboarding?
-
-  InvestorEquityBuybacksPaymentJob.perform_in((delay * 2).seconds, equity_buyback.id)
-  delay += 1
-end
+TenderOffers::FinalizeBuyback.new(tender_offer: tender_offer).perform
 ```
+
+**What this does**:
+
+#### Generates equity buybacks
+
+- Creates an `equity_buyback_round` for the tender offer
+- For each accepted bid, creates `equity_buyback` records
+- Marks securities as sold in the system
+
+#### Processes Payments
+
+Payments are queued for processing. Only investors who meet specific requirements will receive payment:
+
+- User has verified tax ID
+- User is not a restricted payout country resident
+- User is not a sanctioned country resident
+- User has confirmed tax information
+- Investor has completed onboarding
+
+#### Updates cap table
+
+- For equity grants (options): reduces vested shares and increases forfeited shares
+- For share holdings: reduces the number of shares held by investors
+- Updates company's total fully diluted shares count
+- Updates option pool's issued shares count
+- Regenerates share certificates for affected investors
+
+#### Notifies investors with closing information
+
+- Email with results of the tender offer
+- Number of shares sold
+- Price per share
+- Total amount received

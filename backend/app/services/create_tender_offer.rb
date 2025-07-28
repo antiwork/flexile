@@ -15,7 +15,7 @@ class CreateTenderOffer
       company_investors.each do |company_investor|
         tender_offer.tender_offer_investors.build(company_investor: company_investor)
       end
-    else
+    elsif tender_offer.tender_offer_investors.empty? && tender_offer.buyback_type != "single_stock"
       @company.company_investors.each do |company_investor|
         tender_offer.tender_offer_investors.build(company_investor: company_investor)
       end
