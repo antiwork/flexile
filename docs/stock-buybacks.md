@@ -83,7 +83,7 @@ tender_offer = result[:tender_offer] if result[:success]
 
 ```ruby
 company = Company.find(COMPANY_ID)
-tender_offer = company.tender_offers.find_by(external_id: TENDER_OFFER_ID)
+tender_offer = company.tender_offers.find(TENDER_OFFER_ID)
 investor = company.company_investors.joins(:user).find_by(users: { email: INVESTOR_EMAIL })
 
 bid = tender_offer.bids.create!(
@@ -97,7 +97,7 @@ bid = tender_offer.bids.create!(
 ### View Bids for a Tender Offer
 
 ```ruby
-tender_offer = TenderOffer.find_by(external_id: TENDER_OFFER_ID)
+tender_offer = TenderOffer.find(TENDER_OFFER_ID)
 tender_offer.bids.includes(company_investor: :user).each do |bid|
   puts "#{bid.company_investor.user.email}: #{bid.number_of_shares} shares at $#{bid.share_price_cents / 100.0}"
 end
@@ -106,7 +106,7 @@ end
 ### Remove a Bid
 
 ```ruby
-bid = TenderOfferBid.find_by(external_id: BID_ID)
+bid = TenderOfferBid.find(BID_ID)
 bid.destroy
 ```
 
