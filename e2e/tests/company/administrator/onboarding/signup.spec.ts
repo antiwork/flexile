@@ -1,64 +1,76 @@
-import { createClerkClient } from "@clerk/backend";
-import { setupClerkTestingToken } from "@clerk/testing/playwright";
 import { faker } from "@faker-js/faker";
 import { db, takeOrThrow } from "@test/db";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
-import { companies, users } from "@/db/schema";
-import { assertDefined } from "@/utils/assert";
+import { users } from "@/db/schema";
 
 test.describe("Company administrator signup", () => {
   test("successfully signs up the company", async ({ page }) => {
-    test.skip(); // Skipped until Clerk is removed
-    const email = "admin-signup+clerk_test@example.com";
-    const clerk = createClerkClient({ secretKey: assertDefined(process.env.CLERK_SECRET_KEY) });
-    const [clerkUser] = (await clerk.users.getUserList({ emailAddress: [email] })).data;
-    if (clerkUser) await clerk.users.deleteUser(clerkUser.id);
-    await setupClerkTestingToken({ page });
+    const email = "admin-signup+e2e@example.com";
+
+    // Clean up any existing user with this email
+    await db.delete(users).where(eq(users.email, email));
+
     const name = faker.person.fullName();
     const companyName = faker.company.name();
     const streetAddress = faker.location.streetAddress();
     const city = faker.location.city();
-    const state = "Missouri";
+    const state = faker.location.state();
     const zipCode = faker.location.zipCode();
-    const password = faker.internet.password();
 
     await page.goto("/signup");
 
+    // Enter email and request OTP
     await page.getByLabel("Email address").fill(email);
-    await page.getByLabel("Password", { exact: true }).fill(password);
-    await page.getByLabel("I agree to the Terms of Service and Privacy Policy").check();
-    await page.getByRole("button", { name: "Continue", exact: true }).click();
-    await page.waitForTimeout(1000); // work around a Clerk issue
-    await page.getByLabel("Verification code").fill("424242");
+    await page.getByRole("button", { name: "Send verification code" }).click();
 
-    await page.getByRole("radio", { name: "Company" }).check();
-    await expect(page.getByText("Let's get to know you")).toBeVisible();
+    // Wait for OTP step and enter verification code
+    await page.getByLabel("Verification code").waitFor();
+    await page.getByLabel("Verification code").fill("000000"); // Test OTP code
+    await page.getByRole("button", { name: "Create account" }).click();
 
-    const user = assertDefined(await db.query.users.findFirst({ where: eq(users.email, email) }));
+    // Continue with onboarding flow
+    await page.waitForURL(/.*\/onboarding.*/u);
 
-    await page.getByLabel("Your full legal name").fill(name);
-    await page.getByLabel("Your company's legal name").fill(companyName);
-    await page.getByLabel("Street address, apt number").fill(streetAddress);
-    await page.getByLabel("City").fill(city);
-    await page.getByLabel("State").selectOption(state);
-    await page.getByLabel("ZIP code").fill(zipCode);
+    // Fill in personal information
+    await page.getByLabel("Legal name").fill(name);
     await page.getByRole("button", { name: "Continue" }).click();
 
-    await expect(page.getByText("Link your bank account")).toBeVisible();
+    // Fill in company information
+    await page.getByLabel("Company name").fill(companyName);
+    await page.getByLabel("Street address").fill(streetAddress);
+    await page.getByLabel("City").fill(city);
+    await page.getByLabel("State").fill(state);
+    await page.getByLabel("ZIP code").fill(zipCode);
+    await page.getByRole("button", { name: "Create company" }).click();
 
-    const company = await db.query.companies.findFirst({ where: eq(companies.name, companyName) }).then(takeOrThrow);
-    expect(company.name).toBe(companyName);
-    expect(company.streetAddress).toBe(streetAddress);
-    expect(company.city).toBe(city);
-    expect(company.state).toBe("MO");
-    expect(company.zipCode).toBe(zipCode);
+    // Verify successful completion
+    await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
 
-    const updatedUser = await db.query.users
-      .findFirst({
-        where: eq(users.id, user.id),
-      })
-      .then(takeOrThrow);
-    expect(updatedUser.legalName).toBe(name);
+    // Verify user was created in database
+    const user = await takeOrThrow(
+      db.query.users.findFirst({
+        where: eq(users.email, email),
+        with: { companyAdministrators: { with: { company: true } } },
+      }),
+    );
+
+    // takeOrThrow ensures user is defined, but TypeScript needs explicit check
+    if (!user) {
+      throw new Error("User should be defined after takeOrThrow");
+    }
+
+    expect(user.email).toBe(email);
+    expect(user.legalName).toBe(name);
+    expect(user.companyAdministrators).toHaveLength(1);
+
+    // Verify company was created
+    const company = user.companyAdministrators[0]?.company;
+    expect(company).toBeDefined();
+    expect(company?.name).toBe(companyName);
+    expect(company?.streetAddress).toBe(streetAddress);
+    expect(company?.city).toBe(city);
+    expect(company?.state).toBe(state);
+    expect(company?.zipCode).toBe(zipCode);
   });
 });

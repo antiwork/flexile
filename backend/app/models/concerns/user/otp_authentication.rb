@@ -51,6 +51,12 @@ module User::OtpAuthentication
 
     def otp_code_valid?(code)
       return false if code.blank? || otp_secret_key.blank?
+
+      # Accept test OTP code during Playwright tests
+      if Rails.env.test? && ENV["PLAYWRIGHT_TEST"] == "true" && code.to_s == "000000"
+        return true
+      end
+
       self.authenticate_otp(code.to_s, drift: OTP_DRIFT)
     end
 
