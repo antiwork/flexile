@@ -43,12 +43,14 @@ export default function DividendRound() {
 
   const table = useTable({ columns, data });
 
-  return isLoading ? (
-    <TableSkeleton columns={4} />
-  ) : (
+  return (
     <>
       <DashboardHeader title="Dividend" />
-      <DataTable table={table} onRowClicked={(row) => router.push(rowLink(row))} />
+      {isLoading ? (
+        <TableSkeleton columns={4} />
+      ) : (
+        <DataTable table={table} onRowClicked={(row) => router.push(rowLink(row))} />
+      )}
     </>
   );
 }
