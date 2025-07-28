@@ -88,7 +88,7 @@ export default function AdminsPage() {
           }
 
           const isCurrentUserRow = currentUser.email === user.email;
-          const isLoadingRevoke = revokeAdminMutation.isPending && revokeAdminMutation.variables?.userId === user.id;
+          const isLoadingRevoke = revokeAdminMutation.isPending && revokeAdminMutation.variables.userId === user.id;
           const adminCount = users.filter((u) => u.isAdmin).length;
           const isLastAdmin = adminCount === 1 && user.isAdmin;
 

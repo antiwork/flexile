@@ -356,7 +356,7 @@ const Edit = () => {
                       aria-invalid={item.errors?.includes("quantity")}
                       onChange={(value) =>
                         updateLineItem(rowIndex, {
-                          quantity: value?.quantity?.toString() ?? null,
+                          quantity: value?.quantity.toString() ?? null,
                           hourly: value?.hourly ?? false,
                         })
                       }
