@@ -4,6 +4,7 @@
 
 - [Getting Started](#getting-started)
 - [Creating Tender Offers](#creating-tender-offers)
+- [Placing Bids](#placing-bids)
 - [Processing Tender Offers](#processing-tender-offers)
   - [Calculating Equilibrium Price](#calculating-equilibrium-price)
   - [Viewing Buyback Results](#viewing-buyback-results)
@@ -39,11 +40,11 @@ result = CreateTenderOffer.new(
     name: "Q4 2024 Stock Buyback",
     starts_at: Date.current,
     ends_at: 30.days.from_now,
-    total_amount_in_cents: 1_000_000_00,
+    total_amount_in_cents: 20_000_000,
     number_of_shares: 100_000,
     attachment: File.open(Rails.root.join("spec/fixtures/files/sample.zip")),
     letter_of_transmittal: File.open(Rails.root.join("spec/fixtures/files/sample.pdf")),
-    minimum_valuation: 10_000_000_000
+    minimum_valuation: 20_000_000
   },
   investor_ids: investors
 ).perform
@@ -64,16 +65,49 @@ result = CreateTenderOffer.new(
     name: "Single stock purchase from Investor",
     starts_at: Date.current,
     ends_at: 30.days.from_now,
-    total_amount_in_cents: 1_000_000_00,
+    total_amount_in_cents: 20_000_000,
     number_of_shares: 100_000,
     attachment: File.open(Rails.root.join("spec/fixtures/files/sample.zip")),
     letter_of_transmittal: File.open(Rails.root.join("spec/fixtures/files/sample.pdf")),
-    minimum_valuation: 10_000_000_000
+    minimum_valuation: 20_000_000
   },
   investor_ids: [investor].compact
 ).perform
 
 tender_offer = result[:tender_offer] if result[:success]
+```
+
+## Placing Bids
+
+### Create a Bid
+
+```ruby
+company = Company.find(COMPANY_ID)
+tender_offer = company.tender_offers.find_by(external_id: TENDER_OFFER_ID)
+investor = company.company_investors.joins(:user).find_by(users: { email: INVESTOR_EMAIL })
+
+bid = tender_offer.bids.create!(
+  company_investor: investor,
+  number_of_shares: 1000,
+  share_price_cents: 100 * 100,
+  share_class: "common"
+)
+```
+
+### View Bids for a Tender Offer
+
+```ruby
+tender_offer = TenderOffer.find_by(external_id: TENDER_OFFER_ID)
+tender_offer.bids.includes(company_investor: :user).each do |bid|
+  puts "#{bid.company_investor.user.email}: #{bid.number_of_shares} shares at $#{bid.share_price_cents / 100.0}"
+end
+```
+
+### Remove a Bid
+
+```ruby
+bid = TenderOfferBid.find_by(external_id: BID_ID)
+bid.destroy
 ```
 
 ## Processing Tender Offers

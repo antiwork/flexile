@@ -12,7 +12,7 @@ class TenderOfferBid < ApplicationRecord
   validates :share_class, presence: true
   validate :tender_offer_must_be_open, on: [:create]
   validate :share_price_must_be_valid, on: [:create]
-  validate :single_stock_bids_must_not_exceed_total_amount, on: [:create, :update]
+  validate :single_stock_bids_must_not_exceed_total_amount, on: [:create]
   before_destroy do
     tender_offer_must_be_open
     throw(:abort) if errors.present?
@@ -46,6 +46,8 @@ class TenderOfferBid < ApplicationRecord
       end
 
       if tender_offer.minimum_valuation
+        return if tender_offer.company.fully_diluted_shares.zero?
+
         starting_price_cents = (tender_offer.minimum_valuation / tender_offer.company.fully_diluted_shares) * 100
         if share_price_cents < starting_price_cents
           formatted_price = Money.from_cents(starting_price_cents, :usd).format(symbol: true)
