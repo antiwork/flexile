@@ -30,5 +30,4 @@ tmp
 .vscode
 .idea
 
-certificates/flexile.dev
-certificates/api.flexile.dev
+certificates/
