@@ -402,8 +402,8 @@ test.describe("One-off payments", () => {
       await expect(page.locator("tbody")).toBeVisible();
 
       const invoiceRow = await findRequiredTableRow(page, {
-        "Invoice ID": "O-0002",
-        Amount: "$500.00",
+        Amount: "$500",
+        Status: "Failed",
       });
 
       await invoiceRow.getByRole("button", { name: "Pay again" }).click();
