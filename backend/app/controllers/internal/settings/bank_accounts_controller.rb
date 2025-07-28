@@ -6,11 +6,12 @@ class Internal::Settings::BankAccountsController < Internal::Settings::BaseContr
   before_action :load_bank_account!, only: [:update]
 
   def index
+    authorize :bank_account
     render json: Settings::BankAccountsPresenter.new(Current.user).props
   end
 
   def create
-    authorize :onboarding
+    authorize :bank_account
 
     recipient_service = Recipient::CreateService.new(
       user: Current.user,
@@ -21,6 +22,7 @@ class Internal::Settings::BankAccountsController < Internal::Settings::BaseContr
   end
 
   def update
+    authorize :bank_account
     user = Current.user
     ApplicationRecord.transaction do
       if bank_account_params[:used_for_invoices]
