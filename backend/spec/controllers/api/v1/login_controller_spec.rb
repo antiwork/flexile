@@ -7,7 +7,7 @@ RSpec.describe Api::V1::LoginController, type: :controller do
     let(:user) { create(:user) }
     let(:api_token) { GlobalConfig.get("API_SECRET_TOKEN", Rails.application.secret_key_base) }
     let(:valid_otp) { user.otp_code }
-    let(:invalid_otp) { "000000" }
+    let(:invalid_otp) { "999999" }
     let(:expired_otp) { "123456" }
 
     context "with valid parameters" do

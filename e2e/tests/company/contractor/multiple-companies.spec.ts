@@ -1,10 +1,9 @@
-import { clerk } from "@clerk/testing/playwright";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker } from "@test/helpers";
-import { login } from "@test/helpers/auth";
+import { login, logout } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
 
@@ -46,7 +45,7 @@ test.describe("Contractor for multiple companies", () => {
     await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
     await expect(page.getByRole("cell").filter({ hasText: "Alex" })).toBeVisible();
 
-    await clerk.signOut({ page });
+    await logout(page);
     await login(page, contractorUser);
     await page.getByRole("button", { name: "Switch company" }).click();
     await page.getByRole("menuitem", { name: "Second Company" }).click();

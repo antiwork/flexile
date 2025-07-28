@@ -89,7 +89,7 @@ RSpec.describe Api::V1::SignupController, type: :controller do
       it "returns unauthorized" do
         post :verify_and_create, params: {
           email: email,
-          otp_code: "000000",
+          otp_code: "999999",
           token: api_token,
         }
 
