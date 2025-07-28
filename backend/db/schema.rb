@@ -296,28 +296,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_17_153309) do
     t.index ["consolidated_invoice_id"], name: "index_consolidated_payments_on_consolidated_invoice_id"
   end
 
-  create_table "contracts", force: :cascade do |t|
-    t.datetime "signed_at"
-    t.bigint "company_contractor_id"
-    t.bigint "company_administrator_id", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.string "contractor_signature"
-    t.string "administrator_signature", null: false
-    t.string "name", null: false
-    t.bigint "equity_grant_id"
-    t.jsonb "json_data"
-    t.bigint "company_id", null: false
-    t.bigint "user_id", null: false
-    t.boolean "equity_options_plan", default: false, null: false
-    t.boolean "certificate", default: false, null: false
-    t.index ["company_administrator_id"], name: "index_contracts_on_company_administrator_id"
-    t.index ["company_contractor_id"], name: "index_contracts_on_company_contractor_id"
-    t.index ["company_id"], name: "index_contracts_on_company_id"
-    t.index ["equity_grant_id"], name: "index_contracts_on_equity_grant_id"
-    t.index ["user_id"], name: "index_contracts_on_user_id"
-  end
-
   create_table "convertible_investments", force: :cascade do |t|
     t.bigint "company_id", null: false
     t.bigint "company_valuation_in_dollars", null: false
