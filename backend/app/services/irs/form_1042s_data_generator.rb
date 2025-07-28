@@ -35,7 +35,7 @@ class Irs::Form1042sDataGenerator < Irs::BaseFormDataGenerator
                                                              {
                                                                company:,
                                                                year: tax_year,
-                                                               name: TaxDocument::FORM_1042_S,
+                                                               name: Document::FORM_1042_S,
                                                                deleted_at: nil,
                                                                document_type: :tax_document,
                                                              })

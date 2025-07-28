@@ -4,7 +4,7 @@ import { createUpdateSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
-import { activeStorageAttachments, activeStorageBlobs, companies } from "@/db/schema";
+import { activeStorageAttachments, activeStorageBlobs, companies, companyAdministrators, users } from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 import {
   company_administrator_stripe_microdeposit_verifications_url,
@@ -35,6 +35,40 @@ export const companiesRouter = createRouter({
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
     return pick(ctx.company, ["taxId", "brandColor", "website", "name", "phoneNumber"]);
+  }),
+
+  listAdministrators: companyProcedure.input(z.object({ companyId: z.string() })).query(async ({ ctx }) => {
+    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+
+    // Fetch only administrators for this company
+    const admins = await db.query.companyAdministrators.findMany({
+      where: eq(companyAdministrators.companyId, ctx.company.id),
+      with: { user: true },
+      orderBy: companyAdministrators.id, // Order by ID to match Rails primary_admin logic
+    });
+
+    // Get the primary admin (owner) - first admin by ID (matches Rails primary_admin logic)
+    const primaryAdmin = admins.length > 0 ? admins[0] : null;
+
+    // Format the admin users
+    const results = admins.map((admin) => {
+      const isOwner = primaryAdmin?.userId === admin.user.id;
+
+      return {
+        id: admin.user.externalId,
+        email: admin.user.email,
+        name: admin.user.legalName || admin.user.preferredName || admin.user.email,
+        isAdmin: true,
+        role: isOwner ? "Owner" : "Admin",
+        isOwner,
+      };
+    });
+
+    // Owner first, then by name
+    return results.sort((a, b) => {
+      if (a.isOwner !== b.isOwner) return a.isOwner ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
   }),
   update: companyProcedure
     .input(
@@ -120,5 +154,46 @@ export const companiesRouter = createRouter({
         const { error } = z.object({ error: z.string() }).parse(await response.json());
         throw new TRPCError({ code: "BAD_REQUEST", message: error });
       }
+    }),
+
+  revokeAdminRole: companyProcedure
+    .input(z.object({ companyId: z.string(), userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+
+      // Find user by external_id
+      const targetUser = await db.query.users.findFirst({
+        where: eq(users.externalId, input.userId),
+      });
+      if (!targetUser) throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+
+      const targetUserId = targetUser.id;
+
+      // Check if trying to remove own admin role
+      if (BigInt(ctx.userId) === targetUserId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You cannot remove your own admin role",
+        });
+      }
+
+      // Check if this would remove the last administrator
+      const currentAdmins = await db.query.companyAdministrators.findMany({
+        where: eq(companyAdministrators.companyId, ctx.company.id),
+      });
+
+      if (currentAdmins.length === 1 && currentAdmins[0]?.userId === targetUserId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot remove the last administrator",
+        });
+      }
+
+      // Remove admin role
+      await db
+        .delete(companyAdministrators)
+        .where(
+          and(eq(companyAdministrators.userId, targetUserId), eq(companyAdministrators.companyId, ctx.company.id)),
+        );
     }),
 });

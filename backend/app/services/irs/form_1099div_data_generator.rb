@@ -27,7 +27,7 @@ class Irs::Form1099divDataGenerator < Irs::BaseFormDataGenerator
                                                              {
                                                                company:,
                                                                year: tax_year,
-                                                               name: TaxDocument::FORM_1099_DIV,
+                                                               name: Document::FORM_1099_DIV,
                                                                deleted_at: nil,
                                                                document_type: :tax_document,
                                                              })

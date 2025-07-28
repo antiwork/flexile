@@ -2,7 +2,7 @@
 
 class GenerateTaxFormService
   def initialize(user_compliance_info:, form_name:, tax_year:, company:)
-    raise ArgumentError, "Invalid form" unless TaxDocument::ALL_SUPPORTED_TAX_FORM_NAMES.include?(form_name)
+    raise ArgumentError, "Invalid form" unless Document::ALL_SUPPORTED_TAX_FORM_NAMES.include?(form_name)
 
     @user_compliance_info = user_compliance_info
     @tax_year = tax_year
@@ -40,7 +40,7 @@ class GenerateTaxFormService
 
     # Automatically mark as signed tax information forms (W-8/W-9) because the user gave us their e-sign consent
     # TODO: this migrate tax information forms to DocuSeal
-    signed_at = form_name.in?(TaxDocument::SUPPORTED_TAX_INFORMATION_NAMES) ? Time.current : nil
+    signed_at = form_name.in?(Document::SUPPORTED_TAX_INFORMATION_NAMES) ? Time.current : nil
     document.signatures.build(user:, title: "Signer", signed_at:)
     document.save!
     document
