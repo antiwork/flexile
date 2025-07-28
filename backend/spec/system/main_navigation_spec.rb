@@ -5,6 +5,7 @@ RSpec.describe "Main navigation" do
   let(:company_worker) { create(:company_worker, company:) }
   let(:company_administrator) { create(:company_administrator, company:) }
   let(:company_lawyer) { create(:company_lawyer, company:) }
+  let!(:company_investor) { create(:company_investor, company:) }
 
   context "when the user is a contractor" do
     it "renders the expected navigation links" do
