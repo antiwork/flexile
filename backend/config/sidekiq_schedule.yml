@@ -38,6 +38,11 @@ transfer_from_stripe_to_wise_job:
   description: Moves consolidated invoice payments money from Stripe to Wise
   class: TransferFromStripeToWiseJob
 
+mark_dividend_rounds_ready_for_payment_job:
+  cron: "30 0 * * *" # Every day at UTC 00:30
+  description: Marks dividend rounds as ready for payment once their issuance date is reached
+  class: MarkDividendRoundsReadyForPaymentJob
+
 pay_all_dividends_job:
   cron: "0 1 * * *" # Every day at UTC 01:00
   description: Attempts to pay pending dividends

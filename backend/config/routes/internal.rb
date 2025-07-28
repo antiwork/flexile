@@ -75,9 +75,15 @@ scope path: :internal, module: :internal do
       end
     end
 
-    resources :dividends, only: [:show] do
+    resources :dividends, only: [:index, :show] do
       member do
         post :sign
+      end
+    end
+
+    resources :dividend_computations, only: [:index, :create, :show] do
+      member do
+        post :finalize
       end
     end
   end

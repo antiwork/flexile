@@ -6,8 +6,12 @@ class DividendComputation < ApplicationRecord
   belongs_to :company
   has_many :dividend_computation_outputs, dependent: :destroy
 
-  validates :total_amount_in_usd, presence: true
+  validates :total_amount_in_usd, presence: true, numericality: { greater_than: 0 }
   validates :dividends_issuance_date, presence: true
+  validates :return_of_capital, inclusion: { in: [true, false] }
+  validate :dividends_issuance_date_cannot_be_in_past
+  validate :company_must_have_shareholders, on: :create
+
 
   def to_csv
     CSV.generate(headers: true) do |csv|
@@ -74,6 +78,8 @@ class DividendComputation < ApplicationRecord
         status: Dividend::ISSUED # TODO (sharang): set `PENDING_SIGNUP` if user.encrypted_password is ""
       )
     end
+
+    dividend_round
   end
 
   def dividends_info
@@ -125,6 +131,23 @@ class DividendComputation < ApplicationRecord
 
       data
     end
+
+    private
+      def dividends_issuance_date_cannot_be_in_past
+        return unless dividends_issuance_date.present?
+
+        if dividends_issuance_date < Date.current
+          errors.add(:dividends_issuance_date, "cannot be in the past")
+        end
+      end
+
+      def company_must_have_shareholders
+        return unless company.present?
+
+        if company.share_holdings.sum(:number_of_shares) == 0 && company.convertible_investments.sum(:implied_shares) == 0
+          errors.add(:base, "Company must have shareholders or convertible investments to issue dividends")
+        end
+      end
 end
 
 # dividend_computation = DividendComputation.last

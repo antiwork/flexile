@@ -2,14 +2,14 @@
 
 class DividendPolicy < ApplicationPolicy
   def index?
-    company_investor.present?
+    company_administrator.present? || company_investor.present?
   end
 
   def show?
-    index? && user.legal_name.present?
+    index? && (company_administrator.present? || user.legal_name.present?)
   end
 
   def sign?
-    show?
+    company_investor.present? && user.legal_name.present?
   end
 end

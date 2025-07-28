@@ -4,6 +4,12 @@ class Internal::Companies::DividendsController < Internal::Companies::BaseContro
   include ActionView::Helpers::SanitizeHelper
   include ApplicationHelper
 
+  def index
+    authorize Dividend
+    dividends = Current.company_investor.dividends.order(created_at: :desc)
+    render json: { dividends: dividends.map { |d| DividendPresenter.new(d).props } }
+  end
+
   def show
     dividend = Current.company_investor.dividends.find(params[:id])
     authorize dividend

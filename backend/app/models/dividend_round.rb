@@ -13,6 +13,7 @@ class DividendRound < ApplicationRecord
   validates :total_amount_in_cents, presence: true, numericality: { greater_than: 0 }
   validates :status, presence: true, inclusion: { in: %w(Issued Paid) }
   validates :ready_for_payment, inclusion: { in: [true, false] }
+  validates :return_of_capital, inclusion: { in: [true, false] }
 
   scope :ready_for_payment, -> { where(ready_for_payment: true) }
 

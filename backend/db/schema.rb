@@ -366,6 +366,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_17_153308) do
   end
 
   create_table "dividend_computations", force: :cascade do |t|
+    t.string "name"
     t.bigint "company_id", null: false
     t.decimal "total_amount_in_usd", null: false
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
