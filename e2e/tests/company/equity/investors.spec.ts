@@ -116,7 +116,7 @@ test.describe("Investors", () => {
     await expect(page.locator("tbody")).toContainText("15.00%");
     await expect(page.locator("tbody")).toContainText("300,000");
 
-    await expect(page.getByRole("columnheader", { name: "Outstanding ownership" })).toBeVisible();
-    await expect(page.getByRole("columnheader", { name: "Fully diluted ownership" })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "Outstanding ownership" })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "Fully diluted ownership" })).toBeVisible();
   });
 });
