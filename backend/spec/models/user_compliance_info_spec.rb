@@ -3,7 +3,6 @@
 RSpec.describe UserComplianceInfo do
   describe "associations" do
     it { is_expected.to belong_to(:user) }
-    it { is_expected.to have_many(:tax_documents) }
     it { is_expected.to have_many(:documents) }
     it { is_expected.to have_many(:dividends) }
   end
@@ -517,20 +516,6 @@ RSpec.describe UserComplianceInfo do
         expect(submitted_1099_nec).to_not be_deleted
       end
 
-      context "when there are already deleted records for the same tax year" do
-        let!(:deleted_1099_nec) do
-          create(:tax_document, :deleted, :form_1099nec, user_compliance_info:, tax_year: 2023)
-        end
-
-        it "marks the user compliance info and corresponding records as deleted" do
-          user_compliance_info.mark_deleted!
-          expect(user_compliance_info.reload).to be_deleted
-          expect(form_1099_nec.reload).to be_deleted
-          expect(tax_document.reload).to_not be_deleted
-          expect(submitted_1099_nec).to_not be_deleted
-          expect(deleted_1099_nec).to be_deleted
-        end
-      end
 
       context "when there are paid dividends attached to the user compliance info" do
         let!(:form_1099_div) { create(:tax_doc, :form_1099div, user_compliance_info:) }
