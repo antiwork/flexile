@@ -28,6 +28,4 @@ setup("global setup", async () => {
     docusealId: 1n,
     signable: true,
   });
-
-  // Clerk setup removed - now using email OTP authentication
 });
