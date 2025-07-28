@@ -90,7 +90,7 @@ class UserPresenter
         flags = %w[equity_compensation].filter { Flipper.enabled?(_1, company) }
         flags.push("equity_grants") if company.equity_grants_enabled?
         flags.push("dividends")
-        flags.push("company_updates")
+        flags.push("company_updates") if company.company_investors.exists?
         flags.push("quickbooks") if company.quickbooks_enabled?
         flags.push("tender_offers") if company.tender_offers_enabled?
         flags.push("cap_table") if company.cap_table_enabled?
@@ -197,7 +197,7 @@ class UserPresenter
 
           tender_offers: company.tender_offers_enabled?,
           dividends: true,
-          company_updates: true,
+          company_updates: company.company_investors.exists?,
         },
       }
     end

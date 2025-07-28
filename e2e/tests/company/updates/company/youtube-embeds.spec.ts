@@ -1,6 +1,7 @@
 import { expect, type Locator, test } from "@playwright/test";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
+import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { companyUpdatesFactory } from "@test/factories/companyUpdates";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
@@ -53,6 +54,8 @@ test.describe("Company Updates - YouTube Embeds", () => {
       companyId: company.id,
       userId: contractorUser.id,
     });
+    // Add an investor so company updates are available
+    await companyInvestorsFactory.create({ companyId: company.id });
   });
 
   test("should display YouTube embed for youtube.com URLs", async ({ page }) => {

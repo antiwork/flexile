@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
+import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { companyUpdatesFactory } from "@test/factories/companyUpdates";
 import { login } from "@test/helpers/auth";
 import { withinModal } from "@test/index";
@@ -15,6 +16,9 @@ test.describe("company update creation", () => {
     const result = await companiesFactory.createCompletedOnboarding();
     company = result.company;
     adminUser = result.adminUser;
+
+    // Add an investor so company updates are available
+    await companyInvestorsFactory.create({ companyId: company.id });
   });
 
   async function fillForm(page: Page, title: string, body: string) {

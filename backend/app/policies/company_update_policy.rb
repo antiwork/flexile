@@ -2,10 +2,12 @@
 
 class CompanyUpdatePolicy < ApplicationPolicy
   def index?
+    return false unless company.company_investors.exists?
     company_administrator.present? || company_worker.present? || company_investor.present?
   end
 
   def show?
+    return false unless company.company_investors.exists?
     if record.status == CompanyUpdate::DRAFT
       company_administrator.present?
     else
@@ -14,7 +16,7 @@ class CompanyUpdatePolicy < ApplicationPolicy
   end
 
   def new?
-    company_administrator.present?
+    company.company_investors.exists? && company_administrator.present?
   end
 
   def create?
@@ -34,6 +36,6 @@ class CompanyUpdatePolicy < ApplicationPolicy
   end
 
   def send_test_email?
-    company_administrator.present?
+    company.company_investors.exists? && company_administrator.present?
   end
 end
