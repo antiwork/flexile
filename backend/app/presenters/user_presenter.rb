@@ -87,10 +87,10 @@ class UserPresenter
 
     {
       companies: user.all_companies.compact.map do |company|
-        flags = %w[company_updates].filter { Flipper.enabled?(_1, company) }
-        flags.push("equity_compensation") if company.equity_compensation_enabled?
+        flags = %w[equity_compensation].filter { Flipper.enabled?(_1, company) }
         flags.push("equity_grants") if company.equity_grants_enabled?
         flags.push("dividends")
+        flags.push("company_updates") if company.company_investors.exists?
         flags.push("quickbooks") if company.quickbooks_enabled?
         flags.push("tender_offers") if company.tender_offers_enabled?
         flags.push("cap_table") if company.cap_table_enabled?
@@ -197,7 +197,7 @@ class UserPresenter
 
           tender_offers: company.tender_offers_enabled?,
           dividends: true,
-          company_updates: company.company_updates_enabled?,
+          company_updates: company.company_investors.exists?,
         },
       }
     end

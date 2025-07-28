@@ -1,7 +1,11 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import { expect, type Locator, test } from "@playwright/test";
 import { companiesFactory } from "@test/factories/companies";
+import { companyContractorsFactory } from "@test/factories/companyContractors";
+import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { companyUpdatesFactory } from "@test/factories/companyUpdates";
+import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
+import { withinModal } from "@test/index";
 
 const ANTIWORK_VIDEO = {
   id: "qaTy2klHNuI",
@@ -9,8 +13,8 @@ const ANTIWORK_VIDEO = {
   shortUrl: "https://youtu.be/qaTy2klHNuI",
 };
 
-async function assertYouTubeIframeLoaded(page: Page, videoId: string): Promise<Locator> {
-  const iframe = page.locator('iframe[src*="youtube.com/embed"]');
+async function assertYouTubeIframeLoaded(modal: Locator, videoId: string): Promise<Locator> {
+  const iframe = modal.locator('iframe[src*="youtube.com/embed"]');
   const expectedSrc = `https://www.youtube.com/embed/${videoId}?controls=0&rel=0`;
 
   await expect(iframe).toBeVisible();
@@ -27,8 +31,8 @@ async function assertYouTubeIframeLoaded(page: Page, videoId: string): Promise<L
   return iframe;
 }
 
-async function assertNoCSPBlocking(page: Page): Promise<void> {
-  await expect(page.getByText("This content is blocked. Contact the site owner to fix the issue.")).not.toBeVisible();
+async function assertNoCSPBlocking(modal: Locator): Promise<void> {
+  await expect(modal.getByText("This content is blocked. Contact the site owner to fix the issue.")).not.toBeVisible();
 }
 
 async function waitForIframeLoad(iframe: Locator): Promise<void> {
@@ -39,13 +43,19 @@ async function waitForIframeLoad(iframe: Locator): Promise<void> {
 test.describe("Company Updates - YouTube Embeds", () => {
   let company: Awaited<ReturnType<typeof companiesFactory.createCompletedOnboarding>>["company"];
   let adminUser: Awaited<ReturnType<typeof companiesFactory.createCompletedOnboarding>>["adminUser"];
+  let contractorUser: Awaited<ReturnType<typeof usersFactory.create>>["user"];
 
   test.beforeEach(async () => {
-    const result = await companiesFactory.createCompletedOnboarding({
-      companyUpdatesEnabled: true,
-    });
+    const result = await companiesFactory.createCompletedOnboarding();
     company = result.company;
     adminUser = result.adminUser;
+    contractorUser = (await usersFactory.create()).user;
+    await companyContractorsFactory.create({
+      companyId: company.id,
+      userId: contractorUser.id,
+    });
+    // Add an investor so company updates are available
+    await companyInvestorsFactory.create({ companyId: company.id });
   });
 
   test("should display YouTube embed for youtube.com URLs", async ({ page }) => {
@@ -56,15 +66,21 @@ test.describe("Company Updates - YouTube Embeds", () => {
       sentAt: new Date(),
     });
 
-    await login(page, adminUser);
-    await page.goto(`/updates/company/${companyUpdate.externalId}`);
+    await login(page, contractorUser);
+    await page.goto(`/updates/company`);
 
-    await expect(page.getByText(companyUpdate.title)).toBeVisible();
-    await expect(page.getByText("This update includes a YouTube video.")).toBeVisible();
+    await page.getByRole("row").getByText(companyUpdate.title).first().click();
 
-    const iframe = await assertYouTubeIframeLoaded(page, ANTIWORK_VIDEO.id);
-    await assertNoCSPBlocking(page);
-    await waitForIframeLoad(iframe);
+    await withinModal(
+      async (modal) => {
+        await expect(modal.getByText("This update includes a YouTube video.")).toBeVisible();
+
+        const iframe = await assertYouTubeIframeLoaded(modal, ANTIWORK_VIDEO.id);
+        await assertNoCSPBlocking(modal);
+        await waitForIframeLoad(iframe);
+      },
+      { page, title: companyUpdate.title },
+    );
   });
 
   test("should display YouTube embed for youtu.be URLs", async ({ page }) => {
@@ -74,12 +90,19 @@ test.describe("Company Updates - YouTube Embeds", () => {
       sentAt: new Date(),
     });
 
-    await login(page, adminUser);
-    await page.goto(`/updates/company/${companyUpdate.externalId}`);
+    await login(page, contractorUser);
+    await page.goto(`/updates/company`);
 
-    const iframe = await assertYouTubeIframeLoaded(page, ANTIWORK_VIDEO.id);
-    await assertNoCSPBlocking(page);
-    await waitForIframeLoad(iframe);
+    await page.getByRole("row").getByText(companyUpdate.title).first().click();
+
+    await withinModal(
+      async (modal) => {
+        const iframe = await assertYouTubeIframeLoaded(modal, ANTIWORK_VIDEO.id);
+        await assertNoCSPBlocking(modal);
+        await waitForIframeLoad(iframe);
+      },
+      { page, title: companyUpdate.title },
+    );
   });
 
   test("should not display video section when no video URL is provided", async ({ page }) => {
@@ -90,11 +113,18 @@ test.describe("Company Updates - YouTube Embeds", () => {
       sentAt: new Date(),
     });
 
-    await login(page, adminUser);
-    await page.goto(`/updates/company/${companyUpdate.externalId}`);
+    await login(page, contractorUser);
+    await page.goto(`/updates/company`);
 
-    await expect(page.locator('iframe[src*="youtube.com/embed"]')).not.toBeVisible();
-    await expect(page.getByRole("link", { name: "Watch the video" })).not.toBeVisible();
+    await page.getByRole("row").getByText(companyUpdate.title).first().click();
+
+    await withinModal(
+      async (modal) => {
+        await expect(modal.locator('iframe[src*="youtube.com/embed"]')).not.toBeVisible();
+        await expect(modal.getByRole("link", { name: "Watch the video" })).not.toBeVisible();
+      },
+      { page, title: companyUpdate.title },
+    );
   });
 
   test("should allow creating company update with YouTube URL", async ({ page }) => {
@@ -120,12 +150,19 @@ test.describe("Company Updates - YouTube Embeds", () => {
       sentAt: new Date(),
     });
 
-    await login(page, adminUser);
-    await page.goto(`/updates/company/${companyUpdate.externalId}`);
+    await login(page, contractorUser);
+    await page.goto(`/updates/company`);
 
-    const iframe = await assertYouTubeIframeLoaded(page, ANTIWORK_VIDEO.id);
-    await assertNoCSPBlocking(page);
-    await waitForIframeLoad(iframe);
+    await page.getByRole("row").getByText(companyUpdate.title).first().click();
+
+    await withinModal(
+      async (modal) => {
+        const iframe = await assertYouTubeIframeLoaded(modal, ANTIWORK_VIDEO.id);
+        await assertNoCSPBlocking(modal);
+        await waitForIframeLoad(iframe);
+      },
+      { page, title: companyUpdate.title },
+    );
   });
 
   test("should show fallback link for malformed YouTube URLs", async ({ page }) => {
@@ -137,15 +174,22 @@ test.describe("Company Updates - YouTube Embeds", () => {
       sentAt: new Date(),
     });
 
-    await login(page, adminUser);
-    await page.goto(`/updates/company/${companyUpdate.externalId}`);
+    await login(page, contractorUser);
+    await page.goto(`/updates/company`);
 
-    await expect(page.locator('iframe[src*="youtube.com/embed"]')).not.toBeVisible();
+    await page.getByRole("row").getByText(companyUpdate.title).first().click();
 
-    const videoLink = page.getByRole("link", { name: "Watch the video" });
-    await expect(videoLink).toBeVisible();
-    await expect(videoLink).toHaveAttribute("href", malformedUrl);
-    await expect(videoLink).toHaveAttribute("target", "_blank");
-    await expect(videoLink).toHaveAttribute("rel", "noreferrer");
+    await withinModal(
+      async (modal) => {
+        await expect(modal.locator('iframe[src*="youtube.com/embed"]')).not.toBeVisible();
+
+        const videoLink = page.getByRole("link", { name: "Watch the video" });
+        await expect(videoLink).toBeVisible();
+        await expect(videoLink).toHaveAttribute("href", malformedUrl);
+        await expect(videoLink).toHaveAttribute("target", "_blank");
+        await expect(videoLink).toHaveAttribute("rel", "noreferrer");
+      },
+      { page, title: companyUpdate.title },
+    );
   });
 });
