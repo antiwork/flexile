@@ -192,9 +192,6 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByRole("cell", { name: workerUserB.legalName ?? "never" }).click();
     await page.getByRole("link", { name: "View invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoice" })).toBeVisible();
-    await expect(
-      page.locator("header").filter({ hasText: "Invoice" }).getByRole("button", { name: "Pay now" }),
-    ).toBeVisible();
     await page.locator("header").filter({ hasText: "Invoice" }).getByRole("button", { name: "Pay now" }).click();
 
     await expect(openInvoicesBadge).not.toBeVisible();
