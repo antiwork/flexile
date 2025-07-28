@@ -24,7 +24,7 @@ RSpec.describe GenerateTaxFormService do
     context "when the user does not have confirmed tax info" do
       let(:user) { create(:user, :pre_onboarding) }
       let(:user_compliance_info) { user.compliance_info }
-      let(:form_name) { TaxDocument::ALL_SUPPORTED_TAX_FORM_NAMES.sample }
+      let(:form_name) { Document::ALL_SUPPORTED_TAX_FORM_NAMES.sample }
 
       it "does not create a new tax document" do
         expect do
@@ -66,7 +66,7 @@ RSpec.describe GenerateTaxFormService do
       let(:business_name) { nil }
       let(:business_type) { nil }
       let(:tax_classification) { nil }
-      let(:form_name) { TaxDocument::FORM_W_8BEN }
+      let(:form_name) { Document::FORM_W_8BEN }
 
       before { create(:company_worker, company:, user:) }
 
@@ -154,7 +154,7 @@ RSpec.describe GenerateTaxFormService do
       let(:business_name) { "Flexile" }
       let(:business_type) { "partnership" }
       let(:tax_classification) { nil }
-      let(:form_name) { TaxDocument::FORM_W_8BEN_E }
+      let(:form_name) { Document::FORM_W_8BEN_E }
 
       before { create(:company_worker, company:, user:) }
 
@@ -240,7 +240,7 @@ RSpec.describe GenerateTaxFormService do
     end
 
     context "when form is a W-9" do
-      let(:form_name) { TaxDocument::FORM_W_9 }
+      let(:form_name) { Document::FORM_W_9 }
       let(:user_compliance_info) do
         create(:user_compliance_info, :us_resident, :confirmed, user:, business_entity:, business_name:, business_type:, tax_classification:)
       end
@@ -313,7 +313,7 @@ RSpec.describe GenerateTaxFormService do
     end
 
     context "when form is a 1099-DIV" do
-      let(:form_name) { TaxDocument::FORM_1099_DIV }
+      let(:form_name) { Document::FORM_1099_DIV }
       let(:business_entity) { false }
       let(:business_name) { nil }
       let(:business_type) { nil }
@@ -393,7 +393,7 @@ RSpec.describe GenerateTaxFormService do
     end
 
     context "when form is a 1099-NEC" do
-      let(:form_name) { TaxDocument::FORM_1099_NEC }
+      let(:form_name) { Document::FORM_1099_NEC }
       let(:business_entity) { false }
       let(:business_name) { nil }
       let(:business_type) { nil }
@@ -456,7 +456,7 @@ RSpec.describe GenerateTaxFormService do
     end
 
     context "when form is a 1042-S" do
-      let(:form_name) { TaxDocument::FORM_1042_S }
+      let(:form_name) { Document::FORM_1042_S }
       let(:business_entity) { false }
       let(:business_name) { nil }
       let(:business_type) { nil }

@@ -28,7 +28,6 @@ RSpec.describe User do
     it { is_expected.to have_one(:bank_account_for_dividends).class_name("WiseRecipient") }
 
     it { is_expected.to have_many(:user_compliance_infos).autosave(true) }
-    it { is_expected.to have_many(:tax_documents).through(:user_compliance_infos) }
 
     describe "#compliance_info" do
       it "returns the most recent, live compliance info record" do
