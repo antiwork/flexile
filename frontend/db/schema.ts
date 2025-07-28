@@ -52,7 +52,6 @@ export const equityGrantsIssueDateRelationship = pgEnum(
 export const equityGrantsOptionGrantType = pgEnum("equity_grants_option_grant_type", optionGrantTypes);
 export const equityGrantsVestingTrigger = pgEnum("equity_grants_vesting_trigger", optionGrantVestingTriggers);
 export const integrationStatus = pgEnum("integration_status", ["initialized", "active", "out_of_sync", "deleted"]);
-export const taxDocumentsStatus = pgEnum("tax_documents_status", ["initialized", "submitted", "deleted"]);
 export const invoicesInvoiceType = pgEnum("invoices_invoice_type", ["services", "other"]);
 export const activeStorageVariantRecords = pgTable(
   "active_storage_variant_records",
@@ -967,41 +966,6 @@ export const shareHoldings = pgTable(
   ],
 );
 
-export const taxDocuments = pgTable(
-  "tax_documents",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    name: varchar().notNull(),
-    taxYear: integer("tax_year").notNull(),
-    status: taxDocumentsStatus().default("initialized").notNull(),
-    submittedAt: timestamp("submitted_at", { precision: 6, mode: "date" }),
-    emailedAt: timestamp("emailed_at", { precision: 6, mode: "date" }),
-    deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
-    userComplianceInfoId: bigint("user_compliance_info_id", { mode: "bigint" }).notNull(),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-    companyId: bigint("company_id", { mode: "bigint" }).notNull(),
-  },
-  (table) => [
-    index("idx_on_name_tax_year_user_compliance_info_id_a24b2e6c51")
-      .using(
-        "btree",
-        table.name.asc().nullsLast().op("int4_ops"),
-        table.taxYear.asc().nullsLast().op("int8_ops"),
-        table.userComplianceInfoId.asc().nullsLast().op("text_ops"),
-      )
-      .where(sql`(status <> 'deleted'::tax_documents_status)`),
-    index("index_tax_documents_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
-    index("index_tax_documents_on_status").using("btree", table.status.asc().nullsLast().op("enum_ops")),
-    index("index_tax_documents_on_user_compliance_info_id").using(
-      "btree",
-      table.userComplianceInfoId.asc().nullsLast().op("int8_ops"),
-    ),
-  ],
-);
-
 export const tosAgreements = pgTable(
   "tos_agreements",
   {
@@ -1848,7 +1812,6 @@ export const companies = pgTable(
     isTrusted: boolean("is_trusted").notNull().default(false),
     equityGrantsEnabled: boolean("equity_grants_enabled").notNull().default(false),
     showAnalyticsToContractors: boolean("show_analytics_to_contractors").notNull().default(false),
-    companyUpdatesEnabled: boolean("company_updates_enabled").notNull().default(false),
     defaultCurrency: varchar("default_currency").default("usd").notNull(),
 
     tenderOffersEnabled: boolean("tender_offers_enabled").notNull().default(false),
@@ -2359,17 +2322,6 @@ export const shareHoldingsRelations = relations(shareHoldings, ({ one, many }) =
   equityGrantExerciseRequests: many(equityGrantExerciseRequests),
 }));
 
-export const taxDocumentsRelations = relations(taxDocuments, ({ one }) => ({
-  company: one(companies, {
-    fields: [taxDocuments.companyId],
-    references: [companies.id],
-  }),
-  complianceInfo: one(userComplianceInfos, {
-    fields: [taxDocuments.userComplianceInfoId],
-    references: [userComplianceInfos.id],
-  }),
-}));
-
 export const tenderOfferBidsRelations = relations(tenderOfferBids, ({ one }) => ({
   tenderOffer: one(tenderOffers, {
     fields: [tenderOfferBids.tenderOfferId],
@@ -2403,7 +2355,6 @@ export const userComplianceInfosRelations = relations(userComplianceInfos, ({ on
   }),
   documents: many(documents),
   dividends: many(dividends),
-  taxDocuments: many(taxDocuments),
 }));
 
 export const wiseCredentialsRelations = relations(wiseCredentials, ({ many }) => ({

@@ -2456,6 +2456,26 @@ export const send_test_email_company_company_update_path: ((
 
 /**
  * Generates rails route to
+ * /internal/settings(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const settings_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/settings(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const settings_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /internal/settings/bank_accounts/:id(.:format)
  * @param {any} id
  * @param {object | undefined} options

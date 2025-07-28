@@ -1,8 +1,10 @@
 import { expect, type Page, test } from "@playwright/test";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
+import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { companyUpdatesFactory } from "@test/factories/companyUpdates";
 import { login } from "@test/helpers/auth";
+import { withinModal } from "@test/index";
 import { eq } from "drizzle-orm";
 import { companyUpdates } from "@/db/schema";
 
@@ -11,11 +13,12 @@ test.describe("company update creation", () => {
   let adminUser: Awaited<ReturnType<typeof companiesFactory.createCompletedOnboarding>>["adminUser"];
 
   test.beforeEach(async () => {
-    const result = await companiesFactory.createCompletedOnboarding({
-      companyUpdatesEnabled: true,
-    });
+    const result = await companiesFactory.createCompletedOnboarding();
     company = result.company;
     adminUser = result.adminUser;
+
+    // Add an investor so company updates are available
+    await companyInvestorsFactory.create({ companyId: company.id });
   });
 
   async function fillForm(page: Page, title: string, body: string) {
@@ -36,10 +39,8 @@ test.describe("company update creation", () => {
     await expect(page.getByRole("dialog", { name: "Publish update?" })).toBeVisible();
     await page.getByRole("button", { name: "Yes, publish" }).click();
 
-    await page.waitForURL(/\/updates\/company\/[^/]+$/u);
-
-    await expect(page.getByText(title)).toBeVisible();
-    await expect(page.getByText(content)).toBeVisible();
+    await page.waitForURL("/updates/company");
+    await expect(page.getByRole("row").filter({ hasText: title }).filter({ hasText: "Sent" })).toBeVisible();
 
     const updates = await db.query.companyUpdates.findMany({
       where: eq(companyUpdates.companyId, company.id),
@@ -48,7 +49,7 @@ test.describe("company update creation", () => {
     expect(updates[0]?.sentAt).not.toBeNull();
   });
 
-  test("allows previewing content in new tab", async ({ page, context }) => {
+  test("allows previewing content", async ({ page }) => {
     const title = "Test Update";
     const content = "Test content";
 
@@ -57,22 +58,21 @@ test.describe("company update creation", () => {
 
     await fillForm(page, title, content);
 
-    const newPagePromise = context.waitForEvent("page");
     await page.getByRole("button", { name: "Preview" }).click();
 
-    const newPage = await newPagePromise;
-    await newPage.waitForLoadState("networkidle");
-
-    await expect(newPage.getByText(title)).toBeVisible();
-    await expect(newPage.getByText(content)).toBeVisible();
+    await withinModal(
+      async (modal) => {
+        await expect(modal.getByText(title)).toBeVisible();
+        await expect(modal.getByText(content)).toBeVisible();
+      },
+      { page, title },
+    );
 
     const updates = await db.query.companyUpdates.findMany({
       where: eq(companyUpdates.companyId, company.id),
     });
     expect(updates).toHaveLength(1);
     expect(updates[0]?.sentAt).toBeNull();
-
-    await newPage.close();
   });
 
   test("prevents submission with validation errors", async ({ page }) => {
@@ -110,7 +110,8 @@ test.describe("company update creation", () => {
     await expect(page.getByRole("dialog", { name: "Publish update?" })).toBeVisible();
     await page.getByRole("button", { name: "Yes, update" }).click();
 
-    await page.waitForURL(/\/updates\/company\/[^/]+$/u);
+    await page.waitForURL("/updates/company");
+    await expect(page.getByRole("row").filter({ hasText: "Updated Title" }).filter({ hasText: "Sent" })).toBeVisible();
 
     const updatedRecord = await db.query.companyUpdates.findFirst({
       where: eq(companyUpdates.id, companyUpdate.id),
