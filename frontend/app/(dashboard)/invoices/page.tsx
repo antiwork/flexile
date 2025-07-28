@@ -602,7 +602,7 @@ const TasksModal = ({
 
 const quickInvoiceSchema = z.object({
   rate: z.number().min(0.01),
-  quantity: z.object({ quantity: z.number().min(1), hourly: z.boolean() }),
+  quantity: z.object({ quantity: z.number().min(0.01), hourly: z.boolean() }),
   date: z.instanceof(CalendarDate, { message: "This field is required." }),
 });
 

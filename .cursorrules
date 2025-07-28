@@ -40,3 +40,7 @@
   - Add a `TODO (techdebt)` comment to document refactors that should be made in the future
 
 - No explanatory comments please
+
+- Database schema synchronization:
+  - Any changes to the database schema via Rails migrations in `backend/db/migrate/` must be reflected in `frontend/db/schema.ts`
+  - The frontend schema file should be updated to match the Rails schema structure for type safety

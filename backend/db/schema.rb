@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_09_211708) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_17_153308) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -742,7 +742,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_09_211708) do
   create_table "invoice_line_items", force: :cascade do |t|
     t.bigint "invoice_id", null: false
     t.string "description", null: false
-    t.integer "quantity", null: false
+    t.decimal "quantity", precision: 10, scale: 2, null: false
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.integer "pay_rate_in_subunits", null: false
@@ -791,6 +791,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_09_211708) do
     t.datetime "accepted_at"
     t.datetime "deleted_at"
     t.index ["company_contractor_id"], name: "index_invoices_on_company_contractor_id"
+    t.index ["company_id", "invoice_date", "created_at"], name: "idx_invoices_company_alive_date_created", order: { invoice_date: :desc, created_at: :desc }, where: "(deleted_at IS NULL)"
     t.index ["company_id"], name: "index_invoices_on_company_id"
     t.index ["created_by_id"], name: "index_invoices_on_created_by_id"
     t.index ["equity_grant_id"], name: "index_invoices_on_equity_grant_id"

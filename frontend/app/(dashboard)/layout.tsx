@@ -194,7 +194,11 @@ const NavLinks = () => {
   const isInvoiceActionable = useIsActionable();
   const { data: documentsData } = trpc.documents.list.useQuery(
     user.currentCompanyId && user.id
-      ? { companyId: user.currentCompanyId, userId: user.id, signable: true }
+      ? {
+          companyId: user.currentCompanyId,
+          userId: user.roles.administrator || user.roles.lawyer ? null : user.id,
+          signable: true,
+        }
       : skipToken,
     { refetchInterval: 30_000 },
   );
