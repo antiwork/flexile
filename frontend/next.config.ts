@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
     return config;
   },
   experimental: {
-    typedRoutes: true,
+    typedRoutes: process.env.NODE_ENV !== "development",
     testProxy: true,
     serverActions: {
       allowedOrigins: [process.env.DOMAIN, process.env.APP_DOMAIN].filter((x) => x),
