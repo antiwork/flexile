@@ -15,7 +15,7 @@ test.describe("view company updates", () => {
   const adminUserpreferredName = "Test Admin";
 
   test.beforeEach(async () => {
-    const result = await companiesFactory.create({ companyUpdatesEnabled: true });
+    const result = await companiesFactory.create();
     company = result.company;
     adminUser = (await usersFactory.create({ preferredName: adminUserpreferredName })).user;
     await companyAdministratorsFactory.create({
@@ -23,6 +23,8 @@ test.describe("view company updates", () => {
       userId: adminUser.id,
     });
     user = (await usersFactory.create()).user;
+    // Add an investor so company updates are available
+    await companyInvestorsFactory.create({ companyId: company.id });
   });
 
   test("contractor view updates", async ({ page }) => {

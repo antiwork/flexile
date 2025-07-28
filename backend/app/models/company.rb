@@ -78,7 +78,6 @@ class Company < ApplicationRecord
   has_many :share_classes
   has_many :share_holdings, through: :company_investors
   has_many :option_pools
-  has_many :tax_documents
   has_many :tender_offers
   has_many :company_stripe_accounts
   has_many :bank_accounts, class_name: "CompanyStripeAccount"

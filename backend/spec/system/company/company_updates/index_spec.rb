@@ -2,6 +2,7 @@
 
 RSpec.describe "Company updates page" do
   let(:company) { create(:company) }
+  let!(:company_investor) { create(:company_investor, company:) }
 
   before { Flipper.enable(:company_updates, company) }
 

@@ -60,7 +60,8 @@ pnpm playwright test
 7. After reviews begin, avoid force-pushing to your branch
    - Force-pushing rewrites history and makes review threads hard to follow
    - Don't worry about messy commits - we squash everything when merging to main
-8. The PR will be merged once you have the sign-off of at least one other developer
+8. Self-review your PR with explanatory comments for any non-intuitive or non-obvious changes to help reviewers understand your reasoning
+9. The PR will be merged once you have the sign-off of at least one other developer
 
 ## Style Guide
 
