@@ -1,13 +1,12 @@
 "use client";
 
-import { HelperClient } from "@helperai/client";
-import React, { useEffect, useState } from "react";
+import { useConversations, useCreateConversation } from "@helperai/react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface ConversationsListProps {
-  client: HelperClient;
   onSelectConversation: (slug: string) => void;
 }
 
@@ -20,41 +19,22 @@ interface Conversation {
   messageCount: number;
 }
 
-export const ConversationsList: React.FC<ConversationsListProps> = ({ client, onSelectConversation }) => {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
+export const ConversationsList: React.FC<ConversationsListProps> = ({ onSelectConversation }) => {
+  const { data: conversationsData, isLoading: loading } = useConversations();
+  const createConversation = useCreateConversation({
+    onSuccess: (data) => {
+      if (data && typeof data === "object" && "conversationSlug" in data) {
+        onSelectConversation(String(data.conversationSlug));
+      }
+    },
+  });
 
-  useEffect(() => {
-    void loadConversations();
-  }, [client]);
+  const conversations: Conversation[] = conversationsData?.conversations || [];
 
-  const loadConversations = async () => {
-    try {
-      setLoading(true);
-      const response = await client.conversations.list();
-      setConversations(response.conversations);
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Failed to load conversations:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreateTicket = async () => {
-    try {
-      setCreating(true);
-      const newConversation = await client.conversations.create({
-        subject: "New support ticket",
-      });
-      onSelectConversation(newConversation.conversationSlug);
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Failed to create ticket:", error);
-    } finally {
-      setCreating(false);
-    }
+  const handleCreateTicket = () => {
+    createConversation.mutate({
+      subject: "New support ticket",
+    });
   };
 
   if (loading) {
@@ -65,8 +45,8 @@ export const ConversationsList: React.FC<ConversationsListProps> = ({ client, on
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Support tickets</h2>
-        <Button onClick={() => void handleCreateTicket()} disabled={creating}>
-          {creating ? "Creating..." : "New ticket"}
+        <Button onClick={handleCreateTicket} disabled={createConversation.isPending}>
+          {createConversation.isPending ? "Creating..." : "New ticket"}
         </Button>
       </div>
 

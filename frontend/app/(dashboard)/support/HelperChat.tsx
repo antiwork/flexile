@@ -1,42 +1,21 @@
 "use client";
 
-import { useChat } from "@ai-sdk/react";
-import { type ConversationDetails, HelperClient } from "@helperai/client";
-import React, { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { type ConversationDetails } from "@helperai/client";
+import { useChat } from "@helperai/react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
 interface HelperChatProps {
-  client: HelperClient;
   conversation: ConversationDetails;
-  onConversationUpdate: Dispatch<SetStateAction<ConversationDetails | null>>;
 }
 
-export const HelperChat: React.FC<HelperChatProps> = ({ client, conversation, onConversationUpdate }) => {
-  const { messages, setMessages, input, handleInputChange, handleSubmit } = useChat({
-    ...client.chat.handler({ conversation }),
+export const HelperChat: React.FC<HelperChatProps> = ({ conversation }) => {
+  const { messages, input, handleInputChange, handleSubmit, agentTyping } = useChat({
+    conversation,
+    enableRealtime: true,
   });
-
-  const [isListening, setIsListening] = useState(false);
-
-  // Set up real-time listeners
-  useEffect(() => {
-    setIsListening(true);
-    const unlisten = client.conversations.listen(conversation.slug, {
-      onSubjectChanged: (subject) => {
-        onConversationUpdate((prevConversation) => (prevConversation ? { ...prevConversation, subject } : null));
-      },
-      onHumanReply: (message) => {
-        setMessages((prev) => [...prev, message]);
-      },
-    });
-
-    return () => {
-      setIsListening(false);
-      unlisten();
-    };
-  }, [conversation.slug, client, onConversationUpdate, setMessages]);
 
   return (
     <div className="space-y-4">
@@ -46,7 +25,7 @@ export const HelperChat: React.FC<HelperChatProps> = ({ client, conversation, on
             {messages.length === 0 ? (
               <div className="py-8 text-center text-gray-500">No messages yet. Start the conversation!</div>
             ) : (
-              client.chat.messages(messages).map((message, index) => {
+              messages.map((message, index) => {
                 const { content, role, staffName, createdAt } = message;
                 const isUser = role === "user";
 
@@ -61,13 +40,14 @@ export const HelperChat: React.FC<HelperChatProps> = ({ client, conversation, on
                       <div className="mt-1 text-xs opacity-70">
                         {staffName && role === "staff" ? <span className="font-medium">{staffName} • </span> : null}
                         {role === "assistant" && <span className="font-medium">AI Assistant • </span>}
-                        {createdAt ? new Date(createdAt).toLocaleTimeString() : null}
+                        {createdAt ? new Date(String(createdAt)).toLocaleTimeString() : null}
                       </div>
                     </div>
                   </div>
                 );
               })
             )}
+            {agentTyping ? <div className="text-center text-xs text-gray-500">Agent is typing...</div> : null}
           </div>
         </CardContent>
       </Card>
@@ -84,8 +64,6 @@ export const HelperChat: React.FC<HelperChatProps> = ({ client, conversation, on
           Send
         </Button>
       </form>
-
-      {isListening ? <div className="text-center text-xs text-gray-500">Connected to real-time updates</div> : null}
     </div>
   );
 };

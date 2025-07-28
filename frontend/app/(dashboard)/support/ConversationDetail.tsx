@@ -1,37 +1,21 @@
 "use client";
 
-import { type ConversationDetails, HelperClient } from "@helperai/client";
-import React, { useEffect, useState } from "react";
+import { useConversation } from "@helperai/react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HelperChat } from "./HelperChat";
 
 interface ConversationDetailProps {
-  client: HelperClient;
   conversationSlug: string;
   onBack: () => void;
 }
 
-export const ConversationDetail: React.FC<ConversationDetailProps> = ({ client, conversationSlug, onBack }) => {
-  const [conversation, setConversation] = useState<ConversationDetails | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    void loadConversation();
-  }, [conversationSlug, client]);
-
-  const loadConversation = async () => {
-    try {
-      setLoading(true);
-      const details = await client.conversations.get(conversationSlug);
-      setConversation(details);
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Failed to load conversation:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+export const ConversationDetail: React.FC<ConversationDetailProps> = ({ conversationSlug, onBack }) => {
+  const { data: conversation, isLoading: loading } = useConversation(conversationSlug, {
+    enableRealtime: true,
+    markRead: true,
+  });
 
   if (loading) {
     return <div>Loading conversation...</div>;
@@ -75,7 +59,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ client, 
         </CardContent>
       </Card>
 
-      <HelperChat client={client} conversation={conversation} onConversationUpdate={setConversation} />
+      <HelperChat conversation={conversation} />
     </div>
   );
 };
