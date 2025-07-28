@@ -378,8 +378,6 @@ test.describe("One-off payments", () => {
       await page.reload();
       await expect(page.getByRole("row", { name: "$123.45" })).toBeVisible();
 
-      await expect(page.getByRole("button", { name: "Pay now" })).toBeVisible();
-
       await page.getByRole("button", { name: "Pay now" }).click();
       await page.getByRole("button", { name: "Filter" }).click();
       await page.getByRole("menuitem", { name: "Clear all filters" }).click();
@@ -407,28 +405,8 @@ test.describe("One-off payments", () => {
         "Invoice ID": "O-0002",
         Amount: "$500.00",
       });
-      await expect(invoiceRow.getByRole("button", { name: "Pay again" })).toBeVisible();
-    });
 
-    test("shows 'Payment initiated' success message when paying", async ({ page }) => {
-      await invoicesFactory.create({
-        companyId: company.id,
-        companyContractorId: companyContractor.id,
-        status: "approved",
-        totalAmountInUsdCents: BigInt(50000),
-        invoiceNumber: "O-0003",
-      });
-
-      await login(page, adminUser);
-      await page.goto("/invoices");
-
-      await expect(page.locator("tbody")).toBeVisible();
-
-      const invoiceRow = await findRequiredTableRow(page, {
-        "Invoice ID": "O-0003",
-        Amount: "$500.00",
-      });
-      await invoiceRow.getByRole("button", { name: "Pay now" }).click();
+      await invoiceRow.getByRole("button", { name: "Pay again" }).click();
 
       await expect(page.getByText("Payment initiated")).toBeVisible();
     });
