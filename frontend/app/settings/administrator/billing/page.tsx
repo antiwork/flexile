@@ -159,7 +159,7 @@ export default function Billing() {
               <p>We'll use this account to debit contractor payments and our monthly fee.</p>
               <Button onClick={() => setAddingBankAccount(true)}>
                 <Plus className="size-4" />
-                Link bank account
+                Link your bank account
               </Button>
             </Placeholder>
           )}
