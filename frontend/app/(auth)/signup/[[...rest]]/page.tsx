@@ -40,7 +40,12 @@ function SignUpContent() {
           <AuthAlerts error={state.error} success={state.success} />
 
           {state.step === "email" ? (
-            <form onSubmit={handleSendOtp} className="space-y-4">
+            <form
+              onSubmit={(e) => {
+                void handleSendOtp(e);
+              }}
+              className="space-y-4"
+            >
               <div className="space-y-2">
                 <Label htmlFor="email">Email address</Label>
                 <Input
@@ -66,7 +71,12 @@ function SignUpContent() {
             </form>
           ) : (
             <div className="space-y-4">
-              <form onSubmit={handleAuthenticate} className="space-y-4">
+              <form
+                onSubmit={(e) => {
+                  void handleAuthenticate(e);
+                }}
+                className="space-y-4"
+              >
                 <div className="space-y-2">
                   <Label htmlFor="otp">Verification code</Label>
                   <Input

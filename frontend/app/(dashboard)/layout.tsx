@@ -70,7 +70,12 @@ const LogoutButton = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <button onClick={handleLogout} className="w-full">
+    <button
+      onClick={() => {
+        void handleLogout();
+      }}
+      className="w-full"
+    >
       {children}
     </button>
   );
@@ -122,7 +127,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   sideOffset={4}
                 >
                   {user.companies.map((company) => (
-                    <DropdownMenuItem key={company.id} onClick={() => switchCompany(company.id)} className="gap-2 p-2">
+                    <DropdownMenuItem
+                      key={company.id}
+                      onClick={() => {
+                        void switchCompany(company.id);
+                      }}
+                      className="gap-2 p-2"
+                    >
                       <div className="flex size-6 items-center justify-center rounded-sm border">
                         <Image src={defaultCompanyLogo} className="size-4 shrink-0" alt="" />
                       </div>

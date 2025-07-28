@@ -33,9 +33,11 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
         body: JSON.stringify(requestBody),
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const data = await response.json();
 
       if (!response.ok) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         throw new Error(data.error || "Failed to send OTP");
       }
 
@@ -66,9 +68,11 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
           }),
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const data = await response.json();
 
         if (!response.ok) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           throw new Error(data.error || "Signup failed");
         }
       }
@@ -99,7 +103,9 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
         });
 
         if (userResponse.ok) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const userData = await userResponse.json();
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           login(userData);
         }
       }

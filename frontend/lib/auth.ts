@@ -1,4 +1,4 @@
-import type { NextAuthOptions } from "next-auth";
+import type { NextAuthOptions, User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { z } from "zod";
 
@@ -36,7 +36,7 @@ export const authOptions: NextAuthOptions = {
         },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.otp) {
+        if (!credentials?.email || !credentials.otp) {
           return null;
         }
 
@@ -66,8 +66,19 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
-          const data = await response.json();
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/consistent-type-assertions
+          const data = (await response.json()) as {
+            user: {
+              id: number;
+              email: string;
+              name: string;
+              legal_name?: string;
+              preferred_name?: string;
+            };
+            jwt: string;
+          };
 
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/consistent-type-assertions
           return {
             id: data.user.id.toString(),
             email: data.user.email,
@@ -75,7 +86,7 @@ export const authOptions: NextAuthOptions = {
             legalName: data.user.legal_name,
             preferredName: data.user.preferred_name,
             jwt: data.jwt,
-          };
+          } as User;
         } catch {
           return null;
         }
@@ -90,25 +101,28 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    async jwt({ token, user }) {
+    jwt({ token, user }) {
       if (user) {
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
         const customUser = user as any;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
         token.jwt = customUser.jwt;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
         token.legalName = customUser.legalName;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
         token.preferredName = customUser.preferredName;
       }
       return token;
     },
-    async session({ session, token }) {
-      if (token && session.user) {
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
+    session({ session, token }) {
+      if (session.user) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
         (session.user as any).id = token.sub || "";
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
         (session.user as any).jwt = token.jwt || "";
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
         (session.user as any).legalName = token.legalName;
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
         (session.user as any).preferredName = token.preferredName;
       }
       return session;
@@ -134,9 +148,12 @@ export const sendOtpEmail = async (email: string) => {
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/consistent-type-assertions
+    const errorData = (await response.json()) as { error?: string };
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     throw new Error(errorData.error || "Failed to send OTP");
   }
 
-  return await response.json();
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/consistent-type-assertions
+  return (await response.json()) as unknown;
 };

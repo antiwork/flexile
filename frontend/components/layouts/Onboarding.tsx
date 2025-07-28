@@ -56,7 +56,12 @@ const OnboardingLayout = ({
         )}
         <div className="hidden justify-self-end text-sm md:block">
           Signing up as {user.email}.{" "}
-          <Button variant="link" onClick={handleLogout}>
+          <Button
+            variant="link"
+            onClick={() => {
+              void handleLogout();
+            }}
+          >
             Logout
           </Button>
         </div>

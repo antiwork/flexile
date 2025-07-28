@@ -8,7 +8,8 @@ const sendOtpSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/consistent-type-assertions
+    const body = (await request.json()) as unknown;
     const validation = sendOtpSchema.safeParse(body);
 
     if (!validation.success) {

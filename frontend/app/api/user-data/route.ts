@@ -9,7 +9,8 @@ const API_BASE_URL = process.env.NODE_ENV === "production" ? "https://api.flexil
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/consistent-type-assertions
+    const body = (await request.json()) as unknown;
     const validation = userDataSchema.safeParse(body);
 
     if (!validation.success) {
@@ -29,7 +30,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to fetch user data" }, { status: response.status });
     }
 
-    const userData = await response.json();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/consistent-type-assertions
+    const userData = (await response.json()) as unknown;
     return NextResponse.json(userData, { status: 200 });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

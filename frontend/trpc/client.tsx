@@ -24,7 +24,7 @@ const GetUserData = ({ children }: { children: React.ReactNode }) => {
   const { data } = useQuery({
     queryKey: ["currentUser", authId, "otp"],
     queryFn: async (): Promise<unknown> => {
-      if (isAuthenticated && session?.user && "jwt" in session.user) {
+      if (isAuthenticated && session.user && "jwt" in session.user) {
         const response = await request({
           url: "/api/user-data",
           method: "POST",
