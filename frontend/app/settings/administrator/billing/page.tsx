@@ -155,16 +155,13 @@ export default function Billing() {
               </CardHeader>
             </Card>
           ) : (
-            <div className="p-4">
-              <div className="grid justify-items-center gap-4 p-6 text-center text-gray-700">
-                <CircleDollarSign className="-mb-2 size-10" />
-                <p>We'll use this account to debit contractor payments and our monthly fee.</p>
-                <Button onClick={() => setAddingBankAccount(true)} variant="outline">
-                  <Plus className="size-4" />
-                  Link your bank account
-                </Button>
-              </div>
-            </div>
+            <Placeholder icon={CircleDollarSign}>
+              <p>We'll use this account to debit contractor payments and our monthly fee.</p>
+              <Button onClick={() => setAddingBankAccount(true)}>
+                <Plus className="size-4" />
+                Link bank account
+              </Button>
+            </Placeholder>
           )}
           <Elements
             stripe={stripePromise}
