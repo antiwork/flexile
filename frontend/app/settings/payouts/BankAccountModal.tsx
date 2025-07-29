@@ -1,7 +1,7 @@
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Map as ImmutableMap } from "immutable";
 import { set } from "lodash-es";
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import MutationButton from "@/components/MutationButton";
@@ -17,7 +17,7 @@ import {
   currencyCodes,
   supportedCountries,
 } from "@/models/constants";
-import { cn, groupFields } from "@/utils";
+import { cn } from "@/utils";
 import { request } from "@/utils/request";
 import { save_bank_account_onboarding_path, wise_account_requirements_path } from "@/utils/routes";
 
@@ -26,7 +26,6 @@ const KEY_CHECKING_ACCOUNT = "CHECKING";
 const KEY_ACCOUNT_TYPE = "accountType";
 const KEY_ACCOUNT_HOLDER_NAME = "accountHolderName";
 const KEY_ACCOUNT_ROUTING_NUMBER = "abartn";
-const KEY_ACCOUNT_NUMBER = "accountNumber";
 const KEY_ADDRESS_COUNTRY = "address.country";
 const KEY_ADDRESS_STATE = "address.state";
 const KEY_ADDRESS_CITY = "address.city";
@@ -133,21 +132,20 @@ const validateCPF = (cpf: string): boolean => {
   return parseInt(digits.charAt(10), 10) === secondCheckDigit;
 };
 
-const FIELD_GROUPS: string[][] = [
-  [KEY_ACCOUNT_ROUTING_NUMBER, KEY_ACCOUNT_NUMBER],
+const fieldGroups: string[][] = [
+  [
+    "ifscCode",
+    "sortCode",
+    "institutionNumber",
+    "transitNumber",
+    "branchCode",
+    KEY_SWIFT_CODE,
+    KEY_ACCOUNT_ROUTING_NUMBER,
+    "accountNumber",
+    "bankCode",
+  ],
   [KEY_ADDRESS_CITY, KEY_ADDRESS_STATE, KEY_ADDRESS_POST_CODE],
-  // It is expected that the account number appears both here and in the first item.
-  // Because they're valid groups of different transfer methods (in this case, ACH and SWIFT).
-  [KEY_SWIFT_CODE, KEY_ACCOUNT_NUMBER],
 ];
-
-const CURRENCY_FIELD_GROUPS: Record<string, string[]> = {
-  CZK: [KEY_ACCOUNT_NUMBER, "bankCode"],
-  INR: ["ifscCode", KEY_ACCOUNT_NUMBER],
-  GBP: ["sortCode", KEY_ACCOUNT_NUMBER],
-  CAD: ["institutionNumber", "transitNumber", KEY_ACCOUNT_NUMBER],
-  BRL: ["branchCode", KEY_ACCOUNT_NUMBER],
-};
 
 const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClose }: Props) => {
   const defaultCurrency = bankAccount?.currency ?? currencyByCountryCode.get(billingDetails.country_code) ?? "USD";
@@ -394,60 +392,14 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
     });
   };
 
-  const renderField = useCallback(
-    (field: Field) => {
-      if (field.type === "select" || field.type === "radio") {
-        const errorMessage = errors.get(field.key);
-        const selectOptions = (field.valuesAllowed ?? []).map(({ key, name }) => ({
-          value: key,
-          label: name,
-        }));
-
-        return (
-          <div key={field.key} className="grid gap-2">
-            <Label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor={field.key}>
-              {field.name}
-            </Label>
-            <ComboBox
-              id={field.key}
-              value={details.get(field.key) ?? ""}
-              onChange={(value) => {
-                setDetails((prev) => prev.set(field.key, value));
-                setTimeout(() => fieldUpdated(field), 0);
-              }}
-              modal
-              options={selectOptions}
-              disabled={isPending}
-              className={cn(errors.has(field.key) && "border-red-500 focus-visible:ring-red-500")}
-            />
-            {errorMessage ? <div className="text-sm text-red-500">{errorMessage}</div> : null}
-          </div>
-        );
-      }
-
-      return (
-        <BankAccountField
-          key={field.key}
-          value={details.get(field.key) ?? ""}
-          onChange={(value) => {
-            setDetails((prev) => prev.set(field.key, value));
-            setTimeout(() => fieldUpdated(field), 0);
-          }}
-          field={field}
-          invalid={errors.has(field.key)}
-          help={errors.get(field.key)}
-        />
-      );
-    },
-    [details, setDetails, fieldUpdated, errors, isPending],
+  const groupedFields = useMemo(
+    () =>
+      Object.groupBy(visibleFields ?? [], (field: Field, i) => {
+        const index = fieldGroups.findIndex((group) => group.includes(field.key));
+        return index === -1 ? `field${i}` : `group${index}`;
+      }),
+    [visibleFields],
   );
-
-  const fieldGroups = useMemo(() => {
-    const currencyFieldGroup = CURRENCY_FIELD_GROUPS[currency];
-    return [...FIELD_GROUPS, ...(currencyFieldGroup ? [currencyFieldGroup] : [])];
-  }, [currency]);
-
-  const groupedFields = useMemo(() => groupFields(visibleFields ?? [], fieldGroups), [visibleFields, fieldGroups]);
 
   useEffect(() => {
     if (!allFields) return;
@@ -536,18 +488,61 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
             </div>
           ) : null}
 
-          {groupedFields.map((fieldGroup, index) => {
-            if (fieldGroup.length > 1) {
-              const gridCols = fieldGroup.length === 3 ? "md:grid-cols-3" : "md:grid-cols-2";
-              return (
-                <div key={`group-${index}`} className={cn("grid grid-cols-1 items-start gap-4", gridCols)}>
-                  {fieldGroup.map((field) => renderField(field))}
-                </div>
-              );
-            }
+          {Object.values(groupedFields).map((fieldGroup, index) => {
+            if (!fieldGroup) return;
+            const gridCols =
+              fieldGroup.length === 3 ? "md:grid-cols-3" : fieldGroup.length === 2 ? "md:grid-cols-2" : "";
+            return (
+              <div key={`group-${index}`} className={cn("grid grid-cols-1 items-start gap-4", gridCols)}>
+                {fieldGroup.map((field) => {
+                  if (field.type === "select" || field.type === "radio") {
+                    const errorMessage = errors.get(field.key);
+                    const selectOptions = (field.valuesAllowed ?? []).map(({ key, name }) => ({
+                      value: key,
+                      label: name,
+                    }));
 
-            const field = fieldGroup[0];
-            return field ? renderField(field) : null;
+                    return (
+                      <div key={field.key} className="grid gap-2">
+                        <Label
+                          className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          htmlFor={field.key}
+                        >
+                          {field.name}
+                        </Label>
+                        <ComboBox
+                          id={field.key}
+                          value={details.get(field.key) ?? ""}
+                          onChange={(value) => {
+                            setDetails((prev) => prev.set(field.key, value));
+                            setTimeout(() => fieldUpdated(field), 0);
+                          }}
+                          modal
+                          options={selectOptions}
+                          disabled={isPending}
+                          className={cn(errors.has(field.key) && "border-red-500 focus-visible:ring-red-500")}
+                        />
+                        {errorMessage ? <div className="text-sm text-red-500">{errorMessage}</div> : null}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <BankAccountField
+                      key={field.key}
+                      value={details.get(field.key) ?? ""}
+                      onChange={(value) => {
+                        setDetails((prev) => prev.set(field.key, value));
+                        setTimeout(() => fieldUpdated(field), 0);
+                      }}
+                      field={field}
+                      invalid={errors.has(field.key)}
+                      help={errors.get(field.key)}
+                    />
+                  );
+                })}
+              </div>
+            );
           })}
         </div>
 
