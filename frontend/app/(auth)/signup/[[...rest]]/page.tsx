@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
@@ -9,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthApi } from "@/hooks/useAuthApi";
 import { useOtpFlowState } from "@/hooks/useOtpFlowState";
+import logo from "@/public/logo-icon.svg";
 
 function SignUpContent() {
   const searchParams = useSearchParams();
@@ -26,14 +28,19 @@ function SignUpContent() {
   );
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Create your account</CardTitle>
+    <div className="flex items-center justify-center">
+      <Card className="w-full max-w-md border-0 bg-transparent">
+        <CardHeader className="text-center">
+          <div className="mb-8 flex justify-center">
+            <Image src={logo} alt="Flexile" className="size-16" />
+          </div>
+          <CardTitle className="pb-1 text-xl font-medium">
+            {state.step === "email" ? "Create account" : "Check your email for a code"}
+          </CardTitle>
           <CardDescription>
             {state.step === "email"
-              ? "Enter your email address to receive a verification code"
-              : "Enter the 6-digit code sent to your email"}
+              ? "Sign up using the account you use at work."
+              : "We’ve sent a 6-digit code to your email."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -47,11 +54,13 @@ function SignUpContent() {
               className="space-y-4"
             >
               <div className="space-y-2">
-                <Label htmlFor="email">Email address</Label>
+                <Label htmlFor="email" className="block">
+                  Work email
+                </Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder="Enter your work email..."
                   value={state.email}
                   onChange={(e) => actions.setEmail(e.target.value)}
                   required
@@ -59,13 +68,13 @@ function SignUpContent() {
                 />
               </div>
               <Button type="submit" className="w-full" disabled={state.loading}>
-                {state.loading ? "Sending..." : "Send verification code"}
+                {state.loading ? "Signing up..." : "Sign up"}
               </Button>
 
-              <div className="text-center text-sm text-gray-600">
-                Already have an account?{" "}
+              <div className="pt-6 text-center text-sm text-gray-600">
+                Already using Flexile?{" "}
                 <Link href="/login" className="text-blue-600 hover:underline">
-                  Sign in here
+                  Log in
                 </Link>
               </div>
             </form>
@@ -78,7 +87,9 @@ function SignUpContent() {
                 className="space-y-4"
               >
                 <div className="space-y-2">
-                  <Label htmlFor="otp">Verification code</Label>
+                  <Label htmlFor="otp" className="block">
+                    Verification code
+                  </Label>
                   <Input
                     id="otp"
                     type="text"
@@ -91,20 +102,20 @@ function SignUpContent() {
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={state.loading}>
-                  {state.loading ? "Creating account..." : "Create account"}
+                  {state.loading ? "Creating account..." : "Continue"}
                 </Button>
               </form>
 
               <div className="text-center">
-                <Button variant="link" onClick={actions.backToEmail} disabled={state.loading}>
+                <Button className="w-full" variant="outline" onClick={actions.backToEmail} disabled={state.loading}>
                   Back to email
                 </Button>
               </div>
 
-              <div className="text-center text-sm text-gray-600">
-                Already have an account?{" "}
+              <div className="pt-6 text-center text-sm text-gray-600">
+                Already using Flexile?{" "}
                 <Link href="/login" className="text-blue-600 hover:underline">
-                  Sign in here
+                  Log in
                 </Link>
               </div>
             </div>
