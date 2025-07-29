@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe "Tender offer details page" do
-  let(:company) { create(:company, tender_offers_enabled: true) }
+  let(:company) { create(:company, equity_enabled: true) }
   let!(:company_administrator) { create(:company_administrator, company:) }
   let(:company_investor_1) { create(:company_investor, company:) }
   let(:company_investor_2) { create(:company_investor, company:) }

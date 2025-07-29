@@ -79,7 +79,7 @@ export const equityGrantsRouter = createRouter({
       }),
     )
     .query(async ({ input, ctx }) => {
-      if (!ctx.company.equityGrantsEnabled) throw new TRPCError({ code: "FORBIDDEN" });
+      if (!ctx.company.equityEnabled) throw new TRPCError({ code: "FORBIDDEN" });
       if (
         !ctx.companyAdministrator &&
         !ctx.companyLawyer &&

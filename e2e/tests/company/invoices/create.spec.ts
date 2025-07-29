@@ -27,7 +27,7 @@ test.describe("invoice creation", () => {
   test.beforeEach(async () => {
     company = (
       await companiesFactory.createCompletedOnboarding({
-        equityCompensationEnabled: true,
+        equityEnabled: true,
       })
     ).company;
 
@@ -109,7 +109,7 @@ test.describe("invoice creation", () => {
   });
 
   test("does not show equity split if equity compensation is disabled", async ({ page }) => {
-    await db.update(companies).set({ equityCompensationEnabled: false }).where(eq(companies.id, company.id));
+    await db.update(companies).set({ equityEnabled: false }).where(eq(companies.id, company.id));
 
     await login(page, contractorUser);
     await page.goto("/invoices/new");

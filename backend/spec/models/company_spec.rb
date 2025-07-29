@@ -26,7 +26,6 @@ RSpec.describe Company do
     it { is_expected.to have_many(:equity_buyback_rounds) }
     it { is_expected.to have_many(:equity_grants).through(:company_investors) }
     it { is_expected.to have_many(:equity_grant_exercises) }
-    it { is_expected.to have_many(:time_entries) }
     it { is_expected.to have_many(:invoices) }
     it { is_expected.to have_many(:expense_categories) }
     it { is_expected.to have_many(:consolidated_payment_balance_transactions) }
@@ -552,17 +551,17 @@ RSpec.describe Company do
     end
   end
 
-  describe "#equity_compensation_enabled?" do
+  describe "#equity_enabled?" do
     let(:company) { build(:company) }
 
-    it "returns true if equity compensation is enabled" do
-      company.update!(equity_compensation_enabled: true)
-      expect(company.equity_compensation_enabled?).to eq true
+    it "returns true if equity is enabled" do
+      company.update!(equity_enabled: true)
+      expect(company.equity_enabled?).to eq true
     end
 
-    it "returns false if equity compensation is not enabled" do
-      company.update!(equity_compensation_enabled: false)
-      expect(company.equity_compensation_enabled?).to eq false
+    it "returns false if equity is not enabled" do
+      company.update!(equity_enabled: false)
+      expect(company.equity_enabled?).to eq false
     end
   end
 

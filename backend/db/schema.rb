@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_17_153309) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_29_150349) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -102,15 +102,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_17_153309) do
     t.boolean "is_gumroad", default: false, null: false
     t.boolean "dividends_allowed", default: false, null: false
     t.boolean "is_trusted", default: false, null: false
-    t.boolean "equity_grants_enabled", default: false, null: false
     t.boolean "show_analytics_to_contractors", default: false, null: false
     t.string "default_currency", default: "usd", null: false
-    t.boolean "cap_table_enabled", default: false, null: false
-    t.boolean "tender_offers_enabled", default: false, null: false
     t.boolean "lawyers_enabled", default: false, null: false
     t.decimal "conversion_share_price_usd"
-    t.boolean "equity_compensation_enabled", default: false, null: false
     t.jsonb "json_data", default: {"flags" => []}, null: false
+    t.boolean "equity_enabled", default: false, null: false
     t.index ["external_id"], name: "index_companies_on_external_id", unique: true
   end
 
@@ -894,19 +891,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_17_153309) do
     t.index ["external_id"], name: "index_tender_offers_on_external_id", unique: true
   end
 
-  create_table "time_entries", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.bigint "company_id", null: false
-    t.string "description", null: false
-    t.integer "minutes"
-    t.date "date", null: false
-    t.datetime "invoiced_at"
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.index ["company_id"], name: "index_time_entries_on_company_id"
-    t.index ["user_id"], name: "index_time_entries_on_user_id"
-  end
-
   create_table "tos_agreements", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "ip_address", null: false
@@ -938,13 +922,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_17_153309) do
     t.integer "business_type"
     t.integer "tax_classification"
     t.index ["user_id"], name: "index_user_compliance_infos_on_user_id"
-  end
-
-  create_table "user_leads", force: :cascade do |t|
-    t.string "email", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.index ["email"], name: "index_user_leads_on_email", unique: true
   end
 
   create_table "users", force: :cascade do |t|

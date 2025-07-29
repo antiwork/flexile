@@ -180,7 +180,7 @@ RSpec.describe "New Contractor" do
 
   context "when equity compensation is disabled" do
     before do
-      company.update!(equity_compensation_enabled: false)
+      company.update!(equity_enabled: false)
       refresh # Ensure the page is reloaded with the feature flag disabled
     end
 
@@ -204,7 +204,7 @@ RSpec.describe "New Contractor" do
 
   context "when equity compensation is enabled" do
     before do
-      company.update!(equity_compensation_enabled: true)
+      company.update!(equity_enabled: true)
       refresh # Ensure the page is reloaded with the new feature flag
     end
 

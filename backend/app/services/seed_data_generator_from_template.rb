@@ -310,7 +310,7 @@ class SeedDataGeneratorFromTemplate
     end
 
     def create_tender_offer!(company, tender_offer_data)
-      return unless company.tender_offers_enabled?
+      return unless company.equity_enabled?
 
       starts_at = current_time - 1.week
       Timecop.travel(starts_at) do

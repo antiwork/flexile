@@ -14,6 +14,7 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
+import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -42,7 +43,11 @@ export default function BuybackView() {
   const [data] = trpc.tenderOffers.get.useSuspenseQuery({ companyId: company.id, id });
   const isOpen = isPast(utc(data.startsAt)) && isFuture(utc(data.endsAt));
   const investorId = user.roles.investor?.id;
-  const [bids, { refetch: refetchBids }] = trpc.tenderOffers.bids.list.useSuspenseQuery({
+  const {
+    data: bids = [],
+    isLoading,
+    refetch: refetchBids,
+  } = trpc.tenderOffers.bids.list.useQuery({
     companyId: company.id,
     tenderOfferId: id,
     investorId: user.roles.administrator ? undefined : investorId,
@@ -276,7 +281,7 @@ export default function BuybackView() {
         </>
       ) : null}
 
-      {bids.length > 0 ? <DataTable table={bidsTable} /> : null}
+      {isLoading ? <TableSkeleton columns={5} /> : bids && bids.length > 0 ? <DataTable table={bidsTable} /> : null}
 
       {cancelingBid ? (
         <Dialog open onOpenChange={() => setCancelingBid(null)}>
