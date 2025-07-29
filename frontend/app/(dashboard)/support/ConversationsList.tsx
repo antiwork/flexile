@@ -1,16 +1,18 @@
 "use client";
 
 import { useConversations, useCreateConversation } from "@helperai/react";
-import React from "react";
+import { CircleCheck, Plus } from "lucide-react";
+import { DashboardHeader } from "@/components/DashboardHeader";
+import Placeholder from "@/components/Placeholder";
+import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface ConversationsListProps {
   onSelectConversation: (slug: string) => void;
 }
 
-export const ConversationsList: React.FC<ConversationsListProps> = ({ onSelectConversation }) => {
+export const ConversationsList = ({ onSelectConversation }: ConversationsListProps) => {
   const { data: conversationsData, isLoading: loading } = useConversations();
   const createConversation = useCreateConversation({
     onSuccess: (data) => {
@@ -20,71 +22,66 @@ export const ConversationsList: React.FC<ConversationsListProps> = ({ onSelectCo
 
   const conversations = conversationsData?.conversations || [];
 
-  if (loading) {
-    return <div>Loading conversations...</div>;
-  }
-
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Support tickets</h2>
-        <Button onClick={() => createConversation.mutate({})} disabled={createConversation.isPending}>
-          {createConversation.isPending ? "Creating..." : "New ticket"}
-        </Button>
-      </div>
+    <>
+      <DashboardHeader
+        title="Support tickets"
+        headerActions={
+          <Button
+            onClick={() => createConversation.mutate({})}
+            variant="outline"
+            size="small"
+            disabled={createConversation.isPending}
+          >
+            <Plus className="size-4" />
+            {createConversation.isPending ? "Creating..." : "New ticket"}
+          </Button>
+        }
+      />
 
-      {conversations.length === 0 ? (
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-center text-gray-500">
-              No support tickets found. Create your first ticket to get started.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Your support tickets</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Subject</TableHead>
-                  <TableHead>Messages</TableHead>
-                  <TableHead>Last updated</TableHead>
-                  <TableHead></TableHead>
+      <div className="grid gap-4">
+        {loading ? (
+          <TableSkeleton columns={3} />
+        ) : conversations.length === 0 ? (
+          <Placeholder icon={CircleCheck}>
+            No support tickets found. Create your first ticket to get started.
+          </Placeholder>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Subject</TableHead>
+                <TableHead>Messages</TableHead>
+                <TableHead>Last updated</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {conversations.map((conversation) => (
+                <TableRow
+                  key={conversation.slug}
+                  className="cursor-pointer hover:bg-gray-50"
+                  onClick={() => onSelectConversation(conversation.slug)}
+                >
+                  <TableCell className={`font-medium ${conversation.isUnread ? "font-bold" : ""}`}>
+                    <div className="flex items-center gap-2">
+                      {conversation.isUnread ? (
+                        <div className="h-2 w-2 flex-shrink-0 rounded-full bg-blue-500" />
+                      ) : null}
+                      {conversation.subject}
+                    </div>
+                  </TableCell>
+                  <TableCell className={conversation.isUnread ? "font-bold" : ""}>
+                    {conversation.messageCount}
+                  </TableCell>
+                  <TableCell className={conversation.isUnread ? "font-bold" : ""}>
+                    {new Date(conversation.latestMessageAt ?? conversation.createdAt).toLocaleDateString()}
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {conversations.map((conversation) => (
-                  <TableRow key={conversation.slug}>
-                    <TableCell className={`font-medium ${conversation.isUnread ? "font-bold" : ""}`}>
-                      <div className="flex items-center gap-2">
-                        {conversation.isUnread ? (
-                          <div className="h-2 w-2 flex-shrink-0 rounded-full bg-blue-500" />
-                        ) : null}
-                        {conversation.subject}
-                      </div>
-                    </TableCell>
-                    <TableCell className={conversation.isUnread ? "font-bold" : ""}>
-                      {conversation.messageCount}
-                    </TableCell>
-                    <TableCell className={conversation.isUnread ? "font-bold" : ""}>
-                      {new Date(conversation.latestMessageAt ?? conversation.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="outline" size="small" onClick={() => onSelectConversation(conversation.slug)}>
-                        View
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+    </>
   );
 };

@@ -21,24 +21,18 @@ export const SupportPortal = () => {
   const [selectedConversationSlug, setSelectedConversationSlug] = useQueryState("id");
   const { data: session, isLoading } = useHelperSession();
 
-  if (isLoading || !session) {
-    return <div>Loading support portal...</div>;
-  }
+  if (isLoading || !session) return null;
 
   return (
     <HelperClientProvider host="https://help.flexile.com" session={session}>
-      <div className="container mx-auto p-6">
-        <h1 className="mb-6 text-3xl font-bold">Customer support</h1>
-
-        {selectedConversationSlug ? (
-          <ConversationDetail
-            conversationSlug={selectedConversationSlug}
-            onBack={() => void setSelectedConversationSlug(null)}
-          />
-        ) : (
-          <ConversationsList onSelectConversation={(slug) => void setSelectedConversationSlug(slug)} />
-        )}
-      </div>
+      {selectedConversationSlug ? (
+        <ConversationDetail
+          conversationSlug={selectedConversationSlug}
+          onBack={() => void setSelectedConversationSlug(null)}
+        />
+      ) : (
+        <ConversationsList onSelectConversation={(slug) => void setSelectedConversationSlug(slug)} />
+      )}
     </HelperClientProvider>
   );
 };
