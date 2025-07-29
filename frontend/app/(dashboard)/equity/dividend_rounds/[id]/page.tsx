@@ -36,12 +36,10 @@ export default function DividendRound() {
   const { id } = useParams<{ id: string }>();
   const company = useCurrentCompany();
   const router = useRouter();
-  const { data = [], isLoading } = trpc.dividends.list.useQuery({
+  const { data: dividends, isLoading } = trpc.dividends.list.useQuery({
     companyId: company.id,
     dividendRoundId: Number(id),
   });
-
-  const table = useTable({ columns, data });
 
   return (
     <>
@@ -49,7 +47,9 @@ export default function DividendRound() {
       {isLoading ? (
         <TableSkeleton columns={4} />
       ) : (
-        <DataTable table={table} onRowClicked={(row) => router.push(rowLink(row))} />
+        dividends && (
+          <DataTable table={useTable({ columns, data: dividends })} onRowClicked={(row) => router.push(rowLink(row))} />
+        )
       )}
     </>
   );

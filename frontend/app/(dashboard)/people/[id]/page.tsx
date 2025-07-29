@@ -630,20 +630,21 @@ const sharesColumns = [
 type ShareHolding = RouterOutput["shareHoldings"]["list"][number];
 function SharesTab({ investorId }: { investorId: string }) {
   const company = useCurrentCompany();
-  const { data: shareHoldings = [], isLoading } = trpc.shareHoldings.list.useQuery({
+  const { data: shareHoldings, isLoading } = trpc.shareHoldings.list.useQuery({
     companyId: company.id,
     investorId,
   });
 
-  const table = useTable({ data: shareHoldings, columns: sharesColumns });
+  if (isLoading) {
+    return <TableSkeleton columns={6} />;
+  }
 
-  return isLoading ? (
-    <TableSkeleton columns={6} />
-  ) : shareHoldings && shareHoldings.length > 0 ? (
-    <DataTable table={table} />
-  ) : (
-    <Placeholder icon={CircleCheck}>This investor does not hold any shares.</Placeholder>
-  );
+  if (!shareHoldings || shareHoldings.length === 0) {
+    return <Placeholder icon={CircleCheck}>This investor does not hold any shares.</Placeholder>;
+  }
+
+  const table = useTable({ data: shareHoldings, columns: sharesColumns });
+  return <DataTable table={table} />;
 }
 
 const optionsColumnHelper = createColumnHelper<EquityGrant>();
@@ -665,13 +666,18 @@ type EquityGrant = RouterOutput["equityGrants"]["list"][number];
 function OptionsTab({ investorId, userId }: { investorId: string; userId: string }) {
   const company = useCurrentCompany();
   const { data: equityGrants, isLoading } = trpc.equityGrants.list.useQuery({ companyId: company.id, investorId });
-  const table = useTable({ data: equityGrants ?? [], columns: optionsColumns });
-
   const [selectedEquityGrant, setSelectedEquityGrant] = useState<EquityGrant | null>(null);
 
-  return isLoading ? (
-    <TableSkeleton columns={6} />
-  ) : equityGrants && equityGrants.length > 0 ? (
+  if (isLoading) {
+    return <TableSkeleton columns={6} />;
+  }
+
+  if (!equityGrants || equityGrants.length === 0) {
+    return <Placeholder icon={CircleCheck}>This investor does not have any option grants.</Placeholder>;
+  }
+
+  const table = useTable({ data: equityGrants, columns: optionsColumns });
+  return (
     <>
       <DataTable table={table} onRowClicked={setSelectedEquityGrant} />
       {selectedEquityGrant ? (
@@ -683,8 +689,6 @@ function OptionsTab({ investorId, userId }: { investorId: string; userId: string
         />
       ) : null}
     </>
-  ) : (
-    <Placeholder icon={CircleCheck}>This investor does not have any option grants.</Placeholder>
   );
 }
 
@@ -704,6 +708,15 @@ function ExercisesTab({ investorId }: { investorId: string }) {
       await trpcUtils.equityGrantExercises.list.invalidate();
     },
   });
+
+  if (isLoading) {
+    return <TableSkeleton columns={7} />;
+  }
+
+  if (!exercises || exercises.length === 0) {
+    return <Placeholder icon={CircleCheck}>This investor has not exercised any options.</Placeholder>;
+  }
+
   const columnHelper = createColumnHelper<EquityGrantExercise>();
   const columns = useMemo(
     () => [
@@ -733,15 +746,8 @@ function ExercisesTab({ investorId }: { investorId: string }) {
     ],
     [],
   );
-  const table = useTable({ data: exercises ?? [], columns });
-
-  return isLoading ? (
-    <TableSkeleton columns={7} />
-  ) : exercises && exercises.length > 0 ? (
-    <DataTable table={table} />
-  ) : (
-    <Placeholder icon={CircleCheck}>This investor has not exercised any options.</Placeholder>
-  );
+  const table = useTable({ data: exercises, columns });
+  return <DataTable table={table} />;
 }
 
 type ConvertibleSecurity = RouterOutput["convertibleSecurities"]["list"]["convertibleSecurities"][number];
@@ -763,15 +769,17 @@ function ConvertiblesTab({ investorId }: { investorId: string }) {
     companyId: company.id,
     investorId,
   });
-  const table = useTable({ data: convertibles?.convertibleSecurities ?? [], columns: convertiblesColumns });
 
-  return isLoading ? (
-    <TableSkeleton columns={4} />
-  ) : convertibles && convertibles.totalCount > 0 ? (
-    <DataTable table={table} />
-  ) : (
-    <Placeholder icon={CircleCheck}>This investor does not hold any convertible securities.</Placeholder>
-  );
+  if (isLoading) {
+    return <TableSkeleton columns={4} />;
+  }
+
+  if (!convertibles || convertibles.totalCount === 0) {
+    return <Placeholder icon={CircleCheck}>This investor does not hold any convertible securities.</Placeholder>;
+  }
+
+  const table = useTable({ data: convertibles.convertibleSecurities, columns: convertiblesColumns });
+  return <DataTable table={table} />;
 }
 
 type Dividend = RouterOutput["dividends"]["list"][number];
@@ -788,13 +796,15 @@ const dividendsColumns = [
 function DividendsTab({ investorId }: { investorId: string }) {
   const company = useCurrentCompany();
   const { data: dividends, isLoading } = trpc.dividends.list.useQuery({ companyId: company.id, investorId });
-  const table = useTable({ data: dividends ?? [], columns: dividendsColumns });
 
-  return isLoading ? (
-    <TableSkeleton columns={4} />
-  ) : dividends && dividends.length > 0 ? (
-    <DataTable table={table} />
-  ) : (
-    <Placeholder icon={CircleCheck}>This investor hasn't received any dividends yet.</Placeholder>
-  );
+  if (isLoading) {
+    return <TableSkeleton columns={4} />;
+  }
+
+  if (!dividends || dividends.length === 0) {
+    return <Placeholder icon={CircleCheck}>This investor hasn't received any dividends yet.</Placeholder>;
+  }
+
+  const table = useTable({ data: dividends, columns: dividendsColumns });
+  return <DataTable table={table} />;
 }

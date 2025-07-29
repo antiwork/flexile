@@ -125,9 +125,7 @@ export default function Billing() {
         .parse(await response.json());
     },
   });
-  const { data = [], isLoading } = trpc.consolidatedInvoices.list.useQuery({ companyId: company.id });
-
-  const table = useTable({ columns, data });
+  const { data, isLoading } = trpc.consolidatedInvoices.list.useQuery({ companyId: company.id });
 
   return (
     <div className="grid gap-4">
@@ -186,8 +184,8 @@ export default function Billing() {
       </Alert>
       {isLoading ? (
         <TableSkeleton columns={5} />
-      ) : data.length > 0 ? (
-        <DataTable table={table} />
+      ) : data && data.length > 0 ? (
+        <DataTable table={useTable({ columns, data })} />
       ) : (
         <Placeholder icon={CircleDollarSign}>Invoices will appear here.</Placeholder>
       )}

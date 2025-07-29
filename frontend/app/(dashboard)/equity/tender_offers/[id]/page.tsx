@@ -44,7 +44,7 @@ export default function BuybackView() {
   const isOpen = isPast(utc(data.startsAt)) && isFuture(utc(data.endsAt));
   const investorId = user.roles.investor?.id;
   const {
-    data: bids = [],
+    data: bids,
     isLoading,
     refetch: refetchBids,
   } = trpc.tenderOffers.bids.list.useQuery({
@@ -132,8 +132,6 @@ export default function BuybackView() {
       ].filter((column) => !!column),
     [],
   );
-
-  const bidsTable = useTable({ data: bids, columns });
 
   return (
     <>
@@ -281,7 +279,11 @@ export default function BuybackView() {
         </>
       ) : null}
 
-      {isLoading ? <TableSkeleton columns={5} /> : bids && bids.length > 0 ? <DataTable table={bidsTable} /> : null}
+      {isLoading ? (
+        <TableSkeleton columns={5} />
+      ) : bids && bids.length > 0 ? (
+        <DataTable table={useTable({ data: bids, columns })} />
+      ) : null}
 
       {cancelingBid ? (
         <Dialog open onOpenChange={() => setCancelingBid(null)}>
