@@ -87,7 +87,8 @@ class UserPresenter
 
     {
       companies: user.all_companies.compact.map do |company|
-        flags = %w[equity].filter { Flipper.enabled?(_1, company) }
+        flags = []
+        flags.push("equity") if company.equity_enabled?
         flags.push("dividends")
         flags.push("company_updates") if company.company_investors.exists?
         flags.push("quickbooks") if company.quickbooks_enabled?
