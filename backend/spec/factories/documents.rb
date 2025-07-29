@@ -46,7 +46,7 @@ FactoryBot.define do
 
     factory :tax_doc do
       document_type { Document.document_types[:tax_document] }
-      name { TaxDocument::ALL_SUPPORTED_TAX_FORM_NAMES.sample }
+      name { Document::ALL_SUPPORTED_TAX_FORM_NAMES.sample }
       user_compliance_info { create(:user_compliance_info) }
 
       trait :deleted do
@@ -54,27 +54,27 @@ FactoryBot.define do
       end
 
       trait :form_w9 do
-        name { TaxDocument::FORM_W_9 }
+        name { Document::FORM_W_9 }
       end
 
       trait :form_w8ben do
-        name { TaxDocument::FORM_W_8BEN }
+        name { Document::FORM_W_8BEN }
       end
 
       trait :form_w8bene do
-        name { TaxDocument::FORM_W_8BEN_E }
+        name { Document::FORM_W_8BEN_E }
       end
 
       trait :form_1099div do
-        name { TaxDocument::FORM_1099_DIV }
+        name { Document::FORM_1099_DIV }
       end
 
       trait :form_1099nec do
-        name { TaxDocument::FORM_1099_NEC }
+        name { Document::FORM_1099_NEC }
       end
 
       trait :form_1042s do
-        name { TaxDocument::FORM_1042_S }
+        name { Document::FORM_1042_S }
       end
     end
 

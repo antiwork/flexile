@@ -72,12 +72,14 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await page.getByRole("cell", { name: "CUSTOM-1" }).click();
     await page.getByRole("link", { name: "Edit invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
     await page.getByPlaceholder("Description").first().fill("first item updated");
     const timeField = page.getByLabel("Hours / Qty").first();
     await timeField.fill("04:30");
     await timeField.blur(); // work around a test-specific issue; this works fine in a real browser
     await page.waitForTimeout(1000); // TODO (dani) avoid this
     await page.getByRole("button", { name: "Re-submit invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     await expect(page.getByRole("cell", { name: "$870" })).toBeVisible();
     await expect(locateOpenInvoicesBadge(page)).not.toBeVisible();
@@ -210,6 +212,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
     await page.waitForTimeout(200); // TODO (dani) avoid this
     await page.getByRole("button", { name: "Re-submit invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).not.toBeVisible();
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Awaiting approval" })).toBeVisible();

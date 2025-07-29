@@ -3,7 +3,6 @@
 RSpec.describe UserComplianceInfo do
   describe "associations" do
     it { is_expected.to belong_to(:user) }
-    it { is_expected.to have_many(:tax_documents) }
     it { is_expected.to have_many(:documents) }
     it { is_expected.to have_many(:dividends) }
   end
@@ -420,7 +419,7 @@ RSpec.describe UserComplianceInfo do
         let(:business_entity) { false }
 
         it "returns the W-9 form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(TaxDocument::FORM_W_9)
+          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_9)
         end
       end
 
@@ -428,7 +427,7 @@ RSpec.describe UserComplianceInfo do
         let(:business_entity) { true }
 
         it "returns the W-9 form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(TaxDocument::FORM_W_9)
+          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_9)
         end
       end
     end
@@ -440,7 +439,7 @@ RSpec.describe UserComplianceInfo do
         let(:business_entity) { false }
 
         it "returns the W-9 form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(TaxDocument::FORM_W_9)
+          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_9)
         end
       end
 
@@ -448,7 +447,7 @@ RSpec.describe UserComplianceInfo do
         let(:business_entity) { true }
 
         it "returns the W-9 form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(TaxDocument::FORM_W_9)
+          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_9)
         end
       end
     end
@@ -460,7 +459,7 @@ RSpec.describe UserComplianceInfo do
         let(:business_entity) { false }
 
         it "returns the W-8BEN form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(TaxDocument::FORM_W_8BEN)
+          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_8BEN)
         end
       end
 
@@ -468,7 +467,7 @@ RSpec.describe UserComplianceInfo do
         let(:business_entity) { true }
 
         it "returns the W-8BEN-E form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(TaxDocument::FORM_W_8BEN_E)
+          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_8BEN_E)
         end
       end
     end
@@ -481,7 +480,7 @@ RSpec.describe UserComplianceInfo do
       let(:user) { create(:user, country_code: "US", citizenship_country_code: "RO") }
 
       it "returns the 1099-DIV form name" do
-        expect(user_compliance_info.investor_tax_document_name).to eq(TaxDocument::FORM_1099_DIV)
+        expect(user_compliance_info.investor_tax_document_name).to eq(Document::FORM_1099_DIV)
       end
     end
 
@@ -489,7 +488,7 @@ RSpec.describe UserComplianceInfo do
       let(:user) { create(:user, country_code: "RO", citizenship_country_code: "US") }
 
       it "returns the 1099-DIV form name" do
-        expect(user_compliance_info.investor_tax_document_name).to eq(TaxDocument::FORM_1099_DIV)
+        expect(user_compliance_info.investor_tax_document_name).to eq(Document::FORM_1099_DIV)
       end
     end
 
@@ -499,7 +498,7 @@ RSpec.describe UserComplianceInfo do
       end
 
       it "returns the 1042-S form name" do
-        expect(user_compliance_info.investor_tax_document_name).to eq(TaxDocument::FORM_1042_S)
+        expect(user_compliance_info.investor_tax_document_name).to eq(Document::FORM_1042_S)
       end
     end
   end
@@ -517,20 +516,6 @@ RSpec.describe UserComplianceInfo do
         expect(submitted_1099_nec).to_not be_deleted
       end
 
-      context "when there are already deleted records for the same tax year" do
-        let!(:deleted_1099_nec) do
-          create(:tax_document, :deleted, :form_1099nec, user_compliance_info:, tax_year: 2023)
-        end
-
-        it "marks the user compliance info and corresponding records as deleted" do
-          user_compliance_info.mark_deleted!
-          expect(user_compliance_info.reload).to be_deleted
-          expect(form_1099_nec.reload).to be_deleted
-          expect(tax_document.reload).to_not be_deleted
-          expect(submitted_1099_nec).to_not be_deleted
-          expect(deleted_1099_nec).to be_deleted
-        end
-      end
 
       context "when there are paid dividends attached to the user compliance info" do
         let!(:form_1099_div) { create(:tax_doc, :form_1099div, user_compliance_info:) }
