@@ -1673,43 +1673,6 @@ export const companyContractors = pgTable(
   ],
 );
 
-export const contracts = pgTable(
-  "contracts",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    signedAt: timestamp("signed_at", { precision: 6, mode: "date" }),
-    companyContractorId: bigint("company_contractor_id", { mode: "bigint" }),
-    companyAdministratorId: bigint("company_administrator_id", { mode: "bigint" }).notNull(),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-    contractorSignature: varchar("contractor_signature"),
-    administratorSignature: varchar("administrator_signature").notNull(),
-
-    name: varchar().notNull(),
-    equityGrantId: bigint("equity_grant_id", { mode: "bigint" }),
-    jsonData: jsonb("json_data"),
-    companyId: bigint("company_id", { mode: "bigint" }).notNull(),
-    userId: bigint("user_id", { mode: "bigint" }).notNull(),
-    equityOptionsPlan: boolean("equity_options_plan").notNull().default(false),
-    certificate: boolean().notNull().default(false),
-  },
-  (table) => [
-    index("index_contracts_on_company_administrator_id").using(
-      "btree",
-      table.companyAdministratorId.asc().nullsLast().op("int8_ops"),
-    ),
-    index("index_contracts_on_company_contractor_id").using(
-      "btree",
-      table.companyContractorId.asc().nullsLast().op("int8_ops"),
-    ),
-    index("index_contracts_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
-    index("index_contracts_on_equity_grant_id").using("btree", table.equityGrantId.asc().nullsLast().op("int8_ops")),
-    index("index_contracts_on_user_id").using("btree", table.userId.asc().nullsLast().op("int8_ops")),
-  ],
-);
-
 export const investorDividendRounds = pgTable(
   "investor_dividend_rounds",
   {
@@ -1950,7 +1913,6 @@ export const usersRelations = relations(users, ({ many }) => ({
   companyContractors: many(companyContractors),
   companyInvestors: many(companyInvestors),
   companyLawyers: many(companyLawyers),
-  contracts: many(contracts),
   documents: many(documents),
   invoices: many(invoices),
   wiseRecipients: many(wiseRecipients),
@@ -1967,7 +1929,6 @@ export const companiesRelations = relations(companies, ({ many }) => ({
   lawyers: many(companyLawyers),
   shareClasses: many(shareClasses),
   updates: many(companyUpdates),
-  contracts: many(contracts),
   documents: many(documents),
   invoices: many(invoices),
   integrations: many(integrations),
@@ -1983,7 +1944,6 @@ export const companyContractorsRelations = relations(companyContractors, ({ one,
     fields: [companyContractors.userId],
     references: [users.id],
   }),
-  contracts: many(contracts),
   documents: many(documents),
   invoices: many(invoices),
 }));
@@ -2021,7 +1981,6 @@ export const equityGrantsRelations = relations(equityGrants, ({ one, many }) => 
     fields: [equityGrants.companyInvestorId],
     references: [companyInvestors.id],
   }),
-  contracts: many(contracts),
   documents: many(documents),
   transactions: many(equityGrantTransactions),
   vestingEvents: many(vestingEvents),

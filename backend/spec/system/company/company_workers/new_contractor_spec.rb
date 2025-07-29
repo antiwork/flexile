@@ -35,9 +35,9 @@ RSpec.describe "New Contractor" do
 
     expect(page).to have_selector("h2", text: "Effective Date: #{Date.new(2025, 8, 8).strftime("%b %-d, %Y")}")
     expect(page).to have_selector("h2", text: "Gumroad")
-    expect(page).to have_selector("h1", text: "Consulting agreement")
+    expect(page).to have_selector("h1", text: Document::CONSULTING_CONTRACT_NAME)
     expect(page).to have_selector("li", text: "$99 per hour")
-    section = find(:section, "Consulting agreement", section_element: :section, heading_level: 1)
+    section = find(:section, Document::CONSULTING_CONTRACT_NAME, section_element: :section, heading_level: 1)
     expect(section).to have_text("Client: Signature ‌ Name Gumroad Title Chief Executive Officer Email sahil@gumroad.com Country United States Address 548 Market Street San Francisco, CA 94104-5401 Contractor: Signature ‌ Name ‌ Legal entity ‌ Country Australia", normalize_ws: true)
 
     click_on "Add your signature"
@@ -68,9 +68,9 @@ RSpec.describe "New Contractor" do
     fill_in_form(project_based: true)
 
     expect(page).to have_selector("h2", text: "Gumroad")
-    expect(page).to have_selector("h1", text: "Consulting agreement")
+    expect(page).to have_selector("h1", text: Document::CONSULTING_CONTRACT_NAME)
     expect(page).to have_selector("li", text: "$1,000 per project")
-    section = find(:section, "Consulting agreement", section_element: :section, heading_level: 1)
+    section = find(:section, Document::CONSULTING_CONTRACT_NAME, section_element: :section, heading_level: 1)
     expect(section).to have_text("Client: Signature ‌ Name Gumroad Title Chief Executive Officer Email sahil@gumroad.com Country United States Address 548 Market Street San Francisco, CA 94104-5401 Contractor: Signature ‌ Name ‌ Legal entity ‌ Country Australia", normalize_ws: true)
 
     click_on "Add your signature"
@@ -108,9 +108,9 @@ RSpec.describe "New Contractor" do
     fill_in_form
 
     expect(page).to have_selector("h2", text: "Gumroad")
-    expect(page).to have_selector("h1", text: "Consulting agreement")
+    expect(page).to have_selector("h1", text: Document::CONSULTING_CONTRACT_NAME)
     expect(page).to have_selector("li", text: "$#{role.pay_rate_usd} per hour")
-    section = find(:section, "Consulting agreement", section_element: :section, heading_level: 1)
+    section = find(:section, Document::CONSULTING_CONTRACT_NAME, section_element: :section, heading_level: 1)
     expect(section).to have_text("Client: Signature ‌ Name Gumroad Title Chief Executive Officer Email sahil@gumroad.com Country United States Address 548 Market Street San Francisco, CA 94104-5401 Contractor: Signature ‌ Name ‌ Legal entity ‌ Country Australia", normalize_ws: true)
 
     click_on "Add your signature"
@@ -145,9 +145,9 @@ RSpec.describe "New Contractor" do
     fill_in_form
 
     expect(page).to have_selector("h2", text: "Gumroad")
-    expect(page).to have_selector("h1", text: "Consulting agreement")
+    expect(page).to have_selector("h1", text: Document::CONSULTING_CONTRACT_NAME)
     expect(page).to have_selector("li", text: "$#{role.pay_rate_usd} per hour")
-    section = find(:section, "Consulting agreement", section_element: :section, heading_level: 1)
+    section = find(:section, Document::CONSULTING_CONTRACT_NAME, section_element: :section, heading_level: 1)
     expect(section).to have_text("Client: Signature ‌ Name Gumroad Title Chief Executive Officer Email sahil@gumroad.com Country United States Address 548 Market Street San Francisco, CA 94104-5401 Contractor: Signature ‌ Name ‌ Legal entity ‌ Country Australia", normalize_ws: true)
 
     click_on "Add your signature"
@@ -190,7 +190,7 @@ RSpec.describe "New Contractor" do
       fill_in_form
       select "United States", from: "Country of residence"
 
-      expect(page).to have_selector("h1", text: "Consulting agreement")
+      expect(page).to have_selector("h1", text: Document::CONSULTING_CONTRACT_NAME)
       expect(page).to_not have_selector("h1", text: "CONSULTANT EQUITY ELECTION FORM")
       expect(page).to have_selector("h1", text: "ASSIGNMENT OF COPYRIGHT")
       expect(page).to have_selector("span", text: "United States", count: 4)
@@ -214,7 +214,7 @@ RSpec.describe "New Contractor" do
       fill_in_form
       select "United States", from: "Country of residence"
 
-      expect(page).to have_selector("h1", text: "Consulting agreement")
+      expect(page).to have_selector("h1", text: Document::CONSULTING_CONTRACT_NAME)
       expect(page).to have_selector("h1", text: "CONSULTANT EQUITY ELECTION FORM")
       expect(page).to have_selector("h1", text: "ASSIGNMENT OF COPYRIGHT")
       expect(page).to have_selector("span", text: "United States", count: 6)

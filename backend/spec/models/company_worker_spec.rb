@@ -4,7 +4,6 @@ RSpec.describe CompanyWorker do
   describe "associations" do
     it { is_expected.to belong_to(:company) }
     it { is_expected.to belong_to(:user) }
-    it { is_expected.to have_many(:contracts) }
     it { is_expected.to have_many(:integration_records) }
     it { is_expected.to have_many(:invoices) }
     it { is_expected.to have_one(:quickbooks_integration_record) }

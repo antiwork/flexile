@@ -6,7 +6,6 @@ RSpec.describe EquityGrant do
     it { is_expected.to belong_to(:company_investor_entity).optional }
     it { is_expected.to belong_to(:option_pool) }
     it { is_expected.to belong_to(:active_exercise).class_name("EquityGrantExercise").optional(true) }
-    it { is_expected.to have_one(:contract) }
     it { is_expected.to have_many(:equity_grant_exercise_requests) }
     it { is_expected.to have_many(:exercises).class_name("EquityGrantExercise").through(:equity_grant_exercise_requests) }
   end
