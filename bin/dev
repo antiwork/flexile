@@ -12,6 +12,7 @@ fi
 # Generate SSL certificates and start local services
 make local
 
+export ENABLE_DEFAULT_OTP=true
 
 export NODE_EXTRA_CA_CERTS="$(node docker/createCertificate.js)"
 
