@@ -5,7 +5,6 @@ import { db } from "@/db";
 import { DocumentTemplateType } from "@/db/enums";
 import { documents, documentTemplates, users } from "@/db/schema";
 import env from "@/env";
-import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
 import { createRouter, protectedProcedure } from "@/trpc";
 import { sendEmail } from "@/trpc/email";
 import { createSubmission } from "@/trpc/routes/documents/templates";
@@ -63,36 +62,6 @@ export const usersRouter = createRouter({
       hasBankAccount,
     };
   }),
-
-  update: protectedProcedure
-    .input(
-      z.object({
-        email: z.string(),
-        preferredName: z.string().nullable(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      if (input.preferredName && input.preferredName.length > MAX_PREFERRED_NAME_LENGTH) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: `Preferred name exceeds maximum length of ${MAX_PREFERRED_NAME_LENGTH} characters`,
-        });
-      }
-      if (input.email.length < MIN_EMAIL_LENGTH) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: `Email must be at least ${MIN_EMAIL_LENGTH} characters`,
-        });
-      }
-
-      await db
-        .update(users)
-        .set({
-          email: input.email,
-          preferredName: input.preferredName,
-        })
-        .where(eq(users.id, BigInt(ctx.userId)));
-    }),
 
   updateTaxSettings: protectedProcedure.input(z.object({ data: z.unknown() })).mutation(async ({ ctx, input }) => {
     const response = await fetch(settings_tax_url({ host: ctx.host }), {

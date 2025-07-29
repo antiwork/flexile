@@ -42,3 +42,9 @@
 - No explanatory comments please
 
 - When adding new rules: Always update both `.cursorrules` and `.github/copilot-instructions.md` to keep them synchronized
+
+- When building UI, use existing components from `frontend/components/` when available: `Button`, `Input`, `DataTable`, `Placeholder`, `ComboBox`, `NumberInput`, `MutationButton`, `Dialog`, `Form` components, etc.
+
+- Database schema synchronization:
+  - Any changes to the database schema via Rails migrations in `backend/db/migrate/` must be reflected in `frontend/db/schema.ts`
+  - The frontend schema file should be updated to match the Rails schema structure for type safety

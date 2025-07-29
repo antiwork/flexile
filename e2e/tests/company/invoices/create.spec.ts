@@ -261,9 +261,14 @@ test.describe("invoice creation", () => {
     await fillDatePicker(page, "Date", "12/15/2024");
 
     await expect(page.getByText("Total services$150")).toBeVisible();
-    await expect(page.getByText("Net amount in cash$150")).toBeVisible();
+
+    // contractor has 20% equity, so $150 * 0.8 = $120
+    await expect(page.getByText("Net amount in cash$120")).toBeVisible();
 
     await page.getByRole("button", { name: "Send invoice" }).click();
+
+    // wait for navigation to invoice list
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     await expect(page.locator("tbody")).toContainText("$150");
 

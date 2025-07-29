@@ -16,7 +16,6 @@ RSpec.describe User do
     it { is_expected.to have_many(:company_investors) }
     it { is_expected.to have_many(:portfolio_companies).through(:company_investors).source(:company) }
 
-    it { is_expected.to have_many(:contracts) }
     it { is_expected.to have_many(:documents) }
     it { is_expected.to have_many(:dividends).through(:company_investors) }
     it { is_expected.to have_many(:time_entries) }
@@ -28,7 +27,6 @@ RSpec.describe User do
     it { is_expected.to have_one(:bank_account_for_dividends).class_name("WiseRecipient") }
 
     it { is_expected.to have_many(:user_compliance_infos).autosave(true) }
-    it { is_expected.to have_many(:tax_documents).through(:user_compliance_infos) }
 
     describe "#compliance_info" do
       it "returns the most recent, live compliance info record" do

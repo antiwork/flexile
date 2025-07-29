@@ -8,7 +8,6 @@ class CompanyWorker < ApplicationRecord
   belongs_to :company
   belongs_to :user
 
-  has_many :contracts, foreign_key: :company_contractor_id
   has_many :invoices, foreign_key: :company_contractor_id
   has_many :integration_records, as: :integratable
 

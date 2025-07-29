@@ -12,7 +12,7 @@ class GenerateIrsTaxFormsJob
       company_user_klass: CompanyWorker,
       user_compliance_info:,
       user:,
-      form_name: TaxDocument::FORM_1099_NEC,
+      form_name: Document::FORM_1099_NEC,
       tax_year:,
     )
 
