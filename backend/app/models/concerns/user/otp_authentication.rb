@@ -13,35 +13,27 @@ module User::OtpAuthentication
   OTP_DRIFT = 10.minutes
 
   def verify_otp(code)
-    return false if otp_rate_limited?
+    with_lock do
+      return false if otp_rate_limited_unsafe?
 
-    is_valid = otp_code_valid?(code)
+      is_valid = otp_code_valid?(code)
 
-    if is_valid
-      # Reset failure tracking on successful verification
-      reset_otp_failure_tracking!
-    else
-      # Record the failed attempt
-      record_otp_failure!
+      if is_valid
+        # Reset failure tracking on successful verification
+        reset_otp_failure_tracking!
+      else
+        # Record the failed attempt
+        record_otp_failure!
+      end
+
+      is_valid
     end
-
-    is_valid
   end
 
   def otp_rate_limited?
-    return false unless otp_first_failed_at.present?
-
-    # Check if we're still within the rate limit window
-    time_since_first_failure = Time.current - otp_first_failed_at
-
-    if time_since_first_failure > OTP_ATTEMPT_WINDOW
-      # Window has passed, reset tracking
-      reset_otp_failure_tracking!
-      return false
+    with_lock do
+      otp_rate_limited_unsafe?
     end
-
-    # We're within the window, check if we've exceeded the limit
-    otp_failed_attempts_count >= MAX_OTP_ATTEMPTS
   end
 
   private
@@ -78,5 +70,21 @@ module User::OtpAuthentication
         otp_first_failed_at: nil,
         otp_failed_attempts_count: 0
       ) if otp_first_failed_at.present? || otp_failed_attempts_count > 0
+    end
+
+    def otp_rate_limited_unsafe?
+      return false unless otp_first_failed_at.present?
+
+      # Check if we're still within the rate limit window
+      time_since_first_failure = Time.current - otp_first_failed_at
+
+      if time_since_first_failure > OTP_ATTEMPT_WINDOW
+        # Window has passed, reset tracking
+        reset_otp_failure_tracking!
+        return false
+      end
+
+      # We're within the window, check if we've exceeded the limit
+      otp_failed_attempts_count >= MAX_OTP_ATTEMPTS
     end
 end
