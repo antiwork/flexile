@@ -49,7 +49,7 @@ export default function DividendRound() {
       {isLoading ? (
         <TableSkeleton columns={4} />
       ) : (
-        dividends && <DataTable table={table} onRowClicked={(row) => router.push(rowLink(row))} />
+        <DataTable table={table} onRowClicked={(row) => router.push(rowLink(row))} />
       )}
     </>
   );
