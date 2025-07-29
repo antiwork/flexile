@@ -142,7 +142,6 @@ const fieldGroups: string[][] = [
     KEY_SWIFT_CODE,
     KEY_ACCOUNT_ROUTING_NUMBER,
     "accountNumber",
-    "bankCode",
   ],
   [KEY_ADDRESS_CITY, KEY_ADDRESS_STATE, KEY_ADDRESS_POST_CODE],
 ];
