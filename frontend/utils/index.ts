@@ -49,5 +49,3 @@ export const md5Checksum = async (file: File) => {
   md5.update(await file.arrayBuffer());
   return btoa(String.fromCharCode(...(await md5.digest())));
 };
-
-export { type BaseField, groupFields } from "./fieldGrouping";
