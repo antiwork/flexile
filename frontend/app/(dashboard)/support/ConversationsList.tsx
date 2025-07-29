@@ -23,19 +23,11 @@ export const ConversationsList: React.FC<ConversationsListProps> = ({ onSelectCo
   const { data: conversationsData, isLoading: loading } = useConversations();
   const createConversation = useCreateConversation({
     onSuccess: (data) => {
-      if (data && typeof data === "object" && "conversationSlug" in data) {
-        onSelectConversation(String(data.conversationSlug));
-      }
+      onSelectConversation(data.conversationSlug);
     },
   });
 
   const conversations: Conversation[] = conversationsData?.conversations || [];
-
-  const handleCreateTicket = () => {
-    createConversation.mutate({
-      subject: "New support ticket",
-    });
-  };
 
   if (loading) {
     return <div>Loading conversations...</div>;
@@ -45,7 +37,7 @@ export const ConversationsList: React.FC<ConversationsListProps> = ({ onSelectCo
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Support tickets</h2>
-        <Button onClick={handleCreateTicket} disabled={createConversation.isPending}>
+        <Button onClick={() => createConversation.mutate({})} disabled={createConversation.isPending}>
           {createConversation.isPending ? "Creating..." : "New ticket"}
         </Button>
       </div>
@@ -79,9 +71,7 @@ export const ConversationsList: React.FC<ConversationsListProps> = ({ onSelectCo
                     <TableCell className="font-medium">{conversation.subject}</TableCell>
                     <TableCell>{conversation.messageCount}</TableCell>
                     <TableCell>
-                      {conversation.latestMessageAt
-                        ? new Date(conversation.latestMessageAt).toLocaleDateString()
-                        : new Date(conversation.createdAt).toLocaleDateString()}
+                      {new Date(conversation.latestMessageAt ?? conversation.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
                       <Button variant="outline" size="small" onClick={() => onSelectConversation(conversation.slug)}>
