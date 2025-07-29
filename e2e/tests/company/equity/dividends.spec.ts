@@ -13,7 +13,7 @@ import { assertDefined } from "@/utils/assert";
 
 test.describe("Dividends", () => {
   const setup = async () => {
-    const { company } = await companiesFactory.createCompletedOnboarding();
+    const { company } = await companiesFactory.createCompletedOnboarding({ equityEnabled: true });
     const { user: investorUser } = await usersFactory.create();
     const { companyInvestor } = await companyInvestorsFactory.create({
       companyId: company.id,

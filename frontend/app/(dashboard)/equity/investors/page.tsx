@@ -112,7 +112,7 @@ export default function CapTable() {
 
       investorColumnHelper.simple("notes", "Notes"),
     ],
-    [],
+    [data],
   );
 
   const investorsData = useMemo(

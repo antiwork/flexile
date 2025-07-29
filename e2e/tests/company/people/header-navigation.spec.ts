@@ -24,9 +24,7 @@ test.describe("People header navigation", () => {
 
   const setup = async () => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
-      tenderOffersEnabled: true,
-      capTableEnabled: true,
-      equityGrantsEnabled: true,
+      equityEnabled: true,
     });
 
     await companyContractorsFactory.create({

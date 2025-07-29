@@ -8,7 +8,7 @@ FactoryBot.define do
     attachments { [Rack::Test::UploadedFile.new(Rails.root.join("spec/fixtures/files/sample.pdf"))] }
 
     # Consulting contract
-    name { Contract::CONSULTING_CONTRACT_NAME }
+    name { Document::CONSULTING_CONTRACT_NAME }
     document_type { Document.document_types[:consulting_contract] }
 
     transient do

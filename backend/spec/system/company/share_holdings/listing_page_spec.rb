@@ -22,7 +22,7 @@ RSpec.describe "Share holdings page" do
                            share_price_usd: 2.41, share_class:)
   end
 
-  let(:company) { create(:company, valuation_in_dollars: 100_000_000, fully_diluted_shares: 2_000_000, equity_grants_enabled: true) }
+  let(:company) { create(:company, valuation_in_dollars: 100_000_000, fully_diluted_shares: 2_000_000, equity_enabled: true) }
   let(:company_investor) { create(:company_investor, company:) }
 
   before do

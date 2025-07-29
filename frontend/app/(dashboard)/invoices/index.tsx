@@ -149,13 +149,13 @@ export const ApproveButton = ({ invoice, onApprove }: { invoice: Invoice; onAppr
     <MutationButton
       mutation={approveInvoices}
       param={{ [pay ? "pay_ids" : "approve_ids"]: [invoice.id] }}
-      successText={pay ? "Payment sent!" : "Approved!"}
+      successText={pay ? "Payment initiated" : "Approved!"}
       loadingText={pay ? "Sending payment..." : "Approving..."}
       disabled={!!pay && (!company.completedPaymentMethodSetup || !taxRequirementsMet(invoice))}
     >
       {pay ? (
         <>
-          <CurrencyDollarIcon className="size-4" /> Pay now
+          <CurrencyDollarIcon className="size-4" /> {invoice.status === "failed" ? "Pay again" : "Pay now"}
         </>
       ) : (
         "Approve"

@@ -73,7 +73,6 @@ class PurgeSeedData
     end
 
     def purge_documents!(company)
-      company.contracts.each(&:destroy!)
       company.documents.each(&:destroy!)
     end
 
@@ -165,7 +164,6 @@ class PurgeSeedData
     end
 
     def purge_company_worker!(company_worker)
-      company_worker.contracts.each(&:destroy!)
       company_worker.destroy!
     end
 
@@ -188,7 +186,6 @@ class PurgeSeedData
         EquityBuybackPayment.where(wise_recipient_id: wise_recipient.id).find_each(&:destroy!)
         wise_recipient.destroy!
       end
-      user.time_entries.each(&:destroy!)
       user.tos_agreements.each(&:destroy!)
       email = user.email
       user.destroy!
