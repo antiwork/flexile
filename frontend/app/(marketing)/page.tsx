@@ -93,8 +93,8 @@ export default function HomePage() {
               <div>
                 <h3 className="text-xl font-medium">Pay Contractors</h3>
                 <div className="text-xl text-gray-600">
-                  Fast, reliable contractor payments <br />
-                  with transparent processing
+                  Fast, reliable payments to contractors <br />
+                  in 190+ countries worldwide
                 </div>
               </div>
             </div>
