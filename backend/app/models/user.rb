@@ -209,7 +209,7 @@ class User < ApplicationRecord
   end
 
   def has_personal_details?
-    legal_name.present? && preferred_name.present? && citizenship_country_code.present?
+    legal_name.present? && citizenship_country_code.present?
   end
 
   def should_regenerate_consulting_contract?(changeset)

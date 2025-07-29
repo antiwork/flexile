@@ -117,9 +117,9 @@ export const GettingStarted = () => {
               </div>
               <div className="mx-4">
                 <p className="text-sm">
-                  {user.roles.administrator
-                    ? "Everything is in place. Time to flex."
-                    : "You are ready to send your first invoice."}
+                  {user.roles.worker
+                    ? "You are ready to send your first invoice."
+                    : "Everything is in place. Time to flex."}
                 </p>
               </div>
             </div>

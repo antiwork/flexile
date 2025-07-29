@@ -33,9 +33,12 @@ class Company < ApplicationRecord
     { key: "send_first_payment", title: "Send your first payment", description: "Process your first contractor payment" }
   ].freeze
 
-  WORKER_CHECKLIST_ITEMS = [
+  INVESTOR_CHECKLIST_ITEMS = [
     { key: "fill_tax_information", title: "Fill tax information", description: "Complete your tax details" },
     { key: "add_payout_information", title: "Add payout information", description: "Set up your payment method" },
+  ].freeze
+
+  WORKER_CHECKLIST_ITEMS = INVESTOR_CHECKLIST_ITEMS + [
     { key: "sign_contract", title: "Sign contract", description: "Review and sign your contractor agreement" }
   ].freeze
 
@@ -202,17 +205,18 @@ class Company < ApplicationRecord
   end
 
   def checklist_items(user)
-    case user
-    when CompanyAdministrator
-      ADMIN_CHECKLIST_ITEMS.map do |item|
-        item.merge(completed: checklist_item_completed?(item[:key], user))
-      end
-    when CompanyWorker
-      WORKER_CHECKLIST_ITEMS.map do |item|
-        item.merge(completed: checklist_item_completed?(item[:key], user))
-      end
-    else
-      []
+    checklist_items = case user
+                      when CompanyAdministrator
+                        ADMIN_CHECKLIST_ITEMS
+                      when CompanyWorker
+                        WORKER_CHECKLIST_ITEMS
+                      when CompanyInvestor
+                        INVESTOR_CHECKLIST_ITEMS
+                      else
+                        []
+    end
+    checklist_items.map do |item|
+      item.merge(completed: checklist_item_completed?(item[:key], user))
     end
   end
 
