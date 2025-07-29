@@ -48,6 +48,7 @@ export default function BottomNavbar() {
   const [openModal, setOpenModal] = React.useState<"equity" | "more" | null>(null);
   const sidebar = useSidebar();
   const { user, updatesPath, equityLinks, switchCompany } = useNavData();
+  const dialogContentRef = React.useRef<HTMLDivElement>(null);
 
   const moreSections: MoreSection[] = [
     ...(updatesPath
@@ -91,6 +92,7 @@ export default function BottomNavbar() {
         }}
       >
         <DialogContent
+          ref={dialogContentRef}
           className={cn(
             "fixed !top-auto left-1/2 mx-auto !mt-0 w-full max-w-md -translate-x-1/2 !translate-y-0 !transform-none rounded-t-2xl rounded-b-none bg-white p-0",
             "border-none shadow-[0px_-2px_24px_rgba(0,0,0,0.11)]",
@@ -132,7 +134,11 @@ export default function BottomNavbar() {
                         <ChevronsUpDown className="ml-auto h-4 w-4" />
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width]" align="start">
+                    <DropdownMenuContent
+                      className="w-[--radix-dropdown-menu-trigger-width]"
+                      align="start"
+                      container={dialogContentRef.current}
+                    >
                       {user.companies.map((company) => (
                         <DropdownMenuItem
                           key={company.id}
