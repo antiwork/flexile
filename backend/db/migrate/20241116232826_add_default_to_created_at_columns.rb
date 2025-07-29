@@ -69,7 +69,6 @@ class AddDefaultToCreatedAtColumns < ActiveRecord::Migration[7.2]
     change_column_default :time_entries, :created_at, from: nil, to: -> { "CURRENT_TIMESTAMP" }
     change_column_default :tos_agreements, :created_at, from: nil, to: -> { "CURRENT_TIMESTAMP" }
     change_column_default :user_compliance_infos, :created_at, from: nil, to: -> { "CURRENT_TIMESTAMP" }
-    change_column_default :user_leads, :created_at, from: nil, to: -> { "CURRENT_TIMESTAMP" }
     change_column_default :users, :created_at, from: nil, to: -> { "CURRENT_TIMESTAMP" }
     change_column_default :vesting_events, :created_at, from: nil, to: -> { "CURRENT_TIMESTAMP" }
     change_column_default :vesting_schedules, :created_at, from: nil, to: -> { "CURRENT_TIMESTAMP" }
