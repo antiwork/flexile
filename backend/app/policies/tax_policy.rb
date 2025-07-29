@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class TaxPolicy < ApplicationPolicy
-  def index?
+  def show?
     company_worker.present? || company_investor.present?
   end
 
