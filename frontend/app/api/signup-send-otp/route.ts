@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-const API_BASE_URL = process.env.NODE_ENV === "production" ? "https://api.flexile.com" : "https://api.flexile.dev";
+const API_BASE_URL = process.env.NODE_ENV === "production" ? "https://api.flexile.com" : "http://api.flexile.dev:3100";
 const API_SECRET_TOKEN = process.env.API_SECRET_TOKEN;
 
 if (!API_SECRET_TOKEN) {

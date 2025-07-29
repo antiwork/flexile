@@ -53,7 +53,7 @@ module User::OtpAuthentication
       return false if code.blank? || otp_secret_key.blank?
 
       # Accept test OTP code during local development and tests
-      if !Rails.env.production? && ENV["ENABLE_DEFAULT_OTP"] == "true" && code.to_s == "000000"
+      if !Rails.env.production? && ENV["ENABLE_DEFAULT_OTP"] == "true" && code.to_s == "000000" && self.email.ends_with?("@example.com")
         return true
       end
 

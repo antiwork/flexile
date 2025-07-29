@@ -5,7 +5,7 @@ const userDataSchema = z.object({
   jwt: z.string(),
 });
 
-const API_BASE_URL = process.env.NODE_ENV === "production" ? "https://api.flexile.com" : "http://api.flexile.dev";
+const API_BASE_URL = process.env.NODE_ENV === "production" ? "https://api.flexile.com" : "http://api.flexile.dev:3100";
 
 export async function POST(request: NextRequest) {
   try {

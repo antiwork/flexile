@@ -11,6 +11,8 @@ test("login", async ({ page }) => {
 
   await page.goto("/login");
 
+  await page.waitForTimeout(5000);
+
   // Enter email address
   await page.getByLabel("Email address").fill(email);
   await page.getByRole("button", { name: "Send verification code" }).click();
