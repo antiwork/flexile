@@ -6,13 +6,13 @@ RSpec.describe User::OtpAuthentication, type: :model do
   let(:user) { create(:user) }
 
   describe "#verify_otp" do
-    context "when in test environment with PLAYWRIGHT_TEST=true" do
+    context "when in test environment with ENABLE_DEFAULT_OTP=true" do
       before do
-        ENV["PLAYWRIGHT_TEST"] = "true"
+        ENV["ENABLE_DEFAULT_OTP"] = "true"
       end
 
       after do
-        ENV.delete("PLAYWRIGHT_TEST")
+        ENV.delete("ENABLE_DEFAULT_OTP")
       end
 
       it 'accepts "000000" as valid OTP code' do
@@ -27,11 +27,11 @@ RSpec.describe User::OtpAuthentication, type: :model do
     context "when not in test environment" do
       before do
         allow(Rails).to receive(:env).and_return(ActiveSupport::StringInquirer.new("production"))
-        ENV["PLAYWRIGHT_TEST"] = "true"
+        ENV["ENABLE_DEFAULT_OTP"] = "true"
       end
 
       after do
-        ENV.delete("PLAYWRIGHT_TEST")
+        ENV.delete("ENABLE_DEFAULT_OTP")
       end
 
       it 'does not accept "000000" as valid OTP code' do
@@ -39,10 +39,10 @@ RSpec.describe User::OtpAuthentication, type: :model do
       end
     end
 
-    context "when PLAYWRIGHT_TEST is not set" do
+    context "when ENABLE_DEFAULT_OTP is not set" do
       before do
         allow(Rails).to receive(:env).and_return(ActiveSupport::StringInquirer.new("test"))
-        ENV.delete("PLAYWRIGHT_TEST")
+        ENV.delete("ENABLE_DEFAULT_OTP")
       end
 
       it 'does not accept "000000" as valid OTP code' do

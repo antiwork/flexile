@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
 
 // Test OTP code that should be accepted in test environment
-// Backend accepts "000000" when Rails.env.test? && ENV['PLAYWRIGHT_TEST'] == 'true'
+// Backend accepts "000000" when Rails.env.test? && ENV['ENABLE_DEFAULT_OTP'] == 'true'
 const TEST_OTP_CODE = "000000";
 
 const testUsers = [
