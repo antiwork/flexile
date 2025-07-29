@@ -1,4 +1,4 @@
-import { generateHelperAuth } from "@helperai/react";
+import { generateHelperAuth } from "@helperai/client/auth";
 import env from "@/env";
 import { createRouter, protectedProcedure } from "@/trpc";
 

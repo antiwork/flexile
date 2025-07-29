@@ -12,10 +12,7 @@ interface ConversationDetailProps {
 }
 
 export const ConversationDetail: React.FC<ConversationDetailProps> = ({ conversationSlug, onBack }) => {
-  const { data: conversation, isLoading: loading } = useConversation(conversationSlug, {
-    enableRealtime: true,
-    markRead: true,
-  });
+  const { data: conversation, isLoading: loading } = useConversation(conversationSlug);
 
   if (loading) {
     return <div>Loading conversation...</div>;
