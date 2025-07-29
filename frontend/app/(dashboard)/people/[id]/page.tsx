@@ -668,9 +668,11 @@ function OptionsTab({ investorId, userId }: { investorId: string; userId: string
 
   const table = useTable({ data: equityGrants, columns: optionsColumns });
 
-  return (
+  return isLoading ? (
+    <TableSkeleton columns={6} />
+  ) : equityGrants.length > 0 ? (
     <>
-      {isLoading ? <TableSkeleton columns={6} /> : <DataTable table={table} onRowClicked={setSelectedEquityGrant} />}
+      <DataTable table={table} onRowClicked={setSelectedEquityGrant} />
       {selectedEquityGrant ? (
         <DetailsModal
           equityGrant={selectedEquityGrant}
@@ -680,6 +682,8 @@ function OptionsTab({ investorId, userId }: { investorId: string; userId: string
         />
       ) : null}
     </>
+  ) : (
+    <Placeholder icon={CircleCheck}>This investor does not have any option grants.</Placeholder>
   );
 }
 
@@ -739,7 +743,7 @@ function ExercisesTab({ investorId }: { investorId: string }) {
   ) : exercises.length > 0 ? (
     <DataTable table={table} />
   ) : (
-    <Placeholder icon={CircleCheck}>The company does not have any exercises.</Placeholder>
+    <Placeholder icon={CircleCheck}>This investor has not exercised any options.</Placeholder>
   );
 }
 
