@@ -251,7 +251,7 @@ RSpec.describe "Company Settings" do
           wait_for_ajax
           expect(page).to_not have_text("Expense account for equity compensation")
 
-          company.update!(equity_compensation_enabled: true)
+          company.update!(equity_enabled: true)
           visit spa_company_administrator_settings_path(company.external_id)
           click_on "Connect"
           wait_for_ajax

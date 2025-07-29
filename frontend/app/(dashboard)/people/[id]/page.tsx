@@ -280,7 +280,7 @@ export default function ContractorPage() {
                   </FormItem>
                 )}
               />
-              {company.flags.includes("equity_compensation") ? (
+              {company.flags.includes("equity") ? (
                 <div className="space-y-4">
                   <FormField
                     control={issuePaymentForm.control}
@@ -438,7 +438,7 @@ const DetailsTab = ({
           ) : null}
 
           <FormFields />
-          {payRateInSubunits && company.flags.includes("equity_compensation") ? (
+          {payRateInSubunits && company.flags.includes("equity") ? (
             <div>
               <span>Equity split</span>
               <div className="my-2 flex h-2 overflow-hidden rounded-xs bg-gray-200">

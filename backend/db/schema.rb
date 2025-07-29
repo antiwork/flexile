@@ -102,15 +102,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_17_153309) do
     t.boolean "is_gumroad", default: false, null: false
     t.boolean "dividends_allowed", default: false, null: false
     t.boolean "is_trusted", default: false, null: false
-    t.boolean "equity_grants_enabled", default: false, null: false
     t.boolean "show_analytics_to_contractors", default: false, null: false
     t.string "default_currency", default: "usd", null: false
-    t.boolean "cap_table_enabled", default: false, null: false
-    t.boolean "tender_offers_enabled", default: false, null: false
     t.boolean "lawyers_enabled", default: false, null: false
     t.decimal "conversion_share_price_usd"
-    t.boolean "equity_compensation_enabled", default: false, null: false
     t.jsonb "json_data", default: {"flags" => []}, null: false
+    t.boolean "equity_enabled", default: false, null: false
     t.index ["external_id"], name: "index_companies_on_external_id", unique: true
   end
 

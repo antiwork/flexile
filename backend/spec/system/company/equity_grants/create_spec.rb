@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe "Creating an equity grant" do
-  let!(:company) { create(:company, equity_grants_enabled: true) }
+  let!(:company) { create(:company, equity_enabled: true) }
   let!(:option_pool) { create(:option_pool, company:, authorized_shares: 2_001, issued_shares: 1_000) }
   let!(:company_administrator) { create(:company_administrator, company:).user }
 

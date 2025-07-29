@@ -80,7 +80,7 @@ test.describe("One-off payments", () => {
 
     test.describe("for a contractor with equity", () => {
       test.beforeEach(async () => {
-        await db.update(companies).set({ equityCompensationEnabled: true }).where(eq(companies.id, company.id));
+        await db.update(companies).set({ equityEnabled: true }).where(eq(companies.id, company.id));
 
         companyInvestor = (
           await companyInvestorsFactory.create({

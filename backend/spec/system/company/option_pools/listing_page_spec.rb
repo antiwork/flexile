@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe "Option pools" do
-  let(:company) { create(:company, equity_grants_enabled: true) }
+  let(:company) { create(:company, equity_enabled: true) }
 
   shared_examples "a user with access" do
     before do
