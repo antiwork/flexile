@@ -851,40 +851,6 @@ export const admin_user_path = /*#__PURE__*/ __jsr.r({"id":{"r":true},"format":{
 
 /**
  * Generates rails route to
- * /admin/user_leads/:id(.:format)
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const admin_user_lead_url = /*#__PURE__*/ __jsr.r({"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"admin"],[2,[7,"/"],[2,[6,"user_leads"],[2,[7,"/"],[2,[3,"id"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
-
-/**
- * Generates rails route to
- * /admin/user_leads/:id(.:format)
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const admin_user_lead_path = /*#__PURE__*/ __jsr.r({"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"admin"],[2,[7,"/"],[2,[6,"user_leads"],[2,[7,"/"],[2,[3,"id"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
-
-/**
- * Generates rails route to
- * /admin/user_leads(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const admin_user_leads_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"admin"],[2,[7,"/"],[2,[6,"user_leads"],[1,[2,[8,"."],[3,"format"]]]]]]], true);
-
-/**
- * Generates rails route to
- * /admin/user_leads(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const admin_user_leads_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"admin"],[2,[7,"/"],[2,[6,"user_leads"],[1,[2,[8,"."],[3,"format"]]]]]]]);
-
-/**
- * Generates rails route to
  * /admin/users(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
@@ -914,22 +880,6 @@ export const api_helper_users_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"
  * @returns {string} route path
  */
 export const api_helper_users_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"helper"],[2,[7,"/"],[2,[6,"users"],[1,[2,[8,"."],[3,"format"]]]]]]]);
-
-/**
- * Generates rails route to
- * /v1/user_leads(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const api_v1_user_leads_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"v1"],[2,[7,"/"],[2,[6,"user_leads"],[1,[2,[8,"."],[3,"format"]]]]]]], true);
-
-/**
- * Generates rails route to
- * /v1/user_leads(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const api_v1_user_leads_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"v1"],[2,[7,"/"],[2,[6,"user_leads"],[1,[2,[8,"."],[3,"format"]]]]]]]);
 
 /**
  * Generates rails route to
@@ -1601,24 +1551,6 @@ export const edit_admin_user_path = /*#__PURE__*/ __jsr.r({"id":{"r":true},"form
 
 /**
  * Generates rails route to
- * /admin/user_leads/:id/edit(.:format)
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const edit_admin_user_lead_url = /*#__PURE__*/ __jsr.r({"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"admin"],[2,[7,"/"],[2,[6,"user_leads"],[2,[7,"/"],[2,[3,"id"],[2,[7,"/"],[2,[6,"edit"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]], true);
-
-/**
- * Generates rails route to
- * /admin/user_leads/:id/edit(.:format)
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const edit_admin_user_lead_path = /*#__PURE__*/ __jsr.r({"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"admin"],[2,[7,"/"],[2,[6,"user_leads"],[2,[7,"/"],[2,[3,"id"],[2,[7,"/"],[2,[6,"edit"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]);
-
-/**
- * Generates rails route to
  * /internal/companies/:company_id/company_updates/:id/edit(.:format)
  * @param {any} company_id
  * @param {any} id
@@ -1966,22 +1898,6 @@ export const new_admin_user_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"
  * @returns {string} route path
  */
 export const new_admin_user_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"admin"],[2,[7,"/"],[2,[6,"users"],[2,[7,"/"],[2,[6,"new"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
-
-/**
- * Generates rails route to
- * /admin/user_leads/new(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const new_admin_user_lead_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"admin"],[2,[7,"/"],[2,[6,"user_leads"],[2,[7,"/"],[2,[6,"new"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
-
-/**
- * Generates rails route to
- * /admin/user_leads/new(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const new_admin_user_lead_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"admin"],[2,[7,"/"],[2,[6,"user_leads"],[2,[7,"/"],[2,[6,"new"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
 
 /**
  * Generates rails route to
