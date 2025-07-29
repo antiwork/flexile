@@ -158,7 +158,7 @@ TenderOffers::FinalizeBuyback.new(tender_offer: tender_offer).perform
 
 **What this does**:
 
-#### Generates equity buybacks
+#### Generating equity buybacks
 
 - Creates an `equity_buyback_round` for the tender offer
 - For each accepted bid, creates `equity_buyback` records

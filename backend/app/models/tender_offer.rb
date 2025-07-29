@@ -34,7 +34,7 @@ class TenderOffer < ApplicationRecord
 
   validate :ends_at_must_be_after_starts_at
   validate :correct_attachment_mime_type
-  validate :validate_investor_requirements
+  validate :correct_number_of_investors
 
   def open?
     Time.current.utc.between?(starts_at, ends_at)
@@ -73,7 +73,7 @@ class TenderOffer < ApplicationRecord
       end
     end
 
-    def validate_investor_requirements
+    def correct_number_of_investors
       if tender_offer_investors.blank?
         errors.add(:base, "At least one investor must be provided")
         return

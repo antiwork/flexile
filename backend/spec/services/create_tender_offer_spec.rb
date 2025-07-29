@@ -65,14 +65,8 @@ RSpec.describe CreateTenderOffer do
       let(:attributes) { valid_attributes.except(:investors, ["nonexistent-id"]) }
       let(:investor_ids) { ["nonexistent-id"] }
 
-      it "fails to create tender offer due to no valid investors" do
-        expect { result }.not_to change(company.tender_offers, :count)
-        expect { result }.not_to change(TenderOfferInvestor, :count)
-      end
-
-      it "returns failure with validation error" do
-        expect(result[:success]).to be false
-        expect(result[:error_message]).to include("At least one investor must be provided")
+      it "raises RecordNotFound for non-existent investors" do
+        expect { result }.to raise_error(ActiveRecord::RecordNotFound)
       end
     end
 

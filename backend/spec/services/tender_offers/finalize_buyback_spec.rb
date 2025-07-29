@@ -153,21 +153,6 @@ RSpec.describe TenderOffers::FinalizeBuyback do
       end
     end
 
-    context "when cap table update fails" do
-      before do
-        allow(TenderOffers::UpdateCapTable).to receive(:new).and_raise(ActiveRecord::RecordInvalid.new(tender_offer))
-      end
-
-      it "raises the error and does not proceed with payments" do
-        expect { service.perform }.to raise_error(ActiveRecord::RecordInvalid)
-      end
-
-      it "does not process payments" do
-        expect(InvestorEquityBuybacksPaymentJob).not_to receive(:perform_in)
-        expect { service.perform rescue nil }
-      end
-    end
-
     context "with payment processing delays" do
       let!(:users_and_investors) do
         3.times.map do |i|

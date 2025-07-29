@@ -12,6 +12,7 @@ class CreateTenderOffer
 
     if @investor_ids.present?
       company_investors = @company.company_investors.where(external_id: @investor_ids)
+      raise ActiveRecord::RecordNotFound if company_investors.size != @investor_ids.size
       company_investors.each do |company_investor|
         tender_offer.tender_offer_investors.build(company_investor: company_investor)
       end
