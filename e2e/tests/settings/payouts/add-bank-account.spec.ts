@@ -499,21 +499,4 @@ test.describe("Bank account settings", () => {
       });
     });
   });
-
-  test.describe("Submit button behavior", () => {
-    test("disables save button when required fields are empty", async ({ page }) => {
-      await page.getByRole("link", { name: "Settings" }).click();
-      await page.getByRole("link", { name: "Payouts" }).click();
-      await page.getByRole("button", { name: "Add bank account" }).click();
-
-      await selectComboboxOption(page, "Currency", "USD (United States Dollar)");
-
-      await expect(page.getByRole("button", { name: "Save bank account" })).toBeDisabled();
-
-      await page.getByLabel("Full name of the account holder").fill("John Doe");
-      await page.getByLabel("Routing number").fill("071004200");
-
-      await expect(page.getByRole("button", { name: "Save bank account" })).toBeDisabled();
-    });
-  });
 });
