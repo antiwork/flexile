@@ -15,7 +15,7 @@ setup("global setup", async () => {
 
   const tables = result.rows
     .map(({ tablename }) => tablename)
-    .filter((name) => !["_drizzle_migrations", "wise_credentials", "users"].includes(name))
+    .filter((name) => !["_drizzle_migrations", "wise_credentials"].includes(name))
     .map((name) => `"public"."${name}"`);
   await db.execute(sql`TRUNCATE TABLE ${sql.raw(tables.join(","))} CASCADE;`);
 

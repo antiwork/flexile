@@ -17,6 +17,8 @@ class Api::V1::LoginController < Api::BaseController
     return unless check_otp_rate_limit(user)
     return unless verify_user_otp(user, otp_code)
 
+    user.update!(current_sign_in_at: Time.current)
+
     success_response_with_jwt(user)
   end
 end
