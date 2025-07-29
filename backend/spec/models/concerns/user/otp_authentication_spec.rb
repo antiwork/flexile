@@ -3,7 +3,7 @@
 require "spec_helper"
 
 RSpec.describe User::OtpAuthentication, type: :model do
-  let(:user) { create(:user) }
+  let(:user) { create(:user, email: "test@example.com") }
 
   describe "#verify_otp" do
     context "when in test environment with ENABLE_DEFAULT_OTP=true" do
@@ -44,6 +44,14 @@ RSpec.describe User::OtpAuthentication, type: :model do
         allow(Rails).to receive(:env).and_return(ActiveSupport::StringInquirer.new("test"))
         ENV.delete("ENABLE_DEFAULT_OTP")
       end
+
+      it 'does not accept "000000" as valid OTP code' do
+        expect(user.verify_otp("000000")).to be false
+      end
+    end
+
+    context "when email doesn't end with @example.com" do
+      let(:user) { create(:user, email: "test@example.org") }
 
       it 'does not accept "000000" as valid OTP code' do
         expect(user.verify_otp("000000")).to be false
