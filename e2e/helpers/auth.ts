@@ -1,48 +1,15 @@
 import { type Page } from "@playwright/test";
-import { db } from "@test/db";
-import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
 
 // Test OTP code that should be accepted in test environment
 // Backend accepts "000000" when Rails.env.test? && ENV['ENABLE_DEFAULT_OTP'] == 'true'
 const TEST_OTP_CODE = "000000";
 
-const testUsers = [
-  { email: "test1+e2e@example.com" },
-  { email: "test2+e2e@example.com" },
-  { email: "test3+e2e@example.com" },
-  { email: "test4+e2e@example.com" },
-];
-
-let currentTestUser: (typeof testUsers)[number] | undefined;
-
-export const clearTestUser = async () => {
-  currentTestUser = undefined;
-};
-
-export const setTestUser = async (id: bigint) => {
-  await clearTestUser();
-  for (const testUser of testUsers) {
-    try {
-      // Update user email to match our test user
-      await db.update(users).set({ email: testUser.email }).where(eq(users.id, id));
-      currentTestUser = testUser;
-      break;
-    } catch {}
-  }
-  if (!currentTestUser) {
-    throw new Error("Failed to set test user");
-  }
-  return currentTestUser;
-};
-
 export const login = async (page: Page, user: typeof users.$inferSelect) => {
   await page.goto("/login");
 
-  const testUser = await setTestUser(user.id);
-
   // Fill email and submit to get OTP
-  await page.getByLabel("Email address").fill(testUser.email);
+  await page.getByLabel("Email address").fill(user.email);
   await page.getByRole("button", { name: "Send verification code" }).click();
 
   // Wait for OTP step to appear
