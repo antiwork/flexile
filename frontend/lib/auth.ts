@@ -1,23 +1,7 @@
 import type { NextAuthOptions, User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { z } from "zod";
-
-const API_BASE_URL = (() => {
-  switch (process.env.NODE_ENV) {
-    case "production":
-      return "https://api.flexile.com";
-    case "test":
-      return "http://api.flexile.dev:3100";
-    default:
-      return "https://api.flexile.dev";
-  }
-})();
-
-const API_SECRET_TOKEN = process.env.API_SECRET_TOKEN;
-
-if (!API_SECRET_TOKEN) {
-  throw new Error("API_SECRET_TOKEN environment variable is required");
-}
+import { API_BASE_URL, API_SECRET_TOKEN } from "./api";
 
 if (!process.env.NEXTAUTH_SECRET) {
   throw new Error("NEXTAUTH_SECRET environment variable is required");

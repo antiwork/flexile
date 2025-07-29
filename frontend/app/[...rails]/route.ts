@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
+import { API_SECRET_TOKEN } from "@/lib/api";
 import { authOptions } from "@/lib/auth";
 
 async function handler(req: Request) {
@@ -35,7 +36,6 @@ async function handler(req: Request) {
   // Add API secret token for API requests
   let finalUrl = url;
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/v1/")) {
-    const API_SECRET_TOKEN = process.env.API_SECRET_TOKEN;
     if (API_SECRET_TOKEN) {
       // For API requests, we need to pass both JWT and API secret token
       const requestUrl = new URL(url);
