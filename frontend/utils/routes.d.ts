@@ -456,50 +456,6 @@ export const admin_sidekiq_web_path: ((
 
 /**
  * Generates rails route to
- * /admin/time_entries(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const admin_time_entries_url: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /admin/time_entries(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const admin_time_entries_path: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /admin/time_entries/:id(.:format)
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const admin_time_entry_url: ((
-  id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /admin/time_entries/:id(.:format)
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const admin_time_entry_path: ((
-  id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /admin/users/:id(.:format)
  * @param {any} id
  * @param {object | undefined} options
@@ -519,50 +475,6 @@ export const admin_user_url: ((
  */
 export const admin_user_path: ((
   id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /admin/user_leads/:id(.:format)
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const admin_user_lead_url: ((
-  id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /admin/user_leads/:id(.:format)
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const admin_user_lead_path: ((
-  id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /admin/user_leads(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const admin_user_leads_url: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /admin/user_leads(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const admin_user_leads_path: ((
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
@@ -653,16 +565,6 @@ export const api_v1_login_index_path: ((
  * @returns {string} route path
  */
 export const api_v1_user_leads_url: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /v1/user_leads(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const api_v1_user_leads_path: ((
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
@@ -1536,30 +1438,6 @@ export const edit_admin_payment_path: ((
 
 /**
  * Generates rails route to
- * /admin/time_entries/:id/edit(.:format)
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const edit_admin_time_entry_url: ((
-  id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /admin/time_entries/:id/edit(.:format)
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const edit_admin_time_entry_path: ((
-  id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /admin/users/:id/edit(.:format)
  * @param {any} id
  * @param {object | undefined} options
@@ -1578,30 +1456,6 @@ export const edit_admin_user_url: ((
  * @returns {string} route path
  */
 export const edit_admin_user_path: ((
-  id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /admin/user_leads/:id/edit(.:format)
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const edit_admin_user_lead_url: ((
-  id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /admin/user_leads/:id/edit(.:format)
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const edit_admin_user_lead_path: ((
   id: RequiredRouteParameter,
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
@@ -2036,26 +1890,6 @@ export const new_admin_payment_path: ((
 
 /**
  * Generates rails route to
- * /admin/time_entries/new(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const new_admin_time_entry_url: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /admin/time_entries/new(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const new_admin_time_entry_path: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /admin/users/new(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
@@ -2071,26 +1905,6 @@ export const new_admin_user_url: ((
  * @returns {string} route path
  */
 export const new_admin_user_path: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /admin/user_leads/new(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const new_admin_user_lead_url: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /admin/user_leads/new(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const new_admin_user_lead_path: ((
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 

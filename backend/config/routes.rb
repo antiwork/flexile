@@ -21,9 +21,7 @@ Rails.application.routes.draw do
     resources :company_workers
     resources :company_administrators
     resources :companies
-    resources :time_entries
     resources :users
-    resources :user_leads
     resources :payments do
       member do
         patch :wise_paid
@@ -66,7 +64,6 @@ Rails.application.routes.draw do
   scope module: :api, as: :api do
     constraints api_domain_constraint do
       namespace :v1 do
-        resources :user_leads, only: :create
         resources :login, only: :create
         resources :email_otp, only: :create
         resources :signup, only: [] do

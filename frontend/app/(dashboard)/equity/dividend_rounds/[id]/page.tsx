@@ -6,6 +6,7 @@ import React from "react";
 import DividendStatusIndicator from "@/app/(dashboard)/equity/DividendStatusIndicator";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
+import TableSkeleton from "@/components/TableSkeleton";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -35,17 +36,21 @@ export default function DividendRound() {
   const { id } = useParams<{ id: string }>();
   const company = useCurrentCompany();
   const router = useRouter();
-  const [data] = trpc.dividends.list.useSuspenseQuery({
+  const { data: dividends = [], isLoading } = trpc.dividends.list.useQuery({
     companyId: company.id,
     dividendRoundId: Number(id),
   });
 
-  const table = useTable({ columns, data });
+  const table = useTable({ data: dividends, columns });
 
   return (
     <>
       <DashboardHeader title="Dividend" />
-      <DataTable table={table} onRowClicked={(row) => router.push(rowLink(row))} />
+      {isLoading ? (
+        <TableSkeleton columns={4} />
+      ) : (
+        <DataTable table={table} onRowClicked={(row) => router.push(rowLink(row))} />
+      )}
     </>
   );
 }
