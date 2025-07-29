@@ -1,9 +1,11 @@
-import { skipToken } from "@tanstack/react-query";
+import { skipToken, useQueryClient } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
 import React from "react";
+import { request } from "@/utils/request";
+import { company_switch_path } from "@/utils/routes";
 import { navLinks as equityNavLinks } from "../app/(dashboard)/equity";
 import { useIsActionable } from "../app/(dashboard)/invoices";
-import { useCurrentCompany, useCurrentUser } from "../global";
+import { useCurrentCompany, useCurrentUser, useUserStore } from "../global";
 import { storageKeys } from "../models/constants";
 import { trpc } from "../trpc/client";
 
@@ -34,6 +36,17 @@ export function useNavData() {
   const updatesPath = company.routes.find((route) => route.label === "Updates")?.name;
   const equityLinks = equityNavLinks(user, company);
   const [isOpen, setIsOpen] = React.useState(() => localStorage.getItem(storageKeys.EQUITY_MENU_STATE) === "open");
+  const queryClient = useQueryClient();
+  const switchCompany = async (companyId: string) => {
+    useUserStore.setState((state) => ({ ...state, pending: true }));
+    await request({
+      method: "POST",
+      url: company_switch_path(companyId),
+      accept: "json",
+    });
+    await queryClient.resetQueries({ queryKey: ["currentUser"] });
+    useUserStore.setState((state) => ({ ...state, pending: false }));
+  };
 
   return {
     user,
@@ -47,5 +60,6 @@ export function useNavData() {
     equityLinks,
     isOpen,
     setIsOpen,
+    switchCompany,
   };
 }

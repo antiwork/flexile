@@ -2,7 +2,6 @@
 
 import { SignOutButton } from "@clerk/nextjs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   BookUser,
   ChartPie,
@@ -45,29 +44,16 @@ import {
   SidebarProvider,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
+import { useCurrentCompany, useCurrentUser } from "@/global";
 import defaultCompanyLogo from "@/images/default-company-logo.svg";
 import { storageKeys } from "@/models/constants";
-import { request } from "@/utils/request";
-import { company_switch_path } from "@/utils/routes";
 import { useIsMobile } from "@/utils/use-mobile";
 import { useNavData } from "@/utils/use-navdata";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = useCurrentUser();
   const isMobile = useIsMobile();
-
-  const queryClient = useQueryClient();
-  const switchCompany = async (companyId: string) => {
-    useUserStore.setState((state) => ({ ...state, pending: true }));
-    await request({
-      method: "POST",
-      url: company_switch_path(companyId),
-      accept: "json",
-    });
-    await queryClient.resetQueries({ queryKey: ["currentUser"] });
-    useUserStore.setState((state) => ({ ...state, pending: false }));
-  };
+  const { switchCompany } = useNavData();
 
   return (
     <SidebarProvider>
