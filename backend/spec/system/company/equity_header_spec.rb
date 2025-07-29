@@ -25,7 +25,8 @@ RSpec.describe "Equity section navigation" do
     end
 
     it "shows the expected nav link and tabs if feature dividends is enabled" do
-      Flipper.enable(:cap_table, company) if equity_path == spa_company_cap_table_path(company.external_id)
+      Flipper.enable(:equity, company) if equity_path == spa_company_cap_table_path(company.external_id)
+      company.update!(equity_enabled: true)
 
       visit root_path
 

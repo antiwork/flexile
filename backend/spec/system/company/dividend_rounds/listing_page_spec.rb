@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe "Dividend Rounds listing page" do
-  let(:company) { create(:company) }
+  let(:company) { create(:company, equity_enabled: true) }
 
   shared_examples "a user with access" do
     context "when records exist" do

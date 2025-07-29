@@ -89,7 +89,6 @@ class UserPresenter
       companies: user.all_companies.compact.map do |company|
         flags = []
         flags.push("equity") if company.equity_enabled?
-        flags.push("dividends")
         flags.push("company_updates") if company.company_investors.exists?
         flags.push("quickbooks") if company.quickbooks_enabled?
         flags.push("lawyers") if company.lawyers_enabled?
@@ -187,7 +186,6 @@ class UserPresenter
       {
         flags: {
           equity: company.equity_enabled?,
-          dividends: true,
           company_updates: company.company_investors.exists?,
         },
       }
