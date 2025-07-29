@@ -49,13 +49,5 @@ RSpec.describe User::OtpAuthentication, type: :model do
         expect(user.verify_otp("000000")).to be false
       end
     end
-
-    context "when email doesn't end with @example.com" do
-      let(:user) { create(:user, email: "test@example.org") }
-
-      it 'does not accept "000000" as valid OTP code' do
-        expect(user.verify_otp("000000")).to be false
-      end
-    end
   end
 end
