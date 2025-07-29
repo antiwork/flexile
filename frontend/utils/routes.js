@@ -833,40 +833,6 @@ export const admin_sidekiq_web_path = /*#__PURE__*/ __jsr.r({}, [2,[7,"/"],[2,[6
 
 /**
  * Generates rails route to
- * /admin/time_entries(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const admin_time_entries_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"admin"],[2,[7,"/"],[2,[6,"time_entries"],[1,[2,[8,"."],[3,"format"]]]]]]], true);
-
-/**
- * Generates rails route to
- * /admin/time_entries(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const admin_time_entries_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"admin"],[2,[7,"/"],[2,[6,"time_entries"],[1,[2,[8,"."],[3,"format"]]]]]]]);
-
-/**
- * Generates rails route to
- * /admin/time_entries/:id(.:format)
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const admin_time_entry_url = /*#__PURE__*/ __jsr.r({"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"admin"],[2,[7,"/"],[2,[6,"time_entries"],[2,[7,"/"],[2,[3,"id"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
-
-/**
- * Generates rails route to
- * /admin/time_entries/:id(.:format)
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const admin_time_entry_path = /*#__PURE__*/ __jsr.r({"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"admin"],[2,[7,"/"],[2,[6,"time_entries"],[2,[7,"/"],[2,[3,"id"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
-
-/**
- * Generates rails route to
  * /admin/users/:id(.:format)
  * @param {any} id
  * @param {object | undefined} options
@@ -1617,24 +1583,6 @@ export const edit_admin_payment_path = /*#__PURE__*/ __jsr.r({"id":{"r":true},"f
 
 /**
  * Generates rails route to
- * /admin/time_entries/:id/edit(.:format)
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const edit_admin_time_entry_url = /*#__PURE__*/ __jsr.r({"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"admin"],[2,[7,"/"],[2,[6,"time_entries"],[2,[7,"/"],[2,[3,"id"],[2,[7,"/"],[2,[6,"edit"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]], true);
-
-/**
- * Generates rails route to
- * /admin/time_entries/:id/edit(.:format)
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const edit_admin_time_entry_path = /*#__PURE__*/ __jsr.r({"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"admin"],[2,[7,"/"],[2,[6,"time_entries"],[2,[7,"/"],[2,[3,"id"],[2,[7,"/"],[2,[6,"edit"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]);
-
-/**
- * Generates rails route to
  * /admin/users/:id/edit(.:format)
  * @param {any} id
  * @param {object | undefined} options
@@ -2002,22 +1950,6 @@ export const new_admin_payment_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,
  * @returns {string} route path
  */
 export const new_admin_payment_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"admin"],[2,[7,"/"],[2,[6,"payments"],[2,[7,"/"],[2,[6,"new"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
-
-/**
- * Generates rails route to
- * /admin/time_entries/new(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const new_admin_time_entry_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"admin"],[2,[7,"/"],[2,[6,"time_entries"],[2,[7,"/"],[2,[6,"new"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
-
-/**
- * Generates rails route to
- * /admin/time_entries/new(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const new_admin_time_entry_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"admin"],[2,[7,"/"],[2,[6,"time_entries"],[2,[7,"/"],[2,[6,"new"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
 
 /**
  * Generates rails route to

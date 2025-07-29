@@ -38,7 +38,6 @@ class User < ApplicationRecord
   has_many :portfolio_companies, -> { order("company_investors.created_at") }, through: :company_investors, source: :company
 
   has_many :dividends, through: :company_investors
-  has_many :time_entries
   has_many :tos_agreements
   has_many :invoices
   has_many :invoice_approvals, foreign_key: :approver_id

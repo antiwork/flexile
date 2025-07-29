@@ -186,7 +186,6 @@ class PurgeSeedData
         EquityBuybackPayment.where(wise_recipient_id: wise_recipient.id).find_each(&:destroy!)
         wise_recipient.destroy!
       end
-      user.time_entries.each(&:destroy!)
       user.tos_agreements.each(&:destroy!)
       email = user.email
       user.destroy!
