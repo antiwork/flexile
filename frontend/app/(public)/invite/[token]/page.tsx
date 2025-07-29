@@ -1,15 +1,13 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircleIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useUserStore } from "@/global";
+import { switchCompany } from "@/lib/switch-company";
 import { INVITATION_TOKEN_COOKIE_MAX_AGE, INVITATION_TOKEN_COOKIE_NAME } from "@/models/constants";
 import { trpc } from "@/trpc/client";
-import { request } from "@/utils/request";
-import { company_switch_path } from "@/utils/routes";
 
 export default function AcceptInvitationPage() {
   const { token } = useParams();
@@ -18,19 +16,6 @@ export default function AcceptInvitationPage() {
   const { user, pending } = useUserStore();
   const safeToken = typeof token === "string" ? token : "";
   const { data: inviteData, isLoading, isError } = trpc.companyInviteLinks.verify.useQuery({ token: safeToken });
-
-  const queryClient = useQueryClient();
-
-  const switchCompany = async (companyId: string) => {
-    useUserStore.setState((state) => ({ ...state, pending: true }));
-    await request({
-      method: "POST",
-      url: company_switch_path(companyId),
-      accept: "json",
-    });
-    await queryClient.resetQueries({ queryKey: ["currentUser"] });
-    useUserStore.setState((state) => ({ ...state, pending: false }));
-  };
 
   const acceptInviteMutation = trpc.companyInviteLinks.accept.useMutation({
     onSuccess: async () => {

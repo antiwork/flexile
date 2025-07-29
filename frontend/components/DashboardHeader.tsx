@@ -1,5 +1,4 @@
 import React from "react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export function DashboardHeader({ title, headerActions }: { title: React.ReactNode; headerActions?: React.ReactNode }) {
   return (
@@ -8,8 +7,7 @@ export function DashboardHeader({ title, headerActions }: { title: React.ReactNo
         <div className="grid items-center justify-between gap-3 md:flex">
           <div>
             <div className="flex items-center justify-between gap-2">
-              <SidebarTrigger className="md:hidden" />
-              <h1 className="text-sm font-bold">{title}</h1>
+              <h1 className="text-xl font-bold md:text-sm">{title}</h1>
             </div>
           </div>
 

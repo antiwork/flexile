@@ -2,7 +2,7 @@
 
 import { SignOutButton } from "@clerk/nextjs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
-import { skipToken, useQueryClient } from "@tanstack/react-query";
+import { skipToken } from "@tanstack/react-query";
 import {
   BookUser,
   ChartPie,
@@ -23,7 +23,9 @@ import { usePathname } from "next/navigation";
 import React from "react";
 import { navLinks as equityNavLinks } from "@/app/(dashboard)/equity";
 import { useIsActionable } from "@/app/(dashboard)/invoices";
+import { CompanyName } from "@/components/CompanyName";
 import { GettingStarted } from "@/components/GettingStarted";
+import MobileNav from "@/components/MobileNav";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -47,27 +49,27 @@ import {
   SidebarProvider,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
+import { useCurrentCompany, useCurrentUser } from "@/global";
 import defaultCompanyLogo from "@/images/default-company-logo.svg";
+import { switchCompany } from "@/lib/switch-company";
 import { storageKeys } from "@/models/constants";
 import { trpc } from "@/trpc/client";
-import { request } from "@/utils/request";
-import { company_switch_path } from "@/utils/routes";
+import { useIsMobile } from "@/utils/use-mobile";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = useCurrentUser();
+  const isMobile = useIsMobile();
 
-  const queryClient = useQueryClient();
-  const switchCompany = async (companyId: string) => {
-    useUserStore.setState((state) => ({ ...state, pending: true }));
-    await request({
-      method: "POST",
-      url: company_switch_path(companyId),
-      accept: "json",
-    });
-    await queryClient.resetQueries({ queryKey: ["currentUser"] });
-    useUserStore.setState((state) => ({ ...state, pending: false }));
-  };
+  if (isMobile) {
+    return (
+      <>
+        <main className="pb-20">
+          <div className="mx-3 flex flex-col gap-6">{children}</div>
+        </main>
+        <MobileNav />
+      </>
+    );
+  }
 
   return (
     <SidebarProvider>
@@ -159,24 +161,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </SidebarProvider>
   );
 }
-
-const CompanyName = () => {
-  const company = useCurrentCompany();
-  return (
-    <>
-      {company.name ? (
-        <Link href="/settings" className="relative size-6">
-          <Image src={company.logo_url || defaultCompanyLogo} fill className="rounded-sm" alt="" />
-        </Link>
-      ) : null}
-      <div>
-        <span className="line-clamp-1 text-sm font-bold" title={company.name ?? ""}>
-          {company.name}
-        </span>
-      </div>
-    </>
-  );
-};
 
 const NavLinks = () => {
   const user = useCurrentUser();

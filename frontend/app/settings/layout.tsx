@@ -13,6 +13,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
+import MobileNav from "@/components/MobileNav";
 import {
   Sidebar,
   SidebarContent,
@@ -25,10 +26,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useCurrentUser } from "@/global";
 import type { CurrentUser } from "@/models/user";
+import { useIsMobile } from "@/utils/use-mobile";
 
 const personalLinks = [
   {
@@ -80,8 +81,20 @@ const companyLinks = [
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   const user = useCurrentUser();
   const pathname = usePathname();
+  const isMobile = useIsMobile();
   const filteredPersonalLinks = personalLinks.filter((link) => link.isVisible(user));
   const filteredCompanyLinks = companyLinks.filter((link) => link.isVisible(user));
+
+  if (isMobile) {
+    return (
+      <div className="flex h-screen flex-col overflow-hidden">
+        <main className="flex flex-1 flex-col overflow-y-auto pb-20">
+          <div className="flex-1 p-6">{children}</div>
+        </main>
+        <MobileNav />
+      </div>
+    );
+  }
 
   return (
     <SidebarProvider>
@@ -139,14 +152,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
           </SidebarContent>
         </Sidebar>
         <SidebarInset>
-          <div className="flex items-center gap-2 p-2 md:hidden">
-            <SidebarTrigger />
-            <Link href="/dashboard" className="flex items-center gap-2 text-sm">
-              <ChevronLeft className="h-4 w-4" />
-              <span className="text-muted-foreground font-medium">Back to app</span>
-            </Link>
-          </div>
-          <main className="mx-auto w-full max-w-3xl flex-1 p-6 md:p-16">{children}</main>
+          <main className="mx-auto w-full max-w-3xl flex-1 p-16">{children}</main>
         </SidebarInset>
       </div>
     </SidebarProvider>
