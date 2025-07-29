@@ -204,7 +204,7 @@ RSpec.describe LeaveCompanyService do
     end
   end
 
-  describe "#user_has_leavable_role?" do
+  describe "user_has_leavable_role?" do
     context "when user is a contractor" do
       before do
         create(:company_worker, user: user, company: company)
