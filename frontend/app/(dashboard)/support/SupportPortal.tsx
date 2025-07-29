@@ -1,15 +1,25 @@
 "use client";
 
 import { HelperClientProvider } from "@helperai/react";
-import { useState } from "react";
+import { useQueryState } from "nuqs";
 import { trpc } from "@/trpc/client";
 import { ConversationDetail } from "./ConversationDetail";
 import { ConversationsList } from "./ConversationsList";
 
-export const SupportPortal = () => {
-  const [selectedConversationSlug, setSelectedConversationSlug] = useState<string | null>(null);
+export const useHelperSession = () =>
+  // Would be nice to do this in a server component so we don't need to wait for it to load
+  trpc.support.createHelperSession.useQuery(
+    {},
+    {
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      staleTime: Infinity,
+    },
+  );
 
-  const { data: session, isLoading } = trpc.support.createHelperSession.useQuery();
+export const SupportPortal = () => {
+  const [selectedConversationSlug, setSelectedConversationSlug] = useQueryState("id");
+  const { data: session, isLoading } = useHelperSession();
 
   if (isLoading || !session) {
     return <div>Loading support portal...</div>;
@@ -23,10 +33,10 @@ export const SupportPortal = () => {
         {selectedConversationSlug ? (
           <ConversationDetail
             conversationSlug={selectedConversationSlug}
-            onBack={() => setSelectedConversationSlug(null)}
+            onBack={() => void setSelectedConversationSlug(null)}
           />
         ) : (
-          <ConversationsList onSelectConversation={setSelectedConversationSlug} />
+          <ConversationsList onSelectConversation={(slug) => void setSelectedConversationSlug(slug)} />
         )}
       </div>
     </HelperClientProvider>

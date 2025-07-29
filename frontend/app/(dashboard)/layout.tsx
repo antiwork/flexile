@@ -1,6 +1,7 @@
 "use client";
 
 import { SignOutButton } from "@clerk/nextjs";
+import { HelperClientProvider, useUnreadConversationsCount } from "@helperai/react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { skipToken, useQueryClient } from "@tanstack/react-query";
 import {
@@ -11,6 +12,7 @@ import {
   CircleDollarSign,
   Files,
   LogOut,
+  MessageCircle,
   ReceiptIcon,
   Rss,
   Settings,
@@ -23,6 +25,7 @@ import { usePathname } from "next/navigation";
 import React from "react";
 import { navLinks as equityNavLinks } from "@/app/(dashboard)/equity";
 import { useIsActionable } from "@/app/(dashboard)/invoices";
+import { useHelperSession } from "@/app/(dashboard)/support/SupportPortal";
 import { GettingStarted } from "@/components/GettingStarted";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -55,6 +58,7 @@ import { company_switch_path } from "@/utils/routes";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = useCurrentUser();
+  const pathname = usePathname();
 
   const queryClient = useQueryClient();
   const switchCompany = async (companyId: string) => {
@@ -67,6 +71,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     await queryClient.resetQueries({ queryKey: ["currentUser"] });
     useUserStore.setState((state) => ({ ...state, pending: false }));
   };
+
+  const { data: helperSession } = useHelperSession();
 
   return (
     <SidebarProvider>
@@ -126,6 +132,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <SidebarGroup className="mt-auto">
             <SidebarGroupContent>
               <SidebarMenu>
+                <NavLink
+                  href="/support"
+                  active={pathname.startsWith("/support")}
+                  icon={MessageCircle}
+                  badge={
+                    helperSession ? (
+                      <HelperClientProvider host="https://help.flexile.com" session={helperSession}>
+                        <SupportUnreadCount />
+                      </HelperClientProvider>
+                    ) : null
+                  }
+                >
+                  Support
+                </NavLink>
                 <SidebarMenuItem>
                   <SignOutButton>
                     <SidebarMenuButton className="cursor-pointer">
@@ -305,7 +325,7 @@ const NavLink = <T extends string>({
   active?: boolean;
   icon: React.ComponentType;
   filledIcon?: React.ComponentType;
-  badge?: number | undefined;
+  badge?: number | React.ReactNode;
 }) => {
   const Icon = active && filledIcon ? filledIcon : icon;
   return (
@@ -314,13 +334,20 @@ const NavLink = <T extends string>({
         <Link href={href}>
           <Icon />
           <span>{children}</span>
-          {badge && badge > 0 ? (
-            <Badge role="status" className="ml-auto h-4 w-auto min-w-4 bg-blue-500 px-1 text-xs text-white">
-              {badge > 10 ? "10+" : badge}
-            </Badge>
-          ) : null}
+          {typeof badge === "number" && badge > 0 ? <NavBadge count={badge} /> : badge}
         </Link>
       </SidebarMenuButton>
     </SidebarMenuItem>
   );
+};
+
+const NavBadge = ({ count }: { count: number }) => (
+  <Badge role="status" className="ml-auto h-4 w-auto min-w-4 bg-blue-500 px-1 text-xs text-white">
+    {count > 10 ? "10+" : count}
+  </Badge>
+);
+
+const SupportUnreadCount = () => {
+  const { data } = useUnreadConversationsCount();
+  return data?.count && data.count > 0 ? <NavBadge count={data.count} /> : null;
 };
