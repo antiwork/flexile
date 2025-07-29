@@ -102,15 +102,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_17_153309) do
     t.boolean "is_gumroad", default: false, null: false
     t.boolean "dividends_allowed", default: false, null: false
     t.boolean "is_trusted", default: false, null: false
-    t.boolean "equity_grants_enabled", default: false, null: false
     t.boolean "show_analytics_to_contractors", default: false, null: false
     t.string "default_currency", default: "usd", null: false
-    t.boolean "cap_table_enabled", default: false, null: false
-    t.boolean "tender_offers_enabled", default: false, null: false
     t.boolean "lawyers_enabled", default: false, null: false
     t.decimal "conversion_share_price_usd"
-    t.boolean "equity_compensation_enabled", default: false, null: false
     t.jsonb "json_data", default: {"flags" => []}, null: false
+    t.boolean "equity_enabled", default: false, null: false
     t.index ["external_id"], name: "index_companies_on_external_id", unique: true
   end
 
@@ -294,28 +291,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_17_153309) do
     t.string "status", default: "initial", null: false
     t.string "bank_account_last_four"
     t.index ["consolidated_invoice_id"], name: "index_consolidated_payments_on_consolidated_invoice_id"
-  end
-
-  create_table "contracts", force: :cascade do |t|
-    t.datetime "signed_at"
-    t.bigint "company_contractor_id"
-    t.bigint "company_administrator_id", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.string "contractor_signature"
-    t.string "administrator_signature", null: false
-    t.string "name", null: false
-    t.bigint "equity_grant_id"
-    t.jsonb "json_data"
-    t.bigint "company_id", null: false
-    t.bigint "user_id", null: false
-    t.boolean "equity_options_plan", default: false, null: false
-    t.boolean "certificate", default: false, null: false
-    t.index ["company_administrator_id"], name: "index_contracts_on_company_administrator_id"
-    t.index ["company_contractor_id"], name: "index_contracts_on_company_contractor_id"
-    t.index ["company_id"], name: "index_contracts_on_company_id"
-    t.index ["equity_grant_id"], name: "index_contracts_on_equity_grant_id"
-    t.index ["user_id"], name: "index_contracts_on_user_id"
   end
 
   create_table "convertible_investments", force: :cascade do |t|

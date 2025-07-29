@@ -73,7 +73,6 @@ class PurgeSeedData
     end
 
     def purge_documents!(company)
-      company.contracts.each(&:destroy!)
       company.documents.each(&:destroy!)
     end
 
@@ -165,7 +164,6 @@ class PurgeSeedData
     end
 
     def purge_company_worker!(company_worker)
-      company_worker.contracts.each(&:destroy!)
       company_worker.destroy!
     end
 

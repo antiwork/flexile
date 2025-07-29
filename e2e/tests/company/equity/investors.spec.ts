@@ -11,7 +11,7 @@ import { companyInvestors } from "@/db/schema";
 test.describe("Investors", () => {
   test("displays correct ownership percentages for investors", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
-      capTableEnabled: true,
+      equityEnabled: true,
       fullyDilutedShares: BigInt(1000000),
     });
 
@@ -61,7 +61,7 @@ test.describe("Investors", () => {
 
   test("recalculates ownership percentages when data changes", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
-      capTableEnabled: true,
+      equityEnabled: true,
       fullyDilutedShares: BigInt(1000000),
     });
 
@@ -90,7 +90,7 @@ test.describe("Investors", () => {
 
   test("shows correct ownership percentages for both outstanding and fully diluted columns", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
-      capTableEnabled: true,
+      equityEnabled: true,
       fullyDilutedShares: BigInt(2000000),
     });
 

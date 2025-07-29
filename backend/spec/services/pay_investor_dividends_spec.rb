@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe PayInvestorDividends, :vcr do
-  let(:company) { create(:company) }
+  let(:company) { create(:company, equity_enabled: true) }
   let(:user) { create(:user, :without_compliance_info) }
   let!(:user_compliance_info) { create(:user_compliance_info, user:, tax_id_status: UserComplianceInfo::TAX_ID_STATUS_VERIFIED, tax_information_confirmed_at: 1.day.ago) }
   let(:company_investor) { create(:company_investor, user:, company:) }
@@ -72,7 +72,13 @@ RSpec.describe PayInvestorDividends, :vcr do
     end.to change(DividendPayment, :count).by(0)
   end
 
+  it "raises an exception if the company does not have access to the dividends feature" do
+    company.update!(equity_enabled: false)
 
+    expect do
+      described_class.new(company_investor, dividends).process
+    end.to raise_error("Feature unsupported for company #{company.id}")
+  end
 
   it "raises an exception if Flexile does not have sufficient balance to pay for the dividend" do
     allow(Wise::AccountBalance).to receive(:has_sufficient_flexile_balance?).and_return(false)
@@ -243,11 +249,11 @@ RSpec.describe PayInvestorDividends, :vcr do
           .and change { user.bank_accounts.alive.count }.by(-1)
           .and change { DividendPayment.count }.by(1)
           .and have_enqueued_mail(CompanyInvestorMailer, :dividend_payment_failed_reenter_bank_details).with { |kwargs|
-                 expect(kwargs[:dividend_payment_id]).to eq(DividendPayment.last.id)
-                 expect(kwargs[:amount]).to eq((net_amount_in_cents / 100.0) * rate)
-                 expect(kwargs[:currency]).to eq(user.bank_account_for_dividends.currency)
-                 expect(kwargs[:net_amount_in_usd_cents]).to eq(net_amount_in_cents)
-               }
+            expect(kwargs[:dividend_payment_id]).to eq(DividendPayment.last.id)
+            expect(kwargs[:amount]).to eq((net_amount_in_cents / 100.0) * rate)
+            expect(kwargs[:currency]).to eq(user.bank_account_for_dividends.currency)
+            expect(kwargs[:net_amount_in_usd_cents]).to eq(net_amount_in_cents)
+          }
 
         dividend_payment = DividendPayment.last
         expect(dividend_payment.processor_uuid).to be_present
