@@ -46,4 +46,6 @@ kill_process_listening_on_port 3001
 kill_process_listening_on_port 8288 # inngest
 rm -f backend/tmp/pids/server.pid
 
+export RAILS_ENV=development
+
 foreman start -f Procfile.dev "$@"

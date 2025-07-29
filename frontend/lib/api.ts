@@ -1,11 +1,11 @@
 export const API_BASE_URL = (() => {
-  switch (process.env.NODE_ENV) {
-    case "production":
-      return "https://api.flexile.com";
+  switch (process.env.RAILS_ENV) {
+    case "development":
+      return "https://api.flexile.dev";
     case "test":
       return "http://api.flexile.dev:3100";
     default:
-      return "https://api.flexile.dev";
+      return "https://api.flexile.com";
   }
 })();
 
