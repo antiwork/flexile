@@ -637,7 +637,7 @@ function SharesTab({ investorId }: { investorId: string }) {
   const table = useTable({ data: shareHoldings, columns: sharesColumns });
 
   if (isLoading) {
-    return <TableSkeleton columns={6} />;
+    return <TableSkeleton columns={5} />;
   }
 
   if (!shareHoldings || shareHoldings.length === 0) {
