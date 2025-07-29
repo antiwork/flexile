@@ -455,6 +455,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
             <ComboBox
               id={`currency-${uid}`}
               value={currency}
+              modal
               onChange={(value) => setCurrency(z.enum(currencyCodes).parse(value))}
               options={CURRENCIES.map(({ value, name }) => ({ value, label: name }))}
             />
