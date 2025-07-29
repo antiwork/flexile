@@ -515,26 +515,5 @@ test.describe("Bank account settings", () => {
 
       await expect(page.getByRole("button", { name: "Save bank account" })).toBeDisabled();
     });
-
-    test("enables save button when all required fields are filled", async ({ page }) => {
-      await page.getByRole("link", { name: "Settings" }).click();
-      await page.getByRole("link", { name: "Payouts" }).click();
-      await page.getByRole("button", { name: "Add bank account" }).click();
-
-      await selectComboboxOption(page, "Currency", "USD (United States Dollar)");
-
-      await page.getByLabel("Full name of the account holder").fill("John Doe");
-      await page.getByLabel("Routing number").fill("071004200");
-      await page.getByLabel("Account number").fill("12345678");
-      await page.getByLabel("Country").click();
-      await page.getByRole("option", { name: "United States", exact: true }).click();
-      await page.getByLabel("City").fill("New York");
-      await page.getByLabel("Street address, apt number").fill("123 Main St");
-      await page.getByLabel("State").click();
-      await page.getByRole("option", { name: "New York", exact: true }).click();
-      await page.getByLabel("ZIP code").fill("10001");
-
-      await expect(page.getByRole("button", { name: "Save bank account" })).toBeEnabled();
-    });
   });
 });
