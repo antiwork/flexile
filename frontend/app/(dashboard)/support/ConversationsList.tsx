@@ -10,15 +10,6 @@ interface ConversationsListProps {
   onSelectConversation: (slug: string) => void;
 }
 
-interface Conversation {
-  slug: string;
-  subject: string;
-  createdAt: string;
-  latestMessage: string | null;
-  latestMessageAt: string | null;
-  messageCount: number;
-}
-
 export const ConversationsList: React.FC<ConversationsListProps> = ({ onSelectConversation }) => {
   const { data: conversationsData, isLoading: loading } = useConversations();
   const createConversation = useCreateConversation({
@@ -27,7 +18,7 @@ export const ConversationsList: React.FC<ConversationsListProps> = ({ onSelectCo
     },
   });
 
-  const conversations: Conversation[] = conversationsData?.conversations || [];
+  const conversations = conversationsData?.conversations || [];
 
   if (loading) {
     return <div>Loading conversations...</div>;
@@ -68,9 +59,18 @@ export const ConversationsList: React.FC<ConversationsListProps> = ({ onSelectCo
               <TableBody>
                 {conversations.map((conversation) => (
                   <TableRow key={conversation.slug}>
-                    <TableCell className="font-medium">{conversation.subject}</TableCell>
-                    <TableCell>{conversation.messageCount}</TableCell>
-                    <TableCell>
+                    <TableCell className={`font-medium ${conversation.isUnread ? "font-bold" : ""}`}>
+                      <div className="flex items-center gap-2">
+                        {conversation.isUnread ? (
+                          <div className="h-2 w-2 flex-shrink-0 rounded-full bg-blue-500" />
+                        ) : null}
+                        {conversation.subject}
+                      </div>
+                    </TableCell>
+                    <TableCell className={conversation.isUnread ? "font-bold" : ""}>
+                      {conversation.messageCount}
+                    </TableCell>
+                    <TableCell className={conversation.isUnread ? "font-bold" : ""}>
                       {new Date(conversation.latestMessageAt ?? conversation.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell>

@@ -334,7 +334,7 @@ const NavLink = <T extends string>({
         <Link href={href}>
           <Icon />
           <span>{children}</span>
-          {typeof badge === "number" && badge > 0 ? <NavBadge count={badge} /> : badge}
+          {typeof badge === "number" ? badge > 0 ? <NavBadge count={badge} /> : null : badge}
         </Link>
       </SidebarMenuButton>
     </SidebarMenuItem>

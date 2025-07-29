@@ -56,8 +56,8 @@ importers:
         specifier: ^0.2.4
         version: 0.2.4
       '@helperai/react':
-        specifier: ^0.7.2
-        version: 0.7.2(@ai-sdk/react@1.2.12(react@19.0.0)(zod@3.24.2))(@types/react@19.0.10)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        specifier: ^0.7.4
+        version: 0.7.4(@ai-sdk/react@1.2.12(react@19.0.0)(zod@3.24.2))(@types/react@19.0.10)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@heroicons/react':
         specifier: ^2.1.5
         version: 2.2.0(react@19.0.0)
@@ -1002,8 +1002,11 @@ packages:
   '@helperai/client@0.2.4':
     resolution: {integrity: sha512-NAh7P0Ip3iJtWh4o08jXjJH2sB1CweKKgEO0vS09uHbIaMYfGgrglqNYvGXmrvgEtKGNJ/yQ6WGh8LrapfD7Vg==}
 
-  '@helperai/react@0.7.2':
-    resolution: {integrity: sha512-85N2hw8yRFvwNtXKAF0o2DnTtHE8tcIW/t5jVzUYrU+DkCaiN+l6ENb8nwAmBeiPUQ7hoB4v7hEHvjWFS8IE9Q==}
+  '@helperai/client@0.2.5':
+    resolution: {integrity: sha512-niL03lBORKZrajrABCqN5eO4iQvk/u/owbd0EnZXo9O9RcpwRpgm5smTtjqw3TMQKDtZOPEcq7wbp2PvenxYUw==}
+
+  '@helperai/react@0.7.4':
+    resolution: {integrity: sha512-4SkEmOVPKCwPhaq/HxMLpkCGMQ1Az06kBV9x8nRvMAj4pcDlTBrHIfJGZkv9B9Mjj4n/SYnQcF4GramhO9IcCw==}
     peerDependencies:
       '@ai-sdk/react': '>=0.0.0'
       react: '>=18'
@@ -7478,10 +7481,19 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@helperai/react@0.7.2(@ai-sdk/react@1.2.12(react@19.0.0)(zod@3.24.2))(@types/react@19.0.10)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
+  '@helperai/client@0.2.5':
+    dependencies:
+      '@supabase/supabase-js': 2.52.1
+      superjson: 2.2.2
+      zod: 3.24.2
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  '@helperai/react@0.7.4(@ai-sdk/react@1.2.12(react@19.0.0)(zod@3.24.2))(@types/react@19.0.10)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@ai-sdk/react': 1.2.12(react@19.0.0)(zod@3.24.2)
-      '@helperai/client': 0.2.4
+      '@helperai/client': 0.2.5
       '@tanstack/react-query': 5.68.0(react@19.0.0)
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
