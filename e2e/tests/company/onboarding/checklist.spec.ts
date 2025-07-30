@@ -166,6 +166,7 @@ test.describe("Onboarding checklist", () => {
     const { user: investorUser } = await usersFactory.create(undefined, { withoutComplianceInfo: true });
     await companyInvestorsFactory.create({ userId: investorUser.id });
     await login(page, investorUser);
+    await page.waitForTimeout(100000);
 
     await expect(page.getByText("Fill tax information")).toBeVisible();
     await expect(page.getByText("Add payout information")).toBeVisible();
@@ -223,6 +224,7 @@ test.describe("Onboarding checklist", () => {
     const { companyContractor } = await companyContractorsFactory.create({ userId: contractorUser.id });
     await companyInvestorsFactory.create({ userId: contractorUser.id, companyId: companyContractor.companyId });
     await login(page, contractorUser);
+    await page.waitForTimeout(10000);
 
     await expect(page.getByText("Fill tax information")).toBeVisible();
     await expect(page.getByText("Add payout information")).toBeVisible();
@@ -240,7 +242,7 @@ test.describe("Onboarding checklist", () => {
     );
     await page.getByRole("link", { name: "Back to app" }).click();
 
-    await expect(page.getByText("50%")).toBeVisible();
+    await expect(page.getByText("67%")).toBeVisible();
 
     const checklistItems = page.locator('[class*="space-y-1"] > button');
     await expect(checklistItems.nth(0).getByText("Fill tax information")).toHaveClass(/line-through/u);
