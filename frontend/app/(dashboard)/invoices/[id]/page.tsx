@@ -1,7 +1,7 @@
 "use client";
 
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { InformationCircleIcon, PaperClipIcon, PencilIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { InformationCircleIcon, PaperClipIcon, PencilIcon, PrinterIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { CircleAlert, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -90,6 +90,10 @@ export default function InvoicePage() {
         headerActions={
           <>
             <InvoiceStatus aria-label="Status" invoice={invoice} />
+            <Button variant="outline" onClick={() => window.print()}>
+              <PrinterIcon className="size-4" />
+              Print
+            </Button>
             {user.roles.administrator && isActionable(invoice) ? (
               <>
                 <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
@@ -246,7 +250,7 @@ export default function InvoicePage() {
         </Alert>
       ) : null}
 
-      <section>
+      <section className="invoice-print">
         <form>
           <div className="grid gap-4">
             <div className="grid auto-cols-fr gap-3 md:grid-flow-col print:grid-flow-col">
