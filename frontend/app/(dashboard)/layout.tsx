@@ -14,12 +14,14 @@ import {
   ReceiptIcon,
   Rss,
   Settings,
+  Sparkles,
   Users,
+  X,
 } from "lucide-react";
 import type { Route } from "next";
 import Image from "next/image";
 import Link, { type LinkProps } from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 import { navLinks as equityNavLinks } from "@/app/(dashboard)/equity";
 import { useIsActionable } from "@/app/(dashboard)/invoices";
@@ -58,7 +60,12 @@ import { useIsMobile } from "@/utils/use-mobile";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = useCurrentUser();
+  const company = useCurrentCompany();
+  const router = useRouter();
   const isMobile = useIsMobile();
+  const [showTryEquity, setShowTryEquity] = React.useState(true);
+  const [hovered, setHovered] = React.useState(false);
+  const canShowTryEquity = user.roles.administrator && !company.equityEnabled;
 
   if (isMobile) {
     return (
@@ -129,6 +136,39 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <SidebarGroup className="mt-auto">
             <SidebarGroupContent>
               <SidebarMenu>
+                {canShowTryEquity && showTryEquity ? (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <div
+                        className="group relative flex cursor-pointer items-center justify-between"
+                        onClick={() => router.push("/settings/administrator/equity")}
+                        onMouseEnter={() => setHovered(true)}
+                        onMouseLeave={() => setHovered(false)}
+                        role="button"
+                        tabIndex={0}
+                      >
+                        <span className="flex items-center gap-2">
+                          <Sparkles className="size-6" />
+                          <span>Try equity</span>
+                        </span>
+                        {hovered ? (
+                          <button
+                            type="button"
+                            aria-label="Dismiss try equity"
+                            className="hover:bg-muted absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowTryEquity(false);
+                            }}
+                            tabIndex={0}
+                          >
+                            <X className="text-muted-foreground hover:text-foreground size-4 transition-colors" />
+                          </button>
+                        ) : null}
+                      </div>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ) : null}
                 <SidebarMenuItem>
                   <SignOutButton>
                     <SidebarMenuButton className="cursor-pointer">
