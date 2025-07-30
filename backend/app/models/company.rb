@@ -27,19 +27,21 @@ class Company < ApplicationRecord
   end
 
   ADMIN_CHECKLIST_ITEMS = [
-    { key: "add_company_details", title: "Add company details", description: "Add your company name and basic information" },
-    { key: "add_bank_account", title: "Add bank account", description: "Connect your bank account to enable payments" },
-    { key: "invite_contractor", title: "Invite a contractor", description: "Add your first team member" },
-    { key: "send_first_payment", title: "Send your first payment", description: "Process your first contractor payment" }
+    { key: "add_company_details", title: "Add company details" },
+    { key: "add_bank_account", title: "Add bank account" },
+    { key: "invite_contractor", title: "Invite a contractor" },
+    { key: "send_first_payment", title: "Send your first payment" }
   ].freeze
 
   INVESTOR_CHECKLIST_ITEMS = [
-    { key: "fill_tax_information", title: "Fill tax information", description: "Complete your tax details" },
-    { key: "add_payout_information", title: "Add payout information", description: "Set up your payment method" },
+    { key: "fill_tax_information", title: "Fill tax information" },
+    { key: "add_payout_information_dividends", title: "Add dividend payout information" },
   ].freeze
 
-  WORKER_CHECKLIST_ITEMS = INVESTOR_CHECKLIST_ITEMS + [
-    { key: "sign_contract", title: "Sign contract", description: "Review and sign your contractor agreement" }
+  WORKER_CHECKLIST_ITEMS = [
+    { key: "fill_tax_information", title: "Fill tax information" },
+    { key: "add_payout_information_invoices", title: "Add invoice payout information" },
+    { key: "sign_contract", title: "Sign contract" }
   ].freeze
 
   has_many :company_administrators
@@ -205,19 +207,13 @@ class Company < ApplicationRecord
   end
 
   def checklist_items(user)
-    checklist_items = case user
-                      when CompanyAdministrator
-                        ADMIN_CHECKLIST_ITEMS
-                      when CompanyWorker
-                        WORKER_CHECKLIST_ITEMS
-                      when CompanyInvestor
-                        INVESTOR_CHECKLIST_ITEMS
-                      else
-                        []
-    end
-    checklist_items.map do |item|
-      item.merge(completed: checklist_item_completed?(item[:key], user))
-    end
+    [
+      user.company_administrator_for?(self) && ADMIN_CHECKLIST_ITEMS,
+      user.company_investor_for?(self) && INVESTOR_CHECKLIST_ITEMS,
+      user.company_worker_for?(self) && WORKER_CHECKLIST_ITEMS
+    ].flatten.filter_map do |item|
+      item && item.merge(completed: checklist_item_completed?(item[:key], user))
+    end.uniq { |item| item[:key] }
   end
 
   def checklist_completion_percentage(user)
@@ -260,11 +256,13 @@ class Company < ApplicationRecord
       when "send_first_payment"
         invoices.where(status: Invoice::PAID_OR_PAYING_STATES).exists?
       when "fill_tax_information"
-        user.user.compliance_info&.tax_information_confirmed_at.present?
-      when "add_payout_information"
-        user.user.bank_account.present?
+        user.compliance_info&.tax_information_confirmed_at.present?
+      when "add_payout_information_invoices"
+        user.bank_account.present?
+      when "add_payout_information_dividends"
+        user.bank_account_for_dividends.present?
       when "sign_contract"
-        user.contract_signed?
+        user.company_worker_for(self).contract_signed?
       else
         false
       end

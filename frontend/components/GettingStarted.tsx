@@ -24,7 +24,8 @@ const CHECKLIST_ROUTES: Record<string, Route> = {
   invite_contractor: "/people",
   send_first_payment: "/invoices",
   fill_tax_information: "/settings/tax",
-  add_payout_information: "/settings/payouts",
+  add_payout_information_dividends: "/settings/payouts",
+  add_payout_information_invoices: "/settings/payouts",
   sign_contract: "/documents",
   add_company_details: "/settings/administrator/details",
 } as const;
@@ -87,10 +88,7 @@ export const GettingStarted = () => {
         className="flex h-full flex-col-reverse"
       >
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton
-            closeOnMobileClick={false}
-            className="h-full items-center justify-between rounded-none px-5"
-          >
+          <SidebarMenuButton className="h-full items-center justify-between rounded-none px-5">
             {status === "completed" ? (
               <div className="flex h-4 w-4 items-center justify-center rounded-full border-2 border-blue-500 bg-blue-500">
                 <CheckIcon />
