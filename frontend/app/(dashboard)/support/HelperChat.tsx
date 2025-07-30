@@ -3,7 +3,7 @@
 import { type ConversationDetails } from "@helperai/client";
 import { MessageContent, useChat } from "@helperai/react";
 import { Send } from "lucide-react";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -13,10 +13,24 @@ interface HelperChatProps {
   conversation: ConversationDetails;
 }
 
+const TypingIndicator = () => (
+  <div className="flex justify-start">
+    <div className="max-w-xs rounded-lg bg-gray-100 px-4 py-2 text-gray-900 lg:max-w-md">
+      <div className="flex items-center space-x-1">
+        <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "0ms" }}></div>
+        <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "150ms" }}></div>
+        <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "300ms" }}></div>
+      </div>
+    </div>
+  </div>
+);
+
 export const HelperChat: React.FC<HelperChatProps> = ({ conversation }) => {
   const utils = trpc.useUtils();
   const user = useCurrentUser();
   const company = useCurrentCompany();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
   const { messages, input, handleInputChange, handleSubmit, agentTyping } = useChat({
     conversation,
     tools: {
@@ -44,6 +58,24 @@ export const HelperChat: React.FC<HelperChatProps> = ({ conversation }) => {
     },
   });
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (input.trim()) handleSubmit(e);
+    }
+  };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, agentTyping]);
+
+  const lastMessage = messages[messages.length - 1];
+  const showAgentTypingIndicator = lastMessage && !lastMessage.content && lastMessage.role !== "user";
+
   return (
     <>
       <div className="space-y-4 pb-24">
@@ -70,7 +102,9 @@ export const HelperChat: React.FC<HelperChatProps> = ({ conversation }) => {
               </div>
             ))
         )}
+        {showAgentTypingIndicator ? <TypingIndicator /> : null}
         {agentTyping ? <div className="text-center text-xs text-gray-500">Agent is typing...</div> : null}
+        <div ref={messagesEndRef} />
       </div>
 
       <form onSubmit={handleSubmit} className="bg-background absolute right-0 bottom-0 left-0 flex space-x-2 p-4">
@@ -78,6 +112,7 @@ export const HelperChat: React.FC<HelperChatProps> = ({ conversation }) => {
           rows={2}
           value={input}
           onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
           placeholder="Type your message..."
           className="flex-1"
           autoFocus
