@@ -1,0 +1,44 @@
+# frozen_string_literal: true
+
+class DividendConsolidatedInvoiceCreation
+  attr_reader :dividend_round
+
+  def initialize(dividend_round)
+    @dividend_round = dividend_round
+  end
+
+  def process
+    raise "Should not generate consolidated invoice for company #{company.id}" unless company.active? && company.bank_account_ready?
+
+    dividend_amount_cents = dividend_round.total_amount_in_cents
+    fee_cents = calculate_processing_fees(dividend_amount_cents)
+
+    consolidated_invoice = company.consolidated_invoices.create!(
+      invoice_date: Date.current,
+      invoice_number: "FX-DIV-#{company.consolidated_invoices.count + 1}",
+      status: ConsolidatedInvoice::SENT,
+      period_start_date: dividend_round.issued_at.to_date,
+      period_end_date: dividend_round.issued_at.to_date,
+      invoice_amount_cents: dividend_amount_cents,
+      flexile_fee_cents: fee_cents,
+      transfer_fee_cents: 0,
+      total_cents: dividend_amount_cents + fee_cents,
+    )
+
+    dividend_round.update!(consolidated_invoice: consolidated_invoice)
+    consolidated_invoice
+  end
+
+  private
+    def company
+      dividend_round.company
+    end
+
+    def calculate_processing_fees(amount_cents)
+      base_fee_cents = 30
+      percentage_fee_cents = (amount_cents.to_d * 2.9.to_d / 100.to_d).round.to_i
+      total_fee = base_fee_cents + percentage_fee_cents
+
+      [total_fee, 30_00].min
+    end
+end

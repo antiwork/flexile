@@ -107,8 +107,7 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     begin
       dividend_round = @computation.generate_dividends
       dividend_round.send_dividend_emails
-
-      # dividend_round.trigger_payments
+      dividend_round.trigger_payments
 
       render json: {
         success: true,

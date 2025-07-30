@@ -9,6 +9,7 @@ class ConsolidatedInvoice < ApplicationRecord
   has_many :consolidated_invoices_invoices
   has_many :invoices, through: :consolidated_invoices_invoices
   has_many :consolidated_payments
+  has_many :dividend_rounds
   has_many :integration_records, as: :integratable
   has_one_attached :receipt
   has_one :successful_payment, -> { successful.order(succeeded_at: :desc) }, class_name: "ConsolidatedPayment"
@@ -61,6 +62,7 @@ class ConsolidatedInvoice < ApplicationRecord
 
   def trigger_payments
     invoices.each { |invoice| EnqueueInvoicePayment.new(invoice:).perform }
+    dividend_rounds.each { |dividend_round| dividend_round.trigger_individual_payments } # TODO: what to do here?
   end
 
   def total_amount_in_usd

@@ -4,6 +4,7 @@ class DividendRound < ApplicationRecord
   include ExternalId
 
   belongs_to :company
+  belongs_to :consolidated_invoice, optional: true
   has_many :dividends
   has_many :investor_dividend_rounds
 
@@ -25,5 +26,24 @@ class DividendRound < ApplicationRecord
         investor_dividend_round = investor.investor_dividend_rounds.find_or_create_by!(dividend_round_id: id)
         investor_dividend_round.send_dividend_issued_email
       end
+  end
+
+  def company_charged?
+    consolidated_invoice&.consolidated_payments&.any?
+  end
+
+  def company_paid?
+    consolidated_invoice&.status == Invoice::Status::PAID
+  end
+
+  def total_amount_in_usd
+    total_amount_in_cents / 100.0
+  end
+
+  def trigger_payments
+    return if consolidated_invoice.present?
+
+    invoice = DividendConsolidatedInvoiceCreation.new(self).process
+    ChargeConsolidatedInvoiceJob.perform_async(invoice.id)
   end
 end

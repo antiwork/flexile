@@ -29,7 +29,14 @@ class ConsolidatedPayment < ApplicationRecord
   end
 
   def refundable?
-    status.in?(REFUNDABLE_STATUSES) && consolidated_invoice.invoices.alive.paid_or_mid_payment.none?
+    return false unless status.in?(REFUNDABLE_STATUSES)
+
+    invoices_paid_or_processing = consolidated_invoice.invoices.alive.where(status: [Invoice::Status::PROCESSING, Invoice::Status::PAID]).any?
+    dividends_paid_or_processing = consolidated_invoice.dividend_rounds.any? do |dividend_round|
+      dividend_round.dividends.where(status: [Dividend::PROCESSING, Dividend::PAID]).any?
+    end
+
+    !(invoices_paid_or_processing || dividends_paid_or_processing)
   end
 
   def mark_as_refunded!
