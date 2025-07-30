@@ -284,36 +284,95 @@ export default function InvoicePage() {
             </div>
 
             {invoice.lineItems.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>
-                      {complianceInfo?.businessEntity ? `Services (${complianceInfo.legalName})` : "Services"}
-                    </TableHead>
-                    <TableHead className="text-right">Qty / Hours</TableHead>
-                    <TableHead className="text-right">Cash rate</TableHead>
-                    <TableHead className="text-right">Line total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {invoice.lineItems.map((lineItem, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{lineItem.description}</TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {lineItem.hourly ? formatDuration(Number(lineItem.quantity)) : lineItem.quantity}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {lineItem.payRateInSubunits
-                          ? `${formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)}${lineItem.hourly ? " / hour" : ""}`
-                          : ""}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatMoneyFromCents(lineItemTotal(lineItem) * cashFactor)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <>
+                <div className="hidden w-full overflow-x-auto md:block">
+                  <Table className="w-full max-w-full table-fixed">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[60%]">
+                          {complianceInfo?.businessEntity ? `Services (${complianceInfo.legalName})` : "Services"}
+                        </TableHead>
+                        <TableHead className="w-[15%] text-right">Qty / Hours</TableHead>
+                        <TableHead className="w-[15%] text-right">Cash rate</TableHead>
+                        <TableHead className="w-[10%] text-right">Line total</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {invoice.lineItems.map((lineItem, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="w-[60%] align-top">
+                            <div
+                              className="overflow-hidden pr-2"
+                              style={{
+                                wordBreak: "break-word",
+                                whiteSpace: "normal",
+                                maxWidth: "100%",
+                              }}
+                            >
+                              {lineItem.description}
+                            </div>
+                          </TableCell>
+                          <TableCell className="w-[15%] text-right align-top tabular-nums">
+                            {lineItem.hourly ? formatDuration(Number(lineItem.quantity)) : lineItem.quantity}
+                          </TableCell>
+                          <TableCell className="w-[15%] text-right align-top tabular-nums">
+                            {lineItem.payRateInSubunits
+                              ? `${formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)}${lineItem.hourly ? " / hour" : ""}`
+                              : ""}
+                          </TableCell>
+                          <TableCell className="w-[10%] text-right align-top tabular-nums">
+                            {formatMoneyFromCents(lineItemTotal(lineItem) * cashFactor)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                <div className="w-full overflow-x-auto md:hidden">
+                  <Table className="w-full min-w-[600px] table-fixed">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[50%]">
+                          {complianceInfo?.businessEntity ? `Services (${complianceInfo.legalName})` : "Services"}
+                        </TableHead>
+                        <TableHead className="w-[20%] text-right">Qty / Hours</TableHead>
+                        <TableHead className="w-[20%] text-right">Cash rate</TableHead>
+                        <TableHead className="w-[10%] text-right">Line total</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {invoice.lineItems.map((lineItem, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="w-[50%] align-top">
+                            <div
+                              className="overflow-hidden pr-2"
+                              style={{
+                                wordBreak: "break-word",
+                                whiteSpace: "normal",
+                                maxWidth: "100%",
+                              }}
+                            >
+                              {lineItem.description}
+                            </div>
+                          </TableCell>
+                          <TableCell className="w-[20%] text-right align-top tabular-nums">
+                            {lineItem.hourly ? formatDuration(Number(lineItem.quantity)) : lineItem.quantity}
+                          </TableCell>
+                          <TableCell className="w-[20%] text-right align-top tabular-nums">
+                            {lineItem.payRateInSubunits
+                              ? `${formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)}${lineItem.hourly ? " / hour" : ""}`
+                              : ""}
+                          </TableCell>
+                          <TableCell className="w-[10%] text-right align-top tabular-nums">
+                            {formatMoneyFromCents(lineItemTotal(lineItem) * cashFactor)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             ) : null}
 
             {invoice.expenses.length > 0 && (
