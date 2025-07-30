@@ -21,6 +21,7 @@ import { useCurrentCompany, useCurrentUser } from "@/global";
 import { PayRateType, trpc } from "@/trpc/client";
 import { assert } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
+import { downloadInvoicePdf, generateInvoicePdf, type InvoicePdfData } from "@/utils/generateInvoicePdf";
 import { formatDate, formatDuration } from "@/utils/time";
 import {
   Address,
@@ -55,27 +56,6 @@ export default function InvoicePage() {
     invoice.requiresAcceptanceByPayee && searchParams.get("accept") === "true",
   );
   const acceptPayment = trpc.invoices.acceptPayment.useMutation();
-  const downloadInvoice = trpc.invoices.downloadInvoice.useMutation({
-    onSuccess: (data) => {
-      // Convert base64 to blob
-      const byteCharacters = atob(data.pdf);
-      const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      const byteArray = new Uint8Array(byteNumbers);
-      const blob = new Blob([byteArray], { type: data.mimeType });
-
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = data.filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    },
-  });
   const defaultEquityPercentage = invoice.minAllowedEquityPercentage ?? invoice.equityPercentage;
   const [equityPercentage, setEquityPercentageElected] = useState(defaultEquityPercentage);
 
@@ -104,8 +84,52 @@ export default function InvoicePage() {
 
   assert(!!invoice.invoiceDate); // must be defined due to model checks in rails
 
-  const handleDownloadInvoice = () => {
-    downloadInvoice.mutate({ id, companyId: company.id });
+  const handleDownloadInvoice = async () => {
+    try {
+      const pdfData: InvoicePdfData = {
+        invoiceNumber: invoice.invoiceNumber,
+        invoiceDate: invoice.invoiceDate,
+        paidAt: invoice.paidAt ? invoice.paidAt.toISOString() : null,
+        billFrom: invoice.billFrom,
+        billTo: invoice.billTo,
+        notes: invoice.notes,
+        totalAmountInUsdCents: invoice.totalAmountInUsdCents,
+        cashAmountInCents: invoice.cashAmountInCents,
+        equityAmountInCents: invoice.equityAmountInCents,
+        equityPercentage: invoice.equityPercentage,
+        streetAddress: invoice.streetAddress,
+        city: invoice.city,
+        state: invoice.state,
+        zipCode: invoice.zipCode,
+        countryCode: invoice.countryCode,
+        company: {
+          name: company.name || "",
+          streetAddress: company.address.street_address || null,
+          city: company.address.city || null,
+          state: company.address.state || null,
+          zipCode: company.address.zip_code || null,
+          countryCode: company.address.country_code || null,
+        },
+        complianceInfo: invoice.contractor.user.complianceInfo,
+        lineItems: invoice.lineItems.map((item) => ({
+          ...item,
+          quantity: Number(item.quantity),
+        })),
+        expenses: invoice.expenses.map((expense) => ({
+          description: expense.description,
+          totalAmountInCents: expense.totalAmountInCents,
+          expenseCategory: {
+            name: expenseCategories.find((category) => category.id === expense.expenseCategoryId)?.name || "Unknown",
+          },
+        })),
+      };
+
+      const buffer = await generateInvoicePdf(pdfData);
+      downloadInvoicePdf(buffer, `invoice-${invoice.invoiceNumber}.pdf`);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to generate PDF:", error);
+    }
   };
 
   return (
