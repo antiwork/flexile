@@ -29,8 +29,8 @@ interface ListSheetNavChildrenType {
 function TabBar({ nav, type }: { nav: NavType[]; type: "main" | "settings" }) {
   const [activeSheetKey, setActiveSheetKey] = useState<SheetKeyType>(null);
   const tabBarRef = useRef<HTMLDivElement>(null);
-  nav.sort((a, b) => a.tabPriority - b.tabPriority);
-  const mainNav = nav.slice(0, 3);
+  const sortedNav = [...nav].sort((a, b) => a.tabPriority - b.tabPriority);
+  const mainNav = sortedNav.slice(0, 3);
   const closeActiveSheet = () => {
     if (activeSheetKey) {
       setActiveSheetKey(null);
@@ -40,7 +40,7 @@ function TabBar({ nav, type }: { nav: NavType[]; type: "main" | "settings" }) {
     ...(type === "main"
       ? [{ label: "Company Switcher", isVisible: true, isActive: false, element: <CompanySwitcher /> }]
       : []),
-    ...nav.slice(3),
+    ...sortedNav.slice(3),
     ...(type === "main"
       ? [
           {
@@ -143,7 +143,7 @@ const ListSheet = ({
   setActiveSheetKey: Dispatch<SetStateAction<SheetKeyType>>;
   excludeFromBackdrop?: RefObject<HTMLElement | null>;
 }) => {
-  const sheetKey = navTab.label.toLowerCase().replace(" ", "-");
+  const sheetKey = navTab.label.toLowerCase().replaceAll(" ", "-");
   const handleOpenChange = (open: boolean) => {
     setActiveSheetKey(open ? sheetKey : null);
   };

@@ -211,7 +211,13 @@ const NavLink = <T extends string>(props: LinkProps<T>) => {
 
 const CollapsibleNav = ({ nav }: { nav: NavType }) => {
   const storageKey = `${nav.label.toLowerCase().split(" ").join("-")}-menu-state`;
-  const [isOpen, setIsOpen] = React.useState(() => localStorage.getItem(storageKey) === "open");
+  const [isOpen, setIsOpen] = React.useState(() => {
+    try {
+      return localStorage.getItem(storageKey) === "open";
+    } catch {
+      return false;
+    }
+  });
   const Icon = nav.icon;
 
   return (
@@ -219,7 +225,11 @@ const CollapsibleNav = ({ nav }: { nav: NavType }) => {
       open={isOpen}
       onOpenChange={(state) => {
         setIsOpen(state);
-        localStorage.setItem(storageKey, state ? "open" : "closed");
+        try {
+          localStorage.setItem(storageKey, state ? "open" : "closed");
+        } catch {
+          // Silently fail if localStorage is unavailable
+        }
       }}
       className="group/collapsible"
     >
