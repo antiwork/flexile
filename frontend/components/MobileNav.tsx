@@ -86,13 +86,12 @@ const MobileNav = () => {
         <Link
           key={index}
           href={item.route}
-          className="flex items-center justify-between px-6 py-4 hover:bg-gray-50"
+          className="flex items-center px-6 py-4 hover:bg-gray-50"
           onClick={() => {
             toggleDialog(null);
           }}
         >
-          <span>{item.label}</span>
-          <ChevronRight className="size-4 text-gray-600" />
+          {item.label}
         </Link>
       ))}
     </BottomSheetDialog>
@@ -129,7 +128,7 @@ const MobileNav = () => {
           {updatesPath ? (
             <Link
               href="/updates/company"
-              className="flex items-center justify-between px-6 py-4 hover:bg-gray-50"
+              className="flex items-center px-6 py-4 hover:bg-gray-50"
               onClick={() => toggleDialog(null)}
             >
               <div className="flex items-center gap-2">
@@ -138,7 +137,6 @@ const MobileNav = () => {
                 </div>
                 <span>Updates</span>
               </div>
-              <ChevronRight className="size-4 text-gray-600" />
             </Link>
           ) : null}
 
@@ -178,7 +176,7 @@ const MobileNav = () => {
             <Link
               key={link.route}
               href={link.route}
-              className="flex items-center justify-between px-6 py-4 hover:bg-gray-50"
+              className="flex items-center px-6 py-4 hover:bg-gray-50"
               onClick={() => toggleDialog(null)}
             >
               <div className="flex items-center gap-2">
@@ -187,7 +185,6 @@ const MobileNav = () => {
                 </div>
                 <span>{link.label}</span>
               </div>
-              <ChevronRight className="size-4 text-gray-600" />
             </Link>
           ))}
           {filteredCompanyLinks.length ? (
@@ -200,7 +197,7 @@ const MobileNav = () => {
           {filteredCompanyLinks.map((link) => (
             <Link
               href={link.route}
-              className="flex items-center justify-between px-6 py-4 hover:bg-gray-50"
+              className="flex items-center px-6 py-4 hover:bg-gray-50"
               onClick={() => toggleDialog(null)}
               key={link.route}
             >
@@ -210,7 +207,6 @@ const MobileNav = () => {
                 </div>
                 <span>{link.label}</span>
               </div>
-              <ChevronRight className="size-4 text-gray-600" />
             </Link>
           ))}
         </>
