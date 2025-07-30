@@ -302,11 +302,9 @@ export default function InvoicePage() {
                         <TableRow key={index}>
                           <TableCell className="w-[60%] align-top">
                             <div
-                              className="overflow-hidden pr-2"
+                              className="max-w-full overflow-hidden pr-2 whitespace-normal"
                               style={{
                                 wordBreak: "break-word",
-                                whiteSpace: "normal",
-                                maxWidth: "100%",
                               }}
                             >
                               {lineItem.description}
