@@ -2,8 +2,8 @@
 
 import { type ConversationDetails } from "@helperai/client";
 import { MessageContent, useChat } from "@helperai/react";
-import { Send } from "lucide-react";
-import React, { useEffect, useRef } from "react";
+import { Paperclip, Send, X } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -25,11 +25,43 @@ const TypingIndicator = () => (
   </div>
 );
 
+const MessageAttachments = ({
+  attachments,
+  isUser,
+}: {
+  attachments: { name: string | null; contentType: string | null; url: string }[];
+  isUser: boolean;
+}) => {
+  const validAttachments = attachments.filter((att) => att.name !== null);
+  if (validAttachments.length === 0) return null;
+
+  return (
+    <div className="mt-2 space-y-1">
+      {validAttachments.map((attachment, index) => (
+        <a
+          key={index}
+          href={attachment.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`flex items-center gap-2 rounded px-2 py-1 text-xs transition-colors ${
+            isUser ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+          }`}
+        >
+          <Paperclip className="size-3" />
+          <span className="max-w-40 truncate">{attachment.name}</span>
+        </a>
+      ))}
+    </div>
+  );
+};
+
 export const HelperChat: React.FC<HelperChatProps> = ({ conversation }) => {
   const utils = trpc.useUtils();
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [attachments, setAttachments] = useState<File[]>([]);
 
   const { messages, input, handleInputChange, handleSubmit, agentTyping } = useChat({
     conversation,
@@ -61,8 +93,31 @@ export const HelperChat: React.FC<HelperChatProps> = ({ conversation }) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      if (input.trim()) handleSubmit(e);
+      if (input.trim() || attachments.length > 0) handleFormSubmit(e);
     }
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    // Create a DataTransfer object to build a proper FileList
+    const dataTransfer = new DataTransfer();
+    attachments.forEach((file) => dataTransfer.items.add(file));
+
+    const options = attachments.length > 0 ? { experimental_attachments: dataTransfer.files } : {};
+
+    handleSubmit(e, options);
+    setAttachments([]);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setAttachments((prev) => [...prev, ...files]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
   const scrollToBottom = () => {
@@ -92,6 +147,10 @@ export const HelperChat: React.FC<HelperChatProps> = ({ conversation }) => {
                   }`}
                 >
                   <MessageContent message={message} className="text-sm" />
+                  <MessageAttachments
+                    attachments={[...message.publicAttachments, ...message.privateAttachments]}
+                    isUser={message.role === "user"}
+                  />
                   <div className="mt-1 text-xs opacity-70">
                     {message.staffName && message.role === "staff" ? (
                       <span className="font-medium">{message.staffName} • </span>
@@ -107,19 +166,53 @@ export const HelperChat: React.FC<HelperChatProps> = ({ conversation }) => {
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-background absolute right-0 bottom-0 left-0 flex space-x-2 p-4">
-        <Textarea
-          rows={2}
-          value={input}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          placeholder="Type your message..."
-          className="flex-1"
-          autoFocus
+      <form
+        onSubmit={handleFormSubmit}
+        className="bg-background border-border absolute right-0 bottom-0 left-0 space-y-2 border-t p-4"
+      >
+        {attachments.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {attachments.map((file, index) => (
+              <div key={index} className="flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1 text-sm">
+                <span className="max-w-32 truncate">{file.name}</span>
+                <button
+                  type="button"
+                  onClick={() => removeAttachment(index)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="size-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="flex space-x-2">
+          <Textarea
+            rows={2}
+            value={input}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            placeholder="Type your message..."
+            className="flex-1"
+            autoFocus
+          />
+          <div className="flex flex-col space-y-2">
+            <Button type="button" variant="outline" size="small" onClick={() => fileInputRef.current?.click()}>
+              <Paperclip className="size-4" />
+            </Button>
+            <Button type="submit" disabled={!input.trim() && attachments.length === 0}>
+              <Send className="size-4" />
+            </Button>
+          </div>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          onChange={handleFileSelect}
+          className="hidden"
+          accept="image/*,application/pdf,.doc,.docx,.txt"
         />
-        <Button type="submit" disabled={!input.trim()}>
-          <Send className="size-4" />
-        </Button>
       </form>
     </>
   );
