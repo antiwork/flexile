@@ -66,20 +66,18 @@ function CompanySwitcher() {
 const CompanyName = () => {
   const company = useCurrentCompany();
 
-  return (
+  return company.name ? (
     <>
-      {company.name ? (
-        <span className="relative size-6">
-          <Image src={company.logo_url || defaultCompanyLogo} fill className="rounded-sm" alt="Company Logo" />
-        </span>
-      ) : null}
+      <span className="relative size-6">
+        <Image src={company.logo_url || defaultCompanyLogo} fill className="rounded-sm" alt="Company Logo" />
+      </span>
       <div>
-        <span className="line-clamp-1 text-sm font-bold" title={company.name ?? ""}>
+        <span className="line-clamp-1 text-sm font-bold" title={company.name}>
           {company.name}
         </span>
       </div>
     </>
-  );
+  ) : null;
 };
 
 export default CompanySwitcher;
