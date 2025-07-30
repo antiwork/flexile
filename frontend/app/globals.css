@@ -138,39 +138,32 @@
 @media print {
   @page {
     size: A4;
-    margin: 1.35cm !important;
+    margin: 1.35cm;
   }
 
   body,
   #__next,
   main[role="main"],
   .dashboard-layout {
-    display: block !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    max-width: none !important;
-  }
-
-  .dashboard-layout {
-    grid-template-columns: 1fr !important;
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    max-width: none;
+    grid-template-columns: 1fr;
   }
 
   html,
   body {
-    font-family: Arial, Helvetica, sans-serif !important;
-    font-size: 11pt !important;
-    line-height: 1.5 !important;
-    color: #000 !important;
-    margin: 0 !important;
-    hyphens: none !important;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    color: #000;
+    margin: 0;
+    hyphens: none;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     color-adjust: exact;
-  }
-
-  *:not(.invoice-print thead th):not(.invoice-print table thead th) {
-    box-shadow: none !important;
   }
 
   nav,
@@ -181,442 +174,220 @@
   .print\:hidden,
   title,
   h1:not(.invoice-print h1) {
-    display: none !important;
+    display: none;
   }
 
-  .invoice-print table,
-  .invoice-print .table {
-    width: 100% !important;
-    border-collapse: separate !important; /* Prevent merging */
-    table-layout: fixed !important;
-    margin: 0 0 1.5cm 0 !important;
-    border: none !important; /* Minimal, no outer border */
-    border-spacing: 0 0.9em !important;
-    border-radius: 0 !important;
+  * {
+    box-shadow: none;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .invoice-print::before {
+    content: "INVOICE";
+    display: block;
+    font-size: 24pt;
+    font-weight: 700;
+    margin: 0.5rem 0 1.5rem 0;
+    letter-spacing: 0.5px;
+    color: #000;
+  }
+
+  .invoice-print .grid.auto-cols-fr {
+    grid-template-columns: 1fr 1fr auto auto auto;
+    gap: 1.25rem 1.25rem;
+    align-items: start;
+    margin-bottom: 1.5rem;
+    line-height: 1.25;
+  }
+
+  .invoice-print .grid.auto-cols-fr > div > *:first-child {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 9pt;
+  }
+
+  .invoice-print .grid.auto-cols-fr > div {
+    font-weight: 400;
+    line-height: 1.4;
+  }
+
+  .invoice-print .grid.auto-cols-fr > div * {
+    color: #000;
+    font-size: 10pt;
+    font-weight: 400;
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  .invoice-print .grid.auto-cols-fr > div b {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.3em;
+  }
+
+  .invoice-print .grid.auto-cols-fr > div:nth-child(n + 3) {
+    text-align: left;
+    font-size: 10pt;
+    line-height: 1.2;
+    align-self: start;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .invoice-print table {
+    width: 100%;
+    border-collapse: separate;
+    table-layout: fixed;
+    margin: 0 0 1.5cm 0;
+    border: none;
+    border-spacing: 0 0.9em;
   }
 
   .invoice-print thead {
-    display: table-header-group !important;
+    display: table-header-group;
   }
+
+  .invoice-print thead th {
+    background: transparent;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1.25px solid #000;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    font-weight: 500;
+    text-align: left;
+    font-size: 7.5pt;
+    padding: 0.75rem 1rem;
+    white-space: nowrap;
+    color: #000;
+  }
+
   .invoice-print tbody tr {
-    page-break-inside: avoid !important;
+    page-break-inside: avoid;
   }
 
   .invoice-print tbody td {
-    padding: 0.5rem 1rem !important; /* py-2 equivalent - balanced with header py-3 */
-    word-wrap: break-word !important;
-    word-break: break-word !important;
-    vertical-align: top !important; /* Keep top for desc */
-    overflow-wrap: break-word !important;
-    hyphens: none !important;
-    white-space: normal !important;
-    line-height: 1.4 !important;
-    font-size: 10pt !important;
-    border-bottom: 0.5px solid #eee !important; /* Hairline borders */
-    border-top: none !important;
-    border-left: none !important;
-    border-right: none !important;
+    padding: 0.5rem 1rem;
+    vertical-align: top;
+    line-height: 1.4;
+    font-size: 10pt;
+    border-bottom: 0.5px solid #eee;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    background-color: #fff;
+    color: #000;
   }
 
   .invoice-print tbody tr:first-child td {
-    padding-top: 0.5rem !important; /* Consistent with header padding */
+    padding-top: 0.5rem;
+  }
+
+  .invoice-print tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .invoice-print th:nth-child(1),
+  .invoice-print td:nth-child(1) {
+    width: 55%;
+    text-align: left;
+    white-space: normal;
+    max-width: 65ch;
+    padding-right: 1.5rem;
+  }
+
+  .invoice-print th:nth-child(2),
+  .invoice-print td:nth-child(2) {
+    width: 5rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .invoice-print th:nth-child(3),
+  .invoice-print td:nth-child(3) {
+    width: 6rem;
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .invoice-print th:nth-child(4),
+  .invoice-print td:nth-child(4) {
+    width: 6rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    padding-right: 1rem;
   }
 
   .invoice-print td:nth-child(2),
   .invoice-print td:nth-child(3),
   .invoice-print td:nth-child(4) {
-    font-weight: 700 !important; /* Stronger bold */
-  }
-
-  .invoice-print table thead th:nth-child(2) {
-    white-space: nowrap !important; /* Keep this one nowrap if short */
-  }
-
-  .invoice-print thead th {
-    background: transparent !important; /* No fill */
-    text-transform: uppercase !important; /* Uppercase for headers */
-    letter-spacing: 0.5px !important; /* Wide tracking for scan-ability */
-    border-bottom: 1.25px solid #000 !important; /* Thicker border, darker color */
-    border-top: none !important;
-    border-left: none !important;
-    border-right: none !important;
-    font-weight: 500 !important; /* Medium weight for distinction */
-    text-align: left !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    color-adjust: exact !important;
-    box-shadow: none !important;
-    font-size: 7.5pt !important; /* text-xs equivalent */
-    padding: 0.75rem 1rem !important; /* py-3 equivalent */
-    white-space: nowrap !important;
-    overflow: visible !important;
-    text-overflow: clip !important;
-  }
-
-  .invoice-print tbody tr:nth-child(even) {
-    padding-bottom: 0.5em !important; /* Subtle extra space */
-  }
-
-  .invoice-print tbody tr:last-child td {
-    border-bottom: none !important; /* Clean end */
-  }
-
-  .invoice-print tbody td {
-    background-color: #fff !important;
-  }
-
-  .invoice-print table thead th:nth-child(1),
-  .invoice-print table tbody td:nth-child(1) {
-    width: 55% !important; /* Slightly less to balance headers */
-    text-align: left !important;
-    white-space: normal !important; /* Allow wrap for long lorem text */
-    max-width: 65ch !important; /* Prevent description overrun */
-    padding-right: 1.5rem !important; /* Extra space to prevent crowding */
-  }
-
-  .invoice-print table thead th:nth-child(2),
-  .invoice-print table tbody td:nth-child(2) {
-    width: 5rem !important; /* Fixed width w-20 equivalent */
-    text-align: right !important;
-    font-variant-numeric: tabular-nums !important; /* Fixed-width numbers */
-  }
-
-  .invoice-print table thead th:nth-child(3),
-  .invoice-print table tbody td:nth-child(3) {
-    width: 6rem !important; /* Fixed width w-24 equivalent */
-    text-align: right !important;
-    white-space: nowrap !important; /* Keep "$22 / hour" on one line */
-    font-variant-numeric: tabular-nums !important; /* Fixed-width numbers */
-  }
-
-  .invoice-print table thead th:nth-child(4),
-  .invoice-print table tbody td:nth-child(4) {
-    width: 6rem !important; /* Fixed width w-24 equivalent for better alignment */
-    text-align: right !important;
-    font-weight: 600 !important; /* Bold totals */
-    font-variant-numeric: tabular-nums !important; /* Fixed-width numbers */
-    padding-right: 1rem !important; /* Match body cell padding exactly */
-  }
-
-  footer,
-  .invoice-section {
-    page-break-inside: avoid;
-  }
-
-  .invoice-print h1 {
-    font-size: 28px;
-    margin: 0 0 12px 0;
-  }
-  .invoice-print strong {
     font-weight: 700;
-  }
-  .invoice-print p,
-  .invoice-print div {
-    margin: 0;
-  }
-
-  .invoice-print *,
-  .invoice-print *:before,
-  .invoice-print *:after {
-    box-shadow: none !important;
-    border-radius: 0 !important; /* Kill all rounding */
-    color: #000 !important;
-    text-shadow: none !important;
-  }
-
-  .invoice-print * {
-    background: transparent !important; /* Reinforce everywhere */
-  }
-
-  .invoice-print::before {
-    content: "INVOICE" !important;
-    position: static !important;
-    display: block !important;
-    font-size: 24pt !important; /* Larger like second example */
-    font-weight: 700 !important; /* Reduced from 900 to prevent overpowering */
-    text-align: left !important;
-    margin-top: 0.5rem !important; /* Trim top padding to ~40px total */
-    margin-bottom: 1.5rem !important; /* 24px space below */
-    letter-spacing: 0.5px !important; /* Improved tracking */
-    border-bottom: none !important; /* No line for minimalism */
-    color: #000 !important;
-  }
-
-  .invoice-print .invoice-header {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important; /* Just From/To */
-    gap: 3cm !important; /* Wider like second */
-    margin-top: 0.5cm !important;
-    margin-bottom: 1.25cm !important; /* MODIFIED: Breathing room below header */
-    position: relative !important;
-  }
-
-  .invoice-print .grid.auto-cols-fr {
-    grid-template-columns: 1fr 1fr auto auto auto !important; /* From, To, Invoice ID, Sent on, Paid on */
-    column-gap: 1.25rem !important; /* 20px breathing room between columns */
-    row-gap: 0.4rem !important; /* Minimal row gap */
-    align-items: start !important; /* Start align for proper baseline */
-    margin-bottom: 1.5rem !important; /* 24px gap before table */
-    line-height: 1.25 !important; /* Consistent row height */
-  }
-
-  .invoice-print .grid.auto-cols-fr > div > *:first-child {
-    font-weight: 500 !important; /* Medium weight for better hierarchy */
-    margin-bottom: 0.25rem !important; /* 4px space below labels */
-    text-transform: uppercase !important; /* Small caps effect */
-    letter-spacing: 0.5px !important; /* Wide tracking for scan-ability */
-    font-size: 9pt !important; /* Slightly smaller for hierarchy */
-  }
-
-  .invoice-print .invoice-from {
-    grid-area: from !important;
-    position: relative !important;
-  }
-
-  .invoice-print .invoice-to {
-    grid-area: to !important;
-    position: relative !important;
-  }
-
-  .invoice-print .invoice-meta {
-    grid-area: meta !important;
-    text-align: right !important;
-  }
-
-  .invoice-print .invoice-from::before {
-    content: "Bill From: " !important;
-    font-weight: 700 !important;
-    color: #000 !important;
-    position: static !important;
-    display: block !important;
-    font-size: 11pt !important;
-    margin-bottom: 0.3em !important;
-  }
-
-  .invoice-print .invoice-to::before {
-    content: "Bill To: " !important;
-    font-weight: 700 !important;
-    color: #000 !important;
-    position: static !important;
-    display: block !important;
-    font-size: 11pt !important;
-    margin-bottom: 0.3em !important;
-  }
-
-  .invoice-print .invoice-from .invoice-label,
-  .invoice-print .invoice-to .invoice-label,
-  .invoice-print .invoice-from br:first-of-type,
-  .invoice-print .invoice-to br:first-of-type {
-    display: none !important;
-  }
-
-  .invoice-print .grid.auto-cols-fr > div {
-    font-weight: 400 !important; /* Normal weight for header content */
-    line-height: 1.4 !important; /* Consistent line spacing */
-  }
-
-  .invoice-print .grid.auto-cols-fr > div * {
-    color: #000 !important;
-    font-size: 10pt !important;
-    font-weight: 400 !important; /* Normal weight for all nested elements */
-    line-height: 1.4 !important; /* Consistent spacing */
-    margin: 0 !important;
-  }
-
-  .invoice-print .grid.auto-cols-fr > div b {
-    font-weight: 600 !important;
-    display: block !important;
-    margin-bottom: 0.3em !important;
-  }
-
-  .invoice-print .grid.auto-cols-fr > div:nth-child(3),
-  .invoice-print .grid.auto-cols-fr > div:nth-child(4),
-  .invoice-print .grid.auto-cols-fr > div:nth-child(5) {
-    text-align: left !important;
-    font-size: 10pt !important;
-    line-height: 1.2 !important; /* Tighter line-height for shared baseline */
-    align-self: start !important; /* Ensure all meta items align at same baseline */
-    vertical-align: top !important; /* Consistent vertical positioning */
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important; /* Start alignment for consistency */
-  }
-
-  .invoice-print .invoice-number,
-  .invoice-print .invoice-date {
-    position: static !important;
-    text-align: left !important;
-    font-size: 10pt !important;
-    font-weight: 600 !important;
-    margin-bottom: 0 !important;
-  }
-
-  .invoice-print .invoice-number::before {
-    content: "Invoice ID: " !important;
-    font-weight: 600 !important;
-  }
-
-  .invoice-print .invoice-date::before {
-    content: "Sent on: " !important;
-    font-weight: 600 !important;
-  }
-
-  .invoice-print .invoice-number .invoice-label,
-  .invoice-print .invoice-date .invoice-label {
-    display: none !important; /* Hide original labels */
-  }
-
-  .invoice-print .invoice-paid {
-    display: none !important; /* Hide if not needed, as in second example */
-  }
-
-  .invoice-print .invoice-footer {
-    display: block !important; /* Simplify layout */
-    text-align: right !important; /* Right-align everything */
-    margin-top: 1cm !important;
-    border-top: none !important;
-    padding-top: 0 !important;
-  }
-
-  .invoice-print .invoice-totals {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    padding: 0 !important;
-    padding-right: 0 !important; /* No right padding */
-    margin: 0 0 0 auto !important;
-    width: 6rem !important; /* Match last column width exactly */
-    float: right !important;
-    text-align: right !important; /* Right-align flush with last table column */
   }
 
   .invoice-print .card,
   .invoice-print [class*="card"],
   .invoice-print [data-slot="card-content"] {
-    background: none !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-
-  .invoice-print .invoice-totals [data-slot="card-content"] {
-    padding: 0 !important;
-  }
-
-  .invoice-print .invoice-totals strong {
-    font-weight: 600 !important;
-    margin-right: 1em !important; /* Space between label and amount */
-  }
-
-  .invoice-print .invoice-totals span {
-    font-weight: 700 !important; /* For amount */
-  }
-
-  .invoice-print .invoice-totals > div:last-child {
-    display: flex !important;
-    justify-content: space-between !important;
-    border-bottom: 1px dashed #000 !important; /* Dashed like second */
-    border-top: none !important;
-    padding: 0.4em 0 !important;
-    font-size: 11pt !important; /* Same as body text */
-    background: transparent !important;
-    margin-top: 1.5rem !important; /* 24px breathing space */
-  }
-
-  .invoice-print .invoice-totals > div:last-child strong {
-    font-weight: 700 !important; /* Bold for "TOTAL" label */
-    text-transform: uppercase !important; /* Consistent with table headers */
-    letter-spacing: 0.5px !important; /* Subtle tracking */
-  }
-
-  .invoice-print .invoice-totals > div:last-child span {
-    font-weight: 700 !important; /* Bold for amount to match label */
-    font-variant-numeric: tabular-nums !important; /* Consistent number spacing */
-  }
-
-  .invoice-print .invoice-totals [data-orientation="horizontal"] {
-    display: none !important;
+    background: none;
+    border: 0;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
   }
 
   .invoice-print footer {
-    page-break-inside: avoid !important; /* Keep totals on page */
+    page-break-inside: avoid;
+    display: block;
+    text-align: right;
+    margin-top: 1cm;
   }
 
-  .invoice-print .invoice-notes {
-    width: 100% !important;
-    margin-top: 2cm !important; /* Space after total */
-    font-size: 9pt !important;
-    color: #666 !important;
-    font-style: italic !important; /* Subtle distinction */
-    border-top: none !important;
-    padding-top: 0 !important;
-    page-break-inside: avoid !important;
+  .invoice-print footer .card {
+    margin: 0 0 0 auto;
+    width: 6rem;
+    float: right;
+    text-align: right;
   }
 
-  .invoice-print .invoice-notes b {
-    font-weight: bold !important;
-    color: #666 !important;
-    font-size: 9pt !important;
-    margin-bottom: 0.5em !important;
-    display: block !important;
+  .invoice-print footer .card > div:last-child {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px dashed #000;
+    padding: 0.4em 0;
+    font-size: 11pt;
+    margin-top: 1.5rem;
   }
 
-  .invoice-print h2,
-  .invoice-print strong {
-    font-size: 11pt !important;
-    margin-bottom: 0.5em !important;
-    text-transform: uppercase !important;
-    color: #000 !important;
+  .invoice-print footer strong {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
-}
 
-.invoice-print {
-  /* No styles on screen - maintains original dashboard layout */
-}
+  .invoice-print footer span {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
 
-@media print {
   .invoice-print {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 auto !important;
-    padding: 0 !important; /* No internal padding if crowding */
-    border: none !important; /* Keep minimal, no outer border */
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0 0 2rem 0;
+    border: none;
     overflow-wrap: break-word;
-    page-break-inside: avoid !important;
-    min-height: auto !important;
+    page-break-inside: avoid;
+    min-height: 85vh;
   }
-}
 
-@media print {
   .invoice-print * {
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  .invoice-print .print\:grid-cols-2 {
-    gap: 24px !important;
-  }
-
-  .invoice-print p,
-  .invoice-print div {
-    margin-bottom: 0.5em !important;
-  }
-
-  .invoice-print section,
-  .invoice-print div {
-    margin-bottom: 1em !important;
-  }
-
-  .invoice-print .grid {
-    row-gap: 1.5em !important;
-  }
-
-  .invoice-print {
-    padding: 0 !important;
-    padding-bottom: 2rem !important; /* 32px bottom margin so content never crowds page edge */
-    min-height: 85vh !important;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 }
