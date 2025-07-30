@@ -6,17 +6,47 @@ import { Send } from "lucide-react";
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useCurrentCompany, useCurrentUser } from "@/global";
+import { trpc } from "@/trpc/client";
 
 interface HelperChatProps {
   conversation: ConversationDetails;
 }
 
 export const HelperChat: React.FC<HelperChatProps> = ({ conversation }) => {
-  const { messages, input, handleInputChange, handleSubmit, agentTyping } = useChat({ conversation });
+  const utils = trpc.useUtils();
+  const user = useCurrentUser();
+  const company = useCurrentCompany();
+  const { messages, input, handleInputChange, handleSubmit, agentTyping } = useChat({
+    conversation,
+    tools: {
+      getInvoices: {
+        description: "Fetch a list of recent invoices",
+        parameters: {},
+        execute: async () => {
+          const invoices = await utils.invoices.list.fetch({
+            companyId: company.id,
+            contractorId: user.roles.worker?.id,
+          });
+          return invoices.map((invoice) => ({
+            id: invoice.id,
+            number: invoice.invoiceNumber,
+            // The AI SDK crashes if we return a BigInt
+            totalAmountInUsdCents: Number(invoice.totalAmountInUsdCents),
+            date: invoice.invoiceDate,
+            status: invoice.status,
+          }));
+        },
+      },
+    },
+    ai: {
+      maxSteps: 3,
+    },
+  });
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="space-y-4 pb-24">
         {messages.length === 0 ? (
           <div className="py-8 text-center text-gray-500">No messages yet. Start the conversation!</div>
         ) : (
@@ -43,7 +73,7 @@ export const HelperChat: React.FC<HelperChatProps> = ({ conversation }) => {
         {agentTyping ? <div className="text-center text-xs text-gray-500">Agent is typing...</div> : null}
       </div>
 
-      <form onSubmit={handleSubmit} className="absolute right-4 bottom-4 left-4 flex space-x-2">
+      <form onSubmit={handleSubmit} className="bg-background absolute right-0 bottom-0 left-0 flex space-x-2 p-4">
         <Textarea
           rows={2}
           value={input}
