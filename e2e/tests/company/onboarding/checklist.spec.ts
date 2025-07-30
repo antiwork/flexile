@@ -124,7 +124,7 @@ test.describe("Onboarding checklist", () => {
     await expect(checklistItems.nth(1).getByText("Add invoice payout information")).not.toHaveClass(/line-through/u);
     await expect(checklistItems.nth(2).getByText("Sign contract")).toHaveClass(/line-through/u);
 
-    await page.getByText("Add payout information").click();
+    await page.getByText("Add invoice payout information").click();
     await expect(page).toHaveURL(/\/settings\/payouts/u);
     await page.getByText("Add bank account").click();
     await withinModal(
@@ -189,7 +189,7 @@ test.describe("Onboarding checklist", () => {
     await expect(checklistItems.nth(1).getByText("Add dividend payout information")).not.toHaveClass(/line-through/u);
     await expect(checklistItems.nth(2).getByText("Sign contract")).toHaveClass(/line-through/u);
 
-    await page.getByText("Add payout information").click();
+    await page.getByText("Add dividend payout information").click();
     await expect(page).toHaveURL(/\/settings\/payouts/u);
     await page.getByText("Add bank account").click();
     await withinModal(
