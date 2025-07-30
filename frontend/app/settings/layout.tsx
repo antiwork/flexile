@@ -78,7 +78,7 @@ const companyLinks = [
     isVisible: (user: CurrentUser) => !!user.roles.administrator,
   },
   {
-    label: "Equity value",
+    label: "Equity",
     route: "/settings/administrator/equity" as const,
     icon: PieChart,
     isVisible: (user: CurrentUser) => !!user.roles.administrator,
