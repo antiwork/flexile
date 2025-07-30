@@ -11,9 +11,18 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -145,14 +154,14 @@ export default function InvoicePage() {
       />
 
       {invoice.requiresAcceptanceByPayee && user.id === invoice.userId ? (
-        <Dialog open={acceptPaymentModalOpen} onOpenChange={setAcceptPaymentModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Accept invoice</DialogTitle>
-            </DialogHeader>
-            <div>
-              If everything looks correct, accept the invoice. Then your company administrator can initiate payment.
-            </div>
+        <AlertDialog open={acceptPaymentModalOpen} onOpenChange={setAcceptPaymentModalOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Accept invoice</AlertDialogTitle>
+              <AlertDialogDescription>
+                If everything looks correct, accept the invoice. Then your company administrator can initiate payment.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
             <Card>
               <CardContent>
                 {invoice.minAllowedEquityPercentage !== null && invoice.maxAllowedEquityPercentage !== null ? (
@@ -204,17 +213,18 @@ export default function InvoicePage() {
               </CardContent>
             </Card>
 
-            <DialogFooter>
-              <div className="flex justify-end">
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction asChild>
                 <MutationButton mutation={acceptPaymentMutation} successText="Success!" loadingText="Saving...">
                   {invoice.minAllowedEquityPercentage !== null && invoice.maxAllowedEquityPercentage !== null
                     ? `Confirm ${(equityPercentage / 100).toLocaleString(undefined, { style: "percent" })} split`
                     : "Accept payment"}
                 </MutationButton>
-              </div>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       ) : null}
       {!taxRequirementsMet(invoice) && (
         <Alert variant="destructive">
