@@ -9,7 +9,6 @@ RSpec.describe TenderOffer do
     it { is_expected.to have_many(:equity_buyback_payments).through(:equity_buybacks) }
     it { is_expected.to have_many(:tender_offer_investors) }
     it { is_expected.to have_one_attached(:attachment) }
-    it { is_expected.to have_one_attached(:letter_of_transmittal) }
   end
 
   describe "validations" do
@@ -60,23 +59,6 @@ RSpec.describe TenderOffer do
 
         expect(tender_offer).not_to be_valid
         expect(tender_offer.errors[:attachment]).to include("must be a ZIP file")
-      end
-    end
-
-    describe "letter_of_transmittal validation" do
-      it "allows PDF file attachments" do
-        tender_offer = build(:tender_offer)
-
-        expect(tender_offer).to be_valid
-      end
-
-      it "does not allow non-PDF file attachments" do
-        tender_offer = build(:tender_offer, :without_attachments)
-        zip_file = fixture_file_upload("sample.zip", "application/zip")
-        tender_offer.letter_of_transmittal.attach(zip_file)
-
-        expect(tender_offer).not_to be_valid
-        expect(tender_offer.errors[:letter_of_transmittal]).to include("must be a PDF file")
       end
     end
 

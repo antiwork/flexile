@@ -11,7 +11,7 @@ RSpec.describe CreateTenderOffer do
       ends_at: Date.new(2024, 12, 30).to_s,
       minimum_valuation: 1_000_000.to_s,
       attachment: fixture_file_upload("sample.zip"),
-      letter_of_transmittal: fixture_file_upload("sample.pdf"),
+      letter_of_transmittal: "<h1>Letter of transmittal</h1>",
     }
   end
 

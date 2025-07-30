@@ -322,7 +322,7 @@ class SeedDataGeneratorFromTemplate
             starts_at:,
             ends_at: 3.months.from_now,
             attachment: create_temporary_zip_file,
-            letter_of_transmittal: create_temporary_pdf_file
+            letter_of_transmittal: "<h1>Letter of transmittal</h1>"
           )
         ).perform
         if !result[:success]

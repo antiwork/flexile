@@ -1,4 +1,4 @@
-# Stock Buybacks Guide
+# Tender Offers Guide
 
 ## Table of Contents
 
@@ -26,9 +26,7 @@ heroku run rails console -a flexile
 Company.find(COMPANY_ID).update!(stock_buybacks_allowed: true)
 ```
 
-### Create a New Buyback
-
-#### Tender Offer
+### Create a New Tender Offer
 
 ```ruby
 company = Company.find(COMPANY_ID)
@@ -47,31 +45,6 @@ result = CreateTenderOffer.new(
     minimum_valuation: 20_000_000
   },
   investor_ids: investors
-).perform
-
-tender_offer = result[:tender_offer] if result[:success]
-```
-
-#### Single Stock Repurchase
-
-```ruby
-company = Company.find(COMPANY_ID)
-investor = company.company_investors.joins(:user).find_by(users: { email: INVESTOR_EMAIL })&.external_id
-
-result = CreateTenderOffer.new(
-  company: company,
-  attributes: {
-    buyback_type: "single_stock",
-    name: "Single stock purchase from Investor",
-    starts_at: Date.current,
-    ends_at: 30.days.from_now,
-    total_amount_in_cents: 20_000_000,
-    number_of_shares: 100_000,
-    attachment: File.open(Rails.root.join("spec/fixtures/files/sample.zip")),
-    letter_of_transmittal: "<h1>Letter of transmittal</h1>",
-    minimum_valuation: 20_000_000
-  },
-  investor_ids: [investor].compact
 ).perform
 
 tender_offer = result[:tender_offer] if result[:success]

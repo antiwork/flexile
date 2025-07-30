@@ -5,7 +5,7 @@ FactoryBot.define do
     company
     name { "#{company.name} Buyback #{SecureRandom.hex(4)}" }
     attachment { Rack::Test::UploadedFile.new(Rails.root.join("spec/fixtures/files/sample.zip")) }
-    letter_of_transmittal { Rack::Test::UploadedFile.new(Rails.root.join("spec/fixtures/files/sample.pdf")) }
+    letter_of_transmittal { "<h1>Letter of transmittal</h1>" }
     starts_at { 20.days.ago }
     ends_at { 10.days.from_now }
     minimum_valuation { 100_000 }
@@ -45,7 +45,6 @@ FactoryBot.define do
 
     trait :without_attachments do
       attachment { nil }
-      letter_of_transmittal { nil }
     end
 
     trait :without_investors do

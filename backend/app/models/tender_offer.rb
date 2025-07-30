@@ -17,7 +17,6 @@ class TenderOffer < ApplicationRecord
   has_many :equity_buyback_payments, through: :equity_buybacks
   has_many :tender_offer_investors
   has_one_attached :attachment
-  has_one_attached :letter_of_transmittal
 
   validates :buyback_type, presence: true, on: :create
   validates :name, presence: true, on: :create
@@ -66,10 +65,6 @@ class TenderOffer < ApplicationRecord
     def correct_attachment_mime_type
       if attachment.attached? && !attachment.content_type.in?(%w(application/zip))
         errors.add(:attachment, "must be a ZIP file")
-      end
-
-      if letter_of_transmittal.attached? && !letter_of_transmittal.content_type.in?(%w(application/pdf))
-        errors.add(:letter_of_transmittal, "must be a PDF file")
       end
     end
 
