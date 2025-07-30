@@ -10,9 +10,9 @@ import { companies } from "@/db/schema";
 test.describe("Company equity settings", () => {
   test("enabling and updating company equity settings", async ({ page }) => {
     const { company } = await companiesFactory.create({
-      sharePriceInUsd: "20",
-      fmvPerShareInUsd: "15.1",
-      conversionSharePriceUsd: "18.123456789",
+      sharePriceInUsd: null,
+      fmvPerShareInUsd: null,
+      conversionSharePriceUsd: null,
       equityEnabled: false,
     });
     const { user: adminUser } = await usersFactory.create();
@@ -39,9 +39,12 @@ test.describe("Company equity settings", () => {
     const valuationPriceInput = page.getByLabel("Current 409A valuation (USD per share)");
     const conversionPriceInput = page.getByLabel("Conversion share price (USD)");
 
-    await expect(sharePriceInput).toHaveValue("20.00");
-    await expect(valuationPriceInput).toHaveValue("15.10");
-    await expect(conversionPriceInput).toHaveValue("18.123456789");
+    await expect(sharePriceInput).toHaveValue("");
+    await expect(valuationPriceInput).toHaveValue("");
+    await expect(conversionPriceInput).toHaveValue("");
+
+    await sharePriceInput.fill("20");
+    await conversionPriceInput.fill("18.123456789");
 
     await valuationPriceInput.fill("15");
     await expect(valuationPriceInput).toHaveValue("15");
