@@ -4,16 +4,7 @@ import { createUpdateSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
-import {
-  activeStorageAttachments,
-  activeStorageBlobs,
-  companies,
-  companyAdministrators,
-  companyContractors as _companyContractors,
-  companyInvestors as _companyInvestors,
-  companyLawyers as _companyLawyers,
-  users,
-} from "@/db/schema";
+import { activeStorageAttachments, activeStorageBlobs, companies, companyAdministrators, users } from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 import {
   company_administrator_stripe_microdeposit_verifications_url,

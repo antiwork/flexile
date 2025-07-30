@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -110,6 +110,7 @@ const LeaveWorkspaceSection = () => {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -128,7 +129,8 @@ const LeaveWorkspaceSection = () => {
 
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
       setTimeout(() => {
         setIsModalOpen(false);
         router.push("/dashboard");
