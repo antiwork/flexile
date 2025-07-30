@@ -89,11 +89,11 @@ export default function InvoicePage() {
         title={`Invoice ${invoice.invoiceNumber}`}
         headerActions={
           <>
+            <InvoiceStatus aria-label="Status" invoice={invoice} />
             <Button onClick={() => window.print()} variant="outline" className="print:hidden">
               <PrinterIcon className="size-4" />
               Print
             </Button>
-            <InvoiceStatus aria-label="Status" invoice={invoice} />
             {user.roles.administrator && isActionable(invoice) ? (
               <>
                 <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
