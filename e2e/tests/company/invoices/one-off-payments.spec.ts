@@ -80,7 +80,7 @@ test.describe("One-off payments", () => {
 
     test.describe("for a contractor with equity", () => {
       test.beforeEach(async () => {
-        await db.update(companies).set({ equityCompensationEnabled: true }).where(eq(companies.id, company.id));
+        await db.update(companies).set({ equityEnabled: true }).where(eq(companies.id, company.id));
 
         companyInvestor = (
           await companyInvestorsFactory.create({
@@ -383,6 +383,32 @@ test.describe("One-off payments", () => {
       await page.getByRole("menuitem", { name: "Clear all filters" }).click();
 
       await expect(page.getByRole("row", { name: "$123.45 Payment scheduled" })).toBeVisible();
+    });
+
+    test("shows 'Pay again' button for failed payments", async ({ page }) => {
+      const { invoice } = await invoicesFactory.create({
+        companyId: company.id,
+        companyContractorId: companyContractor.id,
+        status: "approved",
+        totalAmountInUsdCents: BigInt(50000),
+        invoiceNumber: "O-0002",
+      });
+
+      await db.update(invoices).set({ status: "failed" }).where(eq(invoices.id, invoice.id));
+
+      await login(page, adminUser);
+      await page.goto("/invoices");
+
+      await expect(page.locator("tbody")).toBeVisible();
+
+      const invoiceRow = await findRequiredTableRow(page, {
+        Amount: "$500",
+        Status: "Failed",
+      });
+
+      await invoiceRow.getByRole("button", { name: "Pay again" }).click();
+
+      await expect(page.getByText("Payment initiated")).toBeVisible();
     });
   });
 });

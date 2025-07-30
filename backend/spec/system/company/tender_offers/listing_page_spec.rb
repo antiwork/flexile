@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe "Tender offer listing page" do
-  let(:company) { create(:company, tender_offers_enabled: true) }
+  let(:company) { create(:company, equity_enabled: true) }
   let(:starts_at_1) { Time.current.beginning_of_day }
   let(:ends_at_1) { starts_at_1 + 3.weeks }
   let(:starts_at_2) { 1.year.ago.beginning_of_day }

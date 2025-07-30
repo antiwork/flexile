@@ -33,7 +33,6 @@ import { Input } from "@/components/ui/input";
 import {
   Table as ShadcnTable,
   TableBody,
-  TableCaption,
   TableCell,
   TableFooter,
   TableHead,
@@ -90,7 +89,6 @@ export const useTable = <T extends RowData>(
 
 interface TableProps<T> {
   table: Table<T>;
-  caption?: string;
   onRowClicked?: ((row: T) => void) | undefined;
   actions?: React.ReactNode;
   searchColumn?: string | undefined;
@@ -106,7 +104,6 @@ interface TableProps<T> {
 
 export default function DataTable<T extends RowData>({
   table,
-  caption,
   onRowClicked,
   actions,
   searchColumn: searchColumnName,
@@ -288,9 +285,6 @@ export default function DataTable<T extends RowData>({
       ) : null}
 
       <ShadcnTable className="caption-top not-print:max-md:grid">
-        {caption ? (
-          <TableCaption className="mb-2 text-left text-lg font-bold text-black">{caption}</TableCaption>
-        ) : null}
         <TableHeader className="not-print:max-md:hidden">
           {data.headers.map((headerGroup) => (
             <TableRow key={headerGroup.id}>
@@ -332,7 +326,7 @@ export default function DataTable<T extends RowData>({
               const rowContent = (
                 <TableRow
                   key={row.id}
-                  className={rowClasses}
+                  className={`${rowClasses} ${onRowClicked ? "cursor-pointer" : ""}`}
                   data-state={isSelected ? "selected" : undefined}
                   onClick={() => onRowClicked?.(row.original)}
                 >

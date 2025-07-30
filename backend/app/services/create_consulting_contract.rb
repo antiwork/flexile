@@ -12,7 +12,7 @@ class CreateConsultingContract
 
   def perform!
     attributes = {
-      name: Contract::CONSULTING_CONTRACT_NAME,
+      name: Document::CONSULTING_CONTRACT_NAME,
       document_type: :consulting_contract,
       year: Date.current.year,
       company: company_worker.company,

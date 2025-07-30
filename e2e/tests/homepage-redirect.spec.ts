@@ -56,7 +56,7 @@ test.describe("Homepage redirect", () => {
 
   test("investor is redirected to first equity page", async ({ page }) => {
     // The redirect for investors depends on company flags and navLinks order.
-    // It could be /equity/cap_table, /equity/options, /equity/shares, /equity/convertibles, or /equity/dividends.
+    // It could be /equity/investors, /equity/options, /equity/shares, /equity/convertibles, or /equity/dividends.
     const { company } = await companiesFactory.createCompletedOnboarding();
     const { user } = await usersFactory.create();
     await companyInvestorsFactory.create({ companyId: company.id, userId: user.id });

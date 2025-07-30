@@ -26,7 +26,6 @@ async function fillOutUsdBankAccountForm(
   await page.getByLabel("Full name of the account holder").fill(formValues.legalName);
   await page.getByLabel("Routing number").fill(formValues.routingNumber);
   await page.getByLabel("Account number").fill(formValues.accountNumber);
-  await page.getByRole("button", { name: "Continue" }).click();
   await page.getByLabel("Country").click();
   await page.getByRole("option", { name: formValues.country, exact: true }).click();
   await page.getByLabel("City").fill(formValues.city);
@@ -88,8 +87,6 @@ test.describe("Bank account settings", () => {
     await page.getByLabel("Full name of the account holder").fill(onboardingUser.legalName ?? "");
     await page.getByLabel("CLABE").fill("032180000118359719");
 
-    await page.getByRole("button", { name: "Continue" }).click();
-
     await page.getByLabel("Country").click();
     await page.getByRole("option", { name: "Mexico" }).click();
     await page.getByLabel("City").fill(" San Andres Cholula ");
@@ -138,7 +135,6 @@ test.describe("Bank account settings", () => {
     await page.getByRole("button", { name: "Add bank account" }).click();
     await expect(page.getByLabel("Full name of the account holder")).toHaveValue(onboardingUser.legalName ?? "");
 
-    await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByLabel("State")).toHaveText("Hawaii"); // unabbreviated version
     await expect(page.getByLabel("City")).toHaveValue(onboardingUser.city ?? "");
     await expect(page.getByLabel("Street address, apt number")).toHaveValue(onboardingUser.streetAddress ?? "");
@@ -150,31 +146,24 @@ test.describe("Bank account settings", () => {
     await page.getByRole("link", { name: "Payouts" }).click();
     await page.getByRole("button", { name: "Add bank account" }).click();
     await page.getByLabel("Full name of the account holder").fill("Da R");
-    await page.getByRole("button", { name: "Continue" }).click();
-    await page.getByRole("button", { name: "Save bank account" }).click();
-    await expect(page.getByRole("button", { name: "Continue" })).toBeDisabled();
-    await expect(page.getByLabel("Full name of the account holder")).not.toBeValid();
-    await expect(page.getByLabel("Account number")).not.toBeValid();
-    await expect(page.getByLabel("Routing number")).not.toBeValid();
-    await expect(page.getByText("Please enter an account number.")).toBeVisible();
-    await expect(page.getByText("This doesn't look like a full legal name.")).toBeVisible();
-
-    await page.getByLabel("Full name of the account holder").fill("Jane Doe");
-    await expect(page.getByLabel("Full name of the account holder")).toBeValid();
+    await expect(page.getByRole("button", { name: "Save bank account" })).toBeDisabled();
     await page.getByLabel("Routing number").fill("123456789");
     await page.getByLabel("Account number").fill("1");
-    await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("button", { name: "Save bank account" }).click();
 
+    await expect(page.getByLabel("Full name of the account holder")).not.toBeValid();
+    await expect(page.getByText("This doesn't look like a full legal name.")).toBeVisible();
     await expect(page.getByLabel("Account number")).not.toBeValid();
     await expect(page.getByLabel("Routing number")).not.toBeValid();
     await expect(page.getByText("Please enter a valid account number of between 4 and 17 digits.")).toBeVisible();
     await expect(page.getByText("This doesn't look like a valid ACH routing number.")).toBeVisible();
 
+    await page.getByLabel("Full name of the account holder").fill("Jane Doe");
+    await expect(page.getByLabel("Full name of the account holder")).toBeValid();
+
     await page.getByLabel("Account number").fill("abcd");
     await page.getByLabel("Account number").fill("12345678");
     await page.getByLabel("Routing number").fill("071004200");
-    await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("button", { name: "Save bank account" }).click();
 
     await expect(page.getByText("Saving bank account...")).toBeVisible();
@@ -187,7 +176,6 @@ test.describe("Bank account settings", () => {
     await selectComboboxOption(page, "Currency", "EUR (Euro)");
     await expect(page.getByLabel("Full name of the account holder")).toHaveValue(onboardingUser.legalName ?? "");
     await page.getByLabel("IBAN").fill("HR7624020064583467589");
-    await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByLabel("Country")).toHaveText("United States");
     await page.getByLabel("Country").click();
     await page.getByRole("option", { name: "Croatia" }).click();
@@ -209,7 +197,6 @@ test.describe("Bank account settings", () => {
     await page.getByLabel("Institution number").fill("006");
     await page.getByLabel("Transit number").fill("04841");
     await page.getByLabel("Account number").fill("3456712");
-    await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByLabel("Country")).toHaveText("United States");
     await page.getByLabel("Country").click();
     await page.getByRole("option", { name: "Canada" }).click();
@@ -268,7 +255,6 @@ test.describe("Bank account settings", () => {
       await page.getByRole("link", { name: "Payouts" }).click();
       await page.getByRole("button", { name: "Add bank account" }).click();
       await selectComboboxOption(page, "Currency", "USD (United States Dollar)");
-      await page.getByRole("button", { name: "Continue" }).click();
       await page.getByLabel("Country").click();
       await page.getByRole("option", { name: "United States", exact: true }).click();
       await expect(page.getByLabel("State")).toBeVisible();
@@ -280,7 +266,6 @@ test.describe("Bank account settings", () => {
       await page.getByRole("link", { name: "Payouts" }).click();
       await page.getByRole("button", { name: "Add bank account" }).click();
       await selectComboboxOption(page, "Currency", "USD (United States Dollar)");
-      await page.getByRole("button", { name: "Continue" }).click();
       await page.getByLabel("Country").click();
       await page.getByRole("option", { name: "Canada" }).click();
       await expect(page.getByLabel("Province")).toBeVisible();
@@ -292,7 +277,6 @@ test.describe("Bank account settings", () => {
       await page.getByRole("link", { name: "Payouts" }).click();
       await page.getByRole("button", { name: "Add bank account" }).click();
       await selectComboboxOption(page, "Currency", "USD (United States Dollar)");
-      await page.getByRole("button", { name: "Continue" }).click();
       await page.getByLabel("Country").click();
       await page.getByRole("option", { name: "United Kingdom" }).click();
       await expect(page.getByLabel("Post code")).toBeVisible();
@@ -305,7 +289,6 @@ test.describe("Bank account settings", () => {
       await page.getByRole("link", { name: "Payouts" }).click();
       await page.getByRole("button", { name: "Add bank account" }).click();
       await selectComboboxOption(page, "Currency", "USD (United States Dollar)");
-      await page.getByRole("button", { name: "Continue" }).click();
       await page.getByLabel("Country").click();
       await page.getByRole("option", { name: "Bahamas" }).click();
       await expect(page.getByLabel("Post code")).not.toBeVisible();
@@ -317,7 +300,6 @@ test.describe("Bank account settings", () => {
       await page.getByRole("link", { name: "Settings" }).click();
       await page.getByRole("link", { name: "Payouts" }).click();
       await page.getByRole("button", { name: "Add bank account" }).click();
-      await page.getByRole("button", { name: "Continue" }).click();
       await page.getByLabel("Country").click();
       await page.getByRole("option", { name: "Japan" }).click();
       await expect(page.getByLabel("Prefecture (optional)")).toBeVisible();
@@ -327,7 +309,6 @@ test.describe("Bank account settings", () => {
       await page.getByRole("link", { name: "Settings" }).click();
       await page.getByRole("link", { name: "Payouts" }).click();
       await page.getByRole("button", { name: "Add bank account" }).click();
-      await page.getByRole("button", { name: "Continue" }).click();
       await page.getByLabel("Country").click();
       await page.getByRole("option", { name: "New Zealand" }).click();
       await expect(page.getByLabel("Region (optional)")).toBeVisible();
