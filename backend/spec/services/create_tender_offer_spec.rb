@@ -9,7 +9,7 @@ RSpec.describe CreateTenderOffer do
       name: "Q4 2024 Buyback",
       starts_at: Date.new(2024, 12, 15).to_s,
       ends_at: Date.new(2024, 12, 30).to_s,
-      minimum_valuation: 1_000_000.to_s,
+      minimum_share_price_cents: 1000,
       attachment: fixture_file_upload("sample.zip"),
       letter_of_transmittal: "<h1>Letter of transmittal</h1>",
     }
@@ -29,7 +29,7 @@ RSpec.describe CreateTenderOffer do
         expect(tender_offer.name).to eq(attributes[:name])
         expect(tender_offer.starts_at).to eq(Date.parse(attributes[:starts_at]))
         expect(tender_offer.ends_at).to eq(Date.parse(attributes[:ends_at]))
-        expect(tender_offer.minimum_valuation).to eq(attributes[:minimum_valuation].to_f)
+        expect(tender_offer.minimum_share_price_cents).to eq(attributes[:minimum_share_price_cents])
         expect(tender_offer.attachment).to be_present
         expect(tender_offer.letter_of_transmittal).to be_present
       end

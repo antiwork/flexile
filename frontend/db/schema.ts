@@ -53,6 +53,7 @@ export const equityGrantsOptionGrantType = pgEnum("equity_grants_option_grant_ty
 export const equityGrantsVestingTrigger = pgEnum("equity_grants_vesting_trigger", optionGrantVestingTriggers);
 export const integrationStatus = pgEnum("integration_status", ["initialized", "active", "out_of_sync", "deleted"]);
 export const invoicesInvoiceType = pgEnum("invoices_invoice_type", ["services", "other"]);
+export const tenderOfferType = pgEnum("tender_offer_buyback_type", ["single_stock", "tender_offer"]);
 export const activeStorageVariantRecords = pgTable(
   "active_storage_variant_records",
   {
@@ -1223,10 +1224,40 @@ export const tenderOffers = pgTable(
       .notNull()
       .$onUpdate(() => new Date()),
     acceptedPriceCents: integer("accepted_price_cents"),
+    name: varchar(),
+    impliedValuation: bigint("implied_valuation", { mode: "bigint" }),
+    buybackType: tenderOfferType("buyback_type").notNull().default("tender_offer"),
+    letterOfTransmittal: text("letter_of_transmittal"),
+    minimumSharePriceCents: integer("minimum_share_price_cents").default(0).notNull(),
   },
   (table) => [
     index("index_tender_offers_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
     index("index_tender_offers_on_external_id").using("btree", table.externalId.asc().nullsLast().op("text_ops")),
+  ],
+);
+
+export const tenderOfferInvestors = pgTable(
+  "tender_offer_investors",
+  {
+    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
+    externalId: varchar("external_id").$default(nanoid).notNull(),
+    tenderOfferId: bigint("tender_offer_id", { mode: "bigint" }).notNull(),
+    companyInvestorId: bigint("company_investor_id", { mode: "bigint" }).notNull(),
+    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("index_tender_offer_investors_on_external_id").using(
+      "btree",
+      table.externalId.asc().nullsLast().op("text_ops"),
+    ),
+    uniqueIndex("idx_tender_offer_investors_unique").using(
+      "btree",
+      table.tenderOfferId.asc().nullsLast().op("int8_ops"),
+      table.companyInvestorId.asc().nullsLast().op("int8_ops"),
+    ),
   ],
 );
 

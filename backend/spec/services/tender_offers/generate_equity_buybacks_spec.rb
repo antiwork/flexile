@@ -6,6 +6,13 @@ RSpec.describe TenderOffers::GenerateEquityBuybacks do
   let(:service) { described_class.new(tender_offer:) }
 
   describe "#perform" do
+    context "when tender offer has not ended" do
+      it "returns early without creating any records" do
+        expect { service.perform }.not_to change(EquityBuyback, :count)
+        expect { service.perform }.not_to change(EquityBuybackRound, :count)
+      end
+    end
+
     context "when there are multiple investors with multiple vested shares, different share classes" do
       let!(:option_pool) { create(:option_pool, company:) }
       let!(:share_class_a) { create(:share_class, company:, name: "Class A") }
@@ -43,7 +50,9 @@ RSpec.describe TenderOffers::GenerateEquityBuybacks do
       let!(:bid8) { create(:tender_offer_bid, tender_offer:, company_investor: company_investor3, share_class: "Class B", number_of_shares: 100, accepted_shares: 100, share_price_cents: 10_00) }
 
       it "creates EquityBuyback records for each company investor and type of holding" do
-        expect { service.perform }.to change(EquityBuyback, :count).by(11)
+        travel_to(tender_offer.ends_at + 1.hour) do
+          expect { service.perform }.to change(EquityBuyback, :count).by(11)
+        end
 
         # Company Investor 1 buybacks
         company_investor1_buybacks = EquityBuyback.where(company_investor: company_investor1).order(:created_at)
@@ -136,17 +145,19 @@ RSpec.describe TenderOffers::GenerateEquityBuybacks do
       end
 
       it "creates an EquityBuybackRound with correct attributes" do
-        service.perform
+        travel_to(tender_offer.ends_at + 1.hour) do
+          service.perform
 
-        expect(EquityBuybackRound.count).to eq(1)
-        round = EquityBuybackRound.last
-        expect(round).to have_attributes(
-          number_of_shares: 780,
-          total_amount_cents: 7_235_00,
-          number_of_shareholders: 3,
-          status: "Issued"
-        )
-        expect(round.issued_at).to be_present
+          expect(EquityBuybackRound.count).to eq(1)
+          round = EquityBuybackRound.last
+          expect(round).to have_attributes(
+            number_of_shares: 780,
+            total_amount_cents: 7_235_00,
+            number_of_shareholders: 3,
+            status: "Issued"
+          )
+          expect(round.issued_at).to be_present
+        end
       end
     end
   end

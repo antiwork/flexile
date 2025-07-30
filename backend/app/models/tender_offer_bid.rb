@@ -6,6 +6,8 @@ class TenderOfferBid < ApplicationRecord
   belongs_to :tender_offer
   belongs_to :company_investor
 
+  before_validation :set_single_stock_defaults, on: :create
+
   validates :number_of_shares, presence: true, numericality: { greater_than: 0 }
   validates :accepted_shares, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :share_price_cents, presence: true, numericality: { only_integer: true, greater_than: 0 }
@@ -33,7 +35,14 @@ class TenderOfferBid < ApplicationRecord
       securities = tender_offer.securities_available_for_purchase(company_investor)
       info_for_security = securities.find { |security| security[:class_name] == share_class }
       max_count = info_for_security ? info_for_security[:count].to_f : 0.0
-      if max_count < number_of_shares
+
+      existing_bids = tender_offer.bids.where(company_investor: company_investor, share_class: share_class)
+      existing_bids = existing_bids.where.not(id: id) if persisted?
+      already_bid_shares = existing_bids.sum(:number_of_shares)
+
+      available_shares = max_count - already_bid_shares
+
+      if available_shares < number_of_shares
         errors.add(:base, "Insufficient #{share_class} shares")
       end
     end
@@ -45,12 +54,9 @@ class TenderOfferBid < ApplicationRecord
         errors.add(:share_price_cents, "Must match the accepted share price")
       end
 
-      if tender_offer.minimum_valuation
-        return if tender_offer.company.fully_diluted_shares.zero?
-
-        starting_price_cents = (tender_offer.minimum_valuation / tender_offer.company.fully_diluted_shares) * 100
-        if share_price_cents < starting_price_cents
-          formatted_price = Money.from_cents(starting_price_cents, :usd).format(symbol: true)
+      if tender_offer.minimum_share_price_cents
+        if share_price_cents < tender_offer.minimum_share_price_cents
+          formatted_price = Money.from_cents(tender_offer.minimum_share_price_cents, :usd).format(symbol: true)
           errors.add(:share_price_cents, "Must be equal to or greater than #{formatted_price}")
         end
       end
@@ -70,5 +76,14 @@ class TenderOfferBid < ApplicationRecord
       if total_bid_amount > tender_offer.total_amount_in_cents
         errors.add(:number_of_shares, "Total bid amount cannot exceed the tender offer's total amount")
       end
+    end
+
+    def set_single_stock_defaults
+      return unless tender_offer&.buyback_type == "single_stock"
+
+      self.share_price_cents = tender_offer.accepted_price_cents
+      self.accepted_shares = number_of_shares
+
+      nil
     end
 end

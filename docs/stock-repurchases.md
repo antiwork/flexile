@@ -19,7 +19,7 @@ heroku run rails console -a flexile
 ### Enable Stock Buybacks for a Company
 
 ```ruby
-Company.find(COMPANY_ID).update!(stock_buybacks_allowed: true)
+Company.find(COMPANY_ID).update!(tender_offers_enabled: true)
 ```
 
 ### Create a New Single Stock Repurchase
@@ -47,9 +47,41 @@ result = CreateTenderOffer.new(
 tender_offer = result[:tender_offer] if result[:success]
 ```
 
+## Placing Bids
+
+### Create a Bid
+
+```ruby
+company = Company.find(COMPANY_ID)
+tender_offer = company.tender_offers.find(TENDER_OFFER_ID)
+investor = company.company_investors.joins(:user).find_by(users: { email: INVESTOR_EMAIL })
+
+bid = tender_offer.bids.create!(
+  company_investor: investor,
+  number_of_shares: 1000,
+  share_class: "Common"
+)
+```
+
+### View Bids for stock repurchase
+
+```ruby
+tender_offer = TenderOffer.find(TENDER_OFFER_ID)
+tender_offer.bids.includes(company_investor: :user).each do |bid|
+  puts "#{bid.company_investor.user.email}: #{bid.number_of_shares} shares at $#{bid.share_price_cents / 100.0}"
+end
+```
+
+### Remove a Bid
+
+```ruby
+bid = TenderOfferBid.find(BID_ID)
+bid.destroy
+```
+
 ## Finalizing Stock Repurchases
 
-After the repurchase has been set up, run the finalize service:
+After the repurchase period elapses, run the finalize service:
 
 ```ruby
 tender_offer = TenderOffer.find(TENDER_OFFER_ID)
@@ -66,7 +98,7 @@ TenderOffers::FinalizeBuyback.new(tender_offer: tender_offer).perform
 
 ### Processes Payments
 
-Payments are queued for processing. Only investors who meet specific requirements will receive payment:
+Payments are queued for processing. The investor would receive payment if they meet the following requirement:
 
 - User has verified tax ID
 - User is not a restricted payout country resident
@@ -77,10 +109,10 @@ Payments are queued for processing. Only investors who meet specific requirement
 ### Updates cap table
 
 - For equity grants (options): reduces vested shares and increases forfeited shares
-- For share holdings: reduces the number of shares held by investors
+- For share holdings: reduces the number of shares held by the investor
 - Updates company's total fully diluted shares count
 - Updates option pool's issued shares count
-- Regenerates share certificates for affected investors
+- Regenerates share certificates for affected investor
 
 ### Notifies investor with closing information
 

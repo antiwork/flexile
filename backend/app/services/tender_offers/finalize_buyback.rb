@@ -23,6 +23,8 @@ class TenderOffers::FinalizeBuyback
     end
 
     send_investor_notifications
+
+    nil
   end
 
   private

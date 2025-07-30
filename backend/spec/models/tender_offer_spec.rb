@@ -17,8 +17,8 @@ RSpec.describe TenderOffer do
     it { is_expected.to validate_presence_of(:attachment) }
     it { is_expected.to validate_presence_of(:starts_at) }
     it { is_expected.to validate_presence_of(:ends_at) }
-    it { is_expected.to validate_presence_of(:minimum_valuation) }
-    it { is_expected.to validate_numericality_of(:minimum_valuation).only_integer.is_greater_than_or_equal_to(0) }
+    it { is_expected.to validate_presence_of(:minimum_share_price_cents) }
+    it { is_expected.to validate_numericality_of(:minimum_share_price_cents).only_integer.is_greater_than_or_equal_to(0) }
     it { is_expected.to validate_numericality_of(:number_of_shares).only_integer.is_greater_than_or_equal_to(0).allow_nil }
     it { is_expected.to validate_numericality_of(:number_of_shareholders).only_integer.is_greater_than(0).allow_nil }
     it { is_expected.to validate_numericality_of(:total_amount_in_cents).only_integer.is_greater_than(0).allow_nil }
@@ -27,6 +27,23 @@ RSpec.describe TenderOffer do
 
     context "on create" do
       it { is_expected.to validate_presence_of(:letter_of_transmittal).on(:create) }
+    end
+
+    describe "#accepted_price_cents_presence" do
+      context "when buyback_type is single_stock" do
+        it "is invalid when accepted_price_cents is not set" do
+          tender_offer = build(:tender_offer, :with_single_stock, accepted_price_cents: nil)
+
+          expect(tender_offer).not_to be_valid
+          expect(tender_offer.errors[:accepted_price_cents]).to include("is required for single stock buybacks")
+        end
+
+        it "is valid when accepted_price_cents is set" do
+          tender_offer = build(:tender_offer, :with_single_stock, accepted_price_cents: 1000)
+
+          expect(tender_offer).to be_valid
+        end
+      end
     end
 
     describe "#ends_at_must_be_after_starts_at" do

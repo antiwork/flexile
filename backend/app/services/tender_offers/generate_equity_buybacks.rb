@@ -7,6 +7,7 @@ class TenderOffers::GenerateEquityBuybacks
   end
 
   def perform
+    return if Time.current <= tender_offer.ends_at
     ApplicationRecord.transaction do
       equity_buyback_round = create_equity_buyback_round
       create_equity_buybacks(equity_buyback_round)

@@ -53,7 +53,7 @@ RSpec.describe TenderOffers::CalculateEquilibriumPrice do
         before do
           allow_any_instance_of(TenderOffer).to receive(:securities_available_for_purchase).and_return(
             [
-              { class_name: "Class A", count: 10_500 },
+              { class_name: "Class A", count: 31_500 },
               { class_name: "Class B", count: 1_000_000 }
             ]
           )
@@ -91,40 +91,42 @@ RSpec.describe TenderOffers::CalculateEquilibriumPrice do
           expect(subject).to eq(11_38)
           expect(tender_offer.accepted_price_cents).to eq(11_38)
 
-          # Investor 1 has bid 13,500 shares below the $11.38 price
+          # Investor 1 has bid 13,400 shares below the $11.38 price
           #   Bids:
           #   Class A: 10,400 shares
           #     400 shares at $10.00
           #     10,000 shares at $11.38
           #   Class B: 3,000 shares at $11.38
-          # Investor 2 has bid 12,500 shares below the $11.38 price
+          # Investor 2 has bid 22,500 shares below the $11.38 price
           #   Bids:
-          #   Class A: 10,500 shares
+          #   Class A: 20,500 shares
           #     500 shares at $10.00
-          #     10,000 shares at $11.38
-          #     10,000 shares at $11.38 - these are ignored because the max limit i.e. 10.5k is reached
+          #     10,000 shares at $11.38 (first bid)
+          #     10,000 shares at $11.38 (second bid)
           #   Class B: 2,000 shares at $11.38
           expect(tender_offer.bids.where(company_investor: company_investor_1).pluck(:share_class, :accepted_shares, :share_price_cents))
             .to match_array([
                               ["Class A", 400.to_d, 10_00],
-                              ["Class A", 3_615.to_d, 11_38],
+                              ["Class A", 2_496.to_d, 11_38],
                               ["Class A", 0.to_d, 13_38],
                               ["Class B", 0.to_d, 22_00],
-                              ["Class B", 1_158.to_d, 11_38],
+                              ["Class B", 836.to_d, 11_38],
                             ])
-          # Class A allocated = (3,615 + 400) / (10,400) = 38.60%
-          # Class B allocated = (1,158) / (3,000) = 38.6%
+          # Investor 1 allocation rates:
+          # Class A allocated = (2,496 + 400) / 10,400 = 27.85%
+          # Class B allocated = 836 / 3,000 = 27.87%
           expect(tender_offer.bids.where(company_investor: company_investor_2).pluck(:share_class, :accepted_shares, :share_price_cents))
             .to match_array([
                               ["Class A", 500.to_d, 10_00],
                               ["Class A", 0.to_d, 11_38],
                               ["Class A", 0.to_d, 13_38],
-                              ["Class A", 3_554.to_d, 11_38],
+                              ["Class A", 5_210.to_d, 11_38],
                               ["Class B", 0.to_d, 22_00],
-                              ["Class B", 772.to_d, 11_38]
+                              ["Class B", 557.to_d, 11_38]
                             ])
-          # Class A allocated = (3,554 + 500) / 10,500 = 38.60%
-          # Class B allocated = 772 / 2,000 = 38.60%
+          # Investor 2 allocation rates:
+          # Class A allocated = (5,210 + 500) / 20,500 = 27.85%
+          # Class B allocated = 557 / 2,000 = 27.85%
         end
       end
 

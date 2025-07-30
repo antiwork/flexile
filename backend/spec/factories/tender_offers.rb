@@ -8,7 +8,7 @@ FactoryBot.define do
     letter_of_transmittal { "<h1>Letter of transmittal</h1>" }
     starts_at { 20.days.ago }
     ends_at { 10.days.from_now }
-    minimum_valuation { 100_000 }
+    minimum_share_price_cents { 1000 }
     buyback_type { "tender_offer" }
 
     after(:build) do |tender_offer|
@@ -21,6 +21,7 @@ FactoryBot.define do
 
     trait :with_single_stock do
       buyback_type { "single_stock" }
+      accepted_price_cents { 1000 }
 
       after(:build) do |tender_offer|
         tender_offer.tender_offer_investors.clear

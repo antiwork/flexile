@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_30_045609) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_30_122829) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -896,7 +896,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_30_045609) do
     t.string "external_id", null: false
     t.datetime "starts_at", null: false
     t.datetime "ends_at", null: false
-    t.bigint "minimum_valuation", null: false
+    t.bigint "minimum_valuation", default: 0, null: false
     t.bigint "number_of_shares"
     t.integer "number_of_shareholders"
     t.bigint "total_amount_in_cents"
@@ -907,6 +907,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_30_045609) do
     t.bigint "implied_valuation"
     t.enum "buyback_type", default: "tender_offer", null: false, enum_type: "tender_offer_buyback_type"
     t.text "letter_of_transmittal"
+    t.integer "minimum_share_price_cents", default: 0, null: false
     t.index ["company_id"], name: "index_tender_offers_on_company_id"
     t.index ["external_id"], name: "index_tender_offers_on_external_id", unique: true
   end

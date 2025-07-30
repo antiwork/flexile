@@ -23,7 +23,7 @@ heroku run rails console -a flexile
 ### Enable Stock Buybacks for a Company
 
 ```ruby
-Company.find(COMPANY_ID).update!(stock_buybacks_allowed: true)
+Company.find(COMPANY_ID).update!(tender_offers_enabled: true)
 ```
 
 ### Create a New Tender Offer
@@ -42,7 +42,7 @@ result = CreateTenderOffer.new(
     number_of_shares: 100_000,
     attachment: File.open(Rails.root.join("spec/fixtures/files/sample.zip")),
     letter_of_transmittal: "<h1>Letter of transmittal</h1>",
-    minimum_valuation: 20_000_000
+    minimum_share_price_cents: 200
   },
   investor_ids: investors
 ).perform
@@ -63,7 +63,7 @@ bid = tender_offer.bids.create!(
   company_investor: investor,
   number_of_shares: 1000,
   share_price_cents: 100 * 100,
-  share_class: "common"
+  share_class: "Common"
 )
 ```
 
