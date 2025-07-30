@@ -135,7 +135,6 @@ test.describe.serial("Onboarding checklist", () => {
         await modal.getByLabel("Full name of the account holder").fill(faker.person.fullName());
         await modal.getByLabel("Routing number").fill("071004200");
         await modal.getByLabel("Account number").fill("12345678");
-        await modal.getByRole("button", { name: "Continue" }).click();
         await modal.getByLabel("Country").click();
         await modal.getByRole("option", { name: "United States", exact: true }).click();
         await modal.getByLabel("City").fill(faker.location.city());

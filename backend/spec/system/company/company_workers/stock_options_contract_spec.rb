@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe "Stock options contract" do
-  let(:company) { create(:company, name: "Gumroad", equity_grants_enabled: true) }
+  let(:company) { create(:company, name: "Gumroad", equity_enabled: true) }
   let(:company_worker) { create(:company_worker, company:) }
   let(:user) { company_worker.user }
   let(:contract) do

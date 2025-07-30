@@ -9,7 +9,6 @@ RSpec.describe Company do
     it { is_expected.to have_many(:administrators).through(:company_administrators).source(:user) }
     it { is_expected.to have_many(:company_lawyers) }
     it { is_expected.to have_many(:lawyers).through(:company_lawyers).source(:user) }
-    it { is_expected.to have_many(:contracts) }
     it { is_expected.to have_many(:company_workers) }
     it { is_expected.to have_many(:company_investor_entities) }
     it { is_expected.to have_many(:investors).through(:company_investors).source(:user) }
@@ -27,7 +26,6 @@ RSpec.describe Company do
     it { is_expected.to have_many(:equity_buyback_rounds) }
     it { is_expected.to have_many(:equity_grants).through(:company_investors) }
     it { is_expected.to have_many(:equity_grant_exercises) }
-    it { is_expected.to have_many(:time_entries) }
     it { is_expected.to have_many(:invoices) }
     it { is_expected.to have_many(:expense_categories) }
     it { is_expected.to have_many(:consolidated_payment_balance_transactions) }
@@ -37,7 +35,6 @@ RSpec.describe Company do
     it { is_expected.to have_many(:share_classes) }
     it { is_expected.to have_many(:share_holdings).through(:company_investors) }
     it { is_expected.to have_many(:option_pools) }
-    it { is_expected.to have_many(:tax_documents) }
     it { is_expected.to have_many(:tender_offers) }
     it { is_expected.to have_one(:quickbooks_integration).conditions(deleted_at: nil) }
     it { is_expected.to have_one_attached(:logo) }
@@ -554,17 +551,17 @@ RSpec.describe Company do
     end
   end
 
-  describe "#equity_compensation_enabled?" do
+  describe "#equity_enabled?" do
     let(:company) { build(:company) }
 
-    it "returns true if equity compensation is enabled" do
-      company.update!(equity_compensation_enabled: true)
-      expect(company.equity_compensation_enabled?).to eq true
+    it "returns true if equity is enabled" do
+      company.update!(equity_enabled: true)
+      expect(company.equity_enabled?).to eq true
     end
 
-    it "returns false if equity compensation is not enabled" do
-      company.update!(equity_compensation_enabled: false)
-      expect(company.equity_compensation_enabled?).to eq false
+    it "returns false if equity is not enabled" do
+      company.update!(equity_enabled: false)
+      expect(company.equity_enabled?).to eq false
     end
   end
 

@@ -1,4 +1,4 @@
-import { Briefcase, Building, CreditCard, Landmark, PieChart, ScrollText, UserCircle2 } from "lucide-react";
+import { Briefcase, Building, CreditCard, Landmark, PieChart, ScrollText, ShieldUser, UserCircle2 } from "lucide-react";
 import type { CurrentUser } from "@/models/user";
 
 export const personalLinks = [
@@ -27,6 +27,12 @@ export const companyLinks = [
     label: "Workspace settings",
     route: "/settings/administrator" as const,
     icon: Building,
+    isVisible: (user: CurrentUser) => !!user.roles.administrator,
+  },
+  {
+    label: "Workspace admins",
+    route: "/settings/administrator/admins" as const,
+    icon: ShieldUser,
     isVisible: (user: CurrentUser) => !!user.roles.administrator,
   },
   {

@@ -27,7 +27,7 @@ test.describe("invoice creation", () => {
   test.beforeEach(async () => {
     company = (
       await companiesFactory.createCompletedOnboarding({
-        equityCompensationEnabled: true,
+        equityEnabled: true,
       })
     ).company;
 
@@ -109,7 +109,7 @@ test.describe("invoice creation", () => {
   });
 
   test("does not show equity split if equity compensation is disabled", async ({ page }) => {
-    await db.update(companies).set({ equityCompensationEnabled: false }).where(eq(companies.id, company.id));
+    await db.update(companies).set({ equityEnabled: false }).where(eq(companies.id, company.id));
 
     await login(page, contractorUser);
     await page.goto("/invoices/new");
@@ -261,9 +261,14 @@ test.describe("invoice creation", () => {
     await fillDatePicker(page, "Date", "12/15/2024");
 
     await expect(page.getByText("Total services$150")).toBeVisible();
-    await expect(page.getByText("Net amount in cash$150")).toBeVisible();
+
+    // contractor has 20% equity, so $150 * 0.8 = $120
+    await expect(page.getByText("Net amount in cash$120")).toBeVisible();
 
     await page.getByRole("button", { name: "Send invoice" }).click();
+
+    // wait for navigation to invoice list
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     await expect(page.locator("tbody")).toContainText("$150");
 

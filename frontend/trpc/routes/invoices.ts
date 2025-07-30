@@ -138,7 +138,7 @@ export const invoicesRouter = createRouter({
     const { userExternalId, description, totalAmountCents, ...values } = input;
     const dateToday = new Date();
 
-    if (ctx.company.equityCompensationEnabled) {
+    if (ctx.company.equityEnabled) {
       const equityResult = await calculateInvoiceEquity({
         companyContractor: companyWorker,
         serviceAmountCents: Number(totalAmountCents),

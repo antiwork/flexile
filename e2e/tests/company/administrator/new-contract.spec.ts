@@ -197,6 +197,32 @@ test.describe("New Contractor", () => {
   // TODO: write these tests after the most important tests are done
   // TODO: write test - allows reactivating an alumni contractor
   // TODO: write test - excludes equity paragraphs when equity compensation is disabled
+  test("allows adding a contractor with custom start date using date picker", async ({ page }) => {
+    const workerEmail = faker.internet.email().toLowerCase();
+    const targetDay = 15;
+    const targetDate = new Date();
+    targetDate.setDate(targetDay);
+
+    await login(page, user);
+    await page.goto("/people");
+    await page.getByRole("button", { name: "Add contractor" }).click();
+
+    await expect(page.getByText("Who's joining?")).toBeVisible();
+    await page.getByLabel("Email").fill(workerEmail);
+
+    // Test the actual date picker calendar interaction
+    await page.getByRole("button", { name: "Calendar" }).click();
+
+    // Wait for calendar to be visible
+    await expect(page.getByRole("grid")).toBeVisible();
+
+    // Click on the specific date
+    await page.getByRole("gridcell", { name: targetDay.toString() }).first().click();
+
+    // Verify the date was selected in the input
+    await expect(page.getByRole("group", { name: "Start date" })).toContainText(targetDay.toString());
+  });
+
   // TODO: write test - includes equity paragraphs when equity compensation is enabled
   // TODO: write test - pre-fills form with last-used hourly contractor values
   // TODO: write test - pre-fills form with last-used project-based contractor values

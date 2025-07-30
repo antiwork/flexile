@@ -4,7 +4,7 @@ import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CircleDollarSign, Download, RefreshCw } from "lucide-react";
+import { CircleDollarSign, Download, Plus, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
 import { z } from "zod";
@@ -12,6 +12,7 @@ import StripeMicrodepositVerification from "@/app/settings/administrator/StripeM
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
+import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -124,9 +125,7 @@ export default function Billing() {
         .parse(await response.json());
     },
   });
-  const [data] = trpc.consolidatedInvoices.list.useSuspenseQuery({ companyId: company.id });
-
-  const table = useTable({ columns, data });
+  const { data, isLoading } = trpc.consolidatedInvoices.list.useQuery({ companyId: company.id });
 
   return (
     <div className="grid gap-4">
@@ -155,17 +154,13 @@ export default function Billing() {
               </CardHeader>
             </Card>
           ) : (
-            <Alert>
-              <InformationCircleIcon />
-              <AlertTitle>You currently do not have a bank account linked.</AlertTitle>
-              <AlertDescription className="flex items-center justify-between">
-                <div>
-                  <p>We'll use this account to debit contractor payments and our monthly fee.</p>
-                  <p>You won't be charged until the first payment.</p>
-                </div>
-                <Button onClick={() => setAddingBankAccount(true)}>Link your bank account</Button>
-              </AlertDescription>
-            </Alert>
+            <Placeholder icon={CircleDollarSign}>
+              <p>We'll use this account to debit contractor payments and our monthly fee.</p>
+              <Button onClick={() => setAddingBankAccount(true)}>
+                <Plus className="size-4" />
+                Link your bank account
+              </Button>
+            </Placeholder>
           )}
           <Elements
             stripe={stripePromise}
@@ -187,8 +182,10 @@ export default function Billing() {
           additional verification steps.
         </AlertDescription>
       </Alert>
-      {data.length > 0 ? (
-        <DataTable table={table} />
+      {isLoading ? (
+        <TableSkeleton columns={5} />
+      ) : data && data.length > 0 ? (
+        <DataTable table={useTable({ columns, data })} />
       ) : (
         <Placeholder icon={CircleDollarSign}>Invoices will appear here.</Placeholder>
       )}
