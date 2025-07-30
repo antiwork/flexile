@@ -182,7 +182,7 @@ test.describe("Onboarding checklist", () => {
     );
     await page.getByRole("link", { name: "Back to app" }).click();
 
-    await expect(page.getByText("67%")).toBeVisible();
+    await expect(page.getByText("50%")).toBeVisible();
 
     const checklistItems = page.locator('[class*="space-y-1"] > button');
     await expect(checklistItems.nth(0).getByText("Fill tax information")).toHaveClass(/line-through/u);
