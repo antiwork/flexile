@@ -139,8 +139,11 @@ This is only necessary if investors are not imported with investment and dividen
 company = Company.is_gumroad.sole
 service = DividendComputationGeneration.new(
   company,
-  amount_in_usd: 5_346_877,
-  return_of_capital: false
+  attributes: {
+    name: "Q2 2025 Distribution"
+    amount_in_usd: 5_346_877,
+    return_of_capital: false
+  }
 )
 service.process
 

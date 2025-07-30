@@ -5,11 +5,12 @@ class DividendComputationGeneration
   MAX_PREFERRED_SHARE_HOLDING_DAYS = 90
   private_constant :DEFAULT_SHARE_HOLDING_DAYS, :MAX_PREFERRED_SHARE_HOLDING_DAYS
 
-  def initialize(company, amount_in_usd:, dividends_issuance_date: Date.current, return_of_capital:)
+  def initialize(company, attributes:)
     @company = company
-    @amount_in_usd = amount_in_usd.to_d
-    @dividends_issuance_date = dividends_issuance_date
-    @return_of_capital = return_of_capital
+    @amount_in_usd = attributes[:amount_in_usd].to_d
+    @dividends_issuance_date = Date.parse(attributes[:issued_at]) if attributes[:issued_at].present?
+    @dividends_issuance_date ||= Date.current
+    @return_of_capital = attributes[:return_of_capital]
   end
 
   def process
@@ -124,7 +125,7 @@ end
 
 =begin
 company = Company.is_gumroad.sole
-service = DividendComputationGeneration.new(company, amount_in_usd: 5_346_877, return_of_capital: false)
+service = DividendComputationGeneration.new(company, attributes: { amount_in_usd: 5_346_877, return_of_capital: false })
 service.process
 
 puts service.instance_variable_get(:@preferred_dividend_total)

@@ -36,9 +36,7 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     begin
       computation = DividendComputationGeneration.new(
         Current.company,
-        amount_in_usd: create_params[:amount_in_usd],
-        dividends_issuance_date: Date.parse(create_params[:issued_at]),
-        return_of_capital: create_params[:return_of_capital]
+        attributes: create_params
       ).process
 
       # TODO
@@ -109,6 +107,8 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     begin
       dividend_round = @computation.generate_dividends
       dividend_round.send_dividend_emails
+
+      # dividend_round.trigger_payments
 
       render json: {
         success: true,

@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "rails_helper"
-
 RSpec.describe MarkDividendRoundsReadyForPaymentJob, type: :job do
   describe "#perform" do
     let(:company) { create(:company) }
