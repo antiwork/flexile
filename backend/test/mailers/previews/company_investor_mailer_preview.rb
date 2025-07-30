@@ -1,6 +1,13 @@
 # frozen_string_literal: true
 
 class CompanyInvestorMailerPreview < ActionMailer::Preview
+  def dividend_payment_failed
+    user = User.first
+    dividend_payment = DividendPayment.last
+
+    CompanyInvestorMailer.dividend_payment_failed(user, dividend_payment)
+  end
+
   def dividend_issued
     CompanyInvestorMailer.dividend_issued(investor_dividend_round_id: InvestorDividendRound.first.id)
   end

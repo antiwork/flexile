@@ -7,6 +7,7 @@ import { companyProcedure, createRouter } from "@/trpc";
 
 export const dividendRoundsRouter = createRouter({
   list: companyProcedure.query(async ({ ctx }) => {
+    if (!ctx.company.equityEnabled) throw new TRPCError({ code: "FORBIDDEN" });
     if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
     const where = eq(dividendRounds.companyId, ctx.company.id);
@@ -18,6 +19,7 @@ export const dividendRoundsRouter = createRouter({
   }),
 
   get: companyProcedure.input(z.object({ id: z.number() })).query(async ({ ctx, input }) => {
+    if (!ctx.company.equityEnabled) throw new TRPCError({ code: "FORBIDDEN" });
     if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
     const dividendRound = await db.query.dividendRounds.findFirst({

@@ -41,7 +41,10 @@ test.describe("Mobile navigation", () => {
   });
 
   test("administrator can navigate via mobile nav menu", async ({ page }) => {
-    const { adminUser } = await companiesFactory.createCompletedOnboarding({ requiredInvoiceApprovalCount: 1 });
+    const { adminUser } = await companiesFactory.createCompletedOnboarding({
+      equityEnabled: true,
+      requiredInvoiceApprovalCount: 1,
+    });
 
     await page.setViewportSize(mobileViewport);
     await login(page, adminUser);

@@ -78,7 +78,7 @@ export default function InvoicePage() {
   });
 
   const lineItemTotal = (lineItem: (typeof invoice.lineItems)[number]) =>
-    Math.ceil((lineItem.quantity / (lineItem.hourly ? 60 : 1)) * lineItem.payRateInSubunits);
+    Math.ceil((Number(lineItem.quantity) / (lineItem.hourly ? 60 : 1)) * lineItem.payRateInSubunits);
   const cashFactor = 1 - invoice.equityPercentage / 100;
 
   assert(!!invoice.invoiceDate); // must be defined due to model checks in rails
@@ -300,7 +300,7 @@ export default function InvoicePage() {
                     <TableRow key={index}>
                       <TableCell>{lineItem.description}</TableCell>
                       <TableCell className="text-right tabular-nums">
-                        {lineItem.hourly ? formatDuration(lineItem.quantity) : lineItem.quantity}
+                        {lineItem.hourly ? formatDuration(Number(lineItem.quantity)) : lineItem.quantity}
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
                         {lineItem.payRateInSubunits

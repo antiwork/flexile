@@ -27,7 +27,6 @@ class User < ApplicationRecord
 
   has_many :company_workers
   has_many :clients, -> { order(CompanyWorker.arel_table[:created_at]) }, through: :company_workers, source: :company
-  has_many :contracts
   has_many :document_signatures
   has_many :documents, through: :document_signatures do
     def unsigned_contracts
@@ -39,7 +38,6 @@ class User < ApplicationRecord
   has_many :portfolio_companies, -> { order("company_investors.created_at") }, through: :company_investors, source: :company
 
   has_many :dividends, through: :company_investors
-  has_many :time_entries
   has_many :tos_agreements
   has_many :invoices
   has_many :invoice_approvals, foreign_key: :approver_id
@@ -49,7 +47,6 @@ class User < ApplicationRecord
 
   has_many :user_compliance_infos, autosave: true
   has_one :compliance_info, -> { alive.order(tax_information_confirmed_at: :desc) }, class_name: "UserComplianceInfo"
-  has_many :tax_documents, through: :user_compliance_infos
 
   has_one_attached :avatar
 

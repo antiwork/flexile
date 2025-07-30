@@ -16,12 +16,14 @@ import {
   ReceiptIcon,
   Rss,
   Settings,
+  Sparkles,
   Users,
+  X,
 } from "lucide-react";
 import type { Route } from "next";
 import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Link, { type LinkProps } from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 import { navLinks as equityNavLinks } from "@/app/(dashboard)/equity";
 import { useIsActionable } from "@/app/(dashboard)/invoices";
@@ -48,6 +50,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarProvider,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
 import defaultCompanyLogo from "@/images/default-company-logo.svg";
@@ -58,9 +61,14 @@ import { company_switch_path } from "@/utils/routes";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = useCurrentUser();
+  const company = useCurrentCompany();
   const pathname = usePathname();
-
+  const router = useRouter();
   const queryClient = useQueryClient();
+  const [showTryEquity, setShowTryEquity] = React.useState(true);
+  const [hovered, setHovered] = React.useState(false);
+  const canShowTryEquity = user.roles.administrator && !company.equityEnabled;
+
   const switchCompany = async (companyId: string) => {
     useUserStore.setState((state) => ({ ...state, pending: true }));
     await request({
@@ -132,7 +140,40 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <SidebarGroup className="mt-auto">
             <SidebarGroupContent>
               <SidebarMenu>
-                <NavLink
+                {canShowTryEquity && showTryEquity ? (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <div
+                        className="group relative flex cursor-pointer items-center justify-between"
+                        onClick={() => router.push("/settings/administrator/equity")}
+                        onMouseEnter={() => setHovered(true)}
+                        onMouseLeave={() => setHovered(false)}
+                        role="button"
+                        tabIndex={0}
+                      >
+                        <span className="flex items-center gap-2">
+                          <Sparkles className="size-6" />
+                          <span>Try equity</span>
+                        </span>
+                        {hovered ? (
+                          <button
+                            type="button"
+                            aria-label="Dismiss try equity"
+                            className="hover:bg-muted absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowTryEquity(false);
+                            }}
+                            tabIndex={0}
+                          >
+                            <X className="text-muted-foreground hover:text-foreground size-4 transition-colors" />
+                          </button>
+                        ) : null}
+                      </div>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ) : null}
+                <NavItem
                   href="/support"
                   active={pathname.startsWith("/support")}
                   icon={MessageCircle}
@@ -145,7 +186,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   }
                 >
                   Support
-                </NavLink>
+                </NavItem>
                 <SidebarMenuItem>
                   <SignOutButton>
                     <SidebarMenuButton className="cursor-pointer">
@@ -213,7 +254,11 @@ const NavLinks = () => {
   const isInvoiceActionable = useIsActionable();
   const { data: documentsData } = trpc.documents.list.useQuery(
     user.currentCompanyId && user.id
-      ? { companyId: user.currentCompanyId, userId: user.id, signable: true }
+      ? {
+          companyId: user.currentCompanyId,
+          userId: user.roles.administrator || user.roles.lawyer ? null : user.id,
+          signable: true,
+        }
       : skipToken,
     { refetchInterval: 30_000 },
   );
@@ -225,52 +270,52 @@ const NavLinks = () => {
   return (
     <SidebarMenu>
       {updatesPath ? (
-        <NavLink href="/updates/company" icon={Rss} filledIcon={Rss} active={pathname.startsWith("/updates")}>
+        <NavItem href="/updates/company" icon={Rss} filledIcon={Rss} active={pathname.startsWith("/updates")}>
           Updates
-        </NavLink>
+        </NavItem>
       ) : null}
       {routes.has("Invoices") && (
-        <NavLink
+        <NavItem
           href="/invoices"
           icon={ReceiptIcon}
           active={pathname.startsWith("/invoices")}
           badge={invoicesData?.filter(isInvoiceActionable).length}
         >
           Invoices
-        </NavLink>
+        </NavItem>
       )}
       {routes.has("Expenses") && (
-        <NavLink
+        <NavItem
           href={`/companies/${company.id}/expenses`}
           icon={CircleDollarSign}
           active={pathname.startsWith(`/companies/${company.id}/expenses`)}
         >
           Expenses
-        </NavLink>
+        </NavItem>
       )}
       {routes.has("Documents") && (
-        <NavLink
+        <NavItem
           href="/documents"
           icon={Files}
           active={pathname.startsWith("/documents") || pathname.startsWith("/document_templates")}
           badge={documentsData?.length}
         >
           Documents
-        </NavLink>
+        </NavItem>
       )}
       {routes.has("People") && (
-        <NavLink
+        <NavItem
           href="/people"
           icon={Users}
           active={pathname.startsWith("/people") || pathname.includes("/investor_entities/")}
         >
           People
-        </NavLink>
+        </NavItem>
       )}
       {routes.has("Roles") && (
-        <NavLink href="/roles" icon={BookUser} active={pathname.startsWith("/roles")}>
+        <NavItem href="/roles" icon={BookUser} active={pathname.startsWith("/roles")}>
           Roles
-        </NavLink>
+        </NavItem>
       )}
       {routes.has("Equity") && equityLinks.length > 0 && (
         <Collapsible
@@ -283,7 +328,7 @@ const NavLinks = () => {
         >
           <SidebarMenuItem>
             <CollapsibleTrigger asChild>
-              <SidebarMenuButton closeOnMobileClick={false}>
+              <SidebarMenuButton>
                 <ChartPie />
                 <span>Equity</span>
                 <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -294,7 +339,7 @@ const NavLinks = () => {
                 {equityLinks.map((link) => (
                   <SidebarMenuSubItem key={link.route}>
                     <SidebarMenuSubButton asChild isActive={pathname === link.route}>
-                      <Link href={link.route}>{link.label}</Link>
+                      <NavLink href={link.route}>{link.label}</NavLink>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                 ))}
@@ -303,14 +348,14 @@ const NavLinks = () => {
           </SidebarMenuItem>
         </Collapsible>
       )}
-      <NavLink href="/settings" active={pathname.startsWith("/settings")} icon={Settings}>
+      <NavItem href="/settings" active={pathname.startsWith("/settings")} icon={Settings}>
         Settings
-      </NavLink>
+      </NavItem>
     </SidebarMenu>
   );
 };
 
-const NavLink = <T extends string>({
+const NavItem = <T extends string>({
   icon,
   filledIcon,
   children,
@@ -331,11 +376,11 @@ const NavLink = <T extends string>({
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={active ?? false} className={className}>
-        <Link href={href}>
+        <NavLink href={href}>
           <Icon />
           <span>{children}</span>
           {typeof badge === "number" ? badge > 0 ? <NavBadge count={badge} /> : null : badge}
-        </Link>
+        </NavLink>
       </SidebarMenuButton>
     </SidebarMenuItem>
   );
@@ -346,6 +391,11 @@ const NavBadge = ({ count }: { count: number }) => (
     {count > 10 ? "10+" : count}
   </Badge>
 );
+
+const NavLink = <T extends string>(props: LinkProps<T>) => {
+  const sidebar = useSidebar();
+  return <Link onClick={() => sidebar.setOpenMobile(false)} {...props} />;
+};
 
 const SupportUnreadCount = () => {
   const { data } = useUnreadConversationsCount();

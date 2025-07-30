@@ -1142,7 +1142,7 @@ RSpec.describe Invoice do
 
     context "when the invoice has an equity component" do
       before do
-        company.update!(equity_compensation_enabled: true)
+        company.update!(equity_enabled: true)
         invoice.update!(equity_amount_in_options: 123)
       end
 
@@ -1176,7 +1176,7 @@ RSpec.describe Invoice do
 
     context "when the company worker is an alumni" do
       before do
-        company.update!(equity_compensation_enabled: true)
+        company.update!(equity_enabled: true)
         invoice.company_worker.update!(ended_at: Time.current)
       end
 
@@ -1195,7 +1195,7 @@ RSpec.describe Invoice do
 
     context "when no payment_id is provided" do
       before do
-        company.update!(equity_compensation_enabled: true)
+        company.update!(equity_enabled: true)
         invoice.update!(equity_amount_in_options: 123)
       end
 

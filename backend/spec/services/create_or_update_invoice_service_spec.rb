@@ -38,9 +38,9 @@ RSpec.describe CreateOrUpdateInvoiceService do
     create(:active_grant, company_investor: create(:company_investor, company:, user:),
                           share_price_usd: 2.34, year: Date.current.year)
   end
-  let(:expected_total_amount_in_cents) { 14100 }
+  let(:expected_total_amount_in_cents) { 14101 }
 
-  before { company.update!(equity_compensation_enabled: true) }
+  before { company.update!(equity_enabled: true) }
 
   shared_examples "common invoice failure specs" do |expected_invoices_count:|
     it "allows creating an invoice with empty notes" do
@@ -80,8 +80,8 @@ RSpec.describe CreateOrUpdateInvoiceService do
 
           invoice = result[:invoice]
           expect(invoice.invoice_line_items).to match([
-                                                        an_object_having_attributes(description: "I worked on XYZ", quantity: 121, hourly: true, pay_rate_in_subunits: contractor.pay_rate_in_subunits),
-                                                        an_object_having_attributes(description: "I also did ABC", quantity: 2, hourly: false, pay_rate_in_subunits: 1000),
+                                                        an_object_having_attributes(description: "I worked on XYZ", quantity: BigDecimal("121"), hourly: true, pay_rate_in_subunits: contractor.pay_rate_in_subunits),
+                                                        an_object_having_attributes(description: "I also did ABC", quantity: BigDecimal("2"), hourly: false, pay_rate_in_subunits: 1000),
                                                       ])
           expect(invoice.invoice_date.strftime("%Y-%m-%d")).to eq(Date.current.strftime("%Y-%m-%d"))
           expect(invoice.invoice_number).to eq("INV-123")
@@ -118,7 +118,7 @@ RSpec.describe CreateOrUpdateInvoiceService do
           invoice = result[:invoice]
           expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents)
           expect(invoice.equity_percentage).to eq(60)
-          expected_equity_cents = 8460
+          expected_equity_cents = 8461
           expect(invoice.equity_amount_in_cents).to eq(expected_equity_cents)
           expected_cash_cents = 5640
           expect(invoice.cash_amount_in_cents).to eq(expected_cash_cents)
@@ -148,7 +148,7 @@ RSpec.describe CreateOrUpdateInvoiceService do
 
       it "does not apply an equity split if the feature is not enabled" do
         contractor.update!(equity_percentage: 60)
-        company.update!(equity_compensation_enabled: false)
+        company.update!(equity_enabled: false)
 
         expect do
           result = invoice_service.process
@@ -263,7 +263,7 @@ RSpec.describe CreateOrUpdateInvoiceService do
             expect(invoice.invoice_expenses.count).to eq(1)
             expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents + invoice_expense.total_amount_in_cents)
             expect(invoice.equity_percentage).to eq(30)
-            expected_equity_cents = expected_total_amount_in_cents * 0.3
+            expected_equity_cents = (expected_total_amount_in_cents * 0.3).round
             expect(invoice.equity_amount_in_cents).to eq(expected_equity_cents)
             expected_cash_cents = expected_total_amount_in_cents + invoice_expense.total_amount_in_cents - expected_equity_cents
             expect(invoice.cash_amount_in_cents).to eq(expected_cash_cents)
@@ -310,8 +310,8 @@ RSpec.describe CreateOrUpdateInvoiceService do
           expect(invoice.invoice_date.strftime("%Y-%m-%d")).to eq(Date.current.strftime("%Y-%m-%d"))
           expect(invoice.invoice_number).to eq("INV-123")
           expect(invoice.invoice_line_items).to match([
-                                                        an_object_having_attributes(description: "I worked on XYZ", quantity: 121, hourly: true, pay_rate_in_subunits: contractor.pay_rate_in_subunits),
-                                                        an_object_having_attributes(description: "I also did ABC", quantity: 2, hourly: false, pay_rate_in_subunits: 1000),
+                                                        an_object_having_attributes(description: "I worked on XYZ", quantity: BigDecimal("121"), hourly: true, pay_rate_in_subunits: contractor.pay_rate_in_subunits),
+                                                        an_object_having_attributes(description: "I also did ABC", quantity: BigDecimal("2"), hourly: false, pay_rate_in_subunits: 1000),
                                                       ])
           expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents)
           expect(invoice.equity_percentage).to eq(0)
@@ -352,7 +352,7 @@ RSpec.describe CreateOrUpdateInvoiceService do
           invoice.reload
           expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents)
           expect(invoice.equity_percentage).to eq(60)
-          expected_equity_cents = expected_total_amount_in_cents * 0.6
+          expected_equity_cents = (expected_total_amount_in_cents * 0.6).round
           expect(invoice.equity_amount_in_cents).to eq(expected_equity_cents)
           expected_cash_cents = expected_total_amount_in_cents - expected_equity_cents
           expect(invoice.cash_amount_in_cents).to eq(expected_cash_cents)
@@ -368,7 +368,7 @@ RSpec.describe CreateOrUpdateInvoiceService do
           result = invoice_service.process
           expect(result[:success]).to eq(false)
           expect(result[:error_message]).to eq(
-            "Invoice line items quantity must be greater than 0 and Total amount in usd cents must be greater than 99"
+            "Invoice line items quantity must be greater than or equal to 0.01 and Total amount in usd cents must be greater than 99"
           )
           expect(user.invoices.count).to eq(1)
         end.to_not change { invoice.invoice_line_items.first.quantity }
@@ -473,7 +473,7 @@ RSpec.describe CreateOrUpdateInvoiceService do
             expected_total_amount = expected_total_amount_in_cents + expense_1.total_amount_in_cents + expense_2.total_amount_in_cents
             expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount)
             expect(invoice.equity_percentage).to eq(30)
-            expected_equity_cents = expected_total_amount_in_cents * 0.3
+            expected_equity_cents = (expected_total_amount_in_cents * 0.3).round
             expect(invoice.equity_amount_in_cents).to eq(expected_equity_cents)
             expected_cash_cents = expected_total_amount - expected_equity_cents
             expect(invoice.cash_amount_in_cents).to eq(expected_cash_cents)

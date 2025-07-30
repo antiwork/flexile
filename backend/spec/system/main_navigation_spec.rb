@@ -5,6 +5,7 @@ RSpec.describe "Main navigation" do
   let(:company_worker) { create(:company_worker, company:) }
   let(:company_administrator) { create(:company_administrator, company:) }
   let(:company_lawyer) { create(:company_lawyer, company:) }
+  let!(:company_investor) { create(:company_investor, company:) }
 
   context "when the user is a contractor" do
     it "renders the expected navigation links" do
@@ -28,7 +29,7 @@ RSpec.describe "Main navigation" do
       visit root_path
       expect(page).to_not have_link("People")
 
-      Flipper.enable(:cap_table, company)
+      company.update!(equity_enabled: true)
       company.is_gumroad = true
       company.save!
       visit root_path
@@ -59,7 +60,7 @@ RSpec.describe "Main navigation" do
       let(:company_worker) { create(:company_worker, company:, pay_rate_type: :hourly) }
 
       before do
-        company.update!(equity_compensation_enabled: true)
+        company.update!(equity_enabled: true)
         sign_in company_worker.user
       end
 
@@ -127,7 +128,7 @@ RSpec.describe "Main navigation" do
       expect(page).to_not have_link("Updates")
       expect(page).to have_link("Account")
 
-      Flipper.enable(:cap_table, company)
+      company.update!(equity_enabled: true)
       visit root_path
       click_on "Equity"
       expect(page).to have_current_path(spa_company_cap_table_path(company.external_id))

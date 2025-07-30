@@ -7,6 +7,7 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
 import Placeholder from "@/components/Placeholder";
+import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Breadcrumb,
@@ -33,7 +34,13 @@ export default function CapTable() {
   const company = useCurrentCompany();
   const searchParams = useSearchParams();
   const newSchema = searchParams.get("new_schema") !== null;
-  const [data] = trpc.capTable.show.useSuspenseQuery({ companyId: company.id, newSchema });
+  const {
+    data = { investors: [], shareClasses: [], optionPools: [], outstandingShares: "", fullyDilutedShares: "" },
+    isLoading,
+  } = trpc.capTable.show.useQuery({
+    companyId: company.id,
+    newSchema,
+  });
   const user = useCurrentUser();
   const canViewInvestor = !!user.roles.administrator || !!user.roles.lawyer;
 
@@ -105,7 +112,7 @@ export default function CapTable() {
 
       investorColumnHelper.simple("notes", "Notes"),
     ],
-    [],
+    [data],
   );
 
   const investorsData = useMemo(
@@ -131,39 +138,6 @@ export default function CapTable() {
     .filter((email): email is string => !!email)
     .join(", ");
 
-  const shareClassColumnHelper = createColumnHelper<Data["shareClasses"][number]>();
-  const shareClassesColumns = useMemo(
-    () => [
-      shareClassColumnHelper.simple("name", "Series"),
-      shareClassColumnHelper.simple("outstandingShares", "Outstanding shares", (v) => v.toLocaleString(), "numeric"),
-      shareClassColumnHelper.accessor((row) => row.outstandingShares, {
-        header: "Outstanding ownership",
-        cell: (info) => formatOwnershipPercentage(info.getValue() / Number(data.outstandingShares)),
-        meta: { numeric: true },
-      }),
-      shareClassColumnHelper.simple("fullyDilutedShares", "Fully diluted shares", (v) => v.toLocaleString(), "numeric"),
-      shareClassColumnHelper.accessor((row) => row.fullyDilutedShares, {
-        header: "Fully diluted ownership",
-        cell: (info) => formatOwnershipPercentage(info.getValue() / Number(data.fullyDilutedShares)),
-        meta: { numeric: true },
-      }),
-    ],
-    [data],
-  );
-
-  const shareClassesData = useMemo(
-    () => [
-      ...data.shareClasses,
-      ...data.optionPools.map((pool) => ({
-        name: `Options available (${pool.name})`,
-        outstandingShares: 0,
-        fullyDilutedShares: Number(pool.availableShares),
-      })),
-    ],
-    [data.shareClasses, data.optionPools],
-  );
-
-  const shareClassesTable = useTable({ data: shareClassesData, columns: shareClassesColumns });
   return (
     <>
       <DashboardHeader
@@ -173,7 +147,7 @@ export default function CapTable() {
               <BreadcrumbItem>Equity</BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>Cap table</BreadcrumbPage>
+                <BreadcrumbPage>Investors</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -191,18 +165,14 @@ export default function CapTable() {
         </Alert>
       )}
 
-      {data.investors.length > 0 ? (
+      {isLoading ? (
+        <TableSkeleton columns={6} />
+      ) : data.investors.length > 0 ? (
         <div className="overflow-x-auto">
-          <DataTable table={investorsTable} caption="Investors" />
+          <DataTable table={investorsTable} />
         </div>
       ) : (
         <Placeholder icon={CircleCheck}>There are no active investors right now.</Placeholder>
-      )}
-
-      {data.investors.length > 0 && data.shareClasses.length > 0 && (
-        <div className="overflow-x-auto">
-          <DataTable table={shareClassesTable} caption="Share Classes" />
-        </div>
       )}
     </>
   );

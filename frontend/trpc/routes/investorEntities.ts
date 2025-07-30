@@ -9,7 +9,7 @@ const RECORDS_PER_SECTION = 20;
 
 export const investorEntitiesRouter = createRouter({
   get: companyProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
-    if (!ctx.company.capTableEnabled) throw new TRPCError({ code: "NOT_FOUND" });
+    if (!ctx.company.equityEnabled) throw new TRPCError({ code: "NOT_FOUND" });
     if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
     const investorEntity = await db.query.companyInvestorEntities.findFirst({
