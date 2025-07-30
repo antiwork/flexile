@@ -131,12 +131,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_29_150349) do
     t.datetime "updated_at", null: false
     t.datetime "ended_at"
     t.string "external_id", null: false
+    t.integer "pay_rate_type", default: 0, null: false
     t.boolean "sent_equity_percent_selection_email", default: false, null: false
     t.integer "pay_rate_in_subunits"
     t.string "pay_rate_currency", default: "usd", null: false
     t.string "role"
     t.boolean "contract_signed_elsewhere", default: false, null: false
-    t.integer "pay_rate_type", default: 0, null: false
     t.integer "equity_percentage", default: 0, null: false
     t.index ["company_id"], name: "index_company_contractors_on_company_id"
     t.index ["external_id"], name: "index_company_contractors_on_external_id", unique: true
