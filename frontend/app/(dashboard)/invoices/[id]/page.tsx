@@ -86,6 +86,7 @@ export default function InvoicePage() {
   return (
     <>
       <DashboardHeader
+        className="print:hidden"
         title={`Invoice ${invoice.invoiceNumber}`}
         headerActions={
           <>
@@ -149,7 +150,7 @@ export default function InvoicePage() {
       />
 
       {invoice.requiresAcceptanceByPayee && user.id === invoice.userId ? (
-        <Dialog open={acceptPaymentModalOpen} onOpenChange={setAcceptPaymentModalOpen}>
+        <Dialog open={acceptPaymentModalOpen} onOpenChange={setAcceptPaymentModalOpen} className="print:hidden">
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Accept invoice</DialogTitle>
@@ -221,17 +222,17 @@ export default function InvoicePage() {
         </Dialog>
       ) : null}
       {!taxRequirementsMet(invoice) && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="print:hidden">
           <ExclamationTriangleIcon />
           <AlertTitle>Missing tax information.</AlertTitle>
           <AlertDescription>Invoice is not payable until contractor provides tax information.</AlertDescription>
         </Alert>
       )}
 
-      <StatusDetails invoice={invoice} />
+      <StatusDetails invoice={invoice} className="print:hidden" />
 
       {payRateInSubunits && invoice.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
-        <Alert variant="warning">
+        <Alert variant="warning" className="print:hidden">
           <CircleAlert />
           <AlertDescription>
             This invoice includes rates above the default of {formatMoneyFromCents(payRateInSubunits)}/
@@ -250,11 +251,11 @@ export default function InvoicePage() {
         </Alert>
       ) : null}
 
-      <section className="invoice-print">
+      <section className="print:overflow-wrap-break-word print:page-break-inside-avoid print:m-0 print:min-h-[85vh] print:w-full print:max-w-full print:border-none print:p-0 print:pb-8 print:before:my-2 print:before:mb-6 print:before:block print:before:text-2xl print:before:font-bold print:before:tracking-wide print:before:text-black print:before:content-['INVOICE']">
         <form>
           <div className="grid gap-4">
-            <div className="grid auto-cols-fr gap-3 md:grid-flow-col print:grid-flow-col">
-              <div>
+            <div className="grid auto-cols-fr gap-3 md:grid-flow-col print:mb-6 print:grid-flow-col print:grid-cols-[1fr_1fr_auto_auto_auto] print:items-start print:gap-5 print:leading-tight">
+              <div className="print:leading-[1.4] print:font-normal print:[&>*]:m-0 print:[&>*]:text-[10pt] print:[&>*]:leading-[1.4] print:[&>*]:font-normal print:[&>*]:text-black print:[&>*:first-child]:mb-1 print:[&>*:first-child]:text-[9pt] print:[&>*:first-child]:font-medium print:[&>*:first-child]:tracking-wide print:[&>*:first-child]:uppercase print:[&>b]:mb-[0.3em] print:[&>b]:block print:[&>b]:font-semibold">
                 From
                 <br />
                 <b>{invoice.billFrom}</b>
@@ -262,7 +263,7 @@ export default function InvoicePage() {
                   <Address address={invoice} />
                 </div>
               </div>
-              <div>
+              <div className="print:leading-[1.4] print:font-normal print:[&>*]:m-0 print:[&>*]:text-[10pt] print:[&>*]:leading-[1.4] print:[&>*]:font-normal print:[&>*]:text-black print:[&>*:first-child]:mb-1 print:[&>*:first-child]:text-[9pt] print:[&>*:first-child]:font-medium print:[&>*:first-child]:tracking-wide print:[&>*:first-child]:uppercase print:[&>b]:mb-[0.3em] print:[&>b]:block print:[&>b]:font-semibold">
                 To
                 <br />
                 <b>{invoice.billTo}</b>
@@ -270,17 +271,17 @@ export default function InvoicePage() {
                   <LegacyAddress address={company.address} />
                 </div>
               </div>
-              <div>
+              <div className="print:flex print:flex-col print:items-start print:self-start print:text-left print:text-[10pt] print:leading-[1.2] print:leading-[1.4] print:font-normal print:[&>*]:m-0 print:[&>*]:text-[10pt] print:[&>*]:leading-[1.4] print:[&>*]:font-normal print:[&>*]:text-black print:[&>*:first-child]:mb-1 print:[&>*:first-child]:text-[9pt] print:[&>*:first-child]:font-medium print:[&>*:first-child]:tracking-wide print:[&>*:first-child]:uppercase">
                 Invoice ID
                 <br />
                 {invoice.invoiceNumber}
               </div>
-              <div>
+              <div className="print:flex print:flex-col print:items-start print:self-start print:text-left print:text-[10pt] print:leading-[1.2] print:leading-[1.4] print:font-normal print:[&>*]:m-0 print:[&>*]:text-[10pt] print:[&>*]:leading-[1.4] print:[&>*]:font-normal print:[&>*]:text-black print:[&>*:first-child]:mb-1 print:[&>*:first-child]:text-[9pt] print:[&>*:first-child]:font-medium print:[&>*:first-child]:tracking-wide print:[&>*:first-child]:uppercase">
                 Sent on
                 <br />
                 {formatDate(invoice.invoiceDate)}
               </div>
-              <div>
+              <div className="print:flex print:flex-col print:items-start print:self-start print:text-left print:text-[10pt] print:leading-[1.2] print:leading-[1.4] print:font-normal print:[&>*]:m-0 print:[&>*]:text-[10pt] print:[&>*]:leading-[1.4] print:[&>*]:font-normal print:[&>*]:text-black print:[&>*:first-child]:mb-1 print:[&>*:first-child]:text-[9pt] print:[&>*:first-child]:font-medium print:[&>*:first-child]:tracking-wide print:[&>*:first-child]:uppercase">
                 Paid on
                 <br />
                 {invoice.paidAt ? formatDate(invoice.paidAt) : "-"}
@@ -288,30 +289,38 @@ export default function InvoicePage() {
             </div>
 
             {invoice.lineItems.length > 0 ? (
-              <Table>
-                <TableHeader>
+              <Table className="print:m-0 print:mb-6 print:w-full print:border-separate print:border-spacing-x-0 print:border-spacing-y-[0.9em] print:overflow-visible print:border-none">
+                <TableHeader className="print:table-header-group">
                   <TableRow>
-                    <TableHead>
+                    <TableHead className="print:w-[60%] print:border-t-0 print:border-r-0 print:border-b-[1.25px] print:border-l-0 print:border-b-black print:bg-transparent print:px-4 print:py-3 print:pr-6 print:text-left print:text-[7.5pt] print:font-medium print:tracking-wide print:whitespace-nowrap print:text-black print:uppercase">
                       {complianceInfo?.businessEntity ? `Services (${complianceInfo.legalName})` : "Services"}
                     </TableHead>
-                    <TableHead className="text-right">Qty / Hours</TableHead>
-                    <TableHead className="text-right">Cash rate</TableHead>
-                    <TableHead className="text-right">Line total</TableHead>
+                    <TableHead className="print:font-variant-numeric-tabular text-right print:w-20 print:border-t-0 print:border-r-0 print:border-b-[1.25px] print:border-l-0 print:border-b-black print:bg-transparent print:px-4 print:py-3 print:text-right print:text-[7.5pt] print:font-medium print:tracking-wide print:whitespace-nowrap print:text-black print:uppercase">
+                      Qty / Hours
+                    </TableHead>
+                    <TableHead className="print:font-variant-numeric-tabular text-right print:w-24 print:border-t-0 print:border-r-0 print:border-b-[1.25px] print:border-l-0 print:border-b-black print:bg-transparent print:px-4 print:py-3 print:text-right print:text-[7.5pt] print:font-medium print:tracking-wide print:whitespace-nowrap print:text-black print:uppercase">
+                      Cash rate
+                    </TableHead>
+                    <TableHead className="print:font-variant-numeric-tabular text-right print:w-24 print:border-t-0 print:border-r-0 print:border-b-[1.25px] print:border-l-0 print:border-b-black print:bg-transparent print:px-4 print:py-3 print:pr-4 print:text-right print:text-[7.5pt] print:font-medium print:tracking-wide print:whitespace-nowrap print:text-black print:uppercase">
+                      Line total
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {invoice.lineItems.map((lineItem, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{lineItem.description}</TableCell>
-                      <TableCell className="text-right tabular-nums">
+                    <TableRow key={index} className="print:page-break-inside-avoid">
+                      <TableCell className="print:max-w-[70ch] print:border-t-0 print:border-r-0 print:border-b-[0.5px] print:border-l-0 print:border-b-gray-200 print:bg-white print:px-4 print:py-2 print:align-top print:text-[10pt] print:leading-[1.4] print:break-all print:whitespace-normal print:text-black print:first:pt-2 print:last:border-b-0">
+                        {lineItem.description}
+                      </TableCell>
+                      <TableCell className="print:font-variant-numeric-tabular text-right tabular-nums print:border-t-0 print:border-r-0 print:border-b-[0.5px] print:border-l-0 print:border-b-gray-200 print:bg-white print:px-4 print:py-2 print:align-top print:text-[10pt] print:leading-[1.4] print:font-bold print:text-black print:first:pt-2 print:last:border-b-0">
                         {lineItem.hourly ? formatDuration(Number(lineItem.quantity)) : lineItem.quantity}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="print:font-variant-numeric-tabular text-right tabular-nums print:border-t-0 print:border-r-0 print:border-b-[0.5px] print:border-l-0 print:border-b-gray-200 print:bg-white print:px-4 print:py-2 print:align-top print:text-[10pt] print:leading-[1.4] print:font-bold print:text-black print:first:pt-2 print:last:border-b-0">
                         {lineItem.payRateInSubunits
                           ? `${formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)}${lineItem.hourly ? " / hour" : ""}`
                           : ""}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="print:font-variant-numeric-tabular text-right tabular-nums print:border-t-0 print:border-r-0 print:border-b-[0.5px] print:border-l-0 print:border-b-gray-200 print:bg-white print:px-4 print:py-2 print:pr-4 print:align-top print:text-[10pt] print:leading-[1.4] print:font-bold print:text-black print:first:pt-2 print:last:border-b-0">
                         {formatMoneyFromCents(lineItemTotal(lineItem) * cashFactor)}
                       </TableCell>
                     </TableRow>
@@ -321,8 +330,8 @@ export default function InvoicePage() {
             ) : null}
 
             {invoice.expenses.length > 0 && (
-              <Card>
-                <CardContent>
+              <Card className="print:m-0 print:rounded-none print:border-0 print:bg-none print:p-0 print:shadow-none">
+                <CardContent className="print:m-0 print:rounded-none print:border-0 print:bg-none print:p-0 print:shadow-none">
                   <div className="flex justify-between gap-2">
                     <div>Expense</div>
                     <div>Amount</div>
@@ -348,7 +357,7 @@ export default function InvoicePage() {
               </Card>
             )}
 
-            <footer className="flex justify-between">
+            <footer className="print:page-break-inside-avoid flex justify-between print:mt-4 print:block print:text-right">
               <div>
                 {invoice.notes ? (
                   <div>
@@ -361,8 +370,8 @@ export default function InvoicePage() {
                   </div>
                 ) : null}
               </div>
-              <Card>
-                <CardContent>
+              <Card className="print:float-right print:m-0 print:ml-auto print:w-24 print:rounded-none print:border-0 print:bg-none print:p-0 print:text-right print:shadow-none">
+                <CardContent className="print:m-0 print:rounded-none print:border-0 print:bg-none print:p-0 print:shadow-none">
                   {invoice.lineItems.length > 0 && invoice.expenses.length > 0 && (
                     <>
                       <div className="flex justify-between gap-2">
@@ -385,7 +394,7 @@ export default function InvoicePage() {
                       <Separator />
                     </>
                   )}
-                  <div className="flex justify-between gap-2">
+                  <div className="print:[&>span]:font-variant-numeric-tabular flex justify-between gap-2 print:mt-6 print:justify-between print:border-b print:border-dashed print:border-black print:py-[0.4em] print:text-[11pt] print:[&>span]:font-bold print:[&>strong]:font-bold print:[&>strong]:tracking-wide print:[&>strong]:uppercase">
                     <strong>Total</strong>
                     <span>{formatMoneyFromCents(invoice.cashAmountInCents)}</span>
                   </div>
