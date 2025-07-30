@@ -47,7 +47,7 @@ test.describe.serial("Onboarding checklist", () => {
     await page.getByLabel("ZIP code").fill(faker.location.zipCode());
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByText("Changes saved")).toBeVisible();
-    await page.getByRole("link", { name: "Back to app" }).click();
+    await page.getByRole("link", { name: "Home" }).click();
     await expect(page.getByText("25%")).toBeVisible();
 
     await page.getByText("Add bank account").click();
@@ -56,7 +56,7 @@ test.describe.serial("Onboarding checklist", () => {
       companyId: company.id,
     });
     await page.reload();
-    await page.getByRole("link", { name: "Back to app" }).click();
+    await page.getByRole("link", { name: "Home" }).click();
     await expect(page.getByText("50%")).toBeVisible();
 
     await page.getByText("Invite a contractor").click();
@@ -117,7 +117,7 @@ test.describe.serial("Onboarding checklist", () => {
       },
       { page },
     );
-    await page.getByRole("link", { name: "Back to app" }).click();
+    await page.getByRole("link", { name: "Home" }).click();
 
     await expect(page.getByText("67%")).toBeVisible();
 
@@ -147,7 +147,7 @@ test.describe.serial("Onboarding checklist", () => {
       { page },
     );
     await expect(page.getByText("Ending in 5678")).toBeVisible();
-    await page.getByRole("link", { name: "Back to app" }).click();
+    await page.getByRole("link", { name: "Home" }).click();
 
     await expect(page.getByText("You are all set!")).toBeVisible();
     await expect(page.getByText("You are ready to send your first invoice.")).toBeVisible();
