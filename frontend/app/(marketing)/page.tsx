@@ -7,12 +7,12 @@ import { redirect, RedirectType } from "next/navigation";
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { useUserStore } from "@/global";
-import logo from "@/public/flexile-logo.svg";
+import logo from "@/public/flexile-logo.svg?url";
 import { cn } from "@/utils";
-import iconClock from "./icon-clock.svg";
-import iconDiamond from "./icon-diamond.svg";
-import iconEye from "./icon-eye.svg";
-import iconGlobe from "./icon-globe.svg";
+import IconClock from "./icon-clock.svg";
+import IconDiamond from "./icon-diamond.svg";
+import IconEye from "./icon-eye.svg";
+import IconGlobe from "./icon-globe.svg";
 
 const buttonClasses = "flex justify-center items-center rounded-full transition-all duration-400 no-underline";
 
@@ -78,7 +78,7 @@ export default function HomePage() {
         <Section className="py-8 md:py-16">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-16">
             <div className="flex items-center gap-8">
-              <Image src={iconClock} alt="Invoice Management" className="w-12 shrink-0" />
+              <IconClock width={48} height={48} className="shrink-0" />
               <div>
                 <h3 className="text-xl font-medium">Invoice Management</h3>
                 <div className="text-xl text-gray-600">
@@ -87,7 +87,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex items-center gap-8">
-              <Image src={iconGlobe} alt="Pay Contractors" className="w-12 shrink-0" />
+              <IconGlobe width={48} height={48} className="shrink-0" />
               <div>
                 <h3 className="text-xl font-medium">Pay Contractors</h3>
                 <div className="text-xl text-gray-600">
@@ -96,7 +96,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex items-center gap-8">
-              <Image src={iconEye} alt="Equity Option" className="w-12 shrink-0" />
+              <IconEye width={48} height={48} className="shrink-0" />
               <div>
                 <h3 className="text-xl font-medium">Equity Option</h3>
                 <div className="text-xl text-gray-600">
@@ -105,7 +105,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex items-center gap-8">
-              <Image src={iconDiamond} alt="Contract Management" className="w-12 shrink-0" />
+              <IconDiamond width={48} height={48} className="shrink-0" />
               <div>
                 <h3 className="text-xl font-medium">Contract Management</h3>
                 <div className="text-xl text-gray-600">

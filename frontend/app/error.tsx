@@ -6,7 +6,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { linkClasses } from "@/components/Link";
-import logo from "@/public/logo-icon.svg";
+import logo from "@/public/logo-icon.svg?url";
 import { ResponseError } from "@/utils/request";
 
 export default function Error({ error }: { error: Error }) {

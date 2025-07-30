@@ -22,7 +22,7 @@ import { Card, CardAction, CardHeader } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useCurrentCompany, useCurrentUser } from "@/global";
-import defaultLogo from "@/images/default-company-logo.svg";
+import defaultLogo from "@/images/default-company-logo.svg?url";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
 import { request } from "@/utils/request";
 import { settings_path } from "@/utils/routes";

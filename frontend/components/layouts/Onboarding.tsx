@@ -2,13 +2,12 @@
 
 import { SignOutButton } from "@clerk/nextjs";
 import { CheckIcon } from "@heroicons/react/16/solid";
-import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useCurrentUser } from "@/global";
-import logo from "@/images/flexile-logo.svg";
+import Logo from "@/images/flexile-logo.svg";
 
 const OnboardingLayout = ({
   steps,
@@ -32,7 +31,7 @@ const OnboardingLayout = ({
           href="https://flexile.com/"
           className={`hidden text-4xl invert md:block ${steps.length === 0 ? "col-start-2" : ""}`}
         >
-          <Image src={logo} alt="Flexile" />
+          <Logo />
         </Link>
         {steps.length > 0 && (
           <ol className="flex list-none justify-center gap-2">

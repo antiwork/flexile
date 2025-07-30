@@ -48,7 +48,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
-import defaultCompanyLogo from "@/images/default-company-logo.svg";
+import defaultCompanyLogo from "@/images/default-company-logo.svg?url";
 import { storageKeys } from "@/models/constants";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";

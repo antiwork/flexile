@@ -29,6 +29,7 @@
     "types": []
   },
   "include": [
+    "svgr.d.ts",
     "next-env.d.ts",
     "app/**/page.tsx",
     "app/**/error.tsx",

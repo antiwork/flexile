@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
-import defaultLogo from "@/images/default-company-logo.svg";
+import defaultLogo from "@/images/default-company-logo.svg?url";
 import { trpc } from "@/trpc/client";
 import { md5Checksum } from "@/utils";
 import QuickbooksIntegration from "./QuickbooksIntegration";
