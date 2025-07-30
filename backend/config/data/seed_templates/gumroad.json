@@ -27,12 +27,8 @@
         "fmv_per_share_in_usd": 7.84,
         "is_trusted": true,
         "fully_diluted_shares": 200188,
-        "equity_grants_enabled": true,
-        "is_gumroad": true,
-        "tender_offers_enabled": true,
-        "cap_table_enabled": true,
-        "equity_compensation_enabled": true,
-        "company_updates_enabled": true
+        "equity_enabled": true,
+        "is_gumroad": true
       },
       "feature_flags": {
         "company_updates": true,
@@ -73,11 +69,26 @@
       "equity_exercise_bank_account": {
         "model_attributes": {
           "details": [
-            ["Beneficiary name", "Gumroad"],
-            ["Beneficiary address", "548 Market Street, San Francisco, CA 94104"],
-            ["Bank name", "Wise Business"],
-            ["Routing number", "987654321"],
-            ["SWIFT/BIC", "WZYOPW1L"]
+            [
+              "Beneficiary name",
+              "Gumroad"
+            ],
+            [
+              "Beneficiary address",
+              "548 Market Street, San Francisco, CA 94104"
+            ],
+            [
+              "Bank name",
+              "Wise Business"
+            ],
+            [
+              "Routing number",
+              "987654321"
+            ],
+            [
+              "SWIFT/BIC",
+              "WZYOPW1L"
+            ]
           ],
           "account_number": "123456789"
         }

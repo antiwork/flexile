@@ -6,16 +6,16 @@ export const navLinks = (user: CurrentUser, company: Company): TabLink[] => {
   const isLawyer = !!user.roles.lawyer;
   const isInvestor = !!user.roles.investor;
   const links: (TabLink | null)[] = [
-    company.flags.includes("cap_table") && (isAdmin || isLawyer || isInvestor)
-      ? { label: "Cap table", route: "/equity/cap_table" }
+    company.flags.includes("equity") && (isAdmin || isLawyer || isInvestor)
+      ? { label: "Investors", route: "/equity/investors" }
       : null,
-    company.flags.includes("equity_grants") && (isAdmin || isLawyer)
+    company.flags.includes("equity") && (isAdmin || isLawyer)
       ? { label: "Option pools", route: "/equity/option_pools" }
       : null,
-    company.flags.includes("equity_grants") && (isAdmin || isLawyer)
+    company.flags.includes("equity") && (isAdmin || isLawyer)
       ? { label: "Equity grants", route: "/equity/grants" }
       : null,
-    company.flags.includes("equity_grants") && isInvestor && user.roles.investor?.hasGrants
+    company.flags.includes("equity") && isInvestor && user.roles.investor?.hasGrants
       ? { label: "Options", route: "/equity/options" }
       : null,
     isInvestor && user.roles.investor?.hasShares ? { label: "Shares", route: "/equity/shares" } : null,
@@ -24,10 +24,10 @@ export const navLinks = (user: CurrentUser, company: Company): TabLink[] => {
       : null,
     isInvestor
       ? { label: "Dividends", route: "/equity/dividends" }
-      : company.flags.includes("dividends") && (isAdmin || isLawyer)
+      : company.flags.includes("equity") && (isAdmin || isLawyer)
         ? { label: "Dividends", route: "/equity/dividend_rounds" }
         : null,
-    company.flags.includes("tender_offers") && (isAdmin || isInvestor)
+    company.flags.includes("equity") && (isAdmin || isInvestor)
       ? { label: "Buybacks", route: "/equity/tender_offers" }
       : null,
   ];

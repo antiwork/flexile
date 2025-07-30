@@ -12,7 +12,7 @@ RSpec.describe "CORS support" do
     end
 
     it "returns a response with CORS headers" do
-      post api_v1_user_leads_path, headers: { "HTTP_ORIGIN": origin_domain, "HTTP_HOST": api_domain }
+      get root_path, headers: { "HTTP_ORIGIN": origin_domain, "HTTP_HOST": api_domain }
 
       expect(response.headers["Access-Control-Allow-Origin"]).to eq "*"
       expect(response.headers["Access-Control-Allow-Methods"]).to eq "GET, POST, PUT, DELETE"

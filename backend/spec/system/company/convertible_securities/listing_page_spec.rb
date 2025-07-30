@@ -14,7 +14,7 @@ RSpec.describe "Convertible securities page" do
                                   convertible_investment:, principal_value_in_cents: 1_000_000_00)
   end
 
-  let(:company) { create(:company, valuation_in_dollars: 150_000_000, fully_diluted_shares: 9_000_000, equity_grants_enabled: true) }
+  let(:company) { create(:company, valuation_in_dollars: 150_000_000, fully_diluted_shares: 9_000_000, equity_enabled: true) }
   let(:company_investor) { create(:company_investor, company:) }
 
   before do

@@ -16,7 +16,6 @@ class CompanyDashboard < Administrate::BaseDashboard
     lawyers: Field::HasMany,
     company_workers: Field::HasMany,
     contractors: Field::HasMany,
-    time_entries: Field::HasMany,
     id: Field::Number,
     name: Field::String,
     email: Field::String,

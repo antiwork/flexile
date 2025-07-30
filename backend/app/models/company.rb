@@ -65,7 +65,6 @@ class Company < ApplicationRecord
   has_many :equity_buyback_rounds
   has_many :equity_grants, through: :company_investors
   has_many :equity_grant_exercises
-  has_many :time_entries
   has_many :convertible_investments
   has_many :consolidated_invoices
   has_many :invoices
@@ -78,7 +77,6 @@ class Company < ApplicationRecord
   has_many :share_classes
   has_many :share_holdings, through: :company_investors
   has_many :option_pools
-  has_many :tax_documents
   has_many :tender_offers
   has_many :company_stripe_accounts
   has_many :bank_accounts, class_name: "CompanyStripeAccount"

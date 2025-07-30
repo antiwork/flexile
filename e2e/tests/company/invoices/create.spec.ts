@@ -9,7 +9,15 @@ import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { subDays } from "date-fns";
 import { desc, eq } from "drizzle-orm";
-import { companies, companyContractors, expenseCategories, invoiceExpenses, invoices, users } from "@/db/schema";
+import {
+  companies,
+  companyContractors,
+  expenseCategories,
+  invoiceExpenses,
+  invoiceLineItems,
+  invoices,
+  users,
+} from "@/db/schema";
 
 test.describe("invoice creation", () => {
   let company: typeof companies.$inferSelect;
@@ -19,7 +27,7 @@ test.describe("invoice creation", () => {
   test.beforeEach(async () => {
     company = (
       await companiesFactory.createCompletedOnboarding({
-        equityCompensationEnabled: true,
+        equityEnabled: true,
       })
     ).company;
 
@@ -101,7 +109,7 @@ test.describe("invoice creation", () => {
   });
 
   test("does not show equity split if equity compensation is disabled", async ({ page }) => {
-    await db.update(companies).set({ equityCompensationEnabled: false }).where(eq(companies.id, company.id));
+    await db.update(companies).set({ equityEnabled: false }).where(eq(companies.id, company.id));
 
     await login(page, contractorUser);
     await page.goto("/invoices/new");
@@ -242,5 +250,38 @@ test.describe("invoice creation", () => {
       .where(eq(companyContractors.id, companyContractor.id));
     await page.reload();
     await expect(page.getByText("This invoice includes rates above your default")).not.toBeVisible();
+  });
+
+  test("supports decimal quantities", async ({ page }) => {
+    await login(page, contractorUser);
+    await page.goto("/invoices/new");
+
+    await page.getByLabel("Hours").fill("2.5");
+    await page.getByPlaceholder("Description").fill("Development work with decimal quantities");
+    await fillDatePicker(page, "Date", "12/15/2024");
+
+    await expect(page.getByText("Total services$150")).toBeVisible();
+
+    // contractor has 20% equity, so $150 * 0.8 = $120
+    await expect(page.getByText("Net amount in cash$120")).toBeVisible();
+
+    await page.getByRole("button", { name: "Send invoice" }).click();
+
+    // wait for navigation to invoice list
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+    await expect(page.locator("tbody")).toContainText("$150");
+
+    const invoice = await db.query.invoices
+      .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
+      .then(takeOrThrow);
+
+    expect(invoice.totalAmountInUsdCents).toBe(15000n);
+
+    const lineItem = await db.query.invoiceLineItems
+      .findFirst({ where: eq(invoiceLineItems.invoiceId, invoice.id) })
+      .then(takeOrThrow);
+
+    expect(Number(lineItem.quantity)).toBe(2.5);
   });
 });

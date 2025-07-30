@@ -6,7 +6,7 @@ import { companyProcedure, createRouter } from "@/trpc";
 
 export const optionPoolsRouter = createRouter({
   list: companyProcedure.query(async ({ ctx }) => {
-    if (!ctx.company.equityGrantsEnabled) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!ctx.company.equityEnabled) throw new TRPCError({ code: "FORBIDDEN" });
     if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
     return await db.query.optionPools.findMany({

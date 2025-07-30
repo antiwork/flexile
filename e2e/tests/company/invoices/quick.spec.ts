@@ -71,7 +71,7 @@ test.describe("quick invoicing", () => {
       { companyInvestorId: companyInvestor.id, sharePriceUsd: "100" },
       { year: 2024 },
     );
-    await db.update(companies).set({ equityCompensationEnabled: true }).where(eq(companies.id, company.id));
+    await db.update(companies).set({ equityEnabled: true }).where(eq(companies.id, company.id));
     await login(page, contractorUser);
     await page.getByLabel("Hours / Qty").fill("10:30");
     await fillDatePicker(page, "Date", "08/08/2024");

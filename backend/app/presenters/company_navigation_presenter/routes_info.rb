@@ -62,7 +62,7 @@ class CompanyNavigationPresenter::RoutesInfo
 
     def company_equity_route_props
       name = \
-        if company.cap_table_enabled?
+        if company.equity_enabled?
           "company_cap_table"
         elsif Pundit.policy!(current_context, Dividend).index?
           "company_dividends"

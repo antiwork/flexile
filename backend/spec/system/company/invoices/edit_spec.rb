@@ -5,7 +5,7 @@ RSpec.describe "Invoice update flow" do
   let(:user) { create(:user, zip_code: "22222", street_address: "1st St.") }
   let(:company) do
     company = create(:company)
-    company.update!(equity_compensation_enabled: true)
+    company.update!(equity_enabled: true)
     company
   end
   let!(:expense_category) { create(:expense_category, company:) }

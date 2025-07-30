@@ -11,6 +11,7 @@ import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import RichText from "@/components/RichText";
+import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -44,7 +45,11 @@ const columnHelper = createColumnHelper<Dividend>();
 export default function Dividends() {
   const company = useCurrentCompany();
   const user = useCurrentUser();
-  const [data, { refetch }] = trpc.dividends.list.useSuspenseQuery({
+  const {
+    data = [],
+    refetch,
+    isLoading,
+  } = trpc.dividends.list.useQuery({
     companyId: company.id,
     investorId: user.roles.investor?.id,
   });
@@ -91,6 +96,7 @@ export default function Dividends() {
     },
   });
 
+  const hasLegalDetails = user.legalName && user.address.street_address && user.taxInformationConfirmedAt;
   const columns = useMemo(
     () => [
       columnHelper.simple("dividendRound.issuedAt", "Issue date", formatDate),
@@ -107,8 +113,8 @@ export default function Dividends() {
           <div className="flex min-h-8 justify-between gap-2">
             <DividendStatusIndicator dividend={info.row.original} />
             {info.row.original.investor.user.id === user.id &&
+            hasLegalDetails &&
             user.hasPayoutMethodForDividends &&
-            user.legalName &&
             info.row.original.dividendRound.releaseDocument &&
             !info.row.original.signedReleaseAt ? (
               <Button size="small" onClick={() => setSigningDividend({ id: info.row.original.id, state: "initial" })}>
@@ -138,7 +144,7 @@ export default function Dividends() {
         }
       />
 
-      {!user.legalName ? (
+      {!hasLegalDetails ? (
         <Alert>
           <Info />
           <AlertDescription>
@@ -161,14 +167,16 @@ export default function Dividends() {
           </AlertDescription>
         </Alert>
       ) : null}
-      {data.length > 0 ? (
+      {isLoading ? (
+        <TableSkeleton columns={7} />
+      ) : data.length > 0 ? (
         <DataTable table={table} />
       ) : (
         <Placeholder icon={CircleCheck}>You have not been issued any dividends yet.</Placeholder>
       )}
       <Dialog open={!!dividendData} onOpenChange={() => setSigningDividend(null)}>
         <DialogContent>
-          {dividendData && signingDividend && user.legalName ? (
+          {dividendData && signingDividend && hasLegalDetails && user.legalName ? (
             signingDividend.state !== "initial" ? (
               <>
                 <DialogHeader className="text-left">

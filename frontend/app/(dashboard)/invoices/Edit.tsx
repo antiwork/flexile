@@ -71,7 +71,7 @@ const dataSchema = z.object({
       z.object({
         id: z.number().optional(),
         description: z.string(),
-        quantity: z.number().nullable(),
+        quantity: z.string().nullable(),
         hourly: z.boolean(),
         pay_rate_in_subunits: z.number(),
       }),
@@ -131,7 +131,7 @@ const Edit = () => {
     return List([
       {
         description: "",
-        quantity: parseInt(searchParams.get("quantity") ?? "", 10) || (data.user.project_based ? 1 : 60),
+        quantity: (parseFloat(searchParams.get("quantity") ?? "") || (data.user.project_based ? 1 : 60)).toString(),
         hourly: searchParams.has("hourly") ? searchParams.get("hourly") === "true" : !data.user.project_based,
         pay_rate_in_subunits: parseInt(searchParams.get("rate") ?? "", 10) || (payRateInSubunits ?? 0),
       },
@@ -197,7 +197,7 @@ const Edit = () => {
     setLineItems((lineItems) =>
       lineItems.push({
         description: "",
-        quantity: data.user.project_based ? 1 : 60,
+        quantity: (data.user.project_based ? 1 : 60).toString(),
         hourly: !data.user.project_based,
         pay_rate_in_subunits: payRateInSubunits ?? 0,
       }),
@@ -221,8 +221,13 @@ const Edit = () => {
     );
   };
 
+  const parseQuantity = (value: string | null | undefined) => {
+    const parsed = value ? Number.parseFloat(value) : NaN;
+    return Number.isNaN(parsed) ? 0 : parsed;
+  };
+
   const lineItemTotal = (lineItem: InvoiceFormLineItem) =>
-    Math.ceil(((lineItem.quantity ?? 0) / (lineItem.hourly ? 60 : 1)) * lineItem.pay_rate_in_subunits);
+    Math.ceil((parseQuantity(lineItem.quantity) / (lineItem.hourly ? 60 : 1)) * lineItem.pay_rate_in_subunits);
   const totalExpensesAmountInCents = expenses.reduce((acc, expense) => acc + expense.total_amount_in_cents, 0);
   const totalServicesAmountInCents = lineItems.reduce((acc, lineItem) => acc + lineItemTotal(lineItem), 0);
   const totalInvoiceAmountInCents = totalServicesAmountInCents + totalExpensesAmountInCents;
@@ -237,7 +242,7 @@ const Edit = () => {
         const updated = { ...assertDefined(lineItem), ...update };
         updated.errors = [];
         if (updated.description.length === 0) updated.errors.push("description");
-        if (!updated.quantity || updated.quantity <= 0) updated.errors.push("quantity");
+        if (!updated.quantity || parseQuantity(updated.quantity) < 0.01) updated.errors.push("quantity");
         return updated;
       }),
     );
@@ -346,12 +351,12 @@ const Edit = () => {
                   </TableCell>
                   <TableCell>
                     <QuantityInput
-                      value={item.quantity ? { quantity: item.quantity, hourly: item.hourly } : null}
+                      value={item.quantity ? { quantity: parseQuantity(item.quantity), hourly: item.hourly } : null}
                       aria-label="Hours / Qty"
                       aria-invalid={item.errors?.includes("quantity")}
                       onChange={(value) =>
                         updateLineItem(rowIndex, {
-                          quantity: value?.quantity ?? null,
+                          quantity: value?.quantity.toString() ?? null,
                           hourly: value?.hourly ?? false,
                         })
                       }
@@ -497,7 +502,7 @@ const Edit = () => {
               className="w-full lg:w-96"
             />
             <div className="flex flex-col gap-2 md:self-start lg:items-end">
-              {showExpensesTable || company.equityCompensationEnabled ? (
+              {showExpensesTable || company.equityEnabled ? (
                 <div className="flex flex-col items-end">
                   <span>Total services</span>
                   <span className="numeric text-xl">{formatMoneyFromCents(totalServicesAmountInCents)}</span>
@@ -509,7 +514,7 @@ const Edit = () => {
                   <span className="numeric text-xl">{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
                 </div>
               ) : null}
-              {company.equityCompensationEnabled ? (
+              {company.equityEnabled ? (
                 <>
                   <div className="flex flex-col items-end">
                     <span>

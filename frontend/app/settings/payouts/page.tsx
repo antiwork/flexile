@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
+import Placeholder from "@/components/Placeholder";
 import RangeInput from "@/components/RangeInput";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,7 @@ export default function PayoutsPage() {
       <h2 className="mb-8 text-xl font-medium">Payouts</h2>
       <div className="grid gap-16">
         <BankAccountsSection />
-        {user.roles.worker && company.equityCompensationEnabled ? <EquitySection /> : null}
+        {user.roles.worker && company.equityEnabled ? <EquitySection /> : null}
         {user.roles.investor ? <DividendSection /> : null}
       </div>
     </>
@@ -325,32 +326,27 @@ const BankAccountsSection = () => {
   return (
     <div className="grid gap-4">
       <div className="text-base font-bold">Payout method</div>
-      <Card>
-        <CardContent className="px-0">
-          {bankAccounts.length === 0 && user.roles.investor ? (
-            <div className="p-4">
-              <div className="grid justify-items-center gap-4 p-6 text-center text-gray-700">
-                <CircleDollarSign className="-mb-2 size-10" />
-                <p>Set up your bank account to receive payouts.</p>
-                <Button onClick={() => setAddingBankAccount(true)} variant="outline">
-                  <Plus className="size-4" />
-                  Add bank account
-                </Button>
-              </div>
-            </div>
-          ) : isFromSanctionedCountry ? (
-            <div>
-              <Alert variant="destructive">
-                <AlertTriangle className="size-4" />
-                <AlertTitle>Payouts are disabled</AlertTitle>
-                <AlertDescription>
-                  Unfortunately, due to regulatory restrictions and compliance with international sanctions, individuals
-                  from sanctioned countries are unable to receive payments through our platform.
-                </AlertDescription>
-              </Alert>
-            </div>
-          ) : (
-            <>
+      {isFromSanctionedCountry ? (
+        <Alert variant="destructive">
+          <AlertTriangle className="size-4" />
+          <AlertTitle>Payouts are disabled</AlertTitle>
+          <AlertDescription>
+            Unfortunately, due to regulatory restrictions and compliance with international sanctions, individuals from
+            sanctioned countries are unable to receive payments through our platform.
+          </AlertDescription>
+        </Alert>
+      ) : bankAccounts.length === 0 && (user.roles.investor || user.roles.worker) ? (
+        <Placeholder icon={CircleDollarSign}>
+          <p>Set up your bank account to receive payouts.</p>
+          <Button onClick={() => setAddingBankAccount(true)}>
+            <Plus className="size-4" />
+            Add bank account
+          </Button>
+        </Placeholder>
+      ) : bankAccounts.length > 0 ? (
+        <>
+          <Card>
+            <CardContent className="px-0">
               {bankAccounts.map((bankAccount, index) => (
                 <Fragment key={bankAccount.id}>
                   <div className="flex justify-between px-4">
@@ -419,29 +415,30 @@ const BankAccountsSection = () => {
                   {index !== bankAccounts.length - 1 && <Separator />}
                 </Fragment>
               ))}
-            </>
-          )}
-          {addingBankAccount ? (
-            <BankAccountModal
-              open={addingBankAccount}
-              billingDetails={data}
-              onClose={() => setAddingBankAccount(false)}
-              onComplete={(result) => {
-                setBankAccounts((prev) => [...prev, result]);
-                setAddingBankAccount(false);
-                void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-              }}
-            />
+            </CardContent>
+          </Card>
+          {user.roles.investor || user.roles.worker ? (
+            <div>
+              <Button onClick={() => setAddingBankAccount(true)} variant="default">
+                <Plus className="size-4" />
+                Add bank account
+              </Button>
+            </div>
           ) : null}
-        </CardContent>
-      </Card>
-      {user.roles.investor || user.roles.worker ? (
-        <div>
-          <Button onClick={() => setAddingBankAccount(true)} variant="default">
-            <Plus className="size-4" />
-            Add bank account
-          </Button>
-        </div>
+        </>
+      ) : null}
+
+      {addingBankAccount ? (
+        <BankAccountModal
+          open={addingBankAccount}
+          billingDetails={data}
+          onClose={() => setAddingBankAccount(false)}
+          onComplete={(result) => {
+            setBankAccounts((prev) => [...prev, result]);
+            setAddingBankAccount(false);
+            void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+          }}
+        />
       ) : null}
     </div>
   );

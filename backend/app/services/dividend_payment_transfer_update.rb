@@ -13,7 +13,14 @@ class DividendPaymentTransferUpdate
 
     dividend_payment.update!(wise_transfer_status: current_state)
 
-    if dividend_payment.in_failed_state?
+    if current_state == Payments::Wise::FUNDS_REFUNDED
+      Rails.logger.info("Processing payout failure for transfer_id: #{transfer_id} due to funds_refunded state.")
+      dividend_payment.update!(status: Payment::FAILED)
+      dividends.update!(status: Dividend::ISSUED, paid_at: nil)
+      user = dividends.first&.company_investor&.user
+      user.bank_account_for_dividends&.mark_deleted!
+      CompanyInvestorMailer.dividend_payment_failed(user, dividend_payment).deliver_later
+    elsif dividend_payment.in_failed_state?
       dividend_payment.update!(status: Payment::FAILED) unless dividend_payment.marked_failed?
     elsif dividend_payment.in_processing_state?
       dividends.update!(status: Dividend::PROCESSING)

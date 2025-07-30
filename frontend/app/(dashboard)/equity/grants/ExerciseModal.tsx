@@ -91,7 +91,7 @@ const ExerciseModal = ({
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="ml-auto min-h-screen max-w-prose md:mr-0">
+      <DialogContent className="ml-auto max-w-prose md:mr-0">
         <DialogHeader>
           <DialogTitle>Exercise your options</DialogTitle>
         </DialogHeader>

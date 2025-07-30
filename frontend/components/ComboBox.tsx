@@ -1,6 +1,6 @@
 import { PopoverTrigger } from "@radix-ui/react-popover";
-import { Check, ChevronsUpDown } from "lucide-react";
-import React from "react";
+import { Check, ChevronDown } from "lucide-react";
+import React, { useRef, useState } from "react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent } from "@/components/ui/popover";
 import { cn } from "@/utils";
@@ -20,7 +20,8 @@ const ComboBox = ({
   | { multiple?: false; value: string | null | undefined; onChange: (value: string) => void }
 ) &
   Omit<React.ComponentProps<typeof Button>, "value" | "onChange">) => {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
   const getLabel = (value: string) => options.find((o) => o.value === value)?.label;
 
   return (
@@ -32,18 +33,27 @@ const ComboBox = ({
           role="combobox"
           aria-expanded={open}
           {...props}
-          className={cn("justify-between", className)}
+          className={cn("w-full min-w-0 justify-between", className)}
         >
           <div className="truncate">
             {value?.length ? (multiple ? value.map(getLabel).join(", ") : getLabel(value)) : placeholder}
           </div>
-          <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
+          <ChevronDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0" style={{ width: "var(--radix-popover-trigger-width)" }}>
         <Command>
-          <CommandInput placeholder="Search..." />
-          <CommandList>
+          <CommandInput
+            placeholder="Search..."
+            onValueChange={() => {
+              requestAnimationFrame(() => {
+                if (listRef.current) {
+                  listRef.current.scrollTop = 0;
+                }
+              });
+            }}
+          />
+          <CommandList ref={listRef}>
             <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup>
               {options.map((option) => (
