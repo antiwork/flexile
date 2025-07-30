@@ -1,4 +1,5 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
+import type { DocumentProps } from "@react-pdf/renderer";
 import React from "react";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDuration } from "@/utils/time";
@@ -33,8 +34,8 @@ interface InvoiceData {
   };
   complianceInfo?:
     | {
-        businessEntity: boolean;
-        legalName: string;
+        businessEntity: boolean | null;
+        legalName: string | null;
       }
     | null
     | undefined;
@@ -53,7 +54,7 @@ interface InvoiceData {
   }[];
 }
 
-export function PdfTemplate({ invoice }: { invoice: InvoiceData }) {
+export function PdfTemplate({ invoice }: { invoice: InvoiceData }): React.ReactElement<DocumentProps> {
   const lineItemTotal = (lineItem: (typeof invoice.lineItems)[number]) =>
     Math.ceil((lineItem.quantity / (lineItem.hourly ? 60 : 1)) * lineItem.payRateInSubunits);
   const cashFactor = 1 - invoice.equityPercentage / 100;

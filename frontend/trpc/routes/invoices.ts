@@ -296,6 +296,7 @@ export const invoicesRouter = createRouter({
       if (!invoice) throw new TRPCError({ code: "NOT_FOUND" });
 
       // Generate PDF
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
       const buffer = await renderToBuffer(
         PdfTemplate({
           invoice: {
@@ -323,7 +324,10 @@ export const invoicesRouter = createRouter({
               countryCode: invoice.company.countryCode,
             },
             complianceInfo: invoice.contractor.user.userComplianceInfos[0],
-            lineItems: invoice.lineItems,
+            lineItems: invoice.lineItems.map((item) => ({
+              ...item,
+              quantity: Number(item.quantity),
+            })),
             expenses: invoice.expenses,
           },
         }),
