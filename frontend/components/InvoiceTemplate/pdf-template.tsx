@@ -1,6 +1,7 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import React from "react";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
+import { formatDuration } from "@/utils/time";
 import { LineItems } from "./line-items";
 import { Meta } from "./meta";
 import { Note } from "./notes";
@@ -30,6 +31,13 @@ interface InvoiceData {
     zipCode: string | null;
     countryCode: string | null;
   };
+  complianceInfo?:
+    | {
+        businessEntity: boolean;
+        legalName: string;
+      }
+    | null
+    | undefined;
   lineItems: {
     description: string;
     quantity: number;
@@ -46,6 +54,10 @@ interface InvoiceData {
 }
 
 export function PdfTemplate({ invoice }: { invoice: InvoiceData }) {
+  const lineItemTotal = (lineItem: (typeof invoice.lineItems)[number]) =>
+    Math.ceil((lineItem.quantity / (lineItem.hourly ? 60 : 1)) * lineItem.payRateInSubunits);
+  const cashFactor = 1 - invoice.equityPercentage / 100;
+
   return (
     <Document>
       <Page
@@ -104,31 +116,19 @@ export function PdfTemplate({ invoice }: { invoice: InvoiceData }) {
 
         {/* Line Items */}
         <LineItems
-          lineItems={invoice.lineItems.map((item) => {
-            const cashFactor = 1 - invoice.equityPercentage / 100;
-            // Match the page logic exactly: Math.ceil((lineItem.quantity / (lineItem.hourly ? 60 : 1)) * lineItem.payRateInSubunits)
-            const lineItemTotal = Math.ceil((item.quantity / (item.hourly ? 60 : 1)) * item.payRateInSubunits);
-
-            return {
-              name: item.description,
-              quantity: item.quantity,
-              price: item.payRateInSubunits,
-              unit: item.hourly ? "hour" : "item",
-              _displayPrice: item.payRateInSubunits
-                ? `${formatMoneyFromCents(item.payRateInSubunits * cashFactor)}${item.hourly ? " / hour" : ""}`
-                : "",
-              // Use the exact same calculation as the page
-              _calculatedTotal: lineItemTotal * cashFactor,
-              // Format quantity for display like the page: formatDuration for hourly, raw for non-hourly
-              _displayQuantity: item.hourly
-                ? `${Math.floor(item.quantity / 60)
-                    .toString()
-                    .padStart(2, "0")}:${(item.quantity % 60).toString().padStart(2, "0")}`
-                : item.quantity.toString(),
-            };
-          })}
+          lineItems={invoice.lineItems.map((item) => ({
+            name: item.description,
+            quantity: item.quantity,
+            price: item.payRateInSubunits,
+            unit: item.hourly ? "hour" : "item",
+            _displayPrice: item.payRateInSubunits ? formatMoneyFromCents(item.payRateInSubunits * cashFactor) : "",
+            _calculatedTotal: lineItemTotal(item) * cashFactor,
+            _displayQuantity: item.hourly ? formatDuration(item.quantity) : item.quantity.toString(),
+          }))}
           currency="USD"
-          descriptionLabel="Description"
+          descriptionLabel={
+            invoice.complianceInfo?.businessEntity ? `Services (${invoice.complianceInfo.legalName})` : "Services"
+          }
           quantityLabel="Qty / Hours"
           priceLabel="Rate"
           totalLabel="Amount"
@@ -137,7 +137,7 @@ export function PdfTemplate({ invoice }: { invoice: InvoiceData }) {
 
         {/* Expenses */}
         {invoice.expenses.length > 0 && (
-          <View style={{ marginTop: 20 }}>
+          <View style={{ marginTop: 25 }}>
             <View
               style={{
                 flexDirection: "row",
@@ -172,19 +172,12 @@ export function PdfTemplate({ invoice }: { invoice: InvoiceData }) {
 
         {/* Summary */}
         {invoice.lineItems.length > 0 && invoice.expenses.length > 0 && (
-          <View style={{ marginTop: 20 }}>
+          <View style={{ marginTop: 25 }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 5 }}>
               <Text style={{ fontSize: 10, fontWeight: "bold" }}>Total services</Text>
               <Text style={{ fontSize: 10 }}>
                 {formatMoneyFromCents(
-                  invoice.lineItems.reduce((acc, lineItem) => {
-                    const cashFactor = 1 - invoice.equityPercentage / 100;
-                    // Match the page logic exactly: Math.ceil((lineItem.quantity / (lineItem.hourly ? 60 : 1)) * lineItem.payRateInSubunits)
-                    const lineItemTotal = Math.ceil(
-                      (lineItem.quantity / (lineItem.hourly ? 60 : 1)) * lineItem.payRateInSubunits,
-                    );
-                    return acc + lineItemTotal * cashFactor;
-                  }, 0),
+                  invoice.lineItems.reduce((acc, lineItem) => acc + lineItemTotal(lineItem) * cashFactor, 0),
                 )}
               </Text>
             </View>
@@ -217,11 +210,15 @@ export function PdfTemplate({ invoice }: { invoice: InvoiceData }) {
         )}
 
         {/* Notes */}
-        <Note content={invoice.notes} noteLabel="Notes:" />
+        {invoice.notes ? (
+          <View style={{ marginTop: 25 }}>
+            <Note content={invoice.notes} noteLabel="Notes:" />
+          </View>
+        ) : null}
 
         {/* Equity Information */}
-        {invoice.equityPercentage > 0 && (
-          <View style={{ marginTop: 20, padding: 10, backgroundColor: "#f5f5f5" }}>
+        {invoice.equityAmountInCents > 0 && (
+          <View style={{ marginTop: 25, padding: 10, backgroundColor: "#f5f5f5" }}>
             <Text style={{ fontSize: 10, fontWeight: "bold", marginBottom: 5 }}>Equity Compensation:</Text>
             <Text style={{ fontSize: 10, marginBottom: 2 }}>
               Cash Amount: {formatMoneyFromCents(invoice.cashAmountInCents)}

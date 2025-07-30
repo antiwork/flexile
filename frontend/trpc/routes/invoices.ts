@@ -283,60 +283,61 @@ export const invoicesRouter = createRouter({
     return invoice;
   }),
 
-  downloadInvoice: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    if (!ctx.companyAdministrator && !ctx.companyContractor) throw new TRPCError({ code: "FORBIDDEN" });
+  downloadInvoice: companyProcedure
+    .input(z.object({ id: z.string(), companyId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const invoice = await getInvoice({
+        id: input.id,
+        companyId: ctx.company.id,
+        companyAdministrator: !!ctx.companyAdministrator,
+        companyContractorId: ctx.companyContractor?.id,
+      });
 
-    const invoice = await getInvoice({
-      id: input.id,
-      companyId: ctx.company.id,
-      companyAdministrator: !!ctx.companyAdministrator,
-      companyContractorId: ctx.companyContractor?.id,
-    });
+      if (!invoice) throw new TRPCError({ code: "NOT_FOUND" });
 
-    if (!invoice) throw new TRPCError({ code: "NOT_FOUND" });
-
-    // Generate PDF
-    const buffer = await renderToBuffer(
-      PdfTemplate({
-        invoice: {
-          invoiceNumber: invoice.invoiceNumber,
-          invoiceDate: invoice.invoiceDate,
-          paidAt: invoice.paidAt ? invoice.paidAt.toISOString() : null,
-          billFrom: invoice.billFrom,
-          billTo: invoice.billTo,
-          notes: invoice.notes,
-          totalAmountInUsdCents: invoice.totalAmountInUsdCents,
-          cashAmountInCents: invoice.cashAmountInCents,
-          equityAmountInCents: invoice.equityAmountInCents,
-          equityPercentage: invoice.equityPercentage,
-          streetAddress: invoice.streetAddress,
-          city: invoice.city,
-          state: invoice.state,
-          zipCode: invoice.zipCode,
-          countryCode: invoice.countryCode,
-          company: {
-            name: invoice.company.name || "",
-            streetAddress: invoice.company.streetAddress,
-            city: invoice.company.city,
-            state: invoice.company.state,
-            zipCode: invoice.company.zipCode,
-            countryCode: invoice.company.countryCode,
+      // Generate PDF
+      const buffer = await renderToBuffer(
+        PdfTemplate({
+          invoice: {
+            invoiceNumber: invoice.invoiceNumber,
+            invoiceDate: invoice.invoiceDate,
+            paidAt: invoice.paidAt ? invoice.paidAt.toISOString() : null,
+            billFrom: invoice.billFrom,
+            billTo: invoice.billTo,
+            notes: invoice.notes,
+            totalAmountInUsdCents: invoice.totalAmountInUsdCents,
+            cashAmountInCents: invoice.cashAmountInCents,
+            equityAmountInCents: invoice.equityAmountInCents,
+            equityPercentage: invoice.equityPercentage,
+            streetAddress: invoice.streetAddress,
+            city: invoice.city,
+            state: invoice.state,
+            zipCode: invoice.zipCode,
+            countryCode: invoice.countryCode,
+            company: {
+              name: invoice.company.name || "",
+              streetAddress: invoice.company.streetAddress,
+              city: invoice.company.city,
+              state: invoice.company.state,
+              zipCode: invoice.company.zipCode,
+              countryCode: invoice.company.countryCode,
+            },
+            complianceInfo: invoice.contractor.user.userComplianceInfos[0],
+            lineItems: invoice.lineItems,
+            expenses: invoice.expenses,
           },
-          lineItems: invoice.lineItems,
-          expenses: invoice.expenses,
-        },
-      }),
-    );
+        }),
+      );
 
-    // Convert buffer to base64 for transfer
-    const base64 = Buffer.from(buffer).toString("base64");
+      // Convert buffer to base64 for transfer
+      const base64 = Buffer.from(buffer).toString("base64");
 
-    return {
-      pdf: base64,
-      filename: `invoice-${invoice.invoiceNumber}.pdf`,
-      mimeType: "application/pdf",
-    };
-  }),
+      return {
+        pdf: base64,
+        filename: `invoice-${invoice.invoiceNumber}.pdf`,
+        mimeType: "application/pdf",
+      };
+    }),
 
   acceptPayment: companyProcedure
     .input(
