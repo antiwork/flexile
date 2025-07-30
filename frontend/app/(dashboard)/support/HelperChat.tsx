@@ -55,7 +55,7 @@ const MessageAttachments = ({
   );
 };
 
-export const HelperChat: React.FC<HelperChatProps> = ({ conversation }) => {
+export const HelperChat = ({ conversation }: HelperChatProps) => {
   const utils = trpc.useUtils();
   const user = useCurrentUser();
   const company = useCurrentCompany();
@@ -139,8 +139,8 @@ export const HelperChat: React.FC<HelperChatProps> = ({ conversation }) => {
         ) : (
           messages
             .filter((message) => !!message.content)
-            .map((message, index) => (
-              <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+            .map((message) => (
+              <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div
                   className={`max-w-xs rounded-lg px-4 py-2 lg:max-w-md ${
                     message.role === "user" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-900"
