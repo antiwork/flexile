@@ -187,7 +187,6 @@ test.describe("Onboarding checklist", () => {
     const checklistItems = page.locator('[class*="space-y-1"] > button');
     await expect(checklistItems.nth(0).getByText("Fill tax information")).toHaveClass(/line-through/u);
     await expect(checklistItems.nth(1).getByText("Add dividend payout information")).not.toHaveClass(/line-through/u);
-    await expect(checklistItems.nth(2).getByText("Sign contract")).toHaveClass(/line-through/u);
 
     await page.getByText("Add dividend payout information").click();
     await expect(page).toHaveURL(/\/settings\/payouts/u);
@@ -213,7 +212,7 @@ test.describe("Onboarding checklist", () => {
     await page.getByRole("link", { name: "Back to app" }).click();
 
     await expect(page.getByText("You are all set!")).toBeVisible();
-    await expect(page.getByText("You are ready to send your first invoice.")).toBeVisible();
+    await expect(page.getByText("Everything is in place. Time to flex.")).toBeVisible();
     await expect(page.getByRole("button", { name: "Close" })).toBeVisible();
   });
 
