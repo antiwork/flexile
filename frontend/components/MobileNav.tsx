@@ -1,6 +1,7 @@
 import { SignOutButton } from "@clerk/nextjs";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { skipToken } from "@tanstack/react-query";
+import { capitalize } from "lodash-es";
 import {
   ChartPie,
   ChevronRight,
@@ -20,13 +21,8 @@ import { usePathname } from "next/navigation";
 import React, { useMemo, useState } from "react";
 import { navLinks as equityNavLinks } from "@/app/(dashboard)/equity";
 import { useIsActionable } from "@/app/(dashboard)/invoices";
+import { companyLinks, personalLinks } from "@/app/settings";
 import { CompanyName } from "@/components/CompanyName";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { switchCompany } from "@/lib/switch-company";
 import { trpc } from "@/trpc/client";
@@ -35,13 +31,17 @@ import defaultCompanyLogo from "../images/default-company-logo.svg";
 
 const NAV_HEIGHT_PX = 49;
 type DialogType = "equity" | "show_more" | null;
+type SubmenuType = "organizations" | "settings" | null;
 
 const MobileNav = () => {
   const pathname = usePathname();
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const [dialog, setDialog] = useState<DialogType>(null);
+  const [submenu, setSubmenu] = useState<SubmenuType>(null);
   const updatesPath = company.routes.find((route) => route.label === "Updates")?.name;
+  const filteredPersonalLinks = personalLinks.filter((link) => link.isVisible(user));
+  const filteredCompanyLinks = companyLinks.filter((link) => link.isVisible(user));
 
   const isInvoiceActionable = useIsActionable();
   const equityLinks = useMemo(() => equityNavLinks(user, company), [user, company]);
@@ -62,7 +62,18 @@ const MobileNav = () => {
   );
 
   const toggleDialog = (dialogType: DialogType) => {
-    setDialog((current) => (current === dialogType ? null : dialogType));
+    if (dialogType === null) {
+      setDialog(null);
+      // Hide submenu when dialog close animation finishes
+      if (submenu) {
+        setTimeout(() => {
+          setSubmenu(null);
+        }, 300);
+      }
+    } else {
+      if (dialogType === dialog) return toggleDialog(null);
+      setDialog(dialogType);
+    }
   };
 
   const renderEquityDialog = () => (
@@ -72,7 +83,9 @@ const MobileNav = () => {
           key={index}
           href={item.route}
           className="flex items-center justify-between px-6 py-4 hover:bg-gray-50"
-          onClick={() => setDialog(null)}
+          onClick={() => {
+            toggleDialog(null);
+          }}
         >
           <span>{item.label}</span>
           <ChevronRight className="h-4 w-4 text-gray-600" />
@@ -80,25 +93,140 @@ const MobileNav = () => {
       ))}
     </BottomSheetDialog>
   );
-
   const renderShowMoreDialog = () => (
-    <BottomSheetDialog open={dialog === "show_more"} title="More" onClose={() => toggleDialog(null)}>
-      {user.companies.length > 1 ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex w-full cursor-pointer items-center gap-2 px-6 py-4 hover:bg-gray-50">
-              <CompanyName />
-              <ChevronsUpDown className="ml-auto h-4 w-4 text-gray-600" />
+    <BottomSheetDialog
+      open={dialog === "show_more"}
+      title={submenu ? capitalize(submenu) : "More"}
+      onClose={() => {
+        toggleDialog(null);
+      }}
+      submenu={!!submenu}
+      onGoBack={() => {
+        setSubmenu(null);
+      }}
+    >
+      <div key={submenu || "main"} className="animate-fadeIn relative transition-opacity duration-300">
+        {/* MAIN MENU */}
+        {submenu === null && (
+          <>
+            {user.companies.length > 1 ? (
+              <button
+                onClick={() => setSubmenu("organizations")}
+                className="flex w-full cursor-pointer items-center gap-2 px-6 py-4 hover:bg-gray-50"
+              >
+                <CompanyName />
+                <ChevronsUpDown className="ml-auto h-4 w-4 text-gray-600" />
+              </button>
+            ) : user.companies[0]?.name ? (
+              <div className="flex items-center gap-2 px-6 py-4">
+                <CompanyName />
+              </div>
+            ) : null}
+
+            {updatesPath ? (
+              <Link
+                href="/updates/company"
+                className="flex items-center justify-between px-6 py-4 hover:bg-gray-50"
+                onClick={() => toggleDialog(null)}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="flex h-6 w-6 items-center justify-center">
+                    <Rss className="h-4 w-4" />
+                  </div>
+                  <span>Updates</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-gray-600" />
+              </Link>
+            ) : null}
+
+            <button
+              className="flex w-full cursor-pointer items-center justify-between px-6 py-4 hover:bg-gray-50"
+              onClick={() => setSubmenu("settings")}
+            >
+              <div className="flex gap-2">
+                <div className="flex h-6 w-6 items-center justify-center">
+                  <Settings className="h-4 w-4" />
+                </div>
+                <span>Settings</span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-gray-600" />
             </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" side="top" className="bg-white">
+
+            <SignOutButton>
+              <Link
+                href="#"
+                className="flex items-center px-6 py-4 hover:bg-gray-50"
+                onClick={() => toggleDialog(null)}
+              >
+                <div className="flex gap-2">
+                  <div className="flex h-6 w-6 items-center justify-center">
+                    <LogOut className="size-4" />
+                  </div>
+                  <span>Log out</span>
+                </div>
+              </Link>
+            </SignOutButton>
+          </>
+        )}
+
+        {/* SETTINGS SUBMENU */}
+        {submenu === "settings" && (
+          <>
+            {filteredCompanyLinks.length ? (
+              <div className="flex h-9 items-center px-4.5 text-sm text-gray-600">Personal</div>
+            ) : null}
+            {filteredPersonalLinks.map((link) => (
+              <Link
+                key={link.route}
+                href={link.route}
+                className="flex items-center justify-between px-6 py-4 hover:bg-gray-50"
+                onClick={() => toggleDialog(null)}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="flex h-6 w-6 items-center justify-center">
+                    <link.icon className="size-4" />
+                  </div>
+                  <span>{link.label}</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-gray-600" />
+              </Link>
+            ))}
+            {filteredCompanyLinks.length ? (
+              <>
+                <div className="my-4 h-px bg-[#dcdcdc]"></div>
+                <div className="flex h-9 items-center px-4.5 text-sm text-gray-600">Company</div>
+              </>
+            ) : null}
+
+            {filteredCompanyLinks.map((link) => (
+              <Link
+                href={link.route}
+                className="flex items-center justify-between px-6 py-4 hover:bg-gray-50"
+                onClick={() => toggleDialog(null)}
+                key={link.route}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="flex h-6 w-6 items-center justify-center">
+                    <link.icon className="size-4" />
+                  </div>
+                  <span>{link.label}</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-gray-600" />
+              </Link>
+            ))}
+          </>
+        )}
+
+        {/* ORGANIZATIONS SUBMENU */}
+        {submenu === "organizations" && (
+          <>
             {user.companies.map((company) => (
-              <DropdownMenuItem
+              <button
                 key={company.id}
-                onSelect={() => {
+                onClick={() => {
                   if (user.currentCompanyId !== company.id) switchCompany(company.id);
                 }}
-                className="flex items-center gap-2"
+                className="flex w-full cursor-pointer items-center gap-2 px-6 py-4 hover:bg-gray-50"
               >
                 <Image
                   src={company.logo_url || defaultCompanyLogo}
@@ -111,53 +239,11 @@ const MobileNav = () => {
                 {company.id === user.currentCompanyId && (
                   <div className="ml-auto size-2 rounded-full bg-blue-500"></div>
                 )}
-              </DropdownMenuItem>
+              </button>
             ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : user.companies[0]?.name ? (
-        <div className="flex items-center gap-2 px-6 py-4">
-          <CompanyName />
-        </div>
-      ) : null}
-      {updatesPath ? (
-        <Link
-          href="/updates/company"
-          className="flex items-center justify-between px-6 py-4 hover:bg-gray-50"
-          onClick={() => setDialog(null)}
-        >
-          <div className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center">
-              <Rss className="h-4 w-4" />
-            </div>
-            <span>Updates</span>
-          </div>
-          <ChevronRight className="h-4 w-4 text-gray-600" />
-        </Link>
-      ) : null}
-      <Link
-        href="/settings"
-        className="flex items-center justify-between px-6 py-4 hover:bg-gray-50"
-        onClick={() => setDialog(null)}
-      >
-        <div className="flex gap-2">
-          <div className="flex h-6 w-6 items-center justify-center">
-            <Settings className="h-4 w-4" />
-          </div>
-          <span>Settings</span>
-        </div>
-        <ChevronRight className="h-4 w-4 text-gray-600" />
-      </Link>
-      <SignOutButton>
-        <Link href="#" className="flex items-center px-6 py-4 hover:bg-gray-50" onClick={() => setDialog(null)}>
-          <div className="flex gap-2">
-            <div className="flex h-6 w-6 items-center justify-center">
-              <LogOut className="h-4 w-4" />
-            </div>
-            <span>Log out</span>
-          </div>
-        </Link>
-      </SignOutButton>
+          </>
+        )}
+      </div>
     </BottomSheetDialog>
   );
 
@@ -237,23 +323,34 @@ const BottomSheetDialog = ({
   title,
   children,
   onClose,
+  submenu,
+  onGoBack,
 }: {
   open: boolean;
   title: string;
   children: React.ReactNode;
   onClose: () => void;
+  submenu?: boolean;
+  onGoBack?: () => void;
 }) => (
   <DialogPrimitive.Root open={open}>
     <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-gray-100/18" onClick={onClose} />
     <DialogPrimitive.Content
-      className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed inset-x-0 z-[50] rounded-t-2xl bg-white pb-2 data-[state=closed]:duration-300 data-[state=open]:duration-200"
+      className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed inset-x-0 z-[50] flex max-h-[75vh] flex-col rounded-t-2xl bg-white pb-2 data-[state=closed]:duration-300 data-[state=open]:duration-200"
       style={{
         boxShadow: "0px -2px 4px -2px rgba(0,0,0,0.1), 0px -4px 6px -1px rgba(0,0,0,0.1)",
         bottom: `calc(${NAV_HEIGHT_PX}px + env(safe-area-inset-bottom))`,
       }}
     >
-      <DialogPrimitive.Title className="px-6 pt-5 pb-3 font-medium">{title}</DialogPrimitive.Title>
-      <div className="border-b border-[#dcdcdc]">{children}</div>
+      <div className="flex shrink-0 gap-2.5 px-6 pt-5 pb-3" onClick={onGoBack}>
+        {submenu ? (
+          <div className="flex size-6 items-center justify-center">
+            <ChevronRight className="size-4 rotate-180" />
+          </div>
+        ) : null}
+        <DialogPrimitive.Title className="font-medium">{title}</DialogPrimitive.Title>
+      </div>
+      <div className="flex-1 overflow-y-auto border-b border-[#dcdcdc]">{children}</div>
     </DialogPrimitive.Content>
   </DialogPrimitive.Root>
 );
