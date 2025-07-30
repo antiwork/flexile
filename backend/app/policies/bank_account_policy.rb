@@ -5,10 +5,6 @@ class BankAccountPolicy < ApplicationPolicy
     company_worker.present? || company_investor.present?
   end
 
-  def show?
-    index?
-  end
-
   def create?
     show?
   end

@@ -24,8 +24,7 @@ const CHECKLIST_ROUTES: Record<string, Route> = {
   invite_contractor: "/people",
   send_first_payment: "/invoices",
   fill_tax_information: "/settings/tax",
-  add_payout_information_dividends: "/settings/payouts",
-  add_payout_information_invoices: "/settings/payouts",
+  add_payout_information: "/settings/payouts",
   sign_contract: "/documents",
   add_company_details: "/settings/administrator/details",
 } as const;

@@ -35,12 +35,10 @@ class Company < ApplicationRecord
 
   INVESTOR_CHECKLIST_ITEMS = [
     { key: "fill_tax_information", title: "Fill tax information" },
-    { key: "add_payout_information_dividends", title: "Add dividend payout information" },
+    { key: "add_payout_information", title: "Add payout information" },
   ].freeze
 
-  WORKER_CHECKLIST_ITEMS = [
-    { key: "fill_tax_information", title: "Fill tax information" },
-    { key: "add_payout_information_invoices", title: "Add invoice payout information" },
+  WORKER_CHECKLIST_ITEMS = INVESTOR_CHECKLIST_ITEMS + [
     { key: "sign_contract", title: "Sign contract" }
   ].freeze
 
@@ -257,10 +255,8 @@ class Company < ApplicationRecord
         invoices.where(status: Invoice::PAID_OR_PAYING_STATES).exists?
       when "fill_tax_information"
         user.compliance_info&.tax_information_confirmed_at.present?
-      when "add_payout_information_invoices"
-        user.bank_account.present?
-      when "add_payout_information_dividends"
-        user.bank_account_for_dividends.present?
+      when "add_payout_information"
+        (!user.company_worker_for?(self) || user.bank_account.present?) && (!user.company_investor_for?(self) || user.bank_account_for_dividends.present?)
       when "sign_contract"
         user.company_worker_for(self).contract_signed?
       else

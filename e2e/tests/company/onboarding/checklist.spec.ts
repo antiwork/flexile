@@ -102,7 +102,7 @@ test.describe("Onboarding checklist", () => {
     await login(page, contractorUser);
 
     await expect(page.getByText("Fill tax information")).toBeVisible();
-    await expect(page.getByText("Add invoice payout information")).toBeVisible();
+    await expect(page.getByText("Add payout information")).toBeVisible();
     await expect(page.getByText("Sign contract")).toBeVisible();
 
     await page.getByText("Fill tax information").click();
@@ -121,10 +121,10 @@ test.describe("Onboarding checklist", () => {
 
     const checklistItems = page.locator('[class*="space-y-1"] > button');
     await expect(checklistItems.nth(0).getByText("Fill tax information")).toHaveClass(/line-through/u);
-    await expect(checklistItems.nth(1).getByText("Add invoice payout information")).not.toHaveClass(/line-through/u);
+    await expect(checklistItems.nth(1).getByText("Add payout information")).not.toHaveClass(/line-through/u);
     await expect(checklistItems.nth(2).getByText("Sign contract")).toHaveClass(/line-through/u);
 
-    await page.getByText("Add invoice payout information").click();
+    await page.getByText("Add payout information").click();
     await expect(page).toHaveURL(/\/settings\/payouts/u);
     await page.getByText("Add bank account").click();
     await withinModal(
@@ -168,7 +168,7 @@ test.describe("Onboarding checklist", () => {
     await login(page, investorUser);
 
     await expect(page.getByText("Fill tax information")).toBeVisible();
-    await expect(page.getByText("Add dividend payout information")).toBeVisible();
+    await expect(page.getByText("Add payout information")).toBeVisible();
 
     await page.getByText("Fill tax information").click();
     await expect(page).toHaveURL(/\/settings\/tax/u);
@@ -186,9 +186,9 @@ test.describe("Onboarding checklist", () => {
 
     const checklistItems = page.locator('[class*="space-y-1"] > button');
     await expect(checklistItems.nth(0).getByText("Fill tax information")).toHaveClass(/line-through/u);
-    await expect(checklistItems.nth(1).getByText("Add dividend payout information")).not.toHaveClass(/line-through/u);
+    await expect(checklistItems.nth(1).getByText("Add payout information")).not.toHaveClass(/line-through/u);
 
-    await page.getByText("Add dividend payout information").click();
+    await page.getByText("Add payout information").click();
     await expect(page).toHaveURL(/\/settings\/payouts/u);
     await page.getByText("Add bank account").click();
     await withinModal(
@@ -225,8 +225,7 @@ test.describe("Onboarding checklist", () => {
     await login(page, contractorUser);
 
     await expect(page.getByText("Fill tax information")).toBeVisible();
-    await expect(page.getByText("Add invoice payout information")).toBeVisible();
-    await expect(page.getByText("Add dividend payout information")).toBeVisible();
+    await expect(page.getByText("Add payout information")).toBeVisible();
     await expect(page.getByText("Sign contract")).toBeVisible();
 
     await page.getByText("Fill tax information").click();
@@ -245,11 +244,10 @@ test.describe("Onboarding checklist", () => {
 
     const checklistItems = page.locator('[class*="space-y-1"] > button');
     await expect(checklistItems.nth(0).getByText("Fill tax information")).toHaveClass(/line-through/u);
-    await expect(checklistItems.nth(1).getByText("Add dividend payout information")).not.toHaveClass(/line-through/u);
-    await expect(checklistItems.nth(2).getByText("Add invoice payout information")).not.toHaveClass(/line-through/u);
-    await expect(checklistItems.nth(3).getByText("Sign contract")).toHaveClass(/line-through/u);
+    await expect(checklistItems.nth(1).getByText("Add payout information")).not.toHaveClass(/line-through/u);
+    await expect(checklistItems.nth(2).getByText("Sign contract")).toHaveClass(/line-through/u);
 
-    await page.getByText("Add dividend payout information").click();
+    await page.getByText("Add payout information").click();
     await page.getByText("Add bank account").click();
     await withinModal(
       async (modal) => {

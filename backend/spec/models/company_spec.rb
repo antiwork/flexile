@@ -132,7 +132,7 @@ RSpec.describe Company do
           items = company.checklist_items(worker.user)
 
           expect(items.map { |item| item[:key] }).to contain_exactly(
-            "fill_tax_information", "add_payout_information_invoices", "sign_contract"
+            "fill_tax_information", "add_payout_information", "sign_contract"
           )
           expect(items.all? { |item| item[:completed] == false }).to be true
         end
@@ -150,7 +150,7 @@ RSpec.describe Company do
           worker.user.reload
 
           items = company.checklist_items(worker.user)
-          payout_item = items.find { |item| item[:key] == "add_payout_information_invoices" }
+          payout_item = items.find { |item| item[:key] == "add_payout_information" }
           expect(payout_item[:completed]).to be true
         end
 
@@ -170,7 +170,7 @@ RSpec.describe Company do
           items = company.checklist_items(investor.user)
 
           expect(items.map { |item| item[:key] }).to contain_exactly(
-            "fill_tax_information", "add_payout_information_dividends"
+            "fill_tax_information", "add_payout_information"
           )
           expect(items.all? { |item| item[:completed] == false }).to be true
         end
@@ -188,7 +188,7 @@ RSpec.describe Company do
           investor.user.reload
 
           items = company.checklist_items(investor.user)
-          payout_item = items.find { |item| item[:key] == "add_payout_information_dividends" }
+          payout_item = items.find { |item| item[:key] == "add_payout_information" }
           expect(payout_item[:completed]).to be true
         end
       end
