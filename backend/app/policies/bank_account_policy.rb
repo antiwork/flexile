@@ -6,10 +6,10 @@ class BankAccountPolicy < ApplicationPolicy
   end
 
   def create?
-    show?
+    index?
   end
 
   def update?
-    show?
+    index?
   end
 end
