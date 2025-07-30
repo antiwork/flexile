@@ -46,6 +46,16 @@ import NumberInput from "@/components/NumberInput";
 import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -446,20 +456,22 @@ export default function InvoicesPage() {
         )}
       </div>
 
-      <Dialog open={openModal === "approve"} onOpenChange={() => setOpenModal(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Approve these invoices?</DialogTitle>
-          </DialogHeader>
-          {selectedPayableInvoices.length > 0 && (
-            <div>
-              You are paying{" "}
-              {formatMoneyFromCents(
-                selectedPayableInvoices.reduce((sum, invoice) => sum + invoice.totalAmountInUsdCents, BigInt(0)),
-              )}{" "}
-              now.
-            </div>
-          )}
+      <AlertDialog open={openModal === "approve"} onOpenChange={() => setOpenModal(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Approve these invoices?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {selectedPayableInvoices.length > 0 && (
+                <>
+                  You are paying{" "}
+                  {formatMoneyFromCents(
+                    selectedPayableInvoices.reduce((sum, invoice) => sum + invoice.totalAmountInUsdCents, BigInt(0)),
+                  )}{" "}
+                  now.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
           <Card>
             <CardContent>
               {selectedApprovableInvoices.slice(0, 5).map((invoice, index, array) => (
@@ -474,22 +486,22 @@ export default function InvoicesPage() {
             </CardContent>
           </Card>
           {selectedApprovableInvoices.length > 5 && <div>and {selectedApprovableInvoices.length - 5} more</div>}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenModal(null)}>
-              No, cancel
-            </Button>
-            <MutationButton
-              mutation={approveInvoices}
-              param={{
-                approve_ids: selectedApprovableInvoices.map((invoice) => invoice.id),
-                pay_ids: selectedPayableInvoices.map((invoice) => invoice.id),
-              }}
-            >
-              Yes, proceed
-            </MutationButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, cancel</AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <MutationButton
+                mutation={approveInvoices}
+                param={{
+                  approve_ids: selectedApprovableInvoices.map((invoice) => invoice.id),
+                  pay_ids: selectedPayableInvoices.map((invoice) => invoice.id),
+                }}
+              >
+                Yes, proceed
+              </MutationButton>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {detailInvoice ? (
         <TasksModal

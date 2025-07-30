@@ -6,6 +6,16 @@ import { z } from "zod";
 import TemplateSelector from "@/app/(dashboard)/document_templates/TemplateSelector";
 import CopyButton from "@/components/CopyButton";
 import { MutationStatusButton } from "@/components/MutationButton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -125,27 +135,25 @@ const InviteLinkModal = ({ open, onOpenChange }: InviteLinkModalProps) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog open={showResetLinkModal} onOpenChange={setShowResetLinkModal}>
-        <DialogContent className="md:mb-80">
-          <DialogHeader>
-            <DialogTitle>Reset invite link?</DialogTitle>
-            <DialogDescription className="text-muted-foreground">
+      <AlertDialog open={showResetLinkModal} onOpenChange={setShowResetLinkModal}>
+        <AlertDialogContent className="md:mb-80">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset invite link?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
               Resetting the link will deactivate the current invite. If you have already shared it, others may not be
               able to join.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col">
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowResetLinkModal(false)}>
-                Cancel
-              </Button>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction asChild>
               <MutationStatusButton mutation={resetInviteLinkMutation} type="button" onClick={resetInviteLink}>
                 Reset link
               </MutationStatusButton>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

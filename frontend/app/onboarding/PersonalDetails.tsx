@@ -7,8 +7,16 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import { MutationStatusButton } from "@/components/MutationButton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useCurrentUser } from "@/global";
@@ -146,33 +154,35 @@ const PersonalDetails = () => {
         </form>
       </Form>
 
-      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Important notice</DialogTitle>
-          </DialogHeader>
-          <p>
-            Unfortunately, due to regulatory restrictions and compliance with international sanctions, individuals from
-            sanctioned countries are unable to receive payments through our platform.
-          </p>
+      <AlertDialog open={modalOpen} onOpenChange={setModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Important notice</AlertDialogTitle>
+            <AlertDialogDescription>
+              Unfortunately, due to regulatory restrictions and compliance with international sanctions, individuals
+              from sanctioned countries are unable to receive payments through our platform.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
           <p>
             You can still use Flexile's features such as
             {user.roles.worker ? " sending invoices and " : " "} receiving equity, but
             <b> you won't be able to set a payout method or receive any payments</b>.
           </p>
-          <DialogFooter>
-            <Button
-              onClick={() => {
-                setConfirmNoPayout(true);
-                setModalOpen(false);
-                save.mutate();
-              }}
-            >
-              Proceed
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <AlertDialogFooter>
+            <AlertDialogAction asChild>
+              <Button
+                onClick={() => {
+                  setConfirmNoPayout(true);
+                  setModalOpen(false);
+                  save.mutate();
+                }}
+              >
+                Proceed
+              </Button>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
