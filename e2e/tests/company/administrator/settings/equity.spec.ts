@@ -8,11 +8,12 @@ import { eq } from "drizzle-orm";
 import { companies } from "@/db/schema";
 
 test.describe("Company equity settings", () => {
-  test("updating company equity settings", async ({ page }) => {
+  test("enabling and updating company equity settings", async ({ page }) => {
     const { company } = await companiesFactory.create({
       sharePriceInUsd: "20",
       fmvPerShareInUsd: "15.1",
       conversionSharePriceUsd: "18.123456789",
+      equityEnabled: false,
     });
     const { user: adminUser } = await usersFactory.create();
     await companyAdministratorsFactory.create({
@@ -22,7 +23,17 @@ test.describe("Company equity settings", () => {
 
     await login(page, adminUser);
     await page.getByRole("link", { name: "Settings" }).click();
-    await page.getByRole("link", { name: "Equity value" }).click();
+    await page.getByRole("link", { name: "Equity" }).click();
+
+    // Enable equity toggle
+    const enableEquitySwitch = page.getByRole("switch", { name: "Enable equity" });
+    await expect(enableEquitySwitch).toHaveAttribute("aria-checked", "false");
+    await enableEquitySwitch.waitFor({ state: "visible" });
+    await enableEquitySwitch.click({ force: true });
+    await expect(enableEquitySwitch).toHaveAttribute("aria-checked", "true");
+
+    // Wait for the form to appear
+    await expect(page.getByRole("heading", { name: "Equity value" })).toBeVisible();
 
     const sharePriceInput = page.getByLabel("Current share price (USD)");
     const valuationPriceInput = page.getByLabel("Current 409A valuation (USD per share)");
@@ -42,14 +53,24 @@ test.describe("Company equity settings", () => {
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByRole("button", { name: "Save changes" })).toBeEnabled();
 
-    expect(
-      await db.query.companies.findFirst({
-        where: eq(companies.id, company.id),
-      }),
-    ).toMatchObject({
+    const dbCompany = await db.query.companies.findFirst({
+      where: eq(companies.id, company.id),
+    });
+    expect(dbCompany).toMatchObject({
+      equityEnabled: true,
       sharePriceInUsd: "20",
       fmvPerShareInUsd: "15.123",
       conversionSharePriceUsd: "18.123456789",
     });
+
+    // Navigate to root page and verify Equity button is visible
+    await page.goto("/dashboard");
+    await expect(page.getByRole("button", { name: "Equity" })).toBeVisible();
+    await page.getByRole("button", { name: "Equity" }).click();
+    await expect(page.getByRole("link", { name: "Investors" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Option pools" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Equity grants" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Dividends" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Buybacks" })).toBeVisible();
   });
 });
