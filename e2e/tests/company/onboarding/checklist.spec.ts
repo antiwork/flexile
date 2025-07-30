@@ -166,7 +166,6 @@ test.describe("Onboarding checklist", () => {
     const { user: investorUser } = await usersFactory.create(undefined, { withoutComplianceInfo: true });
     await companyInvestorsFactory.create({ userId: investorUser.id });
     await login(page, investorUser);
-    await page.waitForTimeout(100000);
 
     await expect(page.getByText("Fill tax information")).toBeVisible();
     await expect(page.getByText("Add payout information")).toBeVisible();
@@ -224,7 +223,6 @@ test.describe("Onboarding checklist", () => {
     const { companyContractor } = await companyContractorsFactory.create({ userId: contractorUser.id });
     await companyInvestorsFactory.create({ userId: contractorUser.id, companyId: companyContractor.companyId });
     await login(page, contractorUser);
-    await page.waitForTimeout(10000);
 
     await expect(page.getByText("Fill tax information")).toBeVisible();
     await expect(page.getByText("Add payout information")).toBeVisible();
