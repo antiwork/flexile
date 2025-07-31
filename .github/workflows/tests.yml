@@ -111,6 +111,9 @@ jobs:
       - name: Run docker compose
         run: docker compose -f docker/docker-compose-local-linux.yml up -d
 
+      - name: Run login specs
+        run: pnpm playwright test e2e/tests/login.spec.ts
+
       - name: Run Playwright tests
         run: pnpm playwright test
 
