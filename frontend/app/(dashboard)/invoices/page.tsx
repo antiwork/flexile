@@ -323,7 +323,7 @@ export default function InvoicesPage() {
         {user.roles.worker ? (
           !hasLegalDetails ? (
             <Alert>
-              <Info />
+              <Info className="size-4" />
               <AlertDescription>
                 Please{" "}
                 <Link className={linkClasses} href="/settings/tax">
@@ -334,7 +334,7 @@ export default function InvoicesPage() {
             </Alert>
           ) : unsignedContractId ? (
             <Alert>
-              <Info />
+              <Info className="size-4" />
               <AlertTitle>You have an unsigned contract.</AlertTitle>
               <AlertDescription>
                 Please{" "}
@@ -349,7 +349,7 @@ export default function InvoicesPage() {
             </Alert>
           ) : !user.hasPayoutMethodForInvoices ? (
             <Alert>
-              <Info />
+              <Info className="size-4" />
               <AlertDescription>
                 Please{" "}
                 <Link className={linkClasses} href="/settings/payouts">
@@ -367,7 +367,7 @@ export default function InvoicesPage() {
 
             {!company.completedPaymentMethodSetup && (
               <Alert variant="destructive">
-                <AlertTriangle className="size-5" />
+                <AlertTriangle className="size-4" />
                 <AlertTitle>Bank account setup incomplete.</AlertTitle>
                 <AlertDescription>
                   We're waiting for your bank details to be confirmed. Once done, you'll be able to start approving
@@ -378,7 +378,7 @@ export default function InvoicesPage() {
 
             {company.completedPaymentMethodSetup && !company.isTrusted ? (
               <Alert variant="destructive">
-                <AlertTriangle className="size-5" />
+                <AlertTriangle className="size-4" />
                 <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
                 <AlertDescription>
                   Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete additional
@@ -389,7 +389,7 @@ export default function InvoicesPage() {
 
             {!data.every(taxRequirementsMet) && (
               <Alert variant="destructive">
-                <AlertTriangle className="size-5" />
+                <AlertTriangle className="size-4" />
                 <AlertTitle>Missing tax information.</AlertTitle>
                 <AlertDescription>
                   Some invoices are not payable until contractors provide tax information.

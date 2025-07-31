@@ -365,7 +365,7 @@ export default function DocumentsPage() {
       <div className="grid gap-4">
         {canSign ? null : (
           <Alert>
-            <Info />
+            <Info className="size-4" />
             <AlertDescription>
               Please{" "}
               <Link className={linkClasses} href="/settings/tax">
