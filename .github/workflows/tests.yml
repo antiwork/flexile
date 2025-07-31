@@ -88,8 +88,8 @@ jobs:
           restore-keys: |
             next-${{ runner.os }}-
 
-      - run: NODE_ENV=test pnpm run build-next --no-lint
-        shell: bash
+      - name: Build Next
+        run: NODE_ENV=test pnpm run build-next --no-lint
 
       - name: Install foreman
         run: gem install foreman
