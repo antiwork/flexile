@@ -84,70 +84,86 @@ export default function InvoicePage() {
   assert(!!invoice.invoiceDate); // must be defined due to model checks in rails
 
   return (
+    // Added print utilities to the root fragment to apply styles to the body for printing
     <>
-      <DashboardHeader
-        className="print:hidden"
-        title={`Invoice ${invoice.invoiceNumber}`}
-        headerActions={
-          <>
-            <InvoiceStatus aria-label="Status" invoice={invoice} />
-            <Button onClick={() => window.print()} variant="outline" className="print:hidden">
-              <PrinterIcon className="size-4" />
-              Print
-            </Button>
-            {user.roles.administrator && isActionable(invoice) ? (
-              <>
-                <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
-                  <XMarkIcon className="size-4" />
-                  Reject
-                </Button>
-
-                <RejectModal
-                  open={rejectModalOpen}
-                  onClose={() => setRejectModalOpen(false)}
-                  onReject={() => router.push(`/invoices`)}
-                  ids={[invoice.id]}
-                />
-
-                <ApproveButton invoice={invoice} onApprove={() => router.push(`/invoices`)} />
-              </>
-            ) : null}
-            {user.id === invoice.userId ? (
-              <>
-                {invoice.requiresAcceptanceByPayee ? (
-                  <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
-                ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
-                  <Button variant="default" asChild>
-                    <Link href={`/invoices/${invoice.id}/edit`}>
-                      {invoice.status !== "rejected" && <PencilIcon className="h-4 w-4" />}
-                      {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
-                    </Link>
-                  </Button>
-                ) : null}
-
-                {isDeletable(invoice) ? (
-                  <>
-                    <Button
-                      variant="outline"
-                      onClick={() => setDeleteModalOpen(true)}
-                      className="hover:text-destructive"
-                    >
-                      <Trash2 className="size-4" />
-                      <span>Delete</span>
-                    </Button>
-                    <DeleteModal
-                      open={deleteModalOpen}
-                      onClose={() => setDeleteModalOpen(false)}
-                      onDelete={() => router.push(`/invoices`)}
-                      invoices={[invoice]}
-                    />
-                  </>
-                ) : null}
-              </>
-            ) : null}
-          </>
+      <style jsx global>{`
+        @media print {
+          body {
+            font-family: Arial, sans-serif !important;
+            margin: 0;
+            font-size: 11pt;
+            line-height: normal;
+            color: black;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            hyphens: none;
+          }
         }
-      />
+      `}</style>
+      <div className="print:hidden">
+        <DashboardHeader
+          title={`Invoice ${invoice.invoiceNumber}`}
+          headerActions={
+            <>
+              <InvoiceStatus aria-label="Status" invoice={invoice} />
+              <Button onClick={() => window.print()} variant="outline" className="print:hidden">
+                <PrinterIcon className="size-4" />
+                Print
+              </Button>
+              {user.roles.administrator && isActionable(invoice) ? (
+                <>
+                  <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
+                    <XMarkIcon className="size-4" />
+                    Reject
+                  </Button>
+
+                  <RejectModal
+                    open={rejectModalOpen}
+                    onClose={() => setRejectModalOpen(false)}
+                    onReject={() => router.push(`/invoices`)}
+                    ids={[invoice.id]}
+                  />
+
+                  <ApproveButton invoice={invoice} onApprove={() => router.push(`/invoices`)} />
+                </>
+              ) : null}
+              {user.id === invoice.userId ? (
+                <>
+                  {invoice.requiresAcceptanceByPayee ? (
+                    <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
+                  ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
+                    <Button variant="default" asChild>
+                      <Link href={`/invoices/${invoice.id}/edit`}>
+                        {invoice.status !== "rejected" && <PencilIcon className="h-4 w-4" />}
+                        {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
+                      </Link>
+                    </Button>
+                  ) : null}
+
+                  {isDeletable(invoice) ? (
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={() => setDeleteModalOpen(true)}
+                        className="hover:text-destructive"
+                      >
+                        <Trash2 className="size-4" />
+                        <span>Delete</span>
+                      </Button>
+                      <DeleteModal
+                        open={deleteModalOpen}
+                        onClose={() => setDeleteModalOpen(false)}
+                        onDelete={() => router.push(`/invoices`)}
+                        invoices={[invoice]}
+                      />
+                    </>
+                  ) : null}
+                </>
+              ) : null}
+            </>
+          }
+        />
+      </div>
 
       {invoice.requiresAcceptanceByPayee && user.id === invoice.userId ? (
         <Dialog open={acceptPaymentModalOpen} onOpenChange={setAcceptPaymentModalOpen} className="print:hidden">
@@ -251,10 +267,10 @@ export default function InvoicePage() {
         </Alert>
       ) : null}
 
-      <section className="print:overflow-wrap-break-word print:page-break-inside-avoid print:m-0 print:min-h-[85vh] print:w-full print:max-w-full print:border-none print:p-0 print:pb-8 print:before:my-2 print:before:mb-6 print:before:block print:before:text-2xl print:before:font-bold print:before:tracking-wide print:before:text-black print:before:content-['INVOICE']">
+      <section className="invoice-print print:m-0 print:min-h-[85vh] print:w-full print:max-w-full print:border-none print:p-0 print:pt-4 print:pb-8 print:*:box-border print:*:max-w-full print:*:rounded-none print:*:bg-transparent print:*:shadow-none print:before:my-2 print:before:mb-6 print:before:block print:before:text-2xl print:before:font-bold print:before:tracking-wide print:before:text-black print:before:content-['INVOICE']">
         <form>
           <div className="grid gap-4">
-            <div className="grid auto-cols-fr gap-3 md:grid-flow-col print:mb-6 print:grid-flow-col print:grid-cols-[1fr_1fr_auto_auto_auto] print:items-start print:gap-5 print:leading-tight">
+            <div className="grid auto-cols-fr gap-3 md:grid-flow-col print:mb-6 print:grid-flow-col print:grid-cols-[1fr_1fr_auto_auto_auto] print:items-start print:gap-5 print:leading-[1.4]">
               <div className="print:leading-[1.4] print:font-normal print:[&>*]:m-0 print:[&>*]:text-[10pt] print:[&>*]:leading-[1.4] print:[&>*]:font-normal print:[&>*]:text-black print:[&>*:first-child]:mb-1 print:[&>*:first-child]:text-[9pt] print:[&>*:first-child]:font-medium print:[&>*:first-child]:tracking-wide print:[&>*:first-child]:uppercase print:[&>b]:mb-[0.3em] print:[&>b]:block print:[&>b]:font-semibold">
                 From
                 <br />
@@ -271,17 +287,17 @@ export default function InvoicePage() {
                   <LegacyAddress address={company.address} />
                 </div>
               </div>
-              <div className="print:flex print:flex-col print:items-start print:self-start print:text-left print:text-[10pt] print:leading-[1.2] print:leading-[1.4] print:font-normal print:[&>*]:m-0 print:[&>*]:text-[10pt] print:[&>*]:leading-[1.4] print:[&>*]:font-normal print:[&>*]:text-black print:[&>*:first-child]:mb-1 print:[&>*:first-child]:text-[9pt] print:[&>*:first-child]:font-medium print:[&>*:first-child]:tracking-wide print:[&>*:first-child]:uppercase">
+              <div className="print:flex print:flex-col print:items-start print:self-start print:text-left print:text-[10pt] print:leading-[1.2] print:font-normal print:[&>*]:m-0 print:[&>*]:text-[10pt] print:[&>*]:leading-[1.4] print:[&>*]:font-normal print:[&>*]:text-black print:[&>*:first-child]:mb-1 print:[&>*:first-child]:text-[9pt] print:[&>*:first-child]:font-medium print:[&>*:first-child]:tracking-wide print:[&>*:first-child]:uppercase">
                 Invoice ID
                 <br />
                 {invoice.invoiceNumber}
               </div>
-              <div className="print:flex print:flex-col print:items-start print:self-start print:text-left print:text-[10pt] print:leading-[1.2] print:leading-[1.4] print:font-normal print:[&>*]:m-0 print:[&>*]:text-[10pt] print:[&>*]:leading-[1.4] print:[&>*]:font-normal print:[&>*]:text-black print:[&>*:first-child]:mb-1 print:[&>*:first-child]:text-[9pt] print:[&>*:first-child]:font-medium print:[&>*:first-child]:tracking-wide print:[&>*:first-child]:uppercase">
+              <div className="print:flex print:flex-col print:items-start print:self-start print:text-left print:text-[10pt] print:leading-[1.2] print:font-normal print:[&>*]:m-0 print:[&>*]:text-[10pt] print:[&>*]:leading-[1.4] print:[&>*]:font-normal print:[&>*]:text-black print:[&>*:first-child]:mb-1 print:[&>*:first-child]:text-[9pt] print:[&>*:first-child]:font-medium print:[&>*:first-child]:tracking-wide print:[&>*:first-child]:uppercase">
                 Sent on
                 <br />
                 {formatDate(invoice.invoiceDate)}
               </div>
-              <div className="print:flex print:flex-col print:items-start print:self-start print:text-left print:text-[10pt] print:leading-[1.2] print:leading-[1.4] print:font-normal print:[&>*]:m-0 print:[&>*]:text-[10pt] print:[&>*]:leading-[1.4] print:[&>*]:font-normal print:[&>*]:text-black print:[&>*:first-child]:mb-1 print:[&>*:first-child]:text-[9pt] print:[&>*:first-child]:font-medium print:[&>*:first-child]:tracking-wide print:[&>*:first-child]:uppercase">
+              <div className="print:flex print:flex-col print:items-start print:self-start print:text-left print:text-[10pt] print:leading-[1.2] print:font-normal print:[&>*]:m-0 print:[&>*]:text-[10pt] print:[&>*]:leading-[1.4] print:[&>*]:font-normal print:[&>*]:text-black print:[&>*:first-child]:mb-1 print:[&>*:first-child]:text-[9pt] print:[&>*:first-child]:font-medium print:[&>*:first-child]:tracking-wide print:[&>*:first-child]:uppercase">
                 Paid on
                 <br />
                 {invoice.paidAt ? formatDate(invoice.paidAt) : "-"}
@@ -292,16 +308,16 @@ export default function InvoicePage() {
               <Table className="print:m-0 print:mb-6 print:w-full print:border-separate print:border-spacing-x-0 print:border-spacing-y-[0.9em] print:overflow-visible print:border-none">
                 <TableHeader className="print:table-header-group">
                   <TableRow>
-                    <TableHead className="print:w-[60%] print:border-t-0 print:border-r-0 print:border-b-[1.25px] print:border-l-0 print:border-b-black print:bg-transparent print:px-4 print:py-3 print:pr-6 print:text-left print:text-[7.5pt] print:font-medium print:tracking-wide print:whitespace-nowrap print:text-black print:uppercase">
+                    <TableHead className="print:w-[55%] print:border-t-0 print:border-r-0 print:border-b-[1.25px] print:border-l-0 print:border-b-black print:bg-transparent print:px-4 print:py-3 print:pr-6 print:text-left print:text-[7.5pt] print:font-medium print:tracking-wide print:whitespace-nowrap print:text-gray-900 print:uppercase">
                       {complianceInfo?.businessEntity ? `Services (${complianceInfo.legalName})` : "Services"}
                     </TableHead>
-                    <TableHead className="print:font-variant-numeric-tabular text-right print:w-20 print:border-t-0 print:border-r-0 print:border-b-[1.25px] print:border-l-0 print:border-b-black print:bg-transparent print:px-4 print:py-3 print:text-right print:text-[7.5pt] print:font-medium print:tracking-wide print:whitespace-nowrap print:text-black print:uppercase">
+                    <TableHead className="print:font-variant-numeric-tabular text-right print:w-24 print:border-t-0 print:border-r-0 print:border-b-[1.25px] print:border-l-0 print:border-b-black print:bg-transparent print:px-4 print:py-3 print:text-right print:text-[7.5pt] print:font-medium print:tracking-wide print:whitespace-nowrap print:text-gray-900 print:uppercase">
                       Qty / Hours
                     </TableHead>
-                    <TableHead className="print:font-variant-numeric-tabular text-right print:w-24 print:border-t-0 print:border-r-0 print:border-b-[1.25px] print:border-l-0 print:border-b-black print:bg-transparent print:px-4 print:py-3 print:text-right print:text-[7.5pt] print:font-medium print:tracking-wide print:whitespace-nowrap print:text-black print:uppercase">
+                    <TableHead className="print:font-variant-numeric-tabular text-right print:w-24 print:border-t-0 print:border-r-0 print:border-b-[1.25px] print:border-l-0 print:border-b-black print:bg-transparent print:px-4 print:py-3 print:text-right print:text-[7.5pt] print:font-medium print:tracking-wide print:whitespace-nowrap print:text-gray-900 print:uppercase">
                       Cash rate
                     </TableHead>
-                    <TableHead className="print:font-variant-numeric-tabular text-right print:w-24 print:border-t-0 print:border-r-0 print:border-b-[1.25px] print:border-l-0 print:border-b-black print:bg-transparent print:px-4 print:py-3 print:pr-4 print:text-right print:text-[7.5pt] print:font-medium print:tracking-wide print:whitespace-nowrap print:text-black print:uppercase">
+                    <TableHead className="print:font-variant-numeric-tabular text-right print:w-28 print:border-t-0 print:border-r-0 print:border-b-[1.25px] print:border-l-0 print:border-b-black print:bg-transparent print:px-4 print:py-3 print:pr-4 print:text-right print:text-[7.5pt] print:font-medium print:tracking-wide print:whitespace-nowrap print:text-gray-900 print:uppercase">
                       Line total
                     </TableHead>
                   </TableRow>
@@ -370,36 +386,47 @@ export default function InvoicePage() {
                   </div>
                 ) : null}
               </div>
-              <Card className="print:float-right print:m-0 print:ml-auto print:w-24 print:rounded-none print:border-0 print:bg-none print:p-0 print:text-right print:shadow-none">
-                <CardContent className="print:m-0 print:rounded-none print:border-0 print:bg-none print:p-0 print:shadow-none">
-                  {invoice.lineItems.length > 0 && invoice.expenses.length > 0 && (
-                    <>
-                      <div className="flex justify-between gap-2">
-                        <strong>Total services</strong>
-                        <span>
-                          {formatMoneyFromCents(
-                            invoice.lineItems.reduce((acc, lineItem) => acc + lineItemTotal(lineItem) * cashFactor, 0),
-                          )}
-                        </span>
-                      </div>
-                      <Separator />
-                      <div className="flex justify-between gap-2">
-                        <strong>Total expenses</strong>
-                        <span>
-                          {formatMoneyFromCents(
-                            invoice.expenses.reduce((acc, expense) => acc + expense.totalAmountInCents, BigInt(0)),
-                          )}
-                        </span>
-                      </div>
-                      <Separator />
-                    </>
-                  )}
-                  <div className="print:[&>span]:font-variant-numeric-tabular flex justify-between gap-2 print:mt-6 print:justify-between print:border-b print:border-dashed print:border-black print:py-[0.4em] print:text-[11pt] print:[&>span]:font-bold print:[&>strong]:font-bold print:[&>strong]:tracking-wide print:[&>strong]:uppercase">
-                    <strong>Total</strong>
-                    <span>{formatMoneyFromCents(invoice.cashAmountInCents)}</span>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="print:hidden">
+                <Card className="print:float-right print:m-0 print:mt-4 print:ml-auto print:w-auto print:rounded-none print:border-0 print:bg-none print:p-0 print:text-right print:shadow-none">
+                  <CardContent className="print:m-0 print:rounded-none print:border-0 print:bg-none print:p-0 print:shadow-none">
+                    {invoice.lineItems.length > 0 && invoice.expenses.length > 0 && (
+                      <>
+                        <div className="flex justify-between gap-2">
+                          <strong>Total services</strong>
+                          <span>
+                            {formatMoneyFromCents(
+                              invoice.lineItems.reduce(
+                                (acc, lineItem) => acc + lineItemTotal(lineItem) * cashFactor,
+                                0,
+                              ),
+                            )}
+                          </span>
+                        </div>
+                        <Separator />
+                        <div className="flex justify-between gap-2">
+                          <strong>Total expenses</strong>
+                          <span>
+                            {formatMoneyFromCents(
+                              invoice.expenses.reduce((acc, expense) => acc + expense.totalAmountInCents, BigInt(0)),
+                            )}
+                          </span>
+                        </div>
+                        <Separator />
+                      </>
+                    )}
+                    <div className="print:[&>span]:font-variant-numeric-tabular flex justify-between gap-2 print:mt-6 print:justify-between print:border-[0.8px] print:border-b print:border-dashed print:border-black print:py-[0.4em] print:text-[11pt] print:[&>span]:font-bold print:[&>strong]:font-bold print:[&>strong]:tracking-wide print:[&>strong]:uppercase">
+                      <strong>Total</strong>
+                      <span>{formatMoneyFromCents(invoice.cashAmountInCents)}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Print-only clean total line */}
+              <div className="hidden print:mt-4 print:flex print:justify-end print:gap-2 print:text-[11pt] print:font-bold print:tabular-nums">
+                <span className="tracking-wide">Total</span>
+                <span>{formatMoneyFromCents(invoice.cashAmountInCents)}</span>
+              </div>
             </footer>
           </div>
         </form>
