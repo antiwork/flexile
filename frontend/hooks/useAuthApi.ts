@@ -78,11 +78,13 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
       }
 
       // For both login and signup, sign in with OTP
+      console.log('1. OTP submitted, calling signIn...');
       const result = await signIn("otp", {
         email: state.email,
         otp: state.otp,
         redirect: false,
       });
+      console.log('2. signIn result:', result);
 
       if (result?.error) {
         throw new Error("Invalid verification code, please try again.");
@@ -90,6 +92,7 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
 
       // Get the session to access the JWT
       const session = await getSession();
+      console.log('3. session after getSession:', session);
       const sessionUser = session?.user;
 
       if (sessionUser && "jwt" in sessionUser && typeof sessionUser.jwt === "string") {
@@ -115,6 +118,12 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
         typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect_url") : null;
       const targetUrl =
         redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "/dashboard";
+
+      console.log('4. About to redirect to:', targetUrl);
+
+      // Check browser storage
+      console.log('localStorage:', localStorage.getItem('next-auth.session-token'));
+      console.log('document.cookie:', document.cookie);
 
       window.location.href = targetUrl;
     } catch (error) {

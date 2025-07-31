@@ -27,7 +27,10 @@ export const useUserStore = create(
 export const useCurrentUser = () => {
   const pathname = usePathname();
   const { user, setRedirected } = useUserStore((state) => state);
-  if (!user) throw redirect(`/login?${new URLSearchParams({ redirect_url: pathname })}`, RedirectType.replace);
+  if (!user) {
+    console.log('useCurrentUser: No user found, redirecting to login from:', pathname);
+    throw redirect(`/login?${new URLSearchParams({ redirect_url: pathname })}`, RedirectType.replace);
+  }
   if (user.onboardingPath && user.onboardingPath !== window.location.pathname)
     throw redirect(user.onboardingPath, RedirectType.replace);
   useEffect(setRedirected, []);
