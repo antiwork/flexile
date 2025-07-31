@@ -335,17 +335,16 @@ export default function InvoicesPage() {
           ) : unsignedContractId ? (
             <Alert>
               <Info />
+              <AlertTitle>You have an unsigned contract.</AlertTitle>
               <AlertDescription>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div>You have an unsigned contract. Please sign it before creating new invoices.</div>
-                  <Button asChild variant="outline" size="small">
-                    <Link
-                      href={`/documents?${new URLSearchParams({ sign: unsignedContractId.toString(), next: "/invoices" })}`}
-                    >
-                      Review & sign
-                    </Link>
-                  </Button>
-                </div>
+                <div>Please sign it before creating new invoices.</div>
+                <Button asChild variant="outline" size="small">
+                  <Link
+                    href={`/documents?${new URLSearchParams({ sign: unsignedContractId.toString(), next: "/invoices" })}`}
+                  >
+                    Review & sign
+                  </Link>
+                </Button>
               </AlertDescription>
             </Alert>
           ) : !user.hasPayoutMethodForInvoices ? (
