@@ -72,6 +72,12 @@ scope path: :internal, module: :internal do
         patch :reset
       end
     end
+    resources :documents, only: [:index, :create, :destroy] do
+      member do
+        post :sign
+        post :share
+      end
+    end
 
     resources :dividends, only: [:show] do
       member do
