@@ -9,7 +9,7 @@ export function DashboardHeader({ title, headerActions }: { title: React.ReactNo
           <div>
             <div className="flex items-center justify-between gap-2">
               <SidebarTrigger className="md:hidden" />
-              <h1 className="text-sm font-bold">{title}</h1>
+              <h1 className="text-3xl font-bold">{title}</h1>
             </div>
           </div>
 
