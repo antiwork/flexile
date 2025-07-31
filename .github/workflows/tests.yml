@@ -120,9 +120,6 @@ jobs:
         env:
           NEXTAUTH_URL: 'https://test.flexile.dev:3101'
         run: |
-          echo "--------------------------------"
-          env
-          echo "--------------------------------"
           pnpm playwright test tests/login.spec.ts
 
       - uses: actions/upload-artifact@v4
