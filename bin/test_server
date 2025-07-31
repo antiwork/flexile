@@ -23,4 +23,7 @@ cd backend
 bundle exec rails db:drop db:create db:schema:load db:seed_test_data
 cd ..
 
+# Build Next
+pnpm run build-next --no-lint
+
 foreman start -f Procfile.test -e .env.test
