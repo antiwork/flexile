@@ -183,11 +183,19 @@ test.describe("Manage roles access", () => {
       await expect(page.getByRole("dialog")).toBeVisible();
       await expect(page.getByText(/Remove admin access for/u)).toBeVisible();
 
+      // Set up promise to wait for the tRPC mutation response
+      const responsePromise = page.waitForResponse(
+        (response) => response.url().includes("trpc/companies.removeRole") && response.status() === 200,
+      );
+
       // Click the button
       await page.getByRole("button", { name: "Remove admin" }).click();
 
       // Wait for the row in the table to be removed, not just any text
       await expect(page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "", "u") })).not.toBeVisible();
+
+      // Wait for the actual backend response
+      await responsePromise;
 
       // Verify in database
       const adminRecord = await db.query.companyAdministrators.findFirst({
@@ -254,7 +262,7 @@ test.describe("Manage roles access", () => {
       await page.getByRole("button", { name: "Remove admin" }).click();
 
       // Row should be removed from the list
-      await expect(page.getByText(secondAdmin.legalName || "")).not.toBeVisible();
+      await expect(page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "", "u") })).not.toBeVisible();
     });
   });
 
@@ -275,11 +283,19 @@ test.describe("Manage roles access", () => {
       await expect(page.getByRole("dialog")).toBeVisible();
       await expect(page.getByText(/Remove lawyer access for/u)).toBeVisible();
 
+      // Set up promise to wait for the tRPC mutation response
+      const responsePromise = page.waitForResponse(
+        (response) => response.url().includes("trpc/companies.removeRole") && response.status() === 200,
+      );
+
       // Click the button
       await page.getByRole("button", { name: "Remove lawyer" }).click();
 
-      // Wait for row to be removed
-      await expect(page.getByText(lawyerUser.legalName || "")).not.toBeVisible();
+      // Wait for row to be removed (optimistic update)
+      await expect(page.getByRole("row", { name: new RegExp(lawyerUser.legalName || "", "u") })).not.toBeVisible();
+
+      // Wait for the actual backend response
+      await responsePromise;
     });
 
     test("prevents removing lawyer role from multi-role user when they have admin role", async ({ page }) => {
@@ -339,11 +355,24 @@ test.describe("Manage roles access", () => {
       const ellipsisButton = multiRoleRow.getByRole("button", { name: "Open menu" });
       await ellipsisButton.click();
       await page.getByRole("menuitem", { name: "Remove admin" }).click();
+
+      // Set up promise to wait for the tRPC mutation response
+      const responsePromise = page.waitForResponse(
+        (response) => response.url().includes("trpc/companies.removeRole") && response.status() === 200,
+      );
+
       await page.getByRole("button", { name: "Remove admin" }).click();
+
+      // Wait for row to be updated (optimistic update)
+      await expect(page.getByText("Admin, Lawyer")).not.toBeVisible();
+
+      // Wait for the actual backend response
+      await responsePromise;
 
       // User should now show as Lawyer only
       await expect(page.getByText(multiRoleUser.legalName || "")).toBeVisible();
-      await expect(page.getByText("Lawyer")).toBeVisible();
+      const updatedMultiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
+      await expect(updatedMultiRoleRow.getByText("Lawyer")).toBeVisible();
       await expect(page.getByText("Admin, Lawyer")).not.toBeVisible();
     });
 
@@ -359,11 +388,24 @@ test.describe("Manage roles access", () => {
       const ellipsisButton = multiRoleRow.getByRole("button", { name: "Open menu" });
       await ellipsisButton.click();
       await page.getByRole("menuitem", { name: "Remove lawyer" }).click();
+
+      // Set up promise to wait for the tRPC mutation response
+      const responsePromise = page.waitForResponse(
+        (response) => response.url().includes("trpc/companies.removeRole") && response.status() === 200,
+      );
+
       await page.getByRole("button", { name: "Remove lawyer" }).click();
+
+      // Wait for row to be updated (optimistic update)
+      await expect(page.getByText("Admin, Lawyer")).not.toBeVisible();
+
+      // Wait for the actual backend response
+      await responsePromise;
 
       // User should now show as Admin only
       await expect(page.getByText(multiRoleUser.legalName || "")).toBeVisible();
-      await expect(page.getByText("Admin")).toBeVisible();
+      const updatedMultiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
+      await expect(updatedMultiRoleRow.getByText("Admin")).toBeVisible();
       await expect(page.getByText("Admin, Lawyer")).not.toBeVisible();
     });
   });
