@@ -361,7 +361,7 @@ export default function InvoicesPage() {
           ) : null
         ) : null}
 
-        {user.roles.administrator && data.length > 0 ? (
+        {user.roles.administrator && data.length > 0 && !isLoading ? (
           <>
             <StripeMicrodepositVerification />
 
