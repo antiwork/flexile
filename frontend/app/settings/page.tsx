@@ -127,7 +127,7 @@ const LeaveWorkspaceSection = () => {
           error_message: z.string().optional(),
           error: z.string().optional(),
         });
-        const errorData = errorSchema.parse(await response.json().catch(() => null));
+        const errorData = errorSchema.parse(await response.json().catch(() => ({})));
         throw new Error(errorData.error_message || errorData.error || "Failed to leave workspace");
       }
 
