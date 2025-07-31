@@ -63,9 +63,7 @@ export default function HomePage() {
       <main className="min-h-screen bg-white pt-20">
         <Section className="bg-blue-600 py-8 md:py-16">
           <h1 className="text-6xl leading-[0.9] font-medium tracking-tight sm:text-8xl md:text-[12rem]">
-            Contractor
-            <br />
-            payments
+            Contractor payments
           </h1>
           <div className="flex">
             <Link
@@ -93,8 +91,7 @@ export default function HomePage() {
               <div>
                 <h3 className="text-xl font-medium">Pay Contractors</h3>
                 <div className="text-xl text-gray-600">
-                  Fast, reliable contractor payments <br />
-                  with transparent processing
+                  Fast, reliable payments to contractors in 190+ countries worldwide
                 </div>
               </div>
             </div>
@@ -103,8 +100,7 @@ export default function HomePage() {
               <div>
                 <h3 className="text-xl font-medium">Equity Option</h3>
                 <div className="text-xl text-gray-600">
-                  Optional equity compensation <br />
-                  for aligned contractor incentives
+                  Optional equity compensation for aligned contractor incentives
                 </div>
               </div>
             </div>
@@ -113,8 +109,7 @@ export default function HomePage() {
               <div>
                 <h3 className="text-xl font-medium">Contract Management</h3>
                 <div className="text-xl text-gray-600">
-                  Digital contract signing and <br />
-                  automated contractor onboarding
+                  Digital contract signing and automated contractor onboarding
                 </div>
               </div>
             </div>

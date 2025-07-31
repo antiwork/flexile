@@ -41,6 +41,7 @@ scope path: :internal, module: :internal do
     end
 
     resource :switch, only: :create, controller: "switch"
+    resource :leave, only: [:destroy], controller: "leave_company"
 
     resources :company_updates do
       post :send_test_email, on: :member
