@@ -475,7 +475,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
               <Label htmlFor={`form-${uid}`}>Transfer method</Label>
               <Tabs
                 value={selectedFormIndex.toString()}
-                onValueChange={(value) => setSelectedFormIndex(parseInt(value, 10))}
+                onValueChange={(value: string) => setSelectedFormIndex(parseInt(value, 10))}
               >
                 <TabsList className="w-full">
                   {forms.map((form, index) => (

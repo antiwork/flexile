@@ -87,6 +87,7 @@ A great bug report includes:
 - Check existing discussions/issues/PRs before creating new ones
 - Start a discussion for questions or ideas
 - Open an [issue](https://github.com/antiwork/flexile/issues) for bugs or problems
+- We don't assign issues to contributors until they have a history of contributions to the project
 
 ## License
 
