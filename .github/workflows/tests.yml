@@ -15,6 +15,7 @@ env:
   WISE_PROFILE_ID: ${{ secrets.WISE_PROFILE_ID }}
   API_SECRET_TOKEN: sample-api-token
   NEXTAUTH_SECRET: sample-next-auth-secret
+  NEXTAUTH_URL: https://test.flexile.dev:3101
 
 jobs:
   rspec:
