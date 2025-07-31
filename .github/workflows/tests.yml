@@ -15,7 +15,7 @@ env:
   WISE_PROFILE_ID: ${{ secrets.WISE_PROFILE_ID }}
   API_SECRET_TOKEN: sample-api-token
   NEXTAUTH_SECRET: sample-nextauth-secret
-  NEXTAUTH_URL: http://test.flexile.dev:3101
+  NEXTAUTH_URL: https://test.flexile.dev:3101
 
 jobs:
   rspec:
@@ -78,19 +78,19 @@ jobs:
 
       - run: pnpm puppeteer browsers install chrome
 
-      - run: node docker/createCertificate.js
+      # - run: node docker/createCertificate.js
 
-      - name: Cache Next build
-        id: next-cache
-        uses: actions/cache@v4
-        with:
-          path: frontend/.next/cache
-          key: next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'backend/pnpm-lock.yaml', 'frontend/pnpm-lock.yaml') }}-${{ hashFiles('frontend/**/*.{ts,tsx}') }}
-          restore-keys: |
-            next-${{ runner.os }}-
+      # - name: Cache Next build
+      #   id: next-cache
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: frontend/.next/cache
+      #     key: next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'backend/pnpm-lock.yaml', 'frontend/pnpm-lock.yaml') }}-${{ hashFiles('frontend/**/*.{ts,tsx}') }}
+      #     restore-keys: |
+      #       next-${{ runner.os }}-
 
-      - run: NODE_ENV=test pnpm run build-next --no-lint
-        shell: bash
+      # - run: NODE_ENV=test pnpm run build-next --no-lint
+      #   shell: bash
 
       - name: Install foreman
         run: gem install foreman
