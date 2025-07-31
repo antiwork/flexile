@@ -770,7 +770,7 @@ function ConvertiblesTab({ investorId }: { investorId: string }) {
   const table = useTable({ data: convertibles?.convertibleSecurities ?? [], columns: convertiblesColumns });
   return isLoading ? (
     <TableSkeleton columns={4} />
-  ) : convertibles && convertibles?.totalCount > 0 ? (
+  ) : convertibles && convertibles.totalCount > 0 ? (
     <DataTable table={table} />
   ) : (
     <Placeholder icon={CircleCheck}>This investor does not hold any convertible securities.</Placeholder>
