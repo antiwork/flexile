@@ -3,7 +3,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export function DashboardHeader({ title, headerActions }: { title: React.ReactNode; headerActions?: React.ReactNode }) {
   return (
-    <header className="px-4 pt-2">
+    <header className="px-4 pt-4">
       <div className="grid items-center justify-between gap-3 md:flex">
         <div>
           <div className="flex items-center justify-between gap-2">

@@ -361,6 +361,44 @@ export default function InvoicesPage() {
           ) : null
         ) : null}
 
+        {user.roles.administrator ? (
+          <>
+            <StripeMicrodepositVerification />
+
+            {!company.completedPaymentMethodSetup && (
+              <Alert variant="destructive">
+                <AlertTriangle className="size-5" />
+                <AlertTitle>Bank account setup incomplete.</AlertTitle>
+                <AlertDescription>
+                  We're waiting for your bank details to be confirmed. Once done, you'll be able to start approving
+                  invoices and paying contractors.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {company.completedPaymentMethodSetup && !company.isTrusted ? (
+              <Alert variant="destructive">
+                <AlertTriangle className="size-5" />
+                <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
+                <AlertDescription>
+                  Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete additional
+                  verification steps.
+                </AlertDescription>
+              </Alert>
+            ) : null}
+
+            {!data.every(taxRequirementsMet) && (
+              <Alert variant="destructive">
+                <AlertTriangle className="size-5" />
+                <AlertTitle>Missing tax information.</AlertTitle>
+                <AlertDescription>
+                  Some invoices are not payable until contractors provide tax information.
+                </AlertDescription>
+              </Alert>
+            )}
+          </>
+        ) : null}
+
         <QuickInvoicesSection />
       </div>
 
@@ -368,43 +406,6 @@ export default function InvoicesPage() {
         <TableSkeleton columns={6} />
       ) : data.length > 0 ? (
         <>
-          {user.roles.administrator ? (
-            <>
-              <StripeMicrodepositVerification />
-              {!company.completedPaymentMethodSetup && (
-                <Alert variant="destructive">
-                  <AlertTriangle className="size-5" />
-                  <AlertTitle>Bank account setup incomplete.</AlertTitle>
-                  <AlertDescription>
-                    We're waiting for your bank details to be confirmed. Once done, you'll be able to start approving
-                    invoices and paying contractors.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {company.completedPaymentMethodSetup && !company.isTrusted ? (
-                <Alert variant="destructive">
-                  <AlertTriangle className="size-5" />
-                  <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
-                  <AlertDescription>
-                    Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete
-                    additional verification steps.
-                  </AlertDescription>
-                </Alert>
-              ) : null}
-
-              {!data.every(taxRequirementsMet) && (
-                <Alert variant="destructive">
-                  <AlertTriangle className="size-5" />
-                  <AlertTitle>Missing tax information.</AlertTitle>
-                  <AlertDescription>
-                    Some invoices are not payable until contractors provide tax information.
-                  </AlertDescription>
-                </Alert>
-              )}
-            </>
-          ) : null}
-
           <div className="flex justify-between md:hidden">
             <h2 className="text-xl font-bold">
               {data.length} {pluralize("invoice", data.length)}
