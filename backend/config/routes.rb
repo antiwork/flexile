@@ -81,13 +81,6 @@ Rails.application.routes.draw do
   get "/invoices/:id/edit", to: redirect("/companies/_/invoices/%{id}/edit")
   get "/people", to: redirect("/companies/_/people")
   get "/people/new", to: redirect { |_path_params, req| "/companies/_/people/new#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/onboarding/invitation", to: redirect { |path_params, req| "/companies/_/worker/onboarding/invitation#{path_params[:id]}#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/onboarding/contract", to: redirect("/companies/_/worker/onboarding/contract")
-  get "/investor_onboarding", to: redirect("/companies/_/investor/onboarding")
-  get "/investor_onboarding/invitation", to: redirect { |path_params, req| "/companies/_/investor/onboarding/invitation#{path_params[:id]}#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/investor_onboarding/legal", to: redirect("/companies/_/investor/onboarding/legal")
-  get "/investor_onboarding/bank_account", to: redirect("/companies/_/investor/onboarding/bank_account")
-  get "/lawyer_onboarding/invitation", to: redirect { |path_params, req| "/companies/_/lawyer/onboarding/invitation#{path_params[:id]}#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   get "/internal/userid", to: "application#userid"
   get "/internal/current_user_data", to: "application#current_user_data"
   get "/companies/:company_id/settings/equity", to: redirect("/settings/equity")
@@ -95,50 +88,5 @@ Rails.application.routes.draw do
 
   def spa_controller_action
     "application#main_vue"
-  end
-
-  scope as: :spa do
-    with_options to: spa_controller_action do
-      resource :onboarding, only: :show, to: "application#main_vue" do
-        resource :legal, only: :show, to: "application#main_vue"
-        resource :bank_account, only: :show, to: "application#main_vue"
-      end
-
-      resources :companies, only: [] do
-        # Accessible by company administrator
-        namespace :administrator, module: nil do
-          namespace :onboarding, module: nil do
-            resource :invitation, only: :show, to: "application#main_vue"
-            resource :details, only: :show, to: "application#main_vue"
-            resource :bank_account, only: :show, to: "application#main_vue"
-          end
-        end
-
-        namespace :worker, module: nil do
-          resource :onboarding, only: :show, to: "application#main_vue" do
-            resource :invitation, only: :show, to: "application#main_vue"
-            resource :legal, only: :show, to: "application#main_vue"
-            resource :bank_account, only: :show, to: "application#main_vue"
-            resource :contract, only: :show, to: "application#main_vue"
-          end
-        end
-
-        namespace :investor, module: nil do
-          resource :onboarding, only: :show, to: "application#main_vue" do
-            resource :invitation, only: :show, to: "application#main_vue"
-            resource :legal, only: :show, to: "application#main_vue"
-            resource :bank_account, only: :show, to: "application#main_vue"
-          end
-        end
-
-        namespace :lawyer, module: nil do
-          namespace :onboarding, module: nil do
-            resource :invitation, only: :show, to: "application#main_vue"
-          end
-        end
-
-        resources :expenses, only: :index, to: "application#main_vue"
-      end
-    end
   end
 end

@@ -87,10 +87,7 @@ export const GettingStarted = () => {
         className="flex h-full flex-col-reverse"
       >
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton
-            closeOnMobileClick={false}
-            className="h-full items-center justify-between rounded-none px-5"
-          >
+          <SidebarMenuButton className="h-full items-center justify-between rounded-none px-5">
             {status === "completed" ? (
               <div className="flex h-4 w-4 items-center justify-center rounded-full border-2 border-blue-500 bg-blue-500">
                 <CheckIcon />
@@ -117,9 +114,9 @@ export const GettingStarted = () => {
               </div>
               <div className="mx-4">
                 <p className="text-sm">
-                  {user.roles.administrator
-                    ? "Everything is in place. Time to flex."
-                    : "You are ready to send your first invoice."}
+                  {user.roles.worker
+                    ? "You are ready to send your first invoice."
+                    : "Everything is in place. Time to flex."}
                 </p>
               </div>
             </div>
