@@ -41,6 +41,6 @@ export default defineConfig({
     url: "https://test.flexile.dev:3101",
     reuseExistingServer: !process.env.CI,
     ignoreHTTPSErrors: true,
-    timeout: 1200000,
+    timeout: 120000000,
   },
 });
