@@ -3,7 +3,7 @@ export const API_BASE_URL = (() => {
     case "development":
       return "https://api.flexile.dev";
     case "test":
-      return "http://api.flexile.dev:3100";
+      return "http://test.flexile.com:3100";
     default:
       return "https://api.flexile.com";
   }

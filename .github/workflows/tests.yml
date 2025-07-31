@@ -118,7 +118,7 @@ jobs:
 
       - name: Run Playwright tests
         env:
-          NEXTAUTH_URL: 'https://test.flexile.dev:3101'
+          NEXTAUTH_URL: 'http://test.gumroad.com:3101'
         run: |
           echo "--------------------------------"
           env

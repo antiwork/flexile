@@ -15,7 +15,7 @@ export default defineConfig({
   workers: 4,
   reporter: process.env.CI ? [["list"], ["html"]] : "list",
   use: {
-    baseURL: "https://test.flexile.dev:3101",
+    baseURL: "http://test.gumroad.com:3101",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
@@ -40,7 +40,7 @@ export default defineConfig({
   tsconfig: "./e2e/tsconfig.json",
   webServer: {
     command: "bin/test_server",
-    url: "https://test.flexile.dev:3101",
+    url: "http://test.gumroad.com:3101",
     reuseExistingServer: !process.env.CI,
     ignoreHTTPSErrors: true,
     stdout: "pipe",
