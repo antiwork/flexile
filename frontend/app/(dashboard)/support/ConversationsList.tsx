@@ -1,12 +1,16 @@
 "use client";
 
 import { useConversations, useCreateConversation } from "@helperai/react";
-import { CircleCheck, Plus } from "lucide-react";
+import { CircleCheck, Paperclip, SendIcon, X } from "lucide-react";
+import React, { useRef, useState } from "react";
 import { DashboardHeader } from "@/components/DashboardHeader";
+import { MutationStatusButton } from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ConversationsListProps {
   onSelectConversation: (slug: string) => void;
@@ -14,27 +18,51 @@ interface ConversationsListProps {
 
 export const ConversationsList = ({ onSelectConversation }: ConversationsListProps) => {
   const { data: conversationsData, isLoading: loading } = useConversations();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const createConversation = useCreateConversation({
-    onSuccess: (data) => {
-      onSelectConversation(data.conversationSlug);
+    onSuccess: () => {
+      setIsModalOpen(false);
+      setMessage("");
+      setAttachments([]);
     },
   });
 
   const conversations = conversationsData?.conversations || [];
 
+  const handleSubmit = () => {
+    if (!message.trim() && attachments.length === 0) return;
+
+    const dataTransfer = new DataTransfer();
+    attachments.forEach((file) => dataTransfer.items.add(file));
+
+    const options = attachments.length > 0 ? { experimental_attachments: dataTransfer.files } : {};
+
+    createConversation.mutate({ subject: message, ...options });
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setAttachments((prev) => [...prev, ...files]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
+
   return (
     <>
       <DashboardHeader
-        title="Support tickets"
+        title="Support center"
         headerActions={
-          <Button
-            onClick={() => createConversation.mutate({})}
-            variant="outline"
-            size="small"
-            disabled={createConversation.isPending}
-          >
-            <Plus className="size-4" />
-            {createConversation.isPending ? "Creating..." : "New ticket"}
+          <Button onClick={() => setIsModalOpen(true)} size="small">
+            Contact support
           </Button>
         }
       />
@@ -82,6 +110,79 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
           </Table>
         )}
       </div>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>How can we help you today?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="relative">
+              <Textarea
+                id="message"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Tell us about your issue or question..."
+                className="mt-1 min-h-40 resize-none pr-12"
+                rows={4}
+              />
+              <div className="absolute right-2 bottom-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="small"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="h-8 w-8 p-0"
+                >
+                  <Paperclip className="size-4" />
+                </Button>
+              </div>
+            </div>
+
+            {attachments.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {attachments.map((file, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-1 rounded-md bg-gray-50 px-2 py-1 text-sm hover:bg-gray-100/50"
+                  >
+                    <span className="max-w-28 truncate">{file.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeAttachment(index)}
+                      className="cursor-pointer text-gray-500 hover:text-gray-700"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              onChange={handleFileSelect}
+              className="hidden"
+              accept="image/*,application/pdf,.doc,.docx,.txt"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+              Cancel
+            </Button>
+            <MutationStatusButton
+              mutation={createConversation}
+              onClick={handleSubmit}
+              disabled={!message.trim() && attachments.length === 0}
+            >
+              <SendIcon className="mr-1 size-4" />
+              Send
+            </MutationStatusButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

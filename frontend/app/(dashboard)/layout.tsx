@@ -12,7 +12,7 @@ import {
   CircleDollarSign,
   Files,
   LogOut,
-  MessageCircle,
+  MessageCircleQuestion,
   ReceiptIcon,
   Rss,
   Settings,
@@ -176,7 +176,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <NavItem
                   href="/support"
                   active={pathname.startsWith("/support")}
-                  icon={MessageCircle}
+                  icon={MessageCircleQuestion}
                   badge={
                     helperSession ? (
                       <HelperClientProvider host="https://help.flexile.com" session={helperSession}>
@@ -185,7 +185,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     ) : null
                   }
                 >
-                  Support
+                  Support center
                 </NavItem>
                 <SidebarMenuItem>
                   <SignOutButton>

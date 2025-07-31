@@ -27,10 +27,8 @@ const TypingIndicator = () => (
 
 const MessageAttachments = ({
   attachments,
-  isUser,
 }: {
   attachments: { name: string | null; contentType: string | null; url: string }[];
-  isUser: boolean;
 }) => {
   const validAttachments = attachments.filter((att) => att.name !== null);
   if (validAttachments.length === 0) return null;
@@ -43,9 +41,7 @@ const MessageAttachments = ({
           href={attachment.url}
           target="_blank"
           rel="noopener noreferrer"
-          className={`flex items-center gap-2 rounded px-2 py-1 text-xs transition-colors ${
-            isUser ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-          }`}
+          className="flex w-fit items-center gap-1 rounded-md bg-gray-50 px-2 py-1 text-sm text-black hover:bg-gray-100/50"
         >
           <Paperclip className="size-3" />
           <span className="max-w-40 truncate">{attachment.name}</span>
@@ -133,29 +129,34 @@ export const HelperChat = ({ conversation }: HelperChatProps) => {
 
   return (
     <>
-      <div className="space-y-4 pb-24">
+      <div>
         {messages.length === 0 ? (
           <div className="py-8 text-center text-gray-500">No messages yet. Start the conversation!</div>
         ) : (
           messages
             .filter((message) => !!message.content)
-            .map((message) => (
-              <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div
-                  className={`max-w-xs rounded-lg px-4 py-2 lg:max-w-md ${
-                    message.role === "user" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-900"
-                  }`}
-                >
-                  <MessageContent message={message} className="text-sm" />
-                  <MessageAttachments
-                    attachments={[...message.publicAttachments, ...message.privateAttachments]}
-                    isUser={message.role === "user"}
-                  />
-                  <div className="mt-1 text-xs opacity-70">
-                    {message.staffName && message.role === "staff" ? (
-                      <span className="font-medium">{message.staffName} • </span>
-                    ) : null}
-                    {new Date(message.createdAt).toLocaleTimeString(undefined, { timeStyle: "short" })}
+            .map((message, index, filteredMessages) => (
+              <div
+                key={message.id}
+                className={`border-muted hover:bg-muted/15 cursor-pointer px-2 py-4 ${
+                  index < filteredMessages.length - 1 ? "border-b" : ""
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100"></div>
+                  <div className="flex-1">
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="text-sm font-medium text-black">
+                        {message.role === "user" ? user.name : message.staffName || "Flexile support"}
+                      </span>
+                      <span className="text-muted-foreground text-sm">
+                        {new Date(message.createdAt).toLocaleTimeString(undefined, { timeStyle: "short" })}
+                      </span>
+                    </div>
+                    <div className="text-muted-foreground max-w-3xl">
+                      <MessageContent message={message} className="text-sm" />
+                      <MessageAttachments attachments={[...message.publicAttachments, ...message.privateAttachments]} />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -166,19 +167,19 @@ export const HelperChat = ({ conversation }: HelperChatProps) => {
         <div ref={messagesEndRef} />
       </div>
 
-      <form
-        onSubmit={handleFormSubmit}
-        className="bg-background border-border absolute right-0 bottom-0 left-0 space-y-2 border-t p-4"
-      >
+      <form onSubmit={handleFormSubmit} className="bg-background w-full max-w-4xl space-y-2 p-4">
         {attachments.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {attachments.map((file, index) => (
-              <div key={index} className="flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1 text-sm">
-                <span className="max-w-32 truncate">{file.name}</span>
+              <div
+                key={index}
+                className="flex w-fit items-center gap-1 rounded-md bg-gray-50 px-2 py-1 text-sm hover:bg-gray-100/50"
+              >
+                <span className="max-w-36 truncate">{file.name}</span>
                 <button
                   type="button"
                   onClick={() => removeAttachment(index)}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="cursor-pointer text-gray-500 hover:text-gray-700"
                 >
                   <X className="size-3" />
                 </button>
@@ -186,24 +187,33 @@ export const HelperChat = ({ conversation }: HelperChatProps) => {
             ))}
           </div>
         )}
-        <div className="flex space-x-2">
+        <div className="relative">
           <Textarea
             rows={2}
             value={input}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder="Type your message..."
-            className="flex-1"
+            placeholder="Ask anything..."
+            className="max-h-50 min-h-26 w-full resize-none pb-10"
             autoFocus
           />
-          <div className="flex flex-col space-y-2">
-            <Button type="button" variant="outline" size="small" onClick={() => fileInputRef.current?.click()}>
+          <div className="absolute right-2 bottom-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="small"
+              onClick={() => fileInputRef.current?.click()}
+              className="h-8 w-8 p-0"
+            >
               <Paperclip className="size-4" />
             </Button>
-            <Button type="submit" disabled={!input.trim() && attachments.length === 0}>
-              <Send className="size-4" />
-            </Button>
           </div>
+        </div>
+        <div className="mt-4 flex justify-end">
+          <Button type="submit" disabled={!input.trim() && attachments.length === 0} size="small">
+            <Send className="size-4" />
+            Send reply
+          </Button>
         </div>
         <input
           ref={fileInputRef}
