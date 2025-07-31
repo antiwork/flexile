@@ -253,52 +253,34 @@ RSpec.describe "Documents page" do
       expect(page).to_not have_selector("h2", text: "Upcoming filing dates for 1099-NEC, 1099-DIV, and 1042-S")
     end
 
-    context "when lawyers are enabled" do
-      before do
-        company.update!(lawyers_enabled: true)
-      end
+    it "allows inviting a lawyer" do
+      visit spa_company_documents_path(company.external_id)
 
-      it "allows inviting a lawyer" do
-        visit spa_company_documents_path(company.external_id)
+      expect(page).to have_button("Invite lawyer")
 
-        expect(page).to have_button("Invite lawyer")
+      click_button "Invite lawyer"
+      expect(page).to have_content("Who's joining?")
 
-        click_button "Invite lawyer"
-        expect(page).to have_content("Who's joining?")
+      fill_in "Email", with: "new_lawyer@example.com"
+      click_button "Invite"
 
-        fill_in "Email", with: "new_lawyer@example.com"
-        click_button "Invite"
+      wait_for_ajax
 
-        wait_for_ajax
-
-        expect(CompanyLawyer.count).to eq(1)
-        expect(CompanyLawyer.last.user.email).to eq("new_lawyer@example.com")
-      end
-
-      it "shows an error when inviting an existing user" do
-        visit spa_company_documents_path(company.external_id)
-
-        existing_user = create(:user, email: "existing_lawyer@example.com")
-
-        click_button "Invite lawyer"
-        fill_in "Email", with: existing_user.email
-        click_button "Invite"
-
-        expect(page).to have_content("Email has already been taken")
-        expect(CompanyLawyer.count).to eq(0)
-      end
+      expect(CompanyLawyer.count).to eq(1)
+      expect(CompanyLawyer.last.user.email).to eq("new_lawyer@example.com")
     end
 
-    context "when lawyers are disabled" do
-      before do
-        company.update!(lawyers_enabled: false)
-      end
+    it "shows an error when inviting an existing user" do
+      visit spa_company_documents_path(company.external_id)
 
-      it "does not show the invite lawyer button" do
-        visit spa_company_documents_path(company.external_id)
+      existing_user = create(:user, email: "existing_lawyer@example.com")
 
-        expect(page).to_not have_button("Invite lawyer")
-      end
+      click_button "Invite lawyer"
+      fill_in "Email", with: existing_user.email
+      click_button "Invite"
+
+      expect(page).to have_content("Email has already been taken")
+      expect(CompanyLawyer.count).to eq(0)
     end
   end
 

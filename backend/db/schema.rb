@@ -102,7 +102,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.boolean "is_trusted", default: false, null: false
     t.boolean "show_analytics_to_contractors", default: false, null: false
     t.string "default_currency", default: "usd", null: false
-    t.boolean "lawyers_enabled", default: false, null: false
     t.decimal "conversion_share_price_usd"
     t.jsonb "json_data", default: {"flags" => []}, null: false
     t.boolean "equity_enabled", default: false, null: false
