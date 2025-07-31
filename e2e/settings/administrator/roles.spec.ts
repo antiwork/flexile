@@ -88,10 +88,10 @@ test.describe("Manage roles access", () => {
       await expect(page.getByText(lawyerUser.legalName || "")).toBeVisible();
       await expect(page.getByText("Lawyer").nth(1)).toBeVisible();
 
-      // Check that multi-role user shows as Admin, Lawyer
+      // Check that multi-role user shows as Admin
       await expect(page.getByText(multiRoleUser.legalName || "")).toBeVisible();
       const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
-      await expect(multiRoleRow.getByText("Admin, Lawyer")).toBeVisible();
+      await expect(multiRoleRow.getByRole("cell", { name: "Admin" })).toBeVisible();
 
       // Verify users with roles other than admin or lawyer are NOT displayed
       await expect(page.getByText(contractorUser.legalName || "")).not.toBeVisible();
@@ -298,20 +298,19 @@ test.describe("Manage roles access", () => {
       await responsePromise;
     });
 
-    test("prevents removing lawyer role from multi-role user when they have admin role", async ({ page }) => {
+    test("shows remove admin option for multi-role user when they have admin role", async ({ page }) => {
       await login(page, primaryAdmin);
       await page.goto("/settings/administrator/roles");
 
-      // Multi-role user should show "Admin, Lawyer" role
+      // Multi-role user should show "Admin" role
       const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
-      await expect(multiRoleRow.getByText("Admin, Lawyer")).toBeVisible();
+      await expect(multiRoleRow.getByRole("cell", { name: "Admin" })).toBeVisible();
 
-      // Should have both "Remove admin" and "Remove lawyer" options
+      // Should have "Remove admin" option
       const ellipsisButton = multiRoleRow.getByRole("button", { name: "Open menu" });
       await ellipsisButton.click();
 
       await expect(page.getByRole("menuitem", { name: "Remove admin" })).toBeVisible();
-      await expect(page.getByRole("menuitem", { name: "Remove lawyer" })).toBeVisible();
     });
   });
 
@@ -334,22 +333,22 @@ test.describe("Manage roles access", () => {
   });
 
   test.describe("Multi-role Users", () => {
-    test("shows multi-role users as Admin, Lawyer when they have both roles", async ({ page }) => {
+    test("shows multi-role users as Admin when they have both admin and lawyer roles", async ({ page }) => {
       await login(page, primaryAdmin);
       await page.goto("/settings/administrator/roles");
 
-      // Multi-role user should show "Admin, Lawyer" role
+      // Multi-role user should show "Admin" role
       const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
-      await expect(multiRoleRow.getByText("Admin, Lawyer")).toBeVisible();
+      await expect(multiRoleRow.getByRole("cell", { name: "Admin" })).toBeVisible();
     });
 
     test("removes multi-role user from list when admin role is revoked", async ({ page }) => {
       await login(page, primaryAdmin);
       await page.goto("/settings/administrator/roles");
 
-      // Multi-role user currently shows as Admin, Lawyer
+      // Multi-role user currently shows as Admin
       const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
-      await expect(multiRoleRow.getByText("Admin, Lawyer")).toBeVisible();
+      await expect(multiRoleRow.getByRole("cell", { name: "Admin" })).toBeVisible();
 
       // Revoke admin role
       const ellipsisButton = multiRoleRow.getByRole("button", { name: "Open menu" });
@@ -364,49 +363,47 @@ test.describe("Manage roles access", () => {
       await page.getByRole("button", { name: "Remove admin" }).click();
 
       // Wait for row to be updated (optimistic update)
-      await expect(page.getByText("Admin, Lawyer")).not.toBeVisible();
+      await expect(multiRoleRow.getByRole("cell", { name: "Admin" })).not.toBeVisible();
 
       // Wait for the actual backend response
       await responsePromise;
 
       // User should now show as Lawyer only
-      await expect(page.getByText(multiRoleUser.legalName || "")).toBeVisible();
       const updatedMultiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
-      await expect(updatedMultiRoleRow.getByText("Lawyer")).toBeVisible();
-      await expect(page.getByText("Admin, Lawyer")).not.toBeVisible();
+      await expect(updatedMultiRoleRow.getByRole("cell", { name: "Lawyer" })).toBeVisible();
+      await expect(updatedMultiRoleRow.getByRole("cell", { name: "Admin" })).not.toBeVisible();
     });
 
-    test("removes multi-role user from list when lawyer role is revoked", async ({ page }) => {
+    test("shows multi-role user as Lawyer when admin role is revoked", async ({ page }) => {
       await login(page, primaryAdmin);
       await page.goto("/settings/administrator/roles");
 
-      // Multi-role user currently shows as Admin, Lawyer
+      // Multi-role user currently shows as Admin
       const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
-      await expect(multiRoleRow.getByText("Admin, Lawyer")).toBeVisible();
+      await expect(multiRoleRow.getByRole("cell", { name: "Admin" })).toBeVisible();
 
-      // Revoke lawyer role
+      // Revoke admin role
       const ellipsisButton = multiRoleRow.getByRole("button", { name: "Open menu" });
       await ellipsisButton.click();
-      await page.getByRole("menuitem", { name: "Remove lawyer" }).click();
+      await page.getByRole("menuitem", { name: "Remove admin" }).click();
 
       // Set up promise to wait for the tRPC mutation response
       const responsePromise = page.waitForResponse(
         (response) => response.url().includes("trpc/companies.removeRole") && response.status() === 200,
       );
 
-      await page.getByRole("button", { name: "Remove lawyer" }).click();
+      await page.getByRole("button", { name: "Remove admin" }).click();
 
       // Wait for row to be updated (optimistic update)
-      await expect(page.getByText("Admin, Lawyer")).not.toBeVisible();
+      await expect(multiRoleRow.getByRole("cell", { name: "Admin" })).not.toBeVisible();
 
       // Wait for the actual backend response
       await responsePromise;
 
-      // User should now show as Admin only
-      await expect(page.getByText(multiRoleUser.legalName || "")).toBeVisible();
+      // User should now show as Lawyer only
       const updatedMultiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
-      await expect(updatedMultiRoleRow.getByText("Admin")).toBeVisible();
-      await expect(page.getByText("Admin, Lawyer")).not.toBeVisible();
+      await expect(updatedMultiRoleRow.getByRole("cell", { name: "Lawyer" })).toBeVisible();
+      await expect(updatedMultiRoleRow.getByRole("cell", { name: "Admin" })).not.toBeVisible();
     });
   });
 });
