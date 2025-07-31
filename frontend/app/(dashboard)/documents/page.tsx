@@ -352,7 +352,7 @@ export default function DocumentsPage() {
         headerActions={
           <>
             {isCompanyRepresentative && documents.length === 0 ? <EditTemplates /> : null}
-            {user.roles.administrator && company.flags.includes("lawyers") ? (
+            {user.roles.administrator ? (
               <Button onClick={() => setShowInviteModal(true)}>
                 <BriefcaseBusiness className="size-4" />
                 Invite lawyer
