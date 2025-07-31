@@ -172,7 +172,9 @@ export default function CapTable() {
           <DataTable table={investorsTable} />
         </div>
       ) : (
-        <Placeholder icon={CircleCheck}>There are no active investors right now.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>There are no active investors right now.</Placeholder>
+        </div>
       )}
     </>
   );

@@ -172,7 +172,9 @@ export default function Dividends() {
       ) : data.length > 0 ? (
         <DataTable table={table} />
       ) : (
-        <Placeholder icon={CircleCheck}>You have not been issued any dividends yet.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>You have not been issued any dividends yet.</Placeholder>
+        </div>
       )}
       <Dialog open={!!dividendData} onOpenChange={() => setSigningDividend(null)}>
         <DialogContent>

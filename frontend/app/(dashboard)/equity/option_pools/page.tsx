@@ -59,7 +59,9 @@ export default function OptionPools() {
       ) : data.length > 0 ? (
         <DataTable table={table} />
       ) : (
-        <Placeholder icon={CircleCheck}>The company does not have any option pools.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>The company does not have any option pools.</Placeholder>
+        </div>
       )}
     </>
   );

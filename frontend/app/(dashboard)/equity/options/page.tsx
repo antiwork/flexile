@@ -117,7 +117,9 @@ export default function OptionsPage() {
       {isLoading ? (
         <TableSkeleton columns={5} />
       ) : data.length === 0 ? (
-        <Placeholder icon={CircleCheck}>You don't have any option grants right now.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>You don't have any option grants right now.</Placeholder>
+        </div>
       ) : (
         <>
           {company.flags.includes("option_exercising") && (
