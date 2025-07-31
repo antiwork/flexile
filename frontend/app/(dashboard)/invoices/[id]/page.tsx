@@ -86,20 +86,6 @@ export default function InvoicePage() {
   return (
     // Added print utilities to the root fragment to apply styles to the body for printing
     <>
-      <style jsx global>{`
-        @media print {
-          body {
-            font-family: Arial, sans-serif !important;
-            margin: 0;
-            font-size: 11pt;
-            line-height: normal;
-            color: black;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-            hyphens: none;
-          }
-        }
-      `}</style>
       <div className="print:hidden">
         <DashboardHeader
           title={`Invoice ${invoice.invoiceNumber}`}
@@ -267,7 +253,7 @@ export default function InvoicePage() {
         </Alert>
       ) : null}
 
-      <section className="invoice-print print:m-0 print:min-h-[85vh] print:w-full print:max-w-full print:border-none print:p-0 print:pt-4 print:pb-8 print:*:box-border print:*:max-w-full print:*:rounded-none print:*:bg-transparent print:*:shadow-none print:before:my-2 print:before:mb-6 print:before:block print:before:text-2xl print:before:font-bold print:before:tracking-wide print:before:text-black print:before:content-['INVOICE']">
+      <section className="invoice-print print:m-0 print:min-h-[85vh] print:w-full print:max-w-full print:border-none print:p-0 print:pt-4 print:pb-8 print:hyphens-none print:*:box-border print:*:max-w-full print:*:rounded-none print:*:bg-transparent print:*:shadow-none print:before:my-2 print:before:mb-6 print:before:block print:before:text-2xl print:before:font-bold print:before:tracking-wide print:before:text-black print:before:content-['INVOICE']">
         <form>
           <div className="grid gap-4">
             <div className="grid auto-cols-fr gap-3 md:grid-flow-col print:mb-6 print:grid-flow-col print:grid-cols-[1fr_1fr_auto_auto_auto] print:items-start print:gap-5 print:leading-[1.4]">
