@@ -680,7 +680,7 @@ const QuickInvoicesSection = () => {
 
   return (
     <Card className={canSubmitInvoices ? "" : "opacity-50"}>
-      <CardContent className="p-8">
+      <CardContent>
         <Form {...form}>
           <form
             className="grid grid-cols-1 items-start gap-x-8 gap-y-6 lg:grid-cols-[1fr_auto_1fr]"
