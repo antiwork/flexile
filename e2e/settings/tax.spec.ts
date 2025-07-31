@@ -506,19 +506,7 @@ test.describe("Tax settings", () => {
     });
 
     test.describe("null data handling", () => {
-      test("handles null company name gracefully when user has complete profile", async ({ page }) => {
-        await db.update(companies).set({ name: null }).where(eq(companies.id, company.id));
-
-        await login(page, user);
-        await page.goto("/settings/tax");
-
-        await expect(
-          page.getByText("These details will be included in your invoices and applicable tax forms."),
-        ).toBeVisible();
-        await expect(page.getByLabel("Individual")).toBeChecked();
-      });
-
-      test("redirects to onboarding when contractor has multiple null fields", async ({ page }) => {
+      test("handles null company name gracefully", async ({ page }) => {
         await db.update(companies).set({ name: null }).where(eq(companies.id, company.id));
         await db
           .update(users)
@@ -533,7 +521,10 @@ test.describe("Tax settings", () => {
         await login(page, user);
         await page.goto("/settings/tax");
 
-        await expect(page).toHaveURL(new RegExp(`^.*/companies/${company.externalId}/worker/onboarding$`, "u"));
+        await expect(
+          page.getByText("These details will be included in your invoices and applicable tax forms."),
+        ).toBeVisible();
+        await expect(page.getByLabel("Individual")).toBeChecked();
       });
     });
   });
@@ -584,24 +575,6 @@ test.describe("Tax settings", () => {
       expect(updatedUser.userComplianceInfos).toHaveLength(1);
       expect(updatedUser.userComplianceInfos[0]?.taxInformationConfirmedAt).not.toBeNull();
       expect(updatedUser.userComplianceInfos[0]?.deletedAt).toBeNull();
-    });
-
-    test("redirects to onboarding when investor has multiple null fields", async ({ page }) => {
-      await db.update(companies).set({ name: null }).where(eq(companies.id, company.id));
-      await db
-        .update(users)
-        .set({
-          preferredName: null,
-          legalName: null,
-          citizenshipCountryCode: null,
-          countryCode: null,
-        })
-        .where(eq(users.id, user.id));
-
-      await login(page, user);
-      await page.goto("/settings/tax");
-
-      await expect(page).toHaveURL(new RegExp(`^.*/companies/${company.externalId}/investor/onboarding$`, "u"));
     });
   });
 

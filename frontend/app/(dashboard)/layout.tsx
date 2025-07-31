@@ -20,8 +20,8 @@ import {
 import type { Route } from "next";
 import Image from "next/image";
 import Link, { type LinkProps } from "next/link";
-import { signOut, useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
 import React from "react";
 import { navLinks as equityNavLinks } from "@/app/(dashboard)/equity";
 import { useIsActionable } from "@/app/(dashboard)/invoices";
@@ -210,7 +210,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
-        {user.currentCompanyId && (user.roles.administrator || user.roles.worker) ? (
+        {company.checklistItems.length > 0 ? (
           <SidebarGroup className="mt-auto px-0 py-0">
             <SidebarGroupContent>
               <SidebarMenu>
