@@ -122,7 +122,7 @@ jobs:
           echo "--------------------------------"
           env
           echo "--------------------------------"
-          npx playwright test tests/login.spec.ts
+          pnpm playwright test tests/login.spec.ts
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
