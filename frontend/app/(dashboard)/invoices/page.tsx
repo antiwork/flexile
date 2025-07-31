@@ -337,15 +337,14 @@ export default function InvoicesPage() {
               <Info />
               <AlertTitle>You have an unsigned contract.</AlertTitle>
               <AlertDescription>
-                <div>
-                  Please{" "}
-                  <Link
-                    href={`/documents?${new URLSearchParams({ sign: unsignedContractId.toString(), next: "/invoices" })}`}
-                  >
-                    sign it
-                  </Link>{" "}
-                  before creating new invoices.
-                </div>
+                Please{" "}
+                <Link
+                  className={linkClasses}
+                  href={`/documents?${new URLSearchParams({ sign: unsignedContractId.toString(), next: "/invoices" })}`}
+                >
+                  sign it
+                </Link>{" "}
+                before creating new invoices.
               </AlertDescription>
             </Alert>
           ) : !user.hasPayoutMethodForInvoices ? (
