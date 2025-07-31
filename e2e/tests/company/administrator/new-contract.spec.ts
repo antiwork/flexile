@@ -108,7 +108,7 @@ test.describe("New Contractor", () => {
     await clerk.signOut({ page });
     const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
     await login(page, newUser);
-    await page.getByRole("link", { name: "Review & sign" }).click();
+    await page.getByRole("link", { name: "sign it" }).click();
     await page.getByRole("button", { name: "Sign now" }).click();
     await page.getByRole("link", { name: "Type" }).click();
     await page.getByPlaceholder("Type signature here...").fill("Flexy Bob");
@@ -147,7 +147,7 @@ test.describe("New Contractor", () => {
     await clerk.signOut({ page });
     const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
     await login(page, newUser);
-    await page.getByRole("link", { name: "Review & sign" }).click();
+    await page.getByRole("link", { name: "sign it" }).click();
     await page.getByRole("button", { name: "Sign now" }).click();
     await page.getByRole("link", { name: "Type" }).click();
     await page.getByPlaceholder("Type signature here...").fill("Flexy Bob");

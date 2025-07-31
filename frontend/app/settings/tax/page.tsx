@@ -192,7 +192,7 @@ export default function TaxPage() {
       <Form {...form}>
         <form onSubmit={(e) => void submit(e)} className="grid gap-8">
           <hgroup>
-            <h2 className="mb-1 text-xl font-bold">Tax information</h2>
+            <h2 className="mb-1 text-3xl font-bold">Tax information</h2>
             <p className="text-muted-foreground text-base">
               These details will be included in your {user.roles.worker ? "invoices and " : ""}applicable tax forms.
             </p>

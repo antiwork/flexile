@@ -70,7 +70,7 @@ export default function Equity() {
   return (
     <div className="grid gap-8">
       <hgroup>
-        <h2 className="mb-1 text-xl font-medium">Equity</h2>
+        <h2 className="mb-1 text-3xl font-bold">Equity</h2>
         <p className="text-muted-foreground text-base">
           Manage your company ownership, including cap table, option pools, and grants.
         </p>
@@ -97,7 +97,7 @@ export default function Equity() {
         <Form {...form}>
           <form className="grid gap-8" onSubmit={(e) => void submit(e)}>
             <hgroup>
-              <h2 className="mb-1 text-xl font-medium">Equity value</h2>
+              <h2 className="mb-1 text-3xl font-bold">Equity value</h2>
               <p className="text-muted-foreground text-base">
                 These details will be used for equity-related calculations and reporting.
               </p>

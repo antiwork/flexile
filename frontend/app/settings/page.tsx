@@ -63,7 +63,7 @@ const DetailsSection = () => {
   return (
     <Form {...form}>
       <form className="grid gap-4" onSubmit={(e) => void submit(e)}>
-        <h2 className="mb-4 text-xl font-medium">Profile</h2>
+        <h2 className="mb-4 text-3xl font-bold">Profile</h2>
         <FormField
           control={form.control}
           name="email"

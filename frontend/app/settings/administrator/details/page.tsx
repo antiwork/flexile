@@ -75,7 +75,7 @@ export default function Details() {
   return (
     <form onSubmit={(e) => void onSubmit(e)} className="grid gap-8">
       <hgroup>
-        <h2 className="mb-1 text-xl font-medium">Details</h2>
+        <h2 className="mb-1 text-3xl font-bold">Details</h2>
         <p className="text-muted-foreground text-base">
           These details will be included in tax forms, as well as in your contractor's invoices.
         </p>

@@ -303,33 +303,6 @@ export default function InvoicesPage() {
     [selectedInvoices, isDeletable],
   );
 
-  const workerNotice = !user.roles.worker ? null : !hasLegalDetails ? (
-    <>
-      Please{" "}
-      <Link className={linkClasses} href="/settings/tax">
-        provide your legal details
-      </Link>{" "}
-      before creating new invoices.
-    </>
-  ) : unsignedContractId ? (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-      <div>You have an unsigned contract. Please sign it before creating new invoices.</div>
-      <Button asChild variant="outline" size="small">
-        <Link href={`/documents?${new URLSearchParams({ sign: unsignedContractId.toString(), next: "/invoices" })}`}>
-          Review & sign
-        </Link>
-      </Button>
-    </div>
-  ) : !user.hasPayoutMethodForInvoices ? (
-    <>
-      Please{" "}
-      <Link className={linkClasses} href="/settings/payouts">
-        provide a payout method
-      </Link>{" "}
-      for your invoices.
-    </>
-  ) : null;
-
   return (
     <>
       <DashboardHeader
@@ -347,11 +320,45 @@ export default function InvoicesPage() {
       />
 
       <div className="grid gap-4">
-        {workerNotice ? (
-          <Alert>
-            <Info className="size-5" />
-            <AlertDescription>{workerNotice}</AlertDescription>
-          </Alert>
+        {user.roles.worker ? (
+          !hasLegalDetails ? (
+            <Alert>
+              <Info />
+              <AlertDescription>
+                Please{" "}
+                <Link className={linkClasses} href="/settings/tax">
+                  provide your legal details
+                </Link>{" "}
+                before creating new invoices.
+              </AlertDescription>
+            </Alert>
+          ) : unsignedContractId ? (
+            <Alert>
+              <Info />
+              <AlertTitle>You have an unsigned contract.</AlertTitle>
+              <AlertDescription>
+                Please{" "}
+                <Link
+                  className={linkClasses}
+                  href={`/documents?${new URLSearchParams({ sign: unsignedContractId.toString(), next: "/invoices" })}`}
+                >
+                  sign it
+                </Link>{" "}
+                before creating new invoices.
+              </AlertDescription>
+            </Alert>
+          ) : !user.hasPayoutMethodForInvoices ? (
+            <Alert>
+              <Info />
+              <AlertDescription>
+                Please{" "}
+                <Link className={linkClasses} href="/settings/payouts">
+                  provide a payout method
+                </Link>{" "}
+                for your invoices.
+              </AlertDescription>
+            </Alert>
+          ) : null
         ) : null}
 
         <QuickInvoicesSection />
@@ -673,7 +680,7 @@ const QuickInvoicesSection = () => {
 
   return (
     <Card className={canSubmitInvoices ? "" : "opacity-50"}>
-      <CardContent className="p-8">
+      <CardContent>
         <Form {...form}>
           <form
             className="grid grid-cols-1 items-start gap-x-8 gap-y-6 lg:grid-cols-[1fr_auto_1fr]"
