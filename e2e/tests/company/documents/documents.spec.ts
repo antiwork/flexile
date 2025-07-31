@@ -109,6 +109,17 @@ test.describe("Invite lawyer functionality", () => {
     await page.getByRole("button", { name: "Invite" }).click();
 
     await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
-    // TODO (techdebt): Add assertion for successful invite (e.g., toast, row, or API check)
+
+    // Verify the lawyer was successfully invited by checking the roles page
+    await page.goto("/settings/administrator/roles");
+    await expect(page.getByRole("heading", { name: "Roles" })).toBeVisible();
+
+    // Wait for the page to be fully loaded
+    await page.waitForLoadState("networkidle");
+
+    // Check that the invited lawyer appears in the roles list
+    const lawyerRow = page.getByRole("row", { name: /new_lawyer@example\.com/u });
+    await expect(lawyerRow.getByText("new_lawyer@example.com").first()).toBeVisible();
+    await expect(lawyerRow.getByRole("cell", { name: "Lawyer", exact: true })).toBeVisible();
   });
 });
