@@ -17,6 +17,8 @@ export default defineConfig({
   use: {
     baseURL: "https://test.flexile.dev:3101",
     trace: "on-first-retry",
+    screenshot: "only-on-failure",
+    video: "retain-on-failure",
     contextOptions: {
       ignoreHTTPSErrors: true,
     },

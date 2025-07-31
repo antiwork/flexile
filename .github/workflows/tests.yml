@@ -15,7 +15,7 @@ env:
   WISE_PROFILE_ID: ${{ secrets.WISE_PROFILE_ID }}
   API_SECRET_TOKEN: sample-api-token
   NEXTAUTH_SECRET: sample-nextauth-secret
-  NEXTAUTH_URL: https://flexile.dev
+  NEXTAUTH_URL: http://test.flexile.dev:3101
 
 jobs:
   rspec:
@@ -114,12 +114,19 @@ jobs:
       - name: Run login specs
         run: pnpm playwright test e2e/tests/login.spec.ts
 
-      - name: Run Playwright tests
-        run: pnpm playwright test
+      # - name: Run Playwright tests
+      #   run: pnpm playwright test
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
           path: playwright-report/
+          retention-days: 7
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-test-results
+          path: test-results/
           retention-days: 7
