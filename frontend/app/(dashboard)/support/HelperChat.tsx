@@ -1,13 +1,15 @@
 "use client";
 
-import { type ConversationDetails } from "@helperai/client";
+import { type ConversationDetails, type Message } from "@helperai/client";
 import { MessageContent, useChat } from "@helperai/react";
-import { Paperclip, Send, X } from "lucide-react";
+import { Paperclip, Send, User, X } from "lucide-react";
+import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
+import { cn } from "@/utils";
 
 interface HelperChatProps {
   conversation: ConversationDetails;
@@ -47,6 +49,66 @@ const MessageAttachments = ({
           <span className="max-w-40 truncate">{attachment.name}</span>
         </a>
       ))}
+    </div>
+  );
+};
+
+const MessageRow = ({
+  message,
+  userName,
+  isLastMessage,
+}: {
+  message: Message;
+  userName: string;
+  isLastMessage: boolean;
+}) => {
+  const [isExpanded, setIsExpanded] = useState(isLastMessage);
+
+  const toggleExpansion = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  return (
+    <div
+      className={cn(
+        "border-muted hover:bg-muted/10 cursor-pointer px-4 py-4",
+        !isLastMessage ? "border-b" : "",
+        message.role === "user" ? "" : "bg-muted/15",
+      )}
+      onClick={toggleExpansion}
+    >
+      <div className="flex items-start gap-3">
+        <div
+          className={cn(
+            "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
+            message.role === "user" ? "bg-muted/15" : "bg-black",
+          )}
+        >
+          {message.role === "user" ? (
+            <User className="size-4" />
+          ) : (
+            <Image src="/logo-icon.svg" alt="Flexile" width={32} height={32} className="size-6 invert" />
+          )}
+        </div>
+        <div className="flex-1">
+          <div className="mb-1 flex items-center justify-between">
+            <span className="text-sm font-medium text-black">
+              {message.role === "user" ? userName : message.staffName || "Flexile support"}
+            </span>
+            <span className="text-muted-foreground text-sm">
+              {new Date(message.createdAt).toLocaleString(undefined, { timeStyle: "short", dateStyle: "short" })}
+            </span>
+          </div>
+          <div
+            className={`max-w-3xl ${isExpanded ? "py-2" : "text-muted-foreground"} ${
+              !isExpanded ? "line-clamp-1" : ""
+            }`}
+          >
+            <MessageContent message={message} className="text-sm" />
+            <MessageAttachments attachments={[...message.publicAttachments, ...message.privateAttachments]} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
@@ -128,44 +190,23 @@ export const HelperChat = ({ conversation }: HelperChatProps) => {
   const showAgentTypingIndicator = lastMessage && !lastMessage.content && lastMessage.role !== "user";
 
   return (
-    <>
-      <div>
-        {messages.length === 0 ? (
-          <div className="py-8 text-center text-gray-500">No messages yet. Start the conversation!</div>
-        ) : (
-          messages
-            .filter((message) => !!message.content)
-            .map((message, index, filteredMessages) => (
-              <div
-                key={message.id}
-                className={`border-muted hover:bg-muted/15 cursor-pointer px-2 py-4 ${
-                  index < filteredMessages.length - 1 ? "border-b" : ""
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100"></div>
-                  <div className="flex-1">
-                    <div className="mb-1 flex items-center justify-between">
-                      <span className="text-sm font-medium text-black">
-                        {message.role === "user" ? user.name : message.staffName || "Flexile support"}
-                      </span>
-                      <span className="text-muted-foreground text-sm">
-                        {new Date(message.createdAt).toLocaleTimeString(undefined, { timeStyle: "short" })}
-                      </span>
-                    </div>
-                    <div className="text-muted-foreground max-w-3xl">
-                      <MessageContent message={message} className="text-sm" />
-                      <MessageAttachments attachments={[...message.publicAttachments, ...message.privateAttachments]} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))
-        )}
-        {showAgentTypingIndicator ? <TypingIndicator /> : null}
-        {agentTyping ? <div className="text-center text-xs text-gray-500">Agent is typing...</div> : null}
-        <div ref={messagesEndRef} />
-      </div>
+    <div className="min-h-0 flex-1 overflow-y-auto">
+      {messages.length === 0 ? (
+        <div className="py-8 text-center text-gray-500">No messages yet. Start the conversation!</div>
+      ) : (
+        messages
+          .filter((message) => !!message.content)
+          .map((message, index, filteredMessages) => (
+            <MessageRow
+              key={message.id}
+              message={message}
+              userName={user.name}
+              isLastMessage={index === filteredMessages.length - 1}
+            />
+          ))
+      )}
+      {showAgentTypingIndicator ? <TypingIndicator /> : null}
+      {agentTyping ? <div className="text-center text-xs text-gray-500">Agent is typing...</div> : null}
 
       <form onSubmit={handleFormSubmit} className="bg-background w-full max-w-4xl space-y-2 p-4">
         {attachments.length > 0 && (
@@ -224,6 +265,7 @@ export const HelperChat = ({ conversation }: HelperChatProps) => {
           accept="image/*,application/pdf,.doc,.docx,.txt"
         />
       </form>
-    </>
+      <div ref={messagesEndRef} />
+    </div>
   );
 };

@@ -211,9 +211,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </Sidebar>
       <SidebarInset>
         <div className="relative flex flex-col not-print:h-screen not-print:overflow-hidden">
-          <main className="flex flex-1 flex-col p-4 not-print:overflow-y-auto">
-            <div className="flex flex-col gap-4">{children}</div>
-          </main>
+          <main className="flex flex-1 flex-col gap-4 p-4 not-print:overflow-y-auto">{children}</main>
         </div>
       </SidebarInset>
     </SidebarProvider>
