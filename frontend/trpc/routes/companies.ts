@@ -4,7 +4,14 @@ import { createUpdateSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
-import { activeStorageAttachments, activeStorageBlobs, companies, companyAdministrators, users } from "@/db/schema";
+import {
+  activeStorageAttachments,
+  activeStorageBlobs,
+  companies,
+  companyAdministrators,
+  companyLawyers,
+  users,
+} from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 import {
   company_administrator_stripe_microdeposit_verifications_url,
@@ -203,5 +210,100 @@ export const companiesRouter = createRouter({
         .where(
           and(eq(companyAdministrators.userId, targetUserId), eq(companyAdministrators.companyId, ctx.company.id)),
         );
+    }),
+
+  listLawyers: companyProcedure.input(z.object({ companyId: z.string() })).query(async ({ ctx }) => {
+    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    const lawyers = await db.query.companyLawyers.findMany({
+      where: eq(companyLawyers.companyId, ctx.company.id),
+      with: { user: true },
+      orderBy: companyLawyers.id,
+    });
+    return lawyers
+      .map((lawyer) => ({
+        id: lawyer.user.externalId,
+        email: lawyer.user.email,
+        name: lawyer.user.legalName || lawyer.user.preferredName || lawyer.user.email,
+        isAdmin: false,
+        role: "Lawyer",
+        isOwner: false,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }),
+
+  listCompanyUsers: companyProcedure.input(z.object({ companyId: z.string() })).query(async ({ ctx }) => {
+    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    // Get all users related to this company (admins, lawyers, contractors, investors)
+    const adminUsers = await db.query.companyAdministrators.findMany({
+      where: eq(companyAdministrators.companyId, ctx.company.id),
+      with: { user: true },
+    });
+    const lawyerUsers = await db.query.companyLawyers.findMany({
+      where: eq(companyLawyers.companyId, ctx.company.id),
+      with: { user: true },
+    });
+    // TODO (techdebt): Add contractors/investors if needed
+    const seen = new Set();
+    const all = [...adminUsers, ...lawyerUsers]
+      .map((entry) => entry.user)
+      .filter((u) => {
+        if (seen.has(u.externalId)) return false;
+        seen.add(u.externalId);
+        return true;
+      })
+      .map((u) => ({
+        id: u.externalId,
+        email: u.email,
+        name: u.legalName || u.preferredName || u.email,
+      }));
+    return all.sort((a, b) => a.name.localeCompare(b.name));
+  }),
+
+  addRole: companyProcedure
+    .input(z.object({ companyId: z.string(), userId: z.string(), role: z.enum(["admin", "lawyer"]) }))
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+      const user = await db.query.users.findFirst({ where: eq(users.externalId, input.userId) });
+      if (!user) throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      if (input.role === "admin") {
+        // Check if already admin
+        const exists = await db.query.companyAdministrators.findFirst({
+          where: and(eq(companyAdministrators.companyId, ctx.company.id), eq(companyAdministrators.userId, user.id)),
+        });
+        if (!exists) {
+          await db.insert(companyAdministrators).values({ companyId: ctx.company.id, userId: user.id });
+        }
+      } else {
+        const exists = await db.query.companyLawyers.findFirst({
+          where: and(eq(companyLawyers.companyId, ctx.company.id), eq(companyLawyers.userId, user.id)),
+        });
+        if (!exists) {
+          await db.insert(companyLawyers).values({ companyId: ctx.company.id, userId: user.id });
+        }
+      }
+    }),
+
+  removeRole: companyProcedure
+    .input(z.object({ companyId: z.string(), userId: z.string(), role: z.enum(["admin", "lawyer"]) }))
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+      const user = await db.query.users.findFirst({ where: eq(users.externalId, input.userId) });
+      if (!user) throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      if (input.role === "admin") {
+        // Prevent removing last admin
+        const currentAdmins = await db.query.companyAdministrators.findMany({
+          where: eq(companyAdministrators.companyId, ctx.company.id),
+        });
+        if (currentAdmins.length === 1 && currentAdmins[0]?.userId === user.id) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot remove the last administrator" });
+        }
+        await db
+          .delete(companyAdministrators)
+          .where(and(eq(companyAdministrators.userId, user.id), eq(companyAdministrators.companyId, ctx.company.id)));
+      } else {
+        await db
+          .delete(companyLawyers)
+          .where(and(eq(companyLawyers.userId, user.id), eq(companyLawyers.companyId, ctx.company.id)));
+      }
     }),
 });
