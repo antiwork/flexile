@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_29_150349) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_31_200856) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -149,7 +149,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_29_150349) do
     t.bigint "company_id", null: false
     t.string "name", null: false
     t.bigint "investment_amount_cents", null: false
-    t.string "cap_table_notes"
     t.bigint "total_shares", default: 0, null: false
     t.bigint "total_options", default: 0, null: false
     t.virtual "fully_diluted_shares", type: :bigint, as: "(total_shares + total_options)", stored: true
@@ -168,7 +167,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_29_150349) do
     t.datetime "updated_at", null: false
     t.bigint "total_shares", default: 0, null: false
     t.bigint "investment_amount_in_cents", null: false
-    t.string "cap_table_notes"
     t.string "external_id", null: false
     t.bigint "total_options", default: 0, null: false
     t.virtual "fully_diluted_shares", type: :bigint, as: "(total_shares + total_options)", stored: true
