@@ -81,7 +81,7 @@ export default function RolesPage() {
       const existing = byId[l.id];
       if (existing) {
         if (existing.role === "Owner") return;
-        existing.role = existing.isAdmin ? "Admin, Lawyer" : "Lawyer";
+        existing.role = existing.isAdmin ? "Admin" : "Lawyer";
       } else {
         byId[l.id] = { ...l };
       }
