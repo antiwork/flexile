@@ -363,9 +363,9 @@ export default function InvoicesPage() {
 
         {user.roles.administrator ? (
           <>
-            <StripeMicrodepositVerification />
+            {data.length > 0 ? <StripeMicrodepositVerification /> : null}
 
-            {!company.completedPaymentMethodSetup && (
+            {!company.completedPaymentMethodSetup && data.length > 0 ? (
               <Alert variant="destructive">
                 <AlertTriangle className="size-4" />
                 <AlertTitle>Bank account setup incomplete.</AlertTitle>
@@ -374,9 +374,9 @@ export default function InvoicesPage() {
                   invoices and paying contractors.
                 </AlertDescription>
               </Alert>
-            )}
+            ) : null}
 
-            {company.completedPaymentMethodSetup && !company.isTrusted ? (
+            {company.completedPaymentMethodSetup && !company.isTrusted && data.length > 0 ? (
               <Alert variant="destructive">
                 <AlertTriangle className="size-4" />
                 <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
@@ -387,7 +387,7 @@ export default function InvoicesPage() {
               </Alert>
             ) : null}
 
-            {!data.every(taxRequirementsMet) && (
+            {data.length > 0 && !data.every(taxRequirementsMet) && (
               <Alert variant="destructive">
                 <AlertTriangle className="size-4" />
                 <AlertTitle>Missing tax information.</AlertTitle>
