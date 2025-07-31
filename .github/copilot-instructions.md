@@ -16,6 +16,7 @@
   - If migrating from rspec, delete the rspec tests
   - Factories can be created using the rspec factories in `spec/factories` in the `/e2e/factories` folder
   - For any broken locators / assertions, you can use the playwright extension to record tests or pick locators
+  - Avoid using `page.waitForTimeout()` in e2e tests unless absolutely necessary, as timeouts slow down test execution. Instead use `waitFor()`, `toBeVisible()`, `toPass()`, or other Playwright assertions that wait for specific conditions
 
 - For writing front-end code:
   - Do not use `React.FC`. Use the following syntax: `const Component = ({ prop1, prop2 }: { prop1: string; prop2: number }) => { ... }`
