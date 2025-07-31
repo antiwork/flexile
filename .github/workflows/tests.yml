@@ -117,6 +117,8 @@ jobs:
           wait-minutes: 300
 
       - name: Run Playwright tests
+        env:
+          NEXTAUTH_URL: 'https://test.flexile.dev:3101'
         run: |
           echo "--------------------------------"
           env
