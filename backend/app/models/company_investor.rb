@@ -34,10 +34,6 @@ class CompanyInvestor < ApplicationRecord
       .where(id: dividends_subquery)
   end
 
-  def completed_onboarding?
-    OnboardingState::Investor.new(user:, company:).complete?
-  end
-
   def cumulative_dividends_roi
     return nil unless investment_amount_in_cents.positive?
     dividends.sum(:total_amount_in_cents) / investment_amount_in_cents.to_d

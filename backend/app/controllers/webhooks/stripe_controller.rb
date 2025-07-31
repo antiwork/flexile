@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class Webhooks::StripeController < ApplicationController
-  skip_before_action :force_onboarding
   skip_before_action :verify_authenticity_token
 
   def create
