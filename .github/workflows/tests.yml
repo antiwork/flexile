@@ -16,6 +16,8 @@ env:
   API_SECRET_TOKEN: sample-api-token
   NEXTAUTH_SECRET: sample-nextauth-secret
   NEXTAUTH_URL: http://test.flexile.dev:3101
+  APP_DOMAIN: test.flexile.dev:3101
+  DOMAIN: test.flexile.dev
 
 jobs:
   rspec:
@@ -113,7 +115,9 @@ jobs:
 
       - name: Run Playwright tests
         run: |
+          echo "--------------------------------"
           env
+          echo "--------------------------------"
           npx playwright test tests/login.spec.ts
 
       - uses: actions/upload-artifact@v4
