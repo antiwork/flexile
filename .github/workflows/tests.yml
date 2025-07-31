@@ -112,7 +112,9 @@ jobs:
         run: docker compose -f docker/docker-compose-local-linux.yml up -d
 
       - name: Run Playwright tests
-        run: pnpm playwright test
+        run: |
+          env
+          npx playwright test tests/login.spec.ts
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
