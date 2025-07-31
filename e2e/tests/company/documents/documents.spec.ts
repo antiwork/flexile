@@ -90,3 +90,25 @@ test.describe("Documents search functionality", () => {
     await expect(page.getByRole("row").filter({ hasText: document2.name })).not.toBeVisible();
   });
 });
+
+test.describe("Invite lawyer functionality", () => {
+  test("allows inviting a lawyer", async ({ page }) => {
+    const { adminUser } = await companiesFactory.createCompletedOnboarding();
+
+    await login(page, adminUser);
+    await page.goto("/documents");
+    await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
+
+    await expect(page.getByRole("button", { name: "Invite lawyer" })).toBeVisible();
+    await page.getByRole("button", { name: "Invite lawyer" }).click();
+    await expect(page.getByText("Who's joining?")).toBeVisible();
+
+    const emailInput = page.getByLabel("Email");
+    await expect(emailInput).toBeVisible();
+    await emailInput.fill("new_lawyer@example.com");
+    await page.getByRole("button", { name: "Invite" }).click();
+
+    await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
+    // TODO (techdebt): Add assertion for successful invite (e.g., toast, row, or API check)
+  });
+});
