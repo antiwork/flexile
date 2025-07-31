@@ -9,13 +9,6 @@ import { linkClasses } from "@/components/Link";
 import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import {
   fetchInvestorEmail,
@@ -109,8 +102,6 @@ export default function CapTable() {
         meta: { numeric: true },
         footer: "100%",
       }),
-
-      investorColumnHelper.simple("notes", "Notes"),
     ],
     [data],
   );
@@ -140,19 +131,7 @@ export default function CapTable() {
 
   return (
     <>
-      <DashboardHeader
-        title={
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>Equity</BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Investors</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        }
-      />
+      <DashboardHeader title="Investors" />
 
       {selectedInvestors.length > 0 && (
         <Alert className="mb-4">
