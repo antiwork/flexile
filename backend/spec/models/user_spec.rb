@@ -119,7 +119,7 @@ RSpec.describe User do
         end
 
         context "when user did not complete onboarding" do
-          before { allow_any_instance_of(OnboardingState::Worker).to receive(:complete?).and_return(false) }
+          before { user.update!(citizenship_country_code: nil) }
 
           it "does not schedule a QuickBooks data sync job when attributes change" do
             expect do

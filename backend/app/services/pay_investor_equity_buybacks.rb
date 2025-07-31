@@ -17,7 +17,6 @@ class PayInvestorEquityBuybacks
 
   def process
     return if equity_buybacks.any? { !_1.status.in?([EquityBuyback::ISSUED, EquityBuyback::RETAINED]) } ||
-              !company_investor.completed_onboarding? ||
               user.tax_information_confirmed_at.nil?
     return unless user.has_verified_tax_id?
 
