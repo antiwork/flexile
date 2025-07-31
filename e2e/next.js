@@ -10,4 +10,5 @@ const options = {
   key: fs.readFileSync("./test_flexile_dev.key"),
   cert: fs.readFileSync("./test_flexile_dev.crt"),
 };
+console.log("Starting test server ***********");
 createServer(options, (req, res) => handle(req, res, parse(req.url, true))).listen(3101);
