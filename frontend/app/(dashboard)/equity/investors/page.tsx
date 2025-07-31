@@ -109,8 +109,6 @@ export default function CapTable() {
         meta: { numeric: true },
         footer: "100%",
       }),
-
-      investorColumnHelper.simple("notes", "Notes"),
     ],
     [data],
   );
