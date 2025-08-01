@@ -20,7 +20,7 @@ class InviteWorker
       existing_company_worker = user.company_workers.active.find_by(company:)
       if existing_company_worker.present?
         error_message = "Invitee is already working for this company."
-        if !OnboardingState::Worker.new(user:, company:).complete?
+        if !user.has_personal_details?
           # Resend the invitation only if the user hasn't completed onboarding (they may have missed the first invitation
           # email)
           GenerateContractorInvitationJob.perform_async(existing_company_worker.id)

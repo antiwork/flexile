@@ -122,8 +122,8 @@ class UserPresenter
           primaryAdminName: company.primary_admin.user.name,
           completedPaymentMethodSetup: company.bank_account_ready?,
           isTrusted: company.is_trusted,
-          checklistItems: company.checklist_items(user.company_administrator_for(company) || user.company_worker_for(company)),
-          checklistCompletionPercentage: company.checklist_completion_percentage(user.company_administrator_for(company) || user.company_worker_for(company)),
+          checklistItems: company.checklist_items(user),
+          checklistCompletionPercentage: company.checklist_completion_percentage(user),
         }
       end,
       id: user.external_id,
@@ -144,7 +144,7 @@ class UserPresenter
         country: user.country_code && ISO3166::Country[user.country_code].common_name,
       },
       email: user.display_email,
-      onboardingPath: OnboardingState::User.new(user:, company:).redirect_path,
+      onboardingPath: worker && worker.role.nil? ? "/documents" : nil,
       taxInformationConfirmedAt: tax_information_confirmed_at&.iso8601,
     }
   end

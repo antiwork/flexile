@@ -95,30 +95,4 @@ RSpec.describe CompanyInvestor do
       end
     end
   end
-
-  describe "#completed_onboarding?" do
-    let(:user) { create(:user) }
-    let(:company) { create(:company) }
-    let(:company_investor) { create(:company_investor, user:, company:) }
-
-    context "when the user has completed onboarding" do
-      before do
-        allow_any_instance_of(OnboardingState::Investor).to receive(:complete?).and_return(true)
-      end
-
-      it "returns true" do
-        expect(company_investor.completed_onboarding?).to eq(true)
-      end
-    end
-
-    context "when the user has not completed onboarding" do
-      before do
-        allow_any_instance_of(OnboardingState::Investor).to receive(:complete?).and_return(false)
-      end
-
-      it "returns false" do
-        expect(company_investor.completed_onboarding?).to eq(false)
-      end
-    end
-  end
 end

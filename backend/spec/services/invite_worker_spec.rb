@@ -62,8 +62,7 @@ RSpec.describe InviteWorker do
 
       context "when the worker hasn't completed onboarding" do
         before do
-          onboarding_state = instance_double(OnboardingState::Worker, complete?: false)
-          allow(OnboardingState::Worker).to receive(:new).with(user:, company:).and_return(onboarding_state)
+          user.update!(legal_name: nil)
         end
 
         it "resends the invitation email and returns an error" do

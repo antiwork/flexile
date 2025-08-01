@@ -171,34 +171,6 @@ RSpec.describe Onetime::PopulateCompanyInvestorEntities do
       end
     end
 
-    context "when determining cap_table_notes" do
-      let(:company_investor_with_notes) { create(:company_investor, company: company, cap_table_notes: "Some notes") }
-      let!(:share_holding_with_notes) do
-        create(:share_holding,
-               company_investor: company_investor_with_notes,
-               company_investor_entity: nil,
-               share_holder_name: company_investor_with_notes.user.legal_name)
-      end
-
-      it "sets cap_table_notes when there's only one investor with notes" do
-        service.perform
-        entity = CompanyInvestorEntity.find_by(name: company_investor_with_notes.user.legal_name)
-
-        expect(entity.cap_table_notes).to eq("Some notes")
-      end
-
-      it "doesn't set cap_table_notes when there are multiple investors with the same name" do
-        create(:share_holding,
-               company_investor: create(:company_investor, company: company, cap_table_notes: "Other notes"),
-               company_investor_entity: nil,
-               share_holder_name: company_investor_with_notes.user.legal_name)
-
-        service.perform
-        entity = CompanyInvestorEntity.find_by(name: company_investor_with_notes.user.legal_name)
-
-        expect(entity.cap_table_notes).to be_nil
-      end
-    end
 
     context "when an investor has no shares but has options" do
       let(:options_only_investor) { create(:company_investor, company: company) }

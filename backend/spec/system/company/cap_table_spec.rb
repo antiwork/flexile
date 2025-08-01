@@ -19,10 +19,10 @@ RSpec.describe "Cap table page" do
       let(:user3) { create(:user, email: "contractor+1@example.com", legal_name: "John Doe") }
       let(:user4) { create(:user, email: "contractor+2@example.com", legal_name: "Jane Snow") }
       let(:company_investor1) do
-        create(:company_investor, user: user1, company:, cap_table_notes: "Founder")
+        create(:company_investor, user: user1, company:)
       end
       let(:company_investor2) do
-        create(:company_investor, user: user2, company:, cap_table_notes: "Partner")
+        create(:company_investor, user: user2, company:)
       end
       let(:company_investor3) do
         create(:company_investor, user: user3, company:,)
@@ -34,16 +34,14 @@ RSpec.describe "Cap table page" do
         create(:company_investor_entity,
                email: user1.email,
                name: user1.legal_name,
-               company: company,
-               cap_table_notes: "Founder")
+               company: company)
       end
 
       let(:company_investor_entity2) do
         create(:company_investor_entity,
                email: user2.email,
                name: user2.legal_name,
-               company: company,
-               cap_table_notes: "Partner")
+               company: company)
       end
 
       let(:company_investor_entity3) do
@@ -119,7 +117,6 @@ RSpec.describe "Cap table page" do
                                        "Outstanding shares" => "500,123",
                                        "Outstanding ownership" => "50.012%", # (500,123 * 100 / (500,123 + 499,877)) with 3 decimals
                                        "Fully diluted ownership" => "4.168%", # (500,123 * 100 / 12,000,000) with 3 decimals
-                                       "Notes" => "Founder",
                                      },
                                      {
                                        "Name" => "Partner Example#{can_view_investor ? " partner@example.com" : nil}",
@@ -127,7 +124,6 @@ RSpec.describe "Cap table page" do
                                        "Outstanding shares" => "499,877",
                                        "Outstanding ownership" => "49.988%", # (499,877 * 100 / (500,123 + 499,877)) with 3 decimals
                                        "Fully diluted ownership" => "4.166%", # (499,877 * 100 / 12_000,000) with 3 decimals
-                                       "Notes" => "Partner",
                                      },
                                      {
                                        "Name" => "Jane Snow#{can_view_investor ? " contractor+2@example.com" : nil}",
@@ -239,7 +235,6 @@ RSpec.describe "Cap table page" do
                                          "Outstanding shares" => "500,123",
                                          "Outstanding ownership" => "50.012%", # (500,123 * 100 / (500,123 + 499,877)) with 3 decimals
                                          "Fully diluted ownership" => "4.168%", # (500,123 * 100 / 12,000,000) with 3 decimals
-                                         "Notes" => "Founder",
                                        },
                                        {
                                          "Name" => "Partner Example#{can_view_investor ? " partner@example.com" : nil}",
@@ -247,7 +242,6 @@ RSpec.describe "Cap table page" do
                                          "Outstanding shares" => "499,877",
                                          "Outstanding ownership" => "49.988%", # (499,877 * 100 / (500,123 + 499,877)) with 3 decimals
                                          "Fully diluted ownership" => "4.166%", # (499,877 * 100 / 12_000,000) with 3 decimals
-                                         "Notes" => "Partner",
                                        },
                                        {
                                          "Name" => "Jane Snow#{can_view_investor ? " contractor+2@example.com" : nil}",

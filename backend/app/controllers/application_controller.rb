@@ -6,7 +6,6 @@ class ApplicationController < ActionController::Base
   include Clerk::Authenticatable
   include PunditAuthorization, SetCurrent
 
-  before_action :force_onboarding, if: -> { clerk.user? }, except: [:userid, :current_user_data]
   before_action :set_paper_trail_whodunnit
   before_action :authenticate_user_json!, only: [:userid]
 
@@ -44,15 +43,6 @@ class ApplicationController < ActionController::Base
         request_path: request.path,
         request_uuid: request.uuid,
       }
-    end
-
-    def force_onboarding
-      redirect_path = OnboardingState::User.new(user: Current.user, company: Current.company).redirect_path
-
-      respond_to do |format|
-        format.html  { redirect_to redirect_path }
-        format.json  { render(json: { success: false, redirect_path: }, status: :forbidden) }
-      end if redirect_path
     end
 
     def set_csrf_cookie

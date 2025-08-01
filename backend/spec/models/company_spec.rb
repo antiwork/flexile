@@ -64,9 +64,8 @@ RSpec.describe Company do
         let(:admin) { create(:company_administrator, company: company) }
 
         it "returns admin checklist items with completion status" do
-          items = company.checklist_items(admin)
+          items = company.checklist_items(admin.user)
 
-          expect(items).to have_attributes(size: 4)
           expect(items.map { |item| item[:key] }).to contain_exactly(
             "add_company_details", "add_bank_account", "invite_contractor", "send_first_payment"
           )
@@ -74,57 +73,41 @@ RSpec.describe Company do
         end
 
         it "completes company details item when company name is present" do
-          items = company.checklist_items(admin)
-          company_details_item = items.find { |item| item[:key] == "add_company_details" }
-          expect(company_details_item[:completed]).to be false
-
           company.update!(name: "Test Company")
-          items = company.reload.checklist_items(admin)
+          items = company.reload.checklist_items(admin.user)
           company_details_item = items.find { |item| item[:key] == "add_company_details" }
           expect(company_details_item[:completed]).to be true
         end
 
         it "completes bank account item when stripe account becomes ready" do
-          items = company.checklist_items(admin)
-          bank_account_item = items.find { |item| item[:key] == "add_bank_account" }
-          expect(bank_account_item[:completed]).to be false
-
           stripe_account = create(:company_stripe_account, company: company, status: "processing")
-          items = company.reload.checklist_items(admin)
+          items = company.reload.checklist_items(admin.user)
           bank_account_item = items.find { |item| item[:key] == "add_bank_account" }
           expect(bank_account_item[:completed]).to be false
 
           stripe_account.update!(status: "ready")
-          items = company.reload.checklist_items(admin)
+          items = company.reload.checklist_items(admin.user)
           bank_account_item = items.find { |item| item[:key] == "add_bank_account" }
           expect(bank_account_item[:completed]).to be true
         end
 
         it "completes contractor item when worker is created" do
-          items = company.checklist_items(admin)
-          contractor_item = items.find { |item| item[:key] == "invite_contractor" }
-          expect(contractor_item[:completed]).to be false
-
           create(:company_worker, company: company, user: create(:user))
-          items = company.reload.checklist_items(admin)
+          items = company.reload.checklist_items(admin.user)
           contractor_item = items.find { |item| item[:key] == "invite_contractor" }
           expect(contractor_item[:completed]).to be true
         end
 
         it "completes payment item when payment succeeds" do
-          items = company.checklist_items(admin)
-          payment_item = items.find { |item| item[:key] == "send_first_payment" }
-          expect(payment_item[:completed]).to be false
-
           contractor = create(:company_worker, company: company)
           company.update!(name: "Test Company")
           invoice = create(:invoice, company: company, company_worker: contractor, user: contractor.user)
-          items = company.reload.checklist_items(admin)
+          items = company.reload.checklist_items(admin.user)
           payment_item = items.find { |item| item[:key] == "send_first_payment" }
           expect(payment_item[:completed]).to be false
 
           invoice.update!(status: Invoice::PAID)
-          items = company.reload.checklist_items(admin)
+          items = company.reload.checklist_items(admin.user)
           payment_item = items.find { |item| item[:key] == "send_first_payment" }
           expect(payment_item[:completed]).to be true
         end
@@ -137,7 +120,7 @@ RSpec.describe Company do
           invoice.update!(status: Invoice::PAID)
           company.reload
 
-          items = company.checklist_items(admin)
+          items = company.checklist_items(admin.user)
           expect(items.all? { |item| item[:completed] }).to be true
         end
       end
@@ -146,9 +129,8 @@ RSpec.describe Company do
         let(:worker) { create(:company_worker, without_contract: true, company: company, user: create(:user, without_bank_account: true)) }
 
         it "returns worker checklist items with completion status" do
-          items = company.checklist_items(worker)
+          items = company.checklist_items(worker.user)
 
-          expect(items).to have_attributes(size: 3)
           expect(items.map { |item| item[:key] }).to contain_exactly(
             "fill_tax_information", "add_payout_information", "sign_contract"
           )
@@ -156,40 +138,58 @@ RSpec.describe Company do
         end
 
         it "completes tax information item when worker confirms tax details" do
-          items = company.checklist_items(worker)
-          tax_item = items.find { |item| item[:key] == "fill_tax_information" }
-          expect(tax_item[:completed]).to be false
-
           worker.user.compliance_info.update!(tax_information_confirmed_at: Time.current)
 
-          items = company.checklist_items(worker)
+          items = company.checklist_items(worker.user)
           tax_item = items.find { |item| item[:key] == "fill_tax_information" }
           expect(tax_item[:completed]).to be true
         end
 
         it "completes payout information item when worker adds bank account" do
-          items = company.checklist_items(worker)
-          payout_item = items.find { |item| item[:key] == "add_payout_information" }
-          expect(payout_item[:completed]).to be false
-
           create(:wise_recipient, user: worker.user, used_for_invoices: true)
           worker.user.reload
 
-          items = company.checklist_items(worker)
+          items = company.checklist_items(worker.user)
           payout_item = items.find { |item| item[:key] == "add_payout_information" }
           expect(payout_item[:completed]).to be true
         end
 
         it "completes contract item when worker signs contract" do
-          items = company.checklist_items(worker)
-          contract_item = items.find { |item| item[:key] == "sign_contract" }
-          expect(contract_item[:completed]).to be false
-
           create(:document, company: company, document_type: :consulting_contract, signatories: [worker.user])
 
-          items = company.checklist_items(worker)
+          items = company.checklist_items(worker.user)
           contract_item = items.find { |item| item[:key] == "sign_contract" }
           expect(contract_item[:completed]).to be true
+        end
+      end
+
+      context "for company investors" do
+        let(:investor) { create(:company_investor, company: company, user: create(:user, without_bank_account: true)) }
+
+        it "returns investor checklist items with completion status" do
+          items = company.checklist_items(investor.user)
+
+          expect(items.map { |item| item[:key] }).to contain_exactly(
+            "fill_tax_information", "add_payout_information"
+          )
+          expect(items.all? { |item| item[:completed] == false }).to be true
+        end
+
+        it "completes tax information item when investor confirms tax details" do
+          investor.user.compliance_info.update!(tax_information_confirmed_at: Time.current)
+
+          items = company.checklist_items(investor.user)
+          tax_item = items.find { |item| item[:key] == "fill_tax_information" }
+          expect(tax_item[:completed]).to be true
+        end
+
+        it "completes payout information item when investor adds bank account" do
+          create(:wise_recipient, user: investor.user, used_for_dividends: true)
+          investor.user.reload
+
+          items = company.checklist_items(investor.user)
+          payout_item = items.find { |item| item[:key] == "add_payout_information" }
+          expect(payout_item[:completed]).to be true
         end
       end
 
@@ -209,13 +209,13 @@ RSpec.describe Company do
         let(:admin) { create(:company_administrator, company: company) }
 
         it "returns 0 when no items are completed" do
-          expect(company.checklist_completion_percentage(admin)).to eq(0)
+          expect(company.checklist_completion_percentage(admin.user)).to eq(0)
         end
 
         it "returns correct percentage when some items are completed" do
           create(:company_stripe_account, company: company, status: "ready")
           company.reload
-          expect(company.checklist_completion_percentage(admin)).to eq(25)
+          expect(company.checklist_completion_percentage(admin.user)).to eq(25)
         end
 
         it "returns 100 when all items are completed" do
@@ -226,7 +226,7 @@ RSpec.describe Company do
           invoice.update!(status: Invoice::PAID)
           company.reload
 
-          expect(company.checklist_completion_percentage(admin)).to eq(100)
+          expect(company.checklist_completion_percentage(admin.user)).to eq(100)
         end
       end
 
@@ -234,13 +234,13 @@ RSpec.describe Company do
         let(:worker) { create(:company_worker, without_contract: true, company: company, user: create(:user, without_bank_account: true)) }
 
         it "returns 0 when no items are completed" do
-          expect(company.checklist_completion_percentage(worker)).to eq(0)
+          expect(company.checklist_completion_percentage(worker.user)).to eq(0)
         end
 
         it "returns correct percentage when some items are completed" do
           worker.user.compliance_info.update!(tax_information_confirmed_at: Time.current)
 
-          expect(company.checklist_completion_percentage(worker)).to eq(33)
+          expect(company.checklist_completion_percentage(worker.user)).to eq(33)
         end
 
         it "returns 100 when all worker items are completed" do
@@ -248,7 +248,7 @@ RSpec.describe Company do
           create(:wise_recipient, user: worker.user, used_for_invoices: true)
           create(:document, company: company, document_type: :consulting_contract, signatories: [worker.user])
 
-          expect(company.checklist_completion_percentage(worker)).to eq(100)
+          expect(company.checklist_completion_percentage(worker.user)).to eq(100)
         end
       end
 

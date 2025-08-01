@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class Internal::InviteLinksController < ApplicationController
-  skip_before_action :force_onboarding
   skip_before_action :verify_authenticity_token, only: [:verify]
   skip_before_action :authenticate_user_json!, only: [:verify]
 

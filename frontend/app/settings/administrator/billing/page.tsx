@@ -129,7 +129,7 @@ export default function Billing() {
 
   return (
     <div className="grid gap-4">
-      <h2 className="mb-8 text-xl font-medium">Billing</h2>
+      <h2 className="mb-8 text-3xl font-bold">Billing</h2>
       <hgroup>
         <h3 className="mb-1 text-base font-medium">Payout method</h3>
         <p className="text-muted-foreground text-sm">

@@ -7,13 +7,6 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -44,25 +37,15 @@ export default function DividendRounds() {
 
   return (
     <>
-      <DashboardHeader
-        title={
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>Equity</BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Dividends</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        }
-      />
+      <DashboardHeader title="Dividends" />
       {isLoading ? (
         <TableSkeleton columns={3} />
       ) : dividendRounds.length > 0 ? (
         <DataTable table={table} onRowClicked={(row) => router.push(`/equity/dividend_rounds/${row.id}`)} />
       ) : (
-        <Placeholder icon={CircleCheck}>You have not issued any dividends yet.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>You have not issued any dividends yet.</Placeholder>
+        </div>
       )}
     </>
   );

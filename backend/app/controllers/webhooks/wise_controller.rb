@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class Webhooks::WiseController < ApplicationController
-  skip_before_action :force_onboarding
   skip_before_action :verify_authenticity_token
   before_action :validate_webhook
   before_action :handle_test_notification

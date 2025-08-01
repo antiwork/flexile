@@ -86,7 +86,7 @@ export default function SettingsPage() {
   return (
     <div className="grid gap-8">
       <hgroup>
-        <h2 className="mb-1 text-xl font-bold">Workspace settings</h2>
+        <h2 className="mb-1 text-3xl font-bold">Workspace settings</h2>
         <p className="text-muted-foreground text-base">
           Set your workspace identity with your company's branding details.
         </p>

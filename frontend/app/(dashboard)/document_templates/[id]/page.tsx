@@ -161,7 +161,7 @@ export default function EditTemplatePage() {
 
       <div className="grid gap-6">
         {template.companyId === null ? (
-          <Alert variant="destructive">
+          <Alert className="mx-4" variant="destructive">
             <InformationCircleIcon />
             <AlertDescription>
               <div className="flex items-center justify-between gap-4">
@@ -186,7 +186,7 @@ export default function EditTemplatePage() {
             </AlertDescription>
           </Alert>
         ) : docusealTemplate?.documents.length && !isSignable(docusealTemplate) ? (
-          <Alert>
+          <Alert className="mx-4">
             <InformationCircleIcon />
             <AlertDescription>
               To use this template, add at least the signature fields for both parties below.

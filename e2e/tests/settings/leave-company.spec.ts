@@ -61,7 +61,7 @@ test.describe("Leave company", () => {
     await expect(page.getByText("Leave this workspace?")).toBeVisible();
     await page.getByRole("button", { name: "Leave" }).click();
 
-    await expect(page).toHaveURL("/invoices");
+    await expect(page).toHaveURL("/equity/dividends");
 
     const investor = await db.query.companyInvestors.findFirst({
       where: and(eq(companyInvestors.companyId, company.id), eq(companyInvestors.userId, user.id)),
@@ -86,7 +86,7 @@ test.describe("Leave company", () => {
     await expect(page.getByText("Leave this workspace?")).toBeVisible();
     await page.getByRole("button", { name: "Leave" }).click();
 
-    await expect(page).toHaveURL("/invoices");
+    await expect(page).toHaveURL("/documents");
 
     const lawyer = await db.query.companyLawyers.findFirst({
       where: and(eq(companyLawyers.companyId, company.id), eq(companyLawyers.userId, user.id)),

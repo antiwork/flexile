@@ -140,7 +140,7 @@ export default function BuybackView() {
       <DashboardHeader title={`Buyback details ("Sell Elections")`} />
 
       {user.roles.investor?.investedInAngelListRuv ? (
-        <Alert variant="destructive">
+        <Alert className="mx-4" variant="destructive">
           <ExclamationTriangleIcon />
           <AlertDescription>
             Note: As an investor through an AngelList RUV, your bids will be submitted on your behalf by the RUV itself.
@@ -281,7 +281,7 @@ export default function BuybackView() {
         </>
       ) : null}
 
-      {isLoading ? <TableSkeleton columns={5} /> : bids && bids.length > 0 ? <DataTable table={bidsTable} /> : null}
+      {isLoading ? <TableSkeleton columns={5} /> : bids.length > 0 ? <DataTable table={bidsTable} /> : null}
 
       {cancelingBid ? (
         <Dialog open onOpenChange={() => setCancelingBid(null)}>

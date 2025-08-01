@@ -7,13 +7,6 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -42,17 +35,7 @@ export default function Buybacks() {
   return (
     <>
       <DashboardHeader
-        title={
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>Equity</BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Buybacks</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        }
+        title="Buybacks"
         headerActions={
           user.roles.administrator ? (
             <Button asChild size="small" variant="outline">
@@ -70,7 +53,9 @@ export default function Buybacks() {
       ) : data.length ? (
         <DataTable table={table} onRowClicked={(row) => router.push(`/equity/tender_offers/${row.id}`)} />
       ) : (
-        <Placeholder icon={CircleCheck}>There are no buybacks yet.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>There are no buybacks yet.</Placeholder>
+        </div>
       )}
     </>
   );

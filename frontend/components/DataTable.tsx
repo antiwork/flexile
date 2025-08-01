@@ -167,7 +167,7 @@ export default function DataTable<T extends RowData>({
   return (
     <div className="grid gap-4">
       {filterable || actions ? (
-        <div className="grid gap-2 md:flex md:justify-between">
+        <div className="mx-4 grid gap-2 md:flex md:justify-between">
           <div className="flex gap-2">
             {table.options.enableGlobalFilter !== false ? (
               <div className="relative w-full md:w-60">

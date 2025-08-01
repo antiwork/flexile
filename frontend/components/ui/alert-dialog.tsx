@@ -27,7 +27,11 @@ function AlertDialogOverlay({ className, ...props }: React.ComponentProps<typeof
   );
 }
 
-function AlertDialogContent({ className, children, ...props }: React.ComponentProps<typeof AlertDialogPrimitive.Content>) {
+function AlertDialogContent({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof AlertDialogPrimitive.Content>) {
   return (
     <AlertDialogPortal data-slot="alert-dialog-portal">
       <AlertDialogOverlay className="grid place-items-center overflow-auto">
@@ -76,8 +80,17 @@ function AlertDialogTitle({ className, ...props }: React.ComponentProps<typeof A
   );
 }
 
-function AlertDialogDescription({ className, ...props }: React.ComponentProps<typeof AlertDialogPrimitive.Description>) {
-  return <AlertDialogPrimitive.Description data-slot="alert-dialog-description" className={cn("text-sm", className)} {...props} />;
+function AlertDialogDescription({
+  className,
+  ...props
+}: React.ComponentProps<typeof AlertDialogPrimitive.Description>) {
+  return (
+    <AlertDialogPrimitive.Description
+      data-slot="alert-dialog-description"
+      className={cn("text-sm", className)}
+      {...props}
+    />
+  );
 }
 
 function AlertDialogAction({ className, ...props }: React.ComponentProps<typeof AlertDialogPrimitive.Action>) {
