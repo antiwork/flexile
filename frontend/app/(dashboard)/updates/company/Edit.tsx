@@ -62,7 +62,7 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
     companyId: company.id,
     includeContractors,
     contractorStatus,
-    minBillingThreshold,
+    ...(minBillingThreshold !== undefined && { minBillingThreshold }),
     includeInvestors,
     investorTypes,
   });
@@ -91,7 +91,7 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
           id,
           includeContractors,
           contractorStatus,
-          minBillingThreshold,
+          ...(minBillingThreshold !== undefined && { minBillingThreshold }),
           includeInvestors,
           investorTypes,
         });
@@ -104,7 +104,7 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
           id,
           includeContractors,
           contractorStatus,
-          minBillingThreshold,
+          ...(minBillingThreshold !== undefined && { minBillingThreshold }),
           includeInvestors,
           investorTypes,
         });

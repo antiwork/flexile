@@ -1,10 +1,10 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, desc, eq, gte, isNotNull, isNull, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { pick, truncate } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
-import { companyAdministrators, companyContractors, companyInvestors, companyUpdates } from "@/db/schema";
+import { companyAdministrators, companyContractors, companyInvestors, companyUpdates, invoices } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { type CompanyContext, companyProcedure, createRouter, renderTiptapToText } from "@/trpc";
 import { isActive } from "@/trpc/routes/contractors";
@@ -183,21 +183,48 @@ export const companyUpdatesRouter = createRouter({
       const hasInvestors = await checkHasInvestors(ctx.company.id);
       if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
+      // Get unique user IDs to handle de-duplication
+      const uniqueUserIds = new Set<bigint>();
+
       // Count administrators (always included)
-      const adminCount = await db.query.companyAdministrators.findMany({
+      const admins = await db.query.companyAdministrators.findMany({
         where: eq(companyAdministrators.companyId, ctx.company.id),
       });
+      admins.forEach((admin) => uniqueUserIds.add(admin.userId));
 
       // Count contractors
       let contractorCount = 0;
       if (input.includeContractors) {
-        const contractors = await db.query.companyContractors.findMany({
-          where: and(
-            eq(companyContractors.companyId, ctx.company.id),
-            input.contractorStatus === "active" ? isNull(companyContractors.endedAt) : undefined,
-          ),
-        });
-        contractorCount = contractors.length;
+        if (input.minBillingThreshold) {
+          // Get contractors with billing threshold
+          const contractorsWithBilling = await db
+            .select({
+              userId: companyContractors.userId,
+              totalBilled: sql<number>`COALESCE(SUM(${invoices.totalAmountInUsdCents}), 0)`,
+            })
+            .from(companyContractors)
+            .leftJoin(invoices, eq(invoices.companyContractorId, companyContractors.id))
+            .where(
+              and(
+                eq(companyContractors.companyId, ctx.company.id),
+                input.contractorStatus === "active" ? isNull(companyContractors.endedAt) : undefined,
+              ),
+            )
+            .groupBy(companyContractors.userId)
+            .having(gte(sql`COALESCE(SUM(${invoices.totalAmountInUsdCents}), 0)`, input.minBillingThreshold * 100));
+
+          contractorCount = contractorsWithBilling.length;
+          contractorsWithBilling.forEach((c) => uniqueUserIds.add(c.userId));
+        } else {
+          const contractors = await db.query.companyContractors.findMany({
+            where: and(
+              eq(companyContractors.companyId, ctx.company.id),
+              input.contractorStatus === "active" ? isNull(companyContractors.endedAt) : undefined,
+            ),
+          });
+          contractorCount = contractors.length;
+          contractors.forEach((c) => uniqueUserIds.add(c.userId));
+        }
       }
 
       // Count investors
@@ -207,13 +234,13 @@ export const companyUpdatesRouter = createRouter({
           where: eq(companyInvestors.companyId, ctx.company.id),
         });
         investorCount = investors.length;
+        investors.forEach((inv) => uniqueUserIds.add(inv.userId));
       }
 
-      // Note: This is a simplified count - actual email sending handles de-duplication
       return {
-        count: adminCount.length + contractorCount + investorCount,
+        count: uniqueUserIds.size,
         breakdown: {
-          administrators: adminCount.length,
+          administrators: admins.length,
           contractors: contractorCount,
           investors: investorCount,
         },
