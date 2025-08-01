@@ -4,8 +4,8 @@ import { EnvelopeIcon, UsersIcon } from "@heroicons/react/24/outline";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { FileScan } from "lucide-react";
-import { useParams, usePathname, useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import ViewUpdateDialog from "@/app/(dashboard)/updates/company/ViewUpdateDialog";
@@ -30,7 +30,6 @@ const formSchema = z.object({
 type CompanyUpdate = RouterOutput["companyUpdates"]["get"];
 const Edit = ({ update }: { update?: CompanyUpdate }) => {
   const { id } = useParams<{ id?: string }>();
-  const pathname = usePathname();
   const company = useCurrentCompany();
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
@@ -45,8 +44,7 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
   });
 
   const [modalOpen, setModalOpen] = useState(false);
-  const navigatedFromNewPreview = sessionStorage.getItem("navigated-from-new-preview");
-  const [viewPreview, setViewPreview] = useState(!!navigatedFromNewPreview);
+  const [viewPreview, setViewPreview] = useState(false);
 
   const recipientCount = (company.contractorCount ?? 0) + (company.investorCount ?? 0);
 
@@ -69,13 +67,8 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
       if (!preview && !update?.sentAt) await publishMutation.mutateAsync({ companyId: company.id, id });
       void trpcUtils.companyUpdates.list.invalidate();
       if (preview) {
-        if (pathname === "/updates/company/new") {
-          sessionStorage.setItem("navigated-from-new-preview", "yes");
-          router.replace(`/updates/company/${id}/edit`);
-        } else {
-          await trpcUtils.companyUpdates.get.invalidate({ companyId: company.id, id });
-          setViewPreview(true);
-        }
+        await trpcUtils.companyUpdates.get.invalidate({ companyId: company.id, id });
+        setViewPreview(true);
       } else {
         router.push(`/updates/company`);
       }
@@ -83,12 +76,6 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
   });
 
   const submit = form.handleSubmit(() => setModalOpen(true));
-
-  useEffect(() => {
-    if (navigatedFromNewPreview) {
-      sessionStorage.removeItem("navigated-from-new-preview");
-    }
-  }, []);
 
   return (
     <>

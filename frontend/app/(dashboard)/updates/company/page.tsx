@@ -3,6 +3,7 @@ import { CircleCheck, Trash } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
+import NewUpdateModal from "@/app/(dashboard)/updates/company/NewUpdateModal";
 import ViewUpdateDialog from "@/app/(dashboard)/updates/company/ViewUpdateDialog";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
@@ -25,17 +26,14 @@ const useData = () => {
 export default function CompanyUpdates() {
   const user = useCurrentUser();
   const { updates, isLoading } = useData();
+  const [newUpdateModalOpen, setNewUpdateModalOpen] = useState(false);
 
   return (
     <>
       <DashboardHeader
         title="Updates"
         headerActions={
-          user.roles.administrator ? (
-            <Button asChild>
-              <Link href="/updates/company/new">New update</Link>
-            </Button>
-          ) : null
+          user.roles.administrator ? <Button onClick={() => setNewUpdateModalOpen(true)}>New update</Button> : null
         }
       />
 
@@ -50,6 +48,10 @@ export default function CompanyUpdates() {
       ) : (
         <Placeholder icon={CircleCheck}>No updates to display.</Placeholder>
       )}
+
+      {user.roles.administrator ? (
+        <NewUpdateModal open={newUpdateModalOpen} onOpenChange={setNewUpdateModalOpen} />
+      ) : null}
     </>
   );
 }

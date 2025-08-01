@@ -31,7 +31,8 @@ test.describe("company update creation", () => {
     const content = "This will be published";
 
     await login(page, adminUser);
-    await page.goto("/updates/company/new");
+    await page.goto("/updates/company");
+    await page.getByRole("button", { name: "New update" }).click();
 
     await fillForm(page, title, content);
     await page.getByRole("button", { name: "Publish" }).click();
@@ -54,7 +55,8 @@ test.describe("company update creation", () => {
     const content = "Test content";
 
     await login(page, adminUser);
-    await page.goto("/updates/company/new");
+    await page.goto("/updates/company");
+    await page.getByRole("button", { name: "New update" }).click();
 
     await fillForm(page, title, content);
 
@@ -77,7 +79,8 @@ test.describe("company update creation", () => {
 
   test("prevents submission with validation errors", async ({ page }) => {
     await login(page, adminUser);
-    await page.goto("/updates/company/new");
+    await page.goto("/updates/company");
+    await page.getByRole("button", { name: "New update" }).click();
 
     await page.getByRole("button", { name: "Preview" }).click();
     await expect(page.locator('[data-slot="form-message"]').first()).toBeVisible();

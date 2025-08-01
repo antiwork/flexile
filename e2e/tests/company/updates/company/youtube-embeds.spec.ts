@@ -129,7 +129,8 @@ test.describe("Company Updates - YouTube Embeds", () => {
 
   test("should allow creating company update with YouTube URL", async ({ page }) => {
     await login(page, adminUser);
-    await page.goto("/updates/company/new");
+    await page.goto("/updates/company");
+    await page.getByRole("button", { name: "New update" }).click();
 
     await expect(page.getByLabel("Title")).toBeVisible();
     await expect(page.getByLabel("Video URL (optional)")).toBeVisible();
