@@ -93,7 +93,18 @@ export const companyUpdatesRouter = createRouter({
       .returning();
     if (!update) throw new TRPCError({ code: "NOT_FOUND" });
   }),
-  publish: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
+  publish: companyProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        includeContractors: z.boolean().optional().default(false),
+        contractorStatus: z.enum(["active", "all"]).optional().default("active"),
+        minBillingThreshold: z.number().optional(),
+        includeInvestors: z.boolean().optional().default(true),
+        investorTypes: z.array(z.string()).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
     const hasInvestors = await checkHasInvestors(ctx.company.id);
     if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
@@ -109,12 +120,30 @@ export const companyUpdatesRouter = createRouter({
       name: "company.update.published",
       data: {
         updateId: update.externalId,
+        recipientFilters: {
+          includeContractors: input.includeContractors,
+          contractorStatus: input.contractorStatus,
+          minBillingThreshold: input.minBillingThreshold,
+          includeInvestors: input.includeInvestors,
+          investorTypes: input.investorTypes,
+        },
       },
     });
 
     return update.externalId;
   }),
-  sendTestEmail: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
+  sendTestEmail: companyProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        includeContractors: z.boolean().optional().default(false),
+        contractorStatus: z.enum(["active", "all"]).optional().default("active"),
+        minBillingThreshold: z.number().optional(),
+        includeInvestors: z.boolean().optional().default(true),
+        investorTypes: z.array(z.string()).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
     const hasInvestors = await checkHasInvestors(ctx.company.id);
     if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
     const update = await db.query.companyUpdates.findFirst({ where: byId(ctx, input.id) });
@@ -124,6 +153,13 @@ export const companyUpdatesRouter = createRouter({
       data: {
         updateId: update.externalId,
         recipients: [ctx.user],
+        recipientFilters: {
+          includeContractors: input.includeContractors,
+          contractorStatus: input.contractorStatus,
+          minBillingThreshold: input.minBillingThreshold,
+          includeInvestors: input.includeInvestors,
+          investorTypes: input.investorTypes,
+        },
       },
     });
   }),

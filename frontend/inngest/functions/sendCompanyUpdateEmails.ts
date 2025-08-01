@@ -1,7 +1,7 @@
-import { and, eq, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, eq, gte, isNotNull, isNull, sql } from "drizzle-orm";
 import { NonRetriableError } from "inngest";
 import { db } from "@/db";
-import { companies, companyContractors, companyInvestors, companyUpdates, users } from "@/db/schema";
+import { companies, companyAdministrators, companyContractors, companyInvestors, companyUpdates, invoices, users } from "@/db/schema";
 import env from "@/env";
 import { inngest } from "@/inngest/client";
 import CompanyUpdatePublished from "@/inngest/functions/emails/CompanyUpdatePublished";
@@ -53,20 +53,94 @@ export default inngest.createFunction(
     const recipients = await step.run("fetch-recipients", async () => {
       if (event.data.recipients) return event.data.recipients;
 
-      const baseQuery = (relationTable: typeof companyContractors | typeof companyInvestors) =>
-        db
+      const filters = event.data.recipientFilters || {
+        includeContractors: false,
+        contractorStatus: "active",
+        includeInvestors: true,
+      };
+
+      const queries: any[] = [];
+
+      // Always include administrators
+      const admins = db
+        .selectDistinct({ email: users.email })
+        .from(users)
+        .innerJoin(companyAdministrators, and(
+          eq(users.id, companyAdministrators.userId),
+          eq(companyAdministrators.companyId, company.id)
+        ));
+      queries.push(admins);
+
+      // Include contractors based on filters
+      if (filters.includeContractors) {
+        let contractorsQuery = db
           .selectDistinct({ email: users.email })
           .from(users)
-          .leftJoin(relationTable, and(eq(users.id, relationTable.userId), eq(relationTable.companyId, company.id)));
+          .innerJoin(companyContractors, and(
+            eq(users.id, companyContractors.userId),
+            eq(companyContractors.companyId, company.id)
+          ));
 
-      const activeContractors = baseQuery(companyContractors).where(
-        and(isNotNull(companyContractors.id), isNull(companyContractors.endedAt)),
-      );
-      const investors = baseQuery(companyInvestors).where(isNotNull(companyInvestors.id));
+        // Apply status filter
+        if (filters.contractorStatus === "active") {
+          contractorsQuery = contractorsQuery.where(isNull(companyContractors.endedAt));
+        }
+
+        // Apply billing threshold filter if specified
+        if (filters.minBillingThreshold) {
+          const contractorsWithBilling = db
+            .select({
+              email: users.email,
+              totalBilled: sql<number>`COALESCE(SUM(${invoices.totalAmountInUsdCents}), 0)`,
+            })
+            .from(users)
+            .innerJoin(companyContractors, and(
+              eq(users.id, companyContractors.userId),
+              eq(companyContractors.companyId, company.id)
+            ))
+            .leftJoin(invoices, eq(invoices.companyContractorId, companyContractors.id))
+            .groupBy(users.email)
+            .having(gte(sql`COALESCE(SUM(${invoices.totalAmountInUsdCents}), 0)`, filters.minBillingThreshold * 100));
+
+          queries.push(contractorsWithBilling);
+        } else {
+          queries.push(contractorsQuery);
+        }
+      }
+
+      // Include investors based on filters
+      if (filters.includeInvestors) {
+        let investorsQuery = db
+          .selectDistinct({ email: users.email })
+          .from(users)
+          .innerJoin(companyInvestors, and(
+            eq(users.id, companyInvestors.userId),
+            eq(companyInvestors.companyId, company.id)
+          ));
+
+        // Apply investor type filter if specified
+        if (filters.investorTypes && filters.investorTypes.length > 0) {
+          investorsQuery = investorsQuery.where(
+            sql`${companyInvestors.investorType} = ANY(${filters.investorTypes})`
+          );
+        }
+
+        queries.push(investorsQuery);
+      }
+
+      // Combine all queries with UNION to de-duplicate
+      if (queries.length === 1) {
+        return queries[0];
+      }
+
+      const unionQuery = queries.reduce((acc, query, index) => {
+        if (index === 0) return query;
+        return sql`${acc} UNION ${query}`;
+      });
 
       return db
         .select({ email: sql<string>`email` })
-        .from(sql`(${activeContractors} UNION ${investors}) as combined_recipients`);
+        .from(sql`(${unionQuery}) as combined_recipients`);
     });
 
     const logoUrl = await step.run("get-logo-url", async () => companyLogoUrl(company.id));
