@@ -40,7 +40,11 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
     accept: "application/json",
     ...(csrfToken ? { "x-csrf-token": csrfToken } : {}),
   };
-  const response = await fetch(internal_userid_url({ host }), { headers });
+  // For local development, force HTTP instead of HTTPS for backend API calls
+  const backendUrl = host.includes("localhost")
+    ? `http://localhost:3000/internal/userid`
+    : internal_userid_url({ host });
+  const response = await fetch(backendUrl, { headers });
   const userId = response.ok ? z.object({ id: z.number() }).parse(await response.json()).id : null;
 
   return {

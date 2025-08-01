@@ -6,7 +6,11 @@ import { internal_current_user_data_url } from "@/utils/routes";
 
 export async function GET(req: Request) {
   const host = assertDefined(req.headers.get("Host"));
-  const response = await fetch(internal_current_user_data_url({ host }), {
+  // For local development, force HTTP instead of HTTPS for backend API calls
+  const backendUrl = host.includes("localhost")
+    ? `http://localhost:3000/internal/current_user_data`
+    : internal_current_user_data_url({ host });
+  const response = await fetch(backendUrl, {
     headers: {
       cookie: req.headers.get("cookie") ?? "",
       "User-Agent": req.headers.get("User-Agent") ?? "",

@@ -1,7 +1,15 @@
-import { and, eq, gte, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, eq, gte, isNull, sql } from "drizzle-orm";
 import { NonRetriableError } from "inngest";
 import { db } from "@/db";
-import { companies, companyAdministrators, companyContractors, companyInvestors, companyUpdates, invoices, users } from "@/db/schema";
+import {
+  companies,
+  companyAdministrators,
+  companyContractors,
+  companyInvestors,
+  companyUpdates,
+  invoices,
+  users,
+} from "@/db/schema";
 import env from "@/env";
 import { inngest } from "@/inngest/client";
 import CompanyUpdatePublished from "@/inngest/functions/emails/CompanyUpdatePublished";
@@ -59,16 +67,16 @@ export default inngest.createFunction(
         includeInvestors: true,
       };
 
-      const queries: any[] = [];
+      const queries: unknown[] = [];
 
       // Always include administrators
       const admins = db
         .selectDistinct({ email: users.email })
         .from(users)
-        .innerJoin(companyAdministrators, and(
-          eq(users.id, companyAdministrators.userId),
-          eq(companyAdministrators.companyId, company.id)
-        ));
+        .innerJoin(
+          companyAdministrators,
+          and(eq(users.id, companyAdministrators.userId), eq(companyAdministrators.companyId, company.id)),
+        );
       queries.push(admins);
 
       // Include contractors based on filters
@@ -76,10 +84,10 @@ export default inngest.createFunction(
         let contractorsQuery = db
           .selectDistinct({ email: users.email })
           .from(users)
-          .innerJoin(companyContractors, and(
-            eq(users.id, companyContractors.userId),
-            eq(companyContractors.companyId, company.id)
-          ));
+          .innerJoin(
+            companyContractors,
+            and(eq(users.id, companyContractors.userId), eq(companyContractors.companyId, company.id)),
+          );
 
         // Apply status filter
         if (filters.contractorStatus === "active") {
@@ -94,10 +102,10 @@ export default inngest.createFunction(
               totalBilled: sql<number>`COALESCE(SUM(${invoices.totalAmountInUsdCents}), 0)`,
             })
             .from(users)
-            .innerJoin(companyContractors, and(
-              eq(users.id, companyContractors.userId),
-              eq(companyContractors.companyId, company.id)
-            ))
+            .innerJoin(
+              companyContractors,
+              and(eq(users.id, companyContractors.userId), eq(companyContractors.companyId, company.id)),
+            )
             .leftJoin(invoices, eq(invoices.companyContractorId, companyContractors.id))
             .groupBy(users.email)
             .having(gte(sql`COALESCE(SUM(${invoices.totalAmountInUsdCents}), 0)`, filters.minBillingThreshold * 100));
@@ -113,16 +121,14 @@ export default inngest.createFunction(
         let investorsQuery = db
           .selectDistinct({ email: users.email })
           .from(users)
-          .innerJoin(companyInvestors, and(
-            eq(users.id, companyInvestors.userId),
-            eq(companyInvestors.companyId, company.id)
-          ));
+          .innerJoin(
+            companyInvestors,
+            and(eq(users.id, companyInvestors.userId), eq(companyInvestors.companyId, company.id)),
+          );
 
         // Apply investor type filter if specified
         if (filters.investorTypes && filters.investorTypes.length > 0) {
-          investorsQuery = investorsQuery.where(
-            sql`${companyInvestors.investorType} = ANY(${filters.investorTypes})`
-          );
+          investorsQuery = investorsQuery.where(sql`${companyInvestors.investorType} = ANY(${filters.investorTypes})`);
         }
 
         queries.push(investorsQuery);
@@ -138,9 +144,7 @@ export default inngest.createFunction(
         return sql`${acc} UNION ${query}`;
       });
 
-      return db
-        .select({ email: sql<string>`email` })
-        .from(sql`(${unionQuery}) as combined_recipients`);
+      return db.select({ email: sql<string>`email` }).from(sql`(${unionQuery}) as combined_recipients`);
     });
 
     const logoUrl = await step.run("get-logo-url", async () => companyLogoUrl(company.id));

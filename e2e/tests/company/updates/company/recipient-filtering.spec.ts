@@ -4,7 +4,6 @@ import {
   seedCompanyAdministrator,
   seedCompanyContractor,
   seedCompanyInvestor,
-  seedCompanyUpdate,
   seedInvoice,
   seedUser,
 } from "@/e2e/factories";
@@ -78,7 +77,7 @@ test.describe("Company Update Recipient Filtering", () => {
     // Check preview modal
     await expect(page.getByText("Preview update")).toBeVisible();
     await expect(page.getByText("A preview email will be sent to your email address")).toBeVisible();
-    await expect(page.getByText(/The actual update will be sent to \d+ recipients/)).toBeVisible();
+    await expect(page.getByText(/The actual update will be sent to \d+ recipients/u)).toBeVisible();
   });
 
   test("should filter contractors by billing threshold", async ({ page }) => {
