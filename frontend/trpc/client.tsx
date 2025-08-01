@@ -13,18 +13,22 @@ import { createClient } from "./shared";
 
 export const trpc = createTRPCReact<AppRouter>();
 
-const GetUserData = ({ children }: { children: React.ReactNode }) => {
-  const { data: session } = useSession(); // NextAuth
-  const { user, login, logout } = useUserStore();
+export const UserDataProvider = ({ children }: { children: React.ReactNode }) => {
+  const { data: session, status } = useSession();
+  const { login, logout } = useUserStore();
 
-  // Only use OTP authentication
-  const isAuthenticated = !!session?.user;
-  const authId = session?.user?.email;
+  const isSignedIn = !!session?.user;
+  const userId = session?.user?.email;
 
-  const { data } = useQuery({
-    queryKey: ["currentUser", authId, "otp"],
+  console.log("session status", status);
+  console.log("session", session);
+  console.log("isSignedIn", isSignedIn);
+  console.log("userId", userId);
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["currentUser", userId],
     queryFn: async (): Promise<unknown> => {
-      if (isAuthenticated && session.user && "jwt" in session.user) {
+      if (session?.user && "jwt" in session.user) {
         const response = await request({
           url: "/api/user-data",
           method: "POST",
@@ -35,18 +39,30 @@ const GetUserData = ({ children }: { children: React.ReactNode }) => {
         });
         return await response.json();
       }
-
-      throw new Error("No authentication method available");
+      throw new Error("No JWT token available");
     },
-    enabled: !!isAuthenticated,
+    enabled: !!isSignedIn,
   });
 
-  useEffect(() => {
-    if (isAuthenticated && data) login(data);
-    else logout();
-  }, [isAuthenticated, data, login, logout]);
+  console.log("data", data);
+  console.log("isLoading", isLoading);
+  console.log("query enabled", !!isSignedIn);
+  console.log("query error", error);
 
-  if (isAuthenticated == null || (isAuthenticated && !user)) return null;
+  useEffect(() => {
+    if (isSignedIn && data) {
+      login(data);
+    } else if (!isSignedIn) {
+      logout();
+    }
+    // Don't call logout() while loading (when isSignedIn=true but data=undefined)
+  }, [isSignedIn, data, login, logout]);
+
+  // Wait for session to load first
+  if (status === "loading") return null;
+
+  // Wait for query to complete before rendering children
+  if (isSignedIn && (isLoading || !data)) return null;
   return children;
 };
 
@@ -75,7 +91,7 @@ export function TRPCProvider({ children }: Readonly<{ children: React.ReactNode 
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <GetUserData>{children}</GetUserData>
+        {children}
       </QueryClientProvider>
     </trpc.Provider>
   );
