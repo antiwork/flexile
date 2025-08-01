@@ -1260,6 +1260,7 @@ export const companyInvestors = pgTable(
     ),
 
     investedInAngelListRuv: boolean("invested_in_angel_list_ruv").notNull().default(false),
+    investorType: varchar("investor_type"),
   },
   (table) => [
     index("index_company_investors_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
