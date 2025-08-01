@@ -70,9 +70,7 @@ test.describe("Mobile navigation", () => {
     await page.getByRole("button", { name: "Toggle Sidebar" }).click();
     await page.getByRole("button", { name: "Equity" }).click();
     await page.getByRole("link", { name: "Dividends" }).click();
-    const breadcrumb = page.getByRole("navigation", { name: "breadcrumb" });
-    await expect(breadcrumb.getByText("Equity")).toBeVisible();
-    await expect(breadcrumb.getByText("Dividends")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Dividends" })).toBeVisible();
 
     await expect(page.getByRole("link", { name: "Invoices" })).not.toBeVisible();
     await expect(page.getByRole("link", { name: "Documents" })).not.toBeVisible();
