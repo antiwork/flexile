@@ -9,6 +9,7 @@ import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -17,8 +18,9 @@ interface ConversationsListProps {
 }
 
 export const ConversationsList = ({ onSelectConversation }: ConversationsListProps) => {
-  const { data: conversationsData, isLoading: loading } = useConversations();
+  const { data: conversationsData, isLoading: loading, refetch } = useConversations();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -33,15 +35,19 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
 
   const conversations = conversationsData?.conversations || [];
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!message.trim() && attachments.length === 0) return;
 
-    const dataTransfer = new DataTransfer();
-    attachments.forEach((file) => dataTransfer.items.add(file));
+    await createConversation.mutateAsync({
+      subject,
+      message: {
+        content: message.trim(),
+        attachments,
+      },
+    });
 
-    const options = attachments.length > 0 ? { experimental_attachments: dataTransfer.files } : {};
-
-    createConversation.mutate({ subject: message, ...options });
+    // TODO: Shouldn't be necessary, the client invalidate doesn't work for some reason
+    void refetch();
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,12 +124,19 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
           </DialogHeader>
           <div className="space-y-4">
             <div className="relative">
+              <Input
+                id="subject"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="Subject"
+                className="mt-1"
+              />
               <Textarea
                 id="message"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Tell us about your issue or question..."
-                className="mt-1 min-h-40 resize-none pr-12"
+                className="mt-4 min-h-40 resize-none pr-12"
                 rows={4}
               />
               <div className="absolute right-2 bottom-2">
@@ -174,8 +187,8 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
             </Button>
             <MutationStatusButton
               mutation={createConversation}
-              onClick={handleSubmit}
               disabled={!message.trim() && attachments.length === 0}
+              onClick={() => void handleSubmit()}
             >
               <SendIcon className="mr-1 size-4" />
               Send
