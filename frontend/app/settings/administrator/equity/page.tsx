@@ -75,7 +75,7 @@ export default function Equity() {
           Manage your company ownership, including cap table, option pools, and grants.
         </p>
       </hgroup>
-      <div className="bg-card rounded-lg border p-6">
+      <div className="bg-card border-input rounded-lg border p-4">
         <div className="flex items-center justify-between">
           <div>
             <div className="font-semibold">Enable equity</div>
@@ -97,7 +97,7 @@ export default function Equity() {
         <Form {...form}>
           <form className="grid gap-8" onSubmit={(e) => void submit(e)}>
             <hgroup>
-              <h2 className="mb-1 text-3xl font-bold">Equity value</h2>
+              <h2 className="mb-1 font-bold">Equity value</h2>
               <p className="text-muted-foreground text-base">
                 These details will be used for equity-related calculations and reporting.
               </p>
