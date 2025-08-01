@@ -422,7 +422,7 @@ const DetailsTab = ({
         <form onSubmit={(e) => void submit(e)} className="grid gap-4">
           <h2 className="text-xl font-bold">Contract</h2>
           {contractor.endedAt ? (
-            <Alert variant="destructive">
+            <Alert className="mx-4" variant="destructive">
               <AlertTriangle />
               <AlertDescription>
                 <div className="flex items-center justify-between">

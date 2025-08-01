@@ -106,7 +106,7 @@ export default function OptionsPage() {
           {company.flags.includes("option_exercising") && (
             <>
               {totalUnexercisedVestedShares > 0 && !exerciseInProgress && (
-                <Alert className="mb-4 w-full">
+                <Alert className="mx-4 mb-4">
                   <Info />
                   <AlertDescription>
                     <div className="flex items-center justify-between">
@@ -122,7 +122,7 @@ export default function OptionsPage() {
               )}
 
               {exerciseInProgress ? (
-                <Alert className="mb-4 w-full">
+                <Alert className="mx-4 mb-4">
                   <Info />
                   <AlertDescription>
                     <div className="flex items-center justify-between">

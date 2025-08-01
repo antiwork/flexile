@@ -134,7 +134,7 @@ export default function CapTable() {
       <DashboardHeader title="Investors" />
 
       {selectedInvestors.length > 0 && (
-        <Alert className="mb-4">
+        <Alert className="mx-4 mb-4">
           <AlertDescription className="flex items-center justify-between">
             <span>
               <strong>{selectedInvestors.length}</strong> selected

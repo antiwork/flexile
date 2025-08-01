@@ -125,31 +125,29 @@ export default function Dividends() {
     <>
       <DashboardHeader title="Dividends" />
 
-      <div className="px-4">
-        {!hasLegalDetails ? (
-          <Alert>
-            <Info />
-            <AlertDescription>
-              Please{" "}
-              <Link className={linkClasses} href="/settings/tax">
-                provide your legal details
-              </Link>{" "}
-              so we can pay you.
-            </AlertDescription>
-          </Alert>
-        ) : !user.hasPayoutMethodForDividends ? (
-          <Alert>
-            <Info />
-            <AlertDescription>
-              Please{" "}
-              <Link className={linkClasses} href="/settings/payouts">
-                provide a payout method
-              </Link>{" "}
-              for your dividends.
-            </AlertDescription>
-          </Alert>
-        ) : null}
-      </div>
+      {!hasLegalDetails ? (
+        <Alert className="mx-4">
+          <Info />
+          <AlertDescription>
+            Please{" "}
+            <Link className={linkClasses} href="/settings/tax">
+              provide your legal details
+            </Link>{" "}
+            so we can pay you.
+          </AlertDescription>
+        </Alert>
+      ) : !user.hasPayoutMethodForDividends ? (
+        <Alert className="mx-4">
+          <Info />
+          <AlertDescription>
+            Please{" "}
+            <Link className={linkClasses} href="/settings/payouts">
+              provide a payout method
+            </Link>{" "}
+            for your dividends.
+          </AlertDescription>
+        </Alert>
+      ) : null}
       {isLoading ? (
         <TableSkeleton columns={7} />
       ) : data.length > 0 ? (

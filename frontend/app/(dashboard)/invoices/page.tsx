@@ -319,88 +319,86 @@ export default function InvoicesPage() {
         }
       />
 
-      <div className="grid gap-4 px-4">
-        {user.roles.worker ? (
-          !hasLegalDetails ? (
-            <Alert>
-              <Info className="size-4" />
+      {user.roles.worker ? (
+        !hasLegalDetails ? (
+          <Alert className="mx-4">
+            <Info className="size-4" />
+            <AlertDescription>
+              Please{" "}
+              <Link className={linkClasses} href="/settings/tax">
+                provide your legal details
+              </Link>{" "}
+              before creating new invoices.
+            </AlertDescription>
+          </Alert>
+        ) : unsignedContractId ? (
+          <Alert className="mx-4">
+            <Info className="size-4" />
+            <AlertTitle>You have an unsigned contract.</AlertTitle>
+            <AlertDescription>
+              Please{" "}
+              <Link
+                className={linkClasses}
+                href={`/documents?${new URLSearchParams({ sign: unsignedContractId.toString(), next: "/invoices" })}`}
+              >
+                sign it
+              </Link>{" "}
+              before creating new invoices.
+            </AlertDescription>
+          </Alert>
+        ) : !user.hasPayoutMethodForInvoices ? (
+          <Alert className="mx-4">
+            <Info className="size-4" />
+            <AlertDescription>
+              Please{" "}
+              <Link className={linkClasses} href="/settings/payouts">
+                provide a payout method
+              </Link>{" "}
+              for your invoices.
+            </AlertDescription>
+          </Alert>
+        ) : null
+      ) : null}
+
+      {user.roles.administrator && data.length > 0 && !isLoading ? (
+        <>
+          <StripeMicrodepositVerification />
+
+          {!company.completedPaymentMethodSetup && (
+            <Alert className="mx-4" variant="destructive">
+              <AlertTriangle className="size-4" />
+              <AlertTitle>Bank account setup incomplete.</AlertTitle>
               <AlertDescription>
-                Please{" "}
-                <Link className={linkClasses} href="/settings/tax">
-                  provide your legal details
-                </Link>{" "}
-                before creating new invoices.
+                We're waiting for your bank details to be confirmed. Once done, you'll be able to start approving
+                invoices and paying contractors.
               </AlertDescription>
             </Alert>
-          ) : unsignedContractId ? (
-            <Alert>
-              <Info className="size-4" />
-              <AlertTitle>You have an unsigned contract.</AlertTitle>
+          )}
+
+          {company.completedPaymentMethodSetup && !company.isTrusted ? (
+            <Alert className="mx-4" variant="destructive">
+              <AlertTriangle className="size-4" />
+              <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
               <AlertDescription>
-                Please{" "}
-                <Link
-                  className={linkClasses}
-                  href={`/documents?${new URLSearchParams({ sign: unsignedContractId.toString(), next: "/invoices" })}`}
-                >
-                  sign it
-                </Link>{" "}
-                before creating new invoices.
+                Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete additional
+                verification steps.
               </AlertDescription>
             </Alert>
-          ) : !user.hasPayoutMethodForInvoices ? (
-            <Alert>
-              <Info className="size-4" />
+          ) : null}
+
+          {!data.every(taxRequirementsMet) && (
+            <Alert className="mx-4" variant="destructive">
+              <AlertTriangle className="size-4" />
+              <AlertTitle>Missing tax information.</AlertTitle>
               <AlertDescription>
-                Please{" "}
-                <Link className={linkClasses} href="/settings/payouts">
-                  provide a payout method
-                </Link>{" "}
-                for your invoices.
+                Some invoices are not payable until contractors provide tax information.
               </AlertDescription>
             </Alert>
-          ) : null
-        ) : null}
+          )}
+        </>
+      ) : null}
 
-        {user.roles.administrator && data.length > 0 && !isLoading ? (
-          <>
-            <StripeMicrodepositVerification />
-
-            {!company.completedPaymentMethodSetup && (
-              <Alert variant="destructive">
-                <AlertTriangle className="size-4" />
-                <AlertTitle>Bank account setup incomplete.</AlertTitle>
-                <AlertDescription>
-                  We're waiting for your bank details to be confirmed. Once done, you'll be able to start approving
-                  invoices and paying contractors.
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {company.completedPaymentMethodSetup && !company.isTrusted ? (
-              <Alert variant="destructive">
-                <AlertTriangle className="size-4" />
-                <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
-                <AlertDescription>
-                  Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete additional
-                  verification steps.
-                </AlertDescription>
-              </Alert>
-            ) : null}
-
-            {!data.every(taxRequirementsMet) && (
-              <Alert variant="destructive">
-                <AlertTriangle className="size-4" />
-                <AlertTitle>Missing tax information.</AlertTitle>
-                <AlertDescription>
-                  Some invoices are not payable until contractors provide tax information.
-                </AlertDescription>
-              </Alert>
-            )}
-          </>
-        ) : null}
-
-        <QuickInvoicesSection />
-      </div>
+      <QuickInvoicesSection />
 
       {isLoading ? (
         <TableSkeleton columns={6} />
@@ -556,7 +554,7 @@ const TasksModal = ({
           <StatusDetails invoice={invoice} />
           {payRateInSubunits &&
           invoiceData.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
-            <Alert variant="warning">
+            <Alert className="mx-4" variant="warning">
               <CircleAlert />
               <AlertDescription>
                 This invoice includes rates above the default of {formatMoneyFromCents(payRateInSubunits)}/
