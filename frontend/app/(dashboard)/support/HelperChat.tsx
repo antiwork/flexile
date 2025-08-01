@@ -1,31 +1,18 @@
 "use client";
 
 import { type ConversationDetails, type Message } from "@helperai/client";
-import { MessageContent, useChat } from "@helperai/react";
+import { MessageContent, useCreateMessage, useRealtimeEvents } from "@helperai/react";
 import { Paperclip, Send, User, X } from "lucide-react";
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useCurrentCompany, useCurrentUser } from "@/global";
-import { trpc } from "@/trpc/client";
+import { useCurrentUser } from "@/global";
 import { cn } from "@/utils";
 
 interface HelperChatProps {
   conversation: ConversationDetails;
 }
-
-const TypingIndicator = () => (
-  <div className="flex justify-start">
-    <div className="max-w-xs rounded-lg bg-gray-100 px-4 py-2 text-gray-900 lg:max-w-md">
-      <div className="flex items-center space-x-1">
-        <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "0ms" }}></div>
-        <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "150ms" }}></div>
-        <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "300ms" }}></div>
-      </div>
-    </div>
-  </div>
-);
 
 const MessageAttachments = ({
   attachments,
@@ -114,56 +101,42 @@ const MessageRow = ({
 };
 
 export const HelperChat = ({ conversation }: HelperChatProps) => {
-  const utils = trpc.useUtils();
   const user = useCurrentUser();
-  const company = useCurrentCompany();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
+  const [content, setContent] = useState("");
 
-  const { messages, input, handleInputChange, handleSubmit, agentTyping } = useChat({
-    conversation,
-    tools: {
-      getInvoices: {
-        description: "Fetch a list of recent invoices",
-        parameters: {},
-        execute: async () => {
-          const invoices = await utils.invoices.list.fetch({
-            companyId: company.id,
-            contractorId: user.roles.worker?.id,
-          });
-          return invoices.map((invoice) => ({
-            id: invoice.id,
-            number: invoice.invoiceNumber,
-            // The AI SDK crashes if we return a BigInt
-            totalAmountInUsdCents: Number(invoice.totalAmountInUsdCents),
-            date: invoice.invoiceDate,
-            status: invoice.status,
-          }));
-        },
-      },
-    },
-    ai: {
-      maxSteps: 3,
+  const createMessage = useCreateMessage({
+    onSuccess: () => {
+      setAttachments([]);
     },
   });
+
+  useRealtimeEvents(conversation.slug);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      if (input.trim() || attachments.length > 0) handleFormSubmit(e);
+      if (content.trim() || attachments.length > 0) handleFormSubmit(e);
     }
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
-    // Create a DataTransfer object to build a proper FileList
-    const dataTransfer = new DataTransfer();
-    attachments.forEach((file) => dataTransfer.items.add(file));
+    e.preventDefault();
 
-    const options = attachments.length > 0 ? { experimental_attachments: dataTransfer.files } : {};
-
-    handleSubmit(e, options);
-    setAttachments([]);
+    createMessage.mutate({
+      conversationSlug: conversation.slug,
+      content,
+      attachments,
+      tools: {
+        getInvoices: {
+          description: "Fetch a list of recent invoices",
+          parameters: {},
+          url: "/api/helper/invoices",
+        },
+      },
+    });
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -184,17 +157,14 @@ export const HelperChat = ({ conversation }: HelperChatProps) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, agentTyping]);
-
-  const lastMessage = messages[messages.length - 1];
-  const showAgentTypingIndicator = lastMessage && !lastMessage.content && lastMessage.role !== "user";
+  }, [conversation.messages.length]);
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
-      {messages.length === 0 ? (
+      {conversation.messages.length === 0 ? (
         <div className="py-8 text-center text-gray-500">No messages yet. Start the conversation!</div>
       ) : (
-        messages
+        conversation.messages
           .filter((message) => !!message.content)
           .map((message, index, filteredMessages) => (
             <MessageRow
@@ -205,8 +175,6 @@ export const HelperChat = ({ conversation }: HelperChatProps) => {
             />
           ))
       )}
-      {showAgentTypingIndicator ? <TypingIndicator /> : null}
-      {agentTyping ? <div className="text-center text-xs text-gray-500">Agent is typing...</div> : null}
 
       <form onSubmit={handleFormSubmit} className="bg-background w-full max-w-4xl space-y-2 p-4">
         {attachments.length > 0 && (
@@ -231,8 +199,8 @@ export const HelperChat = ({ conversation }: HelperChatProps) => {
         <div className="relative">
           <Textarea
             rows={2}
-            value={input}
-            onChange={handleInputChange}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask anything..."
             className="max-h-50 min-h-26 w-full resize-none pb-10"
@@ -251,7 +219,7 @@ export const HelperChat = ({ conversation }: HelperChatProps) => {
           </div>
         </div>
         <div className="mt-4 flex justify-end">
-          <Button type="submit" disabled={!input.trim() && attachments.length === 0} size="small">
+          <Button type="submit" disabled={!content.trim() && attachments.length === 0} size="small">
             <Send className="size-4" />
             Send reply
           </Button>
