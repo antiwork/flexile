@@ -19,6 +19,7 @@ import { Slider } from "@/components/ui/slider";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { PayRateType, trpc } from "@/trpc/client";
+import { cn } from "@/utils";
 import { assert } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate, formatDuration } from "@/utils/time";
@@ -34,6 +35,17 @@ import {
   useIsDeletable,
 } from "..";
 import InvoiceStatus, { StatusDetails } from "../Status";
+
+const printStyles = {
+  page: "print:bg-white print:font-sans print:text-sm print:leading-tight print:text-black print:*:invisible",
+  section:
+    "print:visible print:m-0 print:max-w-none print:break-before-avoid print:break-inside-avoid print:break-after-avoid print:bg-white print:p-0 print:text-black print:*:visible",
+  hidden: "print:hidden",
+  header: "print:text-xs print:leading-tight",
+  tableHeader: "print:border print:border-gray-300 print:bg-gray-100 print:p-1.5 print:text-xs print:font-bold",
+  tableCell: "print:border print:border-gray-300 print:p-1.5 print:text-xs",
+  totalRow: "print:my-1 print:flex print:items-center print:justify-between print:text-xs",
+} as const;
 
 export default function InvoicePage() {
   const { id } = useParams<{ id: string }>();
@@ -84,9 +96,10 @@ export default function InvoicePage() {
   assert(!!invoice.invoiceDate); // must be defined due to model checks in rails
 
   return (
-    <>
+    <div className={printStyles.page}>
       <DashboardHeader
         title={`Invoice ${invoice.invoiceNumber}`}
+        className={printStyles.hidden}
         headerActions={
           <>
             <InvoiceStatus aria-label="Status" invoice={invoice} />
@@ -221,17 +234,17 @@ export default function InvoicePage() {
         </Dialog>
       ) : null}
       {!taxRequirementsMet(invoice) && (
-        <Alert className="mx-4" variant="destructive">
+        <Alert className={cn("mx-4", printStyles.hidden)} variant="destructive">
           <ExclamationTriangleIcon />
           <AlertTitle>Missing tax information.</AlertTitle>
           <AlertDescription>Invoice is not payable until contractor provides tax information.</AlertDescription>
         </Alert>
       )}
 
-      <StatusDetails invoice={invoice} />
+      <StatusDetails invoice={invoice} className={printStyles.hidden} />
 
       {payRateInSubunits && invoice.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
-        <Alert className="mx-4" variant="warning">
+        <Alert className={cn("mx-4", printStyles.hidden)} variant="warning">
           <CircleAlert />
           <AlertDescription>
             This invoice includes rates above the default of {formatMoneyFromCents(payRateInSubunits)}/
@@ -250,37 +263,40 @@ export default function InvoicePage() {
         </Alert>
       ) : null}
 
-      <section className="invoice-print">
+      <section className={cn("invoice-print", printStyles.section)}>
+        <h1 className={cn("hidden", "print:mb-4 print:block print:text-4xl print:font-bold print:text-black")}>
+          INVOICE
+        </h1>
         <form>
           <div className="grid gap-4">
-            <div className="grid auto-cols-fr gap-3 md:grid-flow-col print:grid-flow-col">
-              <div>
+            <div className="grid auto-cols-fr gap-3 p-4 md:grid-flow-col print:mb-4 print:grid-flow-col print:grid-cols-5 print:gap-3 print:border-none print:bg-transparent print:p-0">
+              <div className={printStyles.header}>
                 From
                 <br />
-                <b>{invoice.billFrom}</b>
+                <b className="print:text-sm print:font-bold">{invoice.billFrom}</b>
                 <div>
                   <Address address={invoice} />
                 </div>
               </div>
-              <div>
+              <div className={printStyles.header}>
                 To
                 <br />
-                <b>{invoice.billTo}</b>
+                <b className="print:text-sm print:font-bold">{invoice.billTo}</b>
                 <div>
                   <LegacyAddress address={company.address} />
                 </div>
               </div>
-              <div>
+              <div className={printStyles.header}>
                 Invoice ID
                 <br />
                 {invoice.invoiceNumber}
               </div>
-              <div>
+              <div className={printStyles.header}>
                 Sent on
                 <br />
                 {formatDate(invoice.invoiceDate)}
               </div>
-              <div>
+              <div className={printStyles.header}>
                 Paid on
                 <br />
                 {invoice.paidAt ? formatDate(invoice.paidAt) : "-"}
@@ -289,40 +305,59 @@ export default function InvoicePage() {
 
             {invoice.lineItems.length > 0 ? (
               <>
-                <div className="hidden w-full overflow-x-auto md:block">
-                  <Table className="w-full max-w-full table-fixed">
+                <div className="hidden w-full overflow-x-auto md:block print:block">
+                  <Table className="w-full max-w-full table-fixed print:my-3 print:w-full print:border-collapse print:text-xs">
                     <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[60%]">
+                      <TableRow className="print:border-b print:border-gray-300">
+                        <TableHead className={cn("w-[60%]", printStyles.tableHeader, "print:text-left")}>
                           {complianceInfo?.businessEntity ? `Services (${complianceInfo.legalName})` : "Services"}
                         </TableHead>
-                        <TableHead className="w-[15%] text-right">Qty / Hours</TableHead>
-                        <TableHead className="w-[15%] text-right">Cash rate</TableHead>
-                        <TableHead className="w-[10%] text-right">Line total</TableHead>
+                        <TableHead className={cn("w-[15%] text-right", printStyles.tableHeader, "print:text-right")}>
+                          Qty / Hours
+                        </TableHead>
+                        <TableHead className={cn("w-[15%] text-right", printStyles.tableHeader, "print:text-right")}>
+                          Cash rate
+                        </TableHead>
+                        <TableHead className={cn("w-[10%] text-right", printStyles.tableHeader, "print:text-right")}>
+                          Line total
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {invoice.lineItems.map((lineItem, index) => (
                         <TableRow key={index}>
-                          <TableCell className="w-[60%] align-top">
-                            <div
-                              className="max-w-full overflow-hidden pr-2 whitespace-normal"
-                              style={{
-                                wordBreak: "break-word",
-                              }}
-                            >
+                          <TableCell className={cn("w-[60%] align-top", printStyles.tableCell, "print:align-top")}>
+                            <div className="max-w-full overflow-hidden pr-2 break-words whitespace-normal">
                               {lineItem.description}
                             </div>
                           </TableCell>
-                          <TableCell className="w-[15%] text-right align-top tabular-nums">
+                          <TableCell
+                            className={cn(
+                              "w-[15%] text-right align-top tabular-nums",
+                              printStyles.tableCell,
+                              "print:text-right print:align-top",
+                            )}
+                          >
                             {lineItem.hourly ? formatDuration(Number(lineItem.quantity)) : lineItem.quantity}
                           </TableCell>
-                          <TableCell className="w-[15%] text-right align-top tabular-nums">
+                          <TableCell
+                            className={cn(
+                              "w-[15%] text-right align-top tabular-nums",
+                              printStyles.tableCell,
+                              "print:text-right print:align-top",
+                            )}
+                          >
                             {lineItem.payRateInSubunits
                               ? `${formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)}${lineItem.hourly ? " / hour" : ""}`
                               : ""}
                           </TableCell>
-                          <TableCell className="w-[10%] text-right align-top tabular-nums">
+                          <TableCell
+                            className={cn(
+                              "w-[10%] text-right align-top tabular-nums",
+                              printStyles.tableCell,
+                              "print:text-right print:align-top",
+                            )}
+                          >
                             {formatMoneyFromCents(lineItemTotal(lineItem) * cashFactor)}
                           </TableCell>
                         </TableRow>
@@ -331,7 +366,7 @@ export default function InvoicePage() {
                   </Table>
                 </div>
 
-                <div className="w-full overflow-x-auto md:hidden">
+                <div className="w-full overflow-x-auto md:hidden print:hidden">
                   <Table className="w-full min-w-[600px] table-fixed">
                     <TableHeader>
                       <TableRow>
@@ -378,7 +413,7 @@ export default function InvoicePage() {
             ) : null}
 
             {invoice.expenses.length > 0 && (
-              <Card>
+              <Card className="print:my-3 print:border print:border-gray-300 print:bg-white print:p-2">
                 <CardContent>
                   <div className="flex justify-between gap-2">
                     <div>Expense</div>
@@ -386,14 +421,14 @@ export default function InvoicePage() {
                   </div>
                   {invoice.expenses.map((expense, i) => (
                     <Fragment key={i}>
-                      <Separator />
+                      <Separator className="print:my-1.5 print:border-t print:border-gray-200" />
                       <div className="flex justify-between gap-2">
                         <Link
                           href={`/download/${expense.attachment?.key}/${expense.attachment?.filename}`}
                           download
-                          className={linkClasses}
+                          className={cn(linkClasses, "print:text-black print:no-underline")}
                         >
-                          <PaperClipIcon className="inline size-4" />
+                          <PaperClipIcon className="inline size-4 print:hidden" />
                           {expenseCategories.find((category) => category.id === expense.expenseCategoryId)?.name} –{" "}
                           {expense.description}
                         </Link>
@@ -405,24 +440,24 @@ export default function InvoicePage() {
               </Card>
             )}
 
-            <footer className="flex justify-between">
-              <div>
+            <footer className="flex justify-between print:mt-4 print:flex print:items-start print:justify-between">
+              <div className="print:mr-4 print:flex-1">
                 {invoice.notes ? (
                   <div>
-                    <b>Notes</b>
+                    <b className="print:text-sm print:font-bold">Notes</b>
                     <div>
                       <div className="text-xs">
-                        <p>{invoice.notes}</p>
+                        <p className="print:mt-1 print:text-xs">{invoice.notes}</p>
                       </div>
                     </div>
                   </div>
                 ) : null}
               </div>
-              <Card>
+              <Card className="print:min-w-36 print:border-none print:bg-transparent print:p-2">
                 <CardContent>
                   {invoice.lineItems.length > 0 && invoice.expenses.length > 0 && (
                     <>
-                      <div className="flex justify-between gap-2">
+                      <div className={cn("flex justify-between gap-2", printStyles.totalRow)}>
                         <strong>Total services</strong>
                         <span>
                           {formatMoneyFromCents(
@@ -430,8 +465,8 @@ export default function InvoicePage() {
                           )}
                         </span>
                       </div>
-                      <Separator />
-                      <div className="flex justify-between gap-2">
+                      <Separator className="print:my-1.5 print:border-t print:border-gray-200" />
+                      <div className={cn("flex justify-between gap-2", printStyles.totalRow)}>
                         <strong>Total expenses</strong>
                         <span>
                           {formatMoneyFromCents(
@@ -439,10 +474,10 @@ export default function InvoicePage() {
                           )}
                         </span>
                       </div>
-                      <Separator />
+                      <Separator className="print:my-1.5 print:border-t print:border-gray-200" />
                     </>
                   )}
-                  <div className="flex justify-between gap-2">
+                  <div className="flex justify-between gap-2 print:my-1 print:mt-1.5 print:flex print:items-center print:justify-between print:border-t-2 print:border-gray-300 print:pt-1.5 print:text-sm print:font-bold">
                     <strong>Total</strong>
                     <span>{formatMoneyFromCents(invoice.cashAmountInCents)}</span>
                   </div>
@@ -452,6 +487,6 @@ export default function InvoicePage() {
           </div>
         </form>
       </section>
-    </>
+    </div>
   );
 }

@@ -1,9 +1,18 @@
 import React from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { cn } from "@/utils";
 
-export function DashboardHeader({ title, headerActions }: { title: React.ReactNode; headerActions?: React.ReactNode }) {
+export function DashboardHeader({
+  title,
+  headerActions,
+  className,
+}: {
+  title: React.ReactNode;
+  headerActions?: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <header className="px-4 pt-4">
+    <header className={cn("px-4 pt-4", className)}>
       <div className="grid items-center justify-between gap-3 md:flex">
         <div>
           <div className="flex items-center justify-between gap-2">
