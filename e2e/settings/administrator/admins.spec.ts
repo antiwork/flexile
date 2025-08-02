@@ -149,8 +149,8 @@ test.describe("Manage admin access", () => {
       // Click "Remove admin" in dropdown
       await page.getByRole("menuitem", { name: "Remove admin" }).click();
 
-      // Confirm in modal
-      await expect(page.getByRole("dialog")).toBeVisible();
+      // Confirm in AlertDialog
+      await expect(page.getByRole("alertdialog")).toBeVisible();
       await expect(page.getByText(/Remove admin access for/u)).toBeVisible();
 
       // Set up promise to wait for the tRPC mutation response

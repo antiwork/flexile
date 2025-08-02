@@ -2,8 +2,16 @@ import { CurrencyDollarIcon } from "@heroicons/react/20/solid";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 import MutationButton from "@/components/MutationButton";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -200,31 +208,35 @@ export const RejectModal = ({
   const [reason, setReason] = useState("");
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Reject {ids.length > 1 ? `${ids.length} invoices` : "invoice"}?</DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-2">
-          <Label htmlFor="reject-reason">
+    <AlertDialog open={open} onOpenChange={onClose}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Reject {ids.length > 1 ? `${ids.length} invoices` : "invoice"}?</AlertDialogTitle>
+          <AlertDialogDescription>
             Explain why the {ids.length > 1 ? "invoices were" : "invoice was"} rejected and how to fix it (optional)
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="grid gap-2">
+          <Label htmlFor="reject-reason" className="sr-only">
+            Rejection reason
           </Label>
           <Textarea
             id="reject-reason"
+            placeholder="Enter rejection reason..."
             value={reason}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setReason(e.target.value)}
           />
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            No, cancel
-          </Button>
-          <MutationButton mutation={rejectInvoices} param={{ ids, reason }} loadingText="Rejecting...">
-            Yes, reject
-          </MutationButton>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        <AlertDialogFooter>
+          <AlertDialogCancel>No, cancel</AlertDialogCancel>
+          <AlertDialogAction asChild>
+            <MutationButton mutation={rejectInvoices} param={{ ids, reason }} loadingText="Rejecting...">
+              Yes, reject
+            </MutationButton>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 
@@ -264,29 +276,27 @@ export const DeleteModal = ({
   });
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
+    <AlertDialog open={open} onOpenChange={onClose}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
             Delete {invoices.length > 1 ? `${invoices.length} invoices` : `invoice "${invoices[0]?.invoiceNumber}"`}?
-          </DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-2">
-          <p className="text-sm">
+          </AlertDialogTitle>
+          <AlertDialogDescription>
             {invoices.length > 1
               ? "These invoices will be cancelled and permanently deleted. They won't be payable or recoverable."
               : `This invoice will be cancelled and permanently deleted. It won't be payable or recoverable.`}
-          </p>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <MutationButton idleVariant="critical" mutation={deleteInvoices} param={{ ids }} loadingText="Deleting...">
-            Delete
-          </MutationButton>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction asChild>
+            <MutationButton idleVariant="critical" mutation={deleteInvoices} param={{ ids }} loadingText="Deleting...">
+              Delete
+            </MutationButton>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };

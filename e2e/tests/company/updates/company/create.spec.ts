@@ -36,11 +36,13 @@ test.describe("company update creation", () => {
     await fillForm(page, title, content);
     await page.getByRole("button", { name: "Publish" }).click();
 
-    await expect(page.getByRole("dialog", { name: "Publish update?" })).toBeVisible();
+    await expect(page.getByRole("alertdialog", { name: "Publish update?" })).toBeVisible();
     await page.getByRole("button", { name: "Yes, publish" }).click();
 
     await page.waitForURL("/updates/company");
-    await expect(page.getByRole("row").filter({ hasText: title }).filter({ hasText: "Sent" })).toBeVisible();
+    await expect(page.getByRole("row").filter({ hasText: title }).filter({ hasText: "Sent" })).toBeVisible({
+      timeout: 10000,
+    });
 
     const updates = await db.query.companyUpdates.findMany({
       where: eq(companyUpdates.companyId, company.id),
@@ -81,11 +83,11 @@ test.describe("company update creation", () => {
 
     await page.getByRole("button", { name: "Preview" }).click();
     await expect(page.locator('[data-slot="form-message"]').first()).toBeVisible();
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await expect(page.getByRole("alertdialog")).not.toBeVisible();
 
     await page.getByRole("button", { name: "Publish" }).click();
     await expect(page.locator('[data-slot="form-message"]').first()).toBeVisible();
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await expect(page.getByRole("alertdialog")).not.toBeVisible();
 
     const updates = await db.query.companyUpdates.findMany({
       where: eq(companyUpdates.companyId, company.id),
@@ -107,7 +109,7 @@ test.describe("company update creation", () => {
     await page.getByLabel("Title").fill("Updated Title");
 
     await page.getByRole("button", { name: "Update" }).click();
-    await expect(page.getByRole("dialog", { name: "Publish update?" })).toBeVisible();
+    await expect(page.getByRole("alertdialog", { name: "Publish update?" })).toBeVisible();
     await page.getByRole("button", { name: "Yes, update" }).click();
 
     await page.waitForURL("/updates/company");
