@@ -1,7 +1,6 @@
 "use client";
 
 import { SignOutButton } from "@clerk/nextjs";
-import { HelperClientProvider, useUnreadConversationsCount } from "@helperai/react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { skipToken, useQueryClient } from "@tanstack/react-query";
 import {
@@ -12,7 +11,6 @@ import {
   CircleDollarSign,
   Files,
   LogOut,
-  MessageCircleQuestion,
   ReceiptIcon,
   Rss,
   Settings,
@@ -27,7 +25,6 @@ import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 import { navLinks as equityNavLinks } from "@/app/(dashboard)/equity";
 import { useIsActionable } from "@/app/(dashboard)/invoices";
-import { useHelperSession } from "@/app/(dashboard)/support/SupportPortal";
 import { GettingStarted } from "@/components/GettingStarted";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -62,7 +59,6 @@ import { company_switch_path } from "@/utils/routes";
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = useCurrentUser();
   const company = useCurrentCompany();
-  const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [showTryEquity, setShowTryEquity] = React.useState(true);
@@ -79,8 +75,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     await queryClient.resetQueries({ queryKey: ["currentUser"] });
     useUserStore.setState((state) => ({ ...state, pending: false }));
   };
-
-  const { data: helperSession } = useHelperSession();
 
   return (
     <SidebarProvider>
@@ -173,20 +167,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ) : null}
-                <NavItem
-                  href="/support"
-                  active={pathname.startsWith("/support")}
-                  icon={MessageCircleQuestion}
-                  badge={
-                    helperSession ? (
-                      <HelperClientProvider host="https://help.flexile.com" session={helperSession}>
-                        <SupportUnreadCount />
-                      </HelperClientProvider>
-                    ) : null
-                  }
-                >
-                  Support center
-                </NavItem>
                 <SidebarMenuItem>
                   <SignOutButton>
                     <SidebarMenuButton className="cursor-pointer">
@@ -210,8 +190,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         ) : null}
       </Sidebar>
       <SidebarInset>
-        <div className="relative flex flex-col not-print:h-screen not-print:overflow-hidden">
-          <main className="flex flex-1 flex-col gap-4 p-4 not-print:overflow-y-auto">{children}</main>
+        <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
+          <main className="flex flex-1 flex-col not-print:overflow-y-auto">
+            <div className="flex flex-col gap-4">{children}</div>
+          </main>
         </div>
       </SidebarInset>
     </SidebarProvider>
@@ -368,7 +350,7 @@ const NavItem = <T extends string>({
   active?: boolean;
   icon: React.ComponentType;
   filledIcon?: React.ComponentType;
-  badge?: number | React.ReactNode;
+  badge?: number | undefined;
 }) => {
   const Icon = active && filledIcon ? filledIcon : icon;
   return (
@@ -377,25 +359,18 @@ const NavItem = <T extends string>({
         <NavLink href={href}>
           <Icon />
           <span>{children}</span>
-          {typeof badge === "number" ? badge > 0 ? <NavBadge count={badge} /> : null : badge}
+          {badge && badge > 0 ? (
+            <Badge role="status" className="ml-auto h-4 w-auto min-w-4 bg-blue-500 px-1 text-xs text-white">
+              {badge > 10 ? "10+" : badge}
+            </Badge>
+          ) : null}
         </NavLink>
       </SidebarMenuButton>
     </SidebarMenuItem>
   );
 };
 
-const NavBadge = ({ count }: { count: number }) => (
-  <Badge role="status" className="ml-auto h-4 w-auto min-w-4 bg-blue-500 px-1 text-xs text-white">
-    {count > 10 ? "10+" : count}
-  </Badge>
-);
-
 const NavLink = <T extends string>(props: LinkProps<T>) => {
   const sidebar = useSidebar();
   return <Link onClick={() => sidebar.setOpenMobile(false)} {...props} />;
-};
-
-const SupportUnreadCount = () => {
-  const { data } = useUnreadConversationsCount();
-  return data?.count && data.count > 0 ? <NavBadge count={data.count} /> : null;
 };

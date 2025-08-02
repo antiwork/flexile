@@ -319,139 +319,139 @@ export default function InvoicesPage() {
         }
       />
 
-      <div className="grid gap-4">
-        {user.roles.worker ? (
-          !hasLegalDetails ? (
-            <Alert>
-              <Info />
+      {user.roles.worker ? (
+        !hasLegalDetails ? (
+          <Alert className="mx-4">
+            <Info className="size-4" />
+            <AlertDescription>
+              Please{" "}
+              <Link className={linkClasses} href="/settings/tax">
+                provide your legal details
+              </Link>{" "}
+              before creating new invoices.
+            </AlertDescription>
+          </Alert>
+        ) : unsignedContractId ? (
+          <Alert className="mx-4">
+            <Info className="size-4" />
+            <AlertTitle>You have an unsigned contract.</AlertTitle>
+            <AlertDescription>
+              Please{" "}
+              <Link
+                className={linkClasses}
+                href={`/documents?${new URLSearchParams({ sign: unsignedContractId.toString(), next: "/invoices" })}`}
+              >
+                sign it
+              </Link>{" "}
+              before creating new invoices.
+            </AlertDescription>
+          </Alert>
+        ) : !user.hasPayoutMethodForInvoices ? (
+          <Alert className="mx-4">
+            <Info className="size-4" />
+            <AlertDescription>
+              Please{" "}
+              <Link className={linkClasses} href="/settings/payouts">
+                provide a payout method
+              </Link>{" "}
+              for your invoices.
+            </AlertDescription>
+          </Alert>
+        ) : null
+      ) : null}
+
+      {user.roles.administrator && data.length > 0 && !isLoading ? (
+        <>
+          <StripeMicrodepositVerification />
+
+          {!company.completedPaymentMethodSetup && (
+            <Alert className="mx-4" variant="destructive">
+              <AlertTriangle className="size-4" />
+              <AlertTitle>Bank account setup incomplete.</AlertTitle>
               <AlertDescription>
-                Please{" "}
-                <Link className={linkClasses} href="/settings/tax">
-                  provide your legal details
-                </Link>{" "}
-                before creating new invoices.
+                We're waiting for your bank details to be confirmed. Once done, you'll be able to start approving
+                invoices and paying contractors.
               </AlertDescription>
             </Alert>
-          ) : unsignedContractId ? (
-            <Alert>
-              <Info />
-              <AlertTitle>You have an unsigned contract.</AlertTitle>
+          )}
+
+          {company.completedPaymentMethodSetup && !company.isTrusted ? (
+            <Alert className="mx-4" variant="destructive">
+              <AlertTriangle className="size-4" />
+              <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
               <AlertDescription>
-                Please{" "}
-                <Link
-                  className={linkClasses}
-                  href={`/documents?${new URLSearchParams({ sign: unsignedContractId.toString(), next: "/invoices" })}`}
-                >
-                  sign it
-                </Link>{" "}
-                before creating new invoices.
+                Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete additional
+                verification steps.
               </AlertDescription>
             </Alert>
-          ) : !user.hasPayoutMethodForInvoices ? (
-            <Alert>
-              <Info />
+          ) : null}
+
+          {!data.every(taxRequirementsMet) && (
+            <Alert className="mx-4" variant="destructive">
+              <AlertTriangle className="size-4" />
+              <AlertTitle>Missing tax information.</AlertTitle>
               <AlertDescription>
-                Please{" "}
-                <Link className={linkClasses} href="/settings/payouts">
-                  provide a payout method
-                </Link>{" "}
-                for your invoices.
+                Some invoices are not payable until contractors provide tax information.
               </AlertDescription>
             </Alert>
-          ) : null
-        ) : null}
+          )}
+        </>
+      ) : null}
 
-        <QuickInvoicesSection />
-        {isLoading ? (
-          <TableSkeleton columns={6} />
-        ) : data.length > 0 ? (
-          <>
-            {user.roles.administrator ? (
-              <>
-                <StripeMicrodepositVerification />
-                {!company.completedPaymentMethodSetup && (
-                  <Alert variant="destructive">
-                    <AlertTriangle className="size-5" />
-                    <AlertTitle>Bank account setup incomplete.</AlertTitle>
-                    <AlertDescription>
-                      We're waiting for your bank details to be confirmed. Once done, you'll be able to start approving
-                      invoices and paying contractors.
-                    </AlertDescription>
-                  </Alert>
-                )}
+      <QuickInvoicesSection />
 
-                {company.completedPaymentMethodSetup && !company.isTrusted ? (
-                  <Alert variant="destructive">
-                    <AlertTriangle className="size-5" />
-                    <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
-                    <AlertDescription>
-                      Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete
-                      additional verification steps.
-                    </AlertDescription>
-                  </Alert>
-                ) : null}
-
-                {!data.every(taxRequirementsMet) && (
-                  <Alert variant="destructive">
-                    <AlertTriangle className="size-5" />
-                    <AlertTitle>Missing tax information.</AlertTitle>
-                    <AlertDescription>
-                      Some invoices are not payable until contractors provide tax information.
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </>
-            ) : null}
-
-            <div className="flex justify-between md:hidden">
-              <h2 className="text-xl font-bold">
-                {data.length} {pluralize("invoice", data.length)}
-              </h2>
-              <Checkbox
-                checked={table.getIsAllRowsSelected()}
-                label="Select all"
-                onCheckedChange={(checked) => table.toggleAllRowsSelected(checked === true)}
-              />
-            </div>
-
-            <DataTable
-              table={table}
-              onRowClicked={user.roles.administrator ? setDetailInvoice : undefined}
-              searchColumn={user.roles.administrator ? "billFrom" : undefined}
-              actions={
-                user.roles.administrator ? (
-                  <Button variant="outline" size="small" asChild>
-                    <a href={export_company_invoices_path(company.id)}>
-                      <Download className="size-4" />
-                      Download CSV
-                    </a>
-                  </Button>
-                ) : null
-              }
-              selectionActions={(selectedRows) => (
-                <SelectionActions
-                  selectedItems={selectedRows}
-                  config={actionConfig}
-                  actionContext={actionContext}
-                  onAction={handleInvoiceAction}
-                />
-              )}
-              contextMenuContent={({ row, selectedRows, onClearSelection }) => (
-                <ContextMenuActions
-                  item={row}
-                  selectedItems={selectedRows}
-                  config={actionConfig}
-                  actionContext={actionContext}
-                  onAction={handleInvoiceAction}
-                  onClearSelection={onClearSelection}
-                />
-              )}
+      {isLoading ? (
+        <TableSkeleton columns={6} />
+      ) : data.length > 0 ? (
+        <>
+          <div className="mx-4 flex justify-between md:hidden">
+            <h2 className="text-xl font-bold">
+              {data.length} {pluralize("invoice", data.length)}
+            </h2>
+            <Checkbox
+              checked={table.getIsAllRowsSelected()}
+              label="Select all"
+              onCheckedChange={(checked) => table.toggleAllRowsSelected(checked === true)}
             />
-          </>
-        ) : (
-          <Placeholder icon={CircleCheck}>No invoices to display.</Placeholder>
-        )}
-      </div>
+          </div>
+
+          <DataTable
+            table={table}
+            onRowClicked={user.roles.administrator ? setDetailInvoice : undefined}
+            searchColumn={user.roles.administrator ? "billFrom" : undefined}
+            actions={
+              user.roles.administrator ? (
+                <Button variant="outline" size="small" asChild>
+                  <a href={export_company_invoices_path(company.id)}>
+                    <Download className="size-4" />
+                    Download CSV
+                  </a>
+                </Button>
+              ) : null
+            }
+            selectionActions={(selectedRows) => (
+              <SelectionActions
+                selectedItems={selectedRows}
+                config={actionConfig}
+                actionContext={actionContext}
+                onAction={handleInvoiceAction}
+              />
+            )}
+            contextMenuContent={({ row, selectedRows, onClearSelection }) => (
+              <ContextMenuActions
+                item={row}
+                selectedItems={selectedRows}
+                config={actionConfig}
+                actionContext={actionContext}
+                onAction={handleInvoiceAction}
+                onClearSelection={onClearSelection}
+              />
+            )}
+          />
+        </>
+      ) : (
+        <Placeholder icon={CircleCheck}>No invoices to display.</Placeholder>
+      )}
 
       <Dialog open={openModal === "approve"} onOpenChange={() => setOpenModal(null)}>
         <DialogContent>
@@ -554,7 +554,7 @@ const TasksModal = ({
           <StatusDetails invoice={invoice} />
           {payRateInSubunits &&
           invoiceData.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
-            <Alert variant="warning">
+            <Alert className="mx-4" variant="warning">
               <CircleAlert />
               <AlertDescription>
                 This invoice includes rates above the default of {formatMoneyFromCents(payRateInSubunits)}/

@@ -173,7 +173,9 @@ export default function PeoplePage() {
           }
         />
       ) : (
-        <Placeholder icon={Users}>Contractors will show up here.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={Users}>Contractors will show up here.</Placeholder>
+        </div>
       )}
       <Dialog open={showInviteModal} onOpenChange={setShowInviteModal}>
         <DialogContent>

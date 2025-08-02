@@ -95,7 +95,7 @@ export default function GrantsPage() {
       />
 
       {equityPlanContractTemplates.length === 0 ? (
-        <Alert>
+        <Alert className="mx-4">
           <Info />
           <AlertDescription>
             <Link href="/documents" className={linkClasses}>
@@ -110,7 +110,9 @@ export default function GrantsPage() {
       ) : data.length > 0 ? (
         <DataTable table={table} onRowClicked={(row) => router.push(`/people/${row.user.id}`)} />
       ) : (
-        <Placeholder icon={CircleCheck}>There are no option grants right now.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>There are no option grants right now.</Placeholder>
+        </div>
       )}
       <Dialog open={!!cancellingGrantId} onOpenChange={() => setCancellingGrantId(null)}>
         <DialogContent>
@@ -141,7 +143,7 @@ export default function GrantsPage() {
                   <p className="text-sm text-red-500">{cancellingGrant.unvestedShares.toLocaleString()}</p>
                 </div>
               </div>
-              <Alert variant="destructive">
+              <Alert className="mx-4" variant="destructive">
                 <CircleAlert className="size-4" />
                 <AlertTitle>Important note</AlertTitle>
                 <AlertDescription>

@@ -126,7 +126,7 @@ export default function Dividends() {
       <DashboardHeader title="Dividends" />
 
       {!hasLegalDetails ? (
-        <Alert>
+        <Alert className="mx-4">
           <Info />
           <AlertDescription>
             Please{" "}
@@ -137,7 +137,7 @@ export default function Dividends() {
           </AlertDescription>
         </Alert>
       ) : !user.hasPayoutMethodForDividends ? (
-        <Alert>
+        <Alert className="mx-4">
           <Info />
           <AlertDescription>
             Please{" "}
@@ -153,7 +153,9 @@ export default function Dividends() {
       ) : data.length > 0 ? (
         <DataTable table={table} />
       ) : (
-        <Placeholder icon={CircleCheck}>You have not been issued any dividends yet.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>You have not been issued any dividends yet.</Placeholder>
+        </div>
       )}
       <Dialog open={!!dividendData} onOpenChange={() => setSigningDividend(null)}>
         <DialogContent>

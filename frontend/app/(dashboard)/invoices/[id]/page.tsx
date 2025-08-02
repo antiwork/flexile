@@ -217,7 +217,7 @@ export default function InvoicePage() {
         </Dialog>
       ) : null}
       {!taxRequirementsMet(invoice) && (
-        <Alert variant="destructive">
+        <Alert className="mx-4" variant="destructive">
           <ExclamationTriangleIcon />
           <AlertTitle>Missing tax information.</AlertTitle>
           <AlertDescription>Invoice is not payable until contractor provides tax information.</AlertDescription>
@@ -227,7 +227,7 @@ export default function InvoicePage() {
       <StatusDetails invoice={invoice} />
 
       {payRateInSubunits && invoice.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
-        <Alert variant="warning">
+        <Alert className="mx-4" variant="warning">
           <CircleAlert />
           <AlertDescription>
             This invoice includes rates above the default of {formatMoneyFromCents(payRateInSubunits)}/
@@ -237,7 +237,7 @@ export default function InvoicePage() {
       ) : null}
 
       {invoice.equityAmountInCents > 0 ? (
-        <Alert className="print:hidden">
+        <Alert className="mx-4 print:hidden">
           <InformationCircleIcon />
           <AlertDescription>
             When this invoice is paid, you'll receive an additional {formatMoneyFromCents(invoice.equityAmountInCents)}{" "}
