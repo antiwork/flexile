@@ -1,3 +1,9 @@
+<p align="center">
+  <picture>
+    <img src="https://github.com/antiwork/flexile/blob/main/frontend/public/icon-192.png" alt="Flexile Logo">
+  </picture>
+</p>
+
 # Flexile
 
 Contractor payments as easy as 1-2-3.
