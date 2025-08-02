@@ -24,14 +24,10 @@ export const login = async (page: Page, user: typeof users.$inferSelect) => {
 };
 
 export const logout = async (page: Page) => {
-  // Navigate to a page with logout functionality
-  await page.goto("/dashboard");
+  // Navigate to invoices page to ensure we're on a dashboard page with sidebar
+  await page.goto("/invoices");
 
-  // Look for logout button (this may vary based on your UI)
-  const logoutButton = page.getByRole("button", { name: "Logout" }).first();
-  if (await logoutButton.isVisible()) {
-    await logoutButton.click();
-  }
+  await page.getByRole("button", { name: "Log out" }).first().click();
 
   // Wait for redirect to login
   await page.waitForURL(/.*\/login.*/u);
