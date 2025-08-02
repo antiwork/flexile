@@ -23,18 +23,9 @@ export const login = async (page: Page, user: typeof users.$inferSelect) => {
   await page.waitForURL(/^(?!.*\/login$).*/u);
 };
 
-// TODO: This is a hack to close the Getting Started inner panel. We need to make sure Logout button is visible later
 export const logout = async (page: Page) => {
-  // Look for the Getting Started inner panel by its text and aria-expanded attribute
-  const gettingStartedInnerTrigger = page.locator('div[aria-expanded="true"]:has-text("Getting started")').first();
-
-  // Make sure Getting Started inner panel is closed
-  if (await gettingStartedInnerTrigger.isVisible().catch(() => false)) {
-    // Click the trigger to collapse it
-    await gettingStartedInnerTrigger.click();
-    // Wait a moment for the animation to complete
-    await page.waitForTimeout(300);
-  }
+  // Navigate to invoices page to ensure we're on a dashboard page with sidebar
+  await page.goto("/invoices");
 
   await page.getByRole("button", { name: "Log out" }).first().click();
 
