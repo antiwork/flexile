@@ -25,6 +25,7 @@ import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
+import NewEquityGrantModal from "./NewEquityGrantModal";
 
 type EquityGrant = RouterOutput["equityGrants"]["list"][number];
 export default function GrantsPage() {
@@ -32,6 +33,7 @@ export default function GrantsPage() {
   const company = useCurrentCompany();
   const { data = [], isLoading, refetch } = trpc.equityGrants.list.useQuery({ companyId: company.id });
   const [cancellingGrantId, setCancellingGrantId] = useState<string | null>(null);
+  const [isNewGrantModalOpen, setIsNewGrantModalOpen] = useState(false);
   const cancellingGrant = data.find((grant) => grant.id === cancellingGrantId);
   const cancelGrant = trpc.equityGrants.cancel.useMutation({
     onSuccess: () => {
@@ -84,11 +86,9 @@ export default function GrantsPage() {
         title="Equity grants"
         headerActions={
           equityPlanContractTemplates.length > 0 ? (
-            <Button asChild>
-              <Link href={`/companies/${company.id}/administrator/equity_grants/new`}>
-                <Pencil className="size-4" />
-                New option grant
-              </Link>
+            <Button onClick={() => setIsNewGrantModalOpen(true)}>
+              <Pencil className="size-4" />
+              New option grant
             </Button>
           ) : null
         }
@@ -167,6 +167,7 @@ export default function GrantsPage() {
           ) : null}
         </DialogContent>
       </Dialog>
+      <NewEquityGrantModal open={isNewGrantModalOpen} onOpenChange={setIsNewGrantModalOpen} />
     </>
   );
 }
