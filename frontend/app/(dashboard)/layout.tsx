@@ -56,8 +56,14 @@ import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
 
-// Custom logout component that handles OTP logout
-const LogoutButton = ({ children }: { children: React.ReactNode }) => {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const user = useCurrentUser();
+  const company = useCurrentCompany();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [showTryEquity, setShowTryEquity] = React.useState(true);
+  const [hovered, setHovered] = React.useState(false);
+  const canShowTryEquity = user.roles.administrator && !company.equityEnabled;
   const { data: session } = useSession();
   const { logout } = useUserStore();
 
@@ -70,27 +76,6 @@ const LogoutButton = ({ children }: { children: React.ReactNode }) => {
     // Redirect to login
     window.location.href = "/login";
   };
-
-  return (
-    <button
-      onClick={() => {
-        void handleLogout();
-      }}
-      className="w-full"
-    >
-      {children}
-    </button>
-  );
-};
-
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const user = useCurrentUser();
-  const company = useCurrentCompany();
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const [showTryEquity, setShowTryEquity] = React.useState(true);
-  const [hovered, setHovered] = React.useState(false);
-  const canShowTryEquity = user.roles.administrator && !company.equityEnabled;
 
   const switchCompany = async (companyId: string) => {
     useUserStore.setState((state) => ({ ...state, pending: true }));
@@ -210,12 +195,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </SidebarMenuItem>
               ) : null}
               <SidebarMenuItem>
-                <LogoutButton>
-                  <SidebarMenuButton className="cursor-pointer">
-                    <LogOut className="size-6" />
-                    <span>Log out</span>
-                  </SidebarMenuButton>
-                </LogoutButton>
+                <SidebarMenuButton onClick={() => void handleLogout()} className="cursor-pointer">
+                  <LogOut className="size-6" />
+                  <span>Log out</span>
+                </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
