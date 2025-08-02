@@ -5,7 +5,7 @@ Contractor payments as easy as 1-2-3.
 ## Setup
 
 > **⚠️ Warning:**  
-> We highly recommend using either a MacOS system or a Linux distribution for setting up Flexile on your machine. Using Windows and WSL is known to cause a lot of issues that are hard to debug. If you are using Windows, consider setting up an instance of Linux distro via tools like [VirtualBox](https://Virtualbox.org).
+> We recommend using macOS or a Linux distribution for setting up Flexile locally. Windows and WSL often introduce hard-to-debug issues. If you use Windows, consider running a Linux distribution in a virtual machine (e.g. with [VirtualBox](https://virtualbox.org)).
 
 You'll need:
 
