@@ -130,54 +130,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </SidebarGroupContent>
             </SidebarGroup>
           ) : null}
-
-          <SidebarGroup className="mt-auto">
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {canShowTryEquity && showTryEquity ? (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <div
-                        className="group relative flex cursor-pointer items-center justify-between"
-                        onClick={() => router.push("/settings/administrator/equity")}
-                        onMouseEnter={() => setHovered(true)}
-                        onMouseLeave={() => setHovered(false)}
-                        role="button"
-                        tabIndex={0}
-                      >
-                        <span className="flex items-center gap-2">
-                          <Sparkles className="size-6" />
-                          <span>Try equity</span>
-                        </span>
-                        {hovered ? (
-                          <button
-                            type="button"
-                            aria-label="Dismiss try equity"
-                            className="hover:bg-muted absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 transition-colors"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowTryEquity(false);
-                            }}
-                            tabIndex={0}
-                          >
-                            <X className="text-muted-foreground hover:text-foreground size-4 transition-colors" />
-                          </button>
-                        ) : null}
-                      </div>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ) : null}
-                <SidebarMenuItem>
-                  <SignOutButton>
-                    <SidebarMenuButton className="cursor-pointer">
-                      <LogOut className="size-6" />
-                      <span>Log out</span>
-                    </SidebarMenuButton>
-                  </SignOutButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
         </SidebarContent>
         {company.checklistItems.length > 0 ? (
           <SidebarGroup className="mt-auto px-0 py-0">
@@ -188,6 +140,53 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </SidebarGroupContent>
           </SidebarGroup>
         ) : null}
+        <SidebarGroup className="mt-auto">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {canShowTryEquity && showTryEquity ? (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <div
+                      className="group relative flex cursor-pointer items-center justify-between"
+                      onClick={() => router.push("/settings/administrator/equity")}
+                      onMouseEnter={() => setHovered(true)}
+                      onMouseLeave={() => setHovered(false)}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Sparkles className="size-6" />
+                        <span>Try equity</span>
+                      </span>
+                      {hovered ? (
+                        <button
+                          type="button"
+                          aria-label="Dismiss try equity"
+                          className="hover:bg-muted absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowTryEquity(false);
+                          }}
+                          tabIndex={0}
+                        >
+                          <X className="text-muted-foreground hover:text-foreground size-4 transition-colors" />
+                        </button>
+                      ) : null}
+                    </div>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ) : null}
+              <SidebarMenuItem>
+                <SignOutButton>
+                  <SidebarMenuButton className="cursor-pointer">
+                    <LogOut className="size-6" />
+                    <span>Log out</span>
+                  </SidebarMenuButton>
+                </SignOutButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </Sidebar>
       <SidebarInset>
         <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
