@@ -9,7 +9,7 @@ You'll need:
 - [Docker](https://docs.docker.com/engine/install/)
 - [Node.js](https://nodejs.org/en/download) (set Node.js version from [`.node-version`](.node-version) using [nvm](https://github.com/nvm-sh/nvm))
 
-The easiest way to set up the development environment is to use the [`bin/setup` script](bin/setup), but feel free to do it manually also.
+The easiest way to set up the development environment is to run the [`bin/setup` script](bin/setup); alternatively, you can carry out the steps manually.
 
 ### Manual Setup
 
@@ -43,7 +43,7 @@ Run `cd backend && gem install bundler foreman`
 <details>
 <summary>Mkcert</summary>
 
-Next.js automatically downloads binaries of mkcert.js when running the app, but you need additional libraries if you are on Linux. 
+Next.js automatically downloads binaries of mkcert when running the app, but you need additional libraries if you are on Linux.
 
 If you encounter issues related to SSL it is a good idea to install Mkcert locally to debug further.
 
@@ -67,7 +67,7 @@ If you are an Antiwork team member you can pull .env file by using `pnpx vercel 
 
 #### Other contributors
 
-`cp .env.example .env` then fill in missing values and your own keys. A guide on how to set the nescessary ones is in [Services Configuration](#services-configuration).
+`cp .env.example .env` then fill in missing values and your own keys. A guide on how to set the necessary ones is in [Services Configuration](#services-configuration).
 
 </details>
 
