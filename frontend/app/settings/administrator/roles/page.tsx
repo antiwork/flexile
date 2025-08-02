@@ -2,14 +2,15 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import { MoreHorizontal, Plus } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Check, ChevronDown, Mail, MoreHorizontal, Plus } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -25,15 +26,153 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
+import { cn } from "@/utils";
 
 const addMemberSchema = z.object({
-  userId: z.string().min(1),
+  memberOrEmail: z
+    .string()
+    .min(1, "Please select a member or enter an email")
+    .refine((value) => {
+      // If it's an email (contains @), validate it as an email
+      if (value.includes("@")) {
+        return z.string().email("Please enter a valid email address").safeParse(value).success;
+      }
+      // If it's not an email, it should be a valid user ID (non-empty string)
+      return value.length > 0;
+    }, "Please enter a valid email address or select a member"),
   role: z.enum(["admin", "lawyer"]),
 });
 
 type AddMemberForm = z.infer<typeof addMemberSchema>;
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface UserOrEmailInputProps {
+  value: string;
+  onChange: (value: string) => void;
+  users: User[];
+  placeholder?: string;
+  className?: string;
+}
+
+const UserOrEmailInput = ({
+  value,
+  onChange,
+  users,
+  placeholder = "Search by name or enter email...",
+  className,
+}: UserOrEmailInputProps) => {
+  const [open, setOpen] = useState(false);
+  const [inputValue, setInputValue] = useState(value);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const getDisplayValue = () => {
+    if (!value) return "";
+    const user = users.find((u) => u.id === value);
+    if (user) {
+      return `${user.name} (${user.email})`;
+    }
+    return value; // Return the email if no user found
+  };
+
+  const handleInputChange = (newValue: string) => {
+    setInputValue(newValue);
+    onChange(newValue);
+  };
+
+  const handleUserSelect = (userId: string) => {
+    onChange(userId);
+    setInputValue(userId);
+    setOpen(false);
+  };
+
+  // Update inputValue when value prop changes
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
+
+  const filteredUsers = users.filter(
+    (user) =>
+      user.name.toLowerCase().includes(inputValue.toLowerCase()) ||
+      user.email.toLowerCase().includes(inputValue.toLowerCase()),
+  );
+
+  // More comprehensive email regex pattern
+  const emailRegex =
+    /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/u;
+  const isEmail = emailRegex.test(inputValue);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="small"
+          role="combobox"
+          aria-expanded={open}
+          className={cn("w-full min-w-0 justify-between", className)}
+          onClick={() => setOpen(true)}
+        >
+          <div className="truncate">{getDisplayValue() || placeholder}</div>
+          <ChevronDown className="ml-2 size-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="p-0" style={{ width: "var(--radix-popover-trigger-width)" }}>
+        <Command>
+          <CommandInput
+            placeholder="Search by name or enter email..."
+            value={inputValue}
+            onValueChange={handleInputChange}
+          />
+          <CommandList ref={listRef}>
+            <CommandEmpty>
+              {isEmail ? (
+                <div className="flex items-center gap-2 p-2">
+                  <Mail className="size-4" />
+                  <span>Invite {inputValue}</span>
+                </div>
+              ) : (
+                "No results found."
+              )}
+            </CommandEmpty>
+            <CommandGroup>
+              {filteredUsers.map((user) => (
+                <CommandItem
+                  key={user.id}
+                  value={user.id}
+                  keywords={[user.name, user.email]}
+                  onSelect={handleUserSelect}
+                >
+                  <Check className={cn("mr-2 h-4 w-4", user.id === value ? "opacity-100" : "opacity-0")} />
+                  <div className="flex flex-col">
+                    <span>{user.name}</span>
+                    <span className="text-muted-foreground text-xs">{user.email}</span>
+                  </div>
+                </CommandItem>
+              ))}
+              {isEmail && !users.some((u) => u.email === inputValue) ? (
+                <CommandItem value={inputValue} onSelect={() => handleUserSelect(inputValue)}>
+                  <Mail className="mr-2 h-4 w-4" />
+                  <div className="flex flex-col">
+                    <span>Invite {inputValue}</span>
+                    <span className="text-muted-foreground text-xs">New user</span>
+                  </div>
+                </CommandItem>
+              ) : null}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+};
 
 export default function RolesPage() {
   const company = useCurrentCompany();
@@ -56,6 +195,24 @@ export default function RolesPage() {
     },
   });
 
+  const inviteLawyerMutation = trpc.lawyers.invite.useMutation({
+    onSuccess: async () => {
+      await trpcUtils.companies.listAdministrators.invalidate();
+      await trpcUtils.companies.listLawyers.invalidate();
+      setShowAddModal(false);
+      addMemberForm.reset();
+    },
+  });
+
+  const inviteAdminMutation = trpc.administrators.invite.useMutation({
+    onSuccess: async () => {
+      await trpcUtils.companies.listAdministrators.invalidate();
+      await trpcUtils.companies.listLawyers.invalidate();
+      setShowAddModal(false);
+      addMemberForm.reset();
+    },
+  });
+
   const removeRoleMutation = trpc.companies.removeRole.useMutation({
     onSuccess: async () => {
       await trpcUtils.companies.listAdministrators.invalidate();
@@ -66,7 +223,7 @@ export default function RolesPage() {
 
   const addMemberForm = useForm<AddMemberForm>({
     resolver: zodResolver(addMemberSchema),
-    defaultValues: { userId: "", role: "admin" },
+    defaultValues: { memberOrEmail: "", role: "admin" },
   });
 
   const allRoles = useMemo(() => {
@@ -115,6 +272,7 @@ export default function RolesPage() {
       columnHelper.display({
         id: "actions",
         header: "",
+        meta: { className: "w-6 whitespace-nowrap" },
         cell: (info) => {
           const user = info.row.original;
           if (user.role === "Owner") return null;
@@ -172,11 +330,31 @@ export default function RolesPage() {
   });
 
   const handleSubmit = (values: AddMemberForm) => {
-    addRoleMutation.mutate({
-      companyId: company.id,
-      userId: values.userId,
-      role: values.role,
-    });
+    // More comprehensive email regex pattern (same as in UserOrEmailInput)
+    const emailRegex =
+      /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/u;
+    const isEmail = emailRegex.test(values.memberOrEmail);
+    const existingUser = companyUsers.find((u) => u.id === values.memberOrEmail);
+
+    if (existingUser) {
+      addRoleMutation.mutate({
+        companyId: company.id,
+        userId: values.memberOrEmail,
+        role: values.role,
+      });
+    } else if (isEmail) {
+      if (values.role === "admin") {
+        inviteAdminMutation.mutate({
+          companyId: company.id,
+          email: values.memberOrEmail,
+        });
+      } else {
+        inviteLawyerMutation.mutate({
+          companyId: company.id,
+          email: values.memberOrEmail,
+        });
+      }
+    }
   };
 
   const handleRemoveRole = () => {
@@ -196,7 +374,7 @@ export default function RolesPage() {
           <h2 className="mb-1 text-xl font-bold">Roles</h2>
           <p className="text-muted-foreground text-base">Use roles to grant deeper access to your workspace.</p>
         </hgroup>
-        <div className="[&_td:first-child]:!pl-0 [&_td:last-child]:!pr-0 [&_th:first-child]:!pl-0 [&_th:last-child]:!pr-0">
+        <div className="[&_td:first-child]:!pl-0 [&_td:last-child]:!pr-0 [&_td:last-child]:!pr-2 [&_td:nth-child(2)]:!pr-0 [&_th:first-child]:!pl-0 [&_th:last-child]:!pr-0 [&_th:nth-child(2)]:!pr-0">
           {admins.length === 0 && lawyers.length === 0 ? (
             <TableSkeleton columns={3} />
           ) : (
@@ -219,7 +397,7 @@ export default function RolesPage() {
           <DialogHeader>
             <DialogTitle>Add a member</DialogTitle>
             <DialogDescription>
-              Pick someone from your workspace and choose the role that fits the work they'll be doing.
+              Select someone or invite by email to give them the role that fits the work they'll be doing.
             </DialogDescription>
           </DialogHeader>
           <Form {...addMemberForm}>
@@ -232,18 +410,15 @@ export default function RolesPage() {
             >
               <FormField
                 control={addMemberForm.control}
-                name="userId"
+                name="memberOrEmail"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Select member</FormLabel>
+                    <FormLabel>Name or email</FormLabel>
                     <FormControl>
-                      <ComboBox
+                      <UserOrEmailInput
                         {...field}
-                        options={companyUsers.map((u) => ({
-                          value: u.id,
-                          label: `${u.name} (${u.email})`,
-                        }))}
-                        placeholder="Search by name..."
+                        users={companyUsers}
+                        placeholder="Search by name or enter email..."
                       />
                     </FormControl>
                     <FormMessage />
@@ -257,17 +432,30 @@ export default function RolesPage() {
                   <FormItem>
                     <FormLabel>Role</FormLabel>
                     <FormControl>
-                      <select className="rounded border px-2 py-1" {...field}>
-                        <option value="admin">Admin</option>
-                        <option value="lawyer">Lawyer</option>
-                      </select>
+                      <ComboBox
+                        options={[
+                          { value: "admin", label: "Admin" },
+                          { value: "lawyer", label: "Lawyer" },
+                        ]}
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Select role..."
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <DialogFooter>
-                <Button type="submit" disabled={!addMemberForm.formState.isValid || addRoleMutation.isPending}>
+                <Button
+                  type="submit"
+                  disabled={
+                    !addMemberForm.formState.isValid ||
+                    addRoleMutation.isPending ||
+                    inviteLawyerMutation.isPending ||
+                    inviteAdminMutation.isPending
+                  }
+                >
                   Add member
                 </Button>
               </DialogFooter>

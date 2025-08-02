@@ -46,6 +46,7 @@ declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
     numeric?: boolean;
     filterOptions?: string[];
+    className?: string;
   }
 }
 
@@ -152,10 +153,12 @@ export default function DataTable<T extends RowData>({
   const rowClasses = "py-2 not-print:max-md:grid";
   const cellClasses = (column: Column<T> | null, type?: "header" | "footer") => {
     const numeric = column?.columnDef.meta?.numeric;
+    const customClassName = column?.columnDef.meta?.className;
     return cn(
       numeric && "md:text-right print:text-right",
       numeric && type !== "header" && "tabular-nums",
       !numeric && "print:text-wrap",
+      customClassName,
     );
   };
   const searchColumn = searchColumnName ? table.getColumn(searchColumnName) : null;
