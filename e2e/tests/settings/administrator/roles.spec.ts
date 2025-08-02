@@ -374,38 +374,6 @@ test.describe("Manage roles access", () => {
       await expect(updatedMultiRoleRow.getByRole("cell", { name: "Lawyer" })).toBeVisible();
       await expect(updatedMultiRoleRow.getByRole("cell", { name: "Admin" })).not.toBeVisible();
     });
-
-    test("shows multi-role user as Lawyer when admin role is revoked", async ({ page }) => {
-      await login(page, primaryAdmin);
-      await page.goto("/settings/administrator/roles");
-
-      // Multi-role user currently shows as Admin
-      const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
-      await expect(multiRoleRow.getByRole("cell", { name: "Admin" })).toBeVisible();
-
-      // Revoke admin role
-      const ellipsisButton = multiRoleRow.getByRole("button", { name: "Open menu" });
-      await ellipsisButton.click();
-      await page.getByRole("menuitem", { name: "Remove admin" }).click();
-
-      // Set up promise to wait for the tRPC mutation response
-      const responsePromise = page.waitForResponse(
-        (response) => response.url().includes("trpc/companies.removeRole") && response.status() === 200,
-      );
-
-      await page.getByRole("button", { name: "Remove admin" }).click();
-
-      // Wait for row to be updated (optimistic update)
-      await expect(multiRoleRow.getByRole("cell", { name: "Admin" })).not.toBeVisible();
-
-      // Wait for the actual backend response
-      await responsePromise;
-
-      // User should now show as Lawyer only
-      const updatedMultiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
-      await expect(updatedMultiRoleRow.getByRole("cell", { name: "Lawyer" })).toBeVisible();
-      await expect(updatedMultiRoleRow.getByRole("cell", { name: "Admin" })).not.toBeVisible();
-    });
   });
 });
 
