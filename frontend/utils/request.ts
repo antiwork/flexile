@@ -1,3 +1,5 @@
+import { getSession } from "next-auth/react";
+
 export type RequestSettings = {
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   accept: "json" | "html" | "pdf";
@@ -34,7 +36,7 @@ export function assertResponseError(e: unknown): asserts e is ResponseError {
   if (!(e instanceof ResponseError)) throw e;
 }
 
-export const request = (settings: RequestSettings): Promise<Response> => {
+export const request = async (settings: RequestSettings): Promise<Response> => {
   ++globalThis.__activeRequests;
   const body =
     "formData" in settings ? settings.formData : "jsonData" in settings ? JSON.stringify(settings.jsonData) : null;
@@ -58,6 +60,17 @@ export const request = (settings: RequestSettings): Promise<Response> => {
     headers.append("Content-Type", contentType);
   }
   headers.append("Accept", acceptType);
+
+  // Add NextAuth session token to Authorization header
+  try {
+    const session = await getSession();
+    if (session?.accessToken) {
+      headers.append("Authorization", `Bearer ${session.accessToken}`);
+    }
+  } catch (error) {
+    // Ignore errors getting session
+  }
+
   if (!settings.skipRailsCsrf && settings.method !== "GET") {
     const csrfToken = document.cookie
       .split("; ")
