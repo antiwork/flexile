@@ -84,7 +84,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       url: company_switch_path(companyId),
       accept: "json",
     });
-    await queryClient.resetQueries({ queryKey: ["currentUser"] });
+    await queryClient.resetQueries({ queryKey: ["currentUser", user.email] });
     useUserStore.setState((state) => ({ ...state, pending: false }));
   };
 
