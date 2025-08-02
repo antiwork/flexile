@@ -93,24 +93,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const canShowTryEquity = user.roles.administrator && !company.equityEnabled;
 
   const switchCompany = async (companyId: string) => {
-    try {
-      useUserStore.setState((state) => ({ ...state, pending: true }));
-
-      const response = await request({
-        method: "POST",
-        url: company_switch_path(companyId),
-        accept: "json",
-      });
-
-      if (!response.ok) {
-        return;
-      }
-
-      await queryClient.resetQueries({ queryKey: ["currentUser", user.email] });
-    } catch (_error) {
-    } finally {
-      useUserStore.setState((state) => ({ ...state, pending: false }));
-    }
+    useUserStore.setState((state) => ({ ...state, pending: true }));
+    await request({
+      method: "POST",
+      url: company_switch_path(companyId),
+      accept: "json",
+    });
+    await queryClient.resetQueries({ queryKey: ["currentUser", user.email] });
+    useUserStore.setState((state) => ({ ...state, pending: false }));
   };
 
   return (
