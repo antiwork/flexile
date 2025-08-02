@@ -173,7 +173,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </SidebarGroup>
         ) : null}
 
-        <SidebarGroup className="px-0 py-0">
+        <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
               {canShowTryEquity && showTryEquity ? (
@@ -211,7 +211,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               ) : null}
               <SidebarMenuItem>
                 <LogoutButton>
-                  <SidebarMenuButton size="lg" className="cursor-pointer">
+                  <SidebarMenuButton className="cursor-pointer">
                     <LogOut className="size-6" />
                     <span>Log out</span>
                   </SidebarMenuButton>
