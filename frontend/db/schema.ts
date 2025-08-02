@@ -1808,6 +1808,8 @@ export const users = pgTable(
     state: varchar(),
     legalName: varchar("legal_name"),
     preferredName: varchar("preferred_name"),
+    name: varchar(),
+    image: varchar(),
     gumroadUserId: varchar("gumroad_user_id"),
     minimumDividendPaymentInCents: bigint("minimum_dividend_payment_in_cents", { mode: "bigint" })
       .default(1000n)
@@ -1819,6 +1821,7 @@ export const users = pgTable(
     teamMember: boolean("team_member").notNull().default(false),
     sentInvalidTaxIdEmail: boolean("sent_invalid_tax_id_email").notNull().default(false),
     clerkId: varchar("clerk_id"),
+    googleId: varchar("google_id"),
     signupInviteLinkId: bigint("signup_invite_link_id", { mode: "number" }),
   },
   (table) => [
@@ -1837,6 +1840,7 @@ export const users = pgTable(
       table.resetPasswordToken.asc().nullsLast().op("text_ops"),
     ),
     index("index_users_on_clerk_id").using("btree", table.clerkId.asc().nullsLast().op("text_ops")),
+    index("index_users_on_google_id").using("btree", table.googleId.asc().nullsLast().op("text_ops")),
     index("index_users_on_signup_invite_link_id").using(
       "btree",
       table.signupInviteLinkId.asc().nullsLast().op("int8_ops"),
