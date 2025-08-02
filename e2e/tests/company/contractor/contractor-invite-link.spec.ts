@@ -1,9 +1,8 @@
-import { clerk } from "@clerk/testing/playwright";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { usersFactory } from "@test/factories/users";
-import { login } from "@test/helpers/auth";
+import { login, logout } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { and, eq } from "drizzle-orm";
 import { companies, companyContractors, companyInviteLinks, users } from "@/db/schema";
@@ -96,7 +95,7 @@ test.describe("Contractor Invite Link Joining flow", () => {
     });
     expect(updatedCompayContractor?.role).not.toBe(null);
 
-    await clerk.signOut({ page });
+    await logout(page);
     await login(page, admin);
     await page.getByRole("link", { name: "People" }).click();
     await expect(page.getByRole("heading", { name: "People" })).toBeVisible();

@@ -8,7 +8,7 @@
 # you're free to overwrite the RESTful controller actions.
 module Admin
   class ApplicationController < Administrate::ApplicationController
-    include Clerk::Authenticatable, SetCurrent
+    include SetCurrent
 
     before_action :authenticate_user
     before_action :authenticate_admin

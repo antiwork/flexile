@@ -1,6 +1,5 @@
 "use client";
 
-import { SignOutButton } from "@clerk/nextjs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { skipToken, useQueryClient } from "@tanstack/react-query";
 import {
@@ -22,6 +21,7 @@ import type { Route } from "next";
 import Image from "next/image";
 import Link, { type LinkProps } from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
 import React from "react";
 import { navLinks as equityNavLinks } from "@/app/(dashboard)/equity";
 import { useIsActionable } from "@/app/(dashboard)/invoices";
@@ -56,6 +56,33 @@ import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
 
+// Custom logout component that handles OTP logout
+const LogoutButton = ({ children }: { children: React.ReactNode }) => {
+  const { data: session } = useSession();
+  const { logout } = useUserStore();
+
+  const handleLogout = async () => {
+    if (session?.user) {
+      await signOut({ redirect: false });
+    }
+    // Clear user state
+    logout();
+    // Redirect to login
+    window.location.href = "/login";
+  };
+
+  return (
+    <button
+      onClick={() => {
+        void handleLogout();
+      }}
+      className="w-full"
+    >
+      {children}
+    </button>
+  );
+};
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = useCurrentUser();
   const company = useCurrentCompany();
@@ -79,49 +106,53 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <SidebarProvider>
       <Sidebar collapsible="offcanvas">
-        <SidebarHeader>
-          {user.companies.length > 1 ? (
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <SidebarMenuButton size="lg" className="text-base" aria-label="Switch company">
-                      <CompanyName />
-                      <ChevronsUpDown className="ml-auto" />
-                    </SidebarMenuButton>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-(radix-dropdown-menu-trigger-width)" align="start">
-                    {user.companies.map((company) => (
-                      <DropdownMenuItem
-                        key={company.id}
-                        onSelect={() => {
-                          if (user.currentCompanyId !== company.id) void switchCompany(company.id);
-                        }}
-                        className="flex items-center gap-2"
-                      >
-                        <Image
-                          src={company.logo_url || defaultCompanyLogo}
-                          width={20}
-                          height={20}
-                          className="rounded-xs"
-                          alt=""
-                        />
-                        <span className="line-clamp-1">{company.name}</span>
-                        {company.id === user.currentCompanyId && (
-                          <div className="ml-auto size-2 rounded-full bg-blue-500"></div>
-                        )}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          ) : (
-            <div className="flex items-center gap-2 p-2">
-              <CompanyName />
-            </div>
-          )}
+        <SidebarHeader className="border-sidebar-border border-b">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton
+                    size="lg"
+                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  >
+                    <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                      <Image src={defaultCompanyLogo} className="size-6" alt="" />
+                    </div>
+                    <div className="grid flex-1 text-left text-sm leading-tight">
+                      <span className="truncate font-semibold">
+                        {user.companies.find((c) => c.id === user.currentCompanyId)?.name ?? "Personal"}
+                      </span>
+                      <span className="truncate text-xs">{user.email}</span>
+                    </div>
+                    <ChevronsUpDown className="ml-auto" />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                  align="start"
+                  side="bottom"
+                  sideOffset={4}
+                >
+                  {user.companies.map((company) => (
+                    <DropdownMenuItem
+                      key={company.id}
+                      onClick={() => {
+                        void switchCompany(company.id);
+                      }}
+                      className="gap-2 p-2"
+                    >
+                      <div className="flex size-6 items-center justify-center rounded-sm border">
+                        <Image src={defaultCompanyLogo} className="size-4 shrink-0" alt="" />
+                      </div>
+                      {company.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuItem>
+          </SidebarMenu>
         </SidebarHeader>
+
         <SidebarContent>
           {user.currentCompanyId ? (
             <SidebarGroup>
@@ -168,12 +199,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   </SidebarMenuItem>
                 ) : null}
                 <SidebarMenuItem>
-                  <SignOutButton>
+                  <LogoutButton>
                     <SidebarMenuButton className="cursor-pointer">
                       <LogOut className="size-6" />
                       <span>Log out</span>
                     </SidebarMenuButton>
-                  </SignOutButton>
+                  </LogoutButton>
                 </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
@@ -189,6 +220,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </SidebarGroup>
         ) : null}
       </Sidebar>
+
       <SidebarInset>
         <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
           <main className="flex flex-1 flex-col not-print:overflow-y-auto">
@@ -199,24 +231,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </SidebarProvider>
   );
 }
-
-const CompanyName = () => {
-  const company = useCurrentCompany();
-  return (
-    <>
-      {company.name ? (
-        <Link href="/settings" className="relative size-6">
-          <Image src={company.logo_url || defaultCompanyLogo} fill className="rounded-sm" alt="" />
-        </Link>
-      ) : null}
-      <div>
-        <span className="line-clamp-1 text-sm font-bold" title={company.name ?? ""}>
-          {company.name}
-        </span>
-      </div>
-    </>
-  );
-};
 
 const NavLinks = () => {
   const user = useCurrentUser();
