@@ -29,6 +29,10 @@ const env = z
     VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
     WISE_PROFILE_ID: z.string(),
     WISE_API_KEY: z.string(),
+    GOOGLE_CLIENT_ID: z.string(),
+    GOOGLE_CLIENT_SECRET: z.string(),
+    NEXTAUTH_SECRET: z.string(),
+    NEXTAUTH_URL: z.string(),
   })
   .parse(process.env);
 
