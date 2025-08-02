@@ -27,6 +27,7 @@ import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
 import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
+import { useIsMobile } from "@/utils/use-mobile";
 import FormFields, { schema as formSchema } from "./FormFields";
 import InviteLinkModal from "./InviteLinkModal";
 
@@ -83,10 +84,13 @@ export default function PeoplePage() {
     });
   });
 
+  const isMobile = useIsMobile();
+
   const columnHelper = createColumnHelper<(typeof workers)[number]>();
-  const columns = useMemo(
+  const desktopColumns = useMemo(
     () => [
       columnHelper.accessor("user.name", {
+        id: "userName",
         header: "Name",
         cell: (info) => {
           const content = info.getValue();
@@ -104,6 +108,7 @@ export default function PeoplePage() {
       }),
       columnHelper.simple("user.countryCode", "Country", (v) => v && countries.get(v)),
       columnHelper.accessor((row) => (row.endedAt ? "Alumni" : row.startedAt > new Date() ? "Onboarding" : "Active"), {
+        id: "status",
         header: "Status",
         meta: { filterOptions: ["Active", "Onboarding", "Alumni"] },
         cell: (info) =>
@@ -120,14 +125,98 @@ export default function PeoplePage() {
           ),
       }),
     ],
-    [],
+    [workers.map((worker) => worker.role).join(",")],
   );
+  const mobileColumns = useMemo(
+    () => [
+      columnHelper.display({
+        id: "nameRoleCountry",
+        cell: (info) => {
+          const person = info.row.original;
+          return (
+            <>
+              <div>
+                <div className="truncate text-base font-medium">{person.user.name}</div>
+                <div className="text-sm font-normal">{person.role}</div>
+              </div>
+              {person.user.countryCode ? (
+                <div className="text-sm font-normal text-gray-600">{countries.get(person.user.countryCode)}</div>
+              ) : null}
+            </>
+          );
+        },
+        meta: {
+          cellClassName: "w-full",
+        },
+      }),
+
+      columnHelper.display({
+        id: "statusDisplay",
+        cell: (info) => {
+          const original = info.row.original;
+          let variant: "critical" | "success" | "primary";
+
+          if (original.endedAt) {
+            variant = "critical";
+          } else if (original.startedAt <= new Date()) {
+            variant = "success";
+          } else if (original.user.onboardingCompleted) {
+            variant = "success";
+          } else if (original.user.invitationAcceptedAt) {
+            variant = "primary";
+          } else {
+            variant = "primary";
+          }
+
+          return (
+            <div className="absolute inset-0 flex w-0 flex-col items-end justify-between py-2">
+              <div className="flex h-5 w-4 items-center justify-center">
+                <Status variant={variant} />
+              </div>
+            </div>
+          );
+        },
+        meta: {
+          cellClassName: "relative px-1.5",
+        },
+      }),
+
+      columnHelper.accessor((row) => (row.endedAt ? "Alumni" : row.startedAt > new Date() ? "Onboarding" : "Active"), {
+        id: "status",
+        header: "Status",
+        meta: {
+          filterOptions: ["Active", "Onboarding", "Alumni"],
+          hidden: true,
+        },
+      }),
+
+      columnHelper.accessor("user.name", {
+        id: "userName",
+        header: "Name",
+        meta: {
+          hidden: true,
+        },
+      }),
+
+      columnHelper.accessor("role", {
+        id: "role",
+        header: "Role",
+        meta: {
+          filterOptions: [...new Set(workers.map((worker) => worker.role))],
+          hidden: true,
+        },
+      }),
+    ],
+    [workers.map((worker) => worker.role).join(",")],
+  );
+
+  const columns = isMobile ? mobileColumns : desktopColumns;
 
   const table = useTable({
     columns,
     data: workers,
     initialState: {
-      sorting: [{ id: "Status", desc: false }],
+      sorting: [{ id: "status", desc: false }],
     },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -138,7 +227,16 @@ export default function PeoplePage() {
       <DashboardHeader
         title="People"
         headerActions={
-          workers.length === 0 ? (
+          isMobile ? (
+            table.options.enableRowSelection ? (
+              <button
+                className="text-blue-600"
+                onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
+              >
+                {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
+              </button>
+            ) : null
+          ) : workers.length === 0 ? (
             <div className="flex gap-2">
               <Button size="small" variant="outline" onClick={() => setShowInviteLinkModal(true)}>
                 <LinkIcon className="size-4" />
@@ -158,7 +256,8 @@ export default function PeoplePage() {
       ) : workers.length > 0 ? (
         <DataTable
           table={table}
-          searchColumn="user_name"
+          searchColumn="userName"
+          tabsColumn="status"
           actions={
             <div className="flex gap-2">
               <Button size="small" variant="outline" onClick={() => setShowInviteLinkModal(true)}>

@@ -40,6 +40,7 @@ import type { RouterOutput } from "@/trpc";
 import { DocumentTemplateType, DocumentType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
 import { formatDate } from "@/utils/time";
+import { useIsMobile } from "@/utils/use-mobile";
 
 type Document = RouterOutput["documents"]["list"][number];
 type SignableDocument = Document & { docusealSubmissionId: number };
@@ -210,6 +211,7 @@ export default function DocumentsPage() {
   const isCompanyRepresentative = !!user.roles.administrator || !!user.roles.lawyer;
   const userId = isCompanyRepresentative ? null : user.id;
   const canSign = user.address.street_address || isCompanyRepresentative;
+  const isMobile = useIsMobile();
 
   const [forceWorkerOnboarding, setForceWorkerOnboarding] = useState<boolean>(
     user.roles.worker ? !user.roles.worker.role : false,
@@ -254,14 +256,14 @@ export default function DocumentsPage() {
     if (downloadUrl) window.location.href = downloadUrl;
   }, [downloadUrl]);
 
-  const columns = useMemo(
+  const desktopColumns = useMemo(
     () =>
       [
         isCompanyRepresentative
           ? columnHelper.accessor(
               (row) =>
                 assertDefined(row.signatories.find((signatory) => signatory.title !== "Company Representative")).name,
-              { header: "Signer" },
+              { id: "signer", header: "Signer" },
             )
           : null,
         columnHelper.simple("name", "Document"),
@@ -320,8 +322,87 @@ export default function DocumentsPage() {
           },
         }),
       ].filter((column) => !!column),
-    [userId],
+    [documents, isCompanyRepresentative, isSignable, canSign, setSignDocumentId, setDownloadDocument],
   );
+
+  const mobileColumns = useMemo(
+    () =>
+      [
+        columnHelper.display({
+          id: "documentNameSigner",
+          cell: (info) => (
+            <div className="flex flex-col gap-1">
+              <div className="truncate text-base font-medium">{info.row.original.name}</div>
+              {isCompanyRepresentative ? (
+                <div className="text-sm font-normal">
+                  {
+                    info.row.original.signatories.find((signatory) => signatory.title !== "Company Representative")
+                      ?.name
+                  }
+                </div>
+              ) : null}
+            </div>
+          ),
+          meta: {
+            cellClassName: "w-full",
+          },
+        }),
+        columnHelper.display({
+          id: "statusSentOn",
+          cell: (info) => {
+            const document = info.row.original;
+            const sentOn = document.createdAt ? formatDate(document.createdAt) : "N/A";
+            const { variant } = getStatus(info.row.original);
+
+            return (
+              <div className="absolute inset-0 flex w-0 flex-col items-end justify-between py-2">
+                <div className="flex h-5 w-4 items-center justify-center">
+                  <Status variant={variant} />
+                </div>
+                <div className="self-end text-gray-600">{sentOn}</div>
+              </div>
+            );
+          },
+          meta: {
+            cellClassName: "relative px-1.5",
+          },
+        }),
+        columnHelper.accessor((row) => getStatus(row).name, {
+          id: "status",
+          meta: { filterOptions: [...new Set(documents.map((document) => getStatus(document).name))], hidden: true },
+        }),
+        isCompanyRepresentative
+          ? columnHelper.accessor(
+              (row) =>
+                assertDefined(row.signatories.find((signatory) => signatory.title !== "Company Representative")).name,
+              {
+                id: "signer",
+                header: "Signer",
+                meta: { hidden: true },
+              },
+            )
+          : null,
+        columnHelper.accessor("createdAt", {
+          id: "createdAt",
+          header: "Date",
+          cell: (info) => formatDate(info.getValue()),
+          meta: {
+            filterOptions: [...new Set(documents.map((document) => document.createdAt.getFullYear().toString()))],
+            hidden: true,
+          },
+          filterFn: (row, _, filterValue) =>
+            Array.isArray(filterValue) && filterValue.includes(row.original.createdAt.getFullYear().toString()),
+        }),
+        columnHelper.accessor((row) => typeLabels[row.type], {
+          header: "Type",
+          meta: { filterOptions: [...new Set(documents.map((document) => typeLabels[document.type]))], hidden: true },
+        }),
+      ].filter((column) => !!column),
+    [documents, isCompanyRepresentative],
+  );
+
+  const columns = isMobile ? mobileColumns : desktopColumns;
+
   const storedColumnFilters = columnFiltersSchema.safeParse(
     JSON.parse(localStorage.getItem(storageKeys.DOCUMENTS_COLUMN_FILTERS) ?? "{}"),
   );
@@ -350,15 +431,26 @@ export default function DocumentsPage() {
       <DashboardHeader
         title="Documents"
         headerActions={
-          <>
-            {isCompanyRepresentative && documents.length === 0 ? <EditTemplates /> : null}
-            {user.roles.administrator && company.flags.includes("lawyers") ? (
-              <Button onClick={() => setShowInviteModal(true)}>
-                <BriefcaseBusiness className="size-4" />
-                Invite lawyer
-              </Button>
-            ) : null}
-          </>
+          isMobile ? (
+            table.options.enableRowSelection ? (
+              <button
+                className="text-blue-600"
+                onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
+              >
+                {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
+              </button>
+            ) : null
+          ) : (
+            <>
+              {isCompanyRepresentative && documents.length === 0 ? <EditTemplates /> : null}
+              {user.roles.administrator && company.flags.includes("lawyers") ? (
+                <Button onClick={() => setShowInviteModal(true)}>
+                  <BriefcaseBusiness className="size-4" />
+                  Invite lawyer
+                </Button>
+              ) : null}
+            </>
+          )
         }
       />
 
@@ -394,8 +486,9 @@ export default function DocumentsPage() {
         <>
           <DataTable
             table={table}
+            tabsColumn="status"
             actions={isCompanyRepresentative ? <EditTemplates /> : undefined}
-            {...(isCompanyRepresentative && { searchColumn: "Signer" })}
+            {...(isCompanyRepresentative && { searchColumn: "signer" })}
           />
           {signDocument ? <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} /> : null}
         </>

@@ -48,7 +48,6 @@ import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
@@ -56,10 +55,9 @@ import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { PayRateType, trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
-import { pluralize } from "@/utils/pluralize";
-import { request } from "@/utils/request";
 import { company_invoices_path, export_company_invoices_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
+import { useIsMobile } from "@/utils/use-mobile";
 import QuantityInput from "./QuantityInput";
 import { useCanSubmitInvoices } from ".";
 
@@ -78,6 +76,7 @@ type Invoice = RouterOutput["invoices"]["list"][number];
 export default function InvoicesPage() {
   const user = useCurrentUser();
   const company = useCurrentCompany();
+  const isMobile = useIsMobile();
   const [openModal, setOpenModal] = useState<"approve" | "reject" | "delete" | null>(null);
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
   const isActionable = useIsActionable();
@@ -180,7 +179,7 @@ export default function InvoicesPage() {
   });
 
   const columnHelper = createColumnHelper<(typeof data)[number]>();
-  const columns = useMemo(
+  const desktopColumns = useMemo(
     () => [
       user.roles.administrator
         ? columnHelper.accessor("billFrom", {
@@ -208,6 +207,7 @@ export default function InvoicesPage() {
         "numeric",
       ),
       columnHelper.accessor((row) => statusNames[row.status], {
+        id: "status",
         header: "Status",
         cell: (info) => (
           <div className="relative z-1">
@@ -240,8 +240,89 @@ export default function InvoicesPage() {
         },
       }),
     ],
-    [],
+    [data, user.roles.administrator],
   );
+
+  const mobileColumns = useMemo(
+    () => [
+      columnHelper.display({
+        id: "billFromRoleAmount",
+        cell: (info) => {
+          const invoice = info.row.original;
+          const amount = formatMoneyFromCents(invoice.totalAmountInUsdCents);
+
+          return user.roles.administrator ? (
+            <div className="flex flex-col gap-2">
+              <div>
+                <div className="truncate text-base font-medium">{invoice.billFrom}</div>
+                <div className="text-gray-600">{invoice.contractor.role}</div>
+              </div>
+              <div className="text-sm">{amount}</div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <Link
+                href={`/invoices/${invoice.id}`}
+                className="relative truncate font-medium no-underline after:absolute after:inset-0"
+              >
+                {invoice.invoiceNumber}
+              </Link>
+              <div className="text-sm">{amount}</div>
+            </div>
+          );
+        },
+        meta: {
+          cellClassName: "w-full",
+        },
+      }),
+
+      columnHelper.display({
+        id: "statusSentOn",
+        cell: (info) => {
+          const invoice = info.row.original;
+          const sentOn = invoice.invoiceDate ? formatDate(invoice.invoiceDate) : "N/A";
+
+          return (
+            <div className="absolute inset-0 flex w-0 flex-col items-end justify-between py-2">
+              <div className="flex h-5 w-4 items-center justify-center">
+                <Status invoice={invoice} iconOnly />
+              </div>
+              <div className="self-end text-gray-600">{sentOn}</div>
+            </div>
+          );
+        },
+        meta: {
+          cellClassName: "relative px-1.5",
+        },
+      }),
+
+      columnHelper.accessor((row) => statusNames[row.status], {
+        id: "status",
+        meta: {
+          filterOptions: [...new Set(data.map((invoice) => statusNames[invoice.status]))],
+          hidden: true,
+        },
+      }),
+
+      columnHelper.accessor((row) => row.billFrom, {
+        header: "Contractor",
+        id: "billFrom",
+        meta: {
+          hidden: true,
+        },
+      }),
+
+      columnHelper.accessor("invoiceDate", {
+        id: "invoiceDate",
+        meta: {
+          hidden: true,
+        },
+      }),
+    ],
+    [data],
+  );
+
+  const columns = isMobile ? mobileColumns : desktopColumns;
 
   const handleInvoiceAction = (actionId: string, invoices: Invoice[]) => {
     const isSingleAction = invoices.length === 1;
@@ -276,8 +357,8 @@ export default function InvoicesPage() {
     data,
     getRowId: (invoice) => invoice.id,
     initialState: {
-      sorting: [{ id: user.roles.administrator ? "Status" : "invoiceDate", desc: !user.roles.administrator }],
-      columnFilters: user.roles.administrator ? [{ id: "Status", value: ["Awaiting approval", "Failed"] }] : [],
+      sorting: [{ id: user.roles.administrator ? "status" : "invoiceDate", desc: !user.roles.administrator }],
+      columnFilters: user.roles.administrator ? [{ id: "status", value: ["Awaiting approval", "Failed"] }] : [],
     },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -309,12 +390,21 @@ export default function InvoicesPage() {
         title="Invoices"
         headerActions={
           user.roles.worker ? (
-            <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
-              <Link href="/invoices/new" inert={!canSubmitInvoices}>
-                <Plus className="size-4" />
-                New invoice
-              </Link>
-            </Button>
+            isMobile ? (
+              <button
+                className="text-blue-600"
+                onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
+              >
+                {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
+              </button>
+            ) : (
+              <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
+                <Link href="/invoices/new" inert={!canSubmitInvoices}>
+                  <Plus className="size-4" />
+                  New invoice
+                </Link>
+              </Button>
+            )
           ) : null
         }
       />
@@ -403,52 +493,40 @@ export default function InvoicesPage() {
       {isLoading ? (
         <TableSkeleton columns={6} />
       ) : data.length > 0 ? (
-        <>
-          <div className="mx-4 flex justify-between md:hidden">
-            <h2 className="text-xl font-bold">
-              {data.length} {pluralize("invoice", data.length)}
-            </h2>
-            <Checkbox
-              checked={table.getIsAllRowsSelected()}
-              label="Select all"
-              onCheckedChange={(checked) => table.toggleAllRowsSelected(checked === true)}
+        <DataTable
+          table={table}
+          onRowClicked={user.roles.administrator ? setDetailInvoice : undefined}
+          searchColumn={user.roles.administrator ? "billFrom" : undefined}
+          tabsColumn="status"
+          actions={
+            user.roles.administrator ? (
+              <Button variant="outline" size="small" asChild>
+                <a href={export_company_invoices_path(company.id)}>
+                  <Download className="size-4" />
+                  Download CSV
+                </a>
+              </Button>
+            ) : null
+          }
+          selectionActions={(selectedRows) => (
+            <SelectionActions
+              selectedItems={selectedRows}
+              config={actionConfig}
+              actionContext={actionContext}
+              onAction={handleInvoiceAction}
             />
-          </div>
-
-          <DataTable
-            table={table}
-            onRowClicked={user.roles.administrator ? setDetailInvoice : undefined}
-            searchColumn={user.roles.administrator ? "billFrom" : undefined}
-            actions={
-              user.roles.administrator ? (
-                <Button variant="outline" size="small" asChild>
-                  <a href={export_company_invoices_path(company.id)}>
-                    <Download className="size-4" />
-                    Download CSV
-                  </a>
-                </Button>
-              ) : null
-            }
-            selectionActions={(selectedRows) => (
-              <SelectionActions
-                selectedItems={selectedRows}
-                config={actionConfig}
-                actionContext={actionContext}
-                onAction={handleInvoiceAction}
-              />
-            )}
-            contextMenuContent={({ row, selectedRows, onClearSelection }) => (
-              <ContextMenuActions
-                item={row}
-                selectedItems={selectedRows}
-                config={actionConfig}
-                actionContext={actionContext}
-                onAction={handleInvoiceAction}
-                onClearSelection={onClearSelection}
-              />
-            )}
-          />
-        </>
+          )}
+          contextMenuContent={({ row, selectedRows, onClearSelection }) => (
+            <ContextMenuActions
+              item={row}
+              selectedItems={selectedRows}
+              config={actionConfig}
+              actionContext={actionContext}
+              onAction={handleInvoiceAction}
+              onClearSelection={onClearSelection}
+            />
+          )}
+        />
       ) : (
         <Placeholder icon={CircleCheck}>No invoices to display.</Placeholder>
       )}

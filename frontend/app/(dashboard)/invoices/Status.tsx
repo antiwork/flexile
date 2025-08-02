@@ -54,7 +54,15 @@ export function StatusDetails({ invoice }: { invoice: Invoice }) {
   ) : null;
 }
 
-export default function InvoiceStatus({ invoice, className }: { invoice: Invoice; className?: string }) {
+export default function InvoiceStatus({
+  invoice,
+  className,
+  iconOnly = false,
+}: {
+  invoice: Invoice;
+  className?: string;
+  iconOnly?: boolean;
+}) {
   const company = useCurrentCompany();
   let variant: Variant;
   let Icon: React.ElementType | undefined;
@@ -99,7 +107,7 @@ export default function InvoiceStatus({ invoice, className }: { invoice: Invoice
 
   return (
     <Status variant={variant} className={className} icon={Icon ? <Icon /> : undefined}>
-      {label}
+      {iconOnly ? null : label}
     </Status>
   );
 }

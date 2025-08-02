@@ -13,7 +13,7 @@ const Status = ({
   className,
 }: {
   variant?: Variant | undefined;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   icon?: React.ReactNode;
   className?: string | undefined;
 }) => (
