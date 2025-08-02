@@ -193,7 +193,7 @@ export default function DataTable<T extends RowData>({
                   <Button variant="outline" size="small">
                     <div className="flex items-center gap-1">
                       <ListFilterIcon className="size-4" />
-                      Filter
+                      <span className="hidden sm:block">Filter</span>
                       {activeFilterCount > 0 && (
                         <Badge variant="secondary" className="rounded-sm px-1 font-normal">
                           {activeFilterCount}

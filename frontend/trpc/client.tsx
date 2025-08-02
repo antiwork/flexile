@@ -39,7 +39,7 @@ const GetUserData = ({ children }: { children: React.ReactNode }) => {
 };
 
 let queryClient: QueryClient | undefined;
-function getQueryClient() {
+export function getQueryClient() {
   if (typeof window === "undefined") {
     return createClient();
   }
