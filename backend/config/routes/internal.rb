@@ -44,6 +44,7 @@ scope path: :internal, module: :internal do
     end
     resources :workers, only: [:create]
     resources :lawyers, only: [:create]
+    resources :administrators, only: [:create]
     resources :equity_grant_exercises, only: :create do
       member do
         post :resend

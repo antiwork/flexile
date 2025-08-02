@@ -8,4 +8,8 @@ class CompanyAdministratorPolicy < ApplicationPolicy
   def reset?
     show?
   end
+
+  def create?
+    company_administrator.present?
+  end
 end
