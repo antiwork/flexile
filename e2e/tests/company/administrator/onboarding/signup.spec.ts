@@ -11,41 +11,49 @@ test.describe("Company administrator signup", () => {
     // Clean up any existing user with this email
     await db.delete(users).where(eq(users.email, email));
 
-    const name = faker.person.fullName();
     const companyName = faker.company.name();
+    const ein = faker.string.numeric(9); // 9-digit EIN
+    const phoneNumber = faker.string.numeric(10); // 10-digit phone
     const streetAddress = faker.location.streetAddress();
     const city = faker.location.city();
-    const state = faker.location.state();
+    const stateCode = "CA"; // Use fixed state code
+    const stateName = "California"; // Use fixed state name
     const zipCode = faker.location.zipCode();
 
     await page.goto("/signup");
 
     // Enter email and request OTP
-    await page.getByLabel("Email address").fill(email);
-    await page.getByRole("button", { name: "Send verification code" }).click();
+    await page.getByLabel("Work email").fill(email);
+    await page.getByRole("button", { name: "Sign up" }).click();
 
     // Wait for OTP step and enter verification code
     await page.getByLabel("Verification code").waitFor();
     await page.getByLabel("Verification code").fill("000000"); // Test OTP code
-    await page.getByRole("button", { name: "Create account" }).click();
-
-    // Continue with onboarding flow
-    await page.waitForURL(/.*\/onboarding.*/u);
-
-    // Fill in personal information
-    await page.getByLabel("Legal name").fill(name);
     await page.getByRole("button", { name: "Continue" }).click();
 
-    // Fill in company information
-    await page.getByLabel("Company name").fill(companyName);
-    await page.getByLabel("Street address").fill(streetAddress);
-    await page.getByLabel("City").fill(city);
-    await page.getByLabel("State").fill(state);
-    await page.getByLabel("ZIP code").fill(zipCode);
-    await page.getByRole("button", { name: "Create company" }).click();
+    // Wait for redirect to dashboard
+    await page.waitForURL(/.*\/invoices.*/u);
 
-    // Verify successful completion
-    await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+    // Wait for getting started sidebar to be visible and click on the first incomplete item
+    await page.getByText("Add company details").waitFor();
+    await page.getByText("Add company details").click();
+
+    // Wait for company details page to load
+    await page.waitForURL(/.*\/settings\/administrator\/details.*/u);
+
+    // Fill in company details
+    await page.getByLabel("Company's legal name").fill(companyName);
+    await page.getByLabel("EIN").fill(ein);
+    await page.getByLabel("Phone number").fill(phoneNumber);
+    await page.getByLabel("Residential address (street name, number, apt)").fill(streetAddress);
+    await page.getByLabel("City or town").fill(city);
+    await page.getByLabel("State").click();
+    await page.getByText(stateName).click();
+    await page.getByLabel("ZIP code").fill(zipCode);
+    await page.getByRole("button", { name: "Save changes" }).click();
+
+    // Wait for save to complete and verify we're back on the page
+    await expect(page.getByText("Changes saved")).toBeVisible();
 
     // Verify user was created in database
     const user = await takeOrThrow(
@@ -61,16 +69,15 @@ test.describe("Company administrator signup", () => {
     }
 
     expect(user.email).toBe(email);
-    expect(user.legalName).toBe(name);
     expect(user.companyAdministrators).toHaveLength(1);
 
-    // Verify company was created
+    // Verify company was created with the updated details
     const company = user.companyAdministrators[0]?.company;
     expect(company).toBeDefined();
     expect(company?.name).toBe(companyName);
     expect(company?.streetAddress).toBe(streetAddress);
     expect(company?.city).toBe(city);
-    expect(company?.state).toBe(state);
+    expect(company?.state).toBe(stateCode);
     expect(company?.zipCode).toBe(zipCode);
   });
 });
