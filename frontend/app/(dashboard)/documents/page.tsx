@@ -1,38 +1,25 @@
 "use client";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { skipToken, useQueryClient } from "@tanstack/react-query";
 import { type ColumnFiltersState, getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import {
-  BriefcaseBusiness,
-  CircleCheck,
-  Download,
-  FileTextIcon,
-  Info,
-  Pencil,
-  PercentIcon,
-  SendHorizontal,
-} from "lucide-react";
+import { CircleCheck, Download, FileTextIcon, Info, Pencil, PercentIcon } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 import DocusealForm, { customCss } from "@/app/(dashboard)/documents/DocusealForm";
 import { FinishOnboarding } from "@/app/(dashboard)/documents/FinishOnboarding";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, filterValueSchema, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
-import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
+import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import Status, { type Variant as StatusVariant } from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { storageKeys } from "@/models/constants";
@@ -199,14 +186,9 @@ const EditTemplates = () => {
   );
 };
 
-const inviteLawyerSchema = z.object({
-  email: z.string().email(),
-});
-
 export default function DocumentsPage() {
   const user = useCurrentUser();
   const company = useCurrentCompany();
-  const [showInviteModal, setShowInviteModal] = useState(false);
   const isCompanyRepresentative = !!user.roles.administrator || !!user.roles.lawyer;
   const userId = isCompanyRepresentative ? null : user.id;
   const canSign = user.address.street_address || isCompanyRepresentative;
@@ -217,17 +199,6 @@ export default function DocumentsPage() {
 
   const currentYear = new Date().getFullYear();
   const { data: documents = [], isLoading } = trpc.documents.list.useQuery({ companyId: company.id, userId });
-
-  const inviteLawyerForm = useForm({ resolver: zodResolver(inviteLawyerSchema) });
-  const inviteLawyer = trpc.lawyers.invite.useMutation({
-    onSuccess: () => {
-      setShowInviteModal(false);
-      inviteLawyerForm.reset();
-    },
-  });
-  const submitInviteLawyer = inviteLawyerForm.handleSubmit(async ({ email }) =>
-    inviteLawyer.mutateAsync({ companyId: company.id, email }),
-  );
 
   const columnHelper = createColumnHelper<Document>();
   const [downloadDocument, setDownloadDocument] = useState<bigint | null>(null);
@@ -349,17 +320,7 @@ export default function DocumentsPage() {
     <>
       <DashboardHeader
         title="Documents"
-        headerActions={
-          <>
-            {isCompanyRepresentative && documents.length === 0 ? <EditTemplates /> : null}
-            {user.roles.administrator ? (
-              <Button onClick={() => setShowInviteModal(true)}>
-                <BriefcaseBusiness className="size-4" />
-                Invite lawyer
-              </Button>
-            ) : null}
-          </>
-        }
+        headerActions={isCompanyRepresentative && documents.length === 0 ? <EditTemplates /> : null}
       />
 
       {!canSign || (user.roles.administrator && new Date() <= filingDueDateFor1099DIV) ? (
@@ -404,40 +365,6 @@ export default function DocumentsPage() {
           <Placeholder icon={CircleCheck}>No documents yet.</Placeholder>
         </div>
       )}
-
-      <Dialog open={showInviteModal} onOpenChange={setShowInviteModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Who's joining?</DialogTitle>
-          </DialogHeader>
-          <Form {...inviteLawyerForm}>
-            <form onSubmit={(e) => void submitInviteLawyer(e)}>
-              <FormField
-                control={inviteLawyerForm.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input type="email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <MutationStatusButton
-                type="submit"
-                mutation={inviteLawyer}
-                className="mt-4 w-full"
-                loadingText="Inviting..."
-              >
-                <SendHorizontal className="size-5" />
-                Invite
-              </MutationStatusButton>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
       {forceWorkerOnboarding ? <FinishOnboarding handleComplete={() => setForceWorkerOnboarding(false)} /> : null}
     </>
   );
