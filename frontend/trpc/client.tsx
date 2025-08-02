@@ -1,9 +1,9 @@
 "use client";
-import { useAuth } from "@clerk/nextjs";
 import { type QueryClient } from "@tanstack/react-query";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
+import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import superjson from "superjson";
 import { useUserStore } from "@/global";
@@ -15,10 +15,10 @@ import { createClient } from "./shared";
 export const trpc = createTRPCReact<AppRouter>();
 
 const GetUserData = ({ children }: { children: React.ReactNode }) => {
-  const { isSignedIn, userId } = useAuth();
+  const { data: session, status } = useSession();
   const { user, login, logout } = useUserStore();
   const { data } = useQuery({
-    queryKey: ["currentUser", userId],
+    queryKey: ["currentUser", session?.user?.id],
     queryFn: async (): Promise<unknown> => {
       const response = await request({
         url: internal_current_user_data_path(),
@@ -28,13 +28,13 @@ const GetUserData = ({ children }: { children: React.ReactNode }) => {
       });
       return await response.json();
     },
-    enabled: !!isSignedIn,
+    enabled: !!session?.user?.id,
   });
   useEffect(() => {
-    if (isSignedIn && data) login(data);
+    if (session?.user?.id && data) login(data);
     else logout();
-  }, [isSignedIn, data]);
-  if (isSignedIn == null || (isSignedIn && !user)) return null;
+  }, [session?.user?.id, data]);
+  if (status === "loading" || (session?.user?.id && !user)) return null;
   return children;
 };
 
