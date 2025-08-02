@@ -5,6 +5,7 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { companyLawyersFactory } from "@test/factories/companyLawyers";
 import { usersFactory } from "@test/factories/users";
+import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { and, eq } from "drizzle-orm";
@@ -405,5 +406,63 @@ test.describe("Manage roles access", () => {
       await expect(updatedMultiRoleRow.getByRole("cell", { name: "Lawyer" })).toBeVisible();
       await expect(updatedMultiRoleRow.getByRole("cell", { name: "Admin" })).not.toBeVisible();
     });
+  });
+});
+
+test.describe("Roles page invite functionality", () => {
+  test("should be able to invite admin by email", async ({ page }) => {
+    const { adminUser } = await companiesFactory.createCompletedOnboarding();
+    await login(page, adminUser);
+
+    await page.goto("/settings/administrator/roles");
+
+    await page.getByRole("button", { name: "Add member" }).click();
+
+    await page.getByRole("combobox").filter({ hasText: "Search by name or enter email" }).click();
+    await page.getByPlaceholder("Search by name or enter email...").fill("testadmin@example.com");
+    await page.getByRole("option", { name: "Invite testadmin@example.com" }).click();
+
+    await selectComboboxOption(page, "Role", "Admin");
+
+    await page.getByRole("button", { name: "Add member" }).click();
+
+    await expect(page.getByRole("dialog")).not.toBeVisible();
+  });
+
+  test("should be able to invite lawyer by email", async ({ page }) => {
+    const { adminUser } = await companiesFactory.createCompletedOnboarding();
+    await login(page, adminUser);
+
+    await page.goto("/settings/administrator/roles");
+
+    await page.getByRole("button", { name: "Add member" }).click();
+
+    await page.getByRole("combobox").filter({ hasText: "Search by name or enter email" }).click();
+    await page.getByPlaceholder("Search by name or enter email...").fill("testlawyer@example.com");
+    await page.getByRole("option", { name: "Invite testlawyer@example.com" }).click();
+
+    await selectComboboxOption(page, "Role", "Lawyer");
+
+    await page.getByRole("button", { name: "Add member" }).click();
+
+    await expect(page.getByRole("dialog")).not.toBeVisible();
+  });
+
+  test("should show proper form validation", async ({ page }) => {
+    const { adminUser } = await companiesFactory.createCompletedOnboarding();
+    await login(page, adminUser);
+
+    await page.goto("/settings/administrator/roles");
+
+    await page.getByRole("button", { name: "Add member" }).click();
+
+    await expect(page.getByRole("button", { name: "Add member" })).toBeDisabled();
+
+    await page.getByRole("combobox").filter({ hasText: "Search by name or enter email" }).click();
+    await page.getByPlaceholder("Search by name or enter email...").fill("invalid_name");
+
+    await expect(
+      page.getByText("Please select a valid member from the list or enter a valid email address"),
+    ).toBeVisible();
   });
 });
