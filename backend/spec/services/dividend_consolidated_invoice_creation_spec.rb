@@ -46,7 +46,7 @@ RSpec.describe DividendConsolidatedInvoiceCreation do
       let(:company) { create(:company, deactivated_at: 1.day.ago) }
 
       it "raises an error" do
-        expect { service.process }.to raise_error("Should not generate consolidated invoice for company #{company.id}")
+        expect { service.process }.to raise_error("Company #{company.id} is not active")
       end
     end
 
@@ -56,7 +56,7 @@ RSpec.describe DividendConsolidatedInvoiceCreation do
       end
 
       it "raises an error" do
-        expect { service.process }.to raise_error("Should not generate consolidated invoice for company #{company.id}")
+        expect { service.process }.to raise_error("Company #{company.id} does not have a ready bank account")
       end
     end
   end

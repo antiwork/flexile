@@ -8,7 +8,8 @@ class DividendConsolidatedInvoiceCreation
   end
 
   def process
-    raise "Should not generate consolidated invoice for company #{company.id}" unless company.active? && company.bank_account_ready?
+    raise "Company #{company.id} is not active" unless company.active?
+    raise "Company #{company.id} does not have a ready bank account" unless company.bank_account_ready?
 
     dividend_amount_cents = dividend_round.total_amount_in_cents
     fee_cents = dividend_round.flexile_fees_in_cents

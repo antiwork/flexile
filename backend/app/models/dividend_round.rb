@@ -19,10 +19,7 @@ class DividendRound < ApplicationRecord
   scope :ready_for_payment, -> { where(ready_for_payment: true) }
 
   def flexile_fees_in_cents
-    dividends.map do |dividend|
-      calculated_fee = ((dividend.total_amount_in_cents.to_d * 2.9.to_d / 100.to_d) + 30.to_d).round.to_i
-      [30_00, calculated_fee].min
-    end.sum
+    dividends.sum(&:calculate_flexile_fee_cents)
   end
 
   def send_dividend_emails

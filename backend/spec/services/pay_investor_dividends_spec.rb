@@ -5,12 +5,15 @@ RSpec.describe PayInvestorDividends, :vcr do
   let(:user) { create(:user, :without_compliance_info) }
   let!(:user_compliance_info) { create(:user_compliance_info, user:, tax_id_status: UserComplianceInfo::TAX_ID_STATUS_VERIFIED, tax_information_confirmed_at: 1.day.ago) }
   let(:company_investor) { create(:company_investor, user:, company:) }
-  let(:dividend1) { create(:dividend, company:, company_investor:, user_compliance_info:) }
-  let(:dividend2) { create(:dividend, company:, company_investor:, user_compliance_info:) }
+  let!(:consolidated_invoice) { create(:consolidated_invoice, :paid, company:) }
+  let(:dividend_round) { create(:dividend_round, company:, ready_for_payment: true, consolidated_invoice:) }
+  let(:dividend1) { create(:dividend, company:, company_investor:, user_compliance_info:, dividend_round:) }
+  let(:dividend2) { create(:dividend, company:, company_investor:, user_compliance_info:, dividend_round:) }
   let(:dividends) { Dividend.where(id: [dividend1.id, dividend2.id]) }
 
   before do
     allow(Wise::AccountBalance).to receive(:has_sufficient_flexile_balance?).and_return(true)
+    company.balance.update!(amount_cents: 1_200_00)
   end
 
   it "fails initialization if the dividends are absent" do
@@ -85,7 +88,16 @@ RSpec.describe PayInvestorDividends, :vcr do
 
     expect do
       described_class.new(company_investor, dividends).process
-    end.to raise_error("Flexile balance insufficient to pay for dividends to investor #{company_investor.id}")
+    end.to raise_error("Not enough account balance to pay out for company #{company.id}")
+  end
+
+  it "raises an exception if the company has insufficient virtual balance to pay for the dividend" do
+    net_amount_in_cents = dividends.sum(:net_amount_in_cents)
+    company.balance.update!(amount_cents: net_amount_in_cents - 1)
+
+    expect do
+      described_class.new(company_investor, dividends).process
+    end.to raise_error("Not enough account balance to pay out for company #{company.id}")
   end
 
   it "raises an exception if the country of the investor is missing" do

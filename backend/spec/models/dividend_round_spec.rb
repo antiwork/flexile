@@ -30,4 +30,30 @@ RSpec.describe DividendRound do
       end
     end
   end
+
+  describe "#flexile_fees_in_cents" do
+    let(:dividend_round) { create(:dividend_round) }
+
+    it "returns 0 when there are no dividends" do
+      expect(dividend_round.flexile_fees_in_cents).to eq(0)
+    end
+
+    it "sums fees from multiple dividends" do
+      dividend1 = create(:dividend, dividend_round: dividend_round, total_amount_in_cents: 5_000)
+      dividend2 = create(:dividend, dividend_round: dividend_round, total_amount_in_cents: 10_000)
+      dividend3 = create(:dividend, dividend_round: dividend_round, total_amount_in_cents: 200_000)
+
+      expected_total = dividend1.calculate_flexile_fee_cents +
+                      dividend2.calculate_flexile_fee_cents +
+                      dividend3.calculate_flexile_fee_cents
+
+      expect(dividend_round.flexile_fees_in_cents).to eq(expected_total)
+    end
+
+    it "handles single dividend" do
+      dividend = create(:dividend, dividend_round: dividend_round, total_amount_in_cents: 50_000)
+
+      expect(dividend_round.flexile_fees_in_cents).to eq(dividend.calculate_flexile_fee_cents)
+    end
+  end
 end
