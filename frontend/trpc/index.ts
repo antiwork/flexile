@@ -12,15 +12,16 @@ import {
 } from "@trpc/server";
 import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import { eq } from "drizzle-orm";
+import { getServerSession } from "next-auth";
 import { cache } from "react";
 import superjson from "superjson";
 import { z } from "zod";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/db";
 import { companies, users } from "@/db/schema";
 import env from "@/env";
 import { assertDefined } from "@/utils/assert";
 import { richTextExtensions } from "@/utils/richText";
-import { internal_userid_url } from "@/utils/routes";
 import { latestUserComplianceInfo, withRoles } from "./routes/users/helpers";
 import { type AppRouter } from "./server";
 
@@ -29,26 +30,24 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
   const cookie = req.headers.get("cookie") ?? "";
   const userAgent = req.headers.get("user-agent") ?? "";
   const ipAddress = req.headers.get("x-real-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0] ?? "";
-  const csrfToken = cookie
-    .split("; ")
-    .find((row) => row.startsWith("X-CSRF-Token="))
-    ?.split("=")[1];
-  const headers: Record<string, string> = {
-    cookie,
-    "user-agent": userAgent,
-    referer: "x" /* work around a Clerk limitation */,
-    accept: "application/json",
-    ...(csrfToken ? { "x-csrf-token": csrfToken } : {}),
-  };
-  const response = await fetch(internal_userid_url({ host }), { headers });
-  const userId = response.ok ? z.object({ id: z.number() }).parse(await response.json()).id : null;
+
+  // Get session from NextAuth
+  const session = await getServerSession(authOptions);
+  let userId: number | null = null;
+  if (session?.user?.id && typeof session.user.id === "string") {
+    userId = parseInt(session.user.id, 10);
+  }
 
   return {
     userId,
     host,
     ipAddress,
     userAgent,
-    headers,
+    headers: {
+      cookie,
+      "user-agent": userAgent,
+      accept: "application/json",
+    },
   };
 });
 export type Context = Awaited<ReturnType<typeof createContext>>;
@@ -63,7 +62,7 @@ export const s3Client = new S3Client({
   credentials: { accessKeyId: env.AWS_ACCESS_KEY_ID, secretAccessKey: env.AWS_SECRET_ACCESS_KEY },
 });
 
-// TODO switch all stored HTML to use JSON - we should only have to call generateHTML here
+// TODO switch all HTML to use JSON - we should only have to call generateHTML here
 export const renderTiptap = (html: string) => generateHTML(generateJSON(html, richTextExtensions), richTextExtensions);
 export const renderTiptapToText = (html: string) =>
   Node.fromJSON(getSchema(richTextExtensions), generateJSON(html, richTextExtensions)).textContent;
