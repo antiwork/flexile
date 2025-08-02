@@ -2,7 +2,7 @@
 
 RSpec.describe DividendConsolidatedInvoiceCreation do
   describe "#process" do
-    let(:company) { create(:company, :active, :with_bank_account) }
+    let(:company) { create(:company) }
     let(:dividend_round) { create(:dividend_round, company:, total_amount_in_cents: 50_000) }
     let(:service) { described_class.new(dividend_round) }
 
@@ -43,7 +43,7 @@ RSpec.describe DividendConsolidatedInvoiceCreation do
     end
 
     context "when company is not active" do
-      let(:company) { create(:company, :with_bank_account, status: "inactive") }
+      let(:company) { create(:company, deactivated_at: 1.day.ago) }
 
       it "raises an error" do
         expect { service.process }.to raise_error("Should not generate consolidated invoice for company #{company.id}")
@@ -51,8 +51,6 @@ RSpec.describe DividendConsolidatedInvoiceCreation do
     end
 
     context "when company does not have bank account ready" do
-      let(:company) { create(:company, :active) }
-
       before do
         allow(company).to receive(:bank_account_ready?).and_return(false)
       end

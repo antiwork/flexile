@@ -61,10 +61,10 @@ class Dividend < ApplicationRecord
   end
 
   def tax_requirements_met?
-    user.tax_information_confirmed_at.present?
+    company_investor.user.tax_information_confirmed_at.present?
   end
 
   def bank_account_ready?
-    user.bank_account_for_dividends.present?
+    company_investor.user.bank_account_for_dividends.present?
   end
 end
