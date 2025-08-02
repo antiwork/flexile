@@ -23,13 +23,14 @@ export const UserDataProvider = ({ children }: { children: React.ReactNode }) =>
   const { data, isLoading } = useQuery({
     queryKey: ["currentUser", userId],
     queryFn: async (): Promise<unknown> => {
-      if (session?.user && "jwt" in session.user) {
+      if (session?.user && "jwt" in session.user && typeof session.user.jwt === "string") {
         const response = await request({
-          url: "/api/user-data",
-          method: "POST",
+          url: "/internal/current_user_data",
+          method: "GET",
           accept: "json",
-          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
-          jsonData: { jwt: (session.user as any).jwt },
+          headers: {
+            "x-flexile-auth": `Bearer ${session.user.jwt}`,
+          },
           assertOk: true,
         });
         return await response.json();
