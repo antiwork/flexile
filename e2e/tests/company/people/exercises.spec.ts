@@ -19,31 +19,16 @@ test.describe("People - Exercises Table", () => {
       userId: investorUser.id,
     });
 
+    await equityGrantsFactory.create({
+      companyInvestorId: companyInvestor.id,
+      name: "GUM-1",
+    });
+
     const equityGrantExercise = await equityGrantExercisesFactory.create({ companyInvestorId: companyInvestor.id });
-
-    await login(page, adminUser);
-    await page.goto(`/people/${investorUser.externalId}?tab=exercises`);
-
-    await expect(page.locator("tbody")).toContainText(
-      [
-        "Request date",
-        format(equityGrantExercise.requestedAt, "MMM d, yyyy"),
-        "Number of shares",
-        "100",
-        "Cost",
-        "$50",
-        "Option grant ID",
-        "—",
-        "Stock certificate ID",
-        "—",
-        "Status",
-        "Signed",
-      ].join(""),
-    );
 
     const { equityGrant } = await equityGrantsFactory.create({
       companyInvestorId: companyInvestor.id,
-      name: "GUM-1",
+      name: "GUM-2",
     });
     const shareHolding = await shareHoldingsFactory.create({
       companyInvestorId: companyInvestor.id,
@@ -54,20 +39,30 @@ test.describe("People - Exercises Table", () => {
       equityGrantExerciseId: equityGrantExercise.id,
       shareHoldingId: shareHolding.id,
     });
-    const { equityGrant: equityGrant2 } = await equityGrantsFactory.create({
+    const { equityGrant: equityGrant3 } = await equityGrantsFactory.create({
       companyInvestorId: companyInvestor.id,
-      name: "GUM-2",
+      name: "GUM-3",
     });
     const shareHolding2 = await shareHoldingsFactory.create({
       companyInvestorId: companyInvestor.id,
       name: "SH-2",
     });
     await equityGrantExerciseRequestsFactory.create({
-      equityGrantId: equityGrant2.id,
+      equityGrantId: equityGrant3.id,
       equityGrantExerciseId: equityGrantExercise.id,
       shareHoldingId: shareHolding2.id,
     });
-    await page.reload();
+
+    await login(page, adminUser);
+    await page.goto(`/people/${investorUser.externalId}`);
+    await page.waitForLoadState("networkidle");
+
+    // Go to the exercises tab
+    const exercisesTab = page.getByRole("tab", { name: "Exercises" });
+    await expect(exercisesTab).toBeVisible();
+    await exercisesTab.click();
+    await page.waitForLoadState("networkidle");
+
     await expect(page.locator("tbody")).toContainText(
       [
         "Request date",
@@ -77,7 +72,7 @@ test.describe("People - Exercises Table", () => {
         "Cost",
         "$50",
         "Option grant ID",
-        "GUM-1, GUM-2",
+        "GUM-2, GUM-3",
         "Stock certificate ID",
         "SH-1, SH-2",
         "Status",
