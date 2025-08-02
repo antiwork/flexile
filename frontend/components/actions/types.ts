@@ -1,3 +1,5 @@
+export type WithKey<T> = T & { key: string };
+
 export interface ActionDefinition<T = unknown> {
   id: string;
   label: string;

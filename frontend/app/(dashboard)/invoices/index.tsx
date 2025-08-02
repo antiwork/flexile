@@ -140,13 +140,22 @@ export const useApproveInvoices = (onSuccess?: () => void) => {
   });
 };
 
-export const ApproveButton = ({ invoice, onApprove }: { invoice: Invoice; onApprove?: () => void }) => {
+export const ApproveButton = ({
+  invoice,
+  onApprove,
+  className,
+}: {
+  invoice: Invoice;
+  onApprove?: () => void;
+  className?: string;
+}) => {
   const company = useCurrentCompany();
   const approveInvoices = useApproveInvoices(onApprove);
   const pay = useIsPayable()(invoice);
 
   return (
     <MutationButton
+      className={className}
       mutation={approveInvoices}
       param={{ [pay ? "pay_ids" : "approve_ids"]: [invoice.id] }}
       successText={pay ? "Payment initiated" : "Approved!"}
