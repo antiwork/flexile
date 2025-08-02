@@ -47,8 +47,10 @@ test.describe("Contractor for multiple companies", () => {
 
     await logout(page);
     await login(page, contractorUser);
-    await page.getByRole("button", { name: "Switch company" }).click();
+    // Click company switcher in sidebar
+    await page.locator('[data-slot="dropdown-menu-trigger"]').first().click();
     await page.getByRole("menuitem", { name: "Second Company" }).click();
+    await expect(page.getByText("Second Company")).toBeVisible();
     await page.getByRole("link", { name: "Invoices" }).click();
     await expect(page.getByText("You have an unsigned contract")).toBeVisible();
     await page.getByRole("link", { name: "sign it" }).click();
