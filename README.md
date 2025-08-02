@@ -7,9 +7,11 @@ Contractor payments as easy as 1-2-3.
 You'll need:
 
 - [Docker](https://docs.docker.com/engine/install/)
-- [Node.js](https://nodejs.org/en/download) (see [`.node-version`](.node-version))
+- [Node.js](https://nodejs.org/en/download) (set Node.js version from [`.node-version`](.node-version) using [nvm](https://github.com/nvm-sh/nvm))
 
-The easiest way to set up the development environment is to use the [`bin/setup` script](bin/setup), but feel free to run the commands in it yourself to:
+The easiest way to set up the development environment is to use the [`bin/setup` script](bin/setup), but feel free to do it manually also.
+
+### Manual Setup
 
 <details>
 <summary>Homebrew</summary>
