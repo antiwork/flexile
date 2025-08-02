@@ -1199,6 +1199,7 @@ export const tenderOffers = pgTable(
     id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
     companyId: bigint("company_id", { mode: "bigint" }).notNull(),
     externalId: varchar("external_id").$default(nanoid).notNull(),
+    name: varchar(),
     startsAt: timestamp("starts_at", { precision: 6, mode: "date" }).notNull(),
     endsAt: timestamp("ends_at", { precision: 6, mode: "date" }).notNull(),
     minimumValuation: bigint("minimum_valuation", { mode: "bigint" }).notNull(),
@@ -1210,6 +1211,7 @@ export const tenderOffers = pgTable(
       .notNull()
       .$onUpdate(() => new Date()),
     acceptedPriceCents: integer("accepted_price_cents"),
+    letterOfTransmittal: text("letter_of_transmittal"),
   },
   (table) => [
     index("index_tender_offers_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),

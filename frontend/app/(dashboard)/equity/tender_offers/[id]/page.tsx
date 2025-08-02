@@ -1,47 +1,109 @@
 "use client";
-import { utc } from "@date-fns/utc";
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { ArrowDownTrayIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { isFuture, isPast } from "date-fns";
+import { getFilteredRowModel, getSortedRowModel, type Table } from "@tanstack/react-table";
+import Decimal from "decimal.js";
+import {
+  CheckIcon,
+  CircleCheckIcon,
+  Download,
+  InboxIcon,
+  InfoIcon,
+  LucideCircleDollarSign,
+  Trash2,
+  XIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import React, { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import ComboBox from "@/components/ComboBox";
+import { getBuybackStatus } from "@/app/(dashboard)/equity/tender_offers";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
-import NumberInput from "@/components/NumberInput";
+import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
-import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
-import { formatServerDate } from "@/utils/time";
-import { VESTED_SHARES_CLASS } from "..";
-import LetterOfTransmissal from "./LetterOfTransmissal";
+import { download } from "@/utils";
+import { formatMoneyFromCents } from "@/utils/formatMoney";
+import { formatNumber } from "@/utils/numbers";
+import FinalizeBuybackModal from "../FinalizeBuybackModal";
+import CancelBidModal from "./CancelBidModal";
+import PlaceBidModal from "./PlaceBidModal";
+
+type TenderOffer = RouterOutput["tenderOffers"]["get"];
 type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
 
-const formSchema = z.object({
-  shareClass: z.string().min(1, "This field is required"),
-  numberOfShares: z.number().min(1),
-  pricePerShare: z.number().min(0),
-});
+type BuybackActionsProps = {
+  data: TenderOffer;
+  user: ReturnType<typeof useCurrentUser>;
+  bids: Bid[];
+  onSetActiveModal: (modal: "place" | "finalize" | "cancel" | null) => void;
+  table?: Table<Bid>;
+};
+
+const BuybackActions = ({ data, user, bids, onSetActiveModal, table }: BuybackActionsProps) => {
+  const handleDownloadCSV = () => {
+    if (!table) return;
+
+    const headers = table
+      .getVisibleLeafColumns()
+      .filter((col) => col.id !== "actions")
+      .map((col) => (typeof col.columnDef.header === "string" ? col.columnDef.header : col.id));
+
+    const rows = table.getFilteredRowModel().rows.map((row) =>
+      table
+        .getVisibleLeafColumns()
+        .filter((col) => col.id !== "actions")
+        .map((col) => {
+          const cell = row.getVisibleCells().find((cell) => cell.column.id === col.id);
+          const cellValue = cell?.renderValue() ?? cell?.getValue();
+          return typeof cellValue === "string" ? cellValue : "";
+        }),
+    );
+
+    const csvContent = [headers, ...rows].map((row) => row.map((cell) => `"${cell}"`).join(",")).join("\n");
+
+    download("text/csv", "Bids.csv", csvContent);
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {data.attachment ? (
+        <Button asChild size="small" variant="outline">
+          <Link href={`/download/${data.attachment.key}/${data.attachment.filename}`}>
+            <Download className="size-4" />
+            Download documents
+          </Link>
+        </Button>
+      ) : null}
+      {user.roles.administrator && bids.length ? (
+        <Button variant="outline" size="small" onClick={handleDownloadCSV}>
+          <Download className="size-4" />
+          Download CSV
+        </Button>
+      ) : null}
+      {user.roles.administrator && getBuybackStatus(data) === "Reviewing" ? (
+        <Button size="small" onClick={() => onSetActiveModal("finalize")}>
+          Finalize buyback
+        </Button>
+      ) : null}
+      {getBuybackStatus(data) === "Open" ? (
+        <Button size="small" onClick={() => onSetActiveModal("place")}>
+          Place bid
+        </Button>
+      ) : null}
+    </div>
+  );
+};
 
 export default function BuybackView() {
   const { id } = useParams<{ id: string }>();
   const company = useCurrentCompany();
   const user = useCurrentUser();
-  const [data] = trpc.tenderOffers.get.useSuspenseQuery({ companyId: company.id, id });
-  const isOpen = isPast(utc(data.startsAt)) && isFuture(utc(data.endsAt));
+  const [data, { refetch: refetchTenderOffer }] = trpc.tenderOffers.get.useSuspenseQuery({ companyId: company.id, id });
   const investorId = user.roles.investor?.id;
   const {
     data: bids = [],
@@ -52,93 +114,161 @@ export default function BuybackView() {
     tenderOfferId: id,
     investorId: user.roles.administrator ? undefined : investorId,
   });
-  const { data: ownShareHoldings } = trpc.shareHoldings.sumByShareClass.useQuery(
-    { companyId: company.id, investorId },
-    { enabled: !!investorId },
-  );
-  const { data: ownTotalVestedShares } = trpc.equityGrants.sumVestedShares.useQuery(
-    { companyId: company.id, investorId },
-    { enabled: !!investorId },
-  );
-
-  const holdings = useMemo(
-    () =>
-      ownShareHoldings
-        ? ownTotalVestedShares
-          ? [...ownShareHoldings, { className: VESTED_SHARES_CLASS, count: ownTotalVestedShares }]
-          : ownShareHoldings
-        : [],
-    [ownShareHoldings, ownTotalVestedShares],
-  );
-
-  const form = useForm({
-    defaultValues: { shareClass: holdings[0]?.className ?? "", pricePerShare: 0, numberOfShares: 0 },
-    resolver: zodResolver(formSchema),
-  });
-  const pricePerShare = form.watch("pricePerShare");
-  const [signed, setSigned] = useState(false);
-  const [cancelingBid, setCancelingBid] = useState<Bid | null>(null);
-  const maxShares = holdings.find((h) => h.className === form.watch("shareClass"))?.count || 0;
-
-  const createMutation = trpc.tenderOffers.bids.create.useMutation({
-    onSuccess: async () => {
-      form.reset();
-      await refetchBids();
-    },
-  });
-  const destroyMutation = trpc.tenderOffers.bids.destroy.useMutation({
-    onSuccess: async () => {
-      setCancelingBid(null);
-      await refetchBids();
-    },
-  });
-
-  const submit = form.handleSubmit(async (values) => {
-    if (values.numberOfShares > maxShares)
-      return form.setError("numberOfShares", {
-        message: `Number of shares must be between 1 and ${maxShares.toLocaleString()}`,
-      });
-    await createMutation.mutateAsync({
-      companyId: company.id,
-      tenderOfferId: id,
-      numberOfShares: Number(values.numberOfShares),
-      sharePriceCents: Math.round(Number(values.pricePerShare) * 100),
-      shareClass: values.shareClass,
-    });
-  });
 
   const columnHelper = createColumnHelper<Bid>();
+
+  const [selectedBid, setSelectedBid] = useState<Bid | null>(null);
+  const [activeModal, setActiveModal] = useState<"place" | "finalize" | "cancel" | null>(null);
+
+  const handleBidAction = (bid: Bid | null, action?: "cancel") => {
+    setSelectedBid(bid);
+    setActiveModal(action || null);
+  };
+
   const columns = useMemo(
     () =>
       [
-        columnHelper.accessor("companyInvestor.user.email", {
-          header: "Investor",
-          cell: (info) => (info.row.original.companyInvestor.user.id === user.id ? "You!" : info.getValue()),
-        }),
+        user.roles.administrator
+          ? columnHelper.accessor("companyInvestor.user.name", {
+              id: "investor",
+              header: "Investor",
+              cell: (info) => info.getValue(),
+              footer: getBuybackStatus(data) !== "Open" ? "Total payout" : "",
+            })
+          : null,
         columnHelper.simple("shareClass", "Share class"),
-        columnHelper.simple("numberOfShares", "Number of shares", (value) => value.toLocaleString()),
+        columnHelper.simple("numberOfShares", "Shares", (value) => formatNumber(value)),
+        user.roles.administrator || getBuybackStatus(data) !== "Open"
+          ? columnHelper.accessor("acceptedShares", {
+              id: "acceptedShares",
+              header: "Accepted",
+              cell: (info) => formatNumber(info.getValue()),
+              footer:
+                getBuybackStatus(data) !== "Open"
+                  ? formatNumber(bids.reduce((sum, bid) => sum.plus(bid.acceptedShares), new Decimal(0)))
+                  : "",
+            })
+          : null,
+        (user.roles.administrator || getBuybackStatus(data) !== "Open") && data.acceptedPriceCents
+          ? columnHelper.display({
+              id: "clearingPrice", // TODO
+              header: "Clearing Price",
+              cell: (info) =>
+                info.row.original.acceptedShares && getBuybackStatus(data) !== "Open" && data.acceptedPriceCents
+                  ? formatMoneyFromCents(data.acceptedPriceCents)
+                  : "—",
+              footer: getBuybackStatus(data) !== "Open" ? formatMoneyFromCents(data.acceptedPriceCents) : "",
+            })
+          : null,
         columnHelper.simple("sharePriceCents", "Bid price", formatMoneyFromCents),
-        isOpen
+        columnHelper.display({
+          id: "total",
+          header: "Total",
+          cell: (info) =>
+            getBuybackStatus(data) !== "Open" && data.acceptedPriceCents
+              ? info.row.original.acceptedShares
+                ? formatMoneyFromCents(new Decimal(info.row.original.acceptedShares).mul(data.acceptedPriceCents))
+                : "—"
+              : formatMoneyFromCents(
+                  new Decimal(info.row.original.numberOfShares).mul(info.row.original.sharePriceCents),
+                ),
+          footer:
+            getBuybackStatus(data) !== "Open" && data.acceptedPriceCents
+              ? formatMoneyFromCents(
+                  bids.reduce(
+                    (sum, bid) => sum.plus(new Decimal(bid.acceptedShares).mul(data.acceptedPriceCents || 0)),
+                    new Decimal(0),
+                  ),
+                )
+              : "",
+        }),
+        getBuybackStatus(data) !== "Open"
+          ? columnHelper.accessor(
+              (row) =>
+                new Decimal(row.acceptedShares).eq(row.numberOfShares)
+                  ? "Accepted"
+                  : new Decimal(row.acceptedShares).gt(0)
+                    ? "Partially accepted"
+                    : "Excluded",
+              {
+                header: "Status",
+                meta: { filterOptions: ["Accepted", "Partially accepted", "Excluded"] },
+                cell: (info) =>
+                  info.getValue().toLowerCase() === "accepted" ? (
+                    <div className="inline-flex items-center gap-2">
+                      <span className="bg-green inline-flex h-4 w-4 items-center justify-center rounded-full text-white">
+                        <CheckIcon className="h-3 w-3" />
+                      </span>
+                      {info.getValue()}
+                    </div>
+                  ) : info.getValue().toLowerCase() === "partially accepted" ? (
+                    <div className="inline-flex items-center gap-2">
+                      <span className="border-green from-green h-4 w-4 rounded-full border-2 bg-gradient-to-r from-50% to-transparent to-50%" />
+                      {info.getValue()}
+                    </div>
+                  ) : info.getValue().toLowerCase() === "excluded" ? (
+                    <div className="inline-flex items-center gap-2">
+                      <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-gray-300 text-white">
+                        <XIcon className="h-3 w-3" />
+                      </span>
+                      {info.getValue()}
+                    </div>
+                  ) : (
+                    <div className="inline-flex items-center gap-2"> {info.getValue()}</div>
+                  ),
+              },
+            )
+          : null,
+        getBuybackStatus(data) === "Open"
           ? columnHelper.display({
               id: "actions",
               cell: (info) =>
                 info.row.original.companyInvestor.user.id === user.id ? (
-                  <Button onClick={() => setCancelingBid(info.row.original)}>
-                    <TrashIcon className="size-4" />
+                  <Button
+                    className="size-9"
+                    variant="outline"
+                    onClick={() => handleBidAction(info.row.original, "cancel")}
+                  >
+                    <Trash2 className="size-4" />
                   </Button>
                 ) : null,
             })
           : null,
       ].filter((column) => !!column),
-    [],
+    [user.roles.administrator, user.roles.investor?.id, data, bids],
   );
 
-  const bidsTable = useTable({ data: bids, columns });
+  const bidsTable = useTable({
+    data: bids,
+    columns,
+    getSortedRowModel: getSortedRowModel(),
+    ...(user.roles.administrator && { getFilteredRowModel: getFilteredRowModel() }),
+  });
 
   return (
     <>
-      <DashboardHeader title={`Buyback details ("Sell Elections")`} />
-
+      <DashboardHeader
+        title={
+          <div className="gap-2">
+            {data.name}
+            {getBuybackStatus(data) === "Settled" ? (
+              <Badge variant="outline" className="border-muted text-muted-foreground ml-4 rounded-full">
+                Closed and Settled
+              </Badge>
+            ) : null}
+            {getBuybackStatus(data) === "Closed" ? (
+              <Badge variant="outline" className="border-muted text-muted-foreground ml-4 rounded-full">
+                Closed
+              </Badge>
+            ) : null}
+          </div>
+        }
+        headerActions={
+          !bids.length || !user.roles.administrator ? (
+            <BuybackActions data={data} user={user} bids={bids} onSetActiveModal={setActiveModal} />
+          ) : null
+        }
+      />
       {user.roles.investor?.investedInAngelListRuv ? (
         <Alert variant="destructive">
           <ExclamationTriangleIcon />
@@ -148,169 +278,91 @@ export default function BuybackView() {
           </AlertDescription>
         </Alert>
       ) : null}
-
-      <h2 className="text-xl font-medium">Details</h2>
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label>Start date</Label>
-          <p>{formatServerDate(data.startsAt)}</p>
-        </div>
-        <div>
-          <Label>End date</Label>
-          <p>{formatServerDate(data.endsAt)}</p>
-        </div>
-        <div>
-          <Label>Starting valuation</Label>
-          <p>{formatMoney(data.minimumValuation)}</p>
-        </div>
-        <div>
-          {data.attachment ? (
-            <Button asChild>
-              <Link href={`/download/${data.attachment.key}/${data.attachment.filename}`}>
-                <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
-                Download buyback documents
-              </Link>
-            </Button>
-          ) : null}
-        </div>
-      </div>
-
-      {isOpen && holdings.length ? (
-        <>
-          <Separator />
-          <h2 className="text-xl font-medium">Letter of transmittal</h2>
-          <div>
-            <div>
-              THIS DOCUMENT AND THE INFORMATION REFERENCED HEREIN OR PROVIDED TO YOU IN CONNECTION WITH THIS OFFER TO
-              PURCHASE CONSTITUTES CONFIDENTIAL INFORMATION REGARDING GUMROAD, INC., A DELAWARE CORPORATION (THE
-              "COMPANY"). BY OPENING OR READING THIS DOCUMENT, YOU HEREBY AGREE TO MAINTAIN THE CONFIDENTIALITY OF SUCH
-              INFORMATION AND NOT TO DISCLOSE IT TO ANY PERSON (OTHER THAN TO YOUR LEGAL, FINANCIAL AND TAX ADVISORS,
-              AND THEN ONLY IF THEY HAVE SIMILARLY AGREED TO MAINTAIN THE CONFIDENTIALITY OF SUCH INFORMATION), AND SUCH
-              INFORMATION SHALL BE SUBJECT TO THE CONFIDENTIALITY OBLIGATIONS UNDER [THE NON-DISCLOSURE AGREEMENT
-              INCLUDED] ON THE PLATFORM (AS DEFINED BELOW) AND ANY OTHER AGREEMENT YOU HAVE WITH THE COMPANY, INCLUDING
-              ANY "INVENTION AND NON-DISCLOSURE AGREEMENT", "CONFIDENTIALITY, INVENTION AND NON-SOLICITATION AGREEMENT"
-              OR OTHER NONDISCLOSURE AGREEMENT. BY YOU ACCEPTING TO RECEIVE THIS OFFER TO PURCHASE, YOU ACKNOWLEDGE AND
-              AGREE TO THE FOREGOING RESTRICTIONS.
-            </div>
-            <Separator />
-            <div className="flex flex-col gap-4">
-              <div className="h-96 overflow-y-auto rounded-md border p-4">
-                <div className="prose max-w-none">
-                  <LetterOfTransmissal />
-                </div>
-              </div>
-              <div className="grid gap-3">
-                {signed ? (
-                  <div className="font-signature border-b text-3xl">{user.legalName}</div>
-                ) : (
-                  <Button variant="dashed" onClick={() => setSigned(true)}>
-                    Add your signature
-                  </Button>
-                )}
-                <p className="text-gray-500">
-                  By clicking the button above, you agree to using an electronic representation of your signature for
-                  all purposes within Flexile, just the same as a pen-and-paper signature.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-          <h2 className="text-xl font-medium">Submit a bid ("Sell Order")</h2>
-          <Form {...form}>
-            <form onSubmit={(e) => void submit(e)} className="grid gap-4">
-              <FormField
-                control={form.control}
-                name="shareClass"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Share class</FormLabel>
-                    <FormControl>
-                      <ComboBox
-                        {...field}
-                        options={holdings.map((holding) => ({
-                          value: holding.className,
-                          label: `${holding.className} (${holding.count.toLocaleString()} shares)`,
-                        }))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="numberOfShares"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Number of shares</FormLabel>
-                    <FormControl>
-                      <NumberInput {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="pricePerShare"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Price per share</FormLabel>
-                    <FormControl>
-                      <NumberInput {...field} decimal prefix="$" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {company.fullyDilutedShares ? (
-                <div>
-                  <strong>Implied company valuation:</strong> {formatMoney(company.fullyDilutedShares * pricePerShare)}
-                </div>
-              ) : null}
-              <div>
-                <strong>Total amount:</strong> {formatMoney(form.getValues("numberOfShares") * pricePerShare)}
-              </div>
-              <MutationStatusButton type="submit" mutation={createMutation} className="justify-self-end">
-                Submit bid
-              </MutationStatusButton>
-            </form>
-          </Form>
-        </>
+      {!user.roles.administrator && getBuybackStatus(data) === "Reviewing" ? (
+        <Alert>
+          <InfoIcon />
+          <AlertDescription>
+            <span className="font-semibold"> This buyback is now under review.</span> The company is finalizing bids,
+            and you'll be notified once it's settled.
+          </AlertDescription>
+        </Alert>
       ) : null}
-
-      {isLoading ? <TableSkeleton columns={5} /> : bids && bids.length > 0 ? <DataTable table={bidsTable} /> : null}
-
-      {cancelingBid ? (
-        <Dialog open onOpenChange={() => setCancelingBid(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Cancel bid?</DialogTitle>
-            </DialogHeader>
-            <p>Are you sure you want to cancel this bid?</p>
-            <p>
-              Share class: {cancelingBid.shareClass}
-              <br />
-              Number of shares: {cancelingBid.numberOfShares.toLocaleString()}
-              <br />
-              Bid price: {formatMoneyFromCents(cancelingBid.sharePriceCents)}
-            </p>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setCancelingBid(null)}>
-                No, keep bid
-              </Button>
-              <MutationButton
-                mutation={destroyMutation}
-                param={{ companyId: company.id, id: cancelingBid.id }}
-                loadingText="Canceling..."
-              >
-                Yes, cancel bid
-              </MutationButton>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      {user.roles.administrator && data.acceptedPriceCents && getBuybackStatus(data) === "Reviewing" ? (
+        <Alert>
+          <InfoIcon />
+          <AlertDescription>
+            <span className="font-semibold">Buyback window has ended.</span> All accepted bids cleared at{" "}
+            <span className="font-semibold">{formatMoneyFromCents(data.acceptedPriceCents)} per share</span>. Review and
+            confirm to begin processing payouts.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      {user.roles.administrator && getBuybackStatus(data) === "Closed" ? (
+        <Alert variant="success">
+          <CircleCheckIcon />
+          <AlertDescription>
+            <span className="font-semibold">Buyback successfully closed and settled.</span> Payouts are being processed.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      {!user.roles.administrator && data.acceptedPriceCents && getBuybackStatus(data) === "Settled" ? (
+        <Alert>
+          <InfoIcon />
+          <AlertDescription>
+            <span className="font-semibold">This buyback has been settled.</span> All accepted bids cleared at{" "}
+            <span className="font-semibold">{formatMoneyFromCents(data.acceptedPriceCents)} per share</span>, and
+            payouts have been processed.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      {isLoading ? (
+        <TableSkeleton columns={columns.length} />
+      ) : bids.length > 0 ? (
+        <DataTable
+          table={bidsTable}
+          searchColumn={user.roles.administrator ? "investor" : undefined}
+          actions={
+            user.roles.administrator ? (
+              <BuybackActions data={data} user={user} bids={bids} onSetActiveModal={setActiveModal} table={bidsTable} />
+            ) : null
+          }
+        />
+      ) : user.roles.administrator ? (
+        <Placeholder icon={InboxIcon}>
+          Investors can place bids now. Activity will appear here as it happens.
+        </Placeholder>
+      ) : (
+        <Placeholder icon={LucideCircleDollarSign}>Place your first bid to participate in the data.</Placeholder>
+      )}
+      {activeModal === "cancel" ? (
+        <CancelBidModal
+          onClose={() => {
+            handleBidAction(null);
+            void refetchBids();
+          }}
+          data={data}
+          bid={selectedBid}
+        />
+      ) : null}
+      {activeModal === "place" ? (
+        <PlaceBidModal
+          onClose={() => {
+            setActiveModal(null);
+            void refetchBids();
+          }}
+          data={data}
+        />
+      ) : null}
+      {activeModal === "finalize" ? (
+        <FinalizeBuybackModal
+          onClose={() => {
+            setActiveModal(null);
+            void refetchTenderOffer();
+            void refetchBids();
+          }}
+          data={data}
+          bids={bids}
+        />
       ) : null}
     </>
   );

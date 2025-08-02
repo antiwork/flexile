@@ -87,6 +87,84 @@ function DialogDescription({ className, ...props }: React.ComponentProps<typeof 
     <DialogPrimitive.Description data-slot="dialog-description" className={cn("text-base", className)} {...props} />
   );
 }
+
+type LayerConfig = {
+  scaleX: number;
+  offsetY: number;
+};
+
+type DialogStackContentProps = {
+  step: number;
+  children: React.ReactNode;
+} & React.ComponentProps<typeof DialogPrimitive.Content>;
+
+function DialogStackContent({ step, children, className, ...props }: DialogStackContentProps) {
+  const childrenArray = React.Children.toArray(children);
+  const totalSteps = childrenArray.length;
+
+  // Generate stack layers dynamically based on totalSteps
+  // Last layer: { scaleX: BASE_SCALE, offsetY: BASE_OFFSET }
+  // Each previous layer: reduce scaleX by SCALE_STEP, increase offsetY by OFFSET_STEP
+  const BASE_SCALE = 0.95;
+  const SCALE_STEP = 0.05;
+  const BASE_OFFSET = 20;
+  const OFFSET_STEP = 20;
+  const stackLayers: LayerConfig[] = Array.from({ length: totalSteps - 1 }, (_, i) => ({
+    scaleX: BASE_SCALE - (totalSteps - 2 - i) * SCALE_STEP,
+    offsetY: BASE_OFFSET + (totalSteps - 2 - i) * OFFSET_STEP,
+  }));
+
+  const layersToShow = stackLayers.slice(step);
+
+  return (
+    <DialogPrimitive.Portal data-slot="dialog-portal">
+      <DialogPrimitive.Overlay data-slot="dialog-overlay" className="fixed inset-0 z-40 overflow-auto bg-black/80">
+        <div className="mt-16 mb-10 flex w-full justify-center px-4">
+          <div className="relative w-full max-w-lg">
+            {layersToShow.map((layer, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "bg-background absolute inset-0 rounded-lg shadow-[0_6px_24px_rgba(0,0,0,0.10),_0_9px_48px_rgba(0,0,0,0.08)] transition-transform duration-300",
+                )}
+                style={{
+                  transform: `translateY(-${layer.offsetY}px) scaleX(${layer.scaleX})`,
+                  zIndex: 10 + i,
+                }}
+              />
+            ))}
+
+            <DialogPrimitive.Content
+              data-slot="dialog-content"
+              className={cn(
+                "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 relative z-50 w-full content-start rounded-lg p-8 shadow-[0_6px_24px_rgba(0,0,0,0.10),_0_9px_48px_rgba(0,0,0,0.08)] duration-200",
+                className,
+              )}
+              {...props}
+            >
+              {childrenArray.map((child, index) => (
+                <div
+                  key={index}
+                  className={cn("grid gap-4", index === step ? "grid" : "hidden")}
+                  data-slot="dialog-section"
+                >
+                  {child}
+                </div>
+              ))}
+              <DialogPrimitive.Close
+                data-slot="dialog-close"
+                className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+              >
+                <XIcon />
+                <span className="sr-only">Close</span>
+              </DialogPrimitive.Close>
+            </DialogPrimitive.Content>
+          </div>
+        </div>
+      </DialogPrimitive.Overlay>
+    </DialogPrimitive.Portal>
+  );
+}
 export {
   Dialog,
   DialogClose,
@@ -96,6 +174,7 @@ export {
   DialogHeader,
   DialogOverlay,
   DialogPortal,
+  DialogStackContent,
   DialogTitle,
   DialogTrigger,
 };
