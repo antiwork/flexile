@@ -27,10 +27,7 @@ class DividendReportCsv
                                        .where(dividend_payments: { status: Payments::Status::SUCCEEDED })
                                        .sum("dividend_payments.transfer_fee_in_cents") / 100.0
 
-        flexile_fees = dividends.map do |dividend|
-          calculated_fee = ((dividend.total_amount_in_cents.to_d * 2.9.to_d / 100.to_d) + 30.to_d).round.to_i
-          [30_00, calculated_fee].min
-        end.sum / 100.0
+        flexile_fees = dividend_round.flexile_fees_in_cents / 100.0
 
         total_ach_pull = total_dividends + flexile_fees
 

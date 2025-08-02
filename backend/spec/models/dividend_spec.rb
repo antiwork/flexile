@@ -113,4 +113,137 @@ RSpec.describe Dividend do
       expect(dividend.retained_reason).to eq(reason)
     end
   end
+
+  describe "#company_charged?" do
+    context "when dividend round has no consolidated invoice" do
+      let(:dividend) { create(:dividend) }
+
+      it "returns false" do
+        expect(dividend.company_charged?).to eq(false)
+      end
+    end
+
+    context "when dividend round has a consolidated invoice that is paid or pending payment" do
+      let(:consolidated_invoice) { create(:consolidated_invoice, status: ConsolidatedInvoice::SENT) }
+      let(:dividend_round) { create(:dividend_round, consolidated_invoice:) }
+      let(:dividend) { create(:dividend, dividend_round:) }
+
+      it "returns true" do
+        expect(dividend.company_charged?).to eq(true)
+      end
+    end
+
+    context "when dividend round has a consolidated invoice that is not paid or pending payment" do
+      let(:consolidated_invoice) { create(:consolidated_invoice, status: ConsolidatedInvoice::FAILED) }
+      let(:dividend_round) { create(:dividend_round, consolidated_invoice:) }
+      let(:dividend) { create(:dividend, dividend_round:) }
+
+      it "returns false" do
+        expect(dividend.company_charged?).to eq(false)
+      end
+    end
+  end
+
+  describe "#company_paid?" do
+    context "when dividend round has no consolidated invoice" do
+      let(:dividend) { create(:dividend) }
+
+      it "returns false" do
+        expect(dividend.company_paid?).to eq(false)
+      end
+    end
+
+    context "when dividend round has a paid consolidated invoice" do
+      let(:consolidated_invoice) { create(:consolidated_invoice, :paid) }
+      let(:dividend_round) { create(:dividend_round, consolidated_invoice:) }
+      let(:dividend) { create(:dividend, dividend_round:) }
+
+      it "returns true" do
+        expect(dividend.company_paid?).to eq(true)
+      end
+    end
+
+    context "when dividend round has an unpaid consolidated invoice" do
+      let(:consolidated_invoice) { create(:consolidated_invoice, status: ConsolidatedInvoice::SENT) }
+      let(:dividend_round) { create(:dividend_round, consolidated_invoice:) }
+      let(:dividend) { create(:dividend, dividend_round:) }
+
+      it "returns false" do
+        expect(dividend.company_paid?).to eq(false)
+      end
+    end
+  end
+
+  describe "#calculate_flexile_fee_cents" do
+    context "single dividend yielding a fee under the $30 cap" do
+      it "calculates correct fee for small dividend amount" do
+        dividend = create(:dividend, total_amount_in_cents: 1000)
+
+        expected_fee = ((1000 * 2.9 / 100) + 30).round
+        expect(dividend.calculate_flexile_fee_cents).to eq(expected_fee)
+      end
+
+      it "calculates correct fee for moderate dividend amount" do
+        dividend = create(:dividend, total_amount_in_cents: 50_000)
+
+        expected_fee = ((50_000 * 2.9 / 100) + 30).round
+        expect(dividend.calculate_flexile_fee_cents).to eq(expected_fee)
+      end
+    end
+
+    context "single dividend yielding a fee over the cap" do
+      it "caps the fee at $30.00 for large dividend amounts" do
+        dividend = create(:dividend, total_amount_in_cents: 200_000)
+
+        calculated_fee = ((200_000 * 2.9 / 100) + 30).round
+        expect(calculated_fee).to be > 3000
+        expect(dividend.calculate_flexile_fee_cents).to eq(3000)
+      end
+
+      it "caps the fee at $30.00 for very large dividend amounts" do
+        dividend = create(:dividend, total_amount_in_cents: 1_000_000)
+
+        calculated_fee = ((1_000_000 * 2.9 / 100) + 30).round
+        expect(calculated_fee).to be > 3000
+        expect(dividend.calculate_flexile_fee_cents).to eq(3000)
+      end
+    end
+
+    context "rounding behavior and $0.30 addition" do
+      it "rounds fees correctly for amounts that result in fractional cents" do
+        dividend = create(:dividend, total_amount_in_cents: 1234)
+
+        calculated_fee = (1234 * 2.9 / 100) + 30
+        expected_fee = calculated_fee.round
+        expect(dividend.calculate_flexile_fee_cents).to eq(expected_fee)
+      end
+
+      it "handles rounding edge cases correctly" do
+        dividend = create(:dividend, total_amount_in_cents: 1724)
+
+        calculated_fee = (1724 * 2.9 / 100) + 30
+        expected_fee = calculated_fee.round
+        expect(dividend.calculate_flexile_fee_cents).to eq(expected_fee)
+      end
+    end
+
+    context "edge cases" do
+      it "handles very small amounts that would result in sub-penny fees" do
+        dividend = create(:dividend, total_amount_in_cents: 1)
+
+        calculated_fee = (1 * 2.9 / 100) + 30
+        expected_fee = calculated_fee.round
+        expect(dividend.calculate_flexile_fee_cents).to eq(expected_fee)
+      end
+
+      it "handles the threshold amount where fee equals cap" do
+        threshold_amount = ((3000 - 30) / 0.029).round
+        dividend = create(:dividend, total_amount_in_cents: threshold_amount)
+
+        calculated_fee = ((threshold_amount * 2.9 / 100) + 30).round
+        expected_fee = [3000, calculated_fee].min
+        expect(dividend.calculate_flexile_fee_cents).to eq(expected_fee)
+      end
+    end
+  end
 end

@@ -28,7 +28,8 @@ heroku run rails console -a flexile
 #### Enable Dividends for a Company
 
 ```ruby
-Company.find(1823).update!(equity_enabled: true)
+COMPANY_ID = 1823
+Company.find(COMPANY_ID).update!(equity_enabled: true)
 ```
 
 #### Create Investors and Dividends
@@ -47,9 +48,9 @@ data = <<~CSV
 CSV
 
 service = CreateInvestorsAndDividends.new(
-  company_id: 1823,
+  company_id: COMPANY_ID,
   csv_data: data,
-  dividend_date: Date.new(2025, 6, 4),
+  dividend_date: Date.new(2025, 8, 4),
   is_first_round: true, # defaults to false
   is_return_of_capital: true # defaults to false
 )
@@ -71,7 +72,7 @@ Note: Dividend emails are now sent automatically. To send manually, see dividend
 In case an investor changed their email or is otherwise not in the new list of dividend recepients and needs to be added manually:
 
 ```
-company = Company.find(1823)
+company = Company.find(COMPANY_ID)
 dividend_round = company.dividend_rounds.find(3)
 
 dividend_data = {
@@ -114,7 +115,7 @@ dividend_round.send_dividend_emails
 Script for resending email to investors who didn't sign up to Flexile:
 
 ```ruby
-company = Company.find(1823)
+company = Company.find(COMPANY_ID)
 dividend_date = Date.parse("June 4, 2025")
 primary_admin_user = company.primary_admin.user
 
@@ -144,7 +145,7 @@ service = DividendComputationGeneration.new(
   amount_in_usd: 5_346_877,
   return_of_capital: false
 )
-service.process
+dividend_computation = service.process
 
 puts service.instance_variable_get(:@preferred_dividend_total)
 puts service.instance_variable_get(:@common_dividend_total)
@@ -154,7 +155,7 @@ puts service.instance_variable_get(:@preferred_dividend_total) + service.instanc
 #### Generate Dividends from Computation
 
 ```ruby
-DividendComputation.generate_dividends
+dividend_computation.generate_dividends
 ```
 
 #### Validate the Data
@@ -182,45 +183,28 @@ AdminMailer.custom(
 ### Calculating Fees
 
 ```ruby
-company = Company.find(1823)
-dividends = company.dividends
-fees = dividends.map do |dividend|
-  calculated_fee = ((dividend.total_amount_in_cents.to_d * 2.9.to_d/100.to_d) + 30.to_d).round.to_i
-  [30_00, calculated_fee].min
-end
-fees.sum / 100.0
+dividend_round = company.dividend_rounds.find(DIVIDEND_ROUND_ID)
+dividend_round.flexile_fees_in_cents / 100.0
 ```
 
 ### Fund Transfers
 
 #### Pull Funds via ACH using Stripe
 
+Once the money is in our Stripe account, it is automatically pulled into our Wise account by 12AM/12PM UTC
+
 ```ruby
-company = Company.find(2699)
-stripe_setup_intent = company.bank_account.stripe_setup_intent
-intent = Stripe::PaymentIntent.create({
-  payment_method_types: ["us_bank_account"],
-  payment_method: stripe_setup_intent.payment_method,
-  customer: stripe_setup_intent.customer,
-  confirm: true,
-  amount: 695_009_30, # set manually
-  currency: "USD",
-  expand: ["latest_charge"],
-  capture_method: "automatic",
-})
+consolidated_invoice = DividendConsolidatedInvoiceCreation.new(dividend_round).process
+ChargeConsolidatedInvoice.new(consolidated_invoice.id).process
 ```
 
-#### Move Money from Stripe to Wise
+#### Manually Move Money from Stripe to Wise
 
-Once the money is in our Stripe account, pull into our Wise account.
+Once the money is in our Stripe account, can manually pull into our Wise account.
 
 ```ruby
-payout = Stripe::Payout.create({
-  amount: 275_276_75,
-  currency: "usd",
-  description: "Dividends for ...",
-  statement_descriptor: "Flexile"
-})
+consolidated_payment = consolidated_invoice.consolidated_payments.sole.reload
+CreatePayoutForConsolidatedPayment.new(consolidated_payment).perform!
 ```
 
 ### Sending Notifications
@@ -230,7 +214,7 @@ payout = Stripe::Payout.create({
 After investors sign up/onboard:
 
 ```ruby
-dividend_round = Company.find(1823).dividend_rounds.order(id: :desc).first
+dividend_round = Company.find(COMPANY_ID).dividend_rounds.order(id: :desc).first
 dividend_round.update!(ready_for_payment: true)
 ```
 

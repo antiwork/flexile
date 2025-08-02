@@ -4,6 +4,8 @@ class DividendRound < ApplicationRecord
   include ExternalId
 
   belongs_to :company
+  belongs_to :consolidated_invoice, optional: true
+
   has_many :dividends
   has_many :investor_dividend_rounds
 
@@ -15,6 +17,10 @@ class DividendRound < ApplicationRecord
   validates :ready_for_payment, inclusion: { in: [true, false] }
 
   scope :ready_for_payment, -> { where(ready_for_payment: true) }
+
+  def flexile_fees_in_cents
+    dividends.sum(&:calculate_flexile_fee_cents)
+  end
 
   def send_dividend_emails
     company.company_investors.joins(:dividends)

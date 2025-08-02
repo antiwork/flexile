@@ -19,6 +19,11 @@ class Dividend < ApplicationRecord
   RETAINED_REASON_BELOW_THRESHOLD = "below_minimum_payment_threshold"
   RETAINED_REASONS = [RETAINED_REASON_COUNTRY_SANCTIONED, RETAINED_REASON_BELOW_THRESHOLD].freeze
 
+  BASE_FLEXILE_FEE_CENTS = 30
+  MAX_FLEXILE_FEE_CENTS = 30_00
+  PERCENT_FLEXILE_FEE = 2.9
+  private_constant :BASE_FLEXILE_FEE_CENTS, :MAX_FLEXILE_FEE_CENTS, :PERCENT_FLEXILE_FEE
+
   validates :retained_reason, inclusion: { in: RETAINED_REASONS }, allow_nil: true
   validates :total_amount_in_cents, presence: true, numericality: { greater_than: 0 }
   validates :number_of_shares, numericality: { greater_than: 0 }, allow_nil: true
@@ -38,5 +43,40 @@ class Dividend < ApplicationRecord
 
   def mark_retained!(reason)
     update!(status: RETAINED, retained_reason: reason)
+  end
+
+  def calculate_flexile_fee_cents
+    fee_cents = BASE_FLEXILE_FEE_CENTS + (total_amount_in_cents * PERCENT_FLEXILE_FEE / 100)
+    [fee_cents, MAX_FLEXILE_FEE_CENTS].min.round
+  end
+
+  def payable?
+    company.active? &&
+      status.in?([ISSUED, RETAINED]) &&
+      tax_requirements_met? &&
+      bank_account_ready? &&
+      dividend_round.ready_for_payment?
+  end
+
+  def immediately_payable?
+    payable? && (company.is_trusted? ? company_charged? : company_paid?)
+  end
+
+  def company_charged?
+    return false unless dividend_round.consolidated_invoice
+    dividend_round.consolidated_invoice.status.in?([ConsolidatedInvoice::SENT, ConsolidatedInvoice::PROCESSING, ConsolidatedInvoice::PAID])
+  end
+
+  def company_paid?
+    return false unless dividend_round.consolidated_invoice
+    dividend_round.consolidated_invoice.status == ConsolidatedInvoice::PAID
+  end
+
+  def tax_requirements_met?
+    company_investor.user.tax_information_confirmed_at.present?
+  end
+
+  def bank_account_ready?
+    company_investor.user.bank_account_for_dividends.present?
   end
 end
