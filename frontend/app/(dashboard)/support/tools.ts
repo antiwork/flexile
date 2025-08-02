@@ -2,6 +2,6 @@ export const helperTools = ({ companyId, contractorId }: { companyId: string; co
   getInvoices: {
     description: "Fetch a list of recent invoices",
     parameters: {},
-    url: `/api/helper/invoices?companyId=${companyId}&contractorId=${contractorId}`,
+    url: `/api/helper/invoices?companyId=${companyId}&contractorId=${contractorId ?? ""}`,
   },
 });
