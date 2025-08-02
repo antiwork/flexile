@@ -343,6 +343,7 @@ export const equityGrantsRouter = createRouter({
         };
       }),
       defaultVestingSchedules,
+      sharePriceUsd: ctx.company.fmvPerShareInUsd,
     };
   }),
   cancel: companyProcedure.input(z.object({ id: z.string(), reason: z.string() })).mutation(async ({ input, ctx }) => {
