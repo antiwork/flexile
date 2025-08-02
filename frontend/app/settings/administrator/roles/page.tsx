@@ -31,22 +31,24 @@ import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { cn } from "@/utils";
 
-const addMemberSchema = z.object({
-  memberOrEmail: z
-    .string()
-    .min(1, "Please select a member or enter an email")
-    .refine((value) => {
-      // If it's an email (contains @), validate it as an email
-      if (value.includes("@")) {
-        return z.string().email("Please enter a valid email address").safeParse(value).success;
-      }
-      // If it's not an email, it should be a valid user ID (non-empty string)
-      return value.length > 0;
-    }, "Please enter a valid email address or select a member"),
-  role: z.enum(["admin", "lawyer"]),
-});
+const createAddMemberSchema = (companyUsers: User[]) =>
+  z.object({
+    memberOrEmail: z
+      .string()
+      .min(1, "Please select a member or enter an email")
+      .refine((value) => {
+        // If it's an email (contains @), validate it as an email
+        if (value.includes("@")) {
+          return z.string().email("Please enter a valid email address").safeParse(value).success;
+        }
+        // If it's not an email, it should be a valid user ID that exists in the system
+        const existingUser = companyUsers.find((u) => u.id === value);
+        return !!existingUser;
+      }, "Please select a valid member from the list or enter a valid email address"),
+    role: z.enum(["admin", "lawyer"]),
+  });
 
-type AddMemberForm = z.infer<typeof addMemberSchema>;
+type AddMemberForm = z.infer<ReturnType<typeof createAddMemberSchema>>;
 
 interface User {
   id: string;
@@ -221,9 +223,12 @@ export default function RolesPage() {
     },
   });
 
+  const addMemberSchema = useMemo(() => createAddMemberSchema(companyUsers), [companyUsers]);
+
   const addMemberForm = useForm<AddMemberForm>({
     resolver: zodResolver(addMemberSchema),
     defaultValues: { memberOrEmail: "", role: "admin" },
+    mode: "onChange",
   });
 
   const allRoles = useMemo(() => {
