@@ -11,10 +11,63 @@ You'll need:
 
 The easiest way to set up the development environment is to use the [`bin/setup` script](bin/setup), but feel free to run the commands in it yourself to:
 
-- Set up Ruby (ideally using `rbenv`/`rvm`) and PostgreSQL
-- Install dependencies using `pnpm i` and `cd backend && bundle i`
-- Set up your environment by either using `vercel env pull .env` or `cp .env.example .env` and filling in the missing values with your own keys
-- Run `cd backend && gem install foreman`
+<details>
+<summary>Homebrew</summary>
+
+Follow official [Homebrew documentation](https://brew.sh/) for installation.
+
+</details>
+
+<details>
+<summary>Ruby</summary>
+
+Set up [rbenv](https://github.com/rbenv/rbenv) using Homebrew and set the version to the one in [.ruby-version](https://github.com/antiwork/flexile/blob/main/.ruby-version) file.
+
+```shell
+rbenv install $(cat .ruby-version)
+rbenv local $(cat .ruby-version)
+rbenv rehash
+```
+
+</details>
+
+<details>
+<summary>Bundler and Foreman</summary>
+
+Run `cd backend && gem install bundler foreman`
+
+</details>
+
+<details>
+<summary>Mkcert</summary>
+
+Next.js automatically downloads binaries of mkcert.js when running the app, but you need additional libraries if you are on Linux. 
+
+If you encounter issues related to SSL it is a good idea to install Mkcert locally to debug further.
+
+Refer to [mkcert documentation](https://github.com/FiloSottile/mkcert) for more information.
+
+</details>
+
+<details>
+<summary>Dependencies</summary>
+
+Install dependencies using `pnpm i` and then `cd backend && bundle i`
+
+</details>
+
+<details>
+<summary>Environment variables</summary>
+
+#### Antiwork Team member
+
+If you are an Antiwork team member you can pull .env file by using `pnpx vercel env pull .env`
+
+#### Other contributors
+
+`cp .env.example .env` then fill in missing values and your own keys. A guide on how to set the nescessary ones is in [Services Configuration](#services-configuration).
+
+</details>
 
 ## Running the App
 
