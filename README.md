@@ -4,6 +4,9 @@ Contractor payments as easy as 1-2-3.
 
 ## Setup
 
+> **⚠️ Warning:**  
+> We recommend using macOS or a Linux distribution for setting up Flexile locally. Windows and WSL often introduce hard-to-debug issues. If you use Windows, consider running a Linux distribution in a virtual machine (e.g. with [VirtualBox](https://virtualbox.org)).
+
 You'll need:
 
 - [Docker](https://docs.docker.com/engine/install/)
