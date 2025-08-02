@@ -1,10 +1,10 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, desc, eq, gte, isNotNull, isNull, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { pick, truncate } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
-import { companyInvestors, companyUpdates } from "@/db/schema";
+import { companyAdministrators, companyContractors, companyInvestors, companyUpdates, invoices } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { type CompanyContext, companyProcedure, createRouter, renderTiptapToText } from "@/trpc";
 import { isActive } from "@/trpc/routes/contractors";
@@ -93,44 +93,157 @@ export const companyUpdatesRouter = createRouter({
       .returning();
     if (!update) throw new TRPCError({ code: "NOT_FOUND" });
   }),
-  publish: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    const hasInvestors = await checkHasInvestors(ctx.company.id);
-    if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+  publish: companyProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        includeContractors: z.boolean().optional().default(false),
+        contractorStatus: z.enum(["active", "all"]).optional().default("active"),
+        minBillingThreshold: z.number().optional(),
+        includeInvestors: z.boolean().optional().default(true),
+        investorTypes: z.array(z.string()).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const hasInvestors = await checkHasInvestors(ctx.company.id);
+      if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-    const [update] = await db
-      .update(companyUpdates)
-      .set({ sentAt: new Date() })
-      .where(and(byId(ctx, input.id), isNull(companyUpdates.sentAt)))
-      .returning();
+      const [update] = await db
+        .update(companyUpdates)
+        .set({ sentAt: new Date() })
+        .where(and(byId(ctx, input.id), isNull(companyUpdates.sentAt)))
+        .returning();
 
-    if (!update) throw new TRPCError({ code: "NOT_FOUND" });
+      if (!update) throw new TRPCError({ code: "NOT_FOUND" });
 
-    await inngest.send({
-      name: "company.update.published",
-      data: {
-        updateId: update.externalId,
-      },
-    });
+      await inngest.send({
+        name: "company.update.published",
+        data: {
+          updateId: update.externalId,
+          recipientFilters: {
+            includeContractors: input.includeContractors,
+            contractorStatus: input.contractorStatus,
+            minBillingThreshold: input.minBillingThreshold,
+            includeInvestors: input.includeInvestors,
+            investorTypes: input.investorTypes,
+          },
+        },
+      });
 
-    return update.externalId;
-  }),
-  sendTestEmail: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    const hasInvestors = await checkHasInvestors(ctx.company.id);
-    if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
-    const update = await db.query.companyUpdates.findFirst({ where: byId(ctx, input.id) });
-    if (!update) throw new TRPCError({ code: "NOT_FOUND" });
-    await inngest.send({
-      name: "company.update.published",
-      data: {
-        updateId: update.externalId,
-        recipients: [ctx.user],
-      },
-    });
-  }),
+      return update.externalId;
+    }),
+  sendTestEmail: companyProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        includeContractors: z.boolean().optional().default(false),
+        contractorStatus: z.enum(["active", "all"]).optional().default("active"),
+        minBillingThreshold: z.number().optional(),
+        includeInvestors: z.boolean().optional().default(true),
+        investorTypes: z.array(z.string()).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const hasInvestors = await checkHasInvestors(ctx.company.id);
+      if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+      const update = await db.query.companyUpdates.findFirst({ where: byId(ctx, input.id) });
+      if (!update) throw new TRPCError({ code: "NOT_FOUND" });
+      await inngest.send({
+        name: "company.update.published",
+        data: {
+          updateId: update.externalId,
+          recipients: [ctx.user],
+          recipientFilters: {
+            includeContractors: input.includeContractors,
+            contractorStatus: input.contractorStatus,
+            minBillingThreshold: input.minBillingThreshold,
+            includeInvestors: input.includeInvestors,
+            investorTypes: input.investorTypes,
+          },
+        },
+      });
+    }),
   delete: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
     const hasInvestors = await checkHasInvestors(ctx.company.id);
     if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
     const result = await db.delete(companyUpdates).where(byId(ctx, input.id)).returning();
     if (result.length === 0) throw new TRPCError({ code: "NOT_FOUND" });
   }),
+  getRecipientCount: companyProcedure
+    .input(
+      z.object({
+        includeContractors: z.boolean().optional().default(false),
+        contractorStatus: z.enum(["active", "all"]).optional().default("active"),
+        minBillingThreshold: z.number().optional(),
+        includeInvestors: z.boolean().optional().default(true),
+        investorTypes: z.array(z.string()).optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const hasInvestors = await checkHasInvestors(ctx.company.id);
+      if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+
+      // Get unique user IDs to handle de-duplication
+      const uniqueUserIds = new Set<bigint>();
+
+      // Count administrators (always included)
+      const admins = await db.query.companyAdministrators.findMany({
+        where: eq(companyAdministrators.companyId, ctx.company.id),
+      });
+      admins.forEach((admin) => uniqueUserIds.add(admin.userId));
+
+      // Count contractors
+      let contractorCount = 0;
+      if (input.includeContractors) {
+        if (input.minBillingThreshold) {
+          // Get contractors with billing threshold
+          const contractorsWithBilling = await db
+            .select({
+              userId: companyContractors.userId,
+              totalBilled: sql<number>`COALESCE(SUM(${invoices.totalAmountInUsdCents}), 0)`,
+            })
+            .from(companyContractors)
+            .leftJoin(invoices, eq(invoices.companyContractorId, companyContractors.id))
+            .where(
+              and(
+                eq(companyContractors.companyId, ctx.company.id),
+                input.contractorStatus === "active" ? isNull(companyContractors.endedAt) : undefined,
+              ),
+            )
+            .groupBy(companyContractors.userId)
+            .having(gte(sql`COALESCE(SUM(${invoices.totalAmountInUsdCents}), 0)`, input.minBillingThreshold * 100));
+
+          contractorCount = contractorsWithBilling.length;
+          contractorsWithBilling.forEach((c) => uniqueUserIds.add(c.userId));
+        } else {
+          const contractors = await db.query.companyContractors.findMany({
+            where: and(
+              eq(companyContractors.companyId, ctx.company.id),
+              input.contractorStatus === "active" ? isNull(companyContractors.endedAt) : undefined,
+            ),
+          });
+          contractorCount = contractors.length;
+          contractors.forEach((c) => uniqueUserIds.add(c.userId));
+        }
+      }
+
+      // Count investors
+      let investorCount = 0;
+      if (input.includeInvestors) {
+        const investors = await db.query.companyInvestors.findMany({
+          where: eq(companyInvestors.companyId, ctx.company.id),
+        });
+        investorCount = investors.length;
+        investors.forEach((inv) => uniqueUserIds.add(inv.userId));
+      }
+
+      return {
+        count: uniqueUserIds.size,
+        breakdown: {
+          administrators: admins.length,
+          contractors: contractorCount,
+          investors: investorCount,
+        },
+      };
+    }),
 });

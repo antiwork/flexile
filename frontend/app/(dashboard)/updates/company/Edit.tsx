@@ -10,16 +10,17 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import ViewUpdateDialog from "@/app/(dashboard)/updates/company/ViewUpdateDialog";
 import { DashboardHeader } from "@/components/DashboardHeader";
-import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
+import MutationButton from "@/components/MutationButton";
+import RadioButtons from "@/components/RadioButtons";
 import { Editor as RichTextEditor } from "@/components/RichText";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
-import { pluralize } from "@/utils/pluralize";
 
 const formSchema = z.object({
   title: z.string().trim().min(1, "This field is required."),
@@ -47,12 +48,30 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const navigatedFromNewPreview = sessionStorage.getItem("navigated-from-new-preview");
   const [viewPreview, setViewPreview] = useState(!!navigatedFromNewPreview);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
 
-  const recipientCount = (company.contractorCount ?? 0) + (company.investorCount ?? 0);
+  // Recipient selection state
+  const [includeContractors, setIncludeContractors] = useState(false);
+  const [contractorStatus, setContractorStatus] = useState<"active" | "all">("active");
+  const [minBillingThreshold, setMinBillingThreshold] = useState<number | undefined>();
+  const [includeInvestors, setIncludeInvestors] = useState(true);
+  const [investorTypes, _setInvestorTypes] = useState<string[]>([]);
+
+  // Get recipient count
+  const { data: recipientData } = trpc.companyUpdates.getRecipientCount.useQuery({
+    companyId: company.id,
+    includeContractors,
+    contractorStatus,
+    ...(minBillingThreshold !== undefined && { minBillingThreshold }),
+    includeInvestors,
+    investorTypes,
+  });
+  const recipientCount = recipientData?.count ?? 0;
 
   const createMutation = trpc.companyUpdates.create.useMutation();
   const updateMutation = trpc.companyUpdates.update.useMutation();
   const publishMutation = trpc.companyUpdates.publish.useMutation();
+  const sendTestEmailMutation = trpc.companyUpdates.sendTestEmail.useMutation();
   const saveMutation = useMutation({
     mutationFn: async ({ values, preview }: { values: z.infer<typeof formSchema>; preview: boolean }) => {
       const data = {
@@ -66,9 +85,29 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
       } else {
         id = await createMutation.mutateAsync(data);
       }
-      if (!preview && !update?.sentAt) await publishMutation.mutateAsync({ companyId: company.id, id });
+      if (!preview && !update?.sentAt) {
+        await publishMutation.mutateAsync({
+          companyId: company.id,
+          id,
+          includeContractors,
+          contractorStatus,
+          ...(minBillingThreshold !== undefined && { minBillingThreshold }),
+          includeInvestors,
+          investorTypes,
+        });
+      }
       void trpcUtils.companyUpdates.list.invalidate();
       if (preview) {
+        setPreviewModalOpen(false);
+        await sendTestEmailMutation.mutateAsync({
+          companyId: company.id,
+          id,
+          includeContractors,
+          contractorStatus,
+          ...(minBillingThreshold !== undefined && { minBillingThreshold }),
+          includeInvestors,
+          investorTypes,
+        });
         if (pathname === "/updates/company/new") {
           sessionStorage.setItem("navigated-from-new-preview", "yes");
           router.replace(`/updates/company/${id}/edit`);
@@ -104,18 +143,10 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
                 </Button>
               ) : (
                 <>
-                  <MutationStatusButton
-                    type="button"
-                    mutation={saveMutation}
-                    idleVariant="outline"
-                    loadingText="Saving..."
-                    onClick={() =>
-                      void form.handleSubmit((values) => saveMutation.mutateAsync({ values, preview: true }))()
-                    }
-                  >
+                  <Button type="button" variant="outline" onClick={() => setPreviewModalOpen(true)}>
                     <FileScan className="size-4" />
                     Preview
-                  </MutationStatusButton>
+                  </Button>
                   <Button type="submit">
                     <EnvelopeIcon className="size-4" />
                     Publish
@@ -167,24 +198,75 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
                 )}
               />
             </div>
-            <div className="flex flex-col gap-2">
-              <div className="mb-1 text-xs text-gray-500 uppercase">Recipients ({recipientCount.toLocaleString()})</div>
-              {company.investorCount ? (
-                <div className="flex items-center gap-2">
+            <div className="space-y-4 rounded-lg border p-4">
+              <div className="text-sm font-medium">Recipients {recipientCount > 0 && `(${recipientCount})`}</div>
+
+              <div className="space-y-3">
+                <div className="text-xs text-gray-500 uppercase">Always included:</div>
+                <div className="flex items-center gap-2 pl-4">
                   <UsersIcon className="size-4" />
-                  <span>
-                    {company.investorCount.toLocaleString()} {pluralize("investor", company.investorCount)}
-                  </span>
+                  <span className="text-sm">Company administrators</span>
                 </div>
-              ) : null}
-              {company.contractorCount ? (
-                <div className="flex items-center gap-2">
-                  <UsersIcon className="size-4" />
-                  <span>
-                    {company.contractorCount.toLocaleString()} active {pluralize("contractor", company.contractorCount)}
-                  </span>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="includeContractors"
+                    checked={includeContractors}
+                    onCheckedChange={(checked) => setIncludeContractors(!!checked)}
+                  />
+                  <label htmlFor="includeContractors" className="cursor-pointer text-sm font-normal">
+                    Include contractors{" "}
+                    {includeContractors && recipientData?.breakdown.contractors
+                      ? `(${recipientData.breakdown.contractors})`
+                      : ""}
+                  </label>
                 </div>
-              ) : null}
+
+                {includeContractors ? (
+                  <div className="space-y-3 pl-6">
+                    <RadioButtons
+                      value={contractorStatus}
+                      onChange={(value) => setContractorStatus(value)}
+                      options={[
+                        { value: "active", label: "Active contractors only" },
+                        { value: "all", label: "All contractors including alumni" },
+                      ]}
+                    />
+
+                    <div className="space-y-1">
+                      <label className="text-sm font-normal">Minimum billing threshold (optional)</label>
+                      <Input
+                        type="number"
+                        placeholder="e.g. 1000"
+                        value={minBillingThreshold || ""}
+                        onChange={(e) => setMinBillingThreshold(e.target.value ? Number(e.target.value) : undefined)}
+                        className="w-32"
+                      />
+                      <p className="text-muted-foreground text-xs">
+                        Only include contractors who have billed ≥ this amount
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="includeInvestors"
+                    checked={includeInvestors}
+                    onCheckedChange={(checked) => setIncludeInvestors(!!checked)}
+                  />
+                  <label htmlFor="includeInvestors" className="cursor-pointer text-sm font-normal">
+                    Include investors{" "}
+                    {includeInvestors && recipientData?.breakdown.investors
+                      ? `(${recipientData.breakdown.investors})`
+                      : ""}
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
           <Dialog open={modalOpen} onOpenChange={setModalOpen}>
@@ -223,6 +305,31 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
           }}
         />
       ) : null}
+      <Dialog open={previewModalOpen} onOpenChange={setPreviewModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Preview update</DialogTitle>
+          </DialogHeader>
+          <p>A preview email will be sent to your email address.</p>
+          <p className="text-sm text-gray-500">
+            The actual update will be sent to the selected recipients based on your selections.
+          </p>
+          <DialogFooter>
+            <div className="grid auto-cols-fr grid-flow-col items-center gap-3">
+              <Button variant="outline" onClick={() => setPreviewModalOpen(false)}>
+                Cancel
+              </Button>
+              <MutationButton
+                mutation={saveMutation}
+                param={{ values: form.getValues(), preview: true }}
+                loadingText="Sending preview..."
+              >
+                Send preview
+              </MutationButton>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

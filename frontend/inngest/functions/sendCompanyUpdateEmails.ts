@@ -1,7 +1,15 @@
-import { and, eq, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, eq, gte, isNull, sql } from "drizzle-orm";
 import { NonRetriableError } from "inngest";
 import { db } from "@/db";
-import { companies, companyContractors, companyInvestors, companyUpdates, users } from "@/db/schema";
+import {
+  companies,
+  companyAdministrators,
+  companyContractors,
+  companyInvestors,
+  companyUpdates,
+  invoices,
+  users,
+} from "@/db/schema";
 import env from "@/env";
 import { inngest } from "@/inngest/client";
 import CompanyUpdatePublished from "@/inngest/functions/emails/CompanyUpdatePublished";
@@ -53,20 +61,99 @@ export default inngest.createFunction(
     const recipients = await step.run("fetch-recipients", async () => {
       if (event.data.recipients) return event.data.recipients;
 
-      const baseQuery = (relationTable: typeof companyContractors | typeof companyInvestors) =>
-        db
+      const filters = event.data.recipientFilters || {
+        includeContractors: false,
+        contractorStatus: "active",
+        includeInvestors: true,
+      };
+
+      const queries: unknown[] = [];
+
+      // Always include administrators
+      const admins = db
+        .selectDistinct({ email: users.email })
+        .from(users)
+        .innerJoin(
+          companyAdministrators,
+          and(eq(users.id, companyAdministrators.userId), eq(companyAdministrators.companyId, company.id)),
+        );
+      queries.push(admins);
+
+      // Include contractors based on filters
+      if (filters.includeContractors) {
+        let contractorsQuery = db
           .selectDistinct({ email: users.email })
           .from(users)
-          .leftJoin(relationTable, and(eq(users.id, relationTable.userId), eq(relationTable.companyId, company.id)));
+          .innerJoin(
+            companyContractors,
+            and(eq(users.id, companyContractors.userId), eq(companyContractors.companyId, company.id)),
+          );
 
-      const activeContractors = baseQuery(companyContractors).where(
-        and(isNotNull(companyContractors.id), isNull(companyContractors.endedAt)),
-      );
-      const investors = baseQuery(companyInvestors).where(isNotNull(companyInvestors.id));
+        // Apply status filter
+        if (filters.contractorStatus === "active") {
+          contractorsQuery = contractorsQuery.where(isNull(companyContractors.endedAt));
+        }
 
-      return db
-        .select({ email: sql<string>`email` })
-        .from(sql`(${activeContractors} UNION ${investors}) as combined_recipients`);
+        // Apply billing threshold filter if specified
+        if (filters.minBillingThreshold) {
+          let contractorsWithBilling = db
+            .selectDistinct({ email: users.email })
+            .from(users)
+            .innerJoin(
+              companyContractors,
+              and(eq(users.id, companyContractors.userId), eq(companyContractors.companyId, company.id)),
+            )
+            .leftJoin(invoices, eq(invoices.companyContractorId, companyContractors.id))
+            .groupBy(users.email)
+            .having(gte(sql`COALESCE(SUM(${invoices.totalAmountInUsdCents}), 0)`, filters.minBillingThreshold * 100));
+
+          // Apply status filter to billing threshold query as well
+          if (filters.contractorStatus === "active") {
+            contractorsWithBilling = contractorsWithBilling.where(isNull(companyContractors.endedAt));
+          }
+
+          queries.push(contractorsWithBilling);
+        } else {
+          queries.push(contractorsQuery);
+        }
+      }
+
+      // Include investors based on filters
+      if (filters.includeInvestors) {
+        let investorsQuery = db
+          .selectDistinct({ email: users.email })
+          .from(users)
+          .innerJoin(
+            companyInvestors,
+            and(eq(users.id, companyInvestors.userId), eq(companyInvestors.companyId, company.id)),
+          );
+
+        // Apply investor type filter if specified
+        if (filters.investorTypes && filters.investorTypes.length > 0) {
+          investorsQuery = investorsQuery.where(sql`${companyInvestors.investorType} = ANY(${filters.investorTypes})`);
+        }
+
+        queries.push(investorsQuery);
+      }
+
+      // Execute all queries and combine results
+      if (queries.length === 0) {
+        return [];
+      }
+
+      // Execute all queries in parallel
+      const results = await Promise.all(queries);
+
+      // De-duplicate using a Set
+      const uniqueEmails = new Set<string>();
+      results.forEach((result) => {
+        result.forEach((row: { email: string }) => {
+          uniqueEmails.add(row.email);
+        });
+      });
+
+      // Convert back to array format expected by the rest of the code
+      return Array.from(uniqueEmails).map((email) => ({ email }));
     });
 
     const logoUrl = await step.run("get-logo-url", async () => companyLogoUrl(company.id));
