@@ -182,45 +182,28 @@ AdminMailer.custom(
 ### Calculating Fees
 
 ```ruby
-company = Company.find(1823)
-dividends = company.dividends
-fees = dividends.map do |dividend|
-  calculated_fee = ((dividend.total_amount_in_cents.to_d * 2.9.to_d/100.to_d) + 30.to_d).round.to_i
-  [30_00, calculated_fee].min
-end
-fees.sum / 100.0
+dividend_round = company.dividend_rounds.find(DIVIDEND_ROUND_ID)
+dividend_round.flexile_fees_in_cents / 100.0
 ```
 
 ### Fund Transfers
 
 #### Pull Funds via ACH using Stripe
 
+Once the money is in our Stripe account, it is automatically pulled into our Wise account by 12AM/12PM UTC
+
 ```ruby
-company = Company.find(2699)
-stripe_setup_intent = company.bank_account.stripe_setup_intent
-intent = Stripe::PaymentIntent.create({
-  payment_method_types: ["us_bank_account"],
-  payment_method: stripe_setup_intent.payment_method,
-  customer: stripe_setup_intent.customer,
-  confirm: true,
-  amount: 695_009_30, # set manually
-  currency: "USD",
-  expand: ["latest_charge"],
-  capture_method: "automatic",
-})
+consolidated_invoice = DividendConsolidatedInvoiceCreation.new(dividend_round).process
+ChargeConsolidatedInvoice.new(consolidated_invoice.id).process
 ```
 
-#### Move Money from Stripe to Wise
+#### Manually Move Money from Stripe to Wise
 
-Once the money is in our Stripe account, pull into our Wise account.
+Once the money is in our Stripe account, can manually pull into our Wise account.
 
 ```ruby
-payout = Stripe::Payout.create({
-  amount: 275_276_75,
-  currency: "usd",
-  description: "Dividends for ...",
-  statement_descriptor: "Flexile"
-})
+consolidated_payment = consolidated_invoice.consolidated_payments.sole
+CreatePayoutForConsolidatedPayment.new(consolidated_payment).perform!
 ```
 
 ### Sending Notifications

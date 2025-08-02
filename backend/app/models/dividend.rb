@@ -39,4 +39,32 @@ class Dividend < ApplicationRecord
   def mark_retained!(reason)
     update!(status: RETAINED, retained_reason: reason)
   end
+
+  def payable?
+    company.active? &&
+      status.in?([ISSUED, RETAINED]) &&
+      tax_requirements_met? &&
+      bank_account_ready? &&
+      dividend_round.ready_for_payment?
+  end
+
+  def immediately_payable?
+    payable? && (company.is_trusted? ? company_charged? : company_paid?)
+  end
+
+  def company_charged?
+    dividend_round.consolidated_invoice.paid_or_pending_payment.exists?
+  end
+
+  def company_paid?
+    dividend_round.consolidated_invoice.paid.exists?
+  end
+
+  def tax_requirements_met?
+    user.tax_information_confirmed_at.present?
+  end
+
+  def bank_account_ready?
+    user.bank_account_for_dividends.present?
+  end
 end

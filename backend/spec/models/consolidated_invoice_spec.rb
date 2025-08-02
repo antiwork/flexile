@@ -7,6 +7,7 @@ RSpec.describe ConsolidatedInvoice do
     it { is_expected.to have_many(:invoices).through(:consolidated_invoices_invoices) }
     it { is_expected.to have_many(:consolidated_payments) }
     it { is_expected.to have_many(:integration_records) }
+    it { is_expected.to have_many(:dividend_rounds) }
     it { is_expected.to have_one(:quickbooks_journal_entry) }
   end
 

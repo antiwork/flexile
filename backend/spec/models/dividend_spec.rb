@@ -113,4 +113,64 @@ RSpec.describe Dividend do
       expect(dividend.retained_reason).to eq(reason)
     end
   end
+
+  describe "#company_charged?" do
+    context "when dividend round has no consolidated invoice" do
+      let(:dividend) { create(:dividend) }
+
+      it "returns false" do
+        expect(dividend.company_charged?).to eq(false)
+      end
+    end
+
+    context "when dividend round has a consolidated invoice that is paid or pending payment" do
+      let(:consolidated_invoice) { create(:consolidated_invoice, status: ConsolidatedInvoice::SENT) }
+      let(:dividend_round) { create(:dividend_round, consolidated_invoice:) }
+      let(:dividend) { create(:dividend, dividend_round:) }
+
+      it "returns true" do
+        expect(dividend.company_charged?).to eq(true)
+      end
+    end
+
+    context "when dividend round has a consolidated invoice that is not paid or pending payment" do
+      let(:consolidated_invoice) { create(:consolidated_invoice, status: ConsolidatedInvoice::FAILED) }
+      let(:dividend_round) { create(:dividend_round, consolidated_invoice:) }
+      let(:dividend) { create(:dividend, dividend_round:) }
+
+      it "returns false" do
+        expect(dividend.company_charged?).to eq(false)
+      end
+    end
+  end
+
+  describe "#company_paid?" do
+    context "when dividend round has no consolidated invoice" do
+      let(:dividend) { create(:dividend) }
+
+      it "returns false" do
+        expect(dividend.company_paid?).to eq(false)
+      end
+    end
+
+    context "when dividend round has a paid consolidated invoice" do
+      let(:consolidated_invoice) { create(:consolidated_invoice, :paid) }
+      let(:dividend_round) { create(:dividend_round, consolidated_invoice:) }
+      let(:dividend) { create(:dividend, dividend_round:) }
+
+      it "returns true" do
+        expect(dividend.company_paid?).to eq(true)
+      end
+    end
+
+    context "when dividend round has an unpaid consolidated invoice" do
+      let(:consolidated_invoice) { create(:consolidated_invoice, status: ConsolidatedInvoice::SENT) }
+      let(:dividend_round) { create(:dividend_round, consolidated_invoice:) }
+      let(:dividend) { create(:dividend, dividend_round:) }
+
+      it "returns false" do
+        expect(dividend.company_paid?).to eq(false)
+      end
+    end
+  end
 end

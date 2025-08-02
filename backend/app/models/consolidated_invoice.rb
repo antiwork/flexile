@@ -10,6 +10,8 @@ class ConsolidatedInvoice < ApplicationRecord
   has_many :invoices, through: :consolidated_invoices_invoices
   has_many :consolidated_payments
   has_many :integration_records, as: :integratable
+  has_many :dividend_rounds
+
   has_one_attached :receipt
   has_one :successful_payment, -> { successful.order(succeeded_at: :desc) }, class_name: "ConsolidatedPayment"
   has_one :quickbooks_journal_entry, -> do

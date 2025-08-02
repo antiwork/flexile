@@ -3,6 +3,7 @@
 RSpec.describe DividendRound do
   describe "associations" do
     it { is_expected.to belong_to(:company) }
+    it { is_expected.to belong_to(:consolidated_invoice).optional }
     it { is_expected.to have_many(:dividends) }
     it { is_expected.to have_many(:investor_dividend_rounds) }
   end
