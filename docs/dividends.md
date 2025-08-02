@@ -28,7 +28,8 @@ heroku run rails console -a flexile
 #### Enable Dividends for a Company
 
 ```ruby
-Company.find(1823).update!(equity_enabled: true)
+COMPANY_ID = 1823
+Company.find(COMPANY_ID).update!(equity_enabled: true)
 ```
 
 #### Create Investors and Dividends
@@ -47,9 +48,9 @@ data = <<~CSV
 CSV
 
 service = CreateInvestorsAndDividends.new(
-  company_id: 1823,
+  company_id: COMPANY_ID,
   csv_data: data,
-  dividend_date: Date.new(2025, 6, 4),
+  dividend_date: Date.new(2025, 8, 4),
   is_first_round: true, # defaults to false
   is_return_of_capital: true # defaults to false
 )
@@ -71,7 +72,7 @@ Note: Dividend emails are now sent automatically. To send manually, see dividend
 In case an investor changed their email or is otherwise not in the new list of dividend recepients and needs to be added manually:
 
 ```
-company = Company.find(1823)
+company = Company.find(COMPANY_ID)
 dividend_round = company.dividend_rounds.find(3)
 
 dividend_data = {
@@ -114,7 +115,7 @@ dividend_round.send_dividend_emails
 Script for resending email to investors who didn't sign up to Flexile:
 
 ```ruby
-company = Company.find(1823)
+company = Company.find(COMPANY_ID)
 dividend_date = Date.parse("June 4, 2025")
 primary_admin_user = company.primary_admin.user
 
@@ -144,7 +145,7 @@ service = DividendComputationGeneration.new(
   amount_in_usd: 5_346_877,
   return_of_capital: false
 )
-service.process
+dividend_computation = service.process
 
 puts service.instance_variable_get(:@preferred_dividend_total)
 puts service.instance_variable_get(:@common_dividend_total)
@@ -154,7 +155,7 @@ puts service.instance_variable_get(:@preferred_dividend_total) + service.instanc
 #### Generate Dividends from Computation
 
 ```ruby
-DividendComputation.generate_dividends
+dividend_computation.generate_dividends
 ```
 
 #### Validate the Data
@@ -202,7 +203,7 @@ ChargeConsolidatedInvoice.new(consolidated_invoice.id).process
 Once the money is in our Stripe account, can manually pull into our Wise account.
 
 ```ruby
-consolidated_payment = consolidated_invoice.consolidated_payments.sole
+consolidated_payment = consolidated_invoice.consolidated_payments.sole.reload
 CreatePayoutForConsolidatedPayment.new(consolidated_payment).perform!
 ```
 
@@ -213,7 +214,7 @@ CreatePayoutForConsolidatedPayment.new(consolidated_payment).perform!
 After investors sign up/onboard:
 
 ```ruby
-dividend_round = Company.find(1823).dividend_rounds.order(id: :desc).first
+dividend_round = Company.find(COMPANY_ID).dividend_rounds.order(id: :desc).first
 dividend_round.update!(ready_for_payment: true)
 ```
 
