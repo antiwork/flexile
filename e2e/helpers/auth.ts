@@ -31,6 +31,7 @@ export const logout = async (page: Page) => {
 
   // Wait for redirect to login
   await page.waitForURL(/.*\/login.*/u);
+  await page.waitForLoadState("networkidle");
 };
 
 /**
