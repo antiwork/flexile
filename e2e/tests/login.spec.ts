@@ -38,6 +38,8 @@ test("login with redirect_url", async ({ page }) => {
   await page.getByLabel("Verification code").fill("000000");
   await page.getByRole("button", { name: "Continue", exact: true }).click();
 
+  await page.waitForLoadState("networkidle");
+
   await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
 
   await expect(page.getByText("Welcome back")).not.toBeVisible();
