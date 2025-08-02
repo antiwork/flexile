@@ -21,8 +21,8 @@ export const ConversationDetail = ({ conversationSlug }: ConversationDetailProps
   }
 
   return (
-    <div className="-m-4 flex max-h-dvh flex-col">
-      <div className="border-muted border-b p-4">
+    <div className="flex max-h-dvh flex-col">
+      <div className="border-muted border-b pb-4">
         <DashboardHeader
           title={
             <div className="flex items-center gap-2 text-xl">

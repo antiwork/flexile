@@ -5,6 +5,7 @@ import { MessageContent, useCreateMessage, useRealtimeEvents } from "@helperai/r
 import { Paperclip, Send, User, X } from "lucide-react";
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
+import { MutationStatusButton } from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -109,30 +110,29 @@ export const HelperChat = ({ conversation }: HelperChatProps) => {
   const [attachments, setAttachments] = useState<File[]>([]);
   const [content, setContent] = useState("");
 
-  const createMessage = useCreateMessage({
-    onSuccess: () => {
-      setAttachments([]);
-    },
-  });
+  const createMessage = useCreateMessage();
 
   useRealtimeEvents(conversation.slug);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      if (content.trim() || attachments.length > 0) handleFormSubmit(e);
+      if (content.trim() || attachments.length > 0) void handleFormSubmit(e);
     }
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    createMessage.mutate({
+    await createMessage.mutateAsync({
       conversationSlug: conversation.slug,
       content,
       attachments,
       tools: helperTools({ companyId: company.id, contractorId: user.roles.worker?.id }),
     });
+
+    setContent("");
+    setAttachments([]);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -172,7 +172,7 @@ export const HelperChat = ({ conversation }: HelperChatProps) => {
           ))
       )}
 
-      <form onSubmit={handleFormSubmit} className="bg-background w-full max-w-4xl space-y-2 p-4">
+      <form onSubmit={(e) => void handleFormSubmit(e)} className="bg-background w-full max-w-4xl space-y-2 p-4">
         {attachments.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {attachments.map((file, index) => (
@@ -215,10 +215,15 @@ export const HelperChat = ({ conversation }: HelperChatProps) => {
           </div>
         </div>
         <div className="mt-4 flex justify-end">
-          <Button type="submit" disabled={!content.trim() && attachments.length === 0} size="small">
+          <MutationStatusButton
+            mutation={createMessage}
+            disabled={!content.trim() && attachments.length === 0}
+            size="small"
+            type="submit"
+          >
             <Send className="size-4" />
             Send reply
-          </Button>
+          </MutationStatusButton>
         </div>
         <input
           ref={fileInputRef}
