@@ -87,10 +87,7 @@ export const GettingStarted = () => {
         className="flex h-full flex-col-reverse"
       >
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton
-            className="h-full items-center justify-between rounded-none px-5"
-            data-testid="getting-started-trigger"
-          >
+          <SidebarMenuButton className="h-full items-center justify-between rounded-none px-5">
             {status === "completed" ? (
               <div className="flex h-4 w-4 items-center justify-center rounded-full border-2 border-blue-500 bg-blue-500">
                 <CheckIcon />
@@ -126,10 +123,7 @@ export const GettingStarted = () => {
           ) : (
             <div className="mt-2 rounded-lg border border-gray-200 bg-white px-1 pb-4 shadow-sm">
               <CollapsibleTrigger asChild>
-                <div
-                  className="mx-3 flex h-11 cursor-pointer items-center justify-between"
-                  data-testid="getting-started-inner-trigger"
-                >
+                <div className="mx-3 flex h-11 cursor-pointer items-center justify-between">
                   <span className="font-medium">Getting started</span>
                   <ChevronDown className={cn("h-4 w-4")} />
                 </div>

@@ -24,18 +24,15 @@ export const login = async (page: Page, user: typeof users.$inferSelect) => {
 };
 
 export const logout = async (page: Page) => {
-  const gettingStartedInnerTrigger = page.getByTestId("getting-started-inner-trigger");
+  // Look for the Getting Started inner panel by its text and aria-expanded attribute
+  const gettingStartedInnerTrigger = page.locator('div[aria-expanded="true"]:has-text("Getting started")').first();
 
   // Make sure Getting Started inner panel is closed
   if (await gettingStartedInnerTrigger.isVisible().catch(() => false)) {
-    const isExpanded = await gettingStartedInnerTrigger.getAttribute("aria-expanded").catch(() => null);
-
-    if (isExpanded === "true") {
-      // Click the trigger to collapse it
-      await gettingStartedInnerTrigger.click();
-      // Wait a moment for the animation to complete
-      await page.waitForTimeout(300);
-    }
+    // Click the trigger to collapse it
+    await gettingStartedInnerTrigger.click();
+    // Wait a moment for the animation to complete
+    await page.waitForTimeout(300);
   }
 
   await page.getByRole("button", { name: "Log out" }).first().click();
