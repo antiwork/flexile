@@ -404,7 +404,7 @@ export default function InvoicesPage() {
         <TableSkeleton columns={6} />
       ) : data.length > 0 ? (
         <>
-          <div className="flex justify-between md:hidden">
+          <div className="mx-4 flex justify-between md:hidden">
             <h2 className="text-xl font-bold">
               {data.length} {pluralize("invoice", data.length)}
             </h2>
