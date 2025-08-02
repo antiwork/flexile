@@ -1,6 +1,6 @@
 <p align="center">
   <picture>
-    <img src="https://github.com/antiwork/flexile/blob/main/frontend/public/icon-192.png" height="100" alt="Flexile Logo">
+    <img src="https://github.com/antiwork/flexile/blob/main/frontend/public/icon-192.png" height="128" alt="Flexile Logo">
   </picture>
 </p>
 
