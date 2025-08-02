@@ -24,14 +24,21 @@ export const login = async (page: Page, user: typeof users.$inferSelect) => {
 };
 
 export const logout = async (page: Page) => {
-  // Navigate to a page with logout functionality
-  await page.goto("/dashboard");
+  const gettingStartedInnerTrigger = page.getByTestId("getting-started-inner-trigger");
 
-  // Look for logout button (this may vary based on your UI)
-  const logoutButton = page.getByRole("button", { name: "Logout" }).first();
-  if (await logoutButton.isVisible()) {
-    await logoutButton.click();
+  // Make sure Getting Started inner panel is closed
+  if (await gettingStartedInnerTrigger.isVisible().catch(() => false)) {
+    const isExpanded = await gettingStartedInnerTrigger.getAttribute("aria-expanded").catch(() => null);
+
+    if (isExpanded === "true") {
+      // Click the trigger to collapse it
+      await gettingStartedInnerTrigger.click();
+      // Wait a moment for the animation to complete
+      await page.waitForTimeout(300);
+    }
   }
+
+  await page.getByRole("button", { name: "Log out" }).first().click();
 
   // Wait for redirect to login
   await page.waitForURL(/.*\/login.*/u);
