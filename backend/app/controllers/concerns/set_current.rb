@@ -14,30 +14,34 @@ module SetCurrent
   end
 
   def set_current
-    if clerk&.user_id
-      user = User.find_by(clerk_id: clerk.user_id)
-      if !user && !Rails.env.test?
-        email = clerk.user.email_addresses.find { |item| item.id == clerk.user.primary_email_address_id }.email_address
-        user = User.find_by(email:) if Rails.env.development?
-        if user
-          user.update!(clerk_id: clerk.user_id)
-        else
-          user = User.create!(clerk_id: clerk.user_id, email:)
-          user.tos_agreements.create!(ip_address: request.remote_ip)
+    user = nil
+
+    # Get JWT token from Authorization header
+    auth_header = request.headers["Authorization"]
+    if auth_header&.start_with?("Bearer ")
+      token = auth_header.split(" ").last
+      begin
+        # Decode JWT token (you'll need to implement this based on your NextAuth secret)
+        decoded_token = decode_jwt_token(token)
+        if decoded_token
+          google_id = decoded_token["sub"]
+          user = User.find_by(google_id: google_id)
+
+          if user && decoded_token["iat"]
+            user.update!(current_sign_in_at: Time.zone.at(decoded_token["iat"]))
+          end
         end
+      rescue => e
+        Rails.logger.error "JWT token decode error: #{e.message}"
       end
+    end
 
-      if clerk.user? && clerk.session_claims["iat"] != user.current_sign_in_at.to_i
-        user.update!(current_sign_in_at: Time.zone.at(clerk.session_claims["iat"]))
-      end
-
-      invited_company = nil
-      if cookies["invitation_token"].present?
-        invite_link = CompanyInviteLink.find_by(token: cookies["invitation_token"])
-        invited_company = invite_link&.company
-        user.update!(signup_invite_link: invite_link) if invite_link
-        cookies.delete("invitation_token")
-      end
+    invited_company = nil
+    if cookies["invitation_token"].present?
+      invite_link = CompanyInviteLink.find_by(token: cookies["invitation_token"])
+      invited_company = invite_link&.company
+      user.update!(signup_invite_link: invite_link) if invite_link && user
+      cookies.delete("invitation_token")
     end
 
     Current.user = user
@@ -72,6 +76,16 @@ module SetCurrent
   end
 
   private
+    def decode_jwt_token(token)
+      # This is a simplified JWT decode - you should use a proper JWT library
+      # and verify the signature with your NextAuth secret
+      require "jwt"
+      secret = GlobalConfig.get("NEXTAUTH_SECRET", "your-nextauth-secret")
+      JWT.decode(token, secret, true, { algorithm: "HS256" })[0]
+    rescue JWT::DecodeError
+      nil
+    end
+
     def company_from_param
       # TODO: Remove params[:companyId] once all URLs are updated
       company_id = params[:company_id] || params[:companyId] || cookies[current_user_selected_company_cookie_name]
