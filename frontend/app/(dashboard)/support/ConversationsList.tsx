@@ -3,6 +3,7 @@
 import { useConversations, useCreateConversation } from "@helperai/react";
 import { CircleCheck, Paperclip, SendIcon, X } from "lucide-react";
 import React, { useRef, useState } from "react";
+import { helperTools } from "@/app/(dashboard)/support/tools";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { MutationStatusButton } from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
@@ -12,6 +13,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { useCurrentCompany, useCurrentUser } from "@/global";
 
 interface ConversationsListProps {
   onSelectConversation: (slug: string) => void;
@@ -24,6 +26,8 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const company = useCurrentCompany();
+  const user = useCurrentUser();
 
   const createConversation = useCreateConversation({
     onSuccess: () => {
@@ -43,6 +47,7 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
       message: {
         content: message.trim(),
         attachments,
+        tools: helperTools({ companyId: company.id, contractorId: user.roles.worker?.id }),
       },
     });
 

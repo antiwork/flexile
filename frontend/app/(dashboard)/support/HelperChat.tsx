@@ -7,8 +7,9 @@ import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useCurrentUser } from "@/global";
+import { useCurrentCompany, useCurrentUser } from "@/global";
 import { cn } from "@/utils";
+import { helperTools } from "./tools";
 
 interface HelperChatProps {
   conversation: ConversationDetails;
@@ -102,6 +103,7 @@ const MessageRow = ({
 
 export const HelperChat = ({ conversation }: HelperChatProps) => {
   const user = useCurrentUser();
+  const company = useCurrentCompany();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -129,13 +131,7 @@ export const HelperChat = ({ conversation }: HelperChatProps) => {
       conversationSlug: conversation.slug,
       content,
       attachments,
-      tools: {
-        getInvoices: {
-          description: "Fetch a list of recent invoices",
-          parameters: {},
-          url: "/api/helper/invoices",
-        },
-      },
+      tools: helperTools({ companyId: company.id, contractorId: user.roles.worker?.id }),
     });
   };
 
