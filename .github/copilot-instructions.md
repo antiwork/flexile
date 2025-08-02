@@ -17,6 +17,11 @@
   - Factories can be created using the rspec factories in `spec/factories` in the `/e2e/factories` folder
   - For any broken locators / assertions, you can use the playwright extension to record tests or pick locators
   - Avoid using `page.waitForTimeout()` in e2e tests unless absolutely necessary, as timeouts slow down test execution. Instead use `waitFor()`, `toBeVisible()`, `toPass()`, or other Playwright assertions that wait for specific conditions
+  - **Always add or update e2e tests** when making functional changes to UI components, forms, modals, or user workflows
+  - When testing modal interactions, use the `withinModal` helper for reliable modal testing
+  - For equity grants with vesting events, create test data using `equityGrantsFactory.create()` with appropriate `vestingTrigger` values
+  - Test both positive cases (when vesting events exist) and negative cases (when no vesting events exist) for conditional UI sections
+  - Cover edge cases and error handling in addition to happy path scenarios
 
 - For writing front-end code:
   - Do not use `React.FC`. Use the following syntax: `const Component = ({ prop1, prop2 }: { prop1: string; prop2: number }) => { ... }`

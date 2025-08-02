@@ -12,7 +12,7 @@ import { formatMoney } from "@/utils/formatMoney";
 import { formatDate, humanizeMonths } from "@/utils/time";
 import { optionGrantTypeDisplayNames, relationshipDisplayNames } from ".";
 
-type EquityGrant = RouterOutput["equityGrants"]["list"][number];
+type EquityGrant = RouterOutput["equityGrants"]["get"];
 
 const Item = ({ label, value }: { label: string; value: string }) => (
   <div className="flex justify-between gap-4 px-6">
@@ -36,41 +36,44 @@ const DetailsModal = ({
 }) => {
   const company = useCurrentCompany();
   const [user] = trpc.users.get.useSuspenseQuery({ companyId: company.id, id: userId });
+  const [detailedGrant] = trpc.equityGrants.get.useSuspenseQuery({ companyId: company.id, id: equityGrant.id });
+
+  if (!detailedGrant) return null;
 
   return (
     <Sheet open onOpenChange={onClose}>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle>{`${equityGrant.periodEndedAt.getFullYear()} Stock option grant`}</SheetTitle>
+          <SheetTitle>{`${detailedGrant.periodEndedAt.getFullYear()} Stock option grant`}</SheetTitle>
         </SheetHeader>
         <div className="grid gap-4 pb-6 not-print:overflow-y-auto">
           <Item
             label="Total options granted"
-            value={`${equityGrant.numberOfShares.toLocaleString()} (${optionGrantTypeDisplayNames[equityGrant.optionGrantType]})`}
+            value={`${detailedGrant.numberOfShares.toLocaleString()} (${optionGrantTypeDisplayNames[detailedGrant.optionGrantType]})`}
           />
-          <Item label="Unvested" value={equityGrant.unvestedShares.toLocaleString()} />
-          {equityGrant.exercisedShares > 0 ? (
-            <Item label="Options exercised" value={equityGrant.exercisedShares.toLocaleString()} />
+          <Item label="Unvested" value={detailedGrant.unvestedShares.toLocaleString()} />
+          {detailedGrant.exercisedShares > 0 ? (
+            <Item label="Options exercised" value={detailedGrant.exercisedShares.toLocaleString()} />
           ) : null}
-          {equityGrant.forfeitedShares > 0 ? (
-            <Item label="Options forfeited" value={equityGrant.forfeitedShares.toLocaleString()} />
+          {detailedGrant.forfeitedShares > 0 ? (
+            <Item label="Options forfeited" value={detailedGrant.forfeitedShares.toLocaleString()} />
           ) : null}
-          {equityGrant.vestedShares > 0 ? (
-            <Item label="Vested" value={equityGrant.vestedShares.toLocaleString()} />
+          {detailedGrant.vestedShares > 0 ? (
+            <Item label="Vested" value={detailedGrant.vestedShares.toLocaleString()} />
           ) : null}
-          {equityGrant.unvestedShares > 0 ? (
-            <Item label="Forfeits if unvested on" value={formatDate(equityGrant.periodEndedAt)} />
+          {detailedGrant.unvestedShares > 0 ? (
+            <Item label="Forfeits if unvested on" value={formatDate(detailedGrant.periodEndedAt)} />
           ) : null}
           <Item
             label="Status"
             value={
-              equityGrant.numberOfShares === equityGrant.forfeitedShares
+              detailedGrant.numberOfShares === detailedGrant.forfeitedShares
                 ? "Fully forfeited"
-                : equityGrant.numberOfShares === equityGrant.exercisedShares
+                : detailedGrant.numberOfShares === detailedGrant.exercisedShares
                   ? "Fully exercised"
-                  : equityGrant.exercisedShares > 0
+                  : detailedGrant.exercisedShares > 0
                     ? "Partially exercised"
-                    : equityGrant.numberOfShares === equityGrant.vestedShares
+                    : detailedGrant.numberOfShares === detailedGrant.vestedShares
                       ? "Fully vested"
                       : "Outstanding"
             }
@@ -78,21 +81,21 @@ const DetailsModal = ({
           <Separator />
 
           <h3 className="text-md px-6 font-medium">Exercise key dates</h3>
-          <Item label="Grant date" value={formatDate(equityGrant.issuedAt)} />
-          <Item label="Accepted on" value={equityGrant.acceptedAt ? formatDate(equityGrant.acceptedAt) : "N/A"} />
-          <Item label="Expires on" value={formatDate(equityGrant.expiresAt)} />
+          <Item label="Grant date" value={formatDate(detailedGrant.issuedAt)} />
+          <Item label="Accepted on" value={detailedGrant.acceptedAt ? formatDate(detailedGrant.acceptedAt) : "N/A"} />
+          <Item label="Expires on" value={formatDate(detailedGrant.expiresAt)} />
           <Separator />
 
           <h3 className="text-md px-6 font-medium">Exercise details</h3>
           <Item
             label="Exercise price"
-            value={`${formatMoney(equityGrant.exercisePriceUsd, { precise: true })} per share`}
+            value={`${formatMoney(detailedGrant.exercisePriceUsd, { precise: true })} per share`}
           />
-          <Item label="Vested options" value={equityGrant.vestedShares.toLocaleString()} />
-          {equityGrant.vestedShares > 0 ? (
+          <Item label="Vested options" value={detailedGrant.vestedShares.toLocaleString()} />
+          {detailedGrant.vestedShares > 0 ? (
             <Item
               label="Exercise cost"
-              value={formatMoney(new Decimal(equityGrant.exercisePriceUsd).mul(equityGrant.vestedShares), {
+              value={formatMoney(new Decimal(detailedGrant.exercisePriceUsd).mul(detailedGrant.vestedShares), {
                 precise: true,
               })}
             />
@@ -100,18 +103,18 @@ const DetailsModal = ({
           <Separator />
 
           <h3 className="text-md px-6 font-medium">Post-termination exercise windows</h3>
-          <Item label="Voluntary" value={humanizeMonths(equityGrant.voluntaryTerminationExerciseMonths)} />
-          <Item label="Involuntary" value={humanizeMonths(equityGrant.involuntaryTerminationExerciseMonths)} />
-          <Item label="With cause" value={humanizeMonths(equityGrant.terminationWithCauseExerciseMonths)} />
-          <Item label="Death" value={humanizeMonths(equityGrant.deathExerciseMonths)} />
-          <Item label="Disability" value={humanizeMonths(equityGrant.disabilityExerciseMonths)} />
-          <Item label="Retirement" value={humanizeMonths(equityGrant.retirementExerciseMonths)} />
+          <Item label="Voluntary" value={humanizeMonths(detailedGrant.voluntaryTerminationExerciseMonths)} />
+          <Item label="Involuntary" value={humanizeMonths(detailedGrant.involuntaryTerminationExerciseMonths)} />
+          <Item label="With cause" value={humanizeMonths(detailedGrant.terminationWithCauseExerciseMonths)} />
+          <Item label="Death" value={humanizeMonths(detailedGrant.deathExerciseMonths)} />
+          <Item label="Disability" value={humanizeMonths(detailedGrant.disabilityExerciseMonths)} />
+          <Item label="Retirement" value={humanizeMonths(detailedGrant.retirementExerciseMonths)} />
           <Separator />
 
           <h3 className="text-md px-6 font-medium">Compliance details</h3>
           <Item
             label="Board approved on"
-            value={equityGrant.boardApprovalDate ? formatDate(equityGrant.boardApprovalDate) : "N/A"}
+            value={detailedGrant.boardApprovalDate ? formatDate(detailedGrant.boardApprovalDate) : "N/A"}
           />
           <Item
             label="Residency"
@@ -121,11 +124,25 @@ const DetailsModal = ({
                 : (countries.get(user.address.countryCode ?? "") ?? user.address.countryCode ?? "N/A")
             }
           />
-          <Item label="Role type" value={relationshipDisplayNames[equityGrant.issueDateRelationship]} />
+          <Item label="Role type" value={relationshipDisplayNames[detailedGrant.issueDateRelationship]} />
+
+          {detailedGrant.vestingEvents.length > 0 ? (
+            <>
+              <Separator />
+              <h3 className="text-md px-6 font-medium">Vesting events</h3>
+              {detailedGrant.vestingEvents.map((event) => (
+                <Item
+                  key={event.id}
+                  label={formatDate(event.vestingDate)}
+                  value={`${event.vestedShares.toLocaleString()} shares`}
+                />
+              ))}
+            </>
+          ) : null}
         </div>
         {company.flags.includes("option_exercising") &&
-        equityGrant.vestedShares > 0 &&
-        isFuture(equityGrant.expiresAt) &&
+        detailedGrant.vestedShares > 0 &&
+        isFuture(detailedGrant.expiresAt) &&
         canExercise ? (
           <SheetFooter>
             <div className="grid gap-4">

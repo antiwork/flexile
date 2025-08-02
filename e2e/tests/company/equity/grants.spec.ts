@@ -13,7 +13,7 @@ import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { DocumentTemplateType } from "@/db/enums";
-import { companyInvestors, documents, documentSignatures, equityGrants } from "@/db/schema";
+import { companyInvestors, documents, documentSignatures, equityGrants, vestingEvents } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 
 test.describe("New Contractor", () => {
@@ -203,5 +203,58 @@ test.describe("New Contractor", () => {
       { page },
     );
     await expect(page.getByText("We're awaiting a payment of $50 to exercise 10 options.")).toBeVisible();
+  });
+
+  test("shows vesting events section in equity grant details modal", async ({ page }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
+      equityEnabled: true,
+      conversionSharePriceUsd: "1",
+    });
+    const { user } = await usersFactory.create();
+    await companyContractorsFactory.create({ companyId: company.id, userId: user.id });
+    const { companyInvestor } = await companyInvestorsFactory.create({ companyId: company.id, userId: user.id });
+
+    const { equityGrant } = await equityGrantsFactory.create({
+      companyInvestorId: companyInvestor.id,
+      numberOfShares: 1000,
+      vestedShares: 250,
+      unvestedShares: 750,
+      vestingTrigger: "invoice_paid",
+    });
+
+    await db.insert(vestingEvents).values([
+      {
+        equityGrantId: equityGrant.id,
+        vestingDate: new Date("2025-02-28"),
+        vestedShares: BigInt(1123),
+      },
+      {
+        equityGrantId: equityGrant.id,
+        vestingDate: new Date("2025-05-28"),
+        vestedShares: BigInt(500),
+      },
+    ]);
+
+    await login(page, adminUser);
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Equity grants" }).click();
+
+    await page
+      .getByRole("row")
+      .filter({ hasText: user.legalName ?? "" })
+      .getByRole("button")
+      .first()
+      .click();
+
+    await withinModal(
+      async (modal) => {
+        await expect(modal.getByRole("heading", { name: "Vesting events" })).toBeVisible();
+        await expect(modal.getByText("Feb 28, 2025")).toBeVisible();
+        await expect(modal.getByText("1,123 shares")).toBeVisible();
+        await expect(modal.getByText("May 28, 2025")).toBeVisible();
+        await expect(modal.getByText("500 shares")).toBeVisible();
+      },
+      { page },
+    );
   });
 });
