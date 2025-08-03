@@ -142,7 +142,8 @@ company = Company.is_gumroad.sole
 service = DividendComputationGeneration.new(
   company,
   amount_in_usd: 5_346_877,
-  return_of_capital: false
+  return_of_capital: false,
+  release_document: "Test release document for {{investor}} with {{amount}}"
 )
 service.process
 
