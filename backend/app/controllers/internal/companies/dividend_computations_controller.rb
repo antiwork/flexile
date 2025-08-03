@@ -6,8 +6,8 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
 
     dividend_computation = DividendComputationGeneration.new(
       Current.company,
-      amount_in_usd: dividend_computation_params[:amount_in_usd],
       dividends_issuance_date: dividend_computation_params[:dividends_issuance_date] || Date.current,
+      amount_in_usd: dividend_computation_params[:amount_in_usd],
       return_of_capital: dividend_computation_params[:return_of_capital],
       release_document: dividend_computation_params[:release_document]
     ).process

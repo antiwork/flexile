@@ -65,13 +65,14 @@ RSpec.describe DividendComputationGeneration do
 
     dividend_computation = nil
     expect do
-      dividend_computation = described_class.new(company, amount_in_usd: 1_000_000, return_of_capital: false).process
+      dividend_computation = described_class.new(company, amount_in_usd: 1_000_000, return_of_capital: false, release_document: "Test release document for {{investor}} with {{amount}}").process
     end.to change { company.dividend_computations.count }.by(1)
        .and change { DividendComputationOutput.count }.by(10) # 1 record per investor per share class
 
     expect(dividend_computation.company).to eq(company)
     expect(dividend_computation.total_amount_in_usd).to eq(1_000_000)
     expect(dividend_computation.return_of_capital).to eq(false)
+    expect(dividend_computation.release_document).to eq("Test release document for {{investor}} with {{amount}}")
     expect(dividend_computation.dividend_computation_outputs.count).to eq(10)
 
     # $ Available after paying dividend to preferred shares
