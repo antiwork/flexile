@@ -1,15 +1,19 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
+import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import FormFields from "@/app/(dashboard)/people/FormFields";
+import ContractField, { schema as contractSchema } from "@/components/ContractField";
 import { MutationStatusButton } from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
-import { useCurrentCompany } from "@/global";
+import { useCurrentCompany, useUserStore } from "@/global";
 import { PayRateType, trpc } from "@/trpc/client";
+import { request } from "@/utils/request";
+import { company_worker_path } from "@/utils/routes";
 
 type OnboardingStepProps = {
   open: boolean;
@@ -17,20 +21,23 @@ type OnboardingStepProps = {
   onBack: () => void;
 };
 
+const schema = contractSchema.extend({
+  startedAt: z.instanceof(CalendarDate),
+  payRateInSubunits: z.number(),
+  payRateType: z.nativeEnum(PayRateType),
+  skipContract: z.boolean().optional(),
+  role: z.string(),
+});
+
 const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
   const company = useCurrentCompany();
+  const user = useUserStore((state) => state.user);
 
   const form = useForm({
-    resolver: zodResolver(
-      z.object({
-        startedAt: z.instanceof(CalendarDate),
-        payRateInSubunits: z.number(),
-        payRateType: z.nativeEnum(PayRateType),
-        role: z.string(),
-      }),
-    ),
+    resolver: zodResolver(schema),
     defaultValues: {
       role: "",
+      skipContract: false,
       payRateType: PayRateType.Hourly,
       payRateInSubunits: 100,
       startedAt: today(getLocalTimeZone()),
@@ -38,14 +45,60 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
   });
 
   const trpcUtils = trpc.useUtils();
-  const updateContractor = trpc.companyInviteLinks.completeOnboarding.useMutation({
+
+  const updateContractor = useMutation({
+    mutationFn: async (data: z.infer<typeof schema>) => {
+      if (!user?.roles.worker) {
+        throw new Error("Worker role not found");
+      }
+      let response;
+      if (data.attachment) {
+        const formData = new FormData();
+        formData.append("contractor[role]", data.role);
+        formData.append("contractor[pay_rate_type]", data.payRateType.toString());
+        formData.append("contractor[pay_rate_in_subunits]", data.payRateInSubunits.toString());
+        formData.append("contractor[started_at]", data.startedAt.toString());
+        formData.append("contractor[contract_signed_elsewhere]", (data.skipContract ?? false).toString());
+
+        formData.append("document[attachment]", data.attachment);
+        formData.append("document[name]", data.attachment.name);
+        formData.append("document[signed]", data.signed.toString());
+        response = await request({
+          url: company_worker_path(company.id, user.roles.worker.id),
+          method: "PATCH",
+          accept: "json",
+          formData,
+          assertOk: true,
+        });
+      } else {
+        const payload = {
+          started_at: data.startedAt.toString(),
+          pay_rate_in_subunits: data.payRateInSubunits,
+          pay_rate_type: data.payRateType,
+          role: data.role,
+          document: {
+            text_content: data.content,
+            attachment: data.attachment,
+            signed: false,
+          },
+        };
+        response = request({
+          url: company_worker_path(company.id, user.roles.worker.id),
+          method: "PATCH",
+          accept: "json",
+          jsonData: payload,
+          assertOk: true,
+        });
+      }
+      return response;
+    },
     onSuccess: async () => {
       await trpcUtils.documents.list.invalidate();
       onNext();
     },
   });
   const submit = form.handleSubmit((values) => {
-    updateContractor.mutate({ companyId: company.id, ...values, startedAt: values.startedAt.toString() });
+    updateContractor.mutate(values);
   });
 
   return (
@@ -60,6 +113,7 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
         <Form {...form}>
           <form onSubmit={(e) => void submit(e)} className="space-y-4">
             <FormFields />
+            {form.watch("skipContract") ? null : <ContractField />}
             <div className="flex flex-col items-end space-y-2">
               <MutationStatusButton mutation={updateContractor} type="submit">
                 Continue

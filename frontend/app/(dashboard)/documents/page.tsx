@@ -1,48 +1,61 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { skipToken, useQueryClient } from "@tanstack/react-query";
+import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type ColumnFiltersState, getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import {
+  ArrowUpRightFromSquare,
   BriefcaseBusiness,
   CircleCheck,
   Download,
-  FileTextIcon,
+  EllipsisVertical,
   Info,
-  Pencil,
-  PercentIcon,
   SendHorizontal,
+  Trash2Icon,
+  UserPlus,
 } from "lucide-react";
-import type { Route } from "next";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useId, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import DocusealForm, { customCss } from "@/app/(dashboard)/documents/DocusealForm";
 import { FinishOnboarding } from "@/app/(dashboard)/documents/FinishOnboarding";
+import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, filterValueSchema, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
+import { NewDocument } from "@/components/NewDocument";
 import Placeholder from "@/components/Placeholder";
 import Status, { type Variant as StatusVariant } from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { storageKeys } from "@/models/constants";
-import type { RouterOutput } from "@/trpc";
-import { DocumentTemplateType, DocumentType, trpc } from "@/trpc/client";
-import { assertDefined } from "@/utils/assert";
+import { type Document, documentSchema } from "@/models/document";
+import { DocumentType, trpc } from "@/trpc/client";
+import { request } from "@/utils/request";
+import {
+  company_document_path,
+  company_documents_path,
+  share_company_document_path,
+  sign_company_document_path,
+} from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 
-type Document = RouterOutput["documents"]["list"][number];
-type SignableDocument = Document & { docusealSubmissionId: number };
+type SignableDocument = Document;
 
 const typeLabels = {
   [DocumentType.ConsultingContract]: "Agreement",
@@ -50,11 +63,6 @@ const typeLabels = {
   [DocumentType.TaxDocument]: "Tax form",
   [DocumentType.ExerciseNotice]: "Exercise notice",
   [DocumentType.EquityPlanContract]: "Equity plan",
-};
-
-const templateTypeLabels = {
-  [DocumentTemplateType.ConsultingContract]: "Agreement",
-  [DocumentTemplateType.EquityPlanContract]: "Equity plan",
 };
 
 const columnFiltersSchema = z.array(z.object({ id: z.string(), value: filterValueSchema }));
@@ -92,111 +100,11 @@ function getStatus(document: Document): { variant: StatusVariant | undefined; na
   }
 }
 
-const EditTemplates = () => {
-  const company = useCurrentCompany();
-  const router = useRouter();
-
-  const [open, setOpen] = useState(false);
-  const [templates, { refetch: refetchTemplates }] = trpc.documents.templates.list.useSuspenseQuery({
-    companyId: company.id,
-  });
-  const filteredTemplates = useMemo(
-    () =>
-      company.id && templates.length > 1
-        ? templates.filter(
-            (template) => !template.generic || !templates.some((t) => !t.generic && t.type === template.type),
-          )
-        : templates,
-    [templates],
-  );
-  const createTemplate = trpc.documents.templates.create.useMutation({
-    onSuccess: (id) => {
-      void refetchTemplates();
-      router.push(`/document_templates/${id}`);
-    },
-  });
-
-  return (
-    <>
-      <Button variant="outline" size="small" onClick={() => setOpen(true)}>
-        <Pencil className="size-4" />
-        Edit templates
-      </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit templates</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTemplates.map((template) => (
-                  <TableRow key={template.id}>
-                    <TableCell>
-                      <Link href={`/document_templates/${template.id}`} className="after:absolute after:inset-0">
-                        {template.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{templateTypeLabels[template.type]}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <h3 className="text-lg font-medium">Create a new template</h3>
-            <Alert className="mx-4">
-              <Info className="size-4" />
-              <AlertDescription>
-                By creating a custom document template, you acknowledge that Flexile shall not be liable for any claims,
-                liabilities, or damages arising from or related to such documents. See our{" "}
-                <Link href="/terms" className="text-blue-600 hover:underline">
-                  Terms of Service
-                </Link>{" "}
-                for more details.
-              </AlertDescription>
-            </Alert>
-            <div className="grid grid-cols-3 gap-4">
-              <MutationButton
-                idleVariant="outline"
-                className="h-auto rounded-md p-6"
-                mutation={createTemplate}
-                param={{
-                  companyId: company.id,
-                  name: "Consulting agreement",
-                  type: DocumentTemplateType.ConsultingContract,
-                }}
-              >
-                <div className="flex flex-col items-center">
-                  <FileTextIcon className="size-6" />
-                  <span className="mt-2 whitespace-normal">Consulting agreement</span>
-                </div>
-              </MutationButton>
-              <MutationButton
-                idleVariant="outline"
-                className="h-auto rounded-md p-6"
-                mutation={createTemplate}
-                param={{
-                  companyId: company.id,
-                  name: "Equity grant contract",
-                  type: DocumentTemplateType.EquityPlanContract,
-                }}
-              >
-                <div className="flex flex-col items-center">
-                  <PercentIcon className="size-6" />
-                  <span className="mt-2 whitespace-normal">Equity grant contract</span>
-                </div>
-              </MutationButton>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
+const getDownloadUrl = (document: Document) => {
+  if (document.attachment) {
+    return `/download/${document.attachment.key}/${document.attachment.filename}`;
+  }
+  return null;
 };
 
 const inviteLawyerSchema = z.object({
@@ -216,7 +124,19 @@ export default function DocumentsPage() {
   );
 
   const currentYear = new Date().getFullYear();
-  const { data: documents = [], isLoading } = trpc.documents.list.useQuery({ companyId: company.id, userId });
+
+  const { data: documents = [], isLoading } = useQuery({
+    queryKey: ["documents"],
+    queryFn: async () => {
+      const response = await request({
+        method: "GET",
+        accept: "json",
+        url: company_documents_path(company.id),
+        assertOk: true,
+      });
+      return z.array(documentSchema).parse(await response.json());
+    },
+  });
 
   const inviteLawyerForm = useForm({ resolver: zodResolver(inviteLawyerSchema) });
   const inviteLawyer = trpc.lawyers.invite.useMutation({
@@ -230,14 +150,14 @@ export default function DocumentsPage() {
   );
 
   const columnHelper = createColumnHelper<Document>();
-  const [downloadDocument, setDownloadDocument] = useState<bigint | null>(null);
-  const { data: downloadUrl } = trpc.documents.getUrl.useQuery(
-    downloadDocument ? { companyId: company.id, id: downloadDocument } : skipToken,
-  );
+  const [documentAction, setDocumentAction] = useState<{
+    action: "download" | "share" | "delete";
+    document: Document;
+  } | null>(null);
+
   const [signDocumentParam] = useQueryState("sign");
-  const [signDocumentId, setSignDocumentId] = useState<bigint | null>(null);
+  const [signDocumentId, setSignDocumentId] = useState<string | null>(null);
   const isSignable = (document: Document): document is SignableDocument =>
-    !!document.docusealSubmissionId &&
     document.signatories.some(
       (signatory) =>
         !signatory.signedAt &&
@@ -247,23 +167,17 @@ export default function DocumentsPage() {
     ? documents.find((document): document is SignableDocument => document.id === signDocumentId && isSignable(document))
     : null;
   useEffect(() => {
-    const document = signDocumentParam ? documents.find((document) => document.id === BigInt(signDocumentParam)) : null;
+    const document = signDocumentParam ? documents.find((document) => document.id === signDocumentParam) : null;
     if (canSign && document && isSignable(document)) setSignDocumentId(document.id);
   }, [documents, signDocumentParam]);
   useEffect(() => {
+    const downloadUrl = documentAction?.action === "download" ? getDownloadUrl(documentAction.document) : null;
     if (downloadUrl) window.location.href = downloadUrl;
-  }, [downloadUrl]);
+  }, [documentAction]);
 
   const columns = useMemo(
     () =>
       [
-        isCompanyRepresentative
-          ? columnHelper.accessor(
-              (row) =>
-                assertDefined(row.signatories.find((signatory) => signatory.title !== "Company Representative")).name,
-              { header: "Signer" },
-            )
-          : null,
         columnHelper.simple("name", "Document"),
         columnHelper.accessor((row) => typeLabels[row.type], {
           header: "Type",
@@ -278,6 +192,15 @@ export default function DocumentsPage() {
           filterFn: (row, _, filterValue) =>
             Array.isArray(filterValue) && filterValue.includes(row.original.createdAt.getFullYear().toString()),
         }),
+        isCompanyRepresentative
+          ? columnHelper.accessor(
+              (row) => {
+                const signer = row.signatories.find((signatory) => signatory.title !== "Company Representative");
+                return signer?.name || "-";
+              },
+              { header: "Signer" },
+            )
+          : null,
         columnHelper.accessor((row) => getStatus(row).name, {
           header: "Status",
           meta: { filterOptions: [...new Set(documents.map((document) => getStatus(document).name))] },
@@ -302,15 +225,61 @@ export default function DocumentsPage() {
                     Review and sign
                   </Button>
                 ) : null}
-                {document.attachment ? (
+
+                {isCompanyRepresentative && !getCompletedAt(document) && !isSignable(document) ? (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon" aria-label="More actions">
+                        <EllipsisVertical className="size-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      align="end"
+                      className="border-muted w-44 rounded-md border bg-white p-0 text-sm shadow-lg"
+                    >
+                      <Button
+                        variant="ghost"
+                        size="small"
+                        className="w-full justify-start"
+                        onClick={() => setDocumentAction({ action: "download", document })}
+                      >
+                        <Download className="size-4" />
+                        Download
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="small"
+                        className="w-full justify-start"
+                        onClick={() => setDocumentAction({ action: "share", document })}
+                      >
+                        <UserPlus className="size-4" />
+                        Share
+                      </Button>
+                      <div className="border-muted rounded-md border-t shadow-sm" />
+                      <Button
+                        variant="ghost"
+                        size="small"
+                        className="w-full justify-start"
+                        onClick={() => setDocumentAction({ action: "delete", document })}
+                      >
+                        <Trash2Icon className="size-4" />
+                        Delete
+                      </Button>
+                    </PopoverContent>
+                  </Popover>
+                ) : document.attachment ? (
                   <Button variant="outline" size="small" asChild>
                     <Link href={`/download/${document.attachment.key}/${document.attachment.filename}`} download>
                       <Download className="size-4" />
                       Download
                     </Link>
                   </Button>
-                ) : document.docusealSubmissionId && document.signatories.every((signatory) => signatory.signedAt) ? (
-                  <Button variant="outline" size="small" onClick={() => setDownloadDocument(document.id)}>
+                ) : document.signatories.every((signatory) => signatory.signedAt) ? (
+                  <Button
+                    variant="outline"
+                    size="small"
+                    onClick={() => setDocumentAction({ action: "download", document })}
+                  >
                     <Download className="size-4" />
                     Download
                   </Button>
@@ -351,7 +320,7 @@ export default function DocumentsPage() {
         title="Documents"
         headerActions={
           <>
-            {isCompanyRepresentative && documents.length === 0 ? <EditTemplates /> : null}
+            {isCompanyRepresentative && documents.length === 0 ? <NewDocument /> : null}
             {user.roles.administrator && company.flags.includes("lawyers") ? (
               <Button onClick={() => setShowInviteModal(true)}>
                 <BriefcaseBusiness className="size-4" />
@@ -394,7 +363,7 @@ export default function DocumentsPage() {
         <>
           <DataTable
             table={table}
-            actions={isCompanyRepresentative ? <EditTemplates /> : undefined}
+            actions={isCompanyRepresentative ? <NewDocument /> : undefined}
             {...(isCompanyRepresentative && { searchColumn: "Signer" })}
           />
           {signDocument ? <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} /> : null}
@@ -439,49 +408,235 @@ export default function DocumentsPage() {
         </DialogContent>
       </Dialog>
       {forceWorkerOnboarding ? <FinishOnboarding handleComplete={() => setForceWorkerOnboarding(false)} /> : null}
+      {documentAction?.action === "share" && (
+        <ShareDocumentModal document={documentAction.document} onClose={() => setDocumentAction(null)} />
+      )}
+      {documentAction?.action === "delete" && (
+        <DeleteDocumentModal document={documentAction.document} onClose={() => setDocumentAction(null)} />
+      )}
     </>
   );
 }
 
-const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; onClose: () => void }) => {
-  const user = useCurrentUser();
+const ShareDocumentModal = ({ document, onClose }: { document: Document; onClose: () => void }) => {
   const company = useCurrentCompany();
-  const [redirectUrl] = useQueryState("next");
-  const router = useRouter();
-  const [{ slug, readonlyFields }] = trpc.documents.templates.getSubmitterSlug.useSuspenseQuery({
-    id: document.docusealSubmissionId,
-    companyId: company.id,
-  });
-  const trpcUtils = trpc.useUtils();
+
+  const { data: recipients } = trpc.contractors.list.useQuery(
+    company.id ? { companyId: company.id, excludeAlumni: true } : skipToken,
+  );
+  const [selectedRecipient, setSelectedRecipient] = useState(recipients?.[0] ?? null);
+
   const queryClient = useQueryClient();
 
-  const signDocument = trpc.documents.sign.useMutation({
+  const shareDocumentMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedRecipient) throw new Error("Recipient is required");
+
+      await request({
+        url: share_company_document_path(company.id, document.id),
+        method: "POST",
+        jsonData: { recipient: selectedRecipient.id },
+        assertOk: true,
+        accept: "json",
+      });
+    },
     onSuccess: async () => {
-      router.replace("/documents");
-      await trpcUtils.documents.list.refetch();
+      await queryClient.invalidateQueries({ queryKey: ["documents"] });
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- not ideal, but there's no good way to assert this right now
-      if (redirectUrl) router.push(redirectUrl as Route);
-      else onClose();
+      onClose();
     },
   });
 
   return (
     <Dialog open onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-4xl">
-        <DocusealForm
-          src={`https://docuseal.com/s/${slug}`}
-          readonlyFields={readonlyFields}
-          customCss={customCss}
-          onComplete={() => {
-            signDocument.mutate({
-              companyId: company.id,
-              id: document.id,
-              role:
-                document.signatories.find((signatory) => signatory.id === user.id)?.title ?? "Company Representative",
-            });
-          }}
+      <DialogContent className="max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Share Document</DialogTitle>
+          <DialogDescription>Select who are you sharing "{document.name}" with.</DialogDescription>
+        </DialogHeader>
+        {document.textContent ? (
+          <div
+            className="prose border-muted min-h-0 grow overflow-y-auto rounded-md border p-4 text-black"
+            dangerouslySetInnerHTML={{ __html: document.textContent ?? "" }}
+          />
+        ) : null}
+
+        <div className="flex flex-col gap-2">
+          <Label className="mt-4">Select recipient</Label>
+          <ComboBox
+            value={selectedRecipient?.id}
+            options={
+              recipients
+                ? recipients.map((r) => ({
+                    value: r.id,
+                    label: r.user.name,
+                  }))
+                : []
+            }
+            aria-label="Recipient"
+            onChange={(value) => setSelectedRecipient(recipients?.find((r) => r.id === value) ?? null)}
+          />
+        </div>
+
+        <DialogFooter>
+          <div className="flex flex-col gap-2">
+            {shareDocumentMutation.error ? <p className="text-red-500">{shareDocumentMutation.error.message}</p> : null}
+            <MutationButton
+              mutation={shareDocumentMutation}
+              loadingText="Sharing..."
+              onClick={() => shareDocumentMutation.mutate()}
+              className="w-[200px] self-end"
+            >
+              Share Document
+            </MutationButton>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const DeleteDocumentModal = ({ document, onClose }: { document: Document; onClose: () => void }) => {
+  const company = useCurrentCompany();
+  const queryClient = useQueryClient();
+
+  const deleteDocumentMutation = useMutation({
+    mutationFn: async () => {
+      const response = await request({
+        url: company_document_path(company.id, document.id),
+        method: "DELETE",
+        assertOk: true,
+        accept: "json",
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to delete document");
+      }
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["documents"] });
+      onClose();
+    },
+  });
+
+  return (
+    <Dialog open onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete document</DialogTitle>
+          <DialogDescription>Are you sure you want to delete the document "{document.name}"?</DialogDescription>
+        </DialogHeader>
+
+        <DialogFooter>
+          <>
+            <Button variant="outline" size="small" onClick={onClose}>
+              Cancel
+            </Button>
+
+            <MutationButton
+              mutation={deleteDocumentMutation}
+              loadingText="Deleting..."
+              onClick={() => deleteDocumentMutation.mutate()}
+            >
+              Delete
+            </MutationButton>
+          </>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; onClose: () => void }) => {
+  const uid = useId();
+  const user = useCurrentUser();
+  const company = useCurrentCompany();
+  const [signature, setSignature] = useState(user.legalName);
+
+  const queryClient = useQueryClient();
+
+  const signDocumentMutation = useMutation({
+    mutationFn: async () => {
+      if (!signature) throw new Error("Signature is required");
+
+      const response = await request({
+        url: sign_company_document_path(company.id, document.id),
+        method: "POST",
+        jsonData: {
+          title: document.signatories.find((signatory) => signatory.id === user.id)?.title ?? "Company Representative",
+        },
+        assertOk: true,
+        accept: "json",
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to sign document");
+      }
+    },
+
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["documents"] });
+      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      onClose();
+    },
+  });
+
+  return (
+    <Dialog open onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{document.name}</DialogTitle>
+        </DialogHeader>
+        <div>
+          This information will be used in the W-9 form to confirm your U.S. taxpayer status. If you're eligible for
+          1099 forms, you'll receive a download link by email when it's ready.
+        </div>
+        <div className="flex items-center gap-1">
+          <ArrowUpRightFromSquare className="size-4" />
+          <a
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            href="https://www.irs.gov/forms-pubs/about-form-w-9"
+            className={linkClasses}
+          >
+            Official W-9 instructions
+          </a>
+        </div>
+
+        <div
+          className="prose border-muted min-h-0 grow overflow-y-auto rounded-md border p-4 text-black"
+          dangerouslySetInnerHTML={{ __html: document.textContent ?? "" }}
         />
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor={uid}>Your signature</Label>
+          <Input
+            id={uid}
+            value={signature}
+            onChange={(e) => setSignature(e.target.value)}
+            className="font-signature text-xl"
+            aria-label="Signature"
+          />
+          <p className="text-muted-foreground text-xs">
+            I agree that the signature will be the electronic representation of my signature and for all purposes when I
+            use them on documents just the same as a pen-and-paper signature.
+          </p>
+        </div>
+
+        <DialogFooter>
+          <div className="flex w-full flex-col gap-2">
+            {signDocumentMutation.error ? <p className="text-red-500">{signDocumentMutation.error.message}</p> : null}
+            <MutationButton
+              mutation={signDocumentMutation}
+              loadingText="Saving..."
+              disabled={!signature}
+              onClick={() => signDocumentMutation.mutate()}
+            >
+              Agree & Submit
+            </MutationButton>
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

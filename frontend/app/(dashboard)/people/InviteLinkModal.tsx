@@ -1,9 +1,7 @@
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Copy } from "lucide-react";
 import React, { useState } from "react";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
-import TemplateSelector from "@/app/(dashboard)/document_templates/TemplateSelector";
 import CopyButton from "@/components/CopyButton";
 import { MutationStatusButton } from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
@@ -15,11 +13,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";
-import { DocumentTemplateType, trpc } from "@/trpc/client";
+import { request } from "@/utils/request";
+import { company_invite_links_url, reset_company_invite_links_url } from "@/utils/routes";
 
 interface InviteLinkModalProps {
   open: boolean;
@@ -29,40 +26,38 @@ interface InviteLinkModalProps {
 const InviteLinkModal = ({ open, onOpenChange }: InviteLinkModalProps) => {
   const company = useCurrentCompany();
   const [showResetLinkModal, setShowResetLinkModal] = useState(false);
+  const hostname = window.location.hostname;
 
-  const form = useForm({
-    defaultValues: {
-      contractSignedElsewhere: true,
-      documentTemplateId: "",
+  const { data: invite, refetch } = useQuery({
+    queryKey: ["companyInviteLink", company.id],
+    queryFn: async () => {
+      if (!company.id) return null;
+      const url = company_invite_links_url(company.id);
+      const response = await request({ url, method: "GET", accept: "json", assertOk: true });
+      const data = z.object({ invite_link: z.string(), success: z.boolean() }).parse(await response.json());
+      return { invite_link: `${hostname}/invite/${data.invite_link}` };
     },
-    resolver: zodResolver(
-      z.object({
-        contractSignedElsewhere: z.boolean(),
-        documentTemplateId: z.string().nullable().optional(),
-      }),
-    ),
+    enabled: !!open && !!company.id,
+    refetchOnWindowFocus: false,
   });
 
-  const documentTemplateId = form.watch("documentTemplateId");
-  const contractSignedElsewhere = form.watch("contractSignedElsewhere");
-
-  const queryParams = {
-    companyId: company.id,
-    documentTemplateId: !contractSignedElsewhere ? (documentTemplateId ?? null) : null,
-  };
-
-  const { data: invite, refetch } = trpc.companyInviteLinks.get.useQuery(queryParams, {
-    enabled: !!company.id,
-  });
-
-  const resetInviteLinkMutation = trpc.companyInviteLinks.reset.useMutation({
+  const resetInviteLinkMutation = useMutation({
+    mutationFn: async () => {
+      await request({
+        url: reset_company_invite_links_url(company.id),
+        method: "PATCH",
+        accept: "json",
+        assertOk: true,
+      });
+    },
     onSuccess: async () => {
       await refetch();
       setShowResetLinkModal(false);
     },
   });
+
   const resetInviteLink = () => {
-    void resetInviteLinkMutation.mutateAsync(queryParams);
+    resetInviteLinkMutation.mutate();
   };
 
   return (
@@ -83,30 +78,6 @@ const InviteLinkModal = ({ open, onOpenChange }: InviteLinkModalProps) => {
               value={invite?.invite_link}
               aria-label="Link"
             />
-            <Form {...form}>
-              <FormField
-                control={form.control}
-                name="contractSignedElsewhere"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        label={<span className="text-sm">Already signed contract elsewhere.</span>}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              {!form.watch("contractSignedElsewhere") && (
-                <FormField
-                  control={form.control}
-                  name="documentTemplateId"
-                  render={({ field }) => <TemplateSelector type={DocumentTemplateType.ConsultingContract} {...field} />}
-                />
-              )}
-            </Form>
           </div>
           <DialogFooter>
             <Button

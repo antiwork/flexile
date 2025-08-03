@@ -1,7 +1,7 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import { formatISO } from "date-fns";
 import { LinkIcon, UserPlus, Users } from "lucide-react";
@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import TemplateSelector from "@/app/(dashboard)/document_templates/TemplateSelector";
+import ContractField, { schema as contractSchema } from "@/components/ContractField";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import DatePicker from "@/components/DatePicker";
@@ -25,15 +25,16 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
-import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
+import { PayRateType, trpc } from "@/trpc/client";
+import { request } from "@/utils/request";
+import { company_workers_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import FormFields, { schema as formSchema } from "./FormFields";
 import InviteLinkModal from "./InviteLinkModal";
 
-const schema = formSchema.extend({
+const schema = formSchema.merge(contractSchema).extend({
   email: z.string().email(),
   startDate: z.instanceof(CalendarDate),
-  documentTemplateId: z.string(),
   contractSignedElsewhere: z.boolean().default(false),
 });
 
@@ -53,17 +54,70 @@ export default function PeoplePage() {
     values: {
       email: "",
       role: lastContractor?.role ?? "",
-      documentTemplateId: "",
       payRateType: lastContractor?.payRateType ?? PayRateType.Hourly,
       payRateInSubunits: lastContractor?.payRateInSubunits ?? null,
       startDate: today(getLocalTimeZone()),
       contractSignedElsewhere: lastContractor?.contractSignedElsewhere ?? false,
+      title: "",
+      signed: false,
     },
     resolver: zodResolver(schema),
   });
 
   const trpcUtils = trpc.useUtils();
-  const saveMutation = trpc.contractors.create.useMutation({
+
+  const saveMutation = useMutation({
+    mutationFn: async (values: z.infer<typeof schema>) => {
+      const attachment = form.getValues("attachment");
+      const payRateType = values.payRateType === PayRateType.Hourly ? "hourly" : "fixed";
+      const startDate = formatISO(values.startDate.toDate(getLocalTimeZone()));
+
+      if (attachment) {
+        const formData = new FormData();
+        formData.append("contractor[email]", values.email);
+        formData.append("contractor[role]", values.role);
+        formData.append("contractor[pay_rate_type]", payRateType.toString());
+        formData.append("contractor[pay_rate_in_subunits]", values.payRateInSubunits?.toString() ?? "");
+        formData.append("contractor[started_at]", startDate);
+        formData.append("contractor[contract_signed_elsewhere]", values.contractSignedElsewhere.toString());
+
+        formData.append("document[attachment]", attachment);
+        formData.append("document[name]", attachment.name);
+        formData.append("document[signed]", values.signed.toString());
+        await request({
+          url: company_workers_path(company.id),
+          method: "POST",
+          accept: "json",
+          formData,
+          assertOk: true,
+        });
+      } else {
+        const payload = {
+          contractor: {
+            email: values.email,
+            started_at: startDate,
+            pay_rate_in_subunits: values.payRateInSubunits,
+            pay_rate_type: payRateType,
+            role: values.role,
+            contract_signed_elsewhere: values.contractSignedElsewhere,
+          },
+          document: {
+            name: values.title,
+            text_content: values.content,
+            signed: values.signed,
+          },
+        };
+        const response = await request({
+          url: company_workers_path(company.id),
+          method: "POST",
+          accept: "json",
+          jsonData: payload,
+          assertOk: true,
+        });
+
+        return z.object({ documentId: z.string().optional() }).parse(await response.json());
+      }
+    },
     onSuccess: async (data) => {
       await refetch();
       await trpcUtils.documents.list.invalidate();
@@ -71,16 +125,12 @@ export default function PeoplePage() {
       form.reset();
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
 
-      if (data.documentId)
+      if (data?.documentId)
         router.push(`/documents?${new URLSearchParams({ sign: data.documentId.toString(), next: "/people" })}`);
     },
   });
   const submit = form.handleSubmit((values) => {
-    saveMutation.mutate({
-      companyId: company.id,
-      ...values,
-      startedAt: formatISO(values.startDate.toDate(getLocalTimeZone())),
-    });
+    saveMutation.mutate(values);
   });
 
   const columnHelper = createColumnHelper<(typeof workers)[number]>();
@@ -234,13 +284,7 @@ export default function PeoplePage() {
                 )}
               />
 
-              {!form.watch("contractSignedElsewhere") && (
-                <FormField
-                  control={form.control}
-                  name="documentTemplateId"
-                  render={({ field }) => <TemplateSelector type={DocumentTemplateType.ConsultingContract} {...field} />}
-                />
-              )}
+              {!form.watch("contractSignedElsewhere") && <ContractField label="Contract" />}
               <div className="flex flex-col items-end space-y-2">
                 <MutationStatusButton mutation={saveMutation} type="submit">
                   Send invite

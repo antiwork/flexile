@@ -2,7 +2,7 @@
 
 import { HelperClientProvider, useUnreadConversationsCount } from "@helperai/react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
-import { skipToken, useQueryClient } from "@tanstack/react-query";
+import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BookUser,
   ChartPie,
@@ -25,6 +25,7 @@ import Link, { type LinkProps } from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import React from "react";
+import { z } from "zod";
 import { navLinks as equityNavLinks } from "@/app/(dashboard)/equity";
 import { useIsActionable } from "@/app/(dashboard)/invoices";
 import { useHelperSession } from "@/app/(dashboard)/support/SupportPortal";
@@ -55,9 +56,10 @@ import {
 import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
 import defaultCompanyLogo from "@/images/default-company-logo.svg";
 import { storageKeys } from "@/models/constants";
+import { documentSchema } from "@/models/document";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
-import { company_switch_path } from "@/utils/routes";
+import { company_documents_path, company_switch_path } from "@/utils/routes";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = useCurrentUser();
@@ -250,16 +252,23 @@ const NavLinks = () => {
     { refetchInterval: 30_000 },
   );
   const isInvoiceActionable = useIsActionable();
-  const { data: documentsData } = trpc.documents.list.useQuery(
-    user.currentCompanyId && user.id
-      ? {
-          companyId: user.currentCompanyId,
-          userId: user.roles.administrator || user.roles.lawyer ? null : user.id,
-          signable: true,
-        }
-      : skipToken,
-    { refetchInterval: 30_000 },
-  );
+
+  const { data: documentsData = [] } = useQuery({
+    queryKey: ["signedDocuments"],
+    queryFn: async () => {
+      if (!user.currentCompanyId || !user.id) return [];
+      const params = new URLSearchParams({
+        signable: "true",
+      });
+      const url = `${company_documents_path(company.id)}?${params.toString()}`;
+
+      const response = await request({ method: "GET", accept: "json", url, assertOk: true });
+      return z.array(documentSchema).parse(await response.json());
+    },
+    refetchInterval: 30_000,
+    enabled: !!user.currentCompanyId && !!user.id,
+  });
+
   const updatesPath = company.routes.find((route) => route.label === "Updates")?.name;
   const equityLinks = equityNavLinks(user, company);
 
@@ -296,7 +305,7 @@ const NavLinks = () => {
           href="/documents"
           icon={Files}
           active={pathname.startsWith("/documents") || pathname.startsWith("/document_templates")}
-          badge={documentsData?.length}
+          badge={documentsData.length}
         >
           Documents
         </NavItem>

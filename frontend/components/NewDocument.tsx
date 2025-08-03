@@ -1,0 +1,128 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { skipToken, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import ContractField, { schema as contractSchema } from "@/components/ContractField";
+import { MutationStatusButton } from "@/components/MutationButton";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useCurrentCompany } from "@/global";
+import { documentSchema } from "@/models/document";
+import { trpc } from "@/trpc/client";
+import { request } from "@/utils/request";
+import { company_documents_path } from "@/utils/routes";
+import ComboBox from "./ComboBox";
+import { Button } from "./ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
+
+const schema = contractSchema.extend({
+  recipient: z.string().optional(),
+});
+
+export const NewDocument = () => {
+  const company = useCurrentCompany();
+  const [open, setOpen] = useState(false);
+
+  const queryClient = useQueryClient();
+
+  const { data: recipients } = trpc.contractors.list.useQuery(
+    company.id ? { companyId: company.id, excludeAlumni: true } : skipToken,
+  );
+
+  const form = useForm({
+    resolver: zodResolver(schema),
+  });
+
+  const createDocumentMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof schema>) => {
+      const { attachment, signed, recipient, title, content } = data;
+      const url = company_documents_path(company.id);
+
+      if (attachment) {
+        const formData = new FormData();
+        formData.append("attachment", attachment);
+        formData.append("name", attachment.name);
+        formData.append("signed", String(signed));
+        if (recipient) formData.append("recipient", recipient);
+
+        const response = await request({ url, method: "POST", accept: "json", formData, assertOk: true });
+        return documentSchema.parse(await response.json());
+      }
+
+      const jsonData = {
+        signed,
+        name: title,
+        text_content: content,
+        recipient,
+      };
+
+      const response = await request({ url, method: "POST", accept: "json", jsonData, assertOk: true });
+      return documentSchema.parse(await response.json());
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["documents"] });
+      form.reset();
+      setOpen(false);
+    },
+  });
+
+  const submit = form.handleSubmit((data) => {
+    createDocumentMutation.mutate(data);
+  });
+
+  return (
+    <>
+      <Button variant="outline" size="small" onClick={() => setOpen(true)}>
+        <Plus className="size-4" />
+        New Document
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New document</DialogTitle>
+            <DialogDescription>Choose how you'd like to add your document</DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={(e) => void submit(e)} className="grid gap-6">
+              <ContractField />
+              <FormField
+                control={form.control}
+                name="recipient"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Recipient</FormLabel>
+                    <FormControl>
+                      <ComboBox
+                        {...field}
+                        options={
+                          recipients
+                            ? recipients.map((r) => ({
+                                value: r.id,
+                                label: r.user.name,
+                              }))
+                            : []
+                        }
+                        placeholder="Select recipient"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    <FormDescription>Leave blank to create without sending</FormDescription>
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end gap-2">
+                {createDocumentMutation.error ? (
+                  <p className="text-red-500">{createDocumentMutation.error.message}</p>
+                ) : null}
+                <MutationStatusButton type="submit" mutation={createDocumentMutation} loadingText="Creating...">
+                  Create
+                </MutationStatusButton>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
