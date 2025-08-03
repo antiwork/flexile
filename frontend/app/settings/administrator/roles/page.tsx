@@ -2,15 +2,15 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import { Check, ChevronDown, Mail, MoreHorizontal, Plus } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { MoreHorizontal, Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import AutocompleteInput from "@/components/AutocompleteInput";
 import ComboBox from "@/components/ComboBox";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -26,10 +26,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
-import { cn } from "@/utils";
 
 const createAddMemberSchema = (companyUsers: User[]) =>
   z.object({
@@ -61,7 +59,7 @@ interface UserOrEmailInputProps {
   onChange: (value: string) => void;
   users: User[];
   placeholder?: string;
-  className?: string;
+  className?: string | undefined;
 }
 
 const UserOrEmailInput = ({
@@ -71,108 +69,51 @@ const UserOrEmailInput = ({
   placeholder = "Search by name or enter email...",
   className,
 }: UserOrEmailInputProps) => {
-  const [open, setOpen] = useState(false);
-  const [inputValue, setInputValue] = useState(value);
-  const listRef = useRef<HTMLDivElement>(null);
+  const [inputValue, setInputValue] = useState("");
 
-  const getDisplayValue = () => {
-    if (!value) return "";
+  useEffect(() => {
     const user = users.find((u) => u.id === value);
     if (user) {
-      return `${user.name} (${user.email})`;
+      setInputValue(user.name); // Only show name
+    } else {
+      setInputValue(value);
     }
-    return value; // Return the email if no user found
+  }, [value, users]);
+
+  const options = users.map((user) => ({
+    value: user.id,
+    label: user.name,
+    email: user.email,
+    keywords: [user.name, user.email], // Enable searching by both name and email
+  }));
+
+  const handleInputChange = (val: string) => {
+    setInputValue(val);
+    onChange(val);
   };
 
-  const handleInputChange = (newValue: string) => {
-    setInputValue(newValue);
-    onChange(newValue);
+  const handleSelect = (option: { value: string; label: string; email?: string }) => {
+    setInputValue(option.label); // Only show name
+    onChange(option.value);
   };
 
-  const handleUserSelect = (userId: string) => {
-    onChange(userId);
-    setInputValue(userId);
-    setOpen(false);
-  };
-
-  // Update inputValue when value prop changes
-  useEffect(() => {
-    setInputValue(value);
-  }, [value]);
-
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(inputValue.toLowerCase()) ||
-      user.email.toLowerCase().includes(inputValue.toLowerCase()),
+  const renderOption = (option: { value: string; label: string; email?: string }) => (
+    <div>
+      <div className="font-medium">{option.label}</div>
+      {option.email ? <div className="text-muted-foreground text-sm">{option.email}</div> : null}
+    </div>
   );
 
-  // More comprehensive email regex pattern
-  const emailRegex =
-    /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/u;
-  const isEmail = emailRegex.test(inputValue);
-
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="small"
-          role="combobox"
-          aria-expanded={open}
-          className={cn("w-full min-w-0 justify-between", className)}
-          onClick={() => setOpen(true)}
-        >
-          <div className="truncate">{getDisplayValue() || placeholder}</div>
-          <ChevronDown className="ml-2 size-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="p-0" style={{ width: "var(--radix-popover-trigger-width)" }}>
-        <Command>
-          <CommandInput
-            placeholder="Search by name or enter email..."
-            value={inputValue}
-            onValueChange={handleInputChange}
-          />
-          <CommandList ref={listRef}>
-            <CommandEmpty>
-              {isEmail ? (
-                <div className="flex items-center gap-2 p-2">
-                  <Mail className="size-4" />
-                  <span>Invite {inputValue}</span>
-                </div>
-              ) : (
-                "No results found."
-              )}
-            </CommandEmpty>
-            <CommandGroup>
-              {filteredUsers.map((user) => (
-                <CommandItem
-                  key={user.id}
-                  value={user.id}
-                  keywords={[user.name, user.email]}
-                  onSelect={handleUserSelect}
-                >
-                  <Check className={cn("mr-2 h-4 w-4", user.id === value ? "opacity-100" : "opacity-0")} />
-                  <div className="flex flex-col">
-                    <span>{user.name}</span>
-                    <span className="text-muted-foreground text-xs">{user.email}</span>
-                  </div>
-                </CommandItem>
-              ))}
-              {isEmail && !users.some((u) => u.email === inputValue) ? (
-                <CommandItem value={inputValue} onSelect={() => handleUserSelect(inputValue)}>
-                  <Mail className="mr-2 h-4 w-4" />
-                  <div className="flex flex-col">
-                    <span>Invite {inputValue}</span>
-                    <span className="text-muted-foreground text-xs">New user</span>
-                  </div>
-                </CommandItem>
-              ) : null}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+    <AutocompleteInput
+      value={inputValue}
+      onChange={handleInputChange}
+      onOptionSelect={handleSelect}
+      options={options}
+      placeholder={placeholder}
+      className={className || ""}
+      renderOption={renderOption}
+    />
   );
 };
 
@@ -192,6 +133,7 @@ export default function RolesPage() {
     onSuccess: async () => {
       await trpcUtils.companies.listAdministrators.invalidate();
       await trpcUtils.companies.listLawyers.invalidate();
+      await trpcUtils.companies.listCompanyUsers.invalidate();
       setShowAddModal(false);
       addMemberForm.reset();
     },
@@ -201,6 +143,7 @@ export default function RolesPage() {
     onSuccess: async () => {
       await trpcUtils.companies.listAdministrators.invalidate();
       await trpcUtils.companies.listLawyers.invalidate();
+      await trpcUtils.companies.listCompanyUsers.invalidate();
       setShowAddModal(false);
       addMemberForm.reset();
     },
@@ -210,6 +153,7 @@ export default function RolesPage() {
     onSuccess: async () => {
       await trpcUtils.companies.listAdministrators.invalidate();
       await trpcUtils.companies.listLawyers.invalidate();
+      await trpcUtils.companies.listCompanyUsers.invalidate();
       setShowAddModal(false);
       addMemberForm.reset();
     },
@@ -273,11 +217,11 @@ export default function RolesPage() {
       columnHelper.accessor("role", {
         header: "Role",
         cell: (info) => info.getValue() || "-",
+        meta: { className: "whitespace-nowrap text-left" },
       }),
       columnHelper.display({
         id: "actions",
         header: "",
-        meta: { className: "w-6 whitespace-nowrap" },
         cell: (info) => {
           const user = info.row.original;
           if (user.role === "Owner") return null;
@@ -287,7 +231,7 @@ export default function RolesPage() {
           const isLastAdmin = adminCount === 1 && user.isAdmin;
 
           return (
-            <div className="text-left">
+            <div className="pr-2 pl-0 text-right">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -379,20 +323,27 @@ export default function RolesPage() {
           <h2 className="mb-1 text-xl font-bold">Roles</h2>
           <p className="text-muted-foreground text-base">Use roles to grant deeper access to your workspace.</p>
         </hgroup>
-        <div className="[&_td:first-child]:!pl-0 [&_td:last-child]:!pr-0 [&_td:last-child]:!pr-2 [&_td:nth-child(2)]:!pr-0 [&_th:first-child]:!pl-0 [&_th:last-child]:!pr-0 [&_th:nth-child(2)]:!pr-0">
+        <div className="[&_td:first-child]:!pl-0 [&_td:last-child]:!pr-0 [&_th:first-child]:!pl-0 [&_th:last-child]:!pr-0">
           {admins.length === 0 && lawyers.length === 0 ? (
             <TableSkeleton columns={3} />
           ) : (
-            <DataTable
-              table={table}
-              searchColumn="name"
-              actions={
-                <Button variant="outline" size="small" onClick={() => setShowAddModal(true)}>
-                  <Plus className="mr-2 size-4" />
-                  Add member
-                </Button>
-              }
-            />
+            <div className="[&_table]:w-full [&_table]:table-fixed [&_td:nth-child(1)]:w-[75%] [&_td:nth-child(2)]:w-[15%] [&_td:nth-child(2)]:pr-1 [&_td:nth-child(2)]:text-left [&_td:nth-child(3)]:w-[10%] [&_td:nth-child(3)]:pr-0 [&_td:nth-child(3)]:pl-0 [&_th:nth-child(1)]:w-[75%] [&_th:nth-child(2)]:w-[15%] [&_th:nth-child(3)]:w-[10%] [&>div>div:first-child]:mx-0">
+              <DataTable
+                table={table}
+                searchColumn="name"
+                actions={
+                  <Button
+                    variant="outline"
+                    size="small"
+                    onClick={() => setShowAddModal(true)}
+                    className="w-full md:w-auto"
+                  >
+                    <Plus className="mr-2 size-4" />
+                    Add member
+                  </Button>
+                }
+              />
+            </div>
           )}
         </div>
       </div>
@@ -445,6 +396,7 @@ export default function RolesPage() {
                         value={field.value}
                         onChange={field.onChange}
                         placeholder="Select role..."
+                        showSearch={false}
                       />
                     </FormControl>
                     <FormMessage />

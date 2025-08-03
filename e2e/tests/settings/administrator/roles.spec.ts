@@ -375,9 +375,7 @@ test.describe("Roles page invite functionality", () => {
 
     await page.getByRole("button", { name: "Add member" }).click();
 
-    await page.getByRole("combobox").filter({ hasText: "Search by name or enter email" }).click();
     await page.getByPlaceholder("Search by name or enter email...").fill("testadmin@example.com");
-    await page.getByRole("option", { name: "Invite testadmin@example.com" }).click();
 
     await selectComboboxOption(page, "Role", "Admin");
 
@@ -394,9 +392,7 @@ test.describe("Roles page invite functionality", () => {
 
     await page.getByRole("button", { name: "Add member" }).click();
 
-    await page.getByRole("combobox").filter({ hasText: "Search by name or enter email" }).click();
     await page.getByPlaceholder("Search by name or enter email...").fill("testlawyer@example.com");
-    await page.getByRole("option", { name: "Invite testlawyer@example.com" }).click();
 
     await selectComboboxOption(page, "Role", "Lawyer");
 
@@ -415,7 +411,6 @@ test.describe("Roles page invite functionality", () => {
 
     await expect(page.getByRole("button", { name: "Add member" })).toBeDisabled();
 
-    await page.getByRole("combobox").filter({ hasText: "Search by name or enter email" }).click();
     await page.getByPlaceholder("Search by name or enter email...").fill("invalid_name");
 
     await expect(
