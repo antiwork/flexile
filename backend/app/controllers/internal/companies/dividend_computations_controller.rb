@@ -8,9 +8,11 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
       Current.company,
       amount_in_usd: dividend_computation_params[:amount_in_usd],
       dividends_issuance_date: dividend_computation_params[:dividends_issuance_date] || Date.current,
-      return_of_capital: dividend_computation_params[:return_of_capital]
+      return_of_capital: dividend_computation_params[:return_of_capital],
+      release_document: dividend_computation_params[:release_document]
     ).process
 
+    Rails.logger.info "Successfully created dividend computation with ID: #{dividend_computation.id}"
     render json: { id: dividend_computation.id }, status: :created
   rescue StandardError
     head :unprocessable_entity
