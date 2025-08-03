@@ -18,7 +18,6 @@ import { equityGrantsRouter } from "./routes/equityGrants";
 import { expenseCategoriesRouter } from "./routes/expenseCategories";
 import { investorsRouter } from "./routes/investors";
 import { invoicesRouter } from "./routes/invoices";
-import { lawyersRouter } from "./routes/lawyers";
 import { optionPoolsRouter } from "./routes/optionPools";
 import { quickbooksRouter } from "./routes/quickbooks";
 import { shareHoldingsRouter } from "./routes/shareHoldings";
@@ -53,7 +52,6 @@ export const appRouter = createRouter({
   expenseCategories: expenseCategoriesRouter,
   investorEntities: investorEntitiesRouter,
   equityCalculations: equityCalculationsRouter,
-  lawyers: lawyersRouter,
   companyInviteLinks: companyInviteLinksRouter,
   support: supportRouter,
 });
