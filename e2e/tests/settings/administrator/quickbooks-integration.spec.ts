@@ -21,7 +21,7 @@ test.describe("QuickBooks integration", () => {
 
     await login(page, adminUser);
     await page.getByRole("link", { name: "Settings" }).click();
-    await page.getByRole("link", { name: "Administrator" }).click();
+    await page.getByRole("link", { name: "Workspace settings" }).click();
 
     await expect(page.getByText("QuickBooks")).toBeVisible();
     await expect(page.getByText("Sync invoices, payments, and expenses")).toBeVisible();
@@ -53,7 +53,7 @@ test.describe("QuickBooks integration", () => {
 
     await login(page, adminUser);
     await page.getByRole("link", { name: "Settings" }).click();
-    await page.getByRole("link", { name: "Administrator" }).click();
+    await page.getByRole("link", { name: "Workspace settings" }).click();
 
     await expect(page.getByText("Needs reconnecting")).toBeVisible();
     await expect(page.getByRole("button", { name: "Connect" })).toBeVisible();
@@ -80,7 +80,7 @@ test.describe("QuickBooks integration", () => {
 
     await login(page, adminUser);
     await page.getByRole("link", { name: "Settings" }).click();
-    await page.getByRole("link", { name: "Administrator" }).click();
+    await page.getByRole("link", { name: "Workspace settings" }).click();
 
     await expect(page.getByText("Setup required")).toBeVisible();
     await expect(page.getByRole("button", { name: "Finish setup" })).toBeVisible();
@@ -107,7 +107,7 @@ test.describe("QuickBooks integration", () => {
 
     await login(page, adminUser);
     await page.getByRole("link", { name: "Settings" }).click();
-    await page.getByRole("link", { name: "Administrator" }).click();
+    await page.getByRole("link", { name: "Workspace settings" }).click();
 
     await page.getByRole("button", { name: "Finish setup" }).click();
     await expect(page.getByRole("dialog")).toBeVisible();
@@ -149,7 +149,7 @@ test.describe("QuickBooks integration", () => {
 
     await login(page, adminUser);
     await page.getByRole("link", { name: "Settings" }).click();
-    await page.getByRole("link", { name: "Administrator" }).click();
+    await page.getByRole("link", { name: "Workspace settings" }).click();
 
     await expect(page.getByText("Connected")).toBeVisible();
     await expect(page.getByRole("button", { name: "Disconnect" })).toBeVisible();
