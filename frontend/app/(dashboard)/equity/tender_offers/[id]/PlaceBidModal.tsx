@@ -32,7 +32,7 @@ type TenderOffer = RouterOutput["tenderOffers"]["get"];
 
 type PlaceBidModalProps = {
   onClose: () => void;
-  data: TenderOffer | null;
+  data: TenderOffer;
 };
 
 type ConfirmationSectionProps = {
@@ -76,10 +76,6 @@ const PlaceBidModal = ({ onClose, data }: PlaceBidModalProps) => {
   const goToPreviousStep = () => {
     setCurrentStep(currentStep - 1);
   };
-
-  if (!data) {
-    return null;
-  }
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -178,7 +174,7 @@ const LetterOfTransmittalSection = ({ onBack, onNext, data }: LetterOfTransmitta
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {showDocument ? (
           <div className="mb-4 flex-1 overflow-auto rounded-sm border border-gray-300">
-            <RichText content={data.letterOfTransmittal} />
+            <RichText content={data.letterOfTransmittal || "Letter of transmittal not available"} />
           </div>
         ) : null}
 

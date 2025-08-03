@@ -53,6 +53,7 @@
     "prepare": "git config --local core.hooksPath .githooks"
   },
   "dependencies": {
+    "@ai-sdk/react": "^1.2.12",
     "@aws-sdk/client-s3": "^3.688.0",
     "@aws-sdk/s3-request-presigner": "^3.691.0",
     "@bugsnag/js": "^8.0.0",
@@ -61,7 +62,8 @@
     "@date-fns/utc": "^2.1.0",
     "@docuseal/api": "^1.0.13",
     "@docuseal/react": "^1.0.63",
-    "@helperai/react": "^0.6.0",
+    "@helperai/client": "^0.3.1",
+    "@helperai/react": "^0.8.2",
     "@heroicons/react": "^2.1.5",
     "@hookform/resolvers": "^4.0.0",
     "@internationalized/date": "^3.8.0",

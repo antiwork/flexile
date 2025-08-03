@@ -9,13 +9,6 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -39,6 +32,11 @@ export default function Buybacks() {
   const [selectedBuyback, setSelectedBuyback] = useState<TenderOffer | null>(null);
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
 
+  const { data: selectedBuybackData, isLoading: isLoadingSelectedBuyback } = trpc.tenderOffers.get.useQuery(
+    { id: selectedBuyback?.id || "", companyId: company.id },
+    { enabled: !!selectedBuyback?.id && activeModal === "place-bid" },
+  );
+
   const columns = useMemo(
     () => [
       columnHelper.accessor("name", {
@@ -47,7 +45,7 @@ export default function Buybacks() {
           const content = info.getValue();
           return (
             <Link href={`/equity/tender_offers/${info.row.original.id}`} className="after:absolute after:inset-0">
-              {content}
+              {content || "—"}
             </Link>
           );
         },
@@ -127,38 +125,42 @@ export default function Buybacks() {
 
       columnHelper.display({
         id: "actions",
-        cell: (info) => (
-          <>
-            {getBuybackStatus(info.row.original) === "Open" ? (
-              <Button
-                size="small"
-                variant="outline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedBuyback(info.row.original);
-                  setActiveModal("place-bid");
-                }}
-              >
-                Place bid
-              </Button>
-            ) : null}
-            {user.roles.administrator && getBuybackStatus(info.row.original) === "Reviewing" ? (
-              <Button
-                size="small"
-                className="fill-black"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  router.push(`/equity/tender_offers/${info.row.original.id}`);
-                }}
-              >
-                Review
-              </Button>
-            ) : null}
-          </>
-        ),
+        cell: (info) => {
+          const loading = !!isLoadingSelectedBuyback && selectedBuyback?.id === info.row.original.id;
+          return (
+            <>
+              {getBuybackStatus(info.row.original) === "Open" ? (
+                <Button
+                  size="small"
+                  variant="outline"
+                  disabled={loading}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedBuyback(info.row.original);
+                    setActiveModal("place-bid");
+                  }}
+                >
+                  {loading ? "Loading..." : "Place bid"}
+                </Button>
+              ) : null}
+              {user.roles.administrator && getBuybackStatus(info.row.original) === "Reviewing" ? (
+                <Button
+                  size="small"
+                  className="fill-black"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(`/equity/tender_offers/${info.row.original.id}`);
+                  }}
+                >
+                  Review
+                </Button>
+              ) : null}
+            </>
+          );
+        },
       }),
     ],
-    [company.fullyDilutedShares, user.roles.administrator],
+    [company.fullyDilutedShares, user.roles.administrator, isLoadingSelectedBuyback, selectedBuyback?.id],
   );
 
   const table = useTable({
@@ -171,17 +173,7 @@ export default function Buybacks() {
   return (
     <>
       <DashboardHeader
-        title={
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>Equity</BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Buybacks</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        }
+        title="Buybacks"
         headerActions={
           user.roles.administrator && !data.length ? (
             <Button size="small" variant="outline" onClick={() => setActiveModal("new-buyback")}>
@@ -208,17 +200,19 @@ export default function Buybacks() {
           }
         />
       ) : (
-        <Placeholder icon={CircleCheck}>There are no buybacks yet.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>There are no buybacks yet.</Placeholder>
+        </div>
       )}
 
-      {activeModal === "place-bid" ? (
+      {activeModal === "place-bid" && selectedBuybackData ? (
         <PlaceBidModal
           onClose={() => {
             setActiveModal(null);
             setSelectedBuyback(null);
             void refetch();
           }}
-          data={selectedBuyback}
+          data={selectedBuybackData}
         />
       ) : null}
 

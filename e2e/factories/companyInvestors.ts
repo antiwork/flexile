@@ -6,7 +6,7 @@ import { assert } from "@/utils/assert";
 
 export const companyInvestorsFactory = {
   create: async (overrides: Partial<typeof companyInvestors.$inferInsert> = {}) => {
-    const companyId = overrides.companyId || (await companiesFactory.create()).company.id;
+    const companyId = overrides.companyId || (await companiesFactory.createCompletedOnboarding()).company.id;
     const userId = overrides.userId || (await usersFactory.create()).user.id;
 
     const [createdInvestor] = await db

@@ -5,13 +5,6 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -39,26 +32,16 @@ export default function Shares() {
 
   return (
     <>
-      <DashboardHeader
-        title={
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>Equity</BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Shares</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        }
-      />
+      <DashboardHeader title="Shares" />
 
       {isLoading ? (
         <TableSkeleton columns={5} />
       ) : shareHoldings.length > 0 ? (
         <DataTable table={table} />
       ) : (
-        <Placeholder icon={CheckCircleIcon}>You do not hold any shares.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CheckCircleIcon}>You do not hold any shares.</Placeholder>
+        </div>
       )}
     </>
   );

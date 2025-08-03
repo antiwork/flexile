@@ -16,7 +16,7 @@ type CancelBidModalProps = {
   data: TenderOffer;
 };
 
-const CancelBidModal = ({ onClose, bid, data }: CancelBidModalProps) => {
+const CancelBidModal = ({ onClose, bid }: CancelBidModalProps) => {
   const company = useCurrentCompany();
 
   const destroyMutation = trpc.tenderOffers.bids.destroy.useMutation({

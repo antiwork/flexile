@@ -151,7 +151,7 @@ export default function BuybackView() {
           : null,
         (user.roles.administrator || getBuybackStatus(data) !== "Open") && data.acceptedPriceCents
           ? columnHelper.display({
-              id: "clearingPrice", // TODO
+              id: "clearingPrice",
               header: "Clearing Price",
               cell: (info) =>
                 info.row.original.acceptedShares && getBuybackStatus(data) !== "Open" && data.acceptedPriceCents
@@ -270,7 +270,8 @@ export default function BuybackView() {
         }
       />
       {user.roles.investor?.investedInAngelListRuv ? (
-        <Alert variant="destructive">
+        <Alert className="mx-4" variant="destructive">
+          {" "}
           <ExclamationTriangleIcon />
           <AlertDescription>
             Note: As an investor through an AngelList RUV, your bids will be submitted on your behalf by the RUV itself.
@@ -279,7 +280,7 @@ export default function BuybackView() {
         </Alert>
       ) : null}
       {!user.roles.administrator && getBuybackStatus(data) === "Reviewing" ? (
-        <Alert>
+        <Alert className="mx-4">
           <InfoIcon />
           <AlertDescription>
             <span className="font-semibold"> This buyback is now under review.</span> The company is finalizing bids,
@@ -288,7 +289,7 @@ export default function BuybackView() {
         </Alert>
       ) : null}
       {user.roles.administrator && data.acceptedPriceCents && getBuybackStatus(data) === "Reviewing" ? (
-        <Alert>
+        <Alert className="mx-4">
           <InfoIcon />
           <AlertDescription>
             <span className="font-semibold">Buyback window has ended.</span> All accepted bids cleared at{" "}
@@ -298,7 +299,7 @@ export default function BuybackView() {
         </Alert>
       ) : null}
       {user.roles.administrator && getBuybackStatus(data) === "Closed" ? (
-        <Alert variant="success">
+        <Alert className="mx-4" variant="success">
           <CircleCheckIcon />
           <AlertDescription>
             <span className="font-semibold">Buyback successfully closed and settled.</span> Payouts are being processed.
@@ -306,7 +307,7 @@ export default function BuybackView() {
         </Alert>
       ) : null}
       {!user.roles.administrator && data.acceptedPriceCents && getBuybackStatus(data) === "Settled" ? (
-        <Alert>
+        <Alert className="mx-4">
           <InfoIcon />
           <AlertDescription>
             <span className="font-semibold">This buyback has been settled.</span> All accepted bids cleared at{" "}

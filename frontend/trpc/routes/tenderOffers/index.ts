@@ -45,9 +45,12 @@ export const tenderOffersRouter = createRouter({
         .insert(tenderOffers)
         .values({
           companyId: ctx.company.id,
+          name: input.name,
           startsAt: input.startsAt,
           endsAt: input.endsAt,
           minimumValuation: input.minimumValuation,
+          letterOfTransmittal: input.letterOfTransmittal,
+          totalAmountInCents: input.totalAmountInCents,
         })
         .returning();
       if (!tenderOffer) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });

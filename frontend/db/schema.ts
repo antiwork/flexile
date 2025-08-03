@@ -1254,7 +1254,6 @@ export const companyInvestors = pgTable(
       .$onUpdate(() => new Date()),
     totalShares: bigint("total_shares", { mode: "bigint" }).default(0n).notNull(),
     investmentAmountInCents: bigint("investment_amount_in_cents", { mode: "bigint" }).notNull(),
-    capTableNotes: varchar("cap_table_notes"),
 
     externalId: varchar("external_id").$default(nanoid).notNull(),
     totalOptions: bigint("total_options", { mode: "bigint" }).default(0n).notNull(),
@@ -1406,7 +1405,6 @@ export const companyInvestorEntities = pgTable(
     companyId: bigint("company_id", { mode: "bigint" }).notNull(),
     name: varchar().notNull(),
     investmentAmountCents: bigint("investment_amount_cents", { mode: "bigint" }).notNull(),
-    capTableNotes: varchar("cap_table_notes"),
     totalShares: bigint("total_shares", { mode: "bigint" }).default(0n).notNull(),
     totalOptions: bigint("total_options", { mode: "bigint" }).default(0n).notNull(),
     fullyDilutedShares: bigint("fully_diluted_shares", { mode: "bigint" }).generatedAlwaysAs(

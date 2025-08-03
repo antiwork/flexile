@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { cn, md5Checksum } from "@/utils";
@@ -182,7 +183,7 @@ const NewBuybackModal = ({ onClose }: NewBuybackModalProps) => {
 
   const goToNextStep = () => {
     if (!sections[currentStep + 1]) {
-      // createMutation.mutate();
+      createMutation.mutate();
       return;
     }
     setCurrentStep(Math.min(sections.length - 1, currentStep + 1));
@@ -263,6 +264,19 @@ const BuybackFormSection = ({ onNext, mutation }: BuybackFormSectionProps) => {
 
       <Form {...form}>
         <form onSubmit={(e) => void handleSubmit(e)} className="-m-1 max-h-[65vh] space-y-4 overflow-y-auto p-1">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Buyback name</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2">
             <FormField
               control={form.control}
