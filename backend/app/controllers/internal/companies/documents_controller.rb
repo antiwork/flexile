@@ -6,18 +6,22 @@ class Internal::Companies::DocumentsController < Internal::Companies::BaseContro
   def index
     authorize Document
 
+    filters = params.permit(:signable)
+
     documents = Current.company.documents
       .includes(signatures: :user, attachments_attachments: :blob)
       .where(deleted_at: nil)
-      .joins(:signatures)
-      .where(document_signatures: { user_id: Current.user.id })
-      .distinct
 
+    unless Current.user.administrator? || Current.user.lawyer?
+      documents = documents.for_signatory(Current.user.id)
+    end
+
+    if filters[:signable] == "true"
+      documents = documents.unsigned_by(Current.user.id)
+    end
+
+    documents = documents.distinct
     render json: documents.map { |doc| DocumentPresenter.new(doc).props }
-  end
-
-  def show
-    render json: DocumentPresenter.new(@document).props
   end
 
   def create
@@ -32,7 +36,7 @@ class Internal::Companies::DocumentsController < Internal::Companies::BaseContro
     if result[:success]
       render json: DocumentPresenter.new(result[:document]).props, status: :created
     else
-      render json: { errors: result[:error_message] }, status: :unprocessable_entity
+      render json: { error_message: result[:error_message] }, status: :unprocessable_entity
     end
   end
 
@@ -49,7 +53,7 @@ class Internal::Companies::DocumentsController < Internal::Companies::BaseContro
     if signature.save
       render json: DocumentPresenter.new(@document).props
     else
-      render json: { errors: signature.errors.full_messages }, status: :unprocessable_entity
+      render json: { error_message: signature.errors.full_messages.to_sentence }, status: :unprocessable_entity
     end
   end
 
@@ -59,29 +63,53 @@ class Internal::Companies::DocumentsController < Internal::Companies::BaseContro
     signer = Current.company.company_workers.find_by(external_id: params[:recipient])&.user
 
     unless signer
-      render json: { errors: ["Recipient not found"] }, status: :unprocessable_entity and return
+      render json: { error_message: "Recipient not found" }, status: :unprocessable_entity and return
     end
 
-    signed_at = Time.current if @document.link.present?
-    signature = @document.signatures.find_or_initialize_by(user: signer)
-    signature.update!(title: "Signer", signed_at:)
+    if @document.signatures.exists?(user: signer)
+      render json: { error_message: "Document already shared with this recipient" }, status: :unprocessable_entity and return
+    end
 
-    if signature.persisted?
+    ActiveRecord::Base.transaction do
+      new_document = @document.dup
+      new_document.year = Time.current.year
+      new_document.save!
+
+      new_document.signatures.create!(
+        user: Current.user,
+        title: "Company Representative",
+        signed_at: Time.current
+      )
+      new_document.signatures.create!(
+        user: signer,
+        title: "Signer",
+        signed_at: nil
+      )
+
+      if @document.attachments.attached?
+        @document.attachments.each do |attachment|
+          new_document.attachments.attach(
+            io: StringIO.new(attachment.download),
+            filename: attachment.filename.to_s,
+            content_type: attachment.content_type
+          )
+        end
+      end
+
       render json: { message: "Document shared successfully" }, status: :ok
-    else
-      render json: { errors: signature.errors.full_messages }, status: :unprocessable_entity
+    rescue ActiveRecord::RecordInvalid => e
+      render json: { error_message: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
     end
   end
-
 
   def destroy
     authorize Document
 
     if @document.signatures.where(signed_at: nil).none?
-      render json: { errors: ["Cannot delete a signed document"] }, status: :unprocessable_entity and return
+      render json: { error_message: "Cannot delete a signed document" }, status: :unprocessable_entity and return
     end
 
-    @document.update(deleted_at: Time.current)
+    @document.mark_deleted!
     head :no_content
   end
 

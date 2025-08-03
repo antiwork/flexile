@@ -9,15 +9,13 @@ class DocumentPresenter
 
   def props
     {
-      id: id,
+      id: id.to_s,
       name: name,
-      created_at: created_at&.iso8601,
+      createdAt: created_at&.iso8601,
       type: document_type_before_type_cast,
-      signed: signatories.all? { |s| s[:signed_at].present? },
       year: year,
-      link: link,
-      text_content: text_content,
-      deleted_at: deleted_at&.iso8601,
+      textContent: text_content,
+      deletedAt: deleted_at&.iso8601,
       attachment: attachments&.first ? {
         key: attachments.first.key,
         filename: attachments.first.filename,
@@ -32,12 +30,11 @@ class DocumentPresenter
     def signatories
       document.signatures.map do |signature|
         {
-          id: signature.id,
-          user_id: signature.user.external_id,
+          id: signature.user.external_id.to_s,
           name: signature.user.name,
           email: signature.user.email,
           title: signature.title,
-          signed_at: signature.signed_at&.iso8601,
+          signedAt: signature.signed_at&.iso8601,
         }
       end
     end

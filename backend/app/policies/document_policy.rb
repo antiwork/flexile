@@ -2,31 +2,22 @@
 
 class DocumentPolicy < ApplicationPolicy
   def index?
-    user.administrator? || user.lawyer?
-  end
-
-  def show?
-    index? || document_owner?
+    company_worker.present? || company_investor.present? || company_lawyer.present? || company_administrator.present?
   end
 
   def create?
-    index?
+    company_administrator.present?
   end
 
   def sign?
-    index? || document_owner?
+    index?
   end
 
   def share?
-    index? || document_owner?
+    create?
   end
 
   def destroy?
-    user.administrator?
+    create?
   end
-
-  private
-    def document_owner?
-      record.user_id == user.id
-    end
 end

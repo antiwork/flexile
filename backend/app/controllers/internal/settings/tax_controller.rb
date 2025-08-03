@@ -20,12 +20,7 @@ class Internal::Settings::TaxController < Internal::Settings::BaseController
 
       if error_message.nil? && should_regenerate_consulting_contract
         user.company_workers.where(contract_signed_elsewhere: false).each do |company_worker|
-          company_administrator = company_worker.company.primary_admin
-          contracts << CreateConsultingContract.new(
-            company_worker:,
-            company_administrator:,
-            current_user: user,
-          ).perform!
+          company_worker.user.documents.unsigned_contracts.each(&:mark_deleted!)
         end
       end
     rescue ActiveRecord::ActiveRecordError => e
