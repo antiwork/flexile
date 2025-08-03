@@ -383,7 +383,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_03_043158) do
     t.boolean "return_of_capital", null: false
     t.boolean "ready_for_payment", default: false, null: false
     t.text "release_document"
-    t.bigint "consolidated_invoice_id"
     t.index ["company_id"], name: "index_dividend_rounds_on_company_id"
     t.index ["external_id"], name: "index_dividend_rounds_on_external_id", unique: true
   end

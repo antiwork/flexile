@@ -12,7 +12,6 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
       release_document: dividend_computation_params[:release_document]
     ).process
 
-    Rails.logger.info "Successfully created dividend computation with ID: #{dividend_computation.id}"
     render json: { id: dividend_computation.id }, status: :created
   rescue StandardError
     head :unprocessable_entity
