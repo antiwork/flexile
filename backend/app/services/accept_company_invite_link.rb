@@ -26,9 +26,6 @@ class AcceptCompanyInviteLink
     if company_worker.save
       @user.update!(signup_invite_link: invite_link)
 
-      unless company_worker.contract_signed_elsewhere
-        CreateConsultingContract.new(company_worker:, company_administrator: company.primary_admin, current_user: @user).perform!
-      end
       { success: true, company_worker: company_worker }
     else
       { success: false, error: company_worker.errors.full_messages.to_sentence }
