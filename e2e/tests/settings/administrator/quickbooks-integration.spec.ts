@@ -10,7 +10,7 @@ import { integrations, users } from "@/db/schema";
 
 test.describe("QuickBooks integration", () => {
   test("allows connecting QuickBooks integration", async ({ page, next }) => {
-    const { company } = await companiesFactory.create();
+    const { company } = await companiesFactory.create({ jsonData: { flags: ["quickbooks"] } });
     const { administrator } = await companyAdministratorsFactory.create({
       companyId: company.id,
     });
@@ -38,7 +38,7 @@ test.describe("QuickBooks integration", () => {
   });
 
   test("shows reconnect option for out_of_sync integration", async ({ page, next }) => {
-    const { company } = await companiesFactory.create();
+    const { company } = await companiesFactory.create({ jsonData: { flags: ["quickbooks"] } });
     const { administrator } = await companyAdministratorsFactory.create({
       companyId: company.id,
     });
@@ -63,7 +63,7 @@ test.describe("QuickBooks integration", () => {
   });
 
   test("shows setup required for incomplete integration", async ({ page }) => {
-    const { company } = await companiesFactory.create();
+    const { company } = await companiesFactory.create({ jsonData: { flags: ["quickbooks"] } });
     const { administrator } = await companyAdministratorsFactory.create({
       companyId: company.id,
     });
@@ -88,7 +88,7 @@ test.describe("QuickBooks integration", () => {
   });
 
   test("allows completing integration setup", async ({ page, next }) => {
-    const { company } = await companiesFactory.create();
+    const { company } = await companiesFactory.create({ jsonData: { flags: ["quickbooks"] } });
     const { administrator } = await companyAdministratorsFactory.create({
       companyId: company.id,
     });
@@ -135,7 +135,7 @@ test.describe("QuickBooks integration", () => {
   });
 
   test("allows disconnecting QuickBooks integration", async ({ page, next }) => {
-    const { company } = await companiesFactory.create();
+    const { company } = await companiesFactory.create({ jsonData: { flags: ["quickbooks"] } });
     const { administrator } = await companyAdministratorsFactory.create({
       companyId: company.id,
     });
