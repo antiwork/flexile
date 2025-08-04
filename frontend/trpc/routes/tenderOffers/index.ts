@@ -67,10 +67,9 @@ export const tenderOffersRouter = createRouter({
     if (!ctx.company.equityEnabled || (!ctx.companyAdministrator && !ctx.companyInvestor))
       throw new TRPCError({ code: "FORBIDDEN" });
 
-    const investorFilter =
-      ctx.companyAdministrator && ctx.companyInvestor
-        ? eq(tenderOfferBids.companyInvestorId, ctx.companyInvestor.id)
-        : undefined;
+    const investorFilter = !ctx.companyAdministrator
+      ? eq(tenderOfferBids.companyInvestorId, ctx.companyInvestor?.id || sql`NULL`)
+      : undefined;
 
     const bidCountSubquery = db
       .select({ tenderOfferId: tenderOfferBids.tenderOfferId, bidCount: count(tenderOfferBids.id).as("bidCount") })
@@ -143,10 +142,9 @@ export const tenderOffersRouter = createRouter({
     if (!ctx.company.equityEnabled || (!ctx.companyAdministrator && !ctx.companyInvestor))
       throw new TRPCError({ code: "FORBIDDEN" });
 
-    const investorFilter =
-      ctx.companyAdministrator && ctx.companyInvestor
-        ? eq(tenderOfferBids.companyInvestorId, ctx.companyInvestor.id)
-        : undefined;
+    const investorFilter = !ctx.companyAdministrator
+      ? eq(tenderOfferBids.companyInvestorId, ctx.companyInvestor?.id || sql`NULL`)
+      : undefined;
 
     const tenderOffer = await db.query.tenderOffers.findFirst({
       columns: {
