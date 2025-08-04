@@ -85,7 +85,7 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
       });
 
       if (result?.error) {
-        throw new Error("Invalid verification code, please try again.");
+        throw new Error(result.error);
       }
 
       // Get the session to access the JWT

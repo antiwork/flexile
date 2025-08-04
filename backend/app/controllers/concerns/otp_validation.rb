@@ -31,7 +31,7 @@ module OtpValidation
     def check_otp_rate_limit(user)
       if user.otp_rate_limited?
         render json: {
-          error: "Too many OTP attempts. Please wait before trying again.",
+          error: "Too many login attempts. Please wait before trying again.",
           retry_after: 10.minutes.to_i,
         }, status: :too_many_requests
         return false

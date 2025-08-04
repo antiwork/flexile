@@ -153,7 +153,7 @@ RSpec.describe Api::V1::LoginController, type: :controller do
         expect(response).to have_http_status(:too_many_requests)
 
         json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Too many OTP attempts. Please wait before trying again.")
+        expect(json_response["error"]).to eq("Too many login attempts. Please wait before trying again.")
         expect(json_response["retry_after"]).to eq(10.minutes.to_i)
       end
     end

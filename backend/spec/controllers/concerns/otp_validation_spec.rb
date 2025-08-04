@@ -78,7 +78,7 @@ RSpec.describe OtpValidation, type: :controller do
       allow_any_instance_of(User).to receive(:otp_rate_limited?).and_return(true)
       post :test_check_otp_rate_limit, params: { user_id: user.id }
       expect(response).to have_http_status(:too_many_requests)
-      expect(JSON.parse(response.body)["error"]).to eq("Too many OTP attempts. Please wait before trying again.")
+      expect(JSON.parse(response.body)["error"]).to eq("Too many login attempts. Please wait before trying again.")
     end
   end
 end

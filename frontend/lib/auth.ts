@@ -31,7 +31,7 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials.otp) {
-          return null;
+          throw new Error("Email and OTP are required");
         }
 
         const validation = otpLoginSchema.safeParse({
@@ -40,7 +40,7 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!validation.success) {
-          return null;
+          throw new Error("Invalid email or OTP");
         }
 
         try {
@@ -57,7 +57,10 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (!response.ok) {
-            return null;
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            const errorData = await response.json();
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+            throw new Error(errorData.error || "Authentication failed, please try again.");
           }
 
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/consistent-type-assertions
@@ -81,8 +84,11 @@ export const authOptions: NextAuthOptions = {
             preferredName: data.user.preferred_name,
             jwt: data.jwt,
           } as User;
-        } catch {
-          return null;
+        } catch (error) {
+          if (error instanceof Error) {
+            throw error;
+          }
+          throw new Error("Authentication failed, please try again.");
         }
       },
     }),
