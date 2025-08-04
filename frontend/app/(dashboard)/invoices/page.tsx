@@ -460,7 +460,9 @@ export default function InvoicesPage() {
           />
         </>
       ) : (
-        <Placeholder icon={CircleCheck}>No invoices to display.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>No invoices to display.</Placeholder>
+        </div>
       )}
 
       <AlertDialog open={openModal === "approve"} onOpenChange={() => setOpenModal(null)}>
