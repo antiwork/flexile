@@ -35,7 +35,7 @@ module SetCurrent
       if cookies["invitation_token"].present?
         invite_link = CompanyInviteLink.find_by(token: cookies["invitation_token"])
         invited_company = invite_link&.company
-        user.update!(signup_invite_link: invite_link) if invite_link
+        AcceptCompanyInviteLink.new(user:, token: invite_link.token).perform if invite_link
         cookies.delete("invitation_token")
       end
     end
