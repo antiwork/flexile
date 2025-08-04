@@ -230,7 +230,12 @@ export const RejectModal = ({
         <AlertDialogFooter>
           <AlertDialogCancel>No, cancel</AlertDialogCancel>
           <AlertDialogAction asChild>
-            <MutationButton mutation={rejectInvoices} param={{ ids, reason }} loadingText="Rejecting...">
+            <MutationButton
+              mutation={rejectInvoices}
+              param={{ ids, reason }}
+              idleVariant="critical"
+              loadingText="Rejecting..."
+            >
               Yes, reject
             </MutationButton>
           </AlertDialogAction>

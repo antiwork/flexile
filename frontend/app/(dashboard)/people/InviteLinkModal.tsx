@@ -147,7 +147,12 @@ const InviteLinkModal = ({ open, onOpenChange }: InviteLinkModalProps) => {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction asChild>
-              <MutationStatusButton mutation={resetInviteLinkMutation} type="button" onClick={resetInviteLink}>
+              <MutationStatusButton
+                mutation={resetInviteLinkMutation}
+                idleVariant="critical"
+                type="button"
+                onClick={resetInviteLink}
+              >
                 Reset link
               </MutationStatusButton>
             </AlertDialogAction>

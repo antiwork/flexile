@@ -225,6 +225,7 @@ export default function ContractorPage() {
             <AlertDialogAction asChild>
               <MutationButton
                 mutation={endContract}
+                idleVariant="critical"
                 param={{ companyId: company.id, id: contractor?.id ?? "", endDate: endDate?.toString() ?? "" }}
               >
                 Yes, end contract
