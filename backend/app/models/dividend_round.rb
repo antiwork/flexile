@@ -4,7 +4,6 @@ class DividendRound < ApplicationRecord
   include ExternalId
 
   belongs_to :company
-  belongs_to :consolidated_invoice, optional: true
   has_many :dividends
   has_many :investor_dividend_rounds
 
