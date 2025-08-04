@@ -1,15 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDate } from "@internationalized/date";
 import { useMutation, type UseMutationResult } from "@tanstack/react-query";
-import { EditorContent, useEditor } from "@tiptap/react";
 import Decimal from "decimal.js";
 import { CloudUpload, Trash2 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import DatePicker from "@/components/DatePicker";
 import { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
+import RichText from "@/components/RichText";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,47 +23,11 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
-import { cn, md5Checksum } from "@/utils";
-import { richTextExtensions } from "@/utils/richText";
-
-const SimpleRichTextEditor = ({
-  value,
-  onChange,
-  className,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  className?: string;
-}) => {
-  const editor = useEditor({
-    extensions: richTextExtensions,
-    content: value,
-    onUpdate: ({ editor }) => onChange(editor.getHTML()),
-    editorProps: {
-      attributes: {
-        class: cn(
-          "prose max-w-none p-3 h-[50vh] overflow-y-auto",
-          "border-input rounded-md border bg-transparent text-sm",
-          "placeholder:text-muted-foreground",
-          className,
-        ),
-      },
-    },
-    immediatelyRender: false,
-  });
-
-  useEffect(() => {
-    if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value, false);
-    }
-  }, [value, editor]);
-
-  return <EditorContent editor={editor} />;
-};
+import { md5Checksum } from "@/utils";
 
 const formSchema = z
   .object({
-    name: z.string().nullable(),
+    name: z.string().min(1, "Buyback name is required"),
     startDate: z.instanceof(CalendarDate, { message: "This field is required." }),
     endDate: z.instanceof(CalendarDate, { message: "This field is required." }),
     minimumValuation: z.number(),
@@ -437,7 +401,12 @@ const CreateLetterOfTransmittalSection = ({ onNext, onBack, mutation }: CreateLe
                   <FormItem className="flex flex-col">
                     <FormControl>
                       <div>
-                        <SimpleRichTextEditor value={field.value || ""} onChange={field.onChange} />
+                        <RichText
+                          editable
+                          content={field.value || ""}
+                          onChange={field.onChange}
+                          className="border-input placeholder:text-muted-foreground h-[50vh] max-w-none overflow-y-auto rounded-md border bg-transparent p-3 text-sm"
+                        />
                         <p className="mt-2 text-xs text-gray-500">
                           Rich text formatting will be preserved. You can paste from Word or Google Docs.
                         </p>
