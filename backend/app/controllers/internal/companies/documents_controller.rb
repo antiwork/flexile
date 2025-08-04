@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Internal::Companies::DocumentsController < Internal::Companies::BaseController
-  before_action :set_document, only: [:show, :destroy, :sign, :share]
+  before_action :set_document, only: [:destroy, :sign, :share]
 
   def index
     authorize Document
@@ -12,14 +12,8 @@ class Internal::Companies::DocumentsController < Internal::Companies::BaseContro
       .includes(signatures: :user, attachments_attachments: :blob)
       .where(deleted_at: nil)
 
-    unless Current.user.administrator? || Current.user.lawyer?
-      documents = documents.for_signatory(Current.user.id)
-    end
-
-    if filters[:signable] == "true"
-      documents = documents.unsigned_by(Current.user.id)
-    end
-
+    documents = documents.for_signatory(Current.user.id) unless Current.user.administrator? || Current.user.lawyer?
+    documents = documents.unsigned_by(Current.user.id) if filters[:signable] == "true"
     documents = documents.distinct
     render json: documents.map { |doc| DocumentPresenter.new(doc).props }
   end

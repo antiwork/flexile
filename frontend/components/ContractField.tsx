@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { CloudUpload, PencilIcon } from "lucide-react";
+import { CloudUpload, PencilIcon, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Label } from "react-aria-components";
 import { useFormContext } from "react-hook-form";
@@ -52,7 +52,7 @@ const UploadFormFields = () => {
                   </div>
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="small"
                     aria-label="Remove file"
                     onClick={() => {
                       form.setValue("attachment", undefined);
@@ -60,15 +60,7 @@ const UploadFormFields = () => {
                     }}
                   >
                     <span className="sr-only">Remove</span>
-                    <svg
-                      className="h-4 w-4 text-gray-500"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <Trash2 className="text-grey-600 size-4 hover:text-red-600" />
                   </Button>
                 </div>
               ) : (
@@ -204,7 +196,7 @@ const CreateFormFields = () => {
                           key={option.id}
                           value={option.id}
                           onSelect={() => {
-                            field.onChange(option.id);
+                            field.onChange(option.name);
                             setDocumentPopoverOpen(false);
                             const selectedDoc = filteredDocuments.find((doc) => doc.id === option.id);
                             if (selectedDoc) {

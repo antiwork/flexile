@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -9,9 +9,10 @@ import ContractField, { schema as contractSchema } from "@/components/ContractFi
 import { MutationStatusButton } from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
+import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany, useUserStore } from "@/global";
-import { PayRateType, trpc } from "@/trpc/client";
+import { PayRateType } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_worker_path } from "@/utils/routes";
 
@@ -44,7 +45,7 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
     },
   });
 
-  const trpcUtils = trpc.useUtils();
+  const queryClient = useQueryClient();
 
   const updateContractor = useMutation({
     mutationFn: async (data: z.infer<typeof schema>) => {
@@ -93,7 +94,7 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
       return response;
     },
     onSuccess: async () => {
-      await trpcUtils.documents.list.invalidate();
+      await queryClient.invalidateQueries({ queryKey: ["documents"] });
       onNext();
     },
   });
@@ -113,6 +114,18 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
         <Form {...form}>
           <form onSubmit={(e) => void submit(e)} className="space-y-4">
             <FormFields />
+
+            <FormField
+              control={form.control}
+              name="skipContract"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Switch checked={!!field.value} onCheckedChange={field.onChange} label="Skip contract for now." />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
             {form.watch("skipContract") ? null : <ContractField />}
             <div className="flex flex-col items-end space-y-2">
               <MutationStatusButton mutation={updateContractor} type="submit">

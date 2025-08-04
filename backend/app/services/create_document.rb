@@ -22,7 +22,7 @@ class CreateDocument
     document = user.documents.build(attributes)
 
     signed_at = ActiveModel::Type::Boolean.new.cast(params[:signed]) ? Time.current : nil
-    document.signatures.build(user: user, title: "Company Representative", signed_at: Time.current)
+    document.signatures.build(user: user, title: "Company Representative", signed_at: signed_at)
     if params[:recipient].present?
       signer = company.company_workers.find_by(external_id: params[:recipient])&.user
       document.signatures.build(user: signer, title: "Signer", signed_at: signed_at) if signer

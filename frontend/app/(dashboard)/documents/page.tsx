@@ -226,16 +226,16 @@ export default function DocumentsPage() {
                   </Button>
                 ) : null}
 
-                {isCompanyRepresentative && !getCompletedAt(document) && !isSignable(document) ? (
+                {!getCompletedAt(document) && isCompanyRepresentative ? (
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" aria-label="More actions">
+                      <Button variant="ghost" size="small">
                         <EllipsisVertical className="size-4" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
                       align="end"
-                      className="border-muted w-44 rounded-md border bg-white p-0 text-sm shadow-lg"
+                      className="border-muted w-44 rounded-md border bg-white p-0 text-sm shadow-sm"
                     >
                       <Button
                         variant="ghost"
@@ -267,13 +267,6 @@ export default function DocumentsPage() {
                       </Button>
                     </PopoverContent>
                   </Popover>
-                ) : document.attachment ? (
-                  <Button variant="outline" size="small" asChild>
-                    <Link href={`/download/${document.attachment.key}/${document.attachment.filename}`} download>
-                      <Download className="size-4" />
-                      Download
-                    </Link>
-                  </Button>
                 ) : document.signatories.every((signatory) => signatory.signedAt) ? (
                   <Button
                     variant="outline"
@@ -604,10 +597,26 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
           </a>
         </div>
 
-        <div
-          className="prose border-muted min-h-0 grow overflow-y-auto rounded-md border p-4 text-black"
-          dangerouslySetInnerHTML={{ __html: document.textContent ?? "" }}
-        />
+        {document.textContent ? (
+          <div
+            className="prose border-muted min-h-0 grow overflow-y-auto rounded-md border p-4 text-black"
+            dangerouslySetInnerHTML={{ __html: document.textContent ?? "" }}
+          />
+        ) : (
+          <div className="mt-2 flex items-center justify-between rounded-lg border border-gray-200 bg-white p-2">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded bg-red-50">
+                <span className="text-xs font-medium text-red-500">
+                  {document.name.split(".").pop()?.toUpperCase() || "PDF"}
+                </span>
+              </div>
+              <div>
+                <div className="text-sm font-medium">{document.name}</div>
+                <div className="text-xs text-gray-500">{typeLabels[document.type]}</div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-col gap-2">
           <Label htmlFor={uid}>Your signature</Label>

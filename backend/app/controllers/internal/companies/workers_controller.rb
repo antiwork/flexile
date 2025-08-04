@@ -7,7 +7,6 @@ class Internal::Companies::WorkersController < Internal::Companies::BaseControll
   private_constant :RECORDS_PER_PAGE
 
   before_action :set_company_worker, only: [:update]
-  skip_before_action :force_onboarding, only: [:update]
 
   def create
     authorize CompanyWorker

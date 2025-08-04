@@ -2,10 +2,11 @@
 
 class CreateDocumentAttachmentJob
   include Sidekiq::Job
+  include ActionView::Helpers::SanitizeHelper
   sidekiq_options retry: 5
 
   def perform(document_id)
-    document = Document.find(id: document_id)
+    document = Document.find(document_id)
     html = document.text_content
     pdf = CreatePdf.new(body_html: sanitize(html)).perform
     document.attachments.attach(
