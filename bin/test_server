@@ -17,7 +17,6 @@ kill_process_listening_on_port 8298 # inngest
 export NODE_TLS_REJECT_UNAUTHORIZED=0
 export RAILS_ENV=test
 export NODE_ENV=test
-export ENABLE_DEFAULT_OTP=true
 
 cd backend
 bundle exec rails db:drop db:create db:schema:load db:seed_test_data

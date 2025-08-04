@@ -1,4 +1,5 @@
 import { expect as baseExpect, type Locator, type Page } from "@playwright/test";
+import { clearClerkUser } from "@test/helpers/auth";
 import { test as baseTest } from "next/experimental/testmode/playwright.js";
 import type { CreateEmailOptions } from "resend";
 import { parseHTML } from "zeed-dom";
@@ -27,6 +28,7 @@ export const test = baseTest.extend<{
   setup: [
     async ({}, use) => {
       await use(undefined);
+      await clearClerkUser();
     },
     { auto: true },
   ],

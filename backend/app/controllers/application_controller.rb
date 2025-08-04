@@ -1,7 +1,11 @@
 # frozen_string_literal: true
 
+require "clerk/authenticatable"
+
 class ApplicationController < ActionController::Base
+  include Clerk::Authenticatable
   include PunditAuthorization, SetCurrent
+
   before_action :set_paper_trail_whodunnit
   before_action :authenticate_user_json!, only: [:userid]
 

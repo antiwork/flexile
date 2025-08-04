@@ -1,9 +1,10 @@
+import { clerk } from "@clerk/testing/playwright";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker } from "@test/helpers";
-import { login, logout } from "@test/helpers/auth";
+import { login } from "@test/helpers/auth";
 import { expect, type Page, test, withinModal } from "@test/index";
 
 type User = Awaited<ReturnType<typeof usersFactory.create>>["user"];
@@ -103,7 +104,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByRole("button", { name: "Delete" }).click();
     await expect(page.getByRole("cell", { name: "CUSTOM-3" })).not.toBeVisible();
 
-    await logout(page);
+    await clerk.signOut({ page });
     await login(page, workerUserB);
 
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
@@ -114,7 +115,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByText("Awaiting approval")).toBeVisible();
 
-    await logout(page);
+    await clerk.signOut({ page });
     await login(page, adminUser);
 
     const firstRow = page.locator("tbody tr").first();
@@ -195,7 +196,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await expect(openInvoicesBadge).not.toBeVisible();
 
-    await logout(page);
+    await clerk.signOut({ page });
     await login(page, workerUserA);
 
     const approvedInvoiceRow = page.locator("tbody tr").filter({ hasText: "CUSTOM-1" });
@@ -216,7 +217,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).not.toBeVisible();
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Awaiting approval" })).toBeVisible();
 
-    await logout(page);
+    await clerk.signOut({ page });
     await login(page, adminUser);
 
     await expect(locateOpenInvoicesBadge(page)).toContainText("1");

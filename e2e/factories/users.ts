@@ -34,7 +34,6 @@ export const usersFactory = {
         birthDate: new Date("1980-07-15").toISOString(),
         minimumDividendPaymentInCents: 1000n,
         invitedByType: overrides.invitedById ? "User" : null,
-        otpSecretKey: "sample-otp-secret-key",
         ...overrides,
       })
       .returning();

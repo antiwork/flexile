@@ -65,7 +65,7 @@ export const quickbooksRouter = createRouter({
     };
   }),
 
-  // TODO (techdebt): move this to the page itself
+  // TODO (try to) move this to the page itself once in Clerk
   getAuthUrl: companyProcedure.query(({ ctx }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
