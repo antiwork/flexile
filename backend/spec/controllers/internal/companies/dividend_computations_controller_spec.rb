@@ -100,8 +100,8 @@ RSpec.describe Internal::Companies::DividendComputationsController, type: :contr
       end
 
       it "returns success response" do
-        post :create, params: { company_id: company.id }.merge(valid_params)
         expect(controller).to receive(:authorize).with(DividendComputation)
+        post :create, params: { company_id: company.id }.merge(valid_params)
         expect(response).to have_http_status(:success)
 
         json = JSON.parse(response.body)
@@ -171,13 +171,13 @@ RSpec.describe Internal::Companies::DividendComputationsController, type: :contr
     end
 
     it "returns a successful response" do
-      expect(controller).to receive(:authorize).with(DividendComputation)
-      get :show, params: { company_id: company.id, id: dividend_computation.id }
+      expect(controller).to receive(:authorize).with(dividend_computation)
+      get :show, params: { company_id: company.id, id: dividend_computation.external_id }
       expect(response).to have_http_status(:success)
     end
 
     it "returns computation data" do
-      get :show, params: { company_id: company.id, id: dividend_computation.id }
+      get :show, params: { company_id: company.id, id: dividend_computation.external_id }
       json = JSON.parse(response.body)
 
       expect(json["dividend_computation"]).to include(
@@ -203,7 +203,7 @@ RSpec.describe Internal::Companies::DividendComputationsController, type: :contr
       end
 
       it "denies access" do
-        get :show, params: { company_id: company.id, id: dividend_computation.id }
+        get :show, params: { company_id: company.id, id: dividend_computation.external_id }
         expect(response).to have_http_status(:forbidden)
         json = JSON.parse(response.body)
         expect(json["success"]).to be(false)

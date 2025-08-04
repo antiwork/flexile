@@ -345,6 +345,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_31_200856) do
     t.string "external_id", null: false
     t.boolean "return_of_capital", null: false
     t.string "name"
+    t.text "release_document"
     t.index ["company_id"], name: "index_dividend_computations_on_company_id"
     t.index ["external_id"], name: "index_dividend_computations_on_external_id", unique: true
   end

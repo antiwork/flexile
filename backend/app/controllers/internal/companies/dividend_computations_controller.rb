@@ -38,13 +38,9 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
         Current.company,
         amount_in_usd: create_params[:amount_in_usd],
         dividends_issuance_date: create_params[:issued_at],
-        return_of_capital: create_params[:return_of_capital]
+        return_of_capital: create_params[:return_of_capital],
+        release_document: create_params[:release_document]
       ).process
-
-      # TODO
-      if create_params[:release_document].present?
-        computation.update!(release_document: create_params[:release_document])
-      end
 
       render json: {
         success: true,
@@ -96,6 +92,7 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
         dividends_issuance_date: @computation.dividends_issuance_date,
         return_of_capital: @computation.return_of_capital,
         outputs_count: @computation.dividend_computation_outputs.count,
+        release_document: @computation.release_document,
         created_at: @computation.created_at,
         outputs: outputs,
       },
