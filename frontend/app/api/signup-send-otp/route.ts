@@ -40,7 +40,10 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/consistent-type-assertions
       const errorData = (await response.json()) as { error?: string };
-      return NextResponse.json({ error: errorData.error || "Failed to send OTP" }, { status: response.status });
+      return NextResponse.json(
+        { error: errorData.error || "Failed to send verification code" },
+        { status: response.status },
+      );
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/consistent-type-assertions
@@ -51,6 +54,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ error: "Failed to send OTP" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to send verification code" }, { status: 500 });
   }
 }

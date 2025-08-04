@@ -38,12 +38,12 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
 
       if (!response.ok) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        throw new Error(data.error || "Failed to send OTP");
+        throw new Error(data.error || "Failed to send verification code");
       }
 
       actions.setStep("otp");
     } catch (error) {
-      actions.setError(error instanceof Error ? error.message : "Failed to send OTP");
+      actions.setError(error instanceof Error ? error.message : "Failed to send verification code");
     } finally {
       actions.setLoading(false);
     }

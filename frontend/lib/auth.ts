@@ -134,7 +134,7 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET || "",
 };
 
-// Helper function to send OTP email
+// Helper function to send verification code email
 export const sendOtpEmail = async (email: string) => {
   const response = await fetch(`${API_BASE_URL}/v1/email_otp`, {
     method: "POST",
@@ -151,7 +151,7 @@ export const sendOtpEmail = async (email: string) => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/consistent-type-assertions
     const errorData = (await response.json()) as { error?: string };
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    throw new Error(errorData.error || "Failed to send OTP");
+    throw new Error(errorData.error || "Failed to send verification code");
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/consistent-type-assertions
