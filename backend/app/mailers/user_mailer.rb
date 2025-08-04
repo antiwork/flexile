@@ -10,7 +10,7 @@ class UserMailer < ApplicationMailer
     @user = User.find(user_id)
     @otp_code = @user.otp_code
 
-    mail(to: @user.email, subject: "Your one-time password for Flexile")
+    mail(to: @user.email, subject: "Your verification code for Flexile")
   end
 
   def tax_id_validation_failure(user_id)

@@ -9,13 +9,13 @@ RSpec.describe UserMailer, type: :mailer do
     let(:mail) { UserMailer.otp_code(user.id) }
 
     it "renders the headers" do
-      expect(mail.subject).to eq("Your one-time password for Flexile")
+      expect(mail.subject).to eq("Your verification code for Flexile")
       expect(mail.to).to eq([user.email])
       expect(mail.from).to eq([ApplicationMailer::SUPPORT_EMAIL])
     end
 
     it "renders the body" do
-      expect(mail.body.encoded).to include("Your one-time password is:")
+      expect(mail.body.encoded).to include("Your verification code is:")
       expect(mail.body.encoded).to include(user.otp_code)
       expect(mail.body.encoded).to include("This code will expire in 10 minutes")
       expect(mail.body.encoded).to include(ApplicationMailer::SUPPORT_EMAIL)
