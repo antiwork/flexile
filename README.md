@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/img/flexile-logo.svg" height="100" alt="Flexile logo">
+</p>
+
 # Flexile
 
 Contractor payments as easy as 1-2-3.
