@@ -51,7 +51,7 @@ RSpec.describe Internal::Companies::DividendComputationsController, type: :contr
       expect(computation_data.keys).to contain_exactly(
         "id", "name", "total_amount_in_usd", "dividends_issuance_date",
         "return_of_capital", "outputs_count", "shareholder_count",
-        "finalized", "release_document", "created_at"
+        "release_document", "created_at"
       )
 
       expect(computation_data["id"]).to eq(computation2.external_id)
@@ -74,8 +74,6 @@ RSpec.describe Internal::Companies::DividendComputationsController, type: :contr
 
       expect(computation_data["shareholder_count"]).to eq(1)
       expect(computation_data["shareholder_count"]).to be_a(Integer)
-
-      expect(computation_data["finalized"]).to eq(false)
 
       expect(computation_data["release_document"]).to be_nil
 
@@ -173,7 +171,7 @@ RSpec.describe Internal::Companies::DividendComputationsController, type: :contr
         expect(computation_data.keys).to contain_exactly(
           "id", "name", "total_amount_in_usd", "dividends_issuance_date",
           "return_of_capital", "outputs_count", "shareholder_count",
-          "finalized", "release_document", "created_at"
+          "release_document", "created_at"
         )
 
         expect(computation_data["id"]).to be_a(String)
@@ -190,8 +188,6 @@ RSpec.describe Internal::Companies::DividendComputationsController, type: :contr
 
         expect(computation_data["shareholder_count"]).to be > 0
         expect(computation_data["shareholder_count"]).to be_a(Integer)
-
-        expect(computation_data["finalized"]).to eq(false)
 
         expect(computation_data["release_document"]).to eq("Test release document content")
         expect(computation_data["release_document"]).to be_a(String)
@@ -285,7 +281,7 @@ RSpec.describe Internal::Companies::DividendComputationsController, type: :contr
       expect(computation_data.keys).to contain_exactly(
         "id", "name", "total_amount_in_usd", "dividends_issuance_date",
         "return_of_capital", "outputs_count", "shareholder_count",
-        "finalized", "release_document", "created_at", "outputs"
+        "release_document", "created_at", "outputs"
       )
 
       expect(computation_data["id"]).to eq(dividend_computation.external_id)

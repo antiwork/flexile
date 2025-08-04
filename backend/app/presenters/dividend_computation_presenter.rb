@@ -16,7 +16,6 @@ class DividendComputationPresenter
       created_at: @dividend_computation.created_at,
       outputs_count: @dividend_computation.dividend_computation_outputs.size,
       shareholder_count: shareholder_count,
-      finalized: finalized?,
       release_document: @dividend_computation.release_document,
     }
 
@@ -33,13 +32,6 @@ class DividendComputationPresenter
       company_investor_count = outputs.filter_map(&:company_investor_id).uniq.count
       investor_name_count = outputs.filter_map(&:investor_name).uniq.count
       company_investor_count + investor_name_count
-    end
-
-    def finalized?
-      @dividend_computation.company.dividend_rounds.joins(:dividends).where(
-        issued_at: @dividend_computation.dividends_issuance_date,
-        total_amount_in_cents: (@dividend_computation.total_amount_in_usd * 100).round
-      ).exists?
     end
 
     def outputs
