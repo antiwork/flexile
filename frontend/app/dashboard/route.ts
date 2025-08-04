@@ -10,7 +10,7 @@ export async function GET(req: Request) {
     headers: {
       cookie: req.headers.get("cookie") ?? "",
       "User-Agent": req.headers.get("User-Agent") ?? "",
-      referer: "x", // work around a Clerk limitation
+      referer: "x",
     },
   });
   if (!response.ok) return redirect("/login");

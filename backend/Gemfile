@@ -153,6 +153,8 @@ gem "resend", "~> 0.19.0"
 
 gem "pundit", "~> 2.4"
 
-gem "clerk-sdk-ruby", "~> 4.0", require: "clerk"
+
 
 gem "rubyzip", "~> 2.4"
+
+gem "active_model_otp", "~> 2.3"
