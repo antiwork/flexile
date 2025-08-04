@@ -152,66 +152,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </SidebarGroupContent>
             </SidebarGroup>
           ) : null}
-
-          <SidebarGroup className="mt-auto">
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {canShowTryEquity && showTryEquity ? (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <div
-                        className="group relative flex cursor-pointer items-center justify-between"
-                        onClick={() => router.push("/settings/administrator/equity")}
-                        onMouseEnter={() => setHovered(true)}
-                        onMouseLeave={() => setHovered(false)}
-                        role="button"
-                        tabIndex={0}
-                      >
-                        <span className="flex items-center gap-2">
-                          <Sparkles className="size-4" />
-                          <span>Try equity</span>
-                        </span>
-                        {hovered ? (
-                          <button
-                            type="button"
-                            aria-label="Dismiss try equity"
-                            className="hover:bg-muted absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 transition-colors"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowTryEquity(false);
-                            }}
-                            tabIndex={0}
-                          >
-                            <X className="text-muted-foreground hover:text-foreground size-4 transition-colors" />
-                          </button>
-                        ) : null}
-                      </div>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ) : null}
-                <NavItem
-                  href="/support"
-                  active={pathname.startsWith("/support")}
-                  icon={MessageCircleQuestion}
-                  badge={
-                    helperSession ? (
-                      <HelperClientProvider host="https://help.flexile.com" session={helperSession}>
-                        <SupportUnreadCount />
-                      </HelperClientProvider>
-                    ) : null
-                  }
-                >
-                  Support center
-                </NavItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton onClick={() => void handleLogout()} className="cursor-pointer">
-                    <LogOut className="size-6" />
-                    <span>Log out</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
         </SidebarContent>
 
         {company.checklistItems.length > 0 ? (
@@ -260,6 +200,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ) : null}
+              <NavItem
+                href="/support"
+                active={pathname.startsWith("/support")}
+                icon={MessageCircleQuestion}
+                badge={
+                  helperSession ? (
+                    <HelperClientProvider host="https://help.flexile.com" session={helperSession}>
+                      <SupportUnreadCount />
+                    </HelperClientProvider>
+                  ) : null
+                }
+              >
+                Support center
+              </NavItem>
               <SidebarMenuItem>
                 <SidebarMenuButton onClick={() => void handleLogout()} className="cursor-pointer">
                   <LogOut className="size-6" />
