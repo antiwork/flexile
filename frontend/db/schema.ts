@@ -424,6 +424,7 @@ export const dividendComputations = pgTable(
     externalId: varchar("external_id").$default(nanoid).notNull(),
     returnOfCapital: boolean("return_of_capital").notNull(),
     releaseDocument: text("release_document"),
+    name: varchar("name"),
   },
   (table) => [
     index("index_dividend_computations_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
