@@ -6,9 +6,6 @@ import { documentTemplates } from "@/db/schema";
 setup.describe.configure({ mode: "serial" });
 
 setup("global setup", async () => {
-  // Set environment variable for backend to recognize Playwright tests
-  process.env.ENABLE_DEFAULT_OTP = "true";
-
   const result = await db.execute<{ tablename: string }>(
     sql`SELECT tablename FROM pg_tables WHERE schemaname='public'`,
   );
