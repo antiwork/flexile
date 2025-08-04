@@ -29,7 +29,6 @@ import { trpc } from "@/trpc/client";
 import { download } from "@/utils";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatNumber } from "@/utils/numbers";
-import FinalizeBuybackModal from "../FinalizeBuybackModal";
 import CancelBidModal from "./CancelBidModal";
 import PlaceBidModal from "./PlaceBidModal";
 
@@ -40,7 +39,7 @@ type BuybackActionsProps = {
   data: TenderOffer;
   user: ReturnType<typeof useCurrentUser>;
   bids: Bid[];
-  onSetActiveModal: (modal: "place" | "finalize" | "cancel" | null) => void;
+  onSetActiveModal: (modal: "place" | "cancel" | null) => void;
   table?: Table<Bid>;
 };
 
@@ -85,11 +84,6 @@ const BuybackActions = ({ data, user, bids, onSetActiveModal, table }: BuybackAc
           Download CSV
         </Button>
       ) : null}
-      {user.roles.administrator && getBuybackStatus(data) === "Reviewing" ? (
-        <Button size="small" onClick={() => onSetActiveModal("finalize")}>
-          Finalize buyback
-        </Button>
-      ) : null}
       {getBuybackStatus(data) === "Open" ? (
         <Button size="small" onClick={() => onSetActiveModal("place")}>
           Place bid
@@ -103,7 +97,7 @@ export default function BuybackView() {
   const { id } = useParams<{ id: string }>();
   const company = useCurrentCompany();
   const user = useCurrentUser();
-  const [data, { refetch: refetchTenderOffer }] = trpc.tenderOffers.get.useSuspenseQuery({ companyId: company.id, id });
+  const [data] = trpc.tenderOffers.get.useSuspenseQuery({ companyId: company.id, id });
   const investorId = user.roles.investor?.id;
   const {
     data: bids = [],
@@ -118,7 +112,7 @@ export default function BuybackView() {
   const columnHelper = createColumnHelper<Bid>();
 
   const [selectedBid, setSelectedBid] = useState<Bid | null>(null);
-  const [activeModal, setActiveModal] = useState<"place" | "finalize" | "cancel" | null>(null);
+  const [activeModal, setActiveModal] = useState<"place" | "cancel" | null>(null);
 
   const handleBidAction = (bid: Bid | null, action?: "cancel") => {
     setSelectedBid(bid);
@@ -352,17 +346,6 @@ export default function BuybackView() {
             void refetchBids();
           }}
           data={data}
-        />
-      ) : null}
-      {activeModal === "finalize" ? (
-        <FinalizeBuybackModal
-          onClose={() => {
-            setActiveModal(null);
-            void refetchTenderOffer();
-            void refetchBids();
-          }}
-          data={data}
-          bids={bids}
         />
       ) : null}
     </>
