@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="docs/img/flexile-logo.svg" height="100" alt="Flexile logo">
+  <img src="docs/img/flexile-logo.svg" width="400" alt="Flexile logo">
 </p>
 
-# Flexile
-
-Contractor payments as easy as 1-2-3.
+<p align="center">
+  <strong>Contractor payments as easy as 1-2-3.</strong>
+</p>
 
 ## Setup
 
