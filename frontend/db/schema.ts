@@ -878,29 +878,6 @@ export const payments = pgTable(
   ],
 );
 
-export const pgSearchDocuments = pgTable(
-  "pg_search_documents",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    content: text(),
-    companyId: bigint("company_id", { mode: "bigint" }),
-    searchableType: varchar("searchable_type"),
-    searchableId: bigint("searchable_id", { mode: "bigint" }),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-  },
-  (table) => [
-    index("index_pg_search_documents_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
-    index("index_pg_search_documents_on_searchable").using(
-      "btree",
-      table.searchableType.asc().nullsLast().op("int8_ops"),
-      table.searchableId.asc().nullsLast().op("int8_ops"),
-    ),
-  ],
-);
-
 export const shareClasses = pgTable(
   "share_classes",
   {

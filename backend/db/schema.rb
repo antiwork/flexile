@@ -788,16 +788,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_04_165400) do
     t.index ["wise_recipient_id"], name: "index_payments_on_wise_recipient_id"
   end
 
-  create_table "pg_search_documents", force: :cascade do |t|
-    t.text "content"
-    t.bigint "company_id"
-    t.string "searchable_type"
-    t.bigint "searchable_id"
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.index ["company_id"], name: "index_pg_search_documents_on_company_id"
-    t.index ["searchable_type", "searchable_id"], name: "index_pg_search_documents_on_searchable"
-  end
 
   create_table "share_classes", force: :cascade do |t|
     t.bigint "company_id", null: false

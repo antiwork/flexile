@@ -59,7 +59,6 @@ class AddDefaultToCreatedAtColumns < ActiveRecord::Migration[7.2]
     change_column_default :invoices, :created_at, from: nil, to: -> { "CURRENT_TIMESTAMP" }
     change_column_default :option_pools, :created_at, from: nil, to: -> { "CURRENT_TIMESTAMP" }
     change_column_default :payments, :created_at, from: nil, to: -> { "CURRENT_TIMESTAMP" }
-    change_column_default :pg_search_documents, :created_at, from: nil, to: -> { "CURRENT_TIMESTAMP" }
     change_column_default :share_classes, :created_at, from: nil, to: -> { "CURRENT_TIMESTAMP" }
     change_column_default :share_holdings, :created_at, from: nil, to: -> { "CURRENT_TIMESTAMP" }
     change_column_default :tasks, :created_at, from: nil, to: -> { "CURRENT_TIMESTAMP" }
