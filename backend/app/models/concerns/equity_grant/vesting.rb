@@ -6,7 +6,6 @@ module EquityGrant::Vesting
   included do
     belongs_to :vesting_schedule, optional: true
     has_many :vesting_events, dependent: :destroy
-    has_many :equity_grant_transactions
 
     enum :vesting_trigger, {
       scheduled: "scheduled",
