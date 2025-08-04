@@ -39,7 +39,9 @@ export default function Shares() {
       ) : shareHoldings.length > 0 ? (
         <DataTable table={table} />
       ) : (
-        <Placeholder icon={CheckCircleIcon}>You do not hold any shares.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CheckCircleIcon}>You do not hold any shares.</Placeholder>
+        </div>
       )}
     </>
   );

@@ -57,7 +57,9 @@ export default function CompanyUpdates() {
           <ViewList />
         )
       ) : (
-        <Placeholder icon={CircleCheck}>No updates to display.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>No updates to display.</Placeholder>
+        </div>
       )}
     </>
   );

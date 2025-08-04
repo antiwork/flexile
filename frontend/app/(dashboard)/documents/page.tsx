@@ -149,7 +149,7 @@ const EditTemplates = () => {
               </TableBody>
             </Table>
             <h3 className="text-lg font-medium">Create a new template</h3>
-            <Alert>
+            <Alert className="mx-4">
               <Info className="size-4" />
               <AlertDescription>
                 By creating a custom document template, you acknowledge that Flexile shall not be liable for any claims,
@@ -362,45 +362,49 @@ export default function DocumentsPage() {
         }
       />
 
-      <div className="grid gap-4">
-        {canSign ? null : (
-          <Alert>
-            <Info className="size-4" />
-            <AlertDescription>
-              Please{" "}
-              <Link className={linkClasses} href="/settings/tax">
-                provide your legal details
-              </Link>{" "}
-              before signing documents.
-            </AlertDescription>
-          </Alert>
-        )}
-        {user.roles.administrator && new Date() <= filingDueDateFor1099DIV ? (
-          <Alert className="mb-4">
-            <AlertTitle>Upcoming filing dates for 1099-NEC, 1099-DIV, and 1042-S</AlertTitle>
-            <AlertDescription>
-              We will submit form 1099-NEC to the IRS on {formatDate(new Date(currentYear, 0, 31))}, form 1042-S on{" "}
-              {formatDate(new Date(currentYear, 2, 15))}, and form 1099-DIV on {formatDate(filingDueDateFor1099DIV)}.
-            </AlertDescription>
-          </Alert>
-        ) : null}
-        {isLoading ? (
-          <TableSkeleton columns={6} />
-        ) : documents.length > 0 ? (
-          <>
-            <DataTable
-              table={table}
-              actions={isCompanyRepresentative ? <EditTemplates /> : undefined}
-              {...(isCompanyRepresentative && { searchColumn: "Signer" })}
-            />
-            {signDocument ? (
-              <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} />
-            ) : null}
-          </>
-        ) : (
+      {!canSign || (user.roles.administrator && new Date() <= filingDueDateFor1099DIV) ? (
+        <div className="grid gap-4">
+          {!canSign && (
+            <Alert className="mx-4">
+              <Info className="size-4" />
+              <AlertDescription>
+                Please{" "}
+                <Link className={linkClasses} href="/settings/tax">
+                  provide your legal details
+                </Link>{" "}
+                before signing documents.
+              </AlertDescription>
+            </Alert>
+          )}
+          {user.roles.administrator && new Date() <= filingDueDateFor1099DIV ? (
+            <Alert className="mx-4">
+              <AlertTitle>Upcoming filing dates for 1099-NEC, 1099-DIV, and 1042-S</AlertTitle>
+              <AlertDescription>
+                We will submit form 1099-NEC to the IRS on {formatDate(new Date(currentYear, 0, 31))}, form 1042-S on{" "}
+                {formatDate(new Date(currentYear, 2, 15))}, and form 1099-DIV on {formatDate(filingDueDateFor1099DIV)}.
+              </AlertDescription>
+            </Alert>
+          ) : null}
+        </div>
+      ) : null}
+
+      {isLoading ? (
+        <TableSkeleton columns={6} />
+      ) : documents.length > 0 ? (
+        <>
+          <DataTable
+            table={table}
+            actions={isCompanyRepresentative ? <EditTemplates /> : undefined}
+            {...(isCompanyRepresentative && { searchColumn: "Signer" })}
+          />
+          {signDocument ? <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} /> : null}
+        </>
+      ) : (
+        <div className="mx-4">
           <Placeholder icon={CircleCheck}>No documents yet.</Placeholder>
-        )}
-      </div>
+        </div>
+      )}
+
       <Dialog open={showInviteModal} onOpenChange={setShowInviteModal}>
         <DialogContent>
           <DialogHeader>

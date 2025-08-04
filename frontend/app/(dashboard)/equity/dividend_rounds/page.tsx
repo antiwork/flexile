@@ -43,7 +43,9 @@ export default function DividendRounds() {
       ) : dividendRounds.length > 0 ? (
         <DataTable table={table} onRowClicked={(row) => router.push(`/equity/dividend_rounds/${row.id}`)} />
       ) : (
-        <Placeholder icon={CircleCheck}>You have not issued any dividends yet.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>You have not issued any dividends yet.</Placeholder>
+        </div>
       )}
     </>
   );

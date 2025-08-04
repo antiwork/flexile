@@ -40,7 +40,9 @@ export default function Convertibles() {
       ) : data.convertibleSecurities.length > 0 ? (
         <DataTable table={table} />
       ) : (
-        <Placeholder icon={CircleCheck}>You do not hold any convertible securities.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>You do not hold any convertible securities.</Placeholder>
+        </div>
       )}
     </>
   );

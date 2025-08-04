@@ -48,7 +48,7 @@ export function StatusDetails({ invoice }: { invoice: Invoice }) {
   })();
 
   return details ? (
-    <Alert variant={invoice.status === "rejected" ? "destructive" : undefined}>
+    <Alert className="mx-4" variant={invoice.status === "rejected" ? "destructive" : undefined}>
       <AlertDescription>{details}</AlertDescription>
     </Alert>
   ) : null;
