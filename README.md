@@ -8,13 +8,20 @@ You'll need:
 
 - [Docker](https://docs.docker.com/engine/install/)
 - [Node.js](https://nodejs.org/en/download) (see [`.node-version`](.node-version))
+- [Ruby](https://www.ruby-lang.org/en/documentation/installation/)
 
-The easiest way to set up the development environment is to use the [`bin/setup` script](bin/setup), but feel free to run the commands in it yourself to:
+The easiest way to set up the development environment is to use the [`bin/setup` script](bin/setup), but feel free to run the commands in it yourself:
+
+### Backend
 
 - Set up Ruby (ideally using `rbenv`/`rvm`) and PostgreSQL
-- Install dependencies using `pnpm i` and `cd backend && bundle i`
-- Set up your environment by either using `vercel env pull .env` or `cp .env.example .env` and filling in the missing values with your own keys
-- Run `cd backend && gem install foreman`
+- Navigate to backend code and install dependencies: `cd backend && bundle i && gem install foreman`
+
+### Frontend
+
+- Navigate to frontend app and install dependencies `cd frontend && pnpm i`
+
+Finally, set up your environment: `cp .env.example .env`. If you're an Antiwork team member, you can use `vercel env pull .env`.
 
 ## Running the App
 
