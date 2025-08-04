@@ -10,12 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_04_165400) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_04_180733) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   # Custom types defined in this database.
   # Note that some types may not work with other database engines. Be careful if changing database.
+  create_enum "board_consent_status", ["pending", "lawyer_approved", "board_approved"]
   create_enum "equity_grants_issue_date_relationship", ["employee", "consultant", "investor", "founder", "officer", "executive", "board_member"]
   create_enum "equity_grants_option_grant_type", ["iso", "nso"]
   create_enum "equity_grants_vesting_trigger", ["scheduled", "invoice_paid"]
@@ -72,6 +73,22 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_04_165400) do
     t.index ["company_id"], name: "index_balances_on_company_id"
   end
 
+  create_table "board_consents", force: :cascade do |t|
+    t.bigint "equity_allocation_id", null: false
+    t.bigint "company_investor_id", null: false
+    t.bigint "company_id", null: false
+    t.bigint "document_id", null: false
+    t.enum "status", null: false, enum_type: "board_consent_status"
+    t.datetime "lawyer_approved_at"
+    t.datetime "board_approved_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_board_consents_on_company_id"
+    t.index ["company_investor_id"], name: "index_board_consents_on_company_investor_id"
+    t.index ["document_id"], name: "index_board_consents_on_document_id"
+    t.index ["equity_allocation_id"], name: "index_board_consents_on_equity_allocation_id"
+  end
+
   create_table "companies", force: :cascade do |t|
     t.string "name"
     t.string "email", null: false
@@ -105,8 +122,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_04_165400) do
     t.string "default_currency", default: "usd", null: false
     t.boolean "lawyers_enabled", default: false, null: false
     t.decimal "conversion_share_price_usd"
-    t.jsonb "json_data", default: {"flags" => []}, null: false
     t.boolean "equity_enabled", default: false, null: false
+    t.jsonb "json_data", default: {"flags" => []}, null: false
     t.index ["external_id"], name: "index_companies_on_external_id", unique: true
   end
 
@@ -115,6 +132,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_04_165400) do
     t.bigint "company_id", null: false
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
+    t.boolean "board_member", default: false, null: false
     t.string "external_id", null: false
     t.index ["company_id"], name: "index_company_administrators_on_company_id"
     t.index ["external_id"], name: "index_company_administrators_on_external_id", unique: true
@@ -787,7 +805,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_04_165400) do
     t.index ["wise_credential_id"], name: "index_payments_on_wise_credential_id"
     t.index ["wise_recipient_id"], name: "index_payments_on_wise_recipient_id"
   end
-
 
   create_table "share_classes", force: :cascade do |t|
     t.bigint "company_id", null: false
