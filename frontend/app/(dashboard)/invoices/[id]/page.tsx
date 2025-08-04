@@ -249,7 +249,7 @@ export default function InvoicePage() {
       <section>
         <form>
           <div className="grid gap-4">
-            <div className="grid auto-cols-fr gap-3 md:grid-flow-col print:grid-flow-col">
+            <div className="mx-4 grid auto-cols-fr gap-3 md:grid-flow-col print:grid-flow-col">
               <div>
                 From
                 <br />
