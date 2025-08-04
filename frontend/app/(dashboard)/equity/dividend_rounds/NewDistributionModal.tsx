@@ -1,8 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
+import { useMutation } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import DatePicker from "@/components/DatePicker";
+import NumberInput from "@/components/NumberInput";
+import RadioButtons from "@/components/RadioButtons";
+import { BasicRichTextEditor } from "@/components/RichText";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,10 +20,10 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import DatePicker from "@/components/DatePicker";
-import NumberInput from "@/components/NumberInput";
-import RadioButtons from "@/components/RadioButtons";
-import { BasicRichTextEditor } from "@/components/RichText";
+import { useCurrentCompany } from "@/global";
+import { trpc } from "@/trpc/client";
+import { request } from "@/utils/request";
+import { company_dividend_computations_path } from "@/utils/routes";
 
 interface NewDistributionModalProps {
   open: boolean;
@@ -26,12 +31,11 @@ interface NewDistributionModalProps {
 }
 
 const schema = z.object({
-  returnOfCapital: z.boolean(),
+  return_of_capital: z.boolean(),
   name: z.string().min(1, "Distribution name is required"),
-  dividendsIssuanceDate: z.instanceof(CalendarDate, { message: "This field is required." }),
-  totalAmountInDollars: z.number().min(0.01, "Amount must be greater than 0"),
-  requireSignedAgreement: z.boolean(),
-  releaseDocument: z.string().optional(),
+  dividends_issuance_date: z.instanceof(CalendarDate, { message: "This field is required." }),
+  amount_in_usd: z.number().min(0.01, "Amount must be greater than 0"),
+  release_document: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -43,19 +47,35 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      returnOfCapital: false,
+      return_of_capital: false,
       name: "",
-      dividendsIssuanceDate: today(getLocalTimeZone()),
-      totalAmountInDollars: 0,
-      requireSignedAgreement: false,
-      releaseDocument: "",
+      dividends_issuance_date: today(getLocalTimeZone()),
+      amount_in_usd: 0,
+      release_document: "",
     },
   });
 
-  const handleSubmit = (data: FormValues) => {
-    // TODO(naz): Implement distribution creation
-    handleClose();
-  };
+  const company = useCurrentCompany();
+  const utils = trpc.useUtils();
+  const handleSubmit = useMutation({
+    mutationFn: async (data: FormValues) => {
+      await request({
+        method: "POST",
+        accept: "json",
+        url: company_dividend_computations_path(company.id),
+        jsonData: {
+          dividend_computation: {
+            ...data,
+            dividends_issuance_date: data.dividends_issuance_date.toString(),
+          },
+        },
+      });
+    },
+    onSuccess: () => {
+      utils.dividendComputations.list.invalidate({ companyId: company.id });
+      handleClose();
+    },
+  });
 
   const goToNextStep = () => {
     setCurrentStep(Math.min(sections.length - 1, currentStep + 1));
@@ -76,12 +96,12 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
     if (requireReleaseDocument) {
       goToNextStep();
     } else {
-      form.handleSubmit(handleSubmit)();
+      form.handleSubmit((data) => handleSubmit.mutate(data))();
     }
   };
 
   const handleReleaseDocumentSectionNext = () => {
-    form.handleSubmit(handleSubmit)();
+    form.handleSubmit((data) => handleSubmit.mutate(data))();
   };
 
   const sections = [
@@ -98,7 +118,7 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
         <form className="space-y-4">
           <FormField
             control={form.control}
-            name="returnOfCapital"
+            name="return_of_capital"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Type of distribution</FormLabel>
@@ -133,7 +153,7 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
 
           <FormField
             control={form.control}
-            name="dividendsIssuanceDate"
+            name="dividends_issuance_date"
             render={({ field }) => (
               <FormItem>
                 <FormControl>
@@ -147,7 +167,7 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
 
           <FormField
             control={form.control}
-            name="totalAmountInDollars"
+            name="amount_in_usd"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Total distribution amount</FormLabel>
@@ -194,7 +214,7 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
             <form className="space-y-4">
               <FormField
                 control={form.control}
-                name="releaseDocument"
+                name="release_document"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Agreement template</FormLabel>
@@ -221,7 +241,7 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
           <Button variant="outline" onClick={goToPreviousStep}>
             Back
           </Button>
-          <Button onClick={handleReleaseDocumentSectionNext} disabled={!form.watch("releaseDocument")?.trim()}>
+          <Button onClick={handleReleaseDocumentSectionNext} disabled={!form.watch("release_document")?.trim()}>
             Create distribution
           </Button>
         </DialogFooter>
