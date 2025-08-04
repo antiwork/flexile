@@ -9,7 +9,7 @@ const verifySignupSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/consistent-type-assertions
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     const body = (await request.json()) as unknown;
     const validation = verifySignupSchema.safeParse(body);
 
@@ -31,12 +31,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (!response.ok) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/consistent-type-assertions
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       const errorData = (await response.json()) as { error?: string };
       return NextResponse.json({ error: errorData.error || "Signup verification failed" }, { status: response.status });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/consistent-type-assertions
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     const data = (await response.json()) as unknown;
     return NextResponse.json(data, { status: response.status });
   } catch (error) {

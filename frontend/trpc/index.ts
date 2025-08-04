@@ -46,14 +46,22 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
 
   // Get userId from NextAuth JWT session
   const session = await getServerSession(authOptions);
-  if (session?.user && "jwt" in session.user) {
+  if (session?.user.jwt) {
     // Extract user ID from JWT token
     try {
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
-      const jwt = (session.user as any).jwt;
-      const base64Payload = jwt.split(".")[1];
-      const payload = JSON.parse(Buffer.from(base64Payload, "base64").toString());
-      userId = payload.user_id;
+      const jwt = session.user.jwt;
+      if (typeof jwt === "string") {
+        const parts = jwt.split(".");
+        if (parts.length === 3) {
+          const base64Payload = parts[1];
+          if (base64Payload) {
+            const payload: unknown = JSON.parse(Buffer.from(base64Payload, "base64").toString());
+            if (payload && typeof payload === "object" && "user_id" in payload) {
+              userId = typeof payload.user_id === "number" ? payload.user_id : null;
+            }
+          }
+        }
+      }
     } catch {}
   }
 

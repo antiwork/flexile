@@ -18,7 +18,7 @@ export const UserDataProvider = ({ children }: { children: React.ReactNode }) =>
   const { login, logout } = useUserStore();
 
   const isSignedIn = !!session?.user;
-  const userId = session?.user?.email;
+  const userId = session?.user.email;
 
   const { data, isLoading } = useQuery({
     queryKey: ["currentUser", userId],
@@ -28,8 +28,7 @@ export const UserDataProvider = ({ children }: { children: React.ReactNode }) =>
           url: "/api/user-data",
           method: "POST",
           accept: "json",
-          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
-          jsonData: { jwt: (session.user as any).jwt },
+          jsonData: { jwt: session.user.jwt },
           assertOk: true,
         });
         return await response.json();

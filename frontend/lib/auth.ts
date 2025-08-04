@@ -57,13 +57,15 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (!response.ok) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            const errorData = await response.json();
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-            throw new Error(errorData.error || "Authentication failed, please try again.");
+            const errorData: unknown = await response.json();
+            const errorMessage =
+              errorData && typeof errorData === "object" && "error" in errorData && typeof errorData.error === "string"
+                ? errorData.error
+                : "Authentication failed, please try again.";
+            throw new Error(errorMessage);
           }
 
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/consistent-type-assertions
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
           const data = (await response.json()) as {
             user: {
               id: number;
@@ -75,7 +77,7 @@ export const authOptions: NextAuthOptions = {
             jwt: string;
           };
 
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/consistent-type-assertions
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
           return {
             id: data.user.id.toString(),
             email: data.user.email,
@@ -102,27 +104,30 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     jwt({ token, user }) {
-      if (user) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
+      // User is only available during sign-in, not during token refresh
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      if (user && "jwt" in user) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
         const customUser = user as any;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
         token.jwt = customUser.jwt;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
         token.legalName = customUser.legalName;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
         token.preferredName = customUser.preferredName;
       }
       return token;
     },
     session({ session, token }) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (session.user) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
         (session.user as any).id = token.sub || "";
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
         (session.user as any).jwt = token.jwt || "";
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
         (session.user as any).legalName = token.legalName;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
         (session.user as any).preferredName = token.preferredName;
       }
       return session;
@@ -148,12 +153,12 @@ export const sendOtpEmail = async (email: string) => {
   });
 
   if (!response.ok) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/consistent-type-assertions
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     const errorData = (await response.json()) as { error?: string };
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
     throw new Error(errorData.error || "Failed to send verification code");
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/consistent-type-assertions
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   return (await response.json()) as unknown;
 };

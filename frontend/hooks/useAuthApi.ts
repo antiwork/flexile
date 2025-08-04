@@ -33,12 +33,14 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
         body: JSON.stringify(requestBody),
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const data = await response.json();
+      const data: unknown = await response.json();
 
       if (!response.ok) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        throw new Error(data.error || "Failed to send verification code");
+        const errorMessage =
+          data && typeof data === "object" && "error" in data && typeof data.error === "string"
+            ? data.error
+            : "Failed to send verification code";
+        throw new Error(errorMessage);
       }
 
       actions.setStep("otp");
@@ -68,12 +70,14 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
           }),
         });
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const data = await response.json();
+        const data: unknown = await response.json();
 
         if (!response.ok) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          throw new Error(data.error || "Signup failed");
+          const errorMessage =
+            data && typeof data === "object" && "error" in data && typeof data.error === "string"
+              ? data.error
+              : "Signup failed";
+          throw new Error(errorMessage);
         }
       }
 
@@ -105,7 +109,7 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
         if (userResponse.ok) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const userData = await userResponse.json();
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+
           login(userData);
         }
       }
