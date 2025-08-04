@@ -11,6 +11,9 @@ export default clerkMiddleware((_, req) => {
   const s3Urls = [env.S3_PRIVATE_BUCKET, env.S3_PUBLIC_BUCKET]
     .map((bucket) => `https://${bucket}.s3.${env.AWS_REGION}.amazonaws.com https://${bucket}.s3.amazonaws.com`)
     .join(" ");
+  const helperUrls = ["https://help.flexile.com", "wss://xmrztjqxvugqpgvxpmzz.supabase.co/realtime/v1/websocket"].join(
+    " ",
+  );
 
   const cspHeader = `
     default-src 'self';
@@ -18,7 +21,7 @@ export default clerkMiddleware((_, req) => {
       NODE_ENV === "production" ? "" : `'unsafe-eval'` // required by Clerk, as is style-src 'unsafe-inline' and worker-src blob:.
     };
     style-src 'self' 'unsafe-inline';
-    connect-src 'self' ${clerkFapiUrl} https://docuseal.com ${s3Urls};
+    connect-src 'self' ${clerkFapiUrl} https://docuseal.com ${helperUrls} ${s3Urls};
     img-src 'self' blob: data: https://img.clerk.com https://docuseal.com https://docuseal.s3.amazonaws.com ${s3Urls};
     worker-src 'self' blob:;
     font-src 'self';

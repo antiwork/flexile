@@ -46,6 +46,16 @@ import NumberInput from "@/components/NumberInput";
 import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -303,33 +313,6 @@ export default function InvoicesPage() {
     [selectedInvoices, isDeletable],
   );
 
-  const workerNotice = !user.roles.worker ? null : !hasLegalDetails ? (
-    <>
-      Please{" "}
-      <Link className={linkClasses} href="/settings/tax">
-        provide your legal details
-      </Link>{" "}
-      before creating new invoices.
-    </>
-  ) : unsignedContractId ? (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-      <div>You have an unsigned contract. Please sign it before creating new invoices.</div>
-      <Button asChild variant="outline" size="small">
-        <Link href={`/documents?${new URLSearchParams({ sign: unsignedContractId.toString(), next: "/invoices" })}`}>
-          Review & sign
-        </Link>
-      </Button>
-    </div>
-  ) : !user.hasPayoutMethodForInvoices ? (
-    <>
-      Please{" "}
-      <Link className={linkClasses} href="/settings/payouts">
-        provide a payout method
-      </Link>{" "}
-      for your invoices.
-    </>
-  ) : null;
-
   return (
     <>
       <DashboardHeader
@@ -346,120 +329,158 @@ export default function InvoicesPage() {
         }
       />
 
-      <div className="grid gap-4">
-        {workerNotice ? (
-          <Alert>
-            <Info className="size-5" />
-            <AlertDescription>{workerNotice}</AlertDescription>
+      {user.roles.worker ? (
+        !hasLegalDetails ? (
+          <Alert className="mx-4">
+            <Info className="size-4" />
+            <AlertDescription>
+              Please{" "}
+              <Link className={linkClasses} href="/settings/tax">
+                provide your legal details
+              </Link>{" "}
+              before creating new invoices.
+            </AlertDescription>
           </Alert>
-        ) : null}
+        ) : unsignedContractId ? (
+          <Alert className="mx-4">
+            <Info className="size-4" />
+            <AlertTitle>You have an unsigned contract.</AlertTitle>
+            <AlertDescription>
+              Please{" "}
+              <Link
+                className={linkClasses}
+                href={`/documents?${new URLSearchParams({ sign: unsignedContractId.toString(), next: "/invoices" })}`}
+              >
+                sign it
+              </Link>{" "}
+              before creating new invoices.
+            </AlertDescription>
+          </Alert>
+        ) : !user.hasPayoutMethodForInvoices ? (
+          <Alert className="mx-4">
+            <Info className="size-4" />
+            <AlertDescription>
+              Please{" "}
+              <Link className={linkClasses} href="/settings/payouts">
+                provide a payout method
+              </Link>{" "}
+              for your invoices.
+            </AlertDescription>
+          </Alert>
+        ) : null
+      ) : null}
 
-        <QuickInvoicesSection />
-        {isLoading ? (
-          <TableSkeleton columns={6} />
-        ) : data.length > 0 ? (
-          <>
-            {user.roles.administrator ? (
-              <>
-                <StripeMicrodepositVerification />
-                {!company.completedPaymentMethodSetup && (
-                  <Alert variant="destructive">
-                    <AlertTriangle className="size-5" />
-                    <AlertTitle>Bank account setup incomplete.</AlertTitle>
-                    <AlertDescription>
-                      We're waiting for your bank details to be confirmed. Once done, you'll be able to start approving
-                      invoices and paying contractors.
-                    </AlertDescription>
-                  </Alert>
-                )}
+      {user.roles.administrator && data.length > 0 && !isLoading ? (
+        <>
+          <StripeMicrodepositVerification />
 
-                {company.completedPaymentMethodSetup && !company.isTrusted ? (
-                  <Alert variant="destructive">
-                    <AlertTriangle className="size-5" />
-                    <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
-                    <AlertDescription>
-                      Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete
-                      additional verification steps.
-                    </AlertDescription>
-                  </Alert>
-                ) : null}
-
-                {!data.every(taxRequirementsMet) && (
-                  <Alert variant="destructive">
-                    <AlertTriangle className="size-5" />
-                    <AlertTitle>Missing tax information.</AlertTitle>
-                    <AlertDescription>
-                      Some invoices are not payable until contractors provide tax information.
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </>
-            ) : null}
-
-            <div className="flex justify-between md:hidden">
-              <h2 className="text-xl font-bold">
-                {data.length} {pluralize("invoice", data.length)}
-              </h2>
-              <Checkbox
-                checked={table.getIsAllRowsSelected()}
-                label="Select all"
-                onCheckedChange={(checked) => table.toggleAllRowsSelected(checked === true)}
-              />
-            </div>
-
-            <DataTable
-              table={table}
-              onRowClicked={user.roles.administrator ? setDetailInvoice : undefined}
-              searchColumn={user.roles.administrator ? "billFrom" : undefined}
-              actions={
-                user.roles.administrator ? (
-                  <Button variant="outline" size="small" asChild>
-                    <a href={export_company_invoices_path(company.id)}>
-                      <Download className="size-4" />
-                      Download CSV
-                    </a>
-                  </Button>
-                ) : null
-              }
-              selectionActions={(selectedRows) => (
-                <SelectionActions
-                  selectedItems={selectedRows}
-                  config={actionConfig}
-                  actionContext={actionContext}
-                  onAction={handleInvoiceAction}
-                />
-              )}
-              contextMenuContent={({ row, selectedRows, onClearSelection }) => (
-                <ContextMenuActions
-                  item={row}
-                  selectedItems={selectedRows}
-                  config={actionConfig}
-                  actionContext={actionContext}
-                  onAction={handleInvoiceAction}
-                  onClearSelection={onClearSelection}
-                />
-              )}
-            />
-          </>
-        ) : (
-          <Placeholder icon={CircleCheck}>No invoices to display.</Placeholder>
-        )}
-      </div>
-
-      <Dialog open={openModal === "approve"} onOpenChange={() => setOpenModal(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Approve these invoices?</DialogTitle>
-          </DialogHeader>
-          {selectedPayableInvoices.length > 0 && (
-            <div>
-              You are paying{" "}
-              {formatMoneyFromCents(
-                selectedPayableInvoices.reduce((sum, invoice) => sum + invoice.totalAmountInUsdCents, BigInt(0)),
-              )}{" "}
-              now.
-            </div>
+          {!company.completedPaymentMethodSetup && (
+            <Alert className="mx-4" variant="destructive">
+              <AlertTriangle className="size-4" />
+              <AlertTitle>Bank account setup incomplete.</AlertTitle>
+              <AlertDescription>
+                We're waiting for your bank details to be confirmed. Once done, you'll be able to start approving
+                invoices and paying contractors.
+              </AlertDescription>
+            </Alert>
           )}
+
+          {company.completedPaymentMethodSetup && !company.isTrusted ? (
+            <Alert className="mx-4" variant="destructive">
+              <AlertTriangle className="size-4" />
+              <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
+              <AlertDescription>
+                Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete additional
+                verification steps.
+              </AlertDescription>
+            </Alert>
+          ) : null}
+
+          {!data.every(taxRequirementsMet) && (
+            <Alert className="mx-4" variant="destructive">
+              <AlertTriangle className="size-4" />
+              <AlertTitle>Missing tax information.</AlertTitle>
+              <AlertDescription>
+                Some invoices are not payable until contractors provide tax information.
+              </AlertDescription>
+            </Alert>
+          )}
+        </>
+      ) : null}
+
+      <QuickInvoicesSection />
+
+      {isLoading ? (
+        <TableSkeleton columns={6} />
+      ) : data.length > 0 ? (
+        <>
+          <div className="mx-4 flex justify-between md:hidden">
+            <h2 className="text-xl font-bold">
+              {data.length} {pluralize("invoice", data.length)}
+            </h2>
+            <Checkbox
+              checked={table.getIsAllRowsSelected()}
+              label="Select all"
+              onCheckedChange={(checked) => table.toggleAllRowsSelected(checked === true)}
+            />
+          </div>
+
+          <DataTable
+            table={table}
+            onRowClicked={user.roles.administrator ? setDetailInvoice : undefined}
+            searchColumn={user.roles.administrator ? "billFrom" : undefined}
+            actions={
+              user.roles.administrator ? (
+                <Button variant="outline" size="small" asChild>
+                  <a href={export_company_invoices_path(company.id)}>
+                    <Download className="size-4" />
+                    Download CSV
+                  </a>
+                </Button>
+              ) : null
+            }
+            selectionActions={(selectedRows) => (
+              <SelectionActions
+                selectedItems={selectedRows}
+                config={actionConfig}
+                actionContext={actionContext}
+                onAction={handleInvoiceAction}
+              />
+            )}
+            contextMenuContent={({ row, selectedRows, onClearSelection }) => (
+              <ContextMenuActions
+                item={row}
+                selectedItems={selectedRows}
+                config={actionConfig}
+                actionContext={actionContext}
+                onAction={handleInvoiceAction}
+                onClearSelection={onClearSelection}
+              />
+            )}
+          />
+        </>
+      ) : (
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>No invoices to display.</Placeholder>
+        </div>
+      )}
+
+      <AlertDialog open={openModal === "approve"} onOpenChange={() => setOpenModal(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Approve these invoices?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {selectedPayableInvoices.length > 0 && (
+                <>
+                  You are paying{" "}
+                  {formatMoneyFromCents(
+                    selectedPayableInvoices.reduce((sum, invoice) => sum + invoice.totalAmountInUsdCents, BigInt(0)),
+                  )}{" "}
+                  now.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
           <Card>
             <CardContent>
               {selectedApprovableInvoices.slice(0, 5).map((invoice, index, array) => (
@@ -474,22 +495,22 @@ export default function InvoicesPage() {
             </CardContent>
           </Card>
           {selectedApprovableInvoices.length > 5 && <div>and {selectedApprovableInvoices.length - 5} more</div>}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenModal(null)}>
-              No, cancel
-            </Button>
-            <MutationButton
-              mutation={approveInvoices}
-              param={{
-                approve_ids: selectedApprovableInvoices.map((invoice) => invoice.id),
-                pay_ids: selectedPayableInvoices.map((invoice) => invoice.id),
-              }}
-            >
-              Yes, proceed
-            </MutationButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, cancel</AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <MutationButton
+                mutation={approveInvoices}
+                param={{
+                  approve_ids: selectedApprovableInvoices.map((invoice) => invoice.id),
+                  pay_ids: selectedPayableInvoices.map((invoice) => invoice.id),
+                }}
+              >
+                Yes, proceed
+              </MutationButton>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {detailInvoice ? (
         <TasksModal
@@ -547,7 +568,7 @@ const TasksModal = ({
           <StatusDetails invoice={invoice} />
           {payRateInSubunits &&
           invoiceData.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
-            <Alert variant="warning">
+            <Alert className="mx-4" variant="warning">
               <CircleAlert />
               <AlertDescription>
                 This invoice includes rates above the default of {formatMoneyFromCents(payRateInSubunits)}/
@@ -673,7 +694,7 @@ const QuickInvoicesSection = () => {
 
   return (
     <Card className={canSubmitInvoices ? "" : "opacity-50"}>
-      <CardContent className="p-8">
+      <CardContent>
         <Form {...form}>
           <form
             className="grid grid-cols-1 items-start gap-x-8 gap-y-6 lg:grid-cols-[1fr_auto_1fr]"

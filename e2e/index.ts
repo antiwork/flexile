@@ -64,3 +64,12 @@ export const withinModal = async (
   await modal.waitFor({ state: "visible" });
   await callback(modal);
 };
+
+export const withinAlertDialog = async (
+  callback: (modal: Locator) => Promise<void>,
+  { page, title }: { page: Page; title?: string },
+) => {
+  const modal = title ? page.getByRole("alertdialog", { name: title }) : page.getByRole("alertdialog");
+  await modal.waitFor({ state: "visible" });
+  await callback(modal);
+};

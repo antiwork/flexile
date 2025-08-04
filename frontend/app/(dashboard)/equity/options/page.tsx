@@ -13,13 +13,6 @@ import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -101,29 +94,19 @@ export default function OptionsPage() {
 
   return (
     <>
-      <DashboardHeader
-        title={
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>Equity</BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Options</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        }
-      />
+      <DashboardHeader title="Options" />
       {isLoading ? (
         <TableSkeleton columns={5} />
       ) : data.length === 0 ? (
-        <Placeholder icon={CircleCheck}>You don't have any option grants right now.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>You don't have any option grants right now.</Placeholder>
+        </div>
       ) : (
         <>
           {company.flags.includes("option_exercising") && (
             <>
               {totalUnexercisedVestedShares > 0 && !exerciseInProgress && (
-                <Alert className="mb-4 w-full">
+                <Alert className="mx-4 mb-4">
                   <Info />
                   <AlertDescription>
                     <div className="flex items-center justify-between">
@@ -139,7 +122,7 @@ export default function OptionsPage() {
               )}
 
               {exerciseInProgress ? (
-                <Alert className="mb-4 w-full">
+                <Alert className="mx-4 mb-4">
                   <Info />
                   <AlertDescription>
                     <div className="flex items-center justify-between">

@@ -52,7 +52,7 @@ test.describe("Contractor for multiple companies", () => {
     await page.getByRole("menuitem", { name: "Second Company" }).click();
     await page.getByRole("link", { name: "Invoices" }).click();
     await expect(page.getByText("You have an unsigned contract")).toBeVisible();
-    await page.getByRole("link", { name: "Review & sign" }).click();
+    await page.getByRole("link", { name: "sign it" }).click();
 
     await page.getByRole("button", { name: "Sign now" }).click();
     await page.getByRole("link", { name: "Type" }).click();

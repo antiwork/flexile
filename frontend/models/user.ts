@@ -35,7 +35,6 @@ const companySchema = z.object({
     z.object({
       key: z.string(),
       title: z.string(),
-      description: z.string(),
       completed: z.boolean(),
     }),
   ),
