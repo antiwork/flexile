@@ -14,13 +14,8 @@ module UserDataSerialization
       }
     end
 
-    def success_response_with_jwt(user)
+    def success_response_with_jwt(user, status = :ok)
       jwt_token = generate_jwt_token(user)
-      render json: { jwt: jwt_token, user: user_data(user) }, status: :ok
-    end
-
-    def created_response_with_jwt(user)
-      jwt_token = generate_jwt_token(user)
-      render json: { jwt: jwt_token, user: user_data(user) }, status: :created
+      render json: { jwt: jwt_token, user: user_data(user) }, status: status
     end
 end

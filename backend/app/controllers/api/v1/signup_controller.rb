@@ -61,7 +61,7 @@ class Api::V1::SignupController < Api::BaseController
     result = complete_user_signup(temp_user)
 
     if result[:success]
-      created_response_with_jwt(result[:user])
+      success_response_with_jwt(result[:user], :created)
     else
       render json: { error: result[:error_message] }, status: :unprocessable_entity
     end
