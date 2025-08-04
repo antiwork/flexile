@@ -12,7 +12,6 @@ class Payment < ApplicationRecord
 
   delegate :company, to: :invoice
 
-  after_save :update_invoice_pg_search_document
   after_update_commit :sync_with_quickbooks
 
   validates :net_amount_in_cents, numericality: { greater_than_or_equal_to: 1, only_integer: true }, presence: true
@@ -25,10 +24,6 @@ class Payment < ApplicationRecord
   end
 
   private
-    def update_invoice_pg_search_document
-      invoice.update_pg_search_document
-    end
-
     def sync_with_quickbooks
       if previous_changes.key?(:status) && previous_changes[:status].last == SUCCEEDED
         QuickbooksDataSyncJob.perform_async(invoice.company_id, self.class.name, id)

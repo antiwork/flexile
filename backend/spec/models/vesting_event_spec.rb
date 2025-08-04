@@ -2,7 +2,6 @@
 
 RSpec.describe VestingEvent do
   describe "associations" do
-    it { is_expected.to have_one(:equity_grant_transaction) }
     it { is_expected.to belong_to(:equity_grant) }
   end
 

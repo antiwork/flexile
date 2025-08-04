@@ -4,17 +4,15 @@ import { MoreHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import TableSkeleton from "@/components/TableSkeleton";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -143,38 +141,38 @@ export default function AdminsPage() {
         </div>
       </div>
 
-      <AlertDialog open={!!confirmRevokeUser} onOpenChange={() => setConfirmRevokeUser(null)}>
-        <AlertDialogContent className="sm:max-w-lg">
-          <AlertDialogHeader>
-            <AlertDialogTitle>
+      <Dialog open={!!confirmRevokeUser} onOpenChange={() => setConfirmRevokeUser(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
               Remove admin access for{" "}
               <span className="font-medium">{confirmRevokeUser?.name || confirmRevokeUser?.email}</span>?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
+            </DialogTitle>
+            <DialogDescription>
               This will revoke their admin privileges. They'll still be a member of the workspace.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <Button
-                variant="critical"
-                onClick={() => {
-                  if (confirmRevokeUser) {
-                    revokeAdminMutation.mutate({
-                      companyId: company.id,
-                      userId: confirmRevokeUser.id,
-                    });
-                    setConfirmRevokeUser(null);
-                  }
-                }}
-              >
-                Remove admin
-              </Button>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmRevokeUser(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="critical"
+              onClick={() => {
+                if (confirmRevokeUser) {
+                  revokeAdminMutation.mutate({
+                    companyId: company.id,
+                    userId: confirmRevokeUser.id,
+                  });
+                  setConfirmRevokeUser(null);
+                }
+              }}
+            >
+              Remove admin
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
