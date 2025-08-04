@@ -309,6 +309,7 @@ export default function BuybackView() {
               <AlertDialogAction asChild>
                 <MutationButton
                   mutation={destroyMutation}
+                  idleVariant="critical"
                   param={{ companyId: company.id, id: cancelingBid.id }}
                   loadingText="Canceling..."
                 >

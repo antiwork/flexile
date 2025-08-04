@@ -132,6 +132,7 @@ const AdminList = () => {
             <AlertDialogAction asChild>
               <MutationButton
                 mutation={deleteMutation}
+                idleVariant="critical"
                 param={{ companyId: company.id, id: deletingUpdate ?? "" }}
                 loadingText="Deleting..."
               >
