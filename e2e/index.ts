@@ -1,5 +1,4 @@
 import { expect as baseExpect, type Locator, type Page } from "@playwright/test";
-import { clearClerkUser } from "@test/helpers/auth";
 import { test as baseTest } from "next/experimental/testmode/playwright.js";
 import type { CreateEmailOptions } from "resend";
 import { parseHTML } from "zeed-dom";
@@ -28,7 +27,6 @@ export const test = baseTest.extend<{
   setup: [
     async ({}, use) => {
       await use(undefined);
-      await clearClerkUser();
     },
     { auto: true },
   ],
@@ -61,15 +59,6 @@ export const withinModal = async (
   { page, title }: { page: Page; title?: string },
 ) => {
   const modal = title ? page.getByRole("dialog", { name: title }) : page.getByRole("dialog");
-  await modal.waitFor({ state: "visible" });
-  await callback(modal);
-};
-
-export const withinAlertDialog = async (
-  callback: (modal: Locator) => Promise<void>,
-  { page, title }: { page: Page; title?: string },
-) => {
-  const modal = title ? page.getByRole("alertdialog", { name: title }) : page.getByRole("alertdialog");
   await modal.waitFor({ state: "visible" });
   await callback(modal);
 };

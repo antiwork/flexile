@@ -12,17 +12,8 @@ import ViewUpdateDialog from "@/app/(dashboard)/updates/company/ViewUpdateDialog
 import { DashboardHeader } from "@/components/DashboardHeader";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import { Editor as RichTextEditor } from "@/components/RichText";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useCurrentCompany } from "@/global";
@@ -196,21 +187,21 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
               ) : null}
             </div>
           </div>
-          <AlertDialog open={modalOpen} onOpenChange={setModalOpen}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Publish update?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {update?.sentAt ? (
-                    <>Your update will be visible in Flexile. No new emails will be sent.</>
-                  ) : (
-                    <>Your update will be emailed to {recipientCount.toLocaleString()} stakeholders.</>
-                  )}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>No, cancel</AlertDialogCancel>
-                <AlertDialogAction asChild>
+          <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Publish update?</DialogTitle>
+              </DialogHeader>
+              {update?.sentAt ? (
+                <p>Your update will be visible in Flexile. No new emails will be sent.</p>
+              ) : (
+                <p>Your update will be emailed to {recipientCount.toLocaleString()} stakeholders.</p>
+              )}
+              <DialogFooter>
+                <div className="grid auto-cols-fr grid-flow-col items-center gap-3">
+                  <Button variant="outline" onClick={() => setModalOpen(false)}>
+                    No, cancel
+                  </Button>
                   <MutationButton
                     mutation={saveMutation}
                     param={{ values: form.getValues(), preview: false }}
@@ -218,10 +209,10 @@ const Edit = ({ update }: { update?: CompanyUpdate }) => {
                   >
                     Yes, {update?.sentAt ? "update" : "publish"}
                   </MutationButton>
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                </div>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </form>
       </Form>
       {viewPreview && id ? (

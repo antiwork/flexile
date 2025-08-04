@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 class UserMailerPreview < ActionMailer::Preview
+  def otp_code
+    UserMailer.otp_code(User.last.id)
+  end
+
   def tax_id_validation_failure
     UserMailer.tax_id_validation_failure(User.last.id)
   end
