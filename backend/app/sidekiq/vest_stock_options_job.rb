@@ -31,7 +31,7 @@ class VestStockOptionsJob
         equity_grant:,
         invoice:,
         post_invoice_payment_vesting_event: equity_grant.vesting_events.create!(
-          vesting_date: DateTime.current,
+          vesting_date: invoice.invoice_date,
           vested_shares: invoice.equity_amount_in_options
         )
       ).process

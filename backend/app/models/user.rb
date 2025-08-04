@@ -61,7 +61,6 @@ class User < ApplicationRecord
 
   after_create :upsert_clerk_user
   after_update :upsert_clerk_user, if: -> { %w[email legal_name].any? { |prop| send(:"saved_change_to_#{prop}?") }  }
-  after_update_commit :update_associated_pg_search_documents
   after_update_commit :sync_with_quickbooks, if: :worker?
   after_update_commit :update_dividend_status,
                       if: -> { current_sign_in_at_previously_changed? && current_sign_in_at_previously_was.nil? }
@@ -219,14 +218,6 @@ class User < ApplicationRecord
   end
 
   private
-    def update_associated_pg_search_documents
-      associated_records = [invoices, company_workers, company_investors, company_administrators]
-
-      associated_records.each do |records|
-        records.each(&:update_pg_search_document)
-      end
-    end
-
     def sync_with_quickbooks
       return unless has_personal_details?
 

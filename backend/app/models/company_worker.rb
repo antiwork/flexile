@@ -3,7 +3,7 @@
 class CompanyWorker < ApplicationRecord
   self.table_name = "company_contractors"
 
-  include QuickbooksIntegratable, Serializable, Searchable, ExternalId
+  include QuickbooksIntegratable, Serializable, ExternalId
 
   belongs_to :company
   belongs_to :user

@@ -23,7 +23,6 @@ class EquityGrant::UpdateVestedShares
     return if newly_vested_events.empty?
 
     ActiveRecord::Base.transaction do
-      transaction_type = EquityGrantTransaction.transaction_types[invoice ? :vesting_post_invoice_payment : :scheduled_vesting]
       total_vested_shares = equity_grant.vested_shares
       total_unvested_shares = equity_grant.unvested_shares
 
@@ -37,18 +36,6 @@ class EquityGrant::UpdateVestedShares
 
         total_vested_shares += vesting_event.vested_shares
         total_unvested_shares -= vesting_event.vested_shares
-
-        equity_grant.equity_grant_transactions.create!(
-          transaction_type:,
-          vesting_event:,
-          invoice:,
-          vested_shares: vesting_event.vested_shares,
-          total_number_of_shares: equity_grant.number_of_shares,
-          total_vested_shares:,
-          total_unvested_shares:,
-          total_exercised_shares: equity_grant.exercised_shares,
-          total_forfeited_shares: equity_grant.forfeited_shares,
-        )
 
         vesting_event.with_lock do
           vesting_event.mark_as_processed!
