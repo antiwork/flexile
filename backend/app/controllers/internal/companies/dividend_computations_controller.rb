@@ -5,28 +5,12 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
 
   def index
     authorize DividendComputation
-    computations = Current.company.dividend_computations.order(created_at: :desc)
+    computations = Current.company.dividend_computations
+                                  .includes(:dividend_computation_outputs)
+                                  .order(created_at: :desc)
 
     render json: {
-      dividend_computations: computations.map do |computation|
-        shareholder_count = computation.dividend_computation_outputs.where.not(company_investor_id: nil).distinct.count(:company_investor_id) +
-                            computation.dividend_computation_outputs.where.not(investor_name: nil).distinct.count(:investor_name)
-
-        {
-          id: computation.external_id,
-          name: computation.name,
-          total_amount_in_usd: computation.total_amount_in_usd,
-          dividends_issuance_date: computation.dividends_issuance_date,
-          return_of_capital: computation.return_of_capital,
-          outputs_count: computation.dividend_computation_outputs.count,
-          shareholder_count: shareholder_count,
-          created_at: computation.created_at,
-          finalized: Current.company.dividend_rounds.joins(:dividends).where(
-            issued_at: computation.dividends_issuance_date,
-            total_amount_in_cents: (computation.total_amount_in_usd * 100).to_i
-          ).exists?,
-        }
-      end,
+      dividend_computations: computations.map { |c| DividendComputationPresenter.new(c).props },
     }
   end
 
@@ -44,13 +28,7 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
 
       render json: {
         success: true,
-        dividend_computation: {
-          id: computation.external_id,
-          total_amount_in_usd: computation.total_amount_in_usd,
-          dividends_issuance_date: computation.dividends_issuance_date,
-          return_of_capital: computation.return_of_capital,
-          outputs_count: computation.dividend_computation_outputs.count,
-        },
+        dividend_computation: DividendComputationPresenter.new(computation).props,
       }
     rescue ActiveRecord::RecordInvalid => e
       render json: {
@@ -63,42 +41,16 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
   def show
     authorize @computation
 
-    outputs = @computation.dividend_computation_outputs.includes(company_investor: :user).map do |output|
-      investor_name = output.investor_name || output.company_investor&.user&.legal_name
-
-      fee_in_usd = Dividend.new(total_amount_in_cents: (output.total_amount_in_usd * 100).to_i).calculate_flexile_fee_cents / 100.0
-
-      {
-        investor_name: investor_name,
-        share_class: output.share_class,
-        number_of_shares: output.number_of_shares,
-        hurdle_rate: output.hurdle_rate,
-        original_issue_price_in_usd: output.original_issue_price_in_usd,
-        dividend_amount_in_usd: output.dividend_amount_in_usd,
-        preferred_dividend_amount_in_usd: output.preferred_dividend_amount_in_usd,
-        qualified_dividend_amount_usd: output.qualified_dividend_amount_usd,
-        total_amount_in_usd: output.total_amount_in_usd,
-        fee_in_usd: fee_in_usd,
-      }
-    end
-
     render json: {
-      dividend_computation: {
-        id: @computation.external_id,
-        total_amount_in_usd: @computation.total_amount_in_usd,
-        dividends_issuance_date: @computation.dividends_issuance_date,
-        return_of_capital: @computation.return_of_capital,
-        outputs_count: @computation.dividend_computation_outputs.count,
-        release_document: @computation.release_document,
-        created_at: @computation.created_at,
-        outputs: outputs,
-      },
+      dividend_computation: DividendComputationPresenter.new(@computation, include_outputs: true).props,
     }
   end
 
   private
     def load_computation!
-      @computation = Current.company.dividend_computations.find_by!(external_id: params[:id])
+      @computation = Current.company.dividend_computations
+                                    .includes(dividend_computation_outputs: { company_investor: :user })
+                                    .find_by!(external_id: params[:id])
     end
 
     def create_params

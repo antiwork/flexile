@@ -3,6 +3,7 @@
 FactoryBot.define do
   factory :dividend_computation do
     company
+    sequence(:name) { |n| "Dividend Computation #{n}" }
     total_amount_in_usd { 1_000_000 }
     dividends_issuance_date { Time.current }
     return_of_capital { false }

@@ -33,3 +33,20 @@ RSpec::Matchers.define :be_performed_with do |expected_args|
       end
   end
 end
+
+RSpec::Matchers.define :be_valid_json do
+  match do |json_string|
+    JSON.parse(json_string)
+    true
+  rescue JSON::ParserError
+    false
+  end
+
+  failure_message do |json_string|
+    "expected #{json_string} to be valid JSON"
+  end
+
+  failure_message_when_negated do |json_string|
+    "expected #{json_string} not to be valid JSON"
+  end
+end
