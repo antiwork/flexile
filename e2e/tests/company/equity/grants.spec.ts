@@ -282,7 +282,11 @@ test.describe("Equity Grants", () => {
       companyId: company.id,
       userId: contractorUser.id,
     });
-    await optionPoolsFactory.create({ companyId: company.id });
+    await optionPoolsFactory.create({
+      companyId: company.id,
+      authorizedShares: 20000n, // Ensure enough shares in the pool
+      issuedShares: 0n, // No shares issued yet
+    });
     await documentTemplatesFactory.create({
       companyId: company.id,
       type: DocumentTemplateType.EquityPlanContract,
@@ -373,7 +377,7 @@ test.describe("Equity Grants", () => {
     });
     await optionPoolsFactory.create({
       companyId: company.id,
-      authorizedShares: 10000n, // Ensure enough shares in the pool
+      authorizedShares: 20000n, // Ensure enough shares in the pool
       issuedShares: 0n, // No shares issued yet
     });
     await documentTemplatesFactory.create({
@@ -417,7 +421,11 @@ test.describe("Equity Grants", () => {
       companyId: company.id,
       userId: contractorUser.id,
     });
-    await optionPoolsFactory.create({ companyId: company.id });
+    await optionPoolsFactory.create({
+      companyId: company.id,
+      authorizedShares: 20000n, // Ensure enough shares in the pool
+      issuedShares: 0n, // No shares issued yet
+    });
     await documentTemplatesFactory.create({
       companyId: company.id,
       type: DocumentTemplateType.EquityPlanContract,
