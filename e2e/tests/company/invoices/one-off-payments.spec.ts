@@ -8,7 +8,7 @@ import { invoicesFactory } from "@test/factories/invoices";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { findRequiredTableRow } from "@test/helpers/matchers";
-import { expect, test, withinAlertDialog, withinModal } from "@test/index";
+import { expect, test, withinModal } from "@test/index";
 import { and, eq } from "drizzle-orm";
 import { companies, equityGrants, invoices } from "@/db/schema";
 
@@ -252,11 +252,9 @@ test.describe("One-off payments", () => {
         await page.getByRole("button", { name: "Accept payment" }).click();
         await page.waitForLoadState("networkidle");
 
-        await withinAlertDialog(async (modal) => modal.getByRole("button", { name: "Accept payment" }).click(), {
-          page,
-        });
+        await withinModal(async (modal) => modal.getByRole("button", { name: "Accept payment" }).click(), { page });
 
-        await expect(page.getByRole("alertdialog")).not.toBeVisible();
+        await expect(page.getByRole("dialog")).not.toBeVisible();
         await expect(page.getByRole("button", { name: "Accept payment" })).not.toBeVisible();
       });
 
@@ -282,7 +280,7 @@ test.describe("One-off payments", () => {
         await page.getByRole("button", { name: "Accept payment" }).click();
         await page.waitForLoadState("networkidle");
 
-        await withinAlertDialog(
+        await withinModal(
           async (modal) => {
             const sliderContainer = modal.locator('[data-orientation="horizontal"]').first();
             const containerBounds = await sliderContainer.boundingBox();
@@ -306,7 +304,7 @@ test.describe("One-off payments", () => {
           { page },
         );
 
-        await expect(page.getByRole("alertdialog")).not.toBeVisible();
+        await expect(page.getByRole("dialog")).not.toBeVisible();
         await expect(page.getByRole("button", { name: "Confirm 25% split" })).not.toBeVisible();
 
         await page.waitForLoadState("networkidle");
@@ -359,7 +357,7 @@ test.describe("One-off payments", () => {
       await expect(page.getByRole("cell", { name: "Bonus!" })).toBeVisible();
 
       await page.getByRole("button", { name: "Accept payment" }).click();
-      await withinAlertDialog(
+      await withinModal(
         async (modal) => {
           await expect(modal).toContainText("Total value $123.45", { useInnerText: true });
           await modal.getByRole("button", { name: "Accept payment" }).click();

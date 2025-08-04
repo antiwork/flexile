@@ -5,7 +5,7 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
-import { expect, type Page, test, withinAlertDialog } from "@test/index";
+import { expect, type Page, test, withinModal } from "@test/index";
 
 type User = Awaited<ReturnType<typeof usersFactory.create>>["user"];
 
@@ -100,7 +100,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await page.getByRole("cell", { name: "CUSTOM-3" }).click({ button: "right" });
     await page.getByRole("menuitem", { name: "Delete" }).click();
-    await page.getByRole("alertdialog").waitFor();
+    await page.getByRole("dialog").waitFor();
     await page.getByRole("button", { name: "Delete" }).click();
     await expect(page.getByRole("cell", { name: "CUSTOM-3" })).not.toBeVisible();
 
@@ -154,7 +154,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await page.getByRole("button", { name: "Approve selected invoices" }).click();
 
-    await withinAlertDialog(
+    await withinModal(
       async (modal) => {
         await expect(modal.getByText("You are paying $646 now.")).toBeVisible();
         await expect(modal.getByText(workerUserA.legalName ?? "never")).toBeVisible();
@@ -167,7 +167,7 @@ test.describe("Invoice submission, approval and rejection", () => {
       },
       { page, title: "Approve these invoices?" },
     );
-    await expect(page.getByRole("alertdialog")).not.toBeVisible();
+    await expect(page.getByRole("dialog")).not.toBeVisible();
 
     await page.getByRole("checkbox", { name: "Select all" }).check();
     await page.getByRole("checkbox", { name: "Select all" }).uncheck();
@@ -178,10 +178,10 @@ test.describe("Invoice submission, approval and rejection", () => {
       .getByLabel("Select row")
       .check();
     await page.getByRole("button", { name: "Reject selected invoices" }).click();
-    await page.getByPlaceholder("Enter rejection reason...").fill("Too little time");
+    await page.getByLabel("Explain why the invoice was").fill("Too little time");
 
     await page.getByRole("button", { name: "Yes, reject" }).click();
-    await expect(page.getByRole("alertdialog")).not.toBeVisible();
+    await expect(page.getByRole("dialog")).not.toBeVisible();
     const rejectedInvoiceRow0 = page
       .locator("tbody tr")
       .filter({ hasText: workerUserA.legalName ?? "never" })
@@ -231,7 +231,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await fixedInvoiceRow.click();
 
     await page.getByRole("button", { name: "Reject" }).click();
-    await page.getByPlaceholder("Enter rejection reason...").fill("sorry still wrong");
+    await page.getByLabel("Explain why the invoice was").fill("sorry still wrong");
     await page.getByRole("button", { name: "Yes, reject" }).click();
 
     await expect(locateOpenInvoicesBadge(page)).not.toBeVisible();

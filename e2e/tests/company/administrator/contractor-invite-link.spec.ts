@@ -109,16 +109,11 @@ test.describe("Contractor Invite Link", () => {
     await expect(page.getByRole("textbox", { name: "Link" })).toBeVisible();
 
     await page.getByRole("button", { name: "Reset link" }).click();
-    await expect(page.getByText("Reset invite link?")).toBeVisible();
-    await page.getByRole("button", { name: "Reset link" }).click();
+    await expect(page.getByText("Reset Invite Link")).toBeVisible();
+    await page.getByRole("button", { name: "Reset" }).click();
 
-    // Wait for the reset to complete and the modal to close
-    await page.waitForTimeout(3000);
-    await expect(page.getByText("Reset invite link?")).not.toBeVisible();
-
-    // The modal should still be open, so check the Copy button directly
     await expect(page.getByRole("button", { name: "Copy" })).toBeEnabled();
-
+    await expect(page.getByText("Reset Invite Link")).not.toBeVisible();
     const newInviteLink = await db.query.companyInviteLinks.findFirst({
       where: and(eq(companyInviteLinks.companyId, company.id), isNull(companyInviteLinks.documentTemplateId)),
     });
