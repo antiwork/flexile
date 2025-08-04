@@ -1,0 +1,57 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.clerk.com/v1/invitations
+    body:
+      encoding: UTF-8
+      string: '{"email_address":"admin@example.com","expires_in_days":365,"ignore_existing":true}'
+    headers:
+      Content-Type:
+      - application/json
+      User-Agent:
+      - OpenAPI-Generator/2.0.0/ruby
+      Accept:
+      - application/json
+      Authorization:
+      - Bearer sk_test_IcXt4Bzlq8rkPYCp3tBSNQnfZtrnyoh9VdGDJvzRKr
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Mon, 04 Aug 2025 16:02:09 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Ray:
+      - 969f47062f5b3cf4-BOM
+      Cf-Cache-Status:
+      - DYNAMIC
+      Clerk-Api-Version:
+      - '2025-04-10'
+      X-Cfworker:
+      - '1'
+      X-Clerk-Trace-Id:
+      - cd468264c22313ca442212239b30fc3d
+      X-Cloud-Trace-Context:
+      - cd468264c22313ca442212239b30fc3d
+      Set-Cookie:
+      - __cf_bm=5bZ64T1lHDHtT2yKKL1pi7RZ52ozWwLq2RlgFTFLpz8-1754323329-1.0.1.1-haR5rUwNWvVPmsYQdIRYY0jXJlOMnz2Q4_nJUTWg_TcTKpiNWcikJWjgtwuDcoDnVjskwqln.DAEmwS4tVXCZc8N13HJa8MwOExFI.LW1cU;
+        path=/; expires=Mon, 04-Aug-25 16:32:09 GMT; domain=.api.clerk.com; HttpOnly;
+        Secure; SameSite=None
+      Vary:
+      - Accept-Encoding
+      Server:
+      - cloudflare
+    body:
+      encoding: ASCII-8BIT
+      string: '{"object":"invitation","id":"inv_30pT5Hm3noCHGZefEVuscwugXib","email_address":"admin@example.com","public_metadata":{},"status":"pending","url":"https://neutral-whippet-64.clerk.accounts.dev/v1/tickets/accept?ticket=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJlaXMiOjMxNTM2MDAwLCJleHAiOjE3ODU4NTkzMjksImlpZCI6Imluc18zMDh2ODFzMHlielNYOU5uUWNCT2k0b21TSzgiLCJzaWQiOiJpbnZfMzBwVDVIbTNub0NIR1plZkVWdXNjd3VnWGliIiwic3QiOiJpbnZpdGF0aW9uIn0.fTdMm1DyL3quG3JIvGSJxmDIaRJRzlt9xENCnA0fPr1o6gaGB41_NpqU7r3fDD7qKoiZA7TwFu85gjy_6BH6WtWFxRNqU1FSJxwU2Gim3fN_uhidl8yN7SVRVRxQa-cW1rr4UNkgzlj3PewKYRgkXm1M9Oot6mPKV4P6BnErC0neR16jUGeKvqAgAhCFe0eDx--OSFjfXlBP-tWWukZYuO037b89p-PBk5yySKDmtSlwAGBy74-B0vsDj_O3UmnmrWzXSkLxYpIBKTyGWY7WGYZxKj8BuhAsfubN_wkShVPHYTKLFArjUmC7aSlVsRV-uYw2IjpFDmrgB9R2J9EizA","expires_at":1785859329550,"created_at":1754323329550,"updated_at":1754323329550}'
+  recorded_at: Mon, 04 Aug 2025 16:02:09 GMT
+recorded_with: VCR 6.3.1
