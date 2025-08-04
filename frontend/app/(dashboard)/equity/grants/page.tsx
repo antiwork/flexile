@@ -10,15 +10,17 @@ import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { DocumentTemplateType } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
@@ -95,7 +97,7 @@ export default function GrantsPage() {
       />
 
       {equityPlanContractTemplates.length === 0 ? (
-        <Alert>
+        <Alert className="mx-4">
           <Info />
           <AlertDescription>
             <Link href="/documents" className={linkClasses}>
@@ -110,19 +112,21 @@ export default function GrantsPage() {
       ) : data.length > 0 ? (
         <DataTable table={table} onRowClicked={(row) => router.push(`/people/${row.user.id}`)} />
       ) : (
-        <Placeholder icon={CircleCheck}>There are no option grants right now.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>There are no option grants right now.</Placeholder>
+        </div>
       )}
-      <Dialog open={!!cancellingGrantId} onOpenChange={() => setCancellingGrantId(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Cancel equity grant</DialogTitle>
-          </DialogHeader>
+      <AlertDialog open={!!cancellingGrantId} onOpenChange={() => setCancellingGrantId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel equity grant</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel this equity grant for {cancellingGrant?.optionHolderName}? This action
+              cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
           {cancellingGrant ? (
             <>
-              <DialogDescription>
-                Are you sure you want to cancel this equity grant for {cancellingGrant.optionHolderName}? This action
-                cannot be undone.
-              </DialogDescription>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <h3 className="text-muted-foreground text-sm">Total options</h3>
@@ -141,7 +145,7 @@ export default function GrantsPage() {
                   <p className="text-sm text-red-500">{cancellingGrant.unvestedShares.toLocaleString()}</p>
                 </div>
               </div>
-              <Alert variant="destructive">
+              <Alert className="mx-4" variant="destructive">
                 <CircleAlert className="size-4" />
                 <AlertTitle>Important note</AlertTitle>
                 <AlertDescription>
@@ -149,22 +153,22 @@ export default function GrantsPage() {
                   action cannot be undone.
                 </AlertDescription>
               </Alert>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setCancellingGrantId(null)}>
-                  Cancel
-                </Button>
-                <MutationButton
-                  idleVariant="critical"
-                  mutation={cancelGrant}
-                  param={{ companyId: company.id, id: cancellingGrant.id, reason: "Cancelled by admin" }}
-                >
-                  Confirm cancellation
-                </MutationButton>
-              </DialogFooter>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction asChild>
+                  <MutationButton
+                    idleVariant="critical"
+                    mutation={cancelGrant}
+                    param={{ companyId: company.id, id: cancellingGrant.id, reason: "Cancelled by admin" }}
+                  >
+                    Confirm cancellation
+                  </MutationButton>
+                </AlertDialogAction>
+              </AlertDialogFooter>
             </>
           ) : null}
-        </DialogContent>
-      </Dialog>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

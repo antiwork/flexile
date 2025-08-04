@@ -16,8 +16,17 @@ import MutationButton, { MutationStatusButton } from "@/components/MutationButto
 import NumberInput from "@/components/NumberInput";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -140,7 +149,7 @@ export default function BuybackView() {
       <DashboardHeader title={`Buyback details ("Sell Elections")`} />
 
       {user.roles.investor?.investedInAngelListRuv ? (
-        <Alert variant="destructive">
+        <Alert className="mx-4" variant="destructive">
           <ExclamationTriangleIcon />
           <AlertDescription>
             Note: As an investor through an AngelList RUV, your bids will be submitted on your behalf by the RUV itself.
@@ -284,33 +293,32 @@ export default function BuybackView() {
       {isLoading ? <TableSkeleton columns={5} /> : bids.length > 0 ? <DataTable table={bidsTable} /> : null}
 
       {cancelingBid ? (
-        <Dialog open onOpenChange={() => setCancelingBid(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Cancel bid?</DialogTitle>
-            </DialogHeader>
-            <p>Are you sure you want to cancel this bid?</p>
-            <p>
-              Share class: {cancelingBid.shareClass}
-              <br />
-              Number of shares: {cancelingBid.numberOfShares.toLocaleString()}
-              <br />
-              Bid price: {formatMoneyFromCents(cancelingBid.sharePriceCents)}
-            </p>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setCancelingBid(null)}>
-                No, keep bid
-              </Button>
-              <MutationButton
-                mutation={destroyMutation}
-                param={{ companyId: company.id, id: cancelingBid.id }}
-                loadingText="Canceling..."
-              >
-                Yes, cancel bid
-              </MutationButton>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <AlertDialog open onOpenChange={() => setCancelingBid(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Cancel bid?</AlertDialogTitle>
+              <AlertDialogDescription>Are you sure you want to cancel this bid?</AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="space-y-2">
+              <p>Share class: {cancelingBid.shareClass}</p>
+              <p>Number of shares: {cancelingBid.numberOfShares.toLocaleString()}</p>
+              <p>Bid price: {formatMoneyFromCents(cancelingBid.sharePriceCents)}</p>
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel>No, keep bid</AlertDialogCancel>
+              <AlertDialogAction asChild>
+                <MutationButton
+                  mutation={destroyMutation}
+                  idleVariant="critical"
+                  param={{ companyId: company.id, id: cancelingBid.id }}
+                  loadingText="Canceling..."
+                >
+                  Yes, cancel bid
+                </MutationButton>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       ) : null}
     </>
   );

@@ -6,7 +6,7 @@ import { companyStripeAccountsFactory } from "@test/factories/companyStripeAccou
 import { invoiceApprovalsFactory } from "@test/factories/invoiceApprovals";
 import { invoicesFactory } from "@test/factories/invoices";
 import { login } from "@test/helpers/auth";
-import { expect, test, withinModal } from "@test/index";
+import { expect, test, withinAlertDialog } from "@test/index";
 import { and, eq, exists, isNull, not } from "drizzle-orm";
 import { companies, companyContractors, consolidatedInvoices, invoiceApprovals, invoices, users } from "@/db/schema";
 import { assert } from "@/utils/assert";
@@ -174,7 +174,7 @@ test.describe("Invoices admin flow", () => {
 
       // TODO missing check - need to verify ChargeConsolidatedInvoiceJob not enqueued
 
-      await withinModal(
+      await withinAlertDialog(
         async (modal) => {
           await expect(modal.getByText("$60")).toHaveCount(2);
           await modal.getByRole("button", { name: "Yes, proceed" }).click();
@@ -182,7 +182,7 @@ test.describe("Invoices admin flow", () => {
         { page },
       );
 
-      await expect(page.getByRole("dialog")).not.toBeVisible();
+      await expect(page.getByRole("alertdialog")).not.toBeVisible();
       expect(await countInvoiceApprovals(company.id)).toBe(2);
 
       const pendingInvoices = await db.$count(
@@ -250,7 +250,7 @@ test.describe("Invoices admin flow", () => {
           eq(consolidatedInvoices.companyId, company.id),
         );
 
-        await withinModal(
+        await withinAlertDialog(
           async (modal) => {
             await expect(modal.getByText("You are paying $150 now.")).toBeVisible();
             await expect(modal.getByText("$75")).toHaveCount(2);
@@ -259,7 +259,7 @@ test.describe("Invoices admin flow", () => {
           },
           { page },
         );
-        await expect(page.getByRole("dialog")).not.toBeVisible();
+        await expect(page.getByRole("alertdialog")).not.toBeVisible();
 
         const consolidatedInvoicesCountAfter = await db.$count(
           consolidatedInvoices,
@@ -314,8 +314,13 @@ test.describe("Invoices admin flow", () => {
       await expect(page.getByText("2 selected")).toBeVisible();
       await page.getByRole("button", { name: "Reject selected" }).click();
 
-      await page.getByLabel("Explain why the invoice").fill("Invoice issue date mismatch");
-      await page.getByRole("button", { name: "Yes, reject" }).click();
+      await withinAlertDialog(
+        async (modal) => {
+          await modal.getByPlaceholder("Enter rejection reason...").fill("Invoice issue date mismatch");
+          await modal.getByRole("button", { name: "Yes, reject" }).click();
+        },
+        { page },
+      );
       await page.getByRole("button", { name: "Filter" }).click();
       await page.getByRole("menuitem", { name: "Clear all filters" }).click();
       await expect(page.getByText("Rejected")).toHaveCount(2);
@@ -429,7 +434,7 @@ test.describe("Invoices contractor flow", () => {
       const deletableInvoiceRow = page.getByRole("row").getByText("Awaiting approval").first();
       await deletableInvoiceRow.click({ button: "right" });
       await page.getByRole("menuitem", { name: "Delete" }).click();
-      await page.getByRole("dialog").waitFor();
+      await page.getByRole("alertdialog").waitFor();
       await page.getByRole("button", { name: "Delete" }).click();
 
       await expect(page.locator("tbody tr")).toHaveCount(2);

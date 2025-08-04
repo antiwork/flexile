@@ -98,13 +98,15 @@ export default function OptionsPage() {
       {isLoading ? (
         <TableSkeleton columns={5} />
       ) : data.length === 0 ? (
-        <Placeholder icon={CircleCheck}>You don't have any option grants right now.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>You don't have any option grants right now.</Placeholder>
+        </div>
       ) : (
         <>
           {company.flags.includes("option_exercising") && (
             <>
               {totalUnexercisedVestedShares > 0 && !exerciseInProgress && (
-                <Alert className="mb-4 w-full">
+                <Alert className="mx-4 mb-4">
                   <Info />
                   <AlertDescription>
                     <div className="flex items-center justify-between">
@@ -120,7 +122,7 @@ export default function OptionsPage() {
               )}
 
               {exerciseInProgress ? (
-                <Alert className="mb-4 w-full">
+                <Alert className="mx-4 mb-4">
                   <Info />
                   <AlertDescription>
                     <div className="flex items-center justify-between">

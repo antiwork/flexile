@@ -134,7 +134,7 @@ export default function CapTable() {
       <DashboardHeader title="Investors" />
 
       {selectedInvestors.length > 0 && (
-        <Alert className="mb-4">
+        <Alert className="mx-4 mb-4">
           <AlertDescription className="flex items-center justify-between">
             <span>
               <strong>{selectedInvestors.length}</strong> selected
@@ -151,7 +151,9 @@ export default function CapTable() {
           <DataTable table={investorsTable} />
         </div>
       ) : (
-        <Placeholder icon={CircleCheck}>There are no active investors right now.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>There are no active investors right now.</Placeholder>
+        </div>
       )}
     </>
   );

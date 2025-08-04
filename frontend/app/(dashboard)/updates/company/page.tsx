@@ -1,5 +1,5 @@
 "use client";
-import { CircleCheck, Trash } from "lucide-react";
+import { CircleCheck, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
@@ -10,8 +10,17 @@ import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
@@ -48,7 +57,9 @@ export default function CompanyUpdates() {
           <ViewList />
         )
       ) : (
-        <Placeholder icon={CircleCheck}>No updates to display.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>No updates to display.</Placeholder>
+        </div>
       )}
     </>
   );
@@ -94,7 +105,7 @@ const AdminList = () => {
             onClick={() => setDeletingUpdate(info.row.original.id)}
             className="inline-flex cursor-pointer items-center border-none bg-transparent text-inherit underline hover:text-blue-600"
           >
-            <Trash className="size-4" />
+            <Trash2 className="size-4" />
           </Button>
         ),
       }),
@@ -107,31 +118,30 @@ const AdminList = () => {
   return (
     <>
       <DataTable table={table} onRowClicked={(row) => router.push(`/updates/company/${row.id}/edit`)} />
-      <Dialog open={!!deletingUpdate} onOpenChange={() => setDeletingUpdate(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete update?</DialogTitle>
-          </DialogHeader>
-          <p>
-            "{updates.find((update) => update.id === deletingUpdate)?.title}" will be permanently deleted and cannot be
-            restored.
-          </p>
-          <DialogFooter>
-            <div className="grid auto-cols-fr grid-flow-col items-center gap-3">
-              <Button variant="outline" onClick={() => setDeletingUpdate(null)}>
-                No, cancel
-              </Button>
+      <AlertDialog open={!!deletingUpdate} onOpenChange={() => setDeletingUpdate(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete update?</AlertDialogTitle>
+            <AlertDialogDescription>
+              "{updates.find((update) => update.id === deletingUpdate)?.title}" will be permanently deleted and cannot
+              be restored.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, cancel</AlertDialogCancel>
+            <AlertDialogAction asChild>
               <MutationButton
                 mutation={deleteMutation}
+                idleVariant="critical"
                 param={{ companyId: company.id, id: deletingUpdate ?? "" }}
                 loadingText="Deleting..."
               >
                 Yes, delete
               </MutationButton>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

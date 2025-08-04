@@ -53,7 +53,9 @@ export default function Buybacks() {
       ) : data.length ? (
         <DataTable table={table} onRowClicked={(row) => router.push(`/equity/tender_offers/${row.id}`)} />
       ) : (
-        <Placeholder icon={CircleCheck}>There are no buybacks yet.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>There are no buybacks yet.</Placeholder>
+        </div>
       )}
     </>
   );

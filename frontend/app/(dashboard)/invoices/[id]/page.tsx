@@ -11,9 +11,18 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -145,14 +154,14 @@ export default function InvoicePage() {
       />
 
       {invoice.requiresAcceptanceByPayee && user.id === invoice.userId ? (
-        <Dialog open={acceptPaymentModalOpen} onOpenChange={setAcceptPaymentModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Accept invoice</DialogTitle>
-            </DialogHeader>
-            <div>
-              If everything looks correct, accept the invoice. Then your company administrator can initiate payment.
-            </div>
+        <AlertDialog open={acceptPaymentModalOpen} onOpenChange={setAcceptPaymentModalOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Accept invoice</AlertDialogTitle>
+              <AlertDialogDescription>
+                If everything looks correct, accept the invoice. Then your company administrator can initiate payment.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
             <Card>
               <CardContent>
                 {invoice.minAllowedEquityPercentage !== null && invoice.maxAllowedEquityPercentage !== null ? (
@@ -204,20 +213,21 @@ export default function InvoicePage() {
               </CardContent>
             </Card>
 
-            <DialogFooter>
-              <div className="flex justify-end">
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction asChild>
                 <MutationButton mutation={acceptPaymentMutation} successText="Success!" loadingText="Saving...">
                   {invoice.minAllowedEquityPercentage !== null && invoice.maxAllowedEquityPercentage !== null
                     ? `Confirm ${(equityPercentage / 100).toLocaleString(undefined, { style: "percent" })} split`
                     : "Accept payment"}
                 </MutationButton>
-              </div>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       ) : null}
       {!taxRequirementsMet(invoice) && (
-        <Alert variant="destructive">
+        <Alert className="mx-4" variant="destructive">
           <ExclamationTriangleIcon />
           <AlertTitle>Missing tax information.</AlertTitle>
           <AlertDescription>Invoice is not payable until contractor provides tax information.</AlertDescription>
@@ -227,7 +237,7 @@ export default function InvoicePage() {
       <StatusDetails invoice={invoice} />
 
       {payRateInSubunits && invoice.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
-        <Alert variant="warning">
+        <Alert className="mx-4" variant="warning">
           <CircleAlert />
           <AlertDescription>
             This invoice includes rates above the default of {formatMoneyFromCents(payRateInSubunits)}/
@@ -237,7 +247,7 @@ export default function InvoicePage() {
       ) : null}
 
       {invoice.equityAmountInCents > 0 ? (
-        <Alert className="print:hidden">
+        <Alert className="mx-4 print:hidden">
           <InformationCircleIcon />
           <AlertDescription>
             When this invoice is paid, you'll receive an additional {formatMoneyFromCents(invoice.equityAmountInCents)}{" "}
@@ -249,7 +259,7 @@ export default function InvoicePage() {
       <section>
         <form>
           <div className="grid gap-4">
-            <div className="grid auto-cols-fr gap-3 md:grid-flow-col print:grid-flow-col">
+            <div className="mx-4 grid auto-cols-fr gap-3 md:grid-flow-col print:grid-flow-col">
               <div>
                 From
                 <br />
