@@ -2,7 +2,7 @@
 
 class CompanyAdministratorPolicy < ApplicationPolicy
   def show?
-    user.company_administrator_for?(company)
+    company_administrator?
   end
 
   def reset?
