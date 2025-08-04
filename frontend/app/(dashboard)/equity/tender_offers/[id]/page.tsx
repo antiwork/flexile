@@ -333,7 +333,7 @@ export default function BuybackView() {
           <Placeholder icon={LucideCircleDollarSign}>Place your first bid to participate in the data.</Placeholder>
         </div>
       )}
-      {activeModal === "cancel" ? (
+      {activeModal === "cancel" && selectedBid ? (
         <CancelBidModal
           onClose={() => {
             handleBidAction(null);

@@ -12,7 +12,7 @@ type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
 
 type CancelBidModalProps = {
   onClose: () => void;
-  bid: Bid | null;
+  bid: Bid;
   data: TenderOffer;
 };
 
@@ -24,10 +24,6 @@ const CancelBidModal = ({ onClose, bid }: CancelBidModalProps) => {
       onClose();
     },
   });
-
-  if (!bid) {
-    return null;
-  }
 
   return (
     <Dialog open onOpenChange={onClose}>
