@@ -52,3 +52,6 @@ export const optionGrantIssueDateRelationships = [
 ] as const;
 
 export const companyUpdatePeriods = ["month", "quarter", "year"] as const;
+
+export const workspaceMemberRoles = ["Owner", "Admin", "Lawyer", "Member"] as const;
+export type WorkspaceMemberRoles = (typeof workspaceMemberRoles)[number];
