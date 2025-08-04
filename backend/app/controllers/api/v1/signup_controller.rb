@@ -28,6 +28,7 @@ class Api::V1::SignupController < Api::BaseController
       end
     end
 
+    # TODO: Run basic validation when creating temp user
     temp_user.save!(validate: false) # Skip validations for temp user
 
     return unless check_otp_rate_limit(temp_user)
