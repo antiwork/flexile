@@ -1,14 +1,117 @@
-import React from "react";
-import { linkClasses } from "@/components/Link";
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Letter of Transmittal - Gumroad, Inc.</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Custom CSS Variables from the project */
+      :root {
+        --color-black: #1d1e17;
+        --color-white: #ffffff;
+        --color-blue-50: #d9e4fa;
+        --color-blue-600: #006ceb;
+        --color-red: #d44312;
+        --color-red-700: #c93604;
+        --color-green: #00850d;
+        --color-gray-50: #f1f1f1;
+        --color-gray-100: #d1d1cf;
+        --color-gray-300: #a3a3a0;
+        --color-gray-600: #6e6f6a;
+        --color-gray-800: #333333;
+      }
 
-const LetterOfTransmissal = () => (
-  <>
-    <div className="text-center">
+      /* Link classes from the project */
+      .link-classes {
+        display: inline-flex;
+        cursor: pointer;
+        align-items: center;
+        gap: 0.25rem;
+        border: none;
+        text-decoration: underline;
+      }
+
+      .link-classes:hover {
+        color: var(--color-blue-600);
+      }
+
+      .link-classes:disabled {
+        opacity: 0.5;
+        pointer-events: none;
+      }
+
+      .link-classes[inert] {
+        opacity: 0.5;
+      }
+
+      /* Additional styling for the document */
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        line-height: 1.6;
+        color: #1d1e17;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      h1,
+      h2 {
+        font-weight: bold;
+        margin: 1rem 0;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      h2 {
+        font-size: 1.25rem;
+      }
+
+      p {
+        margin: 1rem 0;
+      }
+
+      ol {
+        padding-left: 1.5rem;
+        margin: 1rem 0;
+      }
+
+      li {
+        margin: 0.5rem 0;
+      }
+
+      .text-center {
+        text-align: center;
+      }
+
+      .border {
+        border: 1px solid var(--color-gray-300);
+      }
+
+      .p-2 {
+        padding: 0.5rem;
+      }
+
+      @media print {
+        body {
+          max-width: none;
+          padding: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="text-center">
       <h2>LETTER OF TRANSMITTAL</h2>
       <h1>To Accompany Offered Securities of Gumroad, Inc.</h1>
       <h2>May 1, 2025 (the "Offer Date")</h2>
     </div>
-    <p className="border p-2 text-center">
+    <p class="border p-2 text-center">
       <b>
         THE OFFER TO PURCHASE WILL EXPIRE AT
         <br />
@@ -89,10 +192,8 @@ const LetterOfTransmissal = () => (
       exercise prior to the earlier to occur of (i) the Expiration Date and (ii) the expiration date of such Expiring
       Vested Options. Such cash exercise cannot be contingent upon the closing of the Offer and the Company will not
       extend the expiration date of any option. If you have questions about exercising through a cash exercise, please
-      contact the Company at{" "}
-      <a className={linkClasses} href="mailto:support@flexile.com">
-        support@flexile.com
-      </a>{" "}
+      contact the Company at
+      <a class="link-classes" href="mailto:support@flexile.com"> support@flexile.com </a>
       for additional information. No other holders of Vested Options wishing to participate in the Offer shall be
       permitted to exercise such Vested Options from the Offer Date through the Expiration Date.
     </p>
@@ -107,10 +208,8 @@ const LetterOfTransmissal = () => (
       Expiring Vested Options.
     </p>
     <p>
-      Any operational or administrative questions or requests may be directed to the Company at{" "}
-      <a className={linkClasses} href="mailto:support@flexile.com">
-        support@flexile.com
-      </a>
+      Any operational or administrative questions or requests may be directed to the Company at
+      <a class="link-classes" href="mailto:support@flexile.com"> support@flexile.com </a>
       . For questions related to the tax implications of tendering Eligible Securities in the Offer, please contact your
       own legal, financial or tax advisors.
     </p>
@@ -139,10 +238,8 @@ const LetterOfTransmissal = () => (
       and submit a separate Letter of Transmittal. This means that if Eligible Securities are held by family members,
       trusts or other persons or entities related to or affiliated with you, each such other person or entity must
       complete, submit and electronically sign a separate Letter of Transmittal. If you have any questions on
-      completing, submitting and electronically signing a separate Letter of Transmittal, please contact the Company at{" "}
-      <a className={linkClasses} href="mailto:support@flexile.com">
-        support@flexile.com
-      </a>
+      completing, submitting and electronically signing a separate Letter of Transmittal, please contact the Company at
+      <a class="link-classes" href="mailto:support@flexile.com"> support@flexile.com </a>
       .
     </p>
     <p>
@@ -252,10 +349,8 @@ const LetterOfTransmissal = () => (
       such Eligible Securityholder must submit a properly completed and appropriate IRS Form W-8, as well as any
       required supporting information. An IRS Form W-8BEN is included with this Letter of Transmittal and attached as
       <b>Exhibit D-2</b> and an IRS Form W-8BEN-E is included with this Letter of Transmittal and attached as
-      <b>Exhibit D-3</b>. Additional IRS Forms W-8, such as IRS Form W-8IMY and IRS Form W-8ECI, are available at{" "}
-      <a className={linkClasses} href="http://www.irs.gov" target="_blank" rel="noopener noreferrer">
-        www.irs.gov
-      </a>
+      <b>Exhibit D-3</b>. Additional IRS Forms W-8, such as IRS Form W-8IMY and IRS Form W-8ECI, are available at
+      <a class="link-classes" href="http://www.irs.gov" target="_blank" rel="noopener noreferrer"> www.irs.gov </a>
       .
     </p>
     <p>
@@ -313,10 +408,8 @@ const LetterOfTransmissal = () => (
       exercise prior to the earlier of (i) the Expiration Date and (ii) the expiration date of such Expiring Vested
       Options. Such cash exercise cannot be contingent upon the closing of the Offer and the Company will not extend the
       expiration date of any option. If you have questions about exercising through a cash exercise, please contact the
-      Company at{" "}
-      <a className={linkClasses} href="mailto:support@flexile.com">
-        support@flexile.com
-      </a>{" "}
+      Company at
+      <a class="link-classes" href="mailto:support@flexile.com"> support@flexile.com </a>
       for additional information. No other holders of Vested Options wishing to participate in the Offer shall be
       permitted to exercise such Vested Options from the Offer Date through the Expiration Date.
     </p>
@@ -677,10 +770,8 @@ const LetterOfTransmissal = () => (
       recipients of the Data may be located in the United States or elsewhere throughout the world, and that the
       recipient's country may have different data privacy laws and protections than his or her country. The undersigned
       understands that if he or she has the right to do so under applicable law, he or she may request a list with the
-      names and addresses of any potential recipients of the Data by emailing{" "}
-      <a className={linkClasses} href="mailto:support@flexile.com">
-        support@flexile.com
-      </a>
+      names and addresses of any potential recipients of the Data by emailing
+      <a class="link-classes" href="mailto:support@flexile.com"> support@flexile.com </a>
       . The undersigned authorizes the Data Recipients and any other possible recipients which may assist the Data
       Recipients (presently or in the future) with implementing, administering and managing the Tender Offer to receive,
       possess, use, retain and transfer the Data, in electronic or other form, for the purpose of implementing,
@@ -691,10 +782,8 @@ const LetterOfTransmissal = () => (
       for such purposes to the fullest extent practicable. The undersigned understands that he or she may, to the extent
       he or she has the right under applicable law, view Data, request additional information about the storage and
       processing of Data, require any necessary amendments to Data or refuse or withdraw the consents herein, in any
-      case without cost, by emailing{" "}
-      <a className={linkClasses} href="mailto:support@flexile.com">
-        support@flexile.com
-      </a>
+      case without cost, by emailing
+      <a class="link-classes" href="mailto:support@flexile.com"> support@flexile.com </a>
       . The undersigned understands, however, that refusing or withdrawing his or her consent may affect his or her
       ability to participate in the Tender Offer.
     </p>
@@ -747,17 +836,13 @@ const LetterOfTransmissal = () => (
       This Letter of Transmittal must be electronically signed by the registered holder(s) of Offered Securities as the
       name of each registered holder is recorded on the Company stock ledger (or stock option agreement, if applicable).
       If your name has been legally changed since your shares were issued (or your stock option agreement was executed),
-      please contact the Company at{" "}
-      <a className={linkClasses} href="mailto:support@flexile.com">
-        support@flexile.com
-      </a>{" "}
+      please contact the Company at
+      <a class="link-classes" href="mailto:support@flexile.com"> support@flexile.com </a>
       for instructions on how to submit proof of the legal name change. If this Letter of Transmittal is being signed by
       a trustee, executor, administrator, guardian, attorney-in-fact, officer of a corporation or other person acting in
       a fiduciary or representative capacity, that person will email proper evidence satisfactory to the Company of the
-      authority of that person to act in that capacity to{" "}
-      <a className={linkClasses} href="mailto:support@flexile.com">
-        support@flexile.com
-      </a>
+      authority of that person to act in that capacity to
+      <a class="link-classes" href="mailto:support@flexile.com"> support@flexile.com </a>
       .
     </p>
     <p>
@@ -821,14 +906,14 @@ const LetterOfTransmissal = () => (
         <b>Tendered Vested Option Shares</b>"), in consideration for a cash payment equal to the Offer Price multiplied
         by the number of Tendered Vested Option Shares less (i) all applicable withholding taxes and transfer taxes, and
         (ii) the aggregate exercise price of the underlying Options so tendered for cancellation and termination.
-      </li>
-      <p>
-        Optionee understands and agrees that this cancellation and termination is contingent upon and will be deemed
-        effective immediately prior to the consummation of the Offer, as set forth in further detail in the accompanying
-        Offer to Purchase. If the Offer is ultimately not consummated, then such cancellation and termination of the
-        Option will not be effective. Optionee may only tender and cancel his or her options using this Option
-        Cancellation Notice as of the Offer Date until 5:00 p.m., Pacific Time, on the Expiration Date.
+        <p>
+          Optionee understands and agrees that this cancellation and termination is contingent upon and will be deemed
+          effective immediately prior to the consummation of the Offer, as set forth in further detail in the
+          accompanying Offer to Purchase. If the Offer is ultimately not consummated, then such cancellation and
+          termination of the Option will not be effective. Optionee may only tender and cancel his or her options using
+          this Option Cancellation Notice as of the Offer Date until 5:00 p.m., Pacific Time, on the Expiration Date.
       </p>
+    </li>
       <li>
         <b>Consideration for Cancellation</b>. Optionee hereby acknowledges and agrees that, for each Option that
         Optionee tenders for cancellation and termination in connection with the Offer, the Company will pay to Optionee
@@ -930,10 +1015,8 @@ const LetterOfTransmissal = () => (
       <b>IRS Form W-8BEN</b>
     </p>
     <p>
-      (Downloadable via{" "}
-      <a className={linkClasses} href="http://www.irs.gov" target="_blank" rel="noopener noreferrer">
-        www.irs.gov
-      </a>
+      (Downloadable via
+      <a class="link-classes" href="http://www.irs.gov" target="_blank" rel="noopener noreferrer"> www.irs.gov </a>
       )
     </p>
     <p>
@@ -943,7 +1026,5 @@ const LetterOfTransmissal = () => (
       <b>IRS Form W-8BEN-E</b>
     </p>
     <p>(Also Available on the Platform)</p>
-  </>
-);
-
-export default LetterOfTransmissal;
+  </body>
+</html>
