@@ -53,15 +53,12 @@ module User::OtpAuthentication
     end
 
     def record_otp_failure!
+      # Always increment failure count first
+      increment!(:otp_failed_attempts_count)
+
+      # Only set the first failure timestamp if it's not already set
       if otp_first_failed_at.blank?
-        # First failure in this window
-        update!(
-          otp_first_failed_at: Time.current,
-          otp_failed_attempts_count: 1
-        )
-      else
-        # Additional failure in the same window
-        increment!(:otp_failed_attempts_count)
+        update!(otp_first_failed_at: Time.current)
       end
     end
 
