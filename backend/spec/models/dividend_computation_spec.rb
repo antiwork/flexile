@@ -8,7 +8,62 @@ RSpec.describe DividendComputation do
 
   describe "validations" do
     it { is_expected.to validate_presence_of(:total_amount_in_usd) }
+    it { is_expected.to validate_numericality_of(:total_amount_in_usd).is_greater_than(0) }
     it { is_expected.to validate_presence_of(:dividends_issuance_date) }
+    it { is_expected.to validate_inclusion_of(:return_of_capital).in_array([true, false]) }
+
+    describe "#dividends_issuance_date_cannot_be_in_past" do
+      let(:company) { create(:company) }
+
+      before do
+        share_class = create(:share_class, company:)
+        company_investor = create(:company_investor, company:)
+        create(:share_holding, company_investor:, share_class:, number_of_shares: 1000)
+      end
+
+      it "is invalid when dividends_issuance_date is in the past" do
+        dividend_computation = build(:dividend_computation, company:, dividends_issuance_date: 1.day.ago)
+        expect(dividend_computation).to be_invalid
+        expect(dividend_computation.errors[:dividends_issuance_date]).to include("cannot be in the past")
+      end
+
+      it "is valid when dividends_issuance_date is today" do
+        dividend_computation = build(:dividend_computation, company:, dividends_issuance_date: Date.current)
+        expect(dividend_computation).to be_valid
+      end
+
+      it "is valid when dividends_issuance_date is in the future" do
+        dividend_computation = build(:dividend_computation, company:, dividends_issuance_date: 1.day.from_now)
+        expect(dividend_computation).to be_valid
+      end
+    end
+
+    describe "#company_must_have_shareholders" do
+      it "is invalid on create when company has no shareholders or convertible investments" do
+        company = create(:company)
+        dividend_computation = build(:dividend_computation, company:)
+        expect(dividend_computation).to be_invalid
+        expect(dividend_computation.errors[:base]).to include("Company must have shareholders or convertible investments to issue dividends")
+      end
+
+      it "is valid when company has share holdings" do
+        company = create(:company)
+        share_class = create(:share_class, company:)
+        company_investor = create(:company_investor, company:)
+        create(:share_holding, company_investor:, share_class:, number_of_shares: 1000)
+
+        dividend_computation = build(:dividend_computation, company:)
+        expect(dividend_computation).to be_valid
+      end
+
+      it "is valid when company has convertible investments" do
+        company = create(:company)
+        create(:convertible_investment, company:, implied_shares: 1000)
+
+        dividend_computation = build(:dividend_computation, company:)
+        expect(dividend_computation).to be_valid
+      end
+    end
   end
 
   let(:company) { create(:company) }
