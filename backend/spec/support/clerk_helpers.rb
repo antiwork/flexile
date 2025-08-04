@@ -10,7 +10,6 @@ module ClerkHelpers
     allow(@clerk_mock).to receive(:session_claims).and_return({ "iat" => Time.current.to_i })
     allow(controller).to receive(:clerk).and_return(@clerk_mock)
 
-    allow(controller).to receive(:force_onboarding)
     allow(controller).to receive(:authenticate_user_json!)
     allow(controller).to receive(:set_paper_trail_whodunnit)
     allow(controller).to receive(:verify_authorized)

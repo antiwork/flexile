@@ -79,11 +79,7 @@ scope path: :internal, module: :internal do
       end
     end
 
-    resources :dividend_computations, only: [:index, :create, :show] do
-      member do
-        post :finalize
-      end
-    end
+    resources :dividend_computations, only: [:index, :create, :show]
   end
 
   resources :wise_account_requirements, only: :create

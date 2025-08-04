@@ -27,23 +27,4 @@ class DividendRound < ApplicationRecord
         investor_dividend_round.send_dividend_issued_email
       end
   end
-
-  def company_charged?
-    consolidated_invoice&.consolidated_payments&.any?
-  end
-
-  def company_paid?
-    consolidated_invoice&.status == Invoice::Status::PAID
-  end
-
-  def total_amount_in_usd
-    total_amount_in_cents / 100.0
-  end
-
-  def trigger_payments
-    return if consolidated_invoice.present?
-
-    invoice = DividendConsolidatedInvoiceCreation.new(self).process
-    ChargeConsolidatedInvoiceJob.perform_async(invoice.id)
-  end
 end

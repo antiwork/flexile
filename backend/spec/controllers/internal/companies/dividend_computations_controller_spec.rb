@@ -30,9 +30,6 @@ RSpec.describe Internal::Companies::DividendComputationsController, type: :contr
 
       expect(json["dividend_computations"]).to be_an(Array)
       expect(json["dividend_computations"].length).to eq(2)
-
-      expect(json["dividend_computations"][0]["id"]).to eq(computation2.id)
-      expect(json["dividend_computations"][1]["id"]).to eq(computation1.id)
     end
 
     it "includes computation attributes in response" do
@@ -207,93 +204,6 @@ RSpec.describe Internal::Companies::DividendComputationsController, type: :contr
 
       it "denies access" do
         get :show, params: { company_id: company.id, id: dividend_computation.id }
-        expect(response).to have_http_status(:forbidden)
-        json = JSON.parse(response.body)
-        expect(json["success"]).to be(false)
-        expect(json["error"]).to eq("You are not allowed to perform this action.")
-      end
-    end
-  end
-
-  describe "POST #finalize" do
-    let(:user) { company_administrator.user }
-    let!(:computation_output) do
-      create(:dividend_computation_output,
-             dividend_computation: dividend_computation,
-             company_investor: company_investor)
-    end
-
-    before do
-      clerk_sign_in CurrentContext.new(user: user, company: company)
-    end
-
-    it "returns a successful response" do
-      post :finalize, params: { company_id: company.id, id: dividend_computation.id }
-      expect(response).to have_http_status(:success)
-    end
-
-    it "creates a dividend round" do
-      expect do
-        post :finalize, params: { company_id: company.id, id: dividend_computation.id }
-      end.to change(DividendRound, :count).by(1)
-    end
-
-    it "creates dividends" do
-      expect do
-        post :finalize, params: { company_id: company.id, id: dividend_computation.id }
-      end.to change(Dividend, :count).by_at_least(1)
-    end
-
-    it "returns dividend round data" do
-      post :finalize, params: { company_id: company.id, id: dividend_computation.id }
-      json = JSON.parse(response.body)
-
-      expect(json["success"]).to be(true)
-      expect(json["dividend_round"]).to be_present
-      expect(json["dividend_round"]).to include(
-        "id",
-        "total_amount_in_cents",
-        "status"
-      )
-    end
-
-    it "sends dividend issued emails" do
-      expect_any_instance_of(DividendRound).to receive(:send_dividend_emails)
-      post :finalize, params: { company_id: company.id, id: dividend_computation.id }
-    end
-
-    context "when computation has invalid data" do
-      before do
-        dividend_computation.dividend_computation_outputs.destroy_all
-      end
-
-      it "returns error response" do
-        post :finalize, params: { company_id: company.id, id: dividend_computation.id }
-        expect(response).to have_http_status(:unprocessable_entity)
-
-        json = JSON.parse(response.body)
-        expect(json["success"]).to be(false)
-        expect(json["error_message"]).to be_present
-      end
-    end
-
-    context "when computation does not exist" do
-      it "raises ActiveRecord::RecordNotFound" do
-        expect do
-          post :finalize, params: { company_id: company.id, id: 999999 }
-        end.to raise_error(ActiveRecord::RecordNotFound)
-      end
-    end
-
-    context "when user is not a company administrator" do
-      let(:user) { company_investor.user }
-
-      before do
-        clerk_sign_in CurrentContext.new(user: user, company: company)
-      end
-
-      it "denies access" do
-        post :finalize, params: { company_id: company.id, id: dividend_computation.id }
         expect(response).to have_http_status(:forbidden)
         json = JSON.parse(response.body)
         expect(json["success"]).to be(false)

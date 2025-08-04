@@ -12,8 +12,4 @@ class DividendComputationPolicy < ApplicationPolicy
   def create?
     company_administrator.present?
   end
-
-  def finalize?
-    company_administrator.present?
-  end
 end

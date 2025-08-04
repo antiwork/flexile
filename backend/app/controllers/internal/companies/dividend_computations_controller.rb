@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Internal::Companies::DividendComputationsController < Internal::Companies::BaseController
-  before_action :load_computation!, only: [:show, :finalize]
+  before_action :load_computation!, only: [:show]
 
   def index
     authorize DividendComputation
@@ -36,7 +36,9 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     begin
       computation = DividendComputationGeneration.new(
         Current.company,
-        attributes: create_params
+        amount_in_usd: create_params[:amount_in_usd],
+        dividends_issuance_date: create_params[:issued_at],
+        return_of_capital: create_params[:return_of_capital]
       ).process
 
       # TODO
@@ -68,7 +70,6 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     outputs = @computation.dividend_computation_outputs.includes(company_investor: :user).map do |output|
       investor_name = output.investor_name || output.company_investor&.user&.legal_name
 
-      # Calculate fee based on the same formula used in DividendReportCsv #TODO validate this, not sure how it plays with wise fees store in payment.transfer_fee_in_cents
       total_amount_in_cents = (output.total_amount_in_usd * 100).to_i
       calculated_fee = ((total_amount_in_cents.to_d * 2.9.to_d / 100.to_d) + 30.to_d).round.to_i
       fee_in_cents = [30_00, calculated_fee].min
@@ -99,26 +100,6 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
         outputs: outputs,
       },
     }
-  end
-
-  def finalize
-    authorize @computation
-
-    begin
-      dividend_round = @computation.generate_dividends
-      dividend_round.send_dividend_emails
-      dividend_round.trigger_payments
-
-      render json: {
-        success: true,
-        dividend_round: DividendRoundPresenter.new(dividend_round).props,
-      }
-    rescue ActiveRecord::RecordInvalid => e
-      render json: {
-        success: false,
-        error_message: e.message,
-      }, status: :unprocessable_entity
-    end
   end
 
   private
