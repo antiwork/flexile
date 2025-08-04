@@ -21,7 +21,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -167,13 +166,13 @@ const LetterOfTransmittalSection = ({ onBack, onNext, data }: LetterOfTransmitta
       <DialogHeader>
         <DialogTitle>Letter of transmittal</DialogTitle>
         <DialogDescription>
-          Review and sign the Letter of Transmittal to confirm your participation in this data.
+          Review and sign the Letter of Transmittal to confirm your participation in this buyback.
         </DialogDescription>
       </DialogHeader>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="flex max-h-[65vh] min-h-0 flex-1 flex-col overflow-hidden">
         {showDocument ? (
-          <div className="mb-4 flex-1 overflow-auto rounded-sm border border-gray-300">
+          <div className="mb-4 flex-1 overflow-auto rounded-sm border border-gray-300 p-4">
             <RichText content={data.letterOfTransmittal || "Letter of transmittal not available"} />
           </div>
         ) : null}
@@ -333,7 +332,7 @@ const SubmitBidSection = ({ onBack, mutation, data }: SubmitBidSectionProps) => 
                 <FormItem>
                   <FormLabel>Number of shares</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="0" type="number" />
+                    <NumberInput {...field} placeholder="0" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

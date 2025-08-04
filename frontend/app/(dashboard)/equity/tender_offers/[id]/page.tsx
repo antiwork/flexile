@@ -243,15 +243,15 @@ export default function BuybackView() {
     <>
       <DashboardHeader
         title={
-          <div className="gap-2">
+          <div className="flex flex-wrap items-end gap-x-4">
             {data.name}
             {getBuybackStatus(data) === "Settled" ? (
-              <Badge variant="outline" className="border-muted text-muted-foreground ml-4 rounded-full">
+              <Badge variant="outline" className="border-muted text-muted-foreground rounded-full text-sm">
                 Closed and Settled
               </Badge>
             ) : null}
             {getBuybackStatus(data) === "Closed" ? (
-              <Badge variant="outline" className="border-muted text-muted-foreground ml-4 rounded-full">
+              <Badge variant="outline" className="border-muted text-muted-foreground rounded-full text-sm">
                 Closed
               </Badge>
             ) : null}
@@ -323,11 +323,15 @@ export default function BuybackView() {
           }
         />
       ) : user.roles.administrator ? (
-        <Placeholder icon={InboxIcon}>
-          Investors can place bids now. Activity will appear here as it happens.
-        </Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={InboxIcon}>
+            Investors can place bids now. Activity will appear here as it happens.
+          </Placeholder>
+        </div>
       ) : (
-        <Placeholder icon={LucideCircleDollarSign}>Place your first bid to participate in the data.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={LucideCircleDollarSign}>Place your first bid to participate in the data.</Placeholder>
+        </div>
       )}
       {activeModal === "cancel" ? (
         <CancelBidModal
