@@ -18,7 +18,6 @@ RSpec.describe User do
 
     it { is_expected.to have_many(:documents) }
     it { is_expected.to have_many(:dividends).through(:company_investors) }
-    it { is_expected.to have_many(:time_entries) }
     it { is_expected.to have_many(:tos_agreements) }
     it { is_expected.to have_many(:invoices) }
     it { is_expected.to have_many(:invoice_approvals) }
@@ -120,7 +119,7 @@ RSpec.describe User do
         end
 
         context "when user did not complete onboarding" do
-          before { allow_any_instance_of(OnboardingState::Worker).to receive(:complete?).and_return(false) }
+          before { user.update!(citizenship_country_code: nil) }
 
           it "does not schedule a QuickBooks data sync job when attributes change" do
             expect do

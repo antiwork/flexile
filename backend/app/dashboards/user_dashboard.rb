@@ -15,7 +15,6 @@ class UserDashboard < Administrate::BaseDashboard
     companies: Field::HasMany,
     company_workers: Field::HasMany,
     clients: Field::HasMany,
-    time_entries: Field::HasMany,
     id: Field::Number,
     email: Field::String,
     encrypted_password: Field::String,

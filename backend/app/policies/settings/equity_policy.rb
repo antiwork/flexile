@@ -2,6 +2,6 @@
 
 class Settings::EquityPolicy < ApplicationPolicy
   def update?
-    company.equity_compensation_enabled?
+    company.equity_enabled?
   end
 end

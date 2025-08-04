@@ -15,7 +15,7 @@ RSpec.describe InvoiceEquityCalculator do
 
   context "when equity compensation is enabled" do
     before do
-      company.update!(equity_compensation_enabled: true)
+      company.update!(equity_enabled: true)
     end
 
     context "and company_worker has equity percentage" do

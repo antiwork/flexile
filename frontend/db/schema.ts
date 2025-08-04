@@ -980,19 +980,6 @@ export const tosAgreements = pgTable(
   (table) => [index("index_tos_agreements_on_user_id").using("btree", table.userId.asc().nullsLast().op("int8_ops"))],
 );
 
-export const userLeads = pgTable(
-  "user_leads",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    email: varchar().notNull(),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-  },
-  (table) => [index("index_user_leads_on_email").using("btree", table.email.asc().nullsLast().op("text_ops"))],
-);
-
 export const versions = pgTable(
   "versions",
   {
@@ -1265,7 +1252,6 @@ export const companyInvestors = pgTable(
       .$onUpdate(() => new Date()),
     totalShares: bigint("total_shares", { mode: "bigint" }).default(0n).notNull(),
     investmentAmountInCents: bigint("investment_amount_in_cents", { mode: "bigint" }).notNull(),
-    capTableNotes: varchar("cap_table_notes"),
 
     externalId: varchar("external_id").$default(nanoid).notNull(),
     totalOptions: bigint("total_options", { mode: "bigint" }).default(0n).notNull(),
@@ -1417,7 +1403,6 @@ export const companyInvestorEntities = pgTable(
     companyId: bigint("company_id", { mode: "bigint" }).notNull(),
     name: varchar().notNull(),
     investmentAmountCents: bigint("investment_amount_cents", { mode: "bigint" }).notNull(),
-    capTableNotes: varchar("cap_table_notes"),
     totalShares: bigint("total_shares", { mode: "bigint" }).default(0n).notNull(),
     totalOptions: bigint("total_options", { mode: "bigint" }).default(0n).notNull(),
     fullyDilutedShares: bigint("fully_diluted_shares", { mode: "bigint" }).generatedAlwaysAs(
@@ -1773,15 +1758,12 @@ export const companies = pgTable(
     countryCode: varchar("country_code"),
     isGumroad: boolean("is_gumroad").notNull().default(false),
     isTrusted: boolean("is_trusted").notNull().default(false),
-    equityGrantsEnabled: boolean("equity_grants_enabled").notNull().default(false),
+    equityEnabled: boolean("equity_enabled").notNull().default(false),
     showAnalyticsToContractors: boolean("show_analytics_to_contractors").notNull().default(false),
     defaultCurrency: varchar("default_currency").default("usd").notNull(),
 
-    tenderOffersEnabled: boolean("tender_offers_enabled").notNull().default(false),
-    capTableEnabled: boolean("cap_table_enabled").default(false).notNull(),
     lawyersEnabled: boolean("lawyers_enabled").notNull().default(false),
     conversionSharePriceUsd: numeric("conversion_share_price_usd"),
-    equityCompensationEnabled: boolean("equity_compensation_enabled").notNull().default(false),
     jsonData: jsonb("json_data").notNull().$type<{ flags: string[] }>().default({ flags: [] }),
   },
   (table) => [

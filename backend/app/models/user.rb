@@ -38,7 +38,6 @@ class User < ApplicationRecord
   has_many :portfolio_companies, -> { order("company_investors.created_at") }, through: :company_investors, source: :company
 
   has_many :dividends, through: :company_investors
-  has_many :time_entries
   has_many :tos_agreements
   has_many :invoices
   has_many :invoice_approvals, foreign_key: :approver_id
@@ -209,6 +208,10 @@ class User < ApplicationRecord
     false
   end
 
+  def has_personal_details?
+    legal_name.present? && citizenship_country_code.present?
+  end
+
   def should_regenerate_consulting_contract?(changeset)
     CONSULTING_CONTRACT_ATTRIBUTES.any? do |attr|
       changeset[attr].present? && send(attr) != changeset[attr]
@@ -225,7 +228,7 @@ class User < ApplicationRecord
     end
 
     def sync_with_quickbooks
-      return unless OnboardingState::Worker.new(user: self, company: company_workers.first!.company).complete?
+      return unless has_personal_details?
 
       columns_synced_with_quickbooks = %w[email unconfirmed_email preferred_name legal_name
                                           city street_address zip_code country_code state]

@@ -35,10 +35,10 @@ export default function PayoutsPage() {
 
   return (
     <>
-      <h2 className="mb-8 text-xl font-medium">Payouts</h2>
+      <h2 className="mb-8 text-3xl font-bold">Payouts</h2>
       <div className="grid gap-16">
         <BankAccountsSection />
-        {user.roles.worker && company.equityCompensationEnabled ? <EquitySection /> : null}
+        {user.roles.worker && company.equityEnabled ? <EquitySection /> : null}
         {user.roles.investor ? <DividendSection /> : null}
       </div>
     </>

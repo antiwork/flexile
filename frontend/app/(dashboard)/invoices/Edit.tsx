@@ -291,7 +291,7 @@ const Edit = () => {
 
       <section>
         <div className="grid gap-4">
-          <div className="grid auto-cols-fr gap-3 md:grid-flow-col">
+          <div className="mx-4 grid auto-cols-fr gap-3 md:grid-flow-col">
             <div>
               From
               <br />
@@ -494,7 +494,7 @@ const Edit = () => {
             </Table>
           ) : null}
 
-          <footer className="flex flex-col gap-3 lg:flex-row lg:justify-between">
+          <footer className="mx-4 flex flex-col gap-3 lg:flex-row lg:justify-between">
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -502,7 +502,7 @@ const Edit = () => {
               className="w-full lg:w-96"
             />
             <div className="flex flex-col gap-2 md:self-start lg:items-end">
-              {showExpensesTable || company.equityCompensationEnabled ? (
+              {showExpensesTable || company.equityEnabled ? (
                 <div className="flex flex-col items-end">
                   <span>Total services</span>
                   <span className="numeric text-xl">{formatMoneyFromCents(totalServicesAmountInCents)}</span>
@@ -514,7 +514,7 @@ const Edit = () => {
                   <span className="numeric text-xl">{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
                 </div>
               ) : null}
-              {company.equityCompensationEnabled ? (
+              {company.equityEnabled ? (
                 <>
                   <div className="flex flex-col items-end">
                     <span>

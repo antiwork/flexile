@@ -114,7 +114,7 @@ export default function QuickbooksRow() {
   const expenseAccountFields = [
     "consultingServicesExpenseAccountId",
     "flexileFeesExpenseAccountId",
-    ...(company.flags.includes("equity_compensation") ? (["equityCompensationExpenseAccountId"] as const) : []),
+    ...(company.flags.includes("equity") ? (["equityCompensationExpenseAccountId"] as const) : []),
     ...expenseCategories.map((category) => `expenseCategoryAccounts.${category.id}` as const),
   ] as const;
   const expenseAccountLabels: Record<(typeof expenseAccountFields)[number], string> = {

@@ -19,7 +19,7 @@ class InvoiceEquityCalculator
     equity_percentage = company_worker.equity_percentage
     equity_amount_in_cents = ((service_amount_cents * equity_percentage) / 100.to_d).round
     equity_amount_in_options =
-      if equity_percentage.zero? || !company.equity_compensation_enabled?
+      if equity_percentage.zero? || !company.equity_enabled?
         0
       else
         (equity_amount_in_cents / (share_price_usd * 100.to_d)).round

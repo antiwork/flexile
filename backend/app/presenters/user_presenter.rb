@@ -87,16 +87,12 @@ class UserPresenter
 
     {
       companies: user.all_companies.compact.map do |company|
-        flags = %w[equity_compensation].filter { Flipper.enabled?(_1, company) }
-        flags.push("equity_grants") if company.equity_grants_enabled?
-        flags.push("dividends")
+        flags = []
+        flags.push("equity") if company.equity_enabled?
         flags.push("company_updates") if company.company_investors.exists?
         flags.push("quickbooks") if company.quickbooks_enabled?
-        flags.push("tender_offers") if company.tender_offers_enabled?
-        flags.push("cap_table") if company.cap_table_enabled?
         flags.push("lawyers") if company.lawyers_enabled?
         flags.push("expenses") if company.expenses_enabled?
-        flags.push("equity_compensation") if company.equity_compensation_enabled?
         flags.push("option_exercising") if company.json_flag?("option_exercising")
         can_view_financial_data = user.company_administrator_for?(company) || user.company_investor_for?(company)
         {
@@ -112,7 +108,7 @@ class UserPresenter
             country: ISO3166::Country[company.country_code].common_name,
           },
           flags:,
-          equityCompensationEnabled: company.equity_compensation_enabled,
+          equityEnabled: company.equity_enabled,
           requiredInvoiceApprovals: company.required_invoice_approval_count,
           paymentProcessingDays: company.contractor_payment_processing_time_in_days,
           createdAt: company.created_at.iso8601,
@@ -126,8 +122,8 @@ class UserPresenter
           primaryAdminName: company.primary_admin.user.name,
           completedPaymentMethodSetup: company.bank_account_ready?,
           isTrusted: company.is_trusted,
-          checklistItems: company.checklist_items(user.company_administrator_for(company) || user.company_worker_for(company)),
-          checklistCompletionPercentage: company.checklist_completion_percentage(user.company_administrator_for(company) || user.company_worker_for(company)),
+          checklistItems: company.checklist_items(user),
+          checklistCompletionPercentage: company.checklist_completion_percentage(user),
         }
       end,
       id: user.external_id,
@@ -148,7 +144,7 @@ class UserPresenter
         country: user.country_code && ISO3166::Country[user.country_code].common_name,
       },
       email: user.display_email,
-      onboardingPath: OnboardingState::User.new(user:, company:).redirect_path,
+      onboardingPath: worker && worker.role.nil? ? "/documents" : nil,
       taxInformationConfirmedAt: tax_information_confirmed_at&.iso8601,
     }
   end
@@ -165,15 +161,12 @@ class UserPresenter
       result[:has_documents] = documents.not_consulting_contract.or(documents.unsigned).exists?
       if company_worker.present?
         if company_worker.active?
-          result[:flags][:cap_table] = true if company.is_gumroad? && company.cap_table_enabled?
+          result[:flags][:equity] = true if company.is_gumroad? && company.equity_enabled?
         end
       end
       if company_investor.present?
-        result[:flags][:cap_table] ||= true if company.cap_table_enabled?
+        result[:flags][:equity] ||= true if company.equity_enabled?
         result[:flags][:option_exercising] = company.json_flag?("option_exercising")
-        result[:flags][:equity_grants] = company.equity_grants_enabled?
-
-        result[:flags][:tender_offers] ||= company.tender_offers_enabled?
       end
       result
     end
@@ -192,11 +185,7 @@ class UserPresenter
     def common_admin_props
       {
         flags: {
-          equity_grants: company.equity_grants_enabled?,
-          cap_table: company.cap_table_enabled?,
-
-          tender_offers: company.tender_offers_enabled?,
-          dividends: true,
+          equity: company.equity_enabled?,
           company_updates: company.company_investors.exists?,
         },
       }

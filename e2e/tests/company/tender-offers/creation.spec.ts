@@ -10,8 +10,7 @@ import { users } from "@/db/schema";
 test.describe("Buyback creation", () => {
   test("allows creating a new buyback", async ({ page }) => {
     const { company } = await companiesFactory.create({
-      tenderOffersEnabled: true,
-      capTableEnabled: true,
+      equityEnabled: true,
     });
 
     const { administrator } = await companyAdministratorsFactory.create({
