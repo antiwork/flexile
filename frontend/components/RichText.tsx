@@ -1,6 +1,6 @@
-import { Bars2Icon, BoldIcon, ItalicIcon, LinkIcon, ListBulletIcon, UnderlineIcon } from "@heroicons/react/24/outline";
 import type { Content } from "@tiptap/core";
 import { EditorContent, isList, useEditor } from "@tiptap/react";
+import { Bold, Heading, Italic, Link, List, Underline } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { linkClasses } from "@/components/Link";
 import { Button } from "@/components/ui/button";
@@ -68,17 +68,17 @@ export const Editor = ({
   const currentLink: unknown = editor?.getAttributes("link").href;
 
   const toolbarItems = [
-    { label: "Bold", name: "bold", icon: BoldIcon },
-    { label: "Italic", name: "italic", icon: ItalicIcon },
-    { label: "Underline", name: "underline", icon: UnderlineIcon },
-    { label: "Heading", name: "heading", attributes: { level: 2 }, icon: Bars2Icon },
+    { label: "Bold", name: "bold", icon: Bold },
+    { label: "Italic", name: "italic", icon: Italic },
+    { label: "Underline", name: "underline", icon: Underline },
+    { label: "Heading", name: "heading", attributes: { level: 2 }, icon: Heading },
     {
       label: "Link",
       name: "link",
-      icon: LinkIcon,
+      icon: Link,
       onClick: () => setAddingLink({ url: typeof currentLink === "string" ? currentLink : "" }),
     },
-    { label: "Bullet list", name: "bulletList", icon: ListBulletIcon },
+    { label: "Bullet list", name: "bulletList", icon: List },
   ];
   const onToolbarClick = (item: (typeof toolbarItems)[number]) => {
     if (!editor) return;
