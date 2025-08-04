@@ -5,7 +5,7 @@ class User < ApplicationRecord
 
   devise :invitable, :database_authenticatable
 
-  include ExternalId, Flipper::Identifier, DeviseInternal
+  include ExternalId, Flipper::Identifier, DeviseInternal, OtpAuthentication
 
   NON_TAX_COMPLIANCE_ATTRIBUTES = %i[legal_name birth_date country_code citizenship_country_code street_address city state zip_code]
   USER_PROVIDED_TAX_ATTRIBUTES = %i[tax_id business_entity business_name business_type tax_classification]
@@ -59,8 +59,7 @@ class User < ApplicationRecord
   validate :minimum_dividend_payment_in_cents_is_within_range
   validates :preferred_name, length: { maximum: MAX_PREFERRED_NAME_LENGTH }, allow_nil: true
 
-  after_create :upsert_clerk_user
-  after_update :upsert_clerk_user, if: -> { %w[email legal_name].any? { |prop| send(:"saved_change_to_#{prop}?") }  }
+
   after_update_commit :update_associated_pg_search_documents
   after_update_commit :sync_with_quickbooks, if: :worker?
   after_update_commit :update_dividend_status,
@@ -174,35 +173,7 @@ class User < ApplicationRecord
     company_lawyers.exists?
   end
 
-  def upsert_clerk_user
-    return if Rails.env.test?
-    clerk = Clerk::SDK.new
-    first_name, _, last_name = legal_name&.rpartition(" ")
-    data = {
-      email_address: [email],
-      first_name: first_name,
-      last_name: last_name,
-    }
-    if Rails.env.development? && !clerk_id
-      clerk_user = clerk.users.get_user_list(email_address: email).first
-      update!(clerk_id: clerk_user.id) if clerk_user
-    end
-    if clerk_id
-      clerk.users.update_user(clerk_id, data)
-    else
-      clerk_user = clerk.users.create_user({
-        **data,
-        created_at: created_at.iso8601,
-        legal_accepted_at: created_at.iso8601,
-        skip_password_requirement: true,
-      })
-      update!(clerk_id: clerk_user.id)
-    end
-  end
 
-  def create_clerk_invitation
-    Clerk::SDK.new.invitations.create_invitation(create_invitation_request: { email_address: email, expires_in_days: 365, ignore_existing: true }).url
-  end
 
   def password_required?
     false

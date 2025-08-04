@@ -8,6 +8,28 @@ elif [ ! -f ".env" ]; then
     echo ".env file not found. Please run bin/setup first."
 fi
 
+
+# Generate SSL certificates and start local services
+make local
+
+export ENABLE_DEFAULT_OTP=true
+
+export NODE_EXTRA_CA_CERTS="$(node docker/createCertificate.js)"
+
+# Generate combined SSL certificates and set environment variables
+mkdir -p tmp
+default_cert_file=$(ruby -ropenssl -e 'puts OpenSSL::X509::DEFAULT_CERT_FILE')
+combined_cert_file="tmp/combined_ca_certs.pem"
+
+if [ -f "$default_cert_file" ] && [ -f "$NODE_EXTRA_CA_CERTS" ]; then
+  cat "$default_cert_file" "$NODE_EXTRA_CA_CERTS" > "$combined_cert_file"
+  echo "Combined certificates created at $combined_cert_file"
+  export SSL_CERT_FILE="$combined_cert_file"
+else
+  echo "Warning: Could not create combined cert file. Using default certificates."
+fi
+
+# Install dependencies and prepare database
 pnpm install
 cd backend
 bundle install
@@ -24,6 +46,8 @@ kill_process_listening_on_port 3001
 kill_process_listening_on_port 8288 # inngest
 rm -f backend/tmp/pids/server.pid
 
-export NODE_EXTRA_CA_CERTS="$(node docker/createCertificate.js)"
-make local
+
+# TODO: Remove this after making sure we can read NODE_ENV in api.ts
+export RAILS_ENV=development
+
 foreman start -f Procfile.dev "$@"

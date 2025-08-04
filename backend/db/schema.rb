@@ -935,6 +935,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_04_165400) do
     t.boolean "team_member", default: false, null: false
     t.boolean "sent_invalid_tax_id_email", default: false, null: false
     t.string "clerk_id"
+    t.string "otp_secret_key"
+    t.integer "otp_failed_attempts_count", default: 0, null: false
+    t.datetime "otp_first_failed_at"
     t.bigint "signup_invite_link_id"
     t.index ["clerk_id"], name: "index_users_on_clerk_id", unique: true
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true

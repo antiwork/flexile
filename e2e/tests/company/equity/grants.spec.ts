@@ -1,4 +1,3 @@
-import { clerk } from "@clerk/testing/playwright";
 import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
@@ -8,9 +7,9 @@ import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { optionPoolsFactory } from "@test/factories/optionPools";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker, selectComboboxOption } from "@test/helpers";
-import { login } from "@test/helpers/auth";
+import { login, logout } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
-import { expect, test, withinAlertDialog, withinModal } from "@test/index";
+import { expect, test, withinModal } from "@test/index";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { DocumentTemplateType } from "@/db/enums";
 import { companyInvestors, documents, documentSignatures, equityGrants } from "@/db/schema";
@@ -105,7 +104,7 @@ test.describe("New Contractor", () => {
           companyDocuments.map((d) => d.id),
         ),
       );
-    await clerk.signOut({ page });
+    await logout(page);
     await login(page, contractorUser);
     await page.goto("/invoices");
     await page.getByRole("link", { name: "New invoice" }).first().click();
@@ -120,7 +119,7 @@ test.describe("New Contractor", () => {
     await expect(page.locator("tbody")).toContainText("Oct 15, 2024");
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
 
-    await clerk.signOut({ page });
+    await logout(page);
     await login(page, projectBasedUser);
     await page.goto("/invoices");
     await page.getByRole("link", { name: "New invoice" }).first().click();
@@ -153,14 +152,14 @@ test.describe("New Contractor", () => {
     await page.getByRole("button", { name: "Equity" }).click();
     await page.getByRole("link", { name: "Equity grants" }).click();
     await page.getByRole("button", { name: "Cancel" }).click();
-    await withinAlertDialog(
+    await withinModal(
       async (modal) => {
         await modal.getByRole("button", { name: "Confirm cancellation" }).click();
       },
       { page },
     );
 
-    await expect(page.getByRole("alertdialog")).not.toBeVisible();
+    await expect(page.getByRole("dialog")).not.toBeVisible();
     await expect(page.getByRole("button", { name: "Cancel" })).not.toBeVisible();
     expect(
       (await db.query.equityGrants.findFirst({ where: eq(equityGrants.id, equityGrant.id) }).then(takeOrThrow))
