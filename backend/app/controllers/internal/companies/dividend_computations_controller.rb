@@ -66,10 +66,7 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     outputs = @computation.dividend_computation_outputs.includes(company_investor: :user).map do |output|
       investor_name = output.investor_name || output.company_investor&.user&.legal_name
 
-      total_amount_in_cents = (output.total_amount_in_usd * 100).to_i
-      calculated_fee = ((total_amount_in_cents.to_d * 2.9.to_d / 100.to_d) + 30.to_d).round.to_i
-      fee_in_cents = [30_00, calculated_fee].min
-      fee_in_usd = fee_in_cents / 100.0
+      fee_in_usd = Dividend.new(total_amount_in_cents: (output.total_amount_in_usd * 100).to_i).calculate_flexile_fee_cents / 100.0
 
       {
         investor_name: investor_name,

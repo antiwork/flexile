@@ -19,6 +19,11 @@ class Dividend < ApplicationRecord
   RETAINED_REASON_BELOW_THRESHOLD = "below_minimum_payment_threshold"
   RETAINED_REASONS = [RETAINED_REASON_COUNTRY_SANCTIONED, RETAINED_REASON_BELOW_THRESHOLD].freeze
 
+  BASE_FLEXILE_FEE_CENTS = 30
+  MAX_FLEXILE_FEE_CENTS = 30_00
+  PERCENT_FLEXILE_FEE = 2.9
+  private_constant :BASE_FLEXILE_FEE_CENTS, :MAX_FLEXILE_FEE_CENTS, :PERCENT_FLEXILE_FEE
+
   validates :retained_reason, inclusion: { in: RETAINED_REASONS }, allow_nil: true
   validates :total_amount_in_cents, presence: true, numericality: { greater_than: 0 }
   validates :number_of_shares, numericality: { greater_than: 0 }, allow_nil: true
@@ -38,5 +43,10 @@ class Dividend < ApplicationRecord
 
   def mark_retained!(reason)
     update!(status: RETAINED, retained_reason: reason)
+  end
+
+  def calculate_flexile_fee_cents
+    fee_cents = BASE_FLEXILE_FEE_CENTS + (total_amount_in_cents * PERCENT_FLEXILE_FEE / 100)
+    [fee_cents, MAX_FLEXILE_FEE_CENTS].min.round
   end
 end

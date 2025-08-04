@@ -365,6 +365,8 @@ export const dividendComputationOutputs = pgTable(
     investorName: varchar("investor_name"),
     companyInvestorId: bigint("company_investor_id", { mode: "bigint" }),
     qualifiedDividendAmountUsd: numeric("qualified_dividend_amount_usd").notNull(),
+    name: varchar("name"),
+    releaseDocument: text("release_document"),
   },
   (table) => [
     index("index_dividend_computation_outputs_on_company_investor_id").using(
