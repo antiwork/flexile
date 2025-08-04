@@ -59,7 +59,7 @@ import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({ children, modal }: { children: React.ReactNode; modal: React.ReactNode }) {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const pathname = usePathname();
@@ -211,8 +211,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </Sidebar>
       <SidebarInset>
         <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
-          <main className="flex flex-1 flex-col not-print:overflow-y-auto">
-            <div className="flex flex-col gap-4">{children}</div>
+          <main className="flex flex-1 flex-col pb-4 not-print:overflow-y-auto">
+            <div className="mx-3 flex flex-col gap-6">
+              {children}
+              {modal}
+            </div>
           </main>
         </div>
       </SidebarInset>
