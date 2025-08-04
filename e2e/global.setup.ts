@@ -1,3 +1,4 @@
+import { clerkSetup } from "@clerk/testing/playwright";
 import { test as setup } from "@playwright/test";
 import { db } from "@test/db";
 import { sql } from "drizzle-orm";
@@ -25,4 +26,6 @@ setup("global setup", async () => {
     docusealId: 1n,
     signable: true,
   });
+
+  await clerkSetup();
 });

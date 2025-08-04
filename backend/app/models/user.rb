@@ -5,7 +5,7 @@ class User < ApplicationRecord
 
   devise :invitable, :database_authenticatable
 
-  include ExternalId, Flipper::Identifier, DeviseInternal, OtpAuthentication
+  include ExternalId, Flipper::Identifier, DeviseInternal
 
   NON_TAX_COMPLIANCE_ATTRIBUTES = %i[legal_name birth_date country_code citizenship_country_code street_address city state zip_code]
   USER_PROVIDED_TAX_ATTRIBUTES = %i[tax_id business_entity business_name business_type tax_classification]

@@ -42,12 +42,8 @@ export default function AcceptInvitationPage() {
 
   const acceptInvite = () => {
     if (!user) {
-      // TODO: Check and remove this later
       document.cookie = `${INVITATION_TOKEN_COOKIE_NAME}=${safeToken}; path=/; max-age=${INVITATION_TOKEN_COOKIE_MAX_AGE}`;
       router.push("/signup");
-
-      // Redirect to signup with invitation token as URL parameter
-      router.push(`/signup?invitation_token=${encodeURIComponent(safeToken)}`);
       return;
     }
 

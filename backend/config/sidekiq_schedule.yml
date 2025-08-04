@@ -81,3 +81,8 @@ dividend_report_csv_email_job:
   args:
     - - "solson@earlygrowth.com"
       - "howard@antiwork.com"
+
+vesting_report_csv_email_job:
+  cron: "0 16 1 * *" # The 1st day of every month at UTC 16:00
+  class: VestingReportCsvEmailJob
+  description: Sends monthly vesting report to company admins

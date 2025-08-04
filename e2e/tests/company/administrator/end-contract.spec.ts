@@ -1,8 +1,9 @@
+import { clerk } from "@clerk/testing/playwright";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { fillDatePicker } from "@test/helpers";
-import { login, logout } from "@test/helpers/auth";
+import { login } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
 import { addDays, addYears, format } from "date-fns";
@@ -69,7 +70,7 @@ test.describe("End contract", () => {
         .filter({ hasText: `Starts on ${format(startDate, "MMM d, yyyy")}` }),
     ).toBeVisible();
 
-    await logout(page);
+    await clerk.signOut({ page });
     await login(page, contractor);
     await page.getByRole("link", { name: "sign it" }).click();
     await page.getByRole("button", { name: "Sign now" }).click();

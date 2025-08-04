@@ -1,9 +1,10 @@
+import { clerk } from "@clerk/testing/playwright";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker } from "@test/helpers";
-import { login, logout } from "@test/helpers/auth";
+import { login } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
 
@@ -45,12 +46,10 @@ test.describe("Contractor for multiple companies", () => {
     await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
     await expect(page.getByRole("cell").filter({ hasText: "Alex" })).toBeVisible();
 
-    await logout(page);
+    await clerk.signOut({ page });
     await login(page, contractorUser);
-    // Click company switcher in sidebar
-    await page.locator('[data-slot="dropdown-menu-trigger"]').first().click();
+    await page.getByRole("button", { name: "Switch company" }).click();
     await page.getByRole("menuitem", { name: "Second Company" }).click();
-    await expect(page.getByText("Second Company")).toBeVisible();
     await page.getByRole("link", { name: "Invoices" }).click();
     await expect(page.getByText("You have an unsigned contract")).toBeVisible();
     await page.getByRole("link", { name: "sign it" }).click();

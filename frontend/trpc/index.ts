@@ -12,16 +12,15 @@ import {
 } from "@trpc/server";
 import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import { eq } from "drizzle-orm";
-import { getServerSession } from "next-auth";
 import { cache } from "react";
 import superjson from "superjson";
 import { z } from "zod";
 import { db } from "@/db";
 import { companies, users } from "@/db/schema";
 import env from "@/env";
-import { authOptions } from "@/lib/auth";
 import { assertDefined } from "@/utils/assert";
 import { richTextExtensions } from "@/utils/richText";
+import { internal_userid_url } from "@/utils/routes";
 import { latestUserComplianceInfo, withRoles } from "./routes/users/helpers";
 import { type AppRouter } from "./server";
 
@@ -37,33 +36,12 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
   const headers: Record<string, string> = {
     cookie,
     "user-agent": userAgent,
-    referer: "x",
+    referer: "x" /* work around a Clerk limitation */,
     accept: "application/json",
     ...(csrfToken ? { "x-csrf-token": csrfToken } : {}),
   };
-
-  let userId: number | null = null;
-
-  // Get userId from NextAuth JWT session
-  const session = await getServerSession(authOptions);
-  if (session?.user.jwt) {
-    // Extract user ID from JWT token
-    try {
-      const jwt = session.user.jwt;
-      if (typeof jwt === "string") {
-        const parts = jwt.split(".");
-        if (parts.length === 3) {
-          const base64Payload = parts[1];
-          if (base64Payload) {
-            const payload: unknown = JSON.parse(Buffer.from(base64Payload, "base64").toString());
-            if (payload && typeof payload === "object" && "user_id" in payload) {
-              userId = typeof payload.user_id === "number" ? payload.user_id : null;
-            }
-          }
-        }
-      }
-    } catch {}
-  }
+  const response = await fetch(internal_userid_url({ host }), { headers });
+  const userId = response.ok ? z.object({ id: z.number() }).parse(await response.json()).id : null;
 
   return {
     userId,

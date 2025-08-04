@@ -15,7 +15,7 @@
   <dt>Expected distribution date</dt>
   <dd><%= @dividend_date.to_fs(:long) %></dd>
 </dl>
-<%= link_to "Create your account", SIGNUP_URL, class: "button" %>
+<%= link_to "Create your account", @resource.create_clerk_invitation, class: "button" %>
 <p>
   If you have any questions or concerns, please reply to this email. We'll assist you in setting up your account.
 </p>

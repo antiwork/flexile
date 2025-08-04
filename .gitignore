@@ -16,6 +16,7 @@ tmp
 # Dependencies
 /node_modules
 /.puppeteer
+/certificates
 
 # Rails credentials
 /backend/config/master.key
@@ -29,5 +30,3 @@ tmp
 # IDE
 .vscode
 .idea
-
-certificates/
