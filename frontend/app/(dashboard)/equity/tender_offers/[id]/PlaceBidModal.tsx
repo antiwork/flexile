@@ -265,6 +265,8 @@ const SubmitBidSection = ({ onBack, mutation, data }: SubmitBidSectionProps) => 
   const pricePerShare = form.watch("pricePerShare") || 0;
   const shareClass = form.watch("shareClass");
   const maxShares = holdings.find((h) => h.className === shareClass)?.count || 0;
+  const impliedValuation = company.fullyDilutedShares ? company.fullyDilutedShares * pricePerShare : 0;
+  const totalAmount = new Decimal(numberOfShares).mul(pricePerShare || 0);
 
   const handleSubmit = form.handleSubmit((values) => {
     if (new Decimal(values.numberOfShares).gt(maxShares)) {
@@ -287,9 +289,6 @@ const SubmitBidSection = ({ onBack, mutation, data }: SubmitBidSectionProps) => 
       sharePriceCents: Math.round(values.pricePerShare * 100),
     });
   });
-
-  const impliedValuation = company.fullyDilutedShares ? company.fullyDilutedShares * pricePerShare : 0;
-  const totalAmount = new Decimal(numberOfShares).mul(pricePerShare || 0);
 
   return (
     <>

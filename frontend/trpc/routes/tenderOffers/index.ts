@@ -188,7 +188,7 @@ export const tenderOffersRouter = createRouter({
         investorCount: countDistinct(tenderOfferBids.companyInvestorId).as("investorCount"),
       })
       .from(tenderOfferBids)
-      .where(investorFilter)
+      .where(and(eq(tenderOfferBids.tenderOfferId, tenderOffer.id), investorFilter))
       .groupBy(tenderOfferBids.tenderOfferId)
       .then((result) => result[0]?.investorCount || 0);
 
