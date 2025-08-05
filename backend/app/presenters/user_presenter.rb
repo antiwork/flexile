@@ -94,6 +94,7 @@ class UserPresenter
         flags.push("lawyers") if company.lawyers_enabled?
         flags.push("expenses") if company.expenses_enabled?
         flags.push("option_exercising") if company.json_flag?("option_exercising")
+        flags.push("dividend_computation") if Flipper.enabled?(:dividend_computation, company)
         can_view_financial_data = user.company_administrator_for?(company) || user.company_investor_for?(company)
         {
           **company_navigation_props(
@@ -167,7 +168,6 @@ class UserPresenter
       if company_investor.present?
         result[:flags][:equity] ||= true if company.equity_enabled?
         result[:flags][:option_exercising] = company.json_flag?("option_exercising")
-        result[:flags][:dividend_computation] = Flipper.enabled?(:dividend_computation, company)
       end
       result
     end
@@ -188,7 +188,6 @@ class UserPresenter
         flags: {
           equity: company.equity_enabled?,
           company_updates: company.company_investors.exists?,
-          dividend_computation: Flipper.enabled?(:dividend_computation, company),
         },
       }
     end
