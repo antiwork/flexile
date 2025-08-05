@@ -42,7 +42,7 @@ type FormValues = z.infer<typeof schema>;
 
 const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps) => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [requireReleaseDocument, setRequireReleaseDocument] = useState(false);
+  const [requireReleaseDocument, setRequireReleaseDocument] = useState(true);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -87,7 +87,7 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
 
   const handleClose = () => {
     setCurrentStep(0);
-    setRequireReleaseDocument(false);
+    setRequireReleaseDocument(true);
     form.reset();
     onOpenChange(false);
   };
