@@ -122,7 +122,6 @@ test.describe("Contractor Invite Link", () => {
     const newInviteLinks = await db.query.companyInviteLinks.findMany({
       where: eq(companyInviteLinks.companyId, company.id),
     });
-    console.log("Invite links after reset:", newInviteLinks);
     expect(newInviteLinks.length).toBeGreaterThan(0);
   });
 });
