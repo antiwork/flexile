@@ -10,6 +10,6 @@ class CompanyAdministratorPolicy < ApplicationPolicy
   end
 
   def create?
-    company_administrator.present?
+    user.company_administrator_for?(company)
   end
 end
