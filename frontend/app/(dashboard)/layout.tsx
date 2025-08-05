@@ -106,7 +106,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     size="lg"
                     className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                   >
-                    <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                    <div className="bg-muted text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                       <Image src={defaultCompanyLogo} className="size-6" alt="" />
                     </div>
                     <div className="grid flex-1 text-left text-sm leading-tight">
