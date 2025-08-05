@@ -12,11 +12,11 @@ import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
-import { formatMoneyFromCents } from "@/utils/formatMoney";
+import { formatMoney } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 import NewDistributionModal from "./NewDistributionModal";
 
-export const DIVIDEND_ROUND_STATUS = {
+const DIVIDEND_ROUND_STATUS = {
   DRAFT: "DRAFT",
   PAYMENT_SCHEDULED: "PAYMENT_SCHEDULED",
   PAYMENT_IN_PROGRESS: "PAYMENT_IN_PROGRESS",
@@ -24,13 +24,7 @@ export const DIVIDEND_ROUND_STATUS = {
   COMPLETED: "COMPLETED",
 } as const;
 
-export type DividendRoundStatus = (typeof DIVIDEND_ROUND_STATUS)[keyof typeof DIVIDEND_ROUND_STATUS];
-
-function formatStatus(status: string) {
-  return capitalize(status.replace(/_/gu, " "));
-}
-
-type UnifiedDividendRound = {
+type TransformedData = {
   id: bigint;
   name: string;
   totalAmountInUsd: string;
@@ -44,34 +38,38 @@ type UnifiedDividendRound = {
 export default function DividendRounds() {
   const company = useCurrentCompany();
   const { data: dividendComputations = [], isLoading: isLoadingDividendComputations } =
-    trpc.dividendComputations.list.useQuery({ companyId: company.id });
-  const { data: dividendRounds = [], isLoading: isLoadingDividendRounds } = trpc.dividendRounds.list.useQuery({
-    companyId: company.id,
-  });
+    trpc.dividendComputations.list.useQuery(
+      { companyId: company.id },
+      {
+        select: (computations) =>
+          computations.map((computation) => ({
+            ...computation,
+            type: "draft" as const,
+            status: DIVIDEND_ROUND_STATUS.DRAFT,
+            dividendsIssuanceDate: new Date(computation.dividendsIssuanceDate),
+            numberOfShareholders: BigInt(computation.numberOfShareholders),
+          })),
+      },
+    );
+  const { data: dividendRounds = [], isLoading: isLoadingDividendRounds } = trpc.dividendRounds.list.useQuery(
+    { companyId: company.id },
+    {
+      select: (rounds) =>
+        rounds.map((round) => ({
+          ...round,
+          type: "round" as const,
+          name: "",
+          dividendsIssuanceDate: round.issuedAt,
+          totalAmountInUsd: String(round.totalAmountInCents / 100n),
+        })),
+    },
+  );
   const isLoading = isLoadingDividendComputations || isLoadingDividendRounds;
-
-  const data: UnifiedDividendRound[] = [
-    ...dividendComputations.map((computation) => ({
-      ...computation,
-      type: "draft" as const,
-      status: DIVIDEND_ROUND_STATUS.DRAFT,
-      dividendsIssuanceDate: new Date(computation.dividendsIssuanceDate),
-      numberOfShareholders: BigInt(computation.numberOfShareholders),
-    })),
-    ...dividendRounds.map((round) => ({
-      ...round,
-      type: "round" as const,
-      name: "",
-      status: round.status,
-      dividendsIssuanceDate: round.issuedAt,
-      totalAmountInUsd: formatMoneyFromCents(round.totalAmountInCents),
-    })),
-  ];
-
+  const data: TransformedData[] = [...dividendComputations, ...dividendRounds];
   const router = useRouter();
   const [isNewDistributionModalOpen, setIsNewDistributionModalOpen] = useState(false);
 
-  const columnHelper = createColumnHelper<UnifiedDividendRound>();
+  const columnHelper = createColumnHelper<TransformedData>();
   const columns = [
     columnHelper.accessor("name", {
       header: "Name",
@@ -100,30 +98,12 @@ export default function DividendRounds() {
       filterFn: (row, _, filterValue) =>
         Array.isArray(filterValue) && filterValue.includes(row.original.dividendsIssuanceDate.getFullYear().toString()),
     }),
-    columnHelper.simple("totalAmountInUsd", "Amount", (value) => value, "numeric"),
+    columnHelper.simple("totalAmountInUsd", "Amount", formatMoney, "numeric"),
     columnHelper.simple("numberOfShareholders", "Stakeholders", (value) => value.toLocaleString(), "numeric"),
     columnHelper.accessor("status", {
       header: "Status",
       cell: (info) => {
         const status = info.getValue();
-
-        const getStatus = (status: DividendRoundStatus) => {
-          switch (status) {
-            case DIVIDEND_ROUND_STATUS.DRAFT:
-              return { Icon: Circle, color: "text-black/18" };
-            case DIVIDEND_ROUND_STATUS.PAYMENT_SCHEDULED:
-              return { Icon: Clock, color: "text-blue-600" };
-            case DIVIDEND_ROUND_STATUS.PAYMENT_IN_PROGRESS:
-              return { Icon: Circle, color: "text-blue-600" };
-            case DIVIDEND_ROUND_STATUS.PARTIALLY_COMPLETED:
-              return { Icon: AlertCircle, color: "text-orange" };
-            case DIVIDEND_ROUND_STATUS.COMPLETED:
-              return { Icon: CheckCircle2, color: "text-green" };
-            default:
-              return { Icon: Circle, color: "text-black/18" };
-          }
-        };
-
         const { Icon, color } = getStatus(status);
 
         return (
@@ -134,7 +114,7 @@ export default function DividendRounds() {
         );
       },
       meta: {
-        filterOptions: Object.values(DIVIDEND_ROUND_STATUS).map(formatStatus),
+        filterOptions: [...new Set(data.map((round) => round.status))].map(formatStatus),
       },
       filterFn: (row, _, filterValue) =>
         Array.isArray(filterValue) && filterValue.includes(formatStatus(row.original.status)),
@@ -183,4 +163,25 @@ export default function DividendRounds() {
       <NewDistributionModal open={isNewDistributionModalOpen} onOpenChange={setIsNewDistributionModalOpen} />
     </>
   );
+}
+
+function formatStatus(status: string) {
+  return capitalize(status.replace(/_/gu, " "));
+}
+
+function getStatus(status: string) {
+  switch (status) {
+    case DIVIDEND_ROUND_STATUS.DRAFT:
+      return { Icon: Circle, color: "text-black/18" };
+    case DIVIDEND_ROUND_STATUS.PAYMENT_SCHEDULED:
+      return { Icon: Clock, color: "text-blue-600" };
+    case DIVIDEND_ROUND_STATUS.PAYMENT_IN_PROGRESS:
+      return { Icon: Circle, color: "text-blue-600" };
+    case DIVIDEND_ROUND_STATUS.PARTIALLY_COMPLETED:
+      return { Icon: AlertCircle, color: "text-orange" };
+    case DIVIDEND_ROUND_STATUS.COMPLETED:
+      return { Icon: CheckCircle2, color: "text-green" };
+    default:
+      return { Icon: Circle, color: "text-black/18" };
+  }
 }
