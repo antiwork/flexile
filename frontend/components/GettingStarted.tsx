@@ -87,7 +87,7 @@ export const GettingStarted = () => {
         className="flex h-full flex-col-reverse"
       >
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton className="h-full items-center justify-between rounded-none px-5">
+          <SidebarMenuButton className="h-full items-center justify-between">
             {status === "completed" ? (
               <div className="flex h-4 w-4 items-center justify-center rounded-full border-2 border-blue-500 bg-blue-500">
                 <CheckIcon />
