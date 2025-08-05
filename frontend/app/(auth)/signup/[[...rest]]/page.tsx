@@ -30,11 +30,6 @@ function SignUpContent() {
   );
 
   const handleGoogleSignIn = () => {
-    // Store invitation token in cookie if present so NextAuth can access it
-    if (invitationToken) {
-      document.cookie = `invitation_token=${invitationToken}; path=/; max-age=3600; SameSite=Lax`;
-    }
-
     const callbackUrl = invitationToken ? `/?invitation_token=${invitationToken}` : "/";
     void signIn("google", { callbackUrl });
   };

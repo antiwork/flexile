@@ -130,19 +130,31 @@ export const authOptions: NextAuthOptions = {
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (account?.provider === "google" && user) {
         try {
+          let invitationToken: string | undefined;
+          if (typeof window !== "undefined") {
+            const urlParams = new URLSearchParams(window.location.search);
+            invitationToken = urlParams.get("invitation_token") || undefined;
+          }
+
+          const requestBody: Record<string, unknown> = {
+            email: user.email,
+            name: user.name,
+            google_id: user.id,
+            image: user.image,
+            token: API_SECRET_TOKEN,
+          };
+
+          if (invitationToken) {
+            requestBody.invitation_token = invitationToken;
+          }
+
           // Call backend to handle Google OAuth login/signup
           const response = await fetch(`${API_BASE_URL}/v1/oauth/google`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-              email: user.email,
-              name: user.name,
-              google_id: user.id,
-              image: user.image,
-              token: API_SECRET_TOKEN,
-            }),
+            body: JSON.stringify(requestBody),
           });
 
           if (response.ok) {

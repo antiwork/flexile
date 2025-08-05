@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Suspense } from "react";
 import { AuthAlerts } from "@/components/auth/AuthAlerts";
@@ -14,18 +15,23 @@ import googleIcon from "@/images/google.svg";
 import logo from "@/public/logo-icon.svg";
 
 function LoginContent() {
+  const searchParams = useSearchParams();
+  const invitationToken = searchParams.get("invitation_token");
+
   const [state, actions] = useOtpFlowState();
   const { handleSendOtp, handleAuthenticate } = useAuthApi(
     {
       type: "login",
       sendOtpEndpoint: "/api/send-otp",
+      ...(invitationToken && { invitationToken }),
     },
     state,
     actions,
   );
 
   const handleGoogleSignIn = () => {
-    signIn("google", { callbackUrl: "/" });
+    const callbackUrl = invitationToken ? `/?invitation_token=${invitationToken}` : "/";
+    void signIn("google", { callbackUrl });
   };
 
   return (
