@@ -102,10 +102,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <SidebarMenuItem>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <SidebarMenuButton
-                    size="lg"
-                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                  >
+                  <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent">
                     <div className="bg-muted text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                       <Image src={defaultCompanyLogo} className="size-6" alt="" />
                     </div>
