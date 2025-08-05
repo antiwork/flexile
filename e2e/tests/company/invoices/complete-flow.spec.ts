@@ -37,6 +37,7 @@ test.describe("Invoice submission, approval and rejection", () => {
   test("allows contractor to submit/delete invoices and admin to approve/reject them", async ({ page }) => {
     await login(page, workerUserA);
 
+    await page.locator("header").getByRole("link", { name: "New invoice" }).waitFor({ timeout: 10000 });
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-1");
     await fillDatePicker(page, "Date", "11/01/2024");
@@ -56,6 +57,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(page.locator("tbody")).toContainText("$683");
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
 
+    await page.locator("header").getByRole("link", { name: "New invoice" }).waitFor({ timeout: 10000 });
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByPlaceholder("Description").fill("woops too little time");
     await page.getByLabel("Hours / Qty").fill("0:23");
@@ -84,6 +86,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(page.getByRole("cell", { name: "$870" })).toBeVisible();
     await expect(locateOpenInvoicesBadge(page)).not.toBeVisible();
 
+    await page.locator("header").getByRole("link", { name: "New invoice" }).waitFor({ timeout: 10000 });
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByPlaceholder("Description").fill("Invoice to be deleted");
     await page.getByLabel("Hours / Qty").fill("0:33");
@@ -107,6 +110,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await clerk.signOut({ page });
     await login(page, workerUserB);
 
+    await page.locator("header").getByRole("link", { name: "New invoice" }).waitFor({ timeout: 10000 });
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByPlaceholder("Description").fill("line item");
     await page.getByLabel("Hours / Qty").fill("10:23");
