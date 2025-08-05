@@ -15,6 +15,7 @@ class InviteLawyer
     user.invite!(current_user) { |u| u.skip_invitation = true }
 
     if user.errors.blank?
+      company_lawyer.save! unless company_lawyer.persisted?
       CompanyLawyerMailer.invitation_instructions(lawyer_id: company_lawyer.id, url: SIGNUP_URL).deliver_later
       { success: true }
     else
