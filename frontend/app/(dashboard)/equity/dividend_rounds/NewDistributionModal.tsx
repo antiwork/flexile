@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import DatePicker from "@/components/DatePicker";
+import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import RadioButtons from "@/components/RadioButtons";
 import { BasicRichTextEditor } from "@/components/RichText";
@@ -57,7 +58,7 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
 
   const company = useCurrentCompany();
   const utils = trpc.useUtils();
-  const handleSubmit = useMutation({
+  const mutation = useMutation({
     mutationFn: async (data: FormValues) => {
       await request({
         method: "POST",
@@ -89,6 +90,7 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
     setCurrentStep(0);
     setRequireReleaseDocument(true);
     form.reset();
+    mutation.reset();
     onOpenChange(false);
   };
 
@@ -96,12 +98,8 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
     if (requireReleaseDocument) {
       goToNextStep();
     } else {
-      form.handleSubmit((data) => handleSubmit.mutate(data))();
+      form.handleSubmit((data) => mutation.mutate(data))();
     }
-  };
-
-  const handleReleaseDocumentSectionNext = () => {
-    form.handleSubmit((data) => handleSubmit.mutate(data))();
   };
 
   const sections = [
@@ -195,9 +193,21 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
       </Form>
 
       <DialogFooter>
-        <Button onClick={handleDistributionSectionNext} disabled={!form.formState.isValid}>
-          {requireReleaseDocument ? "Continue" : "Create distribution"}
-        </Button>
+        {requireReleaseDocument ? (
+          <Button onClick={handleDistributionSectionNext} disabled={!form.formState.isValid}>
+            Continue
+          </Button>
+        ) : (
+          <MutationButton
+            mutation={mutation}
+            param={form.getValues()}
+            errorText={mutation.error?.message}
+            loadingText="Creating distribution..."
+            disabled={!form.formState.isValid}
+          >
+            Create distribution
+          </MutationButton>
+        )}
       </DialogFooter>
     </div>,
     requireReleaseDocument ? (
@@ -241,9 +251,15 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
           <Button variant="outline" onClick={goToPreviousStep}>
             Back
           </Button>
-          <Button onClick={handleReleaseDocumentSectionNext} disabled={!form.watch("release_document")?.trim()}>
+          <MutationButton
+            mutation={mutation}
+            param={form.getValues()}
+            errorText={mutation.error?.message}
+            loadingText="Creating distribution..."
+            disabled={!form.watch("release_document")?.trim()}
+          >
             Create distribution
-          </Button>
+          </MutationButton>
         </DialogFooter>
       </div>
     ) : null,
