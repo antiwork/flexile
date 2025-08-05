@@ -34,6 +34,17 @@ export const quickbooksRouter = createRouter({
 
     const integration = await companyIntegration(ctx.company.id);
     if (!integration) return null;
+    const data = {
+      status: integration.status,
+      consultingServicesExpenseAccountId: integration.configuration.consulting_services_expense_account_id,
+      flexileFeesExpenseAccountId: integration.configuration.flexile_fees_expense_account_id,
+      equityCompensationExpenseAccountId: integration.configuration.equity_compensation_expense_account_id,
+      defaultBankAccountId: integration.configuration.default_bank_account_id,
+      expenseAccounts: [],
+      bankAccounts: [],
+    };
+    if (integration.status !== "active") return data;
+
     const qbo = getQuickbooksClient(integration);
     const [expenseAccounts, bankAccounts] = await Promise.all([
       qbo.findAccounts({ AccountType: "Expense" }),
@@ -46,11 +57,7 @@ export const quickbooksRouter = createRouter({
       }));
 
     return {
-      status: integration.status,
-      consultingServicesExpenseAccountId: integration.configuration.consulting_services_expense_account_id,
-      flexileFeesExpenseAccountId: integration.configuration.flexile_fees_expense_account_id,
-      equityCompensationExpenseAccountId: integration.configuration.equity_compensation_expense_account_id,
-      defaultBankAccountId: integration.configuration.default_bank_account_id,
+      ...data,
       expenseAccounts: formatAccounts(expenseAccounts.QueryResponse.Account),
       bankAccounts: formatAccounts(
         bankAccounts.QueryResponse.Account?.filter((account) => account.Name !== CLEARANCE_BANK_ACCOUNT_NAME),
@@ -58,7 +65,7 @@ export const quickbooksRouter = createRouter({
     };
   }),
 
-  // TODO (try to) move this to the page itself once in Clerk
+  // TODO (techdebt): move this to the page itself
   getAuthUrl: companyProcedure.query(({ ctx }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class CompanyLawyer < ApplicationRecord
-  include ExternalId, Searchable
+  include ExternalId
 
   belongs_to :company
   belongs_to :user

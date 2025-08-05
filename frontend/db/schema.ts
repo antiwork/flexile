@@ -37,14 +37,6 @@ import type { QuickbooksIntegrationConfiguration } from "./json";
 
 const nanoid = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 13);
 
-export const equityGrantTransactionsTransactionType = pgEnum("equity_grant_transactions_transaction_type", [
-  "scheduled_vesting",
-  "vesting_post_invoice_payment",
-  "exercise",
-  "cancellation",
-  "manual_adjustment",
-  "end_of_period_forfeiture",
-]);
 export const equityGrantsIssueDateRelationship = pgEnum(
   "equity_grants_issue_date_relationship",
   optionGrantIssueDateRelationships,
@@ -886,29 +878,6 @@ export const payments = pgTable(
   ],
 );
 
-export const pgSearchDocuments = pgTable(
-  "pg_search_documents",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    content: text(),
-    companyId: bigint("company_id", { mode: "bigint" }),
-    searchableType: varchar("searchable_type"),
-    searchableId: bigint("searchable_id", { mode: "bigint" }),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-  },
-  (table) => [
-    index("index_pg_search_documents_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
-    index("index_pg_search_documents_on_searchable").using(
-      "btree",
-      table.searchableType.asc().nullsLast().op("int8_ops"),
-      table.searchableId.asc().nullsLast().op("int8_ops"),
-    ),
-  ],
-);
-
 export const shareClasses = pgTable(
   "share_classes",
   {
@@ -1543,63 +1512,6 @@ export const equityGrants = pgTable(
   ],
 );
 
-export const equityGrantTransactions = pgTable(
-  "equity_grant_transactions",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    externalId: varchar("external_id").$default(nanoid).notNull(),
-    equityGrantId: bigint("equity_grant_id", { mode: "bigint" }).notNull(),
-    transactionType: equityGrantTransactionsTransactionType("transaction_type").notNull(),
-    vestingEventId: bigint("vesting_event_id", { mode: "bigint" }),
-    invoiceId: bigint("invoice_id", { mode: "bigint" }),
-    equityGrantExerciseId: bigint("equity_grant_exercise_id", { mode: "bigint" }),
-    metadata: jsonb().default({}).notNull(),
-    notes: text(),
-    vestedShares: bigint("vested_shares", { mode: "bigint" }).default(0n).notNull(),
-    exercisedShares: bigint("exercised_shares", { mode: "bigint" }).default(0n).notNull(),
-    forfeitedShares: bigint("forfeited_shares", { mode: "bigint" }).default(0n).notNull(),
-    totalNumberOfShares: bigint("total_number_of_shares", { mode: "bigint" }).notNull(),
-    totalVestedShares: bigint("total_vested_shares", { mode: "bigint" }).notNull(),
-    totalUnvestedShares: bigint("total_unvested_shares", { mode: "bigint" }).notNull(),
-    totalExercisedShares: bigint("total_exercised_shares", { mode: "bigint" }).notNull(),
-    totalForfeitedShares: bigint("total_forfeited_shares", { mode: "bigint" }).notNull(),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-  },
-  (table) => [
-    index("idx_equity_grant_transactions_on_all_columns").using(
-      "btree",
-      table.equityGrantId.asc().nullsLast().op("int8_ops"),
-      table.transactionType.asc().nullsLast().op("enum_ops"),
-      table.vestingEventId.asc().nullsLast().op("int8_ops"),
-      table.invoiceId.asc().nullsLast().op("int8_ops"),
-      table.equityGrantExerciseId.asc().nullsLast().op("enum_ops"),
-    ),
-    index("index_equity_grant_transactions_on_equity_grant_exercise_id").using(
-      "btree",
-      table.equityGrantExerciseId.asc().nullsLast().op("int8_ops"),
-    ),
-    index("index_equity_grant_transactions_on_equity_grant_id").using(
-      "btree",
-      table.equityGrantId.asc().nullsLast().op("int8_ops"),
-    ),
-    index("index_equity_grant_transactions_on_external_id").using(
-      "btree",
-      table.externalId.asc().nullsLast().op("text_ops"),
-    ),
-    index("index_equity_grant_transactions_on_invoice_id").using(
-      "btree",
-      table.invoiceId.asc().nullsLast().op("int8_ops"),
-    ),
-    index("index_equity_grant_transactions_on_vesting_event_id").using(
-      "btree",
-      table.vestingEventId.asc().nullsLast().op("int8_ops"),
-    ),
-  ],
-);
-
 export const companyUpdates = pgTable(
   "company_updates",
   {
@@ -1820,6 +1732,7 @@ export const users = pgTable(
     sentInvalidTaxIdEmail: boolean("sent_invalid_tax_id_email").notNull().default(false),
     clerkId: varchar("clerk_id"),
     signupInviteLinkId: bigint("signup_invite_link_id", { mode: "number" }),
+    otpSecretKey: varchar("otp_secret_key"),
   },
   (table) => [
     index("index_users_on_confirmation_token").using("btree", table.confirmationToken.asc().nullsLast().op("text_ops")),
@@ -1964,7 +1877,6 @@ export const equityGrantsRelations = relations(equityGrants, ({ one, many }) => 
     references: [companyInvestors.id],
   }),
   documents: many(documents),
-  transactions: many(equityGrantTransactions),
   vestingEvents: many(vestingEvents),
   optionPool: one(optionPools, {
     fields: [equityGrants.optionPoolId],
@@ -1973,25 +1885,6 @@ export const equityGrantsRelations = relations(equityGrants, ({ one, many }) => 
   vestingSchedule: one(vestingSchedules, {
     fields: [equityGrants.vestingScheduleId],
     references: [vestingSchedules.id],
-  }),
-}));
-
-export const equityGrantTransactionsRelations = relations(equityGrantTransactions, ({ one }) => ({
-  equityGrant: one(equityGrants, {
-    fields: [equityGrantTransactions.equityGrantId],
-    references: [equityGrants.id],
-  }),
-  invoice: one(invoices, {
-    fields: [equityGrantTransactions.invoiceId],
-    references: [invoices.id],
-  }),
-  vestingEvent: one(vestingEvents, {
-    fields: [equityGrantTransactions.vestingEventId],
-    references: [vestingEvents.id],
-  }),
-  equityGrantExercise: one(equityGrantExercises, {
-    fields: [equityGrantTransactions.equityGrantExerciseId],
-    references: [equityGrantExercises.id],
   }),
 }));
 
@@ -2023,7 +1916,6 @@ export const invoicesRelations = relations(invoices, ({ one, many }) => ({
   approvals: many(invoiceApprovals),
   consolidatedInvoicesInvoices: many(consolidatedInvoicesInvoices),
   payments: many(payments),
-  equityGrantTransactions: many(equityGrantTransactions),
   lineItems: many(invoiceLineItems),
   expenses: many(invoiceExpenses),
 }));
@@ -2323,12 +2215,11 @@ export const companyInvestorsRelations = relations(companyInvestors, ({ one, man
   investorDividendRounds: many(investorDividendRounds),
 }));
 
-export const vestingEventsRelations = relations(vestingEvents, ({ one, many }) => ({
+export const vestingEventsRelations = relations(vestingEvents, ({ one }) => ({
   equityGrant: one(equityGrants, {
     fields: [vestingEvents.equityGrantId],
     references: [equityGrants.id],
   }),
-  equityGrantTransactions: many(equityGrantTransactions),
 }));
 
 export const vestingSchedulesRelations = relations(vestingSchedules, ({ many }) => ({
@@ -2409,7 +2300,6 @@ export const equityGrantExercisesRelations = relations(equityGrantExercises, ({ 
     references: [equityExerciseBankAccounts.id],
   }),
   exerciseRequests: many(equityGrantExerciseRequests),
-  equityGrantTransactions: many(equityGrantTransactions),
   equityGrants: many(equityGrants),
 }));
 

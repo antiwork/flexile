@@ -10,13 +10,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_31_200856) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_04_180733) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   # Custom types defined in this database.
   # Note that some types may not work with other database engines. Be careful if changing database.
-  create_enum "equity_grant_transactions_transaction_type", ["scheduled_vesting", "vesting_post_invoice_payment", "exercise", "cancellation", "manual_adjustment", "end_of_period_forfeiture"]
   create_enum "equity_grants_issue_date_relationship", ["employee", "consultant", "investor", "founder", "officer", "executive", "board_member"]
   create_enum "equity_grants_option_grant_type", ["iso", "nso"]
   create_enum "equity_grants_vesting_trigger", ["scheduled", "invoice_paid"]
@@ -566,33 +565,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_31_200856) do
     t.index ["equity_exercise_bank_account_id"], name: "idx_on_equity_exercise_bank_account_id_92fefd4aa1"
   end
 
-  create_table "equity_grant_transactions", force: :cascade do |t|
-    t.string "external_id", null: false
-    t.bigint "equity_grant_id", null: false
-    t.enum "transaction_type", null: false, enum_type: "equity_grant_transactions_transaction_type"
-    t.bigint "vesting_event_id"
-    t.bigint "invoice_id"
-    t.bigint "equity_grant_exercise_id"
-    t.jsonb "metadata", default: {}, null: false
-    t.text "notes"
-    t.bigint "vested_shares", default: 0, null: false
-    t.bigint "exercised_shares", default: 0, null: false
-    t.bigint "forfeited_shares", default: 0, null: false
-    t.bigint "total_number_of_shares", null: false
-    t.bigint "total_vested_shares", null: false
-    t.bigint "total_unvested_shares", null: false
-    t.bigint "total_exercised_shares", null: false
-    t.bigint "total_forfeited_shares", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.index ["equity_grant_exercise_id"], name: "index_equity_grant_transactions_on_equity_grant_exercise_id"
-    t.index ["equity_grant_id", "transaction_type", "vesting_event_id", "invoice_id", "equity_grant_exercise_id"], name: "idx_equity_grant_transactions_on_all_columns", unique: true
-    t.index ["equity_grant_id"], name: "index_equity_grant_transactions_on_equity_grant_id"
-    t.index ["external_id"], name: "index_equity_grant_transactions_on_external_id", unique: true
-    t.index ["invoice_id"], name: "index_equity_grant_transactions_on_invoice_id"
-    t.index ["vesting_event_id"], name: "index_equity_grant_transactions_on_vesting_event_id"
-  end
-
   create_table "equity_grants", force: :cascade do |t|
     t.string "name", null: false
     t.datetime "period_started_at", null: false
@@ -816,17 +788,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_31_200856) do
     t.index ["wise_recipient_id"], name: "index_payments_on_wise_recipient_id"
   end
 
-  create_table "pg_search_documents", force: :cascade do |t|
-    t.text "content"
-    t.bigint "company_id"
-    t.string "searchable_type"
-    t.bigint "searchable_id"
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.index ["company_id"], name: "index_pg_search_documents_on_company_id"
-    t.index ["searchable_type", "searchable_id"], name: "index_pg_search_documents_on_searchable"
-  end
-
   create_table "share_classes", force: :cascade do |t|
     t.bigint "company_id", null: false
     t.string "name", null: false
@@ -963,6 +924,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_31_200856) do
     t.boolean "team_member", default: false, null: false
     t.boolean "sent_invalid_tax_id_email", default: false, null: false
     t.string "clerk_id"
+    t.string "otp_secret_key"
+    t.integer "otp_failed_attempts_count", default: 0, null: false
+    t.datetime "otp_first_failed_at"
     t.bigint "signup_invite_link_id"
     t.index ["clerk_id"], name: "index_users_on_clerk_id", unique: true
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true

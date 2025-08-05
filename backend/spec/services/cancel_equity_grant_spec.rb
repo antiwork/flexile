@@ -14,16 +14,6 @@ RSpec.describe CancelEquityGrant do
         end.to change(equity_grant, :cancelled_at).from(nil).to(Time.current)
             .and change(equity_grant, :forfeited_shares).by(equity_grant.unvested_shares)
             .and change(equity_grant, :unvested_shares).to(0)
-            .and change(equity_grant.equity_grant_transactions, :count).by(1)
-
-        transaction = equity_grant.equity_grant_transactions.last
-        expect(transaction.transaction_type).to eq("cancellation")
-        expect(transaction.forfeited_shares).to eq(700)
-        expect(transaction.total_number_of_shares).to eq(1000)
-        expect(transaction.total_vested_shares).to eq(100)
-        expect(transaction.total_unvested_shares).to eq(0)
-        expect(transaction.total_exercised_shares).to eq(200)
-        expect(transaction.total_forfeited_shares).to eq(700)
       end
     end
 
@@ -60,15 +50,6 @@ RSpec.describe CancelEquityGrant do
           vesting_event = equity_grant.vesting_events.last
           expect(vesting_event.cancelled_at).to eq(Time.current)
           expect(vesting_event.cancellation_reason).to eq(reason)
-
-          transaction = equity_grant.equity_grant_transactions.last
-          expect(transaction.transaction_type).to eq("cancellation")
-          expect(transaction.forfeited_shares).to eq(700)
-          expect(transaction.total_number_of_shares).to eq(1000)
-          expect(transaction.total_vested_shares).to eq(100)
-          expect(transaction.total_unvested_shares).to eq(0)
-          expect(transaction.total_exercised_shares).to eq(200)
-          expect(transaction.total_forfeited_shares).to eq(700)
         end
       end
     end

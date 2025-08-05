@@ -1,4 +1,3 @@
-import { clerk } from "@clerk/testing/playwright";
 import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
@@ -8,7 +7,7 @@ import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { optionPoolsFactory } from "@test/factories/optionPools";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker, selectComboboxOption } from "@test/helpers";
-import { login } from "@test/helpers/auth";
+import { login, logout } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
 import { and, desc, eq, inArray } from "drizzle-orm";
@@ -16,11 +15,13 @@ import { DocumentTemplateType } from "@/db/enums";
 import { companyInvestors, documents, documentSignatures, equityGrants } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 
-test.describe("New Contractor", () => {
+test.describe("Equity Grants", () => {
   test("allows issuing equity grants", async ({ page, next }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
       equityEnabled: true,
-      conversionSharePriceUsd: "1",
+      fmvPerShareInUsd: "1",
+      conversionSharePriceUsd: "1.00", // Set conversion share price
+      sharePriceInUsd: "1.00", // Set share price to match FMV
     });
     const { user: contractorUser } = await usersFactory.create();
     let submitters = { "Company Representative": adminUser, Signer: contractorUser };
@@ -40,21 +41,51 @@ test.describe("New Contractor", () => {
     await login(page, adminUser);
     await page.getByRole("button", { name: "Equity" }).click();
     await page.getByRole("link", { name: "Equity grants" }).click();
-    await expect(page.getByRole("link", { name: "New option grant" })).not.toBeVisible();
+
+    // Initially, without document templates, the "New option grant" button should not be visible
+    // and the alert about creating templates should be shown
+    await expect(page.getByRole("button", { name: "New option grant" })).not.toBeVisible();
     await expect(page.getByText("Create equity plan contract templates")).toBeVisible();
 
+    // Create the required document template
     await documentTemplatesFactory.create({
       companyId: company.id,
       type: DocumentTemplateType.EquityPlanContract,
     });
     await page.reload();
+
+    // After creating the template, the alert should disappear and the button should be visible
     await expect(page.getByText("Create equity plan contract templates")).not.toBeVisible();
-    await page.getByRole("link", { name: "New option grant" }).click();
+    await expect(page.getByRole("button", { name: "New option grant" })).toBeVisible();
+    await page.getByRole("button", { name: "New option grant" }).click();
     await expect(page.getByLabel("Number of options")).toHaveValue("10000");
     await selectComboboxOption(page, "Recipient", contractorUser.preferredName ?? "");
     await page.getByLabel("Number of options").fill("10");
     await selectComboboxOption(page, "Relationship to company", "Consultant");
-    await page.getByRole("button", { name: "Create option grant" }).click();
+
+    // Fill in required grant type
+    await selectComboboxOption(page, "Grant type", "NSO");
+
+    // Fill in required vesting details
+    await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
+
+    // Fill in required board approval date (using today's date)
+    await fillDatePicker(page, "Board approval date", new Date().toLocaleDateString("en-US"));
+
+    // Fill in required exercise period fields
+    await page.getByRole("button", { name: "Customize post-termination exercise period" }).click();
+
+    // Use more precise selectors focusing on the input fields directly
+    await page.locator('input[name="voluntaryTerminationExerciseMonths"]').fill("3");
+    await page.locator('input[name="involuntaryTerminationExerciseMonths"]').fill("3");
+    await page.locator('input[name="terminationWithCauseExerciseMonths"]').fill("3");
+    await page.locator('input[name="deathExerciseMonths"]').fill("12");
+    await page.locator('input[name="disabilityExerciseMonths"]').fill("12");
+    await page.locator('input[name="retirementExerciseMonths"]').fill("12");
+
+    await expect(page.getByRole("button", { name: "Create grant" })).toBeEnabled();
+
+    await page.getByRole("button", { name: "Create grant" }).click();
 
     await expect(page.getByRole("table")).toHaveCount(1);
     let rows = page.getByRole("table").first().getByRole("row");
@@ -73,11 +104,41 @@ test.describe("New Contractor", () => {
     );
 
     submitters = { "Company Representative": adminUser, Signer: projectBasedUser };
-    await page.getByRole("link", { name: "New option grant" }).click();
+    await page.getByRole("button", { name: "New option grant" }).click();
+
+    // Fill in recipient (required)
     await selectComboboxOption(page, "Recipient", projectBasedUser.preferredName ?? "");
+
+    // Fill in number of options (required)
     await page.getByLabel("Number of options").fill("20");
+
+    // Fill in relationship to company (required)
     await selectComboboxOption(page, "Relationship to company", "Consultant");
-    await page.getByRole("button", { name: "Create option grant" }).click();
+
+    // Fill in required grant type
+    await selectComboboxOption(page, "Grant type", "NSO");
+
+    // Fill in required vesting details
+    await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
+
+    // Fill in required board approval date (using today's date)
+    await fillDatePicker(page, "Board approval date", new Date().toLocaleDateString("en-US"));
+
+    // Fill in required exercise period fields
+    await page.getByRole("button", { name: "Customize post-termination exercise period" }).click();
+
+    // Use more precise selectors focusing on the input fields directly
+    await page.locator('input[name="voluntaryTerminationExerciseMonths"]').fill("3");
+    await page.locator('input[name="involuntaryTerminationExerciseMonths"]').fill("3");
+    await page.locator('input[name="terminationWithCauseExerciseMonths"]').fill("3");
+    await page.locator('input[name="deathExerciseMonths"]').fill("12");
+    await page.locator('input[name="disabilityExerciseMonths"]').fill("12");
+    await page.locator('input[name="retirementExerciseMonths"]').fill("12");
+
+    // All required fields are filled:
+    await expect(page.getByRole("button", { name: "Create grant" })).toBeEnabled();
+
+    await page.getByRole("button", { name: "Create grant" }).click();
 
     await expect(page.getByRole("table")).toHaveCount(1);
     rows = page.getByRole("table").first().getByRole("row");
@@ -105,7 +166,7 @@ test.describe("New Contractor", () => {
           companyDocuments.map((d) => d.id),
         ),
       );
-    await clerk.signOut({ page });
+    await logout(page);
     await login(page, contractorUser);
     await page.goto("/invoices");
     await page.getByRole("link", { name: "New invoice" }).first().click();
@@ -120,7 +181,7 @@ test.describe("New Contractor", () => {
     await expect(page.locator("tbody")).toContainText("Oct 15, 2024");
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
 
-    await clerk.signOut({ page });
+    await logout(page);
     await login(page, projectBasedUser);
     await page.goto("/invoices");
     await page.getByRole("link", { name: "New invoice" }).first().click();
@@ -140,7 +201,7 @@ test.describe("New Contractor", () => {
   test("allows cancelling a grant", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
       equityEnabled: true,
-      conversionSharePriceUsd: "1",
+      fmvPerShareInUsd: "1",
     });
     const { companyInvestor } = await companyInvestorsFactory.create({ companyId: company.id });
     const { equityGrant } = await equityGrantsFactory.create({
@@ -203,5 +264,182 @@ test.describe("New Contractor", () => {
       { page },
     );
     await expect(page.getByText("We're awaiting a payment of $50 to exercise 10 options.")).toBeVisible();
+  });
+
+  test("modal functionality for creating equity grants", async ({ page, next }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
+      equityEnabled: true,
+      fmvPerShareInUsd: "1",
+      conversionSharePriceUsd: "1.00", // Set conversion share price
+      sharePriceInUsd: "1.00", // Set share price to match FMV
+    });
+    const { user: contractorUser } = await usersFactory.create();
+    const submitters = { "Company Representative": adminUser, Signer: contractorUser };
+    const { mockForm } = mockDocuseal(next, { submitters: () => submitters });
+    await mockForm(page);
+    await companyContractorsFactory.create({
+      companyId: company.id,
+      userId: contractorUser.id,
+    });
+    await optionPoolsFactory.create({
+      companyId: company.id,
+      authorizedShares: 20000n, // Ensure enough shares in the pool
+      issuedShares: 0n, // No shares issued yet
+    });
+    await documentTemplatesFactory.create({
+      companyId: company.id,
+      type: DocumentTemplateType.EquityPlanContract,
+    });
+
+    await login(page, adminUser);
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Equity grants" }).click();
+
+    // Test modal opens when clicking "New option grant" button
+    await page.getByRole("button", { name: "New option grant" }).click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(page.getByText("New equity grant")).toBeVisible();
+
+    // Test form validation - button should be disabled initially
+    await expect(page.getByRole("button", { name: "Create grant" })).toBeDisabled();
+
+    // Test form fields are present
+    await expect(page.getByLabel("Recipient")).toBeVisible();
+    await expect(page.getByLabel("Option pool")).toBeVisible();
+    await expect(page.getByLabel("Number of options")).toBeVisible();
+    await expect(page.getByLabel("Relationship to company")).toBeVisible();
+
+    // Test estimated value calculation using FMV share price from database
+    await page.getByLabel("Number of options").fill("1000");
+    await expect(page.getByText("Estimated value: $1000.00, based on a $1")).toBeVisible();
+
+    // Test with different number of shares to verify calculation accuracy
+    await page.getByLabel("Number of options").fill("2500");
+    await expect(page.getByText("Estimated value: $2500.00, based on a $1")).toBeVisible();
+
+    // Test with larger number to verify calculation scales correctly
+    await page.getByLabel("Number of options").fill("10000");
+    await expect(page.getByText("Estimated value: $10000.00, based on a $1")).toBeVisible();
+
+    // Test form completion enables submit button only after filling in all required fields
+    await selectComboboxOption(page, "Recipient", contractorUser.preferredName ?? "");
+    await selectComboboxOption(page, "Relationship to company", "Consultant");
+
+    // Fill in required grant type
+    await selectComboboxOption(page, "Grant type", "NSO");
+
+    // Fill in required vesting details
+    await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
+
+    // Fill in required board approval date (using today's date)
+    await fillDatePicker(page, "Board approval date", new Date().toLocaleDateString("en-US"));
+
+    // Fill in required exercise period fields
+    await page.getByRole("button", { name: "Customize post-termination exercise period" }).click();
+    await page.locator('input[name="voluntaryTerminationExerciseMonths"]').fill("3");
+    await page.locator('input[name="involuntaryTerminationExerciseMonths"]').fill("3");
+    await page.locator('input[name="terminationWithCauseExerciseMonths"]').fill("3");
+    await page.locator('input[name="deathExerciseMonths"]').fill("12");
+    await page.locator('input[name="disabilityExerciseMonths"]').fill("12");
+    await page.locator('input[name="retirementExerciseMonths"]').fill("12");
+
+    // Now verify the button is enabled
+    await expect(page.getByRole("button", { name: "Create grant" })).toBeEnabled();
+
+    // Test modal closes after successful submission
+    await page.getByRole("button", { name: "Create grant" }).click();
+    await expect(page.getByRole("dialog")).not.toBeVisible();
+
+    // Test new grant appears in the table
+    await expect(page.getByRole("table")).toHaveCount(1);
+    const rows = page.getByRole("table").first().getByRole("row");
+    await expect(rows).toHaveCount(2);
+    const row = rows.nth(1);
+    await expect(row).toContainText(contractorUser.legalName ?? "");
+    await expect(row).toContainText("10,000");
+  });
+
+  test("uses correct FMV share price for estimated value", async ({ page, next }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
+      equityEnabled: true,
+      fmvPerShareInUsd: "2.50", // Set a specific FMV share price
+      conversionSharePriceUsd: "1.00", // Set conversion share price
+      sharePriceInUsd: "2.50", // Set share price to match FMV
+    });
+    const { user: contractorUser } = await usersFactory.create();
+    const submitters = { "Company Representative": adminUser, Signer: contractorUser };
+    const { mockForm } = mockDocuseal(next, { submitters: () => submitters });
+    await mockForm(page);
+    await companyContractorsFactory.create({
+      companyId: company.id,
+      userId: contractorUser.id,
+    });
+    await optionPoolsFactory.create({
+      companyId: company.id,
+      authorizedShares: 20000n, // Ensure enough shares in the pool
+      issuedShares: 0n, // No shares issued yet
+    });
+    await documentTemplatesFactory.create({
+      companyId: company.id,
+      type: DocumentTemplateType.EquityPlanContract,
+    });
+
+    await login(page, adminUser);
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Equity grants" }).click();
+
+    // Open the modal
+    await page.getByRole("button", { name: "New option grant" }).click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+
+    // Test estimated value calculation with $2.50 FMV share price
+    await page.getByLabel("Number of options").fill("1000");
+    await expect(page.getByText("Estimated value: $2500.00, based on a $2.5")).toBeVisible();
+
+    // Test with different number of shares
+    await page.getByLabel("Number of options").fill("500");
+    await expect(page.getByText("Estimated value: $1250.00, based on a $2.5")).toBeVisible();
+
+    // Test with larger number
+    await page.getByLabel("Number of options").fill("10000");
+    await expect(page.getByText("Estimated value: $25000.00, based on a $2.5")).toBeVisible();
+  });
+
+  test("handles missing FMV share price gracefully", async ({ page, next }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
+      equityEnabled: true,
+      fmvPerShareInUsd: null,
+      conversionSharePriceUsd: "1.00", // Still need conversion price for the form to work
+      sharePriceInUsd: null, // Also set share price to null since we're testing missing price scenario
+    });
+    const { user: contractorUser } = await usersFactory.create();
+    const submitters = { "Company Representative": adminUser, Signer: contractorUser };
+    const { mockForm } = mockDocuseal(next, { submitters: () => submitters });
+    await mockForm(page);
+    await companyContractorsFactory.create({
+      companyId: company.id,
+      userId: contractorUser.id,
+    });
+    await optionPoolsFactory.create({
+      companyId: company.id,
+      authorizedShares: 20000n, // Ensure enough shares in the pool
+      issuedShares: 0n, // No shares issued yet
+    });
+    await documentTemplatesFactory.create({
+      companyId: company.id,
+      type: DocumentTemplateType.EquityPlanContract,
+    });
+
+    await login(page, adminUser);
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Equity grants" }).click();
+
+    // Open the modal
+    await page.getByRole("button", { name: "New option grant" }).click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+
+    // Test that estimated value is not shown when FMV share price is missing
+    await page.getByLabel("Number of options").fill("1000");
+    await expect(page.getByText("Estimated value:")).not.toBeVisible();
   });
 });

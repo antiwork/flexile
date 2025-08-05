@@ -1,4 +1,3 @@
-import { clerk } from "@clerk/testing/playwright";
 import { faker } from "@faker-js/faker";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
@@ -6,7 +5,7 @@ import { companyAdministratorsFactory } from "@test/factories/companyAdministrat
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker } from "@test/helpers";
-import { login } from "@test/helpers/auth";
+import { login, logout } from "@test/helpers/auth";
 import { mockDocuseal as mockDocusealHelper } from "@test/helpers/docuseal";
 import { expect, type Page, test, withinModal } from "@test/index";
 import { addMonths, format } from "date-fns";
@@ -105,7 +104,7 @@ test.describe("New Contractor", () => {
     await expect(row).toContainText("Invited");
     const [deletedUser] = await db.delete(users).where(eq(users.email, email)).returning();
 
-    await clerk.signOut({ page });
+    await logout(page);
     const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
     await login(page, newUser);
     await page.getByRole("link", { name: "sign it" }).click();
@@ -144,7 +143,7 @@ test.describe("New Contractor", () => {
     await expect(row).toContainText("Invited");
     const [deletedUser] = await db.delete(users).where(eq(users.email, email)).returning();
 
-    await clerk.signOut({ page });
+    await logout(page);
     const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
     await login(page, newUser);
     await page.getByRole("link", { name: "sign it" }).click();
@@ -168,7 +167,7 @@ test.describe("New Contractor", () => {
     await expect(row).toContainText("Contract Signed Elsewhere Role");
     await expect(row).toContainText("Invited");
 
-    await clerk.signOut({ page });
+    await logout(page);
     const [deletedUser] = await db.delete(users).where(eq(users.email, email)).returning();
     const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
     await login(page, newUser);

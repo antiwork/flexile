@@ -1,3 +1,3 @@
 <% company = @resource.invited_by.company_administrators.first&.company %>
-<%= render("shared/contractor_invitation", company:, user: @resource, url: @resource.create_clerk_invitation,
+<%= render("shared/contractor_invitation", company:, user: @resource, url: SIGNUP_URL,
                                            contractor: @resource.company_workers.find_by(company_id: company.id)) %>

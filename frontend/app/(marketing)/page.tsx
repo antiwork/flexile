@@ -1,6 +1,5 @@
 "use client";
 
-import { SignedIn, SignedOut } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect, RedirectType } from "next/navigation";
@@ -34,28 +33,29 @@ export default function HomePage() {
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4">
           <Image src={logo} alt="Flexile" className="flex h-8 w-auto shrink-0 border-none invert md:block md:h-10" />
           <div className="flex gap-2">
-            <SignedIn>
+            {user ? (
               <Link
                 href="/dashboard"
                 className={`${buttonClasses} h-10 bg-white px-8 text-sm text-black hover:bg-blue-600 hover:text-white md:h-12 md:text-base`}
               >
                 Go to dashboard
               </Link>
-            </SignedIn>
-            <SignedOut>
-              <Link
-                href="/login/"
-                className={`${buttonClasses} h-10 px-8 text-sm text-white hover:bg-white hover:text-black md:h-12 md:text-base`}
-              >
-                Login
-              </Link>
-              <Link
-                href="/signup/"
-                className={`${buttonClasses} h-10 bg-white px-8 text-sm text-black hover:bg-blue-600 hover:text-white md:h-12 md:text-base`}
-              >
-                Signup
-              </Link>
-            </SignedOut>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className={`${buttonClasses} h-10 px-8 text-sm text-white hover:bg-white hover:text-black md:h-12 md:text-base`}
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/signup/"
+                  className={`${buttonClasses} h-10 bg-white px-8 text-sm text-black hover:bg-blue-600 hover:text-white md:h-12 md:text-base`}
+                >
+                  Signup
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </nav>
