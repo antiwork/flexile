@@ -3,6 +3,7 @@ import { CircleAlert, CircleCheck, Info, Pencil } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import NewEquityGrantModal from "@/app/(dashboard)/equity/grants/NewEquityGrantModal";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
@@ -32,6 +33,7 @@ export default function GrantsPage() {
   const company = useCurrentCompany();
   const { data = [], isLoading, refetch } = trpc.equityGrants.list.useQuery({ companyId: company.id });
   const [cancellingGrantId, setCancellingGrantId] = useState<string | null>(null);
+  const [showNewGrantModal, setShowNewGrantModal] = useState(false);
   const cancellingGrant = data.find((grant) => grant.id === cancellingGrantId);
   const cancelGrant = trpc.equityGrants.cancel.useMutation({
     onSuccess: () => {
@@ -84,11 +86,9 @@ export default function GrantsPage() {
         title="Equity grants"
         headerActions={
           equityPlanContractTemplates.length > 0 ? (
-            <Button asChild>
-              <Link href={`/companies/${company.id}/administrator/equity_grants/new`}>
-                <Pencil className="size-4" />
-                New option grant
-              </Link>
+            <Button onClick={() => setShowNewGrantModal(true)}>
+              <Pencil className="size-4" />
+              New option grant
             </Button>
           ) : null
         }
@@ -167,6 +167,7 @@ export default function GrantsPage() {
           ) : null}
         </DialogContent>
       </Dialog>
+      <NewEquityGrantModal open={showNewGrantModal} onOpenChange={setShowNewGrantModal} />
     </>
   );
 }

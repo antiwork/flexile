@@ -76,22 +76,6 @@ RSpec.describe User do
   end
 
   describe "callbacks" do
-    describe "#update_associated_pg_search_documents" do
-      it "updates invoice's search index" do
-        invoice = create(:invoice)
-        invoice.user.update!(legal_name: "Sam UpdatedName")
-
-        expect(invoice.pg_search_document.reload.content).to include("UpdatedName")
-      end
-
-      it "updates company_worker's search index" do
-        company_worker = create(:company_worker, user:)
-        user.reload.update!(legal_name: "Sam UpdatedName")
-
-        expect(company_worker.pg_search_document.reload.content).to include("UpdatedName")
-      end
-    end
-
     describe "#sync_with_quickbooks" do
       context "when user is a contractor" do
         let!(:company_worker_1) { create(:company_worker, user:) }

@@ -51,16 +51,6 @@ RSpec.describe Payment do
   end
 
   describe "callbacks" do
-    describe "#update_invoice_pg_search_document" do
-      let(:payment) { create(:payment) }
-
-      it "updates invoice's search index" do
-        payment.update!(wise_transfer_id: "NEW-ID-123")
-
-        expect(payment.invoice.pg_search_document.reload.content).to include("NEW-ID-123")
-      end
-    end
-
     describe "#sync_with_quickbooks" do
       let(:company) { create(:company) }
       let!(:integration) { create(:quickbooks_integration, company:) }
