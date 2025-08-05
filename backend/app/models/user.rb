@@ -59,7 +59,6 @@ class User < ApplicationRecord
   validate :minimum_dividend_payment_in_cents_is_within_range
   validates :preferred_name, length: { maximum: MAX_PREFERRED_NAME_LENGTH }, allow_nil: true
 
-  after_update_commit :update_associated_pg_search_documents
   after_update_commit :sync_with_quickbooks, if: :worker?
   after_update_commit :update_dividend_status,
                       if: -> { current_sign_in_at_previously_changed? && current_sign_in_at_previously_was.nil? }
