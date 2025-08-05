@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import env from "@/env";
 
 export default function middleware(req: NextRequest) {
-  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+  // const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const { NODE_ENV } = process.env; // destructure to prevent inlining
   const s3Urls = [env.S3_PRIVATE_BUCKET, env.S3_PUBLIC_BUCKET]
     .map((bucket) => `https://${bucket}.s3.${env.AWS_REGION}.amazonaws.com https://${bucket}.s3.amazonaws.com`)
@@ -14,7 +14,7 @@ export default function middleware(req: NextRequest) {
 
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'nonce-${nonce}' 'unsafe-inline' ${NODE_ENV === "production" ? "" : `'unsafe-eval'`};
+    script-src 'self' 'unsafe-inline' ${NODE_ENV === "production" ? "" : `'unsafe-eval'`};
     style-src 'self' 'unsafe-inline';
     connect-src 'self' https://docuseal.com ${helperUrls} ${s3Urls};
     img-src 'self' blob: data: https://docuseal.com https://docuseal.s3.amazonaws.com ${s3Urls};
@@ -30,7 +30,7 @@ export default function middleware(req: NextRequest) {
     .trim();
 
   const requestHeaders = new Headers(req.headers);
-  requestHeaders.set("x-nonce", nonce);
+  // requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", cspHeader);
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
