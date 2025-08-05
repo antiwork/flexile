@@ -8,8 +8,6 @@ if (!process.env.NEXTAUTH_SECRET) {
   throw new Error("NEXTAUTH_SECRET environment variable is required");
 }
 
-const isGoogleOAuthConfigured = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
-
 const otpLoginSchema = z.object({
   email: z.string().email(),
   otp: z.string().length(6),
@@ -17,7 +15,7 @@ const otpLoginSchema = z.object({
 
 export const authOptions: NextAuthOptions = {
   providers: [
-    ...(isGoogleOAuthConfigured && process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
       ? [
           GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID,

@@ -40,7 +40,6 @@ class Api::V1::OauthController < Api::BaseController
 
     def complete_google_user_signup(email, name, google_id, image, invitation_token)
       ApplicationRecord.transaction do
-        # Handle invite link if invitation_token is provided (matching signup controller)
         invite_link = nil
         if invitation_token.present?
           invite_link = CompanyInviteLink.find_by(token: invitation_token)
@@ -55,10 +54,8 @@ class Api::V1::OauthController < Api::BaseController
           signup_invite_link: invite_link
         )
 
-        # Create TOS agreement (required for legal compliance)
         user.tos_agreements.create!(ip_address: request.remote_ip)
 
-        # Create default company if no invite link was set (matching signup controller logic)
         unless user.signup_invite_link
           company = Company.create!(
             email: user.email,
