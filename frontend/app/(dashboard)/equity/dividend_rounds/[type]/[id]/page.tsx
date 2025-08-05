@@ -25,6 +25,12 @@ export default function DividendRound() {
 
   const company = useCurrentCompany();
   const router = useRouter();
+  const isDividendComputationEnabled = company.flags.includes("dividend_computation");
+
+  if (isDraft && !isDividendComputationEnabled) {
+    router.replace("/equity/dividend_rounds");
+    return null;
+  }
 
   const { data: dividendOutputs = [], isLoading: isLoadingDividendOutputs } =
     trpc.dividendComputations.getOutputs.useQuery(
@@ -33,7 +39,7 @@ export default function DividendRound() {
         companyId: company.id,
       },
       {
-        enabled: isDraft,
+        enabled: isDraft && isDividendComputationEnabled,
         select: (outputs) => {
           // Aggregate outputs by investor
           const investorMap = new Map<string, TransformedData>();
@@ -43,6 +49,7 @@ export default function DividendRound() {
 
             const existing = investorMap.get(investorKey) || {
               investor: {
+                // No user.legalName for SAFEs
                 name: output.investorName || output.companyInvestor?.user?.legalName || "Unknown",
                 id: output.companyInvestor?.user?.externalId,
               },
@@ -124,7 +131,7 @@ export default function DividendRound() {
   ];
 
   const data: TransformedData[] = isDraft ? dividendOutputs : dividends;
-  const isLoading = isDraft ? isLoadingDividendOutputs : isLoadingDividends;
+  const isLoading = (isDraft && isDividendComputationEnabled ? isLoadingDividendOutputs : false) || isLoadingDividends;
   const table = useTable({
     data,
     columns,
