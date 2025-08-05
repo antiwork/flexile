@@ -167,6 +167,7 @@ class UserPresenter
       if company_investor.present?
         result[:flags][:equity] ||= true if company.equity_enabled?
         result[:flags][:option_exercising] = company.json_flag?("option_exercising")
+        result[:flags][:dividend_computation] = Flipper.enabled?(:dividend_computation, company)
       end
       result
     end
@@ -187,6 +188,7 @@ class UserPresenter
         flags: {
           equity: company.equity_enabled?,
           company_updates: company.company_investors.exists?,
+          dividend_computation: Flipper.enabled?(:dividend_computation, company),
         },
       }
     end
