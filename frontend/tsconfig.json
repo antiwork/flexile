@@ -14,7 +14,11 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "forceConsistentCasingInFileNames": true,
-    "plugins": [{ "name": "next" }],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
       "@/*": ["./*"]
     },
@@ -38,6 +42,7 @@
     "trpc/**/*.ts",
     ".next/types/**/*.ts",
     "types.d.ts",
+    "types/**/*.d.ts",
     "middleware.ts"
   ],
   "exclude": ["node_modules"]

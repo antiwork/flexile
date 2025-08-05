@@ -11,15 +11,6 @@ class CancelEquityGrant
       forfeited_shares = equity_grant.unvested_shares
       total_forfeited_shares = forfeited_shares + equity_grant.forfeited_shares
 
-      equity_grant.equity_grant_transactions.create!(
-        transaction_type: EquityGrantTransaction.transaction_types[:cancellation],
-        forfeited_shares:,
-        total_number_of_shares: equity_grant.number_of_shares,
-        total_vested_shares: equity_grant.vested_shares,
-        total_unvested_shares: 0,
-        total_exercised_shares: equity_grant.exercised_shares,
-        total_forfeited_shares:,
-      )
       vesting_events = equity_grant.vesting_events.unprocessed.not_cancelled.where("DATE(vesting_date) > ?", Date.current)
       vesting_events.each do |vesting_event|
         vesting_event.with_lock do

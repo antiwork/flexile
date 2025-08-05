@@ -3,7 +3,7 @@
 class Invoice < ApplicationRecord
   has_paper_trail
 
-  include QuickbooksIntegratable, Searchable, Serializable, Status, ExternalId, Deletable
+  include QuickbooksIntegratable, Serializable, Status, ExternalId, Deletable
 
   belongs_to :company
   belongs_to :company_worker, foreign_key: :company_contractor_id

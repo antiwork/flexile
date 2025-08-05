@@ -11,18 +11,9 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -154,14 +145,14 @@ export default function InvoicePage() {
       />
 
       {invoice.requiresAcceptanceByPayee && user.id === invoice.userId ? (
-        <AlertDialog open={acceptPaymentModalOpen} onOpenChange={setAcceptPaymentModalOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Accept invoice</AlertDialogTitle>
-              <AlertDialogDescription>
-                If everything looks correct, accept the invoice. Then your company administrator can initiate payment.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
+        <Dialog open={acceptPaymentModalOpen} onOpenChange={setAcceptPaymentModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Accept invoice</DialogTitle>
+            </DialogHeader>
+            <div>
+              If everything looks correct, accept the invoice. Then your company administrator can initiate payment.
+            </div>
             <Card>
               <CardContent>
                 {invoice.minAllowedEquityPercentage !== null && invoice.maxAllowedEquityPercentage !== null ? (
@@ -213,18 +204,17 @@ export default function InvoicePage() {
               </CardContent>
             </Card>
 
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction asChild>
+            <DialogFooter>
+              <div className="flex justify-end">
                 <MutationButton mutation={acceptPaymentMutation} successText="Success!" loadingText="Saving...">
                   {invoice.minAllowedEquityPercentage !== null && invoice.maxAllowedEquityPercentage !== null
                     ? `Confirm ${(equityPercentage / 100).toLocaleString(undefined, { style: "percent" })} split`
                     : "Accept payment"}
                 </MutationButton>
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+              </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       ) : null}
       {!taxRequirementsMet(invoice) && (
         <Alert className="mx-4" variant="destructive">
@@ -294,36 +284,47 @@ export default function InvoicePage() {
             </div>
 
             {invoice.lineItems.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>
-                      {complianceInfo?.businessEntity ? `Services (${complianceInfo.legalName})` : "Services"}
-                    </TableHead>
-                    <TableHead className="text-right">Qty / Hours</TableHead>
-                    <TableHead className="text-right">Cash rate</TableHead>
-                    <TableHead className="text-right">Line total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {invoice.lineItems.map((lineItem, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{lineItem.description}</TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {lineItem.hourly ? formatDuration(Number(lineItem.quantity)) : lineItem.quantity}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {lineItem.payRateInSubunits
-                          ? `${formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)}${lineItem.hourly ? " / hour" : ""}`
-                          : ""}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatMoneyFromCents(lineItemTotal(lineItem) * cashFactor)}
-                      </TableCell>
+              <div className="w-full overflow-x-auto">
+                <Table className="w-full min-w-[600px] table-fixed md:max-w-full md:min-w-full">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[50%] md:w-[60%]">
+                        {complianceInfo?.businessEntity ? `Services (${complianceInfo.legalName})` : "Services"}
+                      </TableHead>
+                      <TableHead className="w-[20%] text-right md:w-[15%]">Qty / Hours</TableHead>
+                      <TableHead className="w-[20%] text-right md:w-[15%]">Cash rate</TableHead>
+                      <TableHead className="w-[10%] text-right">Line total</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {invoice.lineItems.map((lineItem, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="w-[50%] align-top md:w-[60%]">
+                          <div
+                            className="overflow-hidden pr-2 whitespace-normal md:max-w-full"
+                            style={{
+                              wordBreak: "break-word",
+                            }}
+                          >
+                            {lineItem.description}
+                          </div>
+                        </TableCell>
+                        <TableCell className="w-[20%] text-right align-top tabular-nums md:w-[15%]">
+                          {lineItem.hourly ? formatDuration(Number(lineItem.quantity)) : lineItem.quantity}
+                        </TableCell>
+                        <TableCell className="w-[20%] text-right align-top tabular-nums md:w-[15%]">
+                          {lineItem.payRateInSubunits
+                            ? `${formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)}${lineItem.hourly ? " / hour" : ""}`
+                            : ""}
+                        </TableCell>
+                        <TableCell className="w-[10%] text-right align-top tabular-nums">
+                          {formatMoneyFromCents(lineItemTotal(lineItem) * cashFactor)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             ) : null}
 
             {invoice.expenses.length > 0 && (
