@@ -47,3 +47,10 @@ test("login with redirect_url", async ({ page }) => {
 
   expect(page.url()).toContain("/people");
 });
+
+test("Google OAuth button is visible on login page", async ({ page }) => {
+  await page.goto("/login");
+
+  await expect(page.getByRole("button", { name: "Continue with Google" })).toBeVisible();
+  await expect(page.getByText("Or continue with email")).toBeVisible();
+});

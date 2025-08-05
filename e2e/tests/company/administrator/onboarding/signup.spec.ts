@@ -80,4 +80,11 @@ test.describe("Company administrator signup", () => {
     expect(company?.state).toBe(stateCode);
     expect(company?.zipCode).toBe(zipCode);
   });
+
+  test("Google OAuth button is visible on signup page", async ({ page }) => {
+    await page.goto("/signup");
+
+    await expect(page.getByRole("button", { name: "Continue with Google" })).toBeVisible();
+    await expect(page.getByText("Or continue with email")).toBeVisible();
+  });
 });

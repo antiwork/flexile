@@ -47,7 +47,6 @@ function LoginContent() {
 
           {state.step === "email" ? (
             <div className="space-y-4">
-              {/* Google Sign In Button */}
               <Button
                 type="button"
                 variant="outline"

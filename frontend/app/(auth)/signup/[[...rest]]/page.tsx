@@ -2,6 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { Suspense } from "react";
 import { AuthAlerts } from "@/components/auth/AuthAlerts";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthApi } from "@/hooks/useAuthApi";
 import { useOtpFlowState } from "@/hooks/useOtpFlowState";
+import googleIcon from "@/images/google.svg";
 import logo from "@/public/logo-icon.svg";
 
 function SignUpContent() {
@@ -26,6 +28,16 @@ function SignUpContent() {
     state,
     actions,
   );
+
+  const handleGoogleSignIn = () => {
+    // Store invitation token in cookie if present so NextAuth can access it
+    if (invitationToken) {
+      document.cookie = `invitation_token=${invitationToken}; path=/; max-age=3600; SameSite=Lax`;
+    }
+
+    const callbackUrl = invitationToken ? `/?invitation_token=${invitationToken}` : "/";
+    void signIn("google", { callbackUrl });
+  };
 
   return (
     <div className="flex items-center justify-center">
@@ -47,37 +59,59 @@ function SignUpContent() {
           <AuthAlerts error={state.error} success={state.success} />
 
           {state.step === "email" ? (
-            <form
-              onSubmit={(e) => {
-                void handleSendOtp(e);
-              }}
-              className="space-y-4"
-            >
-              <div className="space-y-2">
-                <Label htmlFor="email" className="block">
-                  Work email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your work email..."
-                  value={state.email}
-                  onChange={(e) => actions.setEmail(e.target.value)}
-                  required
-                  disabled={state.loading}
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={state.loading}>
-                {state.loading ? "Signing up..." : "Sign up"}
+            <div className="space-y-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex w-full items-center gap-2"
+                onClick={handleGoogleSignIn}
+                disabled={state.loading}
+              >
+                <Image src={googleIcon} alt="Google" className="size-4" />
+                Continue with Google
               </Button>
 
-              <div className="pt-6 text-center text-sm text-gray-600">
-                Already using Flexile?{" "}
-                <Link href="/login" className="text-blue-600 hover:underline">
-                  Log in
-                </Link>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background text-muted-foreground px-2">Or continue with email</span>
+                </div>
               </div>
-            </form>
+
+              <form
+                onSubmit={(e) => {
+                  void handleSendOtp(e);
+                }}
+                className="space-y-4"
+              >
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="block">
+                    Work email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your work email..."
+                    value={state.email}
+                    onChange={(e) => actions.setEmail(e.target.value)}
+                    required
+                    disabled={state.loading}
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={state.loading}>
+                  {state.loading ? "Signing up..." : "Sign up"}
+                </Button>
+
+                <div className="pt-6 text-center text-sm text-gray-600">
+                  Already using Flexile?{" "}
+                  <Link href="/login" className="text-blue-600 hover:underline">
+                    Log in
+                  </Link>
+                </div>
+              </form>
+            </div>
           ) : (
             <div className="space-y-4">
               <form
