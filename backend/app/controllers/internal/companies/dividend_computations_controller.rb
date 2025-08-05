@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Internal::Companies::DividendComputationsController < Internal::Companies::BaseController
+  before_action :check_feature_flag
+
   def create
     authorize DividendComputation
 
@@ -19,6 +21,12 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
   end
 
   private
+    def check_feature_flag
+      unless Current.company.dividend_computation_enabled?
+        render json: { error: "Feature not available" }, status: :not_found
+      end
+    end
+
     def dividend_computation_params
       params.require(:dividend_computation).permit(:amount_in_usd, :dividends_issuance_date, :return_of_capital, :release_document, :name)
     end
