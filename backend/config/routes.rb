@@ -77,6 +77,11 @@ Rails.application.routes.draw do
             get :protected_action
           end
         end
+        resources :oauth, only: [] do
+          collection do
+            post :google
+          end
+        end
       end
       namespace :helper do
         resource :users, only: :show

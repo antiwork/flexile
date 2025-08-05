@@ -1,11 +1,14 @@
 import type { NextAuthOptions, User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import { z } from "zod";
 import { API_BASE_URL, API_SECRET_TOKEN } from "./api";
 
 if (!process.env.NEXTAUTH_SECRET) {
   throw new Error("NEXTAUTH_SECRET environment variable is required");
 }
+
+const isGoogleOAuthConfigured = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
 
 const otpLoginSchema = z.object({
   email: z.string().email(),
@@ -14,6 +17,14 @@ const otpLoginSchema = z.object({
 
 export const authOptions: NextAuthOptions = {
   providers: [
+    ...(isGoogleOAuthConfigured && process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
     CredentialsProvider({
       id: "otp",
       name: "Email OTP",
@@ -103,8 +114,7 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    jwt({ token, user }) {
-      // User is only available during sign-in, not during token refresh
+    async jwt({ token, user, account }) {
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (user && "jwt" in user) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
@@ -116,6 +126,52 @@ export const authOptions: NextAuthOptions = {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
         token.preferredName = customUser.preferredName;
       }
+
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      if (account?.provider === "google" && user) {
+        try {
+          // Call backend to handle Google OAuth login/signup
+          const response = await fetch(`${API_BASE_URL}/v1/oauth/google`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: user.email,
+              name: user.name,
+              google_id: user.id,
+              image: user.image,
+              token: API_SECRET_TOKEN,
+            }),
+          });
+
+          if (response.ok) {
+            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+            const data = (await response.json()) as {
+              user: {
+                id: number;
+                email: string;
+                name: string;
+                legal_name?: string;
+                preferred_name?: string;
+              };
+              jwt: string;
+            };
+
+            token.jwt = data.jwt;
+            if (data.user.legal_name) {
+              token.legalName = data.user.legal_name;
+            }
+            if (data.user.preferred_name) {
+              token.preferredName = data.user.preferred_name;
+            }
+            token.sub = data.user.id.toString();
+          }
+        } catch {
+          // Google OAuth error - silently fail and continue with regular session
+        }
+      }
+
       return token;
     },
     session({ session, token }) {
