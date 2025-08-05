@@ -27,22 +27,43 @@ class Api::V1::OauthController < Api::BaseController
 
   private
     def find_or_create_google_user(email, name, google_id, image)
-      # Try to find user by email first
       user = User.find_by(email: email)
 
       if user
-        # User exists, update Google ID if not set
         user.update!(google_uid: google_id) if user.google_uid.blank?
         user
       else
-        # Create new user
-        User.create!(
+        complete_google_user_signup(email, name, google_id, image)
+      end
+    end
+
+    def complete_google_user_signup(email, name, google_id, image)
+      ApplicationRecord.transaction do
+        # Create user with all required fields (matching signup controller)
+        user = User.create!(
           email: email,
           name: name || email.split("@").first,
           google_uid: google_id,
           avatar_url: image,
-          email_verified_at: Time.current
+          email_verified_at: Time.current,
+          confirmed_at: Time.current,
+          invitation_accepted_at: Time.current
         )
+
+        # Create TOS agreement (required for legal compliance)
+        user.tos_agreements.create!(ip_address: request.remote_ip)
+
+        # Create default company for the user (matching signup controller logic)
+        company = Company.create!(
+          email: user.email,
+          country_code: "US",
+          default_currency: "USD"
+        )
+
+        # Make user an administrator of their company
+        user.company_administrators.create!(company: company)
+
+        user
       end
     end
 end
