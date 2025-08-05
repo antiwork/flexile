@@ -27,6 +27,16 @@ import Status from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import Tabs from "@/components/Tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -191,12 +201,12 @@ export default function ContractorPage() {
         }
       />
 
-      <Dialog open={endModalOpen} onOpenChange={setEndModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>End contract with {user.displayName}?</DialogTitle>
-          </DialogHeader>
-          <p>This action cannot be undone.</p>
+      <AlertDialog open={endModalOpen} onOpenChange={setEndModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>End contract with {user.displayName}?</AlertDialogTitle>
+            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
           <div className="grid gap-2">
             <DatePicker value={endDate} onChange={setEndDate} label="End date" granularity="day" />
           </div>
@@ -210,34 +220,35 @@ export default function ContractorPage() {
               {user.displayName} won't see any of {company.name}'s information.
             </Status>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEndModalOpen(false)}>
-              No, cancel
-            </Button>
-            <MutationButton
-              mutation={endContract}
-              param={{ companyId: company.id, id: contractor?.id ?? "", endDate: endDate?.toString() ?? "" }}
-            >
-              Yes, end contract
-            </MutationButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, cancel</AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <MutationButton
+                mutation={endContract}
+                idleVariant="critical"
+                param={{ companyId: company.id, id: contractor?.id ?? "", endDate: endDate?.toString() ?? "" }}
+              >
+                Yes, end contract
+              </MutationButton>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Cancel contract end with {user.displayName}?</DialogTitle>
-          </DialogHeader>
-          <p>This will remove the scheduled end date for this contract.</p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCancelModalOpen(false)}>
-              No, keep end date
-            </Button>
-            <MutationButton mutation={cancelContractEndMutation}>Yes, cancel contract end</MutationButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AlertDialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel contract end with {user.displayName}?</AlertDialogTitle>
+            <AlertDialogDescription>This will remove the scheduled end date for this contract.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, keep end date</AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <MutationButton mutation={cancelContractEndMutation}>Yes, cancel contract end</MutationButton>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={issuePaymentModalOpen} onOpenChange={closeIssuePaymentModal}>
         <DialogContent>
