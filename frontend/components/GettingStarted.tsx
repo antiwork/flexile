@@ -80,7 +80,7 @@ export const GettingStarted = () => {
   }
 
   return (
-    <SidebarMenuItem className="h-12 border-t border-gray-200">
+    <SidebarMenuItem className="h-12">
       <Collapsible
         open={status === "expanded" || status === "completed"}
         onOpenChange={(expanded) => setStatus(expanded ? "expanded" : "collapsed")}
