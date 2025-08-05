@@ -154,19 +154,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ) : null}
         </SidebarContent>
 
-        {company.checklistItems.length > 0 ? (
-          <SidebarGroup className="mt-auto px-0 py-0">
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <GettingStarted />
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ) : null}
-
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
+              {company.checklistItems.length > 0 ? <GettingStarted /> : null}
               {canShowTryEquity && showTryEquity ? (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
