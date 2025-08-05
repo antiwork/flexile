@@ -7,7 +7,6 @@ class Api::V1::OauthController < Api::BaseController
 
   def google
     email = params[:email]
-    name = params[:name]
     google_id = params[:google_id]
     invitation_token = params[:invitation_token]
 
@@ -15,7 +14,7 @@ class Api::V1::OauthController < Api::BaseController
     return render json: { error: "Google ID is required" }, status: :bad_request if google_id.blank?
 
     begin
-      user = find_or_create_google_user(email, name, google_id, invitation_token)
+      user = find_or_create_google_user(email, google_id, invitation_token)
       user.update!(current_sign_in_at: Time.current)
 
       success_response_with_jwt(user)
@@ -26,18 +25,18 @@ class Api::V1::OauthController < Api::BaseController
   end
 
   private
-    def find_or_create_google_user(email, name, google_id, invitation_token)
+    def find_or_create_google_user(email, google_id, invitation_token)
       user = User.find_by(email: email)
 
       if user
         user.update!(google_uid: google_id) if user.google_uid.blank?
         user
       else
-        complete_google_user_signup(email, name, google_id, invitation_token)
+        complete_google_user_signup(email, google_id, invitation_token)
       end
     end
 
-    def complete_google_user_signup(email, name, google_id, invitation_token)
+    def complete_google_user_signup(email, google_id, invitation_token)
       ApplicationRecord.transaction do
         invite_link = nil
         if invitation_token.present?
