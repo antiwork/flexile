@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import env from "@/env";
 
 export default function middleware(req: NextRequest) {
+  // TODO: Bring back nonce and remove unsafe-inline
   // const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const { NODE_ENV } = process.env; // destructure to prevent inlining
   const s3Urls = [env.S3_PRIVATE_BUCKET, env.S3_PUBLIC_BUCKET]
