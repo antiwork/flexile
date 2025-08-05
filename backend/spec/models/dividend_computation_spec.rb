@@ -69,7 +69,7 @@ RSpec.describe DividendComputation do
                                   implied_shares: 497_092.to_d / 2_000_000_00.to_d * 966_308_66.to_d,
                                   principal_value_in_cents: 966_308_66)
 
-    @dividend_computation = DividendComputationGeneration.new(company, amount_in_usd: 1_000_000, return_of_capital: false, release_document: "Test release document for {{investor}} with {{amount}}").process
+    @dividend_computation = DividendComputationGeneration.new(company, amount_in_usd: 1_000_000, return_of_capital: false, release_document: "Test release document for {{investor}} with {{amount}}", name: "Test Dividend").process
   end
 
   describe "#to_csv" do
