@@ -110,12 +110,6 @@ test.describe("Contractor Invite Link", () => {
     await expect(page.getByRole("button", { name: "Copy" })).toBeEnabled();
     await expect(page.getByRole("textbox", { name: "Link" })).toBeVisible();
 
-    // Debug: check what invite links exist
-    const allInviteLinks = await db.query.companyInviteLinks.findMany({
-      where: eq(companyInviteLinks.companyId, company.id),
-    });
-    console.log("All invite links for company:", allInviteLinks);
-
     await page.getByRole("button", { name: "Reset link" }).click();
     await expect(page.getByText("Reset invite link?")).toBeVisible();
     await page.getByRole("button", { name: "Reset link" }).click();
