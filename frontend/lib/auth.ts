@@ -146,7 +146,6 @@ export const authOptions: NextAuthOptions = {
             requestBody.invitation_token = invitationToken;
           }
 
-          // Call backend to handle Google OAuth login/signup
           const response = await fetch(`${API_BASE_URL}/v1/oauth/google`, {
             method: "POST",
             headers: {
