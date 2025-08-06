@@ -64,8 +64,6 @@ export default function PeoplePage() {
     resolver: zodResolver(schema),
   });
 
-  const trpcUtils = trpc.useUtils();
-
   const saveMutation = useMutation({
     mutationFn: async (values: z.infer<typeof schema>) => {
       const attachment = form.getValues("attachment");
@@ -120,7 +118,7 @@ export default function PeoplePage() {
     },
     onSuccess: async (data) => {
       await refetch();
-      await trpcUtils.documents.list.invalidate();
+      await queryClient.invalidateQueries({ queryKey: ["documents"] });
       setShowInviteModal(false);
       form.reset();
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
