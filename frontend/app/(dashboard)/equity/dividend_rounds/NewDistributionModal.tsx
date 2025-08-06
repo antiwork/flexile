@@ -68,6 +68,7 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
           dividend_computation: {
             ...data,
             dividends_issuance_date: data.dividends_issuance_date.toString(),
+            release_document: data.release_document?.trim() || null,
           },
         },
       });
