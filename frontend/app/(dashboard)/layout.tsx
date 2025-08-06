@@ -101,32 +101,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
-              {user.companies.length > 1 ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent gap-4">
-                      <div
-                        className={`text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded ${
-                          isDefaultLogo ? "border-sidebar-border border bg-white" : ""
-                        }`}
-                      >
-                        <Image
-                          src={company.logo_url ?? defaultCompanyLogo.src}
-                          className={isDefaultLogo ? "size-4" : "size-8 rounded"}
-                          width={24}
-                          height={24}
-                          alt=""
-                        />
-                      </div>
-                      <div className="grid flex-1 text-left text-sm leading-tight">
-                        <span className="truncate font-semibold">
-                          {user.companies.find((c) => c.id === user.currentCompanyId)?.name ?? "Personal"}
-                        </span>
-                        <span className="text-muted-foreground truncate text-xs">{user.email}</span>
-                      </div>
-                      <ChevronDown className="ml-auto" />
-                    </SidebarMenuButton>
-                  </DropdownMenuTrigger>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent gap-4">
+                    <div
+                      className={`text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded ${
+                        isDefaultLogo ? "border-sidebar-border border bg-white" : ""
+                      }`}
+                    >
+                      <Image
+                        src={company.logo_url ?? defaultCompanyLogo.src}
+                        className={isDefaultLogo ? "size-4" : "size-8 rounded"}
+                        width={24}
+                        height={24}
+                        alt=""
+                      />
+                    </div>
+                    <div className="grid flex-1 text-left text-sm leading-tight">
+                      <span className="truncate font-semibold">
+                        {user.companies.find((c) => c.id === user.currentCompanyId)?.name ?? "Personal"}
+                      </span>
+                      <span className="text-muted-foreground truncate text-xs">{user.email}</span>
+                    </div>
+                    {user.companies.length > 1 && <ChevronDown className="ml-auto" />}
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                {user.companies.length > 1 && (
                   <DropdownMenuContent
                     className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
                     align="start"
@@ -158,30 +158,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <SidebarMenuButton size="lg" className="gap-4">
-                  <div
-                    className={`text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded ${
-                      isDefaultLogo ? "border-sidebar-border border bg-white" : ""
-                    }`}
-                  >
-                    <Image
-                      src={company.logo_url ?? defaultCompanyLogo.src}
-                      className={isDefaultLogo ? "size-4" : "size-8 rounded"}
-                      width={24}
-                      height={24}
-                      alt=""
-                    />
-                  </div>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">
-                      {user.companies.find((c) => c.id === user.currentCompanyId)?.name ?? "Personal"}
-                    </span>
-                    <span className="text-muted-foreground truncate text-xs">{user.email}</span>
-                  </div>
-                </SidebarMenuButton>
-              )}
+                )}
+              </DropdownMenu>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>
