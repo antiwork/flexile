@@ -94,13 +94,13 @@ RSpec.describe DividendComputation do
   describe "#to_per_investor_csv" do
     it "generates CSV data as expected" do
       expected_result = +"Investor,Investor ID,Number of shares,Amount (USD)\n"
-      expected_result << "Seed Investor,#{@seed_investor.id},111406,80328.26\n"
-      expected_result << "Series A Investor,#{@series_A_investor.id},33469,22523.16\n"
-      expected_result << "Seed & Series A Investor,#{@seed_and_series_A_investor.id},12441,8752.98\n"
-      expected_result << "Common Investor,#{@common_investor.id},891,522.34\n"
-      expected_result << "All class Investor,#{@all_class_investor.id},25035,17479.75\n"
       expected_result << "Richie Rich LLC,,987632,578982.04\n"
       expected_result << "Wefunder,,497092,291411.52\n"
+      expected_result << "Seed Investor,#{@seed_investor.id},111406,80328.26\n"
+      expected_result << "Series A Investor,#{@series_A_investor.id},33469,22523.16\n"
+      expected_result << "All class Investor,#{@all_class_investor.id},25035,17479.75\n"
+      expected_result << "Seed & Series A Investor,#{@seed_and_series_A_investor.id},12441,8752.98\n"
+      expected_result << "Common Investor,#{@common_investor.id},891,522.34\n"
 
       expect(@dividend_computation.to_per_investor_csv).to eq(expected_result)
     end
@@ -188,6 +188,154 @@ RSpec.describe DividendComputation do
         @safe1.entity_name => { number_of_shares: 987_632, total_amount: 578_982.04, qualified_dividends_amount: 578_982.04 },
         @safe2.entity_name => { number_of_shares: 497_092, total_amount: 291_411.52, qualified_dividends_amount: 291_411.52 },
       })
+    end
+  end
+
+  describe "#per_investor" do
+    it "returns aggregated data for all investors" do
+      result = @dividend_computation.per_investor
+
+      expect(result).to be_an(Array)
+      expect(result.length).to eq(7) # 5 share investors + 2 SAFE investors
+
+      # Should be sorted by total_amount descending
+      expect(result.map { |r| r[:total_amount] }).to eq(result.map { |r| r[:total_amount] }.sort.reverse)
+    end
+
+    it "correctly aggregates share-based investors" do
+      result = @dividend_computation.per_investor
+
+      seed_investor_data = result.find { |r| r[:investor_name] == "Seed Investor" }
+      expect(seed_investor_data).to include(
+        investor_name: "Seed Investor",
+        company_investor_id: @seed_investor.id,
+        investor_external_id: @seed_investor.user.external_id,
+        total_amount: 80_328.26,
+        number_of_shares: 111_406
+      )
+
+      series_a_investor_data = result.find { |r| r[:investor_name] == "Series A Investor" }
+      expect(series_a_investor_data).to include(
+        investor_name: "Series A Investor",
+        company_investor_id: @series_A_investor.id,
+        investor_external_id: @series_A_investor.user.external_id,
+        total_amount: 22_523.16,
+        number_of_shares: 33_469
+      )
+    end
+
+    it "correctly aggregates investors with multiple share classes" do
+      result = @dividend_computation.per_investor
+
+      multi_class_investor_data = result.find { |r| r[:investor_name] == "Seed & Series A Investor" }
+      expect(multi_class_investor_data).to include(
+        investor_name: "Seed & Series A Investor",
+        company_investor_id: @seed_and_series_A_investor.id,
+        investor_external_id: @seed_and_series_A_investor.user.external_id,
+        total_amount: 8_752.98,
+        number_of_shares: 12_441
+      )
+
+      all_class_investor_data = result.find { |r| r[:investor_name] == "All class Investor" }
+      expect(all_class_investor_data).to include(
+        investor_name: "All class Investor",
+        company_investor_id: @all_class_investor.id,
+        investor_external_id: @all_class_investor.user.external_id,
+        total_amount: 17_479.75,
+        number_of_shares: 25_035
+      )
+    end
+
+    it "correctly handles SAFE investors" do
+      result = @dividend_computation.per_investor
+
+      richie_rich_data = result.find { |r| r[:investor_name] == "Richie Rich LLC" }
+      expect(richie_rich_data).to include(
+        investor_name: "Richie Rich LLC",
+        company_investor_id: nil,
+        investor_external_id: nil,
+        total_amount: 578_982.04,
+        number_of_shares: 987_632
+      )
+
+      wefunder_data = result.find { |r| r[:investor_name] == "Wefunder" }
+      expect(wefunder_data).to include(
+        investor_name: "Wefunder",
+        company_investor_id: nil,
+        investor_external_id: nil,
+        total_amount: 291_411.52,
+        number_of_shares: 497_092
+      )
+    end
+
+    it "sorts results by total_amount in descending order" do
+      result = @dividend_computation.per_investor
+
+      # Verify sorting
+      amounts = result.map { |r| r[:total_amount] }
+      expect(amounts).to eq(amounts.sort.reverse)
+
+      # Verify the highest amount is first
+      expect(result.first[:total_amount]).to eq(578_982.04) # Richie Rich LLC
+      expect(result.first[:investor_name]).to eq("Richie Rich LLC")
+    end
+
+    it "handles edge case with no dividend computation outputs" do
+      empty_computation = create(:dividend_computation, company: company, total_amount_in_usd: 0, dividends_issuance_date: Date.current, name: "Empty")
+
+      result = empty_computation.per_investor
+      expect(result).to eq([])
+    end
+
+    it "handles edge case with only SAFE investors" do
+      safe_only_computation = create(:dividend_computation, company: company, total_amount_in_usd: 100_000, dividends_issuance_date: Date.current, name: "SAFE Only")
+
+      # Create only SAFE outputs
+      create(:dividend_computation_output,
+             dividend_computation: safe_only_computation,
+             company_investor: nil, # Override factory default
+             investor_name: "Test SAFE",
+             share_class: "SAFE A",
+             number_of_shares: 1000,
+             total_amount_in_usd: 50_000,
+             preferred_dividend_amount_in_usd: 0,
+             dividend_amount_in_usd: 50_000,
+             qualified_dividend_amount_usd: 50_000)
+
+      result = safe_only_computation.per_investor
+      expect(result.length).to eq(1)
+      expect(result.first).to include(
+        investor_name: "Test SAFE",
+        company_investor_id: nil,
+        investor_external_id: nil,
+        total_amount: 50_000,
+        number_of_shares: 1000
+      )
+    end
+
+    it "handles edge case with only share-based investors" do
+      shares_only_computation = create(:dividend_computation, company: company, total_amount_in_usd: 100_000, dividends_issuance_date: Date.current, name: "Shares Only")
+
+      # Create only share-based outputs
+      create(:dividend_computation_output,
+             dividend_computation: shares_only_computation,
+             company_investor: @seed_investor,
+             share_class: "Common",
+             number_of_shares: 1000,
+             total_amount_in_usd: 50_000,
+             preferred_dividend_amount_in_usd: 0,
+             dividend_amount_in_usd: 50_000,
+             qualified_dividend_amount_usd: 50_000)
+
+      result = shares_only_computation.per_investor
+      expect(result.length).to eq(1)
+      expect(result.first).to include(
+        investor_name: "Seed Investor",
+        company_investor_id: @seed_investor.id,
+        investor_external_id: @seed_investor.user.external_id,
+        total_amount: 50_000,
+        number_of_shares: 1000
+      )
     end
   end
 end

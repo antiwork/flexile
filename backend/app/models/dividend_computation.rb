@@ -24,19 +24,47 @@ class DividendComputation < ApplicationRecord
     end
   end
 
-  def to_per_investor_csv
+  def per_investor
     share_dividends, safe_dividends = dividends_info
 
+    aggregated_data = []
+
+    share_dividends.each do |company_investor_id, info|
+      company_investor = CompanyInvestor.find(company_investor_id)
+      aggregated_data << {
+        investor_name: company_investor.user.legal_name,
+        company_investor_id: company_investor_id,
+        investor_external_id: company_investor.user.external_id,
+        total_amount: info[:total_amount],
+        number_of_shares: info[:number_of_shares],
+      }
+    end
+
+    safe_dividends.each do |investor_name, info|
+      aggregated_data << {
+        investor_name: investor_name,
+        # SAFEs are identified by their entity name
+        company_investor_id: nil,
+        investor_external_id: nil,
+        total_amount: info[:total_amount],
+        number_of_shares: info[:number_of_shares],
+      }
+    end
+
+    aggregated_data.sort_by { |data| -data[:total_amount] }
+  end
+
+
+  def to_per_investor_csv
     CSV.generate(headers: true) do |csv|
       csv << ["Investor", "Investor ID", "Number of shares", "Amount (USD)"]
-      share_dividends.each do |investor_id, details|
-        csv << [CompanyInvestor.find(investor_id).user.legal_name,
-                investor_id,
-                details[:number_of_shares],
-                details[:total_amount]]
-      end
-      safe_dividends.each do |investor_name, details|
-        csv << [investor_name, nil, details[:number_of_shares], details[:total_amount]]
+      per_investor.each do |investor_data|
+        csv << [
+          investor_data[:investor_name],
+          investor_data[:company_investor_id],
+          investor_data[:number_of_shares],
+          investor_data[:total_amount]
+        ]
       end
     end
   end
