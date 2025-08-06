@@ -9,7 +9,7 @@ import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { and, eq } from "drizzle-orm";
-import { companies, companyAdministrators, users } from "@/db/schema";
+import { companies, companyAdministrators, companyLawyers, users } from "@/db/schema";
 
 test.describe("Manage roles access", () => {
   let company: typeof companies.$inferSelect;
@@ -379,37 +379,65 @@ test.describe("Manage roles access", () => {
 
 test.describe("Roles page invite functionality", () => {
   test("should be able to invite admin by email", async ({ page }) => {
-    const { adminUser } = await companiesFactory.createCompletedOnboarding();
+    const { adminUser, company } = await companiesFactory.createCompletedOnboarding();
     await login(page, adminUser);
 
     await page.goto("/settings/administrator/roles");
 
     await page.getByRole("button", { name: "Add member" }).click();
 
-    await page.getByPlaceholder("Search by name or enter email...").fill("testadmin@example.com");
+    const invitedEmail = "testadmin@example.com";
+    await page.getByPlaceholder("Search by name or enter email...").fill(invitedEmail);
 
     await selectComboboxOption(page, "Role", "Admin");
 
     await page.getByRole("button", { name: "Add member" }).click();
 
     await expect(page.getByRole("dialog")).not.toBeVisible();
+
+    // Check that the invited user appears in the table with the correct role
+    const invitedRow = page.getByRole("row", { name: new RegExp(invitedEmail, "u") });
+    await expect(invitedRow).toBeVisible();
+    await expect(invitedRow.getByRole("cell", { name: "Admin", exact: true })).toBeVisible();
+
+    // Check that the user exists in the database and is associated as an admin
+    const invitedUser = await db.query.users.findFirst({ where: eq(users.email, invitedEmail) });
+    if (!invitedUser) throw new Error("Invited user not found");
+    const adminRecord = await db.query.companyAdministrators.findFirst({
+      where: and(eq(companyAdministrators.userId, invitedUser.id), eq(companyAdministrators.companyId, company.id)),
+    });
+    expect(adminRecord).toBeTruthy();
   });
 
   test("should be able to invite lawyer by email", async ({ page }) => {
-    const { adminUser } = await companiesFactory.createCompletedOnboarding();
+    const { adminUser, company } = await companiesFactory.createCompletedOnboarding();
     await login(page, adminUser);
 
     await page.goto("/settings/administrator/roles");
 
     await page.getByRole("button", { name: "Add member" }).click();
 
-    await page.getByPlaceholder("Search by name or enter email...").fill("testlawyer@example.com");
+    const invitedEmail = "testlawyer@example.com";
+    await page.getByPlaceholder("Search by name or enter email...").fill(invitedEmail);
 
     await selectComboboxOption(page, "Role", "Lawyer");
 
     await page.getByRole("button", { name: "Add member" }).click();
 
     await expect(page.getByRole("dialog")).not.toBeVisible();
+
+    // Check that the invited user appears in the table with the correct role
+    const invitedRow = page.getByRole("row", { name: new RegExp(invitedEmail, "u") });
+    await expect(invitedRow).toBeVisible();
+    await expect(invitedRow.getByRole("cell", { name: "Lawyer", exact: true })).toBeVisible();
+
+    // Check that the user exists in the database and is associated as a lawyer
+    const invitedUser = await db.query.users.findFirst({ where: eq(users.email, invitedEmail) });
+    if (!invitedUser) throw new Error("Invited user not found");
+    const lawyerRecord = await db.query.companyLawyers.findFirst({
+      where: and(eq(companyLawyers.userId, invitedUser.id), eq(companyLawyers.companyId, company.id)),
+    });
+    expect(lawyerRecord).toBeTruthy();
   });
 
   test("should show proper form validation", async ({ page }) => {
@@ -424,8 +452,6 @@ test.describe("Roles page invite functionality", () => {
 
     await page.getByPlaceholder("Search by name or enter email...").fill("invalid_name");
 
-    await expect(
-      page.getByText("Please select a valid member from the list or enter a valid email address"),
-    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "Add member" })).toBeDisabled();
   });
 });

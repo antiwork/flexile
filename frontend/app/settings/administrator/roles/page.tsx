@@ -34,15 +34,21 @@ const createAddMemberSchema = (companyUsers: User[]) =>
     memberOrEmail: z
       .string()
       .min(1, "Please select a member or enter an email")
-      .refine((value) => {
+      .superRefine((value, ctx) => {
         // If it's an email (contains @), validate it as an email
         if (value.includes("@")) {
-          return z.string().email("Please enter a valid email address").safeParse(value).success;
+          const emailResult = z.string().email().safeParse(value);
+          if (!emailResult.success) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Please enter a valid email address" });
+          }
+        } else {
+          // If it's not an email, it should be a valid user ID that exists in the system
+          const existingUser = companyUsers.find((u) => u.id === value);
+          if (!existingUser) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Please select a valid member from the list" });
+          }
         }
-        // If it's not an email, it should be a valid user ID that exists in the system
-        const existingUser = companyUsers.find((u) => u.id === value);
-        return !!existingUser;
-      }, "Please select a valid member from the list or enter a valid email address"),
+      }),
     role: z.enum(["admin", "lawyer"]),
   });
 
@@ -172,7 +178,6 @@ export default function RolesPage() {
   const addMemberForm = useForm<AddMemberForm>({
     resolver: zodResolver(addMemberSchema),
     defaultValues: { memberOrEmail: "", role: "admin" },
-    mode: "onChange",
   });
 
   const allRoles = useMemo(() => {
@@ -338,7 +343,7 @@ export default function RolesPage() {
                     onClick={() => setShowAddModal(true)}
                     className="w-full md:w-auto"
                   >
-                    <Plus className="mr-2 size-4" />
+                    <Plus className="size-4" />
                     Add member
                   </Button>
                 }
@@ -403,7 +408,14 @@ export default function RolesPage() {
                   </FormItem>
                 )}
               />
-              <DialogFooter>
+              <div className="flex flex-row items-center justify-end gap-4">
+                {addRoleMutation.isError || inviteLawyerMutation.isError || inviteAdminMutation.isError ? (
+                  <div className="text-red text-sm">
+                    {addRoleMutation.error?.message ||
+                      inviteLawyerMutation.error?.message ||
+                      inviteAdminMutation.error?.message}
+                  </div>
+                ) : null}
                 <Button
                   type="submit"
                   disabled={
@@ -415,7 +427,7 @@ export default function RolesPage() {
                 >
                   Add member
                 </Button>
-              </DialogFooter>
+              </div>
             </form>
           </Form>
         </DialogContent>
