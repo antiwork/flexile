@@ -429,7 +429,7 @@ test.describe("Invoices contractor flow", () => {
       const deletableInvoiceRow = page.getByRole("row").getByText("Awaiting approval").first();
       await deletableInvoiceRow.click({ button: "right" });
       await expect(page.getByRole("menuitem", { name: "Delete" })).toBeVisible();
-      await page.getByRole("menuitem", { name: "Delete" }).filter({ hasText: "Delete" }).first().click();
+      await page.locator('[data-variant="destructive"]').filter({ hasText: "Delete" }).click();
       await page.getByRole("dialog").waitFor();
       await page.getByRole("button", { name: "Delete" }).click();
 
