@@ -70,6 +70,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const canShowTryEquity = user.roles.administrator && !company.equityEnabled;
   const { data: session } = useSession();
   const { logout } = useUserStore();
+  const isDefaultLogo = !company.logo_url || company.logo_url.includes("default-company-logo");
 
   const handleLogout = async () => {
     if (session?.user) {
@@ -103,10 +104,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent gap-4">
-                    <div className="bg-muted text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                    <div
+                      className={`text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded ${
+                        isDefaultLogo ? "border-sidebar-border border bg-white" : ""
+                      }`}
+                    >
                       <Image
                         src={company.logo_url ?? defaultCompanyLogo.src}
-                        className="size-6"
+                        className={isDefaultLogo ? "size-4" : "size-8 rounded"}
                         width={24}
                         height={24}
                         alt=""
@@ -133,12 +138,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       onClick={() => {
                         void switchCompany(company.id);
                       }}
-                      className="gap-2 p-2"
+                      className="gap-3 p-2 text-sm font-medium"
                     >
-                      <div className="flex size-6 items-center justify-center rounded-sm border">
+                      <div
+                        className={`flex size-6 items-center justify-center rounded-sm ${
+                          isDefaultLogo ? "border-sidebar-border border bg-gray-50" : ""
+                        }`}
+                      >
                         <Image
                           src={company.logo_url ?? defaultCompanyLogo.src}
-                          className="size-4 shrink-0"
+                          className={isDefaultLogo ? "size-4" : "size-6 shrink-0 rounded"}
                           width={24}
                           height={24}
                           alt=""

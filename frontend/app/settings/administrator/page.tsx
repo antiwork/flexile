@@ -44,6 +44,9 @@ export default function SettingsPage() {
     [logoFile, company.logo_url],
   );
 
+  // Determine if we're using the default logo to adjust styling accordingly
+  const isDefaultLogo = logoUrl.includes("default-company-logo");
+
   const createUploadUrl = trpc.files.createDirectUploadUrl.useMutation();
   const updateSettings = trpc.companies.update.useMutation();
   const saveMutation = useMutation({
@@ -108,8 +111,16 @@ export default function SettingsPage() {
                     }
                   }}
                 />
-                <Avatar className="size-12 rounded-md">
-                  <AvatarImage src={logoUrl} alt="Company logo" />
+                <Avatar
+                  className={`flex size-12 items-center justify-center rounded-md ${
+                    isDefaultLogo ? "border-input border bg-gray-50/50" : ""
+                  }`}
+                >
+                  <AvatarImage
+                    src={logoUrl}
+                    alt="Company logo"
+                    className={`rounded ${isDefaultLogo ? "size-6" : "size-12"}`}
+                  />
                   <AvatarFallback>Logo</AvatarFallback>
                 </Avatar>
               </Label>
