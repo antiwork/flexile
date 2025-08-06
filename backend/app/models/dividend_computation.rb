@@ -27,10 +27,14 @@ class DividendComputation < ApplicationRecord
   def per_investor
     share_dividends, safe_dividends = dividends_info
 
+    # Preload all company_investors at once
+    company_investor_ids = share_dividends.keys
+    company_investors_by_id = CompanyInvestor.includes(:user).where(id: company_investor_ids).index_by(&:id)
+
     aggregated_data = []
 
     share_dividends.each do |company_investor_id, info|
-      company_investor = CompanyInvestor.find(company_investor_id)
+      company_investor = company_investors_by_id[company_investor_id]
       aggregated_data << {
         investor_name: company_investor.user.legal_name,
         company_investor_id: company_investor_id,
