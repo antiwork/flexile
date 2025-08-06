@@ -186,11 +186,10 @@ test.describe("Equity Grant Vesting Events", () => {
     }
 
     // Verify some are marked as vested and others as scheduled
-    const vestingEventsContainer = vestingEventsSection.locator("h3:has-text('Vesting events') + div");
-    const vestedCount = await vestingEventsContainer.locator("text=(Vested)").count();
+    const vestedCount = await vestingEventsSection.getByText("(Vested)", { exact: false }).count();
     expect(vestedCount).toBe(4); // Cliff + 3 monthly
 
-    const scheduledCount = await vestingEventsContainer.locator("text=(Scheduled)").count();
+    const scheduledCount = await vestingEventsSection.getByText("(Scheduled)", { exact: false }).count();
     expect(scheduledCount).toBeGreaterThan(30); // Remaining monthly vesting events
 
     // Verify other sections are still present within the modal
