@@ -8,11 +8,8 @@ class InviteAdmin
   end
 
   def perform
-    if @user.persisted? && @user.company_administrators.exists?(company: @company)
-      return error_response("User is already an administrator for this company.", "email")
-    end
-
     company_admin = @user.company_administrators.find_or_initialize_by(company: @company)
+    return { success: false, field: "email", error_message: "User is already an administrator for this company." } if company_admin.persisted?
 
     if @user.persisted?
       @user.invited_by = @current_user
@@ -23,7 +20,10 @@ class InviteAdmin
       company_admin.save if @user.persisted?
     end
 
-    return success_response(company_admin) if @user.errors.blank? && company_admin.errors.blank?
+    if @user.errors.blank? && company_admin.errors.blank?
+      CompanyAdministratorMailer.invitation_instructions(administrator_id: company_admin.id, url: SIGNUP_URL).deliver_later
+      return { success: true }
+    end
 
     error_object = company_admin.errors.any? ? company_admin : @user
     field = error_object.errors.attribute_names.first
@@ -32,16 +32,6 @@ class InviteAdmin
     else
       error_object.errors.full_messages.to_sentence
     end
-    error_response(message, field)
+    { success: false, field: field, error_message: message }
   end
-
-  private
-    def success_response(company_admin)
-      CompanyAdministratorMailer.invitation_instructions(administrator_id: company_admin.id, url: SIGNUP_URL).deliver_later
-      { success: true }
-    end
-
-    def error_response(message, field)
-      { success: false, field: field, error_message: message }
-    end
 end
