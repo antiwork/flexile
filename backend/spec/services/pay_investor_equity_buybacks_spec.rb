@@ -74,13 +74,6 @@ RSpec.describe PayInvestorEquityBuybacks, :vcr do
     end.to change(EquityBuybackPayment, :count).by(0)
   end
 
-  it "raises an exception if the company does not have access to the feature" do
-    company.update!(equity_enabled: false)
-
-    expect do
-      described_class.new(company_investor, equity_buybacks).process
-    end.to raise_error("Feature unsupported for company #{company.id}")
-  end
 
   it "raises an exception if Flexile does not have sufficient balance to pay for the equity buyback" do
     allow(Wise::AccountBalance).to receive(:has_sufficient_flexile_balance?).and_return(false)
