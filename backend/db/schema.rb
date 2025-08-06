@@ -130,12 +130,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_04_180733) do
     t.datetime "updated_at", null: false
     t.datetime "ended_at"
     t.string "external_id", null: false
-    t.integer "pay_rate_type", default: 0, null: false
     t.boolean "sent_equity_percent_selection_email", default: false, null: false
     t.integer "pay_rate_in_subunits"
     t.string "pay_rate_currency", default: "usd", null: false
     t.string "role"
     t.boolean "contract_signed_elsewhere", default: false, null: false
+    t.integer "pay_rate_type", default: 0, null: false
     t.integer "equity_percentage", default: 0, null: false
     t.index ["company_id"], name: "index_company_contractors_on_company_id"
     t.index ["external_id"], name: "index_company_contractors_on_external_id", unique: true
@@ -924,10 +924,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_04_180733) do
     t.boolean "team_member", default: false, null: false
     t.boolean "sent_invalid_tax_id_email", default: false, null: false
     t.string "clerk_id"
+    t.bigint "signup_invite_link_id"
     t.string "otp_secret_key"
     t.integer "otp_failed_attempts_count", default: 0, null: false
     t.datetime "otp_first_failed_at"
-    t.bigint "signup_invite_link_id"
     t.index ["clerk_id"], name: "index_users_on_clerk_id", unique: true
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true

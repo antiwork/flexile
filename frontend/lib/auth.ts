@@ -1,18 +1,15 @@
-import type { NextAuthOptions, User } from "next-auth";
+import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { z } from "zod";
-import { API_BASE_URL, API_SECRET_TOKEN } from "./api";
-
-if (!process.env.NEXTAUTH_SECRET) {
-  throw new Error("NEXTAUTH_SECRET environment variable is required");
-}
+import env from "@/env";
+import { request } from "@/utils/request";
 
 const otpLoginSchema = z.object({
   email: z.string().email(),
   otp: z.string().length(6),
 });
 
-export const authOptions: NextAuthOptions = {
+export const authOptions = {
   providers: [
     CredentialsProvider({
       id: "otp",
@@ -30,67 +27,51 @@ export const authOptions: NextAuthOptions = {
         },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials.otp) {
-          throw new Error("Email and OTP are required");
-        }
+        const validation = otpLoginSchema.safeParse(credentials);
 
-        const validation = otpLoginSchema.safeParse({
-          email: credentials.email,
-          otp: credentials.otp,
-        });
-
-        if (!validation.success) {
-          throw new Error("Invalid email or OTP");
-        }
+        if (!validation.success) throw new Error("Invalid email or OTP");
 
         try {
-          const response = await fetch(`${API_BASE_URL}/v1/login`, {
+          const response = await request({
+            url: `/v1/login`,
+            accept: "json",
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
+            jsonData: {
               email: validation.data.email,
               otp_code: validation.data.otp,
-              token: API_SECRET_TOKEN,
-            }),
+              token: env.API_SECRET_TOKEN,
+            },
           });
 
           if (!response.ok) {
-            const errorData: unknown = await response.json();
-            const errorMessage =
-              errorData && typeof errorData === "object" && "error" in errorData && typeof errorData.error === "string"
-                ? errorData.error
-                : "Authentication failed, please try again.";
-            throw new Error(errorMessage);
+            throw new Error(
+              z.object({ error: z.string() }).safeParse(await response.json()).data?.error ||
+                "Authentication failed, please try again.",
+            );
           }
 
-          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-          const data = (await response.json()) as {
-            user: {
-              id: number;
-              email: string;
-              name: string;
-              legal_name?: string;
-              preferred_name?: string;
-            };
-            jwt: string;
-          };
+          const data = z
+            .object({
+              user: z.object({
+                id: z.number(),
+                email: z.string(),
+                name: z.string(),
+                legal_name: z.string().optional(),
+                preferred_name: z.string().optional(),
+              }),
+              jwt: z.string(),
+            })
+            .parse(await response.json());
 
-          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
           return {
+            ...data.user,
             id: data.user.id.toString(),
-            email: data.user.email,
-            name: data.user.name,
-            legalName: data.user.legal_name,
-            preferredName: data.user.preferred_name,
+            legalName: data.user.legal_name ?? "",
+            preferredName: data.user.preferred_name ?? "",
             jwt: data.jwt,
-          } as User;
-        } catch (error) {
-          if (error instanceof Error) {
-            throw error;
-          }
-          throw new Error("Authentication failed, please try again.");
+          };
+        } catch {
+          return null;
         }
       },
     }),
@@ -104,61 +85,17 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     jwt({ token, user }) {
-      // User is only available during sign-in, not during token refresh
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      if (user && "jwt" in user) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
-        const customUser = user as any;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-        token.jwt = customUser.jwt;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-        token.legalName = customUser.legalName;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-        token.preferredName = customUser.preferredName;
-      }
+      token.jwt = user.jwt;
+      token.legalName = user.legalName ?? "";
+      token.preferredName = user.preferredName ?? "";
       return token;
     },
     session({ session, token }) {
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      if (session.user) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
-        (session.user as any).id = token.sub || "";
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
-        (session.user as any).jwt = token.jwt || "";
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
-        (session.user as any).legalName = token.legalName;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
-        (session.user as any).preferredName = token.preferredName;
-      }
-      return session;
+      return { ...session, user: { ...session.user, ...token, id: token.sub } };
     },
   },
   pages: {
     signIn: "/login",
   },
-  secret: process.env.NEXTAUTH_SECRET || "",
-};
-
-// Helper function to send verification code email
-export const sendOtpEmail = async (email: string) => {
-  const response = await fetch(`${API_BASE_URL}/v1/email_otp`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      email,
-      token: API_SECRET_TOKEN,
-    }),
-  });
-
-  if (!response.ok) {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    const errorData = (await response.json()) as { error?: string };
-
-    throw new Error(errorData.error || "Failed to send verification code");
-  }
-
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  return (await response.json()) as unknown;
-};
+  secret: env.NEXTAUTH_SECRET,
+} satisfies NextAuthOptions;

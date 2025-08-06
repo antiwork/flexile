@@ -1,0 +1,176 @@
+"use client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getSession, signIn } from "next-auth/react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { MutationStatusButton } from "@/components/MutationButton";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useUserStore } from "@/global";
+import { currentUserSchema } from "@/models/user";
+import logo from "@/public/logo-icon.svg";
+import { request } from "@/utils/request";
+
+const emailSchema = z.object({ email: z.string().email() });
+const otpSchema = z.object({ otp: z.string().length(6) });
+
+export function AuthPage({
+  title,
+  description,
+  switcher,
+  sendOtpUrl,
+  onVerifyOtp,
+}: {
+  title: string;
+  description: string;
+  switcher: React.ReactNode;
+  sendOtpUrl: string;
+  onVerifyOtp?: (data: { email: string; otp: string }) => Promise<void>;
+}) {
+  const router = useRouter();
+  const { login } = useUserStore();
+  const searchParams = useSearchParams();
+  const invitationToken = searchParams.get("invitation_token");
+  const sendOtp = useMutation({
+    mutationFn: async (values: { email: string }) => {
+      const response = await request({
+        url: sendOtpUrl,
+        method: "POST",
+        accept: "json",
+        jsonData: { ...values, invitation_token: invitationToken },
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          z.object({ error: z.string() }).safeParse(await response.json()).data?.error ||
+            "Failed to send verification code",
+        );
+      }
+    },
+  });
+
+  const verifyOtp = useMutation({
+    mutationFn: async (values: { otp: string }) => {
+      const email = emailForm.getValues("email");
+      await onVerifyOtp?.({ email, otp: values.otp });
+
+      const result = await signIn("otp", { email, otp: values.otp, redirect: false });
+
+      if (result?.error) throw new Error(result.error);
+
+      const session = await getSession();
+
+      const response = await request({
+        url: "/api/user-data",
+        method: "POST",
+        accept: "json",
+        jsonData: { jwt: session?.user.jwt },
+      });
+      if (!response.ok)
+        throw new Error(
+          z.object({ error: z.string() }).safeParse(await response.json()).data?.error || "Invalid verification code",
+        );
+
+      login(currentUserSchema.parse(await response.json()));
+
+      const redirectUrl =
+        typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect_url") : null;
+      router.replace(
+        // @ts-expect-error - Next currently does not allow checking this at runtime - the leading / ensures this is safe
+        redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "/dashboard",
+      );
+    },
+  });
+  const emailForm = useForm({
+    resolver: zodResolver(emailSchema),
+    disabled: sendOtp.isPending,
+  });
+  const submitEmailForm = emailForm.handleSubmit((values) => sendOtp.mutate(values));
+
+  const otpForm = useForm({
+    resolver: zodResolver(otpSchema),
+    disabled: verifyOtp.isPending,
+  });
+  const submitOtpForm = otpForm.handleSubmit((values) => verifyOtp.mutate(values));
+
+  return (
+    <div className="flex items-center justify-center">
+      <Card className="w-full max-w-md border-0 bg-transparent">
+        <CardHeader className="text-center">
+          <div className="mb-8 flex justify-center">
+            <Image src={logo} alt="Flexile" className="size-16" />
+          </div>
+          <CardTitle className="pb-1 text-xl font-medium">
+            {sendOtp.isSuccess ? "Check your email for a code" : title}
+          </CardTitle>
+          <CardDescription>
+            {sendOtp.isSuccess ? "We’ve sent a 6-digit code to your email." : description}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {sendOtp.isSuccess ? (
+            <Form {...otpForm}>
+              <form onSubmit={(e) => void submitOtpForm(e)} className="space-y-4">
+                <FormField
+                  control={otpForm.control}
+                  name="otp"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Verification code</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter 6-digit code" maxLength={6} required />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <MutationStatusButton mutation={verifyOtp} type="submit" className="w-full" loadingText="Verifying...">
+                  Continue
+                </MutationStatusButton>
+                <div className="text-center">
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    onClick={() => sendOtp.reset()}
+                    disabled={verifyOtp.isPending}
+                  >
+                    Back to email
+                  </Button>
+                </div>
+                <div className="text-center text-sm text-gray-600">{switcher}</div>
+              </form>
+            </Form>
+          ) : (
+            <Form {...emailForm}>
+              <form onSubmit={(e) => void submitEmailForm(e)} className="space-y-4">
+                <FormField
+                  control={emailForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Work email</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="email" placeholder="Enter your work email..." required />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <MutationStatusButton mutation={sendOtp} type="submit" className="w-full" loadingText="Sending...">
+                  Send code
+                </MutationStatusButton>
+
+                <div className="text-center text-sm text-gray-600">{switcher}</div>
+              </form>
+            </Form>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
