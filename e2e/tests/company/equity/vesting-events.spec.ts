@@ -255,11 +255,11 @@ test.describe("Equity Grant Vesting Events", () => {
 
     await page.getByRole("button", { name: "Create grant" }).click();
 
-    // Wait for the grant creation to complete - could redirect to a success page or back to grants list
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle");
 
     // Navigate to the people page and find the contractor
     await page.getByRole("link", { name: "People" }).click();
+
     await page.getByRole("link", { name: contractorUser.preferredName ?? "" }).click();
 
     // Click on the Options tab

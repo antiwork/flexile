@@ -128,11 +128,11 @@ const DetailsModal = ({
             <>
               <Separator />
               <h3 className="text-md px-6 font-medium">Vesting events</h3>
-              {fullEquityGrant.vestingEvents.map((event, index) => (
-                <div key={index}>
+              {fullEquityGrant.vestingEvents.map((event) => (
+                <div key={event.id}>
                   <Item
                     label={`${formatDate(event.vestingDate)} ${event.processedAt ? "(Vested)" : event.cancelledAt ? "(Cancelled)" : "(Scheduled)"}`}
-                    value={`${event.vestedShares.toLocaleString()} options `}
+                    value={`${event.vestedShares.toLocaleString()} options`}
                   />
                 </div>
               ))}
