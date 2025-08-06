@@ -2,11 +2,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useRef } from "react";
 import { AuthAlerts } from "@/components/auth/AuthAlerts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
 import { useAuthApi } from "@/hooks/useAuthApi";
 import { useOtpFlowState } from "@/hooks/useOtpFlowState";
@@ -15,6 +16,7 @@ import logo from "@/public/logo-icon.svg";
 function SignUpContent() {
   const searchParams = useSearchParams();
   const invitationToken = searchParams.get("invitation_token");
+  const formRef = useRef<HTMLFormElement>(null);
 
   const [state, actions] = useOtpFlowState();
   const { handleSendOtp, handleAuthenticate } = useAuthApi(
@@ -85,23 +87,40 @@ function SignUpContent() {
                   void handleAuthenticate(e);
                 }}
                 className="space-y-4"
+                ref={formRef}
               >
-                <div className="space-y-2">
+                <div className="flex flex-col items-center space-y-2">
                   <Label htmlFor="otp" className="block">
                     Verification code
                   </Label>
-                  <Input
+                  <InputOTP
                     id="otp"
-                    type="text"
-                    placeholder="Enter 6-digit code"
-                    value={state.otp}
-                    onChange={(e) => actions.setOtp(e.target.value)}
                     maxLength={6}
-                    required
+                    value={state.otp}
+                    onChange={(value) => {
+                      actions.setOtp(value);
+                      if (value.length === 6 && !state.loading) {
+                        setTimeout(() => formRef.current?.requestSubmit(), 100);
+                      }
+                    }}
                     disabled={state.loading}
-                  />
+                    autoFocus
+                    required
+                  >
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                    </InputOTPGroup>
+                    <InputOTPSeparator />
+                    <InputOTPGroup>
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
                 </div>
-                <Button type="submit" className="w-full" disabled={state.loading}>
+                <Button type="submit" className="w-full" disabled={state.otp.length !== 6 || state.loading}>
                   {state.loading ? "Creating account..." : "Continue"}
                 </Button>
               </form>
