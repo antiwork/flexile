@@ -6,8 +6,8 @@ import { skipToken, useQueryClient } from "@tanstack/react-query";
 import {
   BookUser,
   ChartPie,
+  ChevronDown,
   ChevronRight,
-  ChevronsUpDown,
   CircleDollarSign,
   Files,
   LogOut,
@@ -97,22 +97,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <SidebarProvider>
       <Sidebar collapsible="offcanvas">
-        <SidebarHeader className="border-sidebar-border border-b">
+        <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent">
+                  <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent gap-4">
                     <div className="bg-muted text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                      <Image src={defaultCompanyLogo} className="size-6" alt="" />
+                      <Image src={company.logo_url ?? defaultCompanyLogo.src} className="size-6" alt="" />
                     </div>
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-semibold">
                         {user.companies.find((c) => c.id === user.currentCompanyId)?.name ?? "Personal"}
                       </span>
-                      <span className="truncate text-xs">{user.email}</span>
+                      <span className="text-muted-foreground truncate text-xs">{user.email}</span>
                     </div>
-                    <ChevronsUpDown className="ml-auto" />
+                    <ChevronDown className="ml-auto" />
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
@@ -130,7 +130,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       className="gap-2 p-2"
                     >
                       <div className="flex size-6 items-center justify-center rounded-sm border">
-                        <Image src={defaultCompanyLogo} className="size-4 shrink-0" alt="" />
+                        <Image src={company.logo_url ?? defaultCompanyLogo.src} className="size-4 shrink-0" alt="" />
                       </div>
                       {company.name}
                     </DropdownMenuItem>
