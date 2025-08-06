@@ -145,7 +145,8 @@ export function AuthPage({
                 <div className="text-center text-sm text-gray-600">{switcher}</div>
               </form>
             </Form>
-          ) : (
+          ) : null}
+          {!sendOtp.isSuccess ? (
             <Form {...emailForm}>
               <form onSubmit={(e) => void submitEmailForm(e)} className="space-y-4">
                 <FormField
@@ -168,7 +169,7 @@ export function AuthPage({
                 <div className="text-center text-sm text-gray-600">{switcher}</div>
               </form>
             </Form>
-          )}
+          ) : null}
         </CardContent>
       </Card>
     </div>
