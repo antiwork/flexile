@@ -179,7 +179,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       tabIndex={0}
                     >
                       <span className="flex items-center gap-2">
-                        <Sparkles className="size-6" />
+                        <Sparkles className="size-4" />
                         <span>Try equity</span>
                       </span>
                       {hovered ? (
