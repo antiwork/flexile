@@ -1,17 +1,15 @@
 import { useMutation } from "@tanstack/react-query";
 import { Decimal } from "decimal.js";
 import { Fragment, useId, useState } from "react";
-import { z } from "zod";
-import Form, { customCss } from "@/app/(dashboard)/documents/DocusealForm";
 import Delta from "@/components/Delta";
 import RangeInput from "@/components/RangeInput";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import env from "@/env/client";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -41,6 +39,7 @@ const ExerciseModal = ({
     equityGrants.length === 1 && equityGrants[0]?.id ? [equityGrants[0].id] : [],
   );
   const [signing, setSigning] = useState(false);
+  const [signature, setSignature] = useState(user.legalName);
   let remaining = optionsToExercise;
   const selectedGrants = new Map(
     selectedGrantIds.map((id) => {
@@ -70,7 +69,7 @@ const ExerciseModal = ({
 
   const trpcUtils = trpc.useUtils();
   const submitMutation = useMutation({
-    mutationFn: async (submissionId: number) => {
+    mutationFn: async () => {
       if (optionsToExercise === 0) throw new Error("No options to exercise");
       const equityGrants = [...selectedGrants].map(([grant, options]) => ({
         id: grant.id,
@@ -81,7 +80,7 @@ const ExerciseModal = ({
         method: "POST",
         url: company_equity_grant_exercises_path(company.id),
         accept: "json",
-        jsonData: { equity_grants: equityGrants, submission_id: submissionId },
+        jsonData: { equity_grants: equityGrants },
         assertOk: true,
       });
       await trpcUtils.equityGrants.list.refetch();
@@ -96,22 +95,20 @@ const ExerciseModal = ({
           <DialogTitle>Exercise your options</DialogTitle>
         </DialogHeader>
         {signing ? (
-          <Form
-            src={`https://docuseal.com/d/${env.NEXT_PUBLIC_EQUITY_EXERCISE_DOCUSEAL_ID}`}
-            externalId={new Date().toISOString()}
-            customCss={customCss}
-            onComplete={(data) =>
-              submitMutation.mutate(z.object({ submission_id: z.number() }).parse(data).submission_id)
-            }
-            values={{
-              __companyName: company.name,
-              __name: user.legalName,
-              __email: user.email,
-              __address1: user.address.street_address,
-              __address2: `${user.address.city}, ${user.address.state} ${user.address.zip_code}`,
-              __address3: user.address.country,
-            }}
-          />
+          <div className="flex flex-col gap-2">
+            <Label htmlFor={uid}>Your signature</Label>
+            <Input
+              id={uid}
+              value={signature}
+              onChange={(e) => setSignature(e.target.value)}
+              className="font-signature text-xl"
+              aria-label="Signature"
+            />
+            <p className="text-muted-foreground text-xs">
+              I agree that the signature will be the electronic representation of my signature and for all purposes when
+              I use them on documents just the same as a pen-and-paper signature.
+            </p>
+          </div>
         ) : (
           <>
             <div className="grid gap-2">
@@ -210,9 +207,16 @@ const ExerciseModal = ({
           </>
         )}
         <DialogFooter>
-          <Button onClick={() => setSigning(true)} disabled={optionsToExercise === 0}>
-            Proceed
-          </Button>
+          {signing ? (
+            <>
+              <Button variant="outline" onClick={() => setSigning(false)}>
+                Back
+              </Button>
+              <Button onClick={() => submitMutation.mutate()}>Sign</Button>
+            </>
+          ) : (
+            <Button onClick={() => setSigning(true)}>Proceed</Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

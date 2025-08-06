@@ -1,9 +1,13 @@
+import { useQuery } from "@tanstack/react-query";
 import React, { useEffect, useId } from "react";
+import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import { FormControl, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { DocumentTemplateType } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
-import { trpc } from "@/trpc/client";
+import { type Document, documentSchema } from "@/models/document";
+import { request } from "@/utils/request";
+import { company_documents_path } from "@/utils/routes";
 
 const TemplateSelector = ({
   type,
@@ -14,10 +18,19 @@ const TemplateSelector = ({
 >) => {
   const company = useCurrentCompany();
   const uid = useId();
-  const [templates] = trpc.documents.templates.list.useSuspenseQuery({ companyId: company.id, type, signable: true });
-  const filteredTemplates = templates.filter(
-    (template) => !template.generic || !templates.some((t) => !t.generic && t.type === template.type),
-  );
+
+  const { data: filteredTemplates = [] } = useQuery<Document[]>({
+    queryKey: [`${type}documentTemplates`],
+    queryFn: async () => {
+      if (!company) return [];
+
+      const params = new URLSearchParams({ type: String(type), signable: "true" });
+      const url = `${company_documents_path(company.id)}?${params.toString()}`;
+      const response = await request({ method: "GET", accept: "json", url, assertOk: true });
+      return z.array(documentSchema).parse(await response.json());
+    },
+  });
+
   useEffect(() => {
     if (!filteredTemplates.some((t) => t.id === props.value)) props.onChange(filteredTemplates[0]?.id ?? "");
   }, [filteredTemplates]);

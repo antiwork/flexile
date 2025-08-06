@@ -56,7 +56,7 @@ class CreateDocument
     end
 
     def is_param_keys_valid?
-      keys = [params[:link], params[:text_content], params[:attachment]]
+      keys = [params[:text_content], params[:attachment]]
       present_count = keys.count { |v| v.present? }
       present_count == 1
     end

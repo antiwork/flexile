@@ -50,7 +50,7 @@ const formSchema = z.object({
   disabilityExerciseMonths: z.number().min(0),
   retirementExerciseMonths: z.number().min(0),
   boardApprovalDate: z.instanceof(CalendarDate, { message: "This field is required." }),
-  docusealTemplateId: z.string(),
+  documentTemplateId: z.string(),
 });
 const refinedSchema = formSchema.refine(
   (data) => data.optionGrantType !== "iso" || ["employee", "founder"].includes(data.issueDateRelationship),
@@ -581,7 +581,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
 
             <FormField
               control={form.control}
-              name="docusealTemplateId"
+              name="documentTemplateId"
               render={({ field }) => <TemplateSelector type={DocumentTemplateType.EquityPlanContract} {...field} />}
             />
 

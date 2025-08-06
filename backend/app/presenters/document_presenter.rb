@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class DocumentPresenter
-  delegate :id, :name, :created_at, :document_type, :document_type_before_type_cast, :attachments, :signatures, :signed, :year, :source_type, :link, :text_content, :deleted_at, to: :document, private: true
+  delegate :id, :name, :created_at, :document_type, :document_type_before_type_cast, :attachments, :signatures, :signed, :year, :source_type, :text_content, :deleted_at, to: :document, private: true
 
   def initialize(document)
     @document = document

@@ -3,7 +3,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type ColumnFiltersState, getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import {
-  ArrowUpRightFromSquare,
   BriefcaseBusiness,
   CircleCheck,
   Download,
@@ -579,42 +578,19 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
     <Dialog open onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{document.name}</DialogTitle>
+          <DialogTitle>Sign Document</DialogTitle>
         </DialogHeader>
-        <div>
-          This information will be used in the W-9 form to confirm your U.S. taxpayer status. If you're eligible for
-          1099 forms, you'll receive a download link by email when it's ready.
-        </div>
-        <div className="flex items-center gap-1">
-          <ArrowUpRightFromSquare className="size-4" />
-          <a
-            target="_blank"
-            rel="noopener noreferrer nofollow"
-            href="https://www.irs.gov/forms-pubs/about-form-w-9"
-            className={linkClasses}
-          >
-            Official W-9 instructions
-          </a>
-        </div>
-
         {document.textContent ? (
           <div
             className="prose border-muted min-h-0 grow overflow-y-auto rounded-md border p-4 text-black"
             dangerouslySetInnerHTML={{ __html: document.textContent ?? "" }}
           />
         ) : (
-          <div className="mt-2 flex items-center justify-between rounded-lg border border-gray-200 bg-white p-2">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded bg-red-50">
-                <span className="text-xs font-medium text-red-500">
-                  {document.name.split(".").pop()?.toUpperCase() || "PDF"}
-                </span>
-              </div>
-              <div>
-                <div className="text-sm font-medium">{document.name}</div>
-                <div className="text-xs text-gray-500">{typeLabels[document.type]}</div>
-              </div>
-            </div>
+          <div className="flex items-center gap-1">
+            <Download className="size-4" />
+            <a className={linkClasses} href={getDownloadUrl(document) ?? "#"} target="_blank" rel="noopener noreferrer">
+              {document.name}
+            </a>
           </div>
         )}
 

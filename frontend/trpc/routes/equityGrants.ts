@@ -4,12 +4,10 @@ import { createInsertSchema } from "drizzle-zod";
 import { omit, pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
-import { DocumentTemplateType, optionGrantTypes, optionGrantVestingTriggers } from "@/db/enums";
+import { optionGrantTypes, optionGrantVestingTriggers } from "@/db/enums";
 import {
   companyContractors,
   companyInvestors,
-  documents,
-  documentTemplates,
   equityGrantExercises,
   equityGrants,
   optionPools,
@@ -19,7 +17,6 @@ import {
 } from "@/db/schema";
 import { DEFAULT_VESTING_SCHEDULE_OPTIONS } from "@/models";
 import { type CompanyContext, companyProcedure, createRouter } from "@/trpc";
-import { createSubmission } from "@/trpc/routes/documents/templates";
 import { simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
 import { company_administrator_equity_grants_url } from "@/utils/routes";
@@ -161,19 +158,11 @@ export const equityGrantsRouter = createRouter({
           totalVestingDurationMonths: z.number().nullable(),
           cliffDurationMonths: z.number().nullable(),
           vestingFrequencyMonths: z.string().nullable(),
-          docusealTemplateId: z.string(),
+          documentTemplateId: z.string(),
         }),
     )
     .mutation(async ({ input, ctx }) => {
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
-      const template = await db.query.documentTemplates.findFirst({
-        where: and(
-          eq(documentTemplates.externalId, input.docusealTemplateId),
-          eq(documentTemplates.type, DocumentTemplateType.EquityPlanContract),
-          or(eq(documentTemplates.companyId, ctx.company.id), isNull(documentTemplates.companyId)),
-        ),
-      });
-      if (!template) throw new TRPCError({ code: "NOT_FOUND" });
 
       const worker = await db.query.companyContractors.findFirst({
         where: and(
@@ -216,11 +205,6 @@ export const equityGrantsRouter = createRouter({
 
       if (!response.ok) throw new TRPCError({ code: "BAD_REQUEST", message: await response.text() });
       const { document_id } = z.object({ document_id: z.number() }).parse(await response.json());
-      const submission = await createSubmission(ctx, template.docusealId, worker.user, "Company Representative");
-      await db
-        .update(documents)
-        .set({ docusealSubmissionId: submission.id })
-        .where(eq(documents.id, BigInt(document_id)));
       return { documentId: document_id };
     }),
   totals: companyProcedure.query(async ({ ctx }) => {

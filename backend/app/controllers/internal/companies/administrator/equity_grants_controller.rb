@@ -6,10 +6,11 @@ class Internal::Companies::Administrator::EquityGrantsController < Internal::Com
 
     company_worker = Current.company.company_workers.find_by(external_id: params[:equity_grant][:company_worker_id])
     option_pool = Current.company.option_pools.find_by(external_id: params[:equity_grant][:option_pool_id])
+    template_document = Current.company.documents.find_by(id: params[:equity_grant][:document_template_id])
 
     result = GrantStockOptions.new(
       company_worker,
-      **equity_grant_params.to_h.symbolize_keys.merge(option_pool:, vesting_schedule_params:)
+      **equity_grant_params.to_h.symbolize_keys.merge(option_pool:, vesting_schedule_params:, template_document:)
     ).process
 
     if result[:success]

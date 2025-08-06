@@ -8,7 +8,7 @@ class EquityExercisingService
     @equity_grants = exercise.equity_grants
   end
 
-  def self.create_request(equity_grants_params:, submission_id:, company_investor:, company_worker:)
+  def self.create_request(equity_grants_params:, company_investor:, company_worker:)
     company = company_investor.company
     number_of_options_by_equity_grant = equity_grants_params.to_h { [_1[:id], _1[:number_of_options]] }
     equity_grant_ids = number_of_options_by_equity_grant.keys
@@ -57,7 +57,7 @@ class EquityExercisingService
         )
       end
       document = Document.new(company:, name: "Notice of Exercise", document_type: :exercise_notice, year: current_time.year,
-                              json_data: { equity_grant_exercise_id: exercise.id }, docuseal_submission_id: submission_id)
+                              json_data: { equity_grant_exercise_id: exercise.id })
       document.signatures.build(user: company_investor.user, title: "Signer", signed_at: current_time)
       document.save!
       CompanyInvestorMailer.stock_exercise_payment_instructions(company_investor.id, exercise_id: exercise.id).deliver_later

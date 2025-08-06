@@ -5,7 +5,7 @@ class GrantStockOptions
                 number_of_shares:, issue_date_relationship:, option_grant_type:, option_expiry_months:,
                 vesting_trigger:, vesting_schedule_params:, voluntary_termination_exercise_months:,
                 involuntary_termination_exercise_months:, termination_with_cause_exercise_months:,
-                death_exercise_months:, disability_exercise_months:, retirement_exercise_months:)
+                death_exercise_months:, disability_exercise_months:, retirement_exercise_months:, template_document:)
     @company_worker = company_worker
     @option_pool = option_pool
     @company = company_worker.company
@@ -23,6 +23,7 @@ class GrantStockOptions
     @death_exercise_months = death_exercise_months
     @disability_exercise_months = disability_exercise_months
     @retirement_exercise_months = retirement_exercise_months
+    @template_document = template_document
   end
 
   def process
@@ -72,12 +73,20 @@ class GrantStockOptions
       equity_grant = equity_grant_creation_result.equity_grant
       document = company_worker.user.documents.build(equity_grant:,
                                                      company:,
-                                                     name: "Equity Incentive Plan #{Date.current.year}",
+                                                     name: "Equity Incentive Plan #{company_investor.user.legal_name} #{Date.current.year}",
                                                      year: Date.current.year,
                                                      document_type: :equity_plan_contract)
       document.signatures.build(user:, title: "Signer")
       document.signatures.build(user: company_administrator.user, title: "Company Representative")
       document.save!
+
+      if template_document.present?
+        document.attachments.attach(
+          io: template_document.attachment.download,
+          filename: template_document.attachment.filename.to_s,
+          content_type: template_document.attachment.content_type
+        )
+      end
       CompanyWorkerMailer.equity_grant_issued(equity_grant.id).deliver_later
       { success: true, document_id: document.id }
     else
@@ -90,5 +99,5 @@ class GrantStockOptions
                 :issue_date_relationship, :option_expiry_months, :vesting_trigger, :vesting_schedule_params,
                 :voluntary_termination_exercise_months, :involuntary_termination_exercise_months,
                 :termination_with_cause_exercise_months, :death_exercise_months, :disability_exercise_months,
-                :retirement_exercise_months
+                :retirement_exercise_months, :template_document
 end
