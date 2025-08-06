@@ -12,10 +12,10 @@ import { BasicRichTextEditor } from "@/components/RichText";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogStackContent,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -267,7 +267,7 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogStackContent step={currentStep}>{sections}</DialogStackContent>
+      <DialogContent>{sections[currentStep]}</DialogContent>
     </Dialog>
   );
 };
