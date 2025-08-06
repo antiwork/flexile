@@ -36,6 +36,7 @@ const DetailsModal = ({
 }) => {
   const company = useCurrentCompany();
   const [user] = trpc.users.get.useSuspenseQuery({ companyId: company.id, id: userId });
+  const { data: fullEquityGrant } = trpc.equityGrants.get.useQuery({ companyId: company.id, id: equityGrant.id });
 
   return (
     <Sheet open onOpenChange={onClose}>
@@ -122,6 +123,21 @@ const DetailsModal = ({
             }
           />
           <Item label="Role type" value={relationshipDisplayNames[equityGrant.issueDateRelationship]} />
+
+          {fullEquityGrant?.vestingEvents && fullEquityGrant.vestingEvents.length > 0 ? (
+            <>
+              <Separator />
+              <h3 className="text-md px-6 font-medium">Vesting events</h3>
+              {fullEquityGrant.vestingEvents.map((event, index) => (
+                <div key={index}>
+                  <Item
+                    label={`${formatDate(event.vestingDate)} ${event.processedAt ? "(Vested)" : event.cancelledAt ? "(Cancelled)" : "(Scheduled)"}`}
+                    value={`${event.vestedShares.toLocaleString()} options `}
+                  />
+                </div>
+              ))}
+            </>
+          ) : null}
         </div>
         {company.flags.includes("option_exercising") &&
         equityGrant.vestedShares > 0 &&
