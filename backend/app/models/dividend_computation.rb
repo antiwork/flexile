@@ -27,7 +27,6 @@ class DividendComputation < ApplicationRecord
   def per_investor
     share_dividends, safe_dividends = dividends_info
 
-    # Preload all company_investors at once
     company_investor_ids = share_dividends.keys
     company_investors_by_id = CompanyInvestor.includes(:user).where(id: company_investor_ids).index_by(&:id)
 
