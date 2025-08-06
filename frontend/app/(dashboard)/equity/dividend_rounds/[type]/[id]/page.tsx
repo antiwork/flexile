@@ -17,10 +17,10 @@ import { request } from "@/utils/request";
 import { per_investor_company_dividend_computation_path } from "@/utils/routes";
 
 type TransformedData = {
-  investor: { name: string; id: string | undefined };
+  investor: { name: string; id: string | null };
   status: { value: string; Component: React.JSX.Element };
   totalAmountUsd: number;
-  numberOfShares: number;
+  numberOfShares: number | null;
   flexileFee: number;
 };
 
@@ -63,7 +63,7 @@ export default function DividendRound() {
       outputs.map((output) => ({
         investor: {
           name: output.investor_name || "Unknown",
-          id: output.investor_external_id ?? undefined,
+          id: output.investor_external_id ?? null,
         },
         status: {
           value: "DRAFT",
@@ -95,7 +95,8 @@ export default function DividendRound() {
           },
           status: { value: dividend.status, Component: <DividendStatusIndicator dividend={dividend} /> },
           totalAmountUsd: Number(dividend.totalAmountInCents) / 100,
-          numberOfShares: Number(dividend.numberOfShares) || NaN,
+          numberOfShares:
+            dividend.numberOfShares && dividend.numberOfShares > 0 ? Number(dividend.numberOfShares) : null,
           flexileFee: calculateFlexileFees(Number(dividend.totalAmountInCents) / 100),
         })),
     },
@@ -113,9 +114,10 @@ export default function DividendRound() {
     }),
     columnHelper.accessor("numberOfShares", {
       header: "Number of shares",
-      cell: (info) => info.getValue().toLocaleString(),
+      // SAFE investors don't have number of shares
+      cell: (info) => info.getValue()?.toLocaleString() ?? "—",
       meta: { numeric: true },
-      footer: sums.numberOfSharesSum.toLocaleString(),
+      footer: sums.numberOfSharesSum > 0 ? sums.numberOfSharesSum.toLocaleString() : "—",
     }),
     columnHelper.accessor("totalAmountUsd", {
       header: "Return amount",
@@ -179,7 +181,7 @@ export default function DividendRound() {
 
 function calculateSums(data: TransformedData[]) {
   const totalAmountUsdSum = data.reduce((sum, item) => sum + item.totalAmountUsd, 0);
-  const numberOfSharesSum = data.reduce((sum, item) => sum + item.numberOfShares, 0);
+  const numberOfSharesSum = data.reduce((sum, item) => sum + (item.numberOfShares ?? 0), 0);
   const flexileFeeSum = data.reduce((sum, item) => sum + item.flexileFee, 0);
 
   return {
