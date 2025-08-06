@@ -20,6 +20,7 @@ type TransformedData = {
   investor: { name: string; id: string | undefined };
   status: { value: string; Component: React.JSX.Element };
   totalAmountUsd: number;
+  numberOfShares: number;
   flexileFee: number;
 };
 
@@ -74,6 +75,7 @@ export default function DividendRound() {
           ),
         },
         totalAmountUsd: Number(output.total_amount),
+        numberOfShares: output.number_of_shares,
         flexileFee: calculateFlexileFees(Number(output.total_amount)),
       })),
   });
@@ -93,6 +95,7 @@ export default function DividendRound() {
           },
           status: { value: dividend.status, Component: <DividendStatusIndicator dividend={dividend} /> },
           totalAmountUsd: Number(dividend.totalAmountInCents) / 100,
+          numberOfShares: Number(dividend.numberOfShares) || NaN,
           flexileFee: calculateFlexileFees(Number(dividend.totalAmountInCents) / 100),
         })),
     },
@@ -107,6 +110,12 @@ export default function DividendRound() {
       header: "Investor",
       cell: (info) => <div className="font-light">{info.getValue()}</div>,
       footer: "Total",
+    }),
+    columnHelper.accessor("numberOfShares", {
+      header: "Number of shares",
+      cell: (info) => info.getValue().toLocaleString(),
+      meta: { numeric: true },
+      footer: sums.numberOfSharesSum.toLocaleString(),
     }),
     columnHelper.accessor("totalAmountUsd", {
       header: "Return amount",
@@ -170,10 +179,12 @@ export default function DividendRound() {
 
 function calculateSums(data: TransformedData[]) {
   const totalAmountUsdSum = data.reduce((sum, item) => sum + item.totalAmountUsd, 0);
+  const numberOfSharesSum = data.reduce((sum, item) => sum + item.numberOfShares, 0);
   const flexileFeeSum = data.reduce((sum, item) => sum + item.flexileFee, 0);
 
   return {
     totalAmountUsdSum,
+    numberOfSharesSum,
     flexileFeeSum,
   };
 }
