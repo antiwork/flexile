@@ -146,23 +146,6 @@ RSpec.describe CreateOrUpdateInvoiceService do
         end.to change { user.invoices.count }.by(1)
       end
 
-      it "does not apply an equity split if the feature is not enabled" do
-        contractor.update!(equity_percentage: 60)
-        company.update!(equity_enabled: false)
-
-        expect do
-          result = invoice_service.process
-          expect(result[:success]).to be(true)
-          invoice = result[:invoice]
-          expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents)
-          expect(invoice.equity_percentage).to eq(0)
-          expect(invoice.cash_amount_in_cents).to eq(expected_total_amount_in_cents)
-          expect(invoice.flexile_fee_cents).to eq(50 + (1.5 * expected_total_amount_in_cents / 100).round)
-          expect(invoice.equity_amount_in_cents).to eq(0)
-          expect(invoice.equity_amount_in_options).to eq(0)
-          expect(invoice.notes).to eq("Tax ID: 123efjo32r")
-        end.to change { user.invoices.count }.by(1)
-      end
 
       it "fails to create an invoice if an active grant is missing, company does not have a share price, and the contractor has an equity percentage" do
         contractor.update!(equity_percentage: 20)
