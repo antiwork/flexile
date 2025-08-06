@@ -88,6 +88,9 @@ class UserPresenter
     {
       companies: user.all_companies.compact.map do |company|
         flags = []
+        if ENV["RAILS_ENV"] == "test"
+          Flipper.enable(:dividend_computation, company)
+        end
         flags.push("equity") if company.equity_enabled?
         flags.push("company_updates") if company.company_investors.exists?
         flags.push("quickbooks") if company.quickbooks_enabled?
@@ -95,6 +98,7 @@ class UserPresenter
         flags.push("expenses") if company.expenses_enabled?
         flags.push("option_exercising") if company.json_flag?("option_exercising")
         flags.push("dividend_computation") if Flipper.enabled?(:dividend_computation, company)
+        Rails.logger.info("Current environment: #{ENV["RAILS_ENV"]}")
         can_view_financial_data = user.company_administrator_for?(company) || user.company_investor_for?(company)
         {
           **company_navigation_props(
