@@ -61,7 +61,7 @@ export default function DividendRounds() {
         rounds.map((round) => ({
           ...round,
           type: "round" as const,
-          name: "",
+          name: "—",
           dividendsIssuanceDate: round.issuedAt,
           totalAmountInUsd: String(round.totalAmountInCents / 100n),
         })),
