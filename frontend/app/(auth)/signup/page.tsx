@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
 import { z } from "zod";
-import { AuthPage } from "@/app/(auth)";
 import { request } from "@/utils/request";
+import { AuthPage } from "..";
 
 export default function SignUpPage() {
   return (
@@ -18,10 +18,10 @@ export default function SignUpPage() {
           </Link>
         </>
       }
-      sendOtpUrl="/v1/signup/send_otp"
+      sendOtpUrl="/internal/signup/send_otp"
       onVerifyOtp={async (data) => {
         const response = await request({
-          url: "/api/signup-verify",
+          url: "/internal/signup/verify_and_create",
           method: "POST",
           accept: "json",
           jsonData: {

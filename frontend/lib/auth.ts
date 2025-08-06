@@ -54,9 +54,9 @@ export const authOptions = {
               user: z.object({
                 id: z.number(),
                 email: z.string(),
-                name: z.string(),
-                legal_name: z.string().optional(),
-                preferred_name: z.string().optional(),
+                name: z.string().nullable(),
+                legal_name: z.string().nullable(),
+                preferred_name: z.string().nullable(),
               }),
               jwt: z.string(),
             })
@@ -84,6 +84,7 @@ export const authOptions = {
   },
   callbacks: {
     jwt({ token, user }) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- next-auth types are wrong
       if (!user) return token;
       token.jwt = user.jwt;
       token.legalName = user.legalName ?? "";
