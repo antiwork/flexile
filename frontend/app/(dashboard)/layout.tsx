@@ -103,7 +103,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <SidebarMenuItem>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent gap-4">
+                  <SidebarMenuButton
+                    size="lg"
+                    className={`gap-4 ${user.companies.length > 1 ? "data-[state=open]:bg-sidebar-accent" : "hover:bg-transparent"}`}
+                  >
                     <div
                       className={`text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded ${
                         isDefaultLogo ? "border-sidebar-border border bg-white" : ""
@@ -128,7 +131,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </DropdownMenuTrigger>
                 {user.companies.length > 1 && (
                   <DropdownMenuContent
-                    className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                    className="w-[--radix-dropdown-menu-trigger-width] min-w-[239px] rounded-lg"
                     align="start"
                     side="bottom"
                     sideOffset={4}
@@ -143,18 +146,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       >
                         <div
                           className={`flex size-6 items-center justify-center rounded-sm ${
-                            isDefaultLogo ? "border-sidebar-border border bg-gray-50" : ""
+                            !company.logo_url || company.logo_url.includes("default-company-logo")
+                              ? "border-sidebar-border border bg-gray-50"
+                              : ""
                           }`}
                         >
                           <Image
                             src={company.logo_url ?? defaultCompanyLogo.src}
-                            className={isDefaultLogo ? "size-4" : "size-6 shrink-0 rounded"}
+                            className={
+                              !company.logo_url || company.logo_url.includes("default-company-logo")
+                                ? "size-4"
+                                : "size-6 shrink-0 rounded"
+                            }
                             width={24}
                             height={24}
                             alt=""
                           />
                         </div>
-                        {company.name}
+                        {company.name ?? "Personal"}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
