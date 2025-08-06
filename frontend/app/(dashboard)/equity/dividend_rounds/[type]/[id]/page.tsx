@@ -1,9 +1,11 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import { Circle, Info } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import React from "react";
+import { z } from "zod";
 import DividendStatusIndicator from "@/app/(dashboard)/equity/DividendStatusIndicator";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
@@ -11,6 +13,8 @@ import TableSkeleton from "@/components/TableSkeleton";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
+import { request } from "@/utils/request";
+import { per_investor_company_dividend_computation_path } from "@/utils/routes";
 
 type TransformedData = {
   investor: { name: string; id: string | undefined };
@@ -18,6 +22,16 @@ type TransformedData = {
   totalAmountUsd: number;
   flexileFee: number;
 };
+
+const responseSchema = z.array(
+  z.object({
+    investor_name: z.string(),
+    company_investor_id: z.number().nullable(),
+    investor_external_id: z.string().nullable(),
+    total_amount: z.string(),
+    number_of_shares: z.number(),
+  }),
+);
 
 export default function DividendRound() {
   const { id, type } = useParams<{ id: string; type: "draft" | "round" }>();
@@ -32,50 +46,37 @@ export default function DividendRound() {
     return null;
   }
 
-  const { data: dividendOutputs = [], isLoading: isLoadingDividendOutputs } =
-    trpc.dividendComputations.getOutputs.useQuery(
-      {
-        id: BigInt(id),
-        companyId: company.id,
-      },
-      {
-        enabled: isDraft && isDividendComputationEnabled,
-        select: (outputs) => {
-          // Aggregate outputs by investor
-          const investorMap = new Map<string, TransformedData>();
-
-          outputs.forEach((output) => {
-            const investorKey = output.investorName || `investor_${output.companyInvestorId}`;
-
-            const existing = investorMap.get(investorKey) || {
-              investor: {
-                // No user.legalName for SAFEs
-                name: output.investorName || output.companyInvestor?.user?.legalName || "Unknown",
-                id: output.companyInvestor?.user?.externalId,
-              },
-              status: {
-                value: "DRAFT",
-                Component: (
-                  <div className="flex items-center gap-2">
-                    <Circle className="size-4 text-black/18" />
-                    <span>Draft</span>
-                  </div>
-                ),
-              },
-              totalAmountUsd: 0,
-              flexileFee: 0,
-            };
-
-            existing.totalAmountUsd += Number(output.totalAmountInUsd);
-            existing.flexileFee = calculateFlexileFees(existing.totalAmountUsd);
-
-            investorMap.set(investorKey, existing);
-          });
-
-          return Array.from(investorMap.values());
+  const { data: dividendOutputs = [], isLoading: isLoadingDividendOutputs } = useQuery({
+    queryKey: ["dividend-computation", id],
+    queryFn: async () => {
+      const response = await request({
+        method: "GET",
+        accept: "json",
+        url: per_investor_company_dividend_computation_path(company.id, BigInt(id)),
+        assertOk: true,
+      });
+      return responseSchema.parse(await response.json());
+    },
+    enabled: isDraft && isDividendComputationEnabled,
+    select: (outputs) =>
+      outputs.map((output) => ({
+        investor: {
+          name: output.investor_name || "Unknown",
+          id: output.investor_external_id ?? undefined,
         },
-      },
-    );
+        status: {
+          value: "DRAFT",
+          Component: (
+            <div className="flex items-center gap-2">
+              <Circle className="size-4 text-black/18" />
+              <span>Draft</span>
+            </div>
+          ),
+        },
+        totalAmountUsd: Number(output.total_amount),
+        flexileFee: calculateFlexileFees(Number(output.total_amount)),
+      })),
+  });
 
   const { data: dividends = [], isLoading: isLoadingDividends } = trpc.dividends.list.useQuery(
     {
