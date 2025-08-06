@@ -1,5 +1,6 @@
 import { db } from "@test/db";
 import { usersFactory } from "@test/factories/users";
+import { fillOtpSlots } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
@@ -12,7 +13,7 @@ test("login", async ({ page }) => {
 
   await page.getByLabel("Work email").fill(email);
   await page.getByRole("button", { name: "Log in", exact: true }).click();
-  await page.getByLabel("Verification code").fill("000000");
+  await fillOtpSlots(page, "000000");
   await page.getByRole("button", { name: "Continue", exact: true }).click();
 
   await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
@@ -35,7 +36,7 @@ test("login with redirect_url", async ({ page }) => {
 
   await page.getByLabel("Work email").fill(email);
   await page.getByRole("button", { name: "Log in", exact: true }).click();
-  await page.getByLabel("Verification code").fill("000000");
+  await fillOtpSlots(page, "000000");
   await page.getByRole("button", { name: "Continue", exact: true }).click();
 
   await page.waitForLoadState("networkidle");

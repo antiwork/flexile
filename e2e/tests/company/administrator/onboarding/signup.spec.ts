@@ -1,5 +1,6 @@
 import { faker } from "@faker-js/faker";
 import { db, takeOrThrow } from "@test/db";
+import { fillOtpSlots } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
@@ -26,9 +27,8 @@ test.describe("Company administrator signup", () => {
     await page.getByLabel("Work email").fill(email);
     await page.getByRole("button", { name: "Sign up" }).click();
 
-    // Wait for OTP step and enter verification code
-    await page.getByLabel("Verification code").waitFor();
-    await page.getByLabel("Verification code").fill("000000"); // Test OTP code
+    // Wait for OTP step and enter verification code using slots
+    await fillOtpSlots(page, "000000");
     await page.getByRole("button", { name: "Continue" }).click();
 
     // Wait for redirect to dashboard

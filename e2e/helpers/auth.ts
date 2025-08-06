@@ -5,6 +5,14 @@ import { users } from "@/db/schema";
 // Backend accepts "000000" when Rails.env.test? && ENV['ENABLE_DEFAULT_OTP'] == 'true'
 const TEST_OTP_CODE = "000000";
 
+/**
+ * Fill individual OTP slots with the test code
+ */
+export const fillOtpSlots = async (page: Page, code = TEST_OTP_CODE) => {
+  // Use the accessible textbox instead of individual div slots
+  await page.getByRole("textbox", { name: "Verification code" }).fill(code);
+};
+
 export const login = async (page: Page, user: typeof users.$inferSelect) => {
   await page.goto("/login");
 
@@ -12,11 +20,8 @@ export const login = async (page: Page, user: typeof users.$inferSelect) => {
   await page.getByLabel("Work email").fill(user.email);
   await page.getByRole("button", { name: "Log in" }).click();
 
-  // Wait for OTP step to appear
-  await page.getByLabel("Verification code").waitFor();
-
-  // Use test OTP code - backend should accept this in test environment
-  await page.getByLabel("Verification code").fill(TEST_OTP_CODE);
+  // Wait for OTP step and fill slots
+  await fillOtpSlots(page);
   await page.getByRole("button", { name: "Continue" }).click();
 
   // Wait for successful redirect
@@ -44,9 +49,8 @@ export const signup = async (page: Page, email: string) => {
   await page.getByLabel("Work email").fill(email);
   await page.getByRole("button", { name: "Sign up" }).click();
 
-  // Wait for OTP step and enter verification code
-  await page.getByLabel("Verification code").waitFor();
-  await page.getByLabel("Verification code").fill(TEST_OTP_CODE);
+  // Wait for OTP step and fill slots
+  await fillOtpSlots(page);
   await page.getByRole("button", { name: "Continue" }).click();
 
   // Wait for successful redirect to onboarding or dashboard
