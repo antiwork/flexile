@@ -130,8 +130,29 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
     }
   };
 
+  const handleGoogleAuth = async () => {
+    actions.setLoading(true);
+    actions.clearMessages();
+
+    try {
+      const context = config.type;
+      document.cookie = `auth_context=${context}; path=/; max-age=300`;
+
+      if (config.invitationToken) {
+        document.cookie = `auth_invitation_token=${config.invitationToken}; path=/; max-age=300`;
+      }
+
+      await signIn("google");
+    } catch (error) {
+      actions.setError(error instanceof Error ? error.message : "Unable to continue with Google. Please try again.");
+    } finally {
+      actions.setLoading(false);
+    }
+  };
+
   return {
     handleSendOtp,
     handleAuthenticate,
+    handleGoogleAuth,
   };
 }

@@ -2,7 +2,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { Suspense } from "react";
 import { AuthAlerts } from "@/components/auth/AuthAlerts";
 import { Button } from "@/components/ui/button";
@@ -17,9 +16,10 @@ import logo from "@/public/logo-icon.svg";
 function SignUpContent() {
   const searchParams = useSearchParams();
   const invitationToken = searchParams.get("invitation_token");
+  const urlError = searchParams.get("error");
 
   const [state, actions] = useOtpFlowState();
-  const { handleSendOtp, handleAuthenticate } = useAuthApi(
+  const { handleSendOtp, handleAuthenticate, handleGoogleAuth } = useAuthApi(
     {
       type: "signup",
       sendOtpEndpoint: "/api/signup-send-otp",
@@ -28,11 +28,6 @@ function SignUpContent() {
     state,
     actions,
   );
-
-  const handleGoogleSignIn = () => {
-    const callbackUrl = invitationToken ? `/?invitation_token=${invitationToken}` : "/";
-    void signIn("google", { callbackUrl });
-  };
 
   return (
     <div className="flex items-center justify-center">
@@ -51,7 +46,7 @@ function SignUpContent() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <AuthAlerts error={state.error} success={state.success} />
+          <AuthAlerts error={state.error || urlError || ""} success={state.success} />
 
           {state.step === "email" ? (
             <div className="space-y-4">
@@ -59,7 +54,7 @@ function SignUpContent() {
                 type="button"
                 variant="outline"
                 className="flex w-full items-center gap-2"
-                onClick={handleGoogleSignIn}
+                onClick={() => void handleGoogleAuth()}
                 disabled={state.loading}
               >
                 <Image src={googleIcon} alt="Google" className="size-4" />

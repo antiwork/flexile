@@ -5,7 +5,26 @@ class Api::V1::OauthController < Api::BaseController
 
   skip_before_action :authenticate_with_jwt
 
-  def google
+  def google_login
+    email = params[:email]
+    google_id = params[:google_id]
+
+    return render json: { error: "Email is required" }, status: :bad_request if email.blank?
+    return render json: { error: "Google ID is required" }, status: :bad_request if google_id.blank?
+
+    begin
+      user = handle_google_login(email, google_id)
+      return unless user
+
+      user.update!(current_sign_in_at: Time.current)
+      success_response_with_jwt(user)
+    rescue StandardError => e
+      Rails.logger.error "Google OAuth login error: #{e.message}"
+      render json: { error: "Authentication failed" }, status: :internal_server_error
+    end
+  end
+
+  def google_signup
     email = params[:email]
     google_id = params[:google_id]
     invitation_token = params[:invitation_token]
@@ -14,26 +33,37 @@ class Api::V1::OauthController < Api::BaseController
     return render json: { error: "Google ID is required" }, status: :bad_request if google_id.blank?
 
     begin
-      user = find_or_create_google_user(email, google_id, invitation_token)
-      user.update!(current_sign_in_at: Time.current)
+      user = handle_google_signup(email, google_id, invitation_token)
+      return unless user
 
+      user.update!(current_sign_in_at: Time.current)
       success_response_with_jwt(user)
     rescue StandardError => e
-      Rails.logger.error "Google OAuth error: #{e.message}"
+      Rails.logger.error "Google OAuth signup error: #{e.message}"
       render json: { error: "Authentication failed" }, status: :internal_server_error
     end
   end
 
   private
-    def find_or_create_google_user(email, google_id, invitation_token)
+    def handle_google_login(email, google_id)
       user = User.find_by(email: email)
-
-      if user
-        user.update!(google_uid: google_id) if user.google_uid.blank?
-        user
-      else
-        complete_google_user_signup(email, google_id, invitation_token)
+      unless user
+        render json: { error: "User not found" }, status: :not_found
+        return nil
       end
+
+      user.update!(google_uid: google_id) if user.google_uid.blank?
+      user
+    end
+
+    def handle_google_signup(email, google_id, invitation_token)
+      existing_user = User.find_by(email: email)
+      if existing_user
+        render json: { error: "An account with this email already exists. Please log in instead." }, status: :conflict
+        return nil
+      end
+
+      complete_google_user_signup(email, google_id, invitation_token)
     end
 
     def complete_google_user_signup(email, google_id, invitation_token)
