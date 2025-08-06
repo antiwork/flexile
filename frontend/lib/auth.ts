@@ -104,6 +104,7 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     jwt({ token, user }) {
+      // User is only available during sign-in, not during token refresh
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (user && "jwt" in user) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
@@ -115,7 +116,6 @@ export const authOptions: NextAuthOptions = {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
         token.preferredName = customUser.preferredName;
       }
-
       return token;
     },
     session({ session, token }) {
