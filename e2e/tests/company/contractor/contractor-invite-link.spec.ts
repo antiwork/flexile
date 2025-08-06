@@ -80,6 +80,10 @@ test.describe("Contractor Invite Link Joining flow", () => {
 
     await page.getByLabel("Role").fill("Hourly Role 1");
     await page.getByLabel("Rate").fill("99");
+    const switchButton = page.getByLabel("Skip contract for now");
+    await expect(switchButton).not.toHaveAttribute("aria-checked", "true");
+    await switchButton.click({ force: true });
+
     await page.getByRole("button", { name: "Continue" }).click();
 
     await expect(
