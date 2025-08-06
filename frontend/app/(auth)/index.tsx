@@ -1,6 +1,6 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSession, signIn } from "next-auth/react";
@@ -11,8 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useUserStore } from "@/global";
-import { currentUserSchema } from "@/models/user";
 import logo from "@/public/logo-icon.svg";
 import { request } from "@/utils/request";
 
@@ -33,9 +31,9 @@ export function AuthPage({
   onVerifyOtp?: (data: { email: string; otp: string }) => Promise<void>;
 }) {
   const router = useRouter();
-  const { login } = useUserStore();
   const searchParams = useSearchParams();
   const invitationToken = searchParams.get("invitation_token");
+  const queryClient = useQueryClient();
   const sendOtp = useMutation({
     mutationFn: async (values: { email: string }) => {
       const response = await request({
@@ -64,19 +62,8 @@ export function AuthPage({
       if (result?.error) throw new Error(result.error);
 
       const session = await getSession();
-
-      const response = await request({
-        url: "/api/user-data",
-        method: "POST",
-        accept: "json",
-        jsonData: { jwt: session?.user.jwt },
-      });
-      if (!response.ok)
-        throw new Error(
-          z.object({ error: z.string() }).safeParse(await response.json()).data?.error || "Invalid verification code",
-        );
-
-      login(currentUserSchema.parse(await response.json()));
+      if (!session?.user.email) throw new Error("Invalid verification code");
+      await queryClient.resetQueries({ queryKey: ["currentUser", session.user.email] });
 
       const redirectUrl =
         typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect_url") : null;
@@ -90,13 +77,27 @@ export function AuthPage({
     resolver: zodResolver(emailSchema),
     disabled: sendOtp.isPending,
   });
-  const submitEmailForm = emailForm.handleSubmit((values) => sendOtp.mutate(values));
+  const submitEmailForm = emailForm.handleSubmit(async (values) => {
+    try {
+      await sendOtp.mutateAsync(values);
+    } catch (error) {
+      emailForm.setError("email", {
+        message: error instanceof Error ? error.message : "Failed to send verification code",
+      });
+    }
+  });
 
   const otpForm = useForm({
     resolver: zodResolver(otpSchema),
     disabled: verifyOtp.isPending,
   });
-  const submitOtpForm = otpForm.handleSubmit((values) => verifyOtp.mutate(values));
+  const submitOtpForm = otpForm.handleSubmit(async (values) => {
+    try {
+      await verifyOtp.mutateAsync(values);
+    } catch (error) {
+      otpForm.setError("otp", { message: error instanceof Error ? error.message : "Failed to verify OTP" });
+    }
+  });
 
   return (
     <div className="flex items-center justify-center">

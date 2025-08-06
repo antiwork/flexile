@@ -2,7 +2,7 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { z } from "zod";
 import env from "@/env";
-import { request } from "@/utils/request";
+import { assertDefined } from "@/utils/assert";
 
 const otpLoginSchema = z.object({
   email: z.string().email(),
@@ -26,21 +26,20 @@ export const authOptions = {
           placeholder: "Enter 6-digit OTP",
         },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         const validation = otpLoginSchema.safeParse(credentials);
 
         if (!validation.success) throw new Error("Invalid email or OTP");
 
         try {
-          const response = await request({
-            url: `/v1/login`,
-            accept: "json",
+          const response = await fetch(`${assertDefined(req.headers?.origin)}/internal/login`, {
             method: "POST",
-            jsonData: {
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
               email: validation.data.email,
               otp_code: validation.data.otp,
               token: env.API_SECRET_TOKEN,
-            },
+            }),
           });
 
           if (!response.ok) {
@@ -85,6 +84,7 @@ export const authOptions = {
   },
   callbacks: {
     jwt({ token, user }) {
+      if (!user) return token;
       token.jwt = user.jwt;
       token.legalName = user.legalName ?? "";
       token.preferredName = user.preferredName ?? "";

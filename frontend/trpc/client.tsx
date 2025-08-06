@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import superjson from "superjson";
 import { useUserStore } from "@/global";
 import { request } from "@/utils/request";
+import { internal_current_user_data_path } from "@/utils/routes";
 import { type AppRouter } from "./server";
 import { createClient } from "./shared";
 
@@ -25,10 +26,9 @@ export const UserDataProvider = ({ children }: { children: React.ReactNode }) =>
     queryFn: isSignedIn
       ? async (): Promise<unknown> => {
           const response = await request({
-            url: "/api/user-data",
-            method: "POST",
+            url: internal_current_user_data_path(),
+            method: "GET",
             accept: "json",
-            jsonData: { jwt: session.user.jwt },
             assertOk: true,
           });
           return await response.json();
