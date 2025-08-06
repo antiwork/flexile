@@ -254,8 +254,6 @@ test.describe("Equity Grant Vesting Events", () => {
 
     await page.getByRole("button", { name: "Create grant" }).click();
 
-    await page.waitForLoadState("networkidle");
-
     // Navigate to the people page and find the contractor
     await page.getByRole("link", { name: "People" }).click();
 
