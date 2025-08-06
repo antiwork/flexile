@@ -65,6 +65,7 @@ export const authOptions = {
           return {
             ...data.user,
             id: data.user.id.toString(),
+            name: data.user.name ?? "",
             legalName: data.user.legal_name ?? "",
             preferredName: data.user.preferred_name ?? "",
             jwt: data.jwt,
