@@ -9,6 +9,7 @@ export default function SignUpPage() {
     <AuthPage
       title="Create account"
       description="Sign up using the account you use at work."
+      sendOtpText="Sign up"
       switcher={
         <>
           Already using Flexile?{" "}

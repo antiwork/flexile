@@ -7,6 +7,7 @@ export default function LoginPage() {
     <AuthPage
       title="Welcome back"
       description="Use your work email to log in."
+      sendOtpText="Log in"
       switcher={
         <>
           Don't have an account?{" "}

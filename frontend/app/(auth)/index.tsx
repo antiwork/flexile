@@ -22,12 +22,14 @@ export function AuthPage({
   description,
   switcher,
   sendOtpUrl,
+  sendOtpText,
   onVerifyOtp,
 }: {
   title: string;
   description: string;
   switcher: React.ReactNode;
   sendOtpUrl: string;
+  sendOtpText: string;
   onVerifyOtp?: (data: { email: string; otp: string }) => Promise<void>;
 }) {
   const router = useRouter();
@@ -164,7 +166,7 @@ export function AuthPage({
                   )}
                 />
                 <MutationStatusButton mutation={sendOtp} type="submit" className="w-full" loadingText="Sending...">
-                  Send code
+                  {sendOtpText}
                 </MutationStatusButton>
 
                 <div className="text-center text-sm text-gray-600">{switcher}</div>
