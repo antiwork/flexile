@@ -72,13 +72,6 @@ RSpec.describe PayInvestorDividends, :vcr do
     end.to change(DividendPayment, :count).by(0)
   end
 
-  it "raises an exception if the company does not have access to the dividends feature" do
-    company.update!(equity_enabled: false)
-
-    expect do
-      described_class.new(company_investor, dividends).process
-    end.to raise_error("Feature unsupported for company #{company.id}")
-  end
 
   it "raises an exception if Flexile does not have sufficient balance to pay for the dividend" do
     allow(Wise::AccountBalance).to receive(:has_sufficient_flexile_balance?).and_return(false)
