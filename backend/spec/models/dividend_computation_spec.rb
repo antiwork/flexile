@@ -191,9 +191,9 @@ RSpec.describe DividendComputation do
     end
   end
 
-  describe "#per_investor" do
+  describe "#to_per_investor" do
     it "returns aggregated data for all investors" do
-      result = @dividend_computation.per_investor
+      result = @dividend_computation.to_per_investor
 
       expect(result).to be_an(Array)
       expect(result.length).to eq(7) # 5 share investors + 2 SAFE investors
@@ -203,7 +203,7 @@ RSpec.describe DividendComputation do
     end
 
     it "correctly aggregates share-based investors" do
-      result = @dividend_computation.per_investor
+      result = @dividend_computation.to_per_investor
 
       seed_investor_data = result.find { |r| r[:investor_name] == "Seed Investor" }
       expect(seed_investor_data).to include(
@@ -225,7 +225,7 @@ RSpec.describe DividendComputation do
     end
 
     it "correctly aggregates investors with multiple share classes" do
-      result = @dividend_computation.per_investor
+      result = @dividend_computation.to_per_investor
 
       multi_class_investor_data = result.find { |r| r[:investor_name] == "Seed & Series A Investor" }
       expect(multi_class_investor_data).to include(
@@ -247,7 +247,7 @@ RSpec.describe DividendComputation do
     end
 
     it "correctly handles SAFE investors" do
-      result = @dividend_computation.per_investor
+      result = @dividend_computation.to_per_investor
 
       richie_rich_data = result.find { |r| r[:investor_name] == "Richie Rich LLC" }
       expect(richie_rich_data).to include(
@@ -269,7 +269,7 @@ RSpec.describe DividendComputation do
     end
 
     it "sorts results by total_amount in descending order" do
-      result = @dividend_computation.per_investor
+      result = @dividend_computation.to_per_investor
 
       # Verify sorting
       amounts = result.map { |r| r[:total_amount] }
@@ -283,7 +283,7 @@ RSpec.describe DividendComputation do
     it "handles edge case with no dividend computation outputs" do
       empty_computation = create(:dividend_computation, company: company, total_amount_in_usd: 0, dividends_issuance_date: Date.current, name: "Empty")
 
-      result = empty_computation.per_investor
+      result = empty_computation.to_per_investor
       expect(result).to eq([])
     end
 
@@ -302,7 +302,7 @@ RSpec.describe DividendComputation do
              dividend_amount_in_usd: 50_000,
              qualified_dividend_amount_usd: 50_000)
 
-      result = safe_only_computation.per_investor
+      result = safe_only_computation.to_per_investor
       expect(result.length).to eq(1)
       expect(result.first).to include(
         investor_name: "Test SAFE",
@@ -327,7 +327,7 @@ RSpec.describe DividendComputation do
              dividend_amount_in_usd: 50_000,
              qualified_dividend_amount_usd: 50_000)
 
-      result = shares_only_computation.per_investor
+      result = shares_only_computation.to_per_investor
       expect(result.length).to eq(1)
       expect(result.first).to include(
         investor_name: "Seed Investor",

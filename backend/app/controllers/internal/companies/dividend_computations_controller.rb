@@ -24,7 +24,7 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
   def per_investor
     authorize @dividend_computation
 
-    aggregated_data = @dividend_computation.per_investor
+    aggregated_data = @dividend_computation.to_per_investor
     render json: aggregated_data
   end
 
