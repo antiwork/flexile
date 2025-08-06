@@ -104,7 +104,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent gap-4">
                     <div className="bg-muted text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                      <Image src={company.logo_url ?? defaultCompanyLogo.src} className="size-6" alt="" />
+                      <Image
+                        src={company.logo_url ?? defaultCompanyLogo.src}
+                        className="size-6"
+                        width={24}
+                        height={24}
+                        alt=""
+                      />
                     </div>
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-semibold">
@@ -130,7 +136,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       className="gap-2 p-2"
                     >
                       <div className="flex size-6 items-center justify-center rounded-sm border">
-                        <Image src={company.logo_url ?? defaultCompanyLogo.src} className="size-4 shrink-0" alt="" />
+                        <Image
+                          src={company.logo_url ?? defaultCompanyLogo.src}
+                          className="size-4 shrink-0"
+                          width={24}
+                          height={24}
+                          alt=""
+                        />
                       </div>
                       {company.name}
                     </DropdownMenuItem>
