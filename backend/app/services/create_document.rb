@@ -15,7 +15,6 @@ class CreateDocument
 
     attributes = {
       **document_params.except(:attachment).to_h,
-      document_type: :consulting_contract,
       year: Date.current.year,
       company: company,
     }
@@ -52,7 +51,8 @@ class CreateDocument
     attr_reader :company, :params, :user
 
     def document_params
-      params.permit(:name, :text_content, :attachment)
+      params[:document_type] = params[:document_type].to_i
+      params.permit(:name, :document_type, :text_content, :attachment)
     end
 
     def is_param_keys_valid?

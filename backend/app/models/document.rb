@@ -37,7 +37,7 @@ class Document < ApplicationRecord
   validates :document_type, presence: true
   validates :year, presence: true, numericality: { only_integer: true, less_than_or_equal_to: Date.current.year }
   validates :user_compliance_info_id, presence: true, if: :tax_document?
-  validates :equity_grant_id, presence: true, if: -> { equity_plan_contract? }
+  validates :equity_grant_id, presence: true, if: -> { equity_plan_contract? && signatures.any? { |s| s.signed_at.present? } }
   validates :name, inclusion: { in: ALL_SUPPORTED_TAX_FORM_NAMES }, if: :tax_document?
   validate :tax_document_must_be_unique, if: :tax_document?
 

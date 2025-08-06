@@ -9,7 +9,7 @@ import { MutationStatusButton } from "@/components/MutationButton";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useCurrentCompany } from "@/global";
 import { documentSchema } from "@/models/document";
-import { trpc } from "@/trpc/client";
+import { DocumentType, trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_documents_path } from "@/utils/routes";
 import ComboBox from "./ComboBox";
@@ -18,7 +18,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 
 const schema = contractSchema.extend({
   recipient: z.string().optional(),
+  type: z.enum([DocumentType.ConsultingContract.toString(), DocumentType.EquityPlanContract.toString()]),
 });
+
+const documentTypeOptions = [
+  { value: DocumentType.ConsultingContract.toString(), label: "Agreement" },
+  { value: DocumentType.EquityPlanContract.toString(), label: "Equity plan" },
+];
 
 export const NewDocument = () => {
   const company = useCurrentCompany();
@@ -32,17 +38,26 @@ export const NewDocument = () => {
 
   const form = useForm({
     resolver: zodResolver(schema),
+    defaultValues: {
+      type: DocumentType.ConsultingContract.toString(),
+    },
   });
 
   const createDocumentMutation = useMutation({
     mutationFn: async (data: z.infer<typeof schema>) => {
-      const { attachment, signed, recipient, title, content } = data;
+      const { attachment, type, recipient, title, content } = data;
       const url = company_documents_path(company.id);
+
+      let signed = data.signed;
+      if (type === DocumentType.EquityPlanContract.toString()) {
+        signed = false;
+      }
 
       if (attachment) {
         const formData = new FormData();
         formData.append("attachment", attachment);
         formData.append("name", attachment.name);
+        formData.append("document_type", String(type));
         formData.append("signed", String(signed));
         if (recipient) formData.append("recipient", recipient);
 
@@ -52,6 +67,7 @@ export const NewDocument = () => {
 
       const jsonData = {
         signed,
+        document_type: type,
         name: title,
         text_content: content,
         recipient,
@@ -108,6 +124,24 @@ export const NewDocument = () => {
                     </FormControl>
                     <FormMessage />
                     <FormDescription>Leave blank to create without sending</FormDescription>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Document type</FormLabel>
+                    <FormControl>
+                      <ComboBox
+                        value={field.value?.toString() ?? ""}
+                        onChange={(value) => form.setValue("type", value)}
+                        options={documentTypeOptions}
+                        placeholder="Select document type"
+                      />
+                    </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}
               />

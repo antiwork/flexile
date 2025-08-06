@@ -19,7 +19,7 @@ const TemplateSelector = ({
   const company = useCurrentCompany();
   const uid = useId();
 
-  const { data: filteredTemplates = [] } = useQuery<Document[]>({
+  const { data: templates = [] } = useQuery<Document[]>({
     queryKey: [`${type}documentTemplates`],
     queryFn: async () => {
       if (!company) return [];
@@ -30,6 +30,8 @@ const TemplateSelector = ({
       return z.array(documentSchema).parse(await response.json());
     },
   });
+
+  const filteredTemplates = templates.filter((t) => t.signatories.every((s) => s.signedAt === null));
 
   useEffect(() => {
     if (!filteredTemplates.some((t) => t.id === props.value)) props.onChange(filteredTemplates[0]?.id ?? "");
