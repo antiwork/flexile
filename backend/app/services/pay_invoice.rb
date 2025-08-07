@@ -40,7 +40,6 @@ class PayInvoice
     account = payout_service.get_recipient_account(recipient_id: bank_account.recipient_id)
     unless account["active"]
       bank_account.mark_deleted!
-      CompanyWorkerMailer.payment_failed_reenter_bank_details(payment.id, amount, target_currency).deliver_later
       raise WiseError, "Bank account is no longer active for payment #{payment.id}"
     end
     quote = payout_service.create_quote(target_currency:, amount:, recipient_id: bank_account.recipient_id)
@@ -72,7 +71,11 @@ class PayInvoice
     target_currency = payment.wise_recipient&.currency || "USD"
     amount = payment.cash_amount_in_usd
 
-    CompanyWorkerMailer.payment_failed(payment.id, amount, target_currency).deliver_later
+    if e.message.include?("Bank account is no longer active")
+      CompanyWorkerMailer.payment_failed_reenter_bank_details(payment.id, amount, target_currency).deliver_later
+    else
+      CompanyWorkerMailer.payment_failed(payment.id, amount, target_currency).deliver_later
+    end
 
     raise e
   end
