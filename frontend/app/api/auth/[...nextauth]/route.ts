@@ -82,8 +82,6 @@ function handler(req: NextRequest, context: { params: { nextauth: string[] } }) 
           user.legalName = data.user.legal_name || "";
           user.preferredName = data.user.preferred_name || "";
           user.id = data.user.id.toString();
-
-          return true;
         }
 
         return true;
