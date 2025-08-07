@@ -15,7 +15,7 @@ import { formatMoney } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 import NewDistributionModal from "./NewDistributionModal";
 
-type TransformedData = {
+type RowData = {
   id: bigint;
   totalAmountInUsd: string;
   numberOfShareholders: bigint;
@@ -55,11 +55,11 @@ export default function DividendRounds() {
     },
   );
   const isLoading = isLoadingDividendComputations || isLoadingDividendRounds;
-  const data: TransformedData[] = [...dividendComputations, ...dividendRounds];
+  const data: RowData[] = [...dividendComputations, ...dividendRounds];
   const router = useRouter();
   const [isNewDistributionModalOpen, setIsNewDistributionModalOpen] = useState(false);
 
-  const columnHelper = createColumnHelper<TransformedData>();
+  const columnHelper = createColumnHelper<RowData>();
   const columns = [
     columnHelper.accessor("returnOfCapital", {
       header: "Type",

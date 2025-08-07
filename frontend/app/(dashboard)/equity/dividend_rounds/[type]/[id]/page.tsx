@@ -16,7 +16,7 @@ import { formatMoney } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { investor_breakdown_company_dividend_computation_path } from "@/utils/routes";
 
-type TransformedData = {
+type RowData = {
   investor: { name: string; id: string | null };
   status: { value: string; Component: React.JSX.Element };
   totalAmountUsd: number;
@@ -24,7 +24,7 @@ type TransformedData = {
   flexileFee: number;
 };
 
-const responseSchema = z.array(
+const dividendOutputsSchema = z.array(
   z.object({
     investor_name: z.string(),
     company_investor_id: z.number().nullable(),
@@ -50,7 +50,7 @@ export default function DividendRound() {
         url: investor_breakdown_company_dividend_computation_path(company.id, BigInt(id)),
         assertOk: true,
       });
-      return responseSchema.parse(await response.json());
+      return dividendOutputsSchema.parse(await response.json());
     },
     enabled: isDraft,
     select: (outputs) =>
@@ -98,7 +98,7 @@ export default function DividendRound() {
 
   const sums = calculateSums(isDraft ? dividendOutputs : dividends);
 
-  const columnHelper = createColumnHelper<TransformedData>();
+  const columnHelper = createColumnHelper<RowData>();
   const columns = [
     columnHelper.accessor("investor.name", {
       id: "investor",
@@ -108,7 +108,7 @@ export default function DividendRound() {
     }),
     columnHelper.accessor("numberOfShares", {
       header: "Number of shares",
-      // SAFE investors don't have number of shares
+      // When actual dividends are created, this will be null for SAFE investors
       cell: (info) => info.getValue()?.toLocaleString() ?? "—",
       meta: { numeric: true },
       footer: sums.numberOfSharesSum > 0 ? sums.numberOfSharesSum.toLocaleString() : "—",
@@ -136,7 +136,7 @@ export default function DividendRound() {
     }),
   ];
 
-  const data: TransformedData[] = isDraft ? dividendOutputs : dividends;
+  const data: RowData[] = isDraft ? dividendOutputs : dividends;
   const isLoading = isDraft ? isLoadingDividendOutputs : isLoadingDividends;
   const table = useTable({
     data,
@@ -153,7 +153,7 @@ export default function DividendRound() {
     },
   });
 
-  const onRowClicked = (row: TransformedData) => {
+  const onRowClicked = (row: RowData) => {
     // No ID for SAFEs
     if (row.investor.id) {
       router.push(`/people/${row.investor.id}?tab=dividends`);
@@ -173,7 +173,7 @@ export default function DividendRound() {
   );
 }
 
-function calculateSums(data: TransformedData[]) {
+function calculateSums(data: RowData[]) {
   const totalAmountUsdSum = data.reduce((sum, item) => sum + item.totalAmountUsd, 0);
   const numberOfSharesSum = data.reduce((sum, item) => sum + (item.numberOfShares ?? 0), 0);
   const flexileFeeSum = data.reduce((sum, item) => sum + item.flexileFee, 0);
