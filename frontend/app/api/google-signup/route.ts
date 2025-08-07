@@ -25,7 +25,6 @@ export async function POST(request: NextRequest) {
       token: API_SECRET_TOKEN!,
     };
 
-    // Add invitation token if provided
     if (validation.data.invitation_token) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       requestBody.invitation_token = validation.data.invitation_token!;

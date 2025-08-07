@@ -16,7 +16,6 @@ import logo from "@/public/logo-icon.svg";
 
 function LoginContent() {
   const searchParams = useSearchParams();
-  const invitationToken = searchParams.get("invitation_token");
   const urlError = searchParams.get("error");
 
   const formRef = useRef<HTMLFormElement>(null);
@@ -25,7 +24,6 @@ function LoginContent() {
     {
       type: "login",
       sendOtpEndpoint: "/api/send-otp",
-      ...(invitationToken && { invitationToken }),
     },
     state,
     actions,
