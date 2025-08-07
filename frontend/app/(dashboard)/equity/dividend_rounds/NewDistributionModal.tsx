@@ -116,7 +116,6 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
                     <FormControl>
                       <DatePicker {...field} label="Payment date" granularity="day" />
                     </FormControl>
-                    <p className="text-muted-foreground text-sm">Funds will be paid out to eligible shareholders.</p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -138,6 +137,7 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
                         placeholder="0"
                       />
                     </FormControl>
+                    <p className="text-muted-foreground text-sm">Funds will be paid out to eligible shareholders.</p>
                     <FormMessage />
                   </FormItem>
                 )}
