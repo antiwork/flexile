@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, Settings, Users, X } from "lucide-react";
+import { Check, ChevronDown, Users, X } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,6 @@ interface RecipientSelectorProps {
   value: RecipientType[];
   onChange: (value: RecipientType[]) => void;
   counts: RecipientCounts;
-  onMinBilledAmountClick?: () => void;
 }
 
 const recipientOptions: { value: RecipientType; label: string; icon: typeof Users }[] = [
@@ -35,7 +34,7 @@ const recipientOptions: { value: RecipientType; label: string; icon: typeof User
   { value: "alumni_contractors", label: "Alumni contractors", icon: Users },
 ];
 
-export default function RecipientSelector({ value, onChange, counts, onMinBilledAmountClick }: RecipientSelectorProps) {
+export default function RecipientSelector({ value, onChange, counts }: RecipientSelectorProps) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -160,22 +159,6 @@ export default function RecipientSelector({ value, onChange, counts, onMinBilled
                 </DropdownMenuItem>
               );
             })}
-            {(value.includes("active_contractors") || value.includes("alumni_contractors")) &&
-            onMinBilledAmountClick ? (
-              <>
-                <div className="bg-border my-1 h-px" />
-                <DropdownMenuItem
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    setOpen(false);
-                    onMinBilledAmountClick();
-                  }}
-                >
-                  <Settings className="mr-2 h-4 w-4" />
-                  Set min billed amount
-                </DropdownMenuItem>
-              </>
-            ) : null}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
