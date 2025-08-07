@@ -145,7 +145,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         role="button"
                         tabIndex={0}
                       >
-                        <span className="flex items-center gap-2">
+                        <span className="flex items-center gap-3">
                           <Sparkles className="size-6" />
                           <span>Try equity</span>
                         </span>
