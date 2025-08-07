@@ -137,6 +137,38 @@ test.describe("Equity Grant Vesting Events", () => {
         .where(eq(vestingEvents.id, assertDefined(allVestingEvents[i]).id));
     }
 
+    // Add some non-processed vesting events (should not show in modal)
+    await db.insert(vestingEvents).values([
+      {
+        equityGrantId: equityGrant.id,
+        vestingDate: addMonths(vestingStartDate, 49), // Future event - not processed
+        vestedShares: 1000n,
+      },
+      {
+        equityGrantId: equityGrant.id,
+        vestingDate: addMonths(vestingStartDate, 50), // Future event - not processed
+        vestedShares: 1000n,
+      },
+    ]);
+
+    // Add some cancelled vesting events (should not show in modal)
+    await db.insert(vestingEvents).values([
+      {
+        equityGrantId: equityGrant.id,
+        vestingDate: addMonths(vestingStartDate, 17),
+        vestedShares: 1000n,
+        processedAt: new Date(),
+        cancelledAt: new Date(),
+      },
+      {
+        equityGrantId: equityGrant.id,
+        vestingDate: addMonths(vestingStartDate, 18),
+        vestedShares: 1000n,
+        processedAt: new Date(),
+        cancelledAt: new Date(),
+      },
+    ]);
+
     // Update the equity grant's vested shares count
     await db
       .update(equityGrants)
@@ -185,7 +217,7 @@ test.describe("Equity Grant Vesting Events", () => {
       await expect(vestingEventsSection).toContainText("1,000 shares");
     }
 
-    // Verify only 4 processed events are shown (cliff + 3 monthly)
+    // Verify only 4 processed events are shown (cliff + 3 monthly) and no cancelled events
     const sharesEntries = await vestingEventsSection.getByText(/\d+,?\d*\s+shares/u, { exact: false }).count();
     expect(sharesEntries).toBe(4); // Only processed events should be visible
 
@@ -193,7 +225,7 @@ test.describe("Equity Grant Vesting Events", () => {
     const statusCount = await vestingEventsSection
       .getByText(/\((Vested|Scheduled|Cancelled)\)/u, { exact: false })
       .count();
-    expect(statusCount).toBe(0); // No status indicators should be visible
+    expect(statusCount).toBe(0);
 
     // Verify other sections are still present within the modal
     const modalContent = page.getByRole("dialog");
