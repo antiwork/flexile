@@ -617,13 +617,23 @@ const quickInvoiceSchema = z.object({
 
 const QuickInvoicesSection = () => {
   const user = useCurrentUser();
+
+  // Early bail-out BEFORE any additional hooks that might change between renders.
+  if (!user.roles.worker) return null;
+
+  return <QuickInvoicesSectionContent />;
+};
+
+// Separated component that contains all hooks related to the worker view. This
+// avoids violating the Rules of Hooks when the parent conditionally renders.
+const QuickInvoicesSectionContent = () => {
+  const user = useCurrentUser();
   const company = useCurrentCompany();
   const trpcUtils = trpc.useUtils();
   const queryClient = useQueryClient();
 
-  if (!user.roles.worker) return null;
-  const payRateInSubunits = user.roles.worker.payRateInSubunits;
-  const isHourly = user.roles.worker.payRateType === "hourly";
+  const payRateInSubunits = user.roles.worker?.payRateInSubunits ?? 0;
+  const isHourly = user.roles.worker?.payRateType === "hourly";
 
   const { canSubmitInvoices } = useCanSubmitInvoices();
   const form = useForm({
@@ -641,6 +651,7 @@ const QuickInvoicesSection = () => {
   const hourly = form.watch("quantity").hourly;
   const rate = form.watch("rate") * 100;
   const totalAmountInCents = Math.ceil((quantity / (hourly ? 60 : 1)) * rate);
+
   const newCompanyInvoiceRoute = () => {
     const params = new URLSearchParams({
       date: date.toString(),
