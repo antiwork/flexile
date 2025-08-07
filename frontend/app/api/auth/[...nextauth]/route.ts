@@ -23,8 +23,6 @@ function handler(req: NextRequest, context: { params: { nextauth: string[] } }) 
   const cookieMap = parseCookies(cookies);
   const authContext = cookieMap.get("auth_context");
 
-  const errorPage = authContext === "signup" ? "/signup" : "/login";
-
   const augmentedOptions = {
     ...authOptions,
     providers: [
@@ -42,13 +40,9 @@ function handler(req: NextRequest, context: { params: { nextauth: string[] } }) 
       ...authOptions.callbacks,
       async signIn({ user, account }: { user: User; account: Account | null }) {
         if (account?.provider === "google") {
-          const cookies = req.headers.get("cookie") || "";
-          const cookieMap = parseCookies(cookies);
-
-          const context = cookieMap.get("auth_context");
           const invitationToken = cookieMap.get("auth_invitation_token");
 
-          const endpoint = context === "signup" ? "/api/google-signup" : "/api/google-login";
+          const endpoint = authContext === "signup" ? "/api/google-signup" : "/api/google-login";
           const requestBody: Record<string, unknown> = {
             email: user.email,
             google_id: user.id,
@@ -68,7 +62,7 @@ function handler(req: NextRequest, context: { params: { nextauth: string[] } }) 
 
           if (!response.ok) {
             // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-            const errorData = (await response.json().catch(() => ({}))) as { error?: string };
+            const errorData = (await response.json()) as { error?: string };
             throw new Error(errorData.error || "Authentication failed");
           }
 
@@ -97,7 +91,7 @@ function handler(req: NextRequest, context: { params: { nextauth: string[] } }) 
     },
     pages: {
       ...authOptions.pages,
-      error: errorPage,
+      error: authContext === "signup" ? "/signup" : "/login",
     },
   };
 
