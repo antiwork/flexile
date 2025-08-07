@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import NextAuth from "next-auth";
 import type { Account, User } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { authOptions } from "@/lib/auth";
 
@@ -27,14 +28,49 @@ function handler(req: NextRequest, ...params: unknown[]) {
     ...authOptions,
     providers: [
       ...authOptions.providers,
-      ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ...(process.env.NODE_ENV === "test"
         ? [
-            GoogleProvider({
-              clientId: process.env.GOOGLE_CLIENT_ID,
-              clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            CredentialsProvider({
+              id: "google",
+              name: "Google (Test)",
+              credentials: {
+                email: { label: "Email", type: "email" },
+                name: { label: "Name", type: "text" },
+                googleId: { label: "Google ID", type: "text" },
+              },
+              authorize() {
+                const testGoogleUser = cookieMap.get("test_google_user");
+
+                if (testGoogleUser) {
+                  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+                  const user = JSON.parse(testGoogleUser) as {
+                    email: string;
+                    name: string;
+                    googleUid: string;
+                  };
+
+                  const result = {
+                    id: user.googleUid,
+                    email: user.email,
+                    name: "",
+                    jwt: "",
+                    legalName: "",
+                    preferredName: "",
+                  };
+                  return result;
+                }
+                return null;
+              },
             }),
           ]
-        : []),
+        : process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+          ? [
+              GoogleProvider({
+                clientId: process.env.GOOGLE_CLIENT_ID,
+                clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+              }),
+            ]
+          : []),
     ],
     callbacks: {
       ...authOptions.callbacks,

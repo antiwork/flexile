@@ -1,5 +1,7 @@
+import { faker } from "@faker-js/faker";
 import { db } from "@test/db";
 import { usersFactory } from "@test/factories/users";
+import { loginWithGoogle } from "@test/helpers/googleAuth";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
@@ -59,9 +61,20 @@ test("login with redirect_url", async ({ page }) => {
   expect(page.url()).toContain("/people");
 });
 
-test("Google OAuth button is visible on login page", async ({ page }) => {
-  await page.goto("/login");
+test("login with Google", async ({ page }) => {
+  const { user } = await usersFactory.create({
+    googleUid: faker.string.alphanumeric(12),
+  });
 
-  await expect(page.getByRole("button", { name: "Continue with Google" })).toBeVisible();
-  await expect(page.getByText("Or continue with email")).toBeVisible();
+  await loginWithGoogle(page, user);
+
+  await page.waitForURL(/.*\/invoices.*/u);
+
+  await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+  await expect(page.getByText("Continue with Google")).not.toBeVisible();
+
+  const updatedUser = await db.query.users.findFirst({ where: eq(users.id, user.id) });
+  expect(updatedUser?.currentSignInAt).not.toBeNull();
+  expect(updatedUser?.currentSignInAt).not.toBe(user.currentSignInAt);
 });

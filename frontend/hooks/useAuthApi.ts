@@ -9,6 +9,12 @@ export interface AuthApiConfig {
   onSuccess?: () => void;
 }
 
+const getRedirectUrl = () => {
+  const redirectUrl =
+    typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect_url") : null;
+  return redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "/dashboard";
+};
+
 export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: OtpFlowActions) {
   const { login } = useUserStore();
 
@@ -115,12 +121,7 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
       }
 
       // Handle redirect
-      const redirectUrl =
-        typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect_url") : null;
-      const targetUrl =
-        redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "/dashboard";
-
-      window.location.href = targetUrl;
+      window.location.href = getRedirectUrl();
     } catch (error) {
       actions.setError(
         error instanceof Error ? error.message : `${config.type === "signup" ? "Signup" : "Login"} failed`,
@@ -142,7 +143,7 @@ export function useAuthApi(config: AuthApiConfig, state: OtpFlowState, actions: 
         document.cookie = `auth_invitation_token=${config.invitationToken}; path=/; max-age=300`;
       }
 
-      await signIn("google");
+      await signIn("google", { callbackUrl: getRedirectUrl() });
     } catch (error) {
       actions.setError(error instanceof Error ? error.message : "Unable to continue with Google. Please try again.");
     } finally {
