@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Internal::Companies::DividendComputationsController < Internal::Companies::BaseController
-  before_action :set_dividend_computation, only: [:per_investor]
+  before_action :set_dividend_computation, only: [:investor_breakdown]
 
   def create
     authorize DividendComputation
@@ -19,7 +19,7 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     render json: { error_message: e.message }, status: :unprocessable_entity
   end
 
-  def per_investor
+  def investor_breakdown
     authorize @dividend_computation
 
     aggregated_data = @dividend_computation.broken_down_by_investor

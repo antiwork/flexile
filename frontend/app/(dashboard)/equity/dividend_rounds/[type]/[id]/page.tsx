@@ -14,7 +14,7 @@ import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
-import { per_investor_company_dividend_computation_path } from "@/utils/routes";
+import { investor_breakdown_company_dividend_computation_path } from "@/utils/routes";
 
 type TransformedData = {
   investor: { name: string; id: string | null };
@@ -47,7 +47,7 @@ export default function DividendRound() {
       const response = await request({
         method: "GET",
         accept: "json",
-        url: per_investor_company_dividend_computation_path(company.id, BigInt(id)),
+        url: investor_breakdown_company_dividend_computation_path(company.id, BigInt(id)),
         assertOk: true,
       });
       return responseSchema.parse(await response.json());

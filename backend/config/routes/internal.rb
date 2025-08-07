@@ -80,7 +80,7 @@ scope path: :internal, module: :internal do
     end
     resources :dividend_computations, only: [:create] do
       member do
-        get :per_investor
+        get :investor_breakdown
       end
     end
   end
