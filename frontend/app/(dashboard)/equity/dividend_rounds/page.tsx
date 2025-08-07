@@ -106,6 +106,7 @@ export default function DividendRounds() {
   const table = useTable({
     columns,
     data,
+    enableGlobalFilter: false,
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     initialState: {
