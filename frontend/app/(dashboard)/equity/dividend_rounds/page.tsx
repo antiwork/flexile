@@ -2,7 +2,6 @@
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import { capitalize } from "lodash-es";
 import { AlertCircle, CheckCircle2, Circle, CircleCheck, Clock, Plus } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -74,11 +73,7 @@ export default function DividendRounds() {
   const columns = [
     columnHelper.accessor("name", {
       header: "Name",
-      cell: (info) => (
-        <Link href={`/equity/dividend_rounds/${info.row.original.id}`} className="no-underline">
-          {info.getValue()}
-        </Link>
-      ),
+      cell: (info) => info.getValue(),
     }),
     columnHelper.accessor("returnOfCapital", {
       header: "Type",
