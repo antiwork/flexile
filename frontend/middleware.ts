@@ -15,7 +15,7 @@ export default function middleware(req: NextRequest) {
 
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-inline' ${NODE_ENV === "production" ? "" : `'unsafe-eval'`};
+    script-src 'self' 'unsafe-inline' https://cdn.docuseal.com https://js.stripe.com ${NODE_ENV === "production" ? "" : `'unsafe-eval'`};
     style-src 'self' 'unsafe-inline';
     connect-src 'self' https://docuseal.com ${helperUrls} ${s3Urls};
     img-src 'self' blob: data: https://docuseal.com https://docuseal.s3.amazonaws.com ${s3Urls};

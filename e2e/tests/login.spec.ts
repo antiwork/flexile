@@ -12,8 +12,15 @@ test("login", async ({ page }) => {
 
   await page.getByLabel("Work email").fill(email);
   await page.getByRole("button", { name: "Log in", exact: true }).click();
-  await page.getByLabel("Verification code").fill("000000");
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
+
+  // Fill the OTP code using the InputOTP component's hidden input
+  // The form should auto-submit when all 6 digits are entered
+  const otpCode = "000000";
+  await page.locator('[data-slot="input-otp"]').fill(otpCode);
+
+  // No need to click the button as it should auto-submit
+  // Wait for navigation to complete after auto-submit
+  await page.waitForURL(/.*\/invoices.*/u);
 
   await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
@@ -35,9 +42,13 @@ test("login with redirect_url", async ({ page }) => {
 
   await page.getByLabel("Work email").fill(email);
   await page.getByRole("button", { name: "Log in", exact: true }).click();
-  await page.getByLabel("Verification code").fill("000000");
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
 
+  // Fill the OTP code using the InputOTP component's hidden input
+  // The form should auto-submit when all 6 digits are entered
+  const otpCode = "000000";
+  await page.locator('[data-slot="input-otp"]').fill(otpCode);
+
+  // No need to click the button as it should auto-submit
   await page.waitForLoadState("networkidle");
 
   await expect(page.getByRole("heading", { name: "People" })).toBeVisible();

@@ -27,10 +27,11 @@ test.describe("Company administrator signup", () => {
     await page.getByRole("button", { name: "Sign up" }).click();
 
     // Wait for OTP step and enter verification code
-    await page.getByLabel("Verification code").waitFor();
-    await page.getByLabel("Verification code").fill("000000"); // Test OTP code
-    await page.getByRole("button", { name: "Continue" }).click();
+    // The form should auto-submit when all 6 digits are entered
+    const otpCode = "000000";
+    await page.locator('[data-slot="input-otp"]').fill(otpCode);
 
+    // No need to click the button as it should auto-submit
     // Wait for redirect to dashboard
     await page.waitForURL(/.*\/invoices.*/u);
 
