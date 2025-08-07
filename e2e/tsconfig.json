@@ -1,8 +1,6 @@
 {
   "extends": "../frontend/tsconfig.json",
   "compilerOptions": {
-    "target": "es2024",
-    "lib": ["dom", "dom.iterable", "es2024"],
     "types": ["node", "@playwright/test"],
     "baseUrl": ".",
     "paths": {
