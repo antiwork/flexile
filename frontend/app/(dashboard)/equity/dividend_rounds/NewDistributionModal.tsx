@@ -54,10 +54,7 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
         accept: "json",
         url: company_dividend_computations_path(company.id),
         jsonData: {
-          dividend_computation: {
-            ...data,
-            dividends_issuance_date: data.dividends_issuance_date.toString(),
-          },
+          dividend_computation: data,
         },
       });
     },
