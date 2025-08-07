@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 class InviteWorker
-  attr_reader :current_user, :company, :company_administrator, :email,
-              :attachment, :docuseal_submission_id
+  attr_reader :current_user, :company, :company_administrator, :email, :attachment, :document
   attr_accessor :params
 
   def initialize(current_user:, company:, company_administrator:, worker_params:)
@@ -11,6 +10,7 @@ class InviteWorker
     @company_administrator = company_administrator
     @params = worker_params.dup
     @email = @params.delete(:email)
+    @document_params = @params.delete(:document)
   end
 
   def perform
@@ -43,7 +43,7 @@ class InviteWorker
     if user.errors.blank? && company_worker.errors.blank?
       document = nil
       unless company_worker.contract_signed_elsewhere
-        document = CreateConsultingContract.new(company_worker:, company_administrator:, current_user:).perform!
+        document = CreateConsultingContract.new(company_worker:, company_administrator:, current_user:, document_params: @document_params).perform!
       end
       GenerateContractorInvitationJob.perform_async(company_worker.id, is_existing_user)
 

@@ -55,7 +55,6 @@ class SeedDataGeneratorFromTemplate
 
     print_message("Using email #{@config.fetch("email")}.")
     WiseCredential.create!(profile_id: WISE_PROFILE_ID, api_key: WISE_API_KEY)
-    ActiveRecord::Base.connection.exec_query("INSERT INTO document_templates(name, external_id, created_at, updated_at, document_type, docuseal_id, signable) VALUES('Consulting agreement', 'ex1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, 592723, true), ('Equity grant contract', 'ex2', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1, 613787, true), ('Board consent', 'ex3', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 2, 613787, true)")
     Wise::AccountBalance.create_usd_balance_if_needed
     top_up_wise_account_if_needed
 
@@ -567,7 +566,18 @@ class SeedDataGeneratorFromTemplate
               pay_rate_in_subunits: company_worker_attributes.fetch("pay_rate_in_subunits"),
               pay_rate_type: company_worker_attributes.fetch("pay_rate_type"),
               role: company_worker_attributes.fetch("role"),
+              contract_signed_elsewhere: company_worker_attributes.fetch("contract_signed_elsewhere", false),
             }
+
+            if company_worker_attributes.key?("document")
+              document_params = {
+                name: company_worker_attributes.fetch("document").fetch("name"),
+                text_content: company_worker_attributes.fetch("document").fetch("text_content", nil),
+                attachment: company_worker_attributes.fetch("document").fetch("attachment", nil),
+              }
+              worker_params[:document] = document_params
+            end
+
             result = InviteWorker.new(
               current_user: company_administrator.user,
               company:,
@@ -588,8 +598,11 @@ class SeedDataGeneratorFromTemplate
             ).process
             raise Error, error_message if error_message.present?
 
-            document = contractor.documents.unsigned_contracts.reload.first
-            document.signatures.where(user: contractor).update!(signed_at: Time.current)
+            if !company_worker.contract_signed_elsewhere
+              document = contractor.documents.unsigned_contracts.reload.first
+              document.signatures.where(user: contractor).update!(signed_at: Time.current)
+            end
+
             user_legal_params = user_attributes.slice("street_address", "city", "state", "zip_code")
             error_message = UpdateUser.new(
               user: contractor,
@@ -793,7 +806,6 @@ class SeedDataGeneratorFromTemplate
             ],
             company_investor:,
             company_worker:,
-            submission_id: "submission"
           )
         end
       end

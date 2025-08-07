@@ -1,13 +1,11 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, inArray, isNull, or } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { DocumentTemplateType } from "@/db/enums";
-import { documents, documentTemplates, users } from "@/db/schema";
+import { documents, users } from "@/db/schema";
 import env from "@/env";
 import { createRouter, protectedProcedure } from "@/trpc";
 import { sendEmail } from "@/trpc/email";
-import { createSubmission } from "@/trpc/routes/documents/templates";
 import { assertDefined } from "@/utils/assert";
 import { settings_tax_url } from "@/utils/routes";
 import { latestUserComplianceInfo, userDisplayEmail, userDisplayName, withRoles } from "./helpers";
@@ -77,17 +75,7 @@ export const usersRouter = createRouter({
       with: { signatures: { with: { user: true } } },
     });
     for (const document of createdDocuments) {
-      // TODO store which template was used for the previous contract
-      const template = await db.query.documentTemplates.findFirst({
-        where: and(
-          or(eq(documentTemplates.companyId, document.companyId), isNull(documentTemplates.companyId)),
-          eq(documentTemplates.type, DocumentTemplateType.ConsultingContract),
-        ),
-        orderBy: desc(documentTemplates.createdAt),
-      });
       const user = assertDefined(document.signatures.find((s) => s.title === "Company Representative")?.user);
-      const submission = await createSubmission(ctx, assertDefined(template).docusealId, user, "Signer");
-      await db.update(documents).set({ docusealSubmissionId: submission.id }).where(eq(documents.id, document.id));
 
       await sendEmail({
         from: `Flexile <support@${env.DOMAIN}>`,

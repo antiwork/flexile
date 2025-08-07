@@ -5,7 +5,6 @@ import { CalendarDate, parseDate } from "@internationalized/date";
 import { useMutation, type UseMutationResult, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { iso31662 } from "iso-3166";
 import { AlertTriangle, ArrowUpRightFromSquare, Eye, EyeOff, Info } from "lucide-react";
-import { useRouter } from "next/navigation";
 import React, { useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -24,7 +23,6 @@ import { Label } from "@/components/ui/label";
 import { BusinessType, TaxClassification } from "@/db/enums";
 import { useCurrentUser } from "@/global";
 import { countries } from "@/models/constants";
-import { trpc } from "@/trpc/client";
 import { getTinName } from "@/utils/legal";
 import { request } from "@/utils/request";
 import { settings_tax_path } from "@/utils/routes";
@@ -86,9 +84,6 @@ const formSchema = formValuesSchema
 
 export default function TaxPage() {
   const user = useCurrentUser();
-  const router = useRouter();
-  const trpcUtils = trpc.useUtils();
-  const updateTaxSettings = trpc.users.updateTaxSettings.useMutation();
   const queryClient = useQueryClient();
 
   const { data } = useSuspenseQuery({
@@ -159,14 +154,21 @@ export default function TaxPage() {
         birth_date: formValues.birth_date ? formValues.birth_date.toString() : null,
         signature,
       };
-      const data = await updateTaxSettings.mutateAsync({ data: transformedData });
+      const response = await request({
+        url: settings_tax_path(),
+        accept: "json",
+        method: "PATCH",
+        jsonData: transformedData,
+        assertOk: true,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save tax information");
+      }
 
       setIsTaxInfoConfirmed(true);
       if (form.getFieldState("tax_id").isDirty) setTaxIdStatus(null);
-      if (data.documentId) {
-        await trpcUtils.documents.list.invalidate();
-        router.push(`/documents?sign=${data.documentId}`);
-      } else setShowCertificationModal(false);
+      setShowCertificationModal(false);
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     },
   });

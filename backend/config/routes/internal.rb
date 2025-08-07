@@ -51,7 +51,7 @@ scope path: :internal, module: :internal do
     resources :company_updates do
       post :send_test_email, on: :member
     end
-    resources :workers, only: [:create]
+    resources :workers, only: [:create, :update]
     resources :lawyers, only: [:create]
     resources :equity_grant_exercises, only: :create do
       member do
@@ -79,6 +79,12 @@ scope path: :internal, module: :internal do
       collection do
         get :show
         patch :reset
+      end
+    end
+    resources :documents, only: [:index, :create, :destroy] do
+      member do
+        post :sign
+        post :share
       end
     end
 

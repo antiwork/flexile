@@ -14,20 +14,8 @@ class Internal::Settings::TaxController < Internal::Settings::BaseController
     error_message = nil
 
     user = Current.user
-    should_regenerate_consulting_contract = user.should_regenerate_consulting_contract?(update_params)
     ApplicationRecord.transaction do
       error_message = UpdateUser.new(user:, update_params:, confirm_tax_info: true).process
-
-      if error_message.nil? && should_regenerate_consulting_contract
-        user.company_workers.where(contract_signed_elsewhere: false).each do |company_worker|
-          company_administrator = company_worker.company.primary_admin
-          contracts << CreateConsultingContract.new(
-            company_worker:,
-            company_administrator:,
-            current_user: user,
-          ).perform!
-        end
-      end
     rescue ActiveRecord::ActiveRecordError => e
       Bugsnag.notify(e)
       error_message = e.message
