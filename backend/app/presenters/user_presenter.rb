@@ -94,7 +94,6 @@ class UserPresenter
         flags.push("lawyers") if company.lawyers_enabled?
         flags.push("expenses") if company.expenses_enabled?
         flags.push("option_exercising") if company.json_flag?("option_exercising")
-        Rails.logger.info("Current environment: #{ENV["RAILS_ENV"]}")
         can_view_financial_data = user.company_administrator_for?(company) || user.company_investor_for?(company)
         {
           **company_navigation_props(
