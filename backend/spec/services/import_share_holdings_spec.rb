@@ -19,7 +19,7 @@ RSpec.describe ImportShareHoldings do
 
   describe "Environment is in an unexpected state" do
     it "raises an exception if user mapping CSV is malformed" do
-      create(:company, is_gumroad: true)
+      create(:company, id: 5)
 
       expect do
         described_class.new(user_mapping_csv: "invalid,csv", share_data_csv: share_data_csv).process
@@ -41,7 +41,7 @@ RSpec.describe ImportShareHoldings do
     end
 
     it "raises an exception if there are multiple Gumroad-like companies" do
-      create_pair(:company, is_gumroad: true)
+      create_pair(:company)
 
       expect do
         described_class.new(user_mapping_csv: user_mapping_csv, share_data_csv: share_data_csv).process
@@ -51,7 +51,7 @@ RSpec.describe ImportShareHoldings do
   end
 
   describe "Happy path" do
-    let!(:company) { create(:company, is_gumroad: true) }
+    let!(:company) { create(:company, id: 5) }
     let!(:user1) { create(:user, email: "sharang.d+1@gmail.com", legal_name: "John Doe") }
     let!(:user2) { create(:user, email: "sharang.d+2@gmail.com", legal_name: "Jane Smith") }
     let!(:company_investor1) { create(:company_investor, company:, user: user1) }

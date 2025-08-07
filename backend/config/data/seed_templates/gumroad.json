@@ -27,8 +27,7 @@
         "fmv_per_share_in_usd": 7.84,
         "is_trusted": true,
         "fully_diluted_shares": 200188,
-        "equity_enabled": true,
-        "is_gumroad": true
+        "equity_enabled": true
       },
       "feature_flags": {
         "company_updates": true,
