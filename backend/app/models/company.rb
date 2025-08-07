@@ -184,8 +184,6 @@ class Company < ApplicationRecord
     Flipper.enabled?(:expenses, self)
   end
 
-
-
   def find_company_worker!(user:)
     company_workers.find_by!(user:)
   end
