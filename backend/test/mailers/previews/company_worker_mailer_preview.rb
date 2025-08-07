@@ -32,6 +32,13 @@ class CompanyWorkerMailerPreview < ActionMailer::Preview
     CompanyWorkerMailer.payment_failed_reenter_bank_details(Payment.last.id, amount, currency)
   end
 
+  def payment_failed
+    payment = Payment.last
+    amount = 1000.0
+    currency = "USD"
+    CompanyWorkerMailer.payment_failed(payment.id, amount, currency)
+  end
+
   def invoice_approved
     CompanyWorkerMailer.invoice_approved(invoice_id: Invoice.alive.where(equity_percentage: 0).last.id)
   end

@@ -36,6 +36,11 @@ class WiseTransferUpdateJob
         if payment.is_a?(Payment)
           amount_cents = api_service.get_transfer(transfer_id:)["sourceValue"] * -100
           payment.balance_transactions.create!(company: payment.company, amount_cents:, transaction_type: BalanceTransaction::PAYMENT_FAILED)
+
+          transfer_details = api_service.get_transfer(transfer_id:)
+          amount = transfer_details["targetValue"]
+          currency = transfer_details["targetCurrency"]
+          CompanyWorkerMailer.payment_failed(payment.id, amount, currency).deliver_later
         end
       end
       invoice.update!(status: Invoice::FAILED)

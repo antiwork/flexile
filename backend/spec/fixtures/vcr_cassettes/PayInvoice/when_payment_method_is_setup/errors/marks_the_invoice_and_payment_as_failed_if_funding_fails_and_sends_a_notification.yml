@@ -1,0 +1,502 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.sandbox.transferwise.tech/v1/accounts
+    body:
+      encoding: UTF-8
+      string: '{"currency":"GBP","type":"sort_code","details":{"legalType":"PRIVATE","email":"someone@somewhere.com","accountHolderName":"someone
+        somewhere","sortCode":231470,"accountNumber":28821822,"address":{"country":"GB","city":"London","firstLine":"112
+        2nd street","postCode":"SW1P 3"}},"profile":"<WISE_PROFILE_ID>"}'
+    headers:
+      Authorization:
+      - Bearer 8ead1034-8730-46a5-8750-7ce0482ef0bf
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Thu, 07 Aug 2025 09:30:38 GMT
+      Content-Type:
+      - application/json;charset=UTF-8
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      X-Content-Type-Options:
+      - nosniff
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - DENY
+      Cache-Control:
+      - no-cache, no-store, max-age=0, must-revalidate
+      Pragma:
+      - no-cache
+      Expires:
+      - '0'
+      X-Trace-Id:
+      - 9ef19de0318f7d75b9b50b997015ee46
+      Route:
+      - v1_account_create
+      X-Envoy-Upstream-Service-Time:
+      - '120'
+      X-Envoy-Attempt-Count:
+      - '1'
+      Vary:
+      - origin,access-control-request-method,access-control-request-headers,accept-encoding
+      Cf-Cache-Status:
+      - DYNAMIC
+      Set-Cookie:
+      - __cf_bm=8WDI9LrI4RHSOEv4u.EwOAp1xtawT8xNFJXxOviieNc-1754559038-1.0.1.1-TI5EmpkmTif_SZ.JZrlFvjp938yHz893M7NjnBdMjLTM1rhcpJWWHYzzWdBLNWtwjm.o.AEww63.UX69GuSU2SP9or2lRrmd9eW6tPsFVfQ;
+        path=/; expires=Thu, 07-Aug-25 10:00:38 GMT; domain=.transferwise.tech; HttpOnly;
+        Secure; SameSite=None
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - 96b5c1a51c659a8a-NAG
+      Alt-Svc:
+      - h3=":443"; ma=86400
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":701432364,"business":null,"profile":<WISE_PROFILE_ID>,"accountHolderName":"someone
+        somewhere","currency":"GBP","country":"GB","type":"sort_code","details":{"address":{"country":"GB","countryCode":"GB","firstLine":"112
+        2nd street","postCode":"SW1P 3","city":"London","state":null},"email":"someone@somewhere.com","legalType":"PRIVATE","accountHolderName":null,"accountNumber":"28821822","sortCode":"231470","abartn":null,"accountType":null,"bankgiroNumber":null,"ifscCode":null,"bsbCode":null,"institutionNumber":null,"transitNumber":null,"phoneNumber":null,"bankCode":null,"russiaRegion":null,"routingNumber":null,"branchCode":null,"cpf":null,"cardToken":null,"idType":null,"idNumber":null,"idCountryIso3":null,"idValidFrom":null,"idValidTo":null,"clabe":null,"swiftCode":null,"dateOfBirth":null,"clearingNumber":null,"bankName":null,"branchName":null,"businessNumber":null,"province":null,"city":null,"rut":null,"token":null,"cnpj":null,"payinReference":null,"pspReference":null,"orderId":null,"idDocumentType":null,"idDocumentNumber":null,"identificationNumber":null,"targetProfile":null,"targetUserId":null,"taxId":null,"job":null,"nationality":null,"interacAccount":null,"bban":null,"town":null,"postCode":null,"language":null,"billerCode":null,"customerReferenceNumber":null,"prefix":null,"relationship":null,"IBAN":null,"iban":null,"bic":null,"BIC":null},"user":13122309,"active":true,"ownedByCustomer":false,"confirmations":null}'
+  recorded_at: Thu, 07 Aug 2025 09:30:38 GMT
+- request:
+    method: get
+    uri: https://api.sandbox.transferwise.tech/v4/profiles/<WISE_PROFILE_ID>/balances?types=STANDARD
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Authorization:
+      - Bearer 8ead1034-8730-46a5-8750-7ce0482ef0bf
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Thu, 07 Aug 2025 09:30:38 GMT
+      Content-Type:
+      - application/json;charset=UTF-8
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Ray:
+      - 96b5c1a7ac039a99-NAG
+      X-Content-Type-Options:
+      - nosniff
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - DENY
+      Cache-Control:
+      - no-cache, no-store, max-age=0, must-revalidate
+      Pragma:
+      - no-cache
+      Expires:
+      - '0'
+      X-Trace-Id:
+      - 7da7b06cb43821e854249b9e0e6f3a08
+      Route:
+      - v4_balance_get
+      X-Envoy-Upstream-Service-Time:
+      - '91'
+      X-Envoy-Attempt-Count:
+      - '1'
+      Vary:
+      - origin,access-control-request-method,access-control-request-headers,accept-encoding
+      Cf-Cache-Status:
+      - DYNAMIC
+      Set-Cookie:
+      - __cf_bm=Q7nl.415f9Ee0Gj8jEif3j0B__nuqoltqEAgY24JEIY-1754559038-1.0.1.1-w89pck5cgUwPmae4_wo1Bgkmp4vKF5h8rEA3rlh30KAk4ELN7YlglmJHkp8n67ZBasb8hJWapNC0U_zutAbwBrp0xCmxZ_D57tNosS1H.2M;
+        path=/; expires=Thu, 07-Aug-25 10:00:38 GMT; domain=.transferwise.tech; HttpOnly;
+        Secure; SameSite=None
+      Server:
+      - cloudflare
+      Alt-Svc:
+      - h3=":443"; ma=86400
+    body:
+      encoding: ASCII-8BIT
+      string: '[{"id":285903,"currency":"GBP","amount":{"value":1000000.00,"currency":"GBP"},"reservedAmount":{"value":0.00,"currency":"GBP"},"cashAmount":{"value":1000000.00,"currency":"GBP"},"totalWorth":{"value":1000000.00,"currency":"GBP"},"type":"STANDARD","name":null,"icon":null,"investmentState":"NOT_INVESTED","creationTime":"2025-07-17T09:35:38.170301Z","modificationTime":"2025-07-17T09:35:38.561910Z","visible":true,"primary":true,"groupId":null,"recipientId":701360838},{"id":285904,"currency":"EUR","amount":{"value":1000000.00,"currency":"EUR"},"reservedAmount":{"value":0.00,"currency":"EUR"},"cashAmount":{"value":1000000.00,"currency":"EUR"},"totalWorth":{"value":1000000.00,"currency":"EUR"},"type":"STANDARD","name":null,"icon":null,"investmentState":"NOT_INVESTED","creationTime":"2025-07-17T09:35:38.926250Z","modificationTime":"2025-07-17T09:35:39.278111Z","visible":true,"primary":true,"groupId":null,"recipientId":701360839},{"id":285905,"currency":"USD","amount":{"value":1000000.00,"currency":"USD"},"reservedAmount":{"value":0.00,"currency":"USD"},"cashAmount":{"value":1000000.00,"currency":"USD"},"totalWorth":{"value":1000000.00,"currency":"USD"},"type":"STANDARD","name":null,"icon":null,"investmentState":"NOT_INVESTED","creationTime":"2025-07-17T09:35:39.696822Z","modificationTime":"2025-07-17T09:35:40.030487Z","visible":true,"primary":true,"groupId":null,"recipientId":701360840},{"id":285855,"currency":"AUD","amount":{"value":1000000.00,"currency":"AUD"},"reservedAmount":{"value":0.00,"currency":"AUD"},"cashAmount":{"value":1000000.00,"currency":"AUD"},"totalWorth":{"value":1000000.00,"currency":"AUD"},"type":"STANDARD","name":null,"icon":null,"investmentState":"NOT_INVESTED","creationTime":"2025-07-17T09:35:40.382713Z","modificationTime":"2025-07-17T09:35:40.701227Z","visible":true,"primary":true,"groupId":null,"recipientId":701360841}]'
+  recorded_at: Thu, 07 Aug 2025 09:30:38 GMT
+- request:
+    method: get
+    uri: https://api.sandbox.transferwise.tech/v1/rates?source=USD&target=GBP
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Authorization:
+      - Bearer 8ead1034-8730-46a5-8750-7ce0482ef0bf
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Thu, 07 Aug 2025 09:30:39 GMT
+      Content-Type:
+      - application/json;charset=UTF-8
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Ray:
+      - 96b5c1a9da409a8a-NAG
+      Cache-Control:
+      - no-cache, no-store, max-age=0, must-revalidate
+      Expires:
+      - '0'
+      X-Content-Type-Options:
+      - nosniff
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - DENY
+      Pragma:
+      - no-cache
+      X-Trace-Id:
+      - 2e08ff05c8747ac2d571043714a820d1
+      Access-Control-Allow-Origin:
+      - "*"
+      Route:
+      - rates
+      X-Envoy-Upstream-Service-Time:
+      - '17'
+      X-Envoy-Attempt-Count:
+      - '1'
+      Vary:
+      - origin,access-control-request-method,access-control-request-headers,accept-encoding
+      Cf-Cache-Status:
+      - DYNAMIC
+      Set-Cookie:
+      - __cf_bm=Cq5VXSjJLICnBJV6vZ.dbymJFxSjrdeS5d13HkO08S8-1754559039-1.0.1.1-7ydAPEwPHpOi6.6msJeTo.2KvYNsQWH9DYccLRqZy4zJQhpGHLt1SuFqrb9uI5G9YwPqVH02XUw.0VLDckPnakM1ZbK2vuNgZqg9Jht8XH8;
+        path=/; expires=Thu, 07-Aug-25 10:00:39 GMT; domain=.transferwise.tech; HttpOnly;
+        Secure; SameSite=None
+      Server:
+      - cloudflare
+      Alt-Svc:
+      - h3=":443"; ma=86400
+    body:
+      encoding: ASCII-8BIT
+      string: '[{"rate":0.747885,"source":"USD","target":"GBP","time":"2025-08-07T09:29:42+0000"}]'
+  recorded_at: Thu, 07 Aug 2025 09:30:39 GMT
+- request:
+    method: get
+    uri: https://api.sandbox.transferwise.tech/v1/accounts/701432364
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Authorization:
+      - Bearer 8ead1034-8730-46a5-8750-7ce0482ef0bf
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Thu, 07 Aug 2025 09:30:39 GMT
+      Content-Type:
+      - application/json;charset=UTF-8
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Ray:
+      - 96b5c1ab9c5f9a8a-NAG
+      X-Content-Type-Options:
+      - nosniff
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - DENY
+      Cache-Control:
+      - no-cache, no-store, max-age=0, must-revalidate
+      Pragma:
+      - no-cache
+      Expires:
+      - '0'
+      X-Trace-Id:
+      - 3b5e8a13a7fc51733d2c77d454ebd591
+      Route:
+      - account_details_v1_accounts_get
+      X-Envoy-Upstream-Service-Time:
+      - '42'
+      X-Envoy-Attempt-Count:
+      - '1'
+      Vary:
+      - origin,access-control-request-method,access-control-request-headers,accept-encoding
+      Cf-Cache-Status:
+      - DYNAMIC
+      Set-Cookie:
+      - __cf_bm=2G9XfbUsvEnRGAhH.kVjD_ADwvuEpiFpVGKVoi7sZsk-1754559039-1.0.1.1-To2cNlpvFNeNZhH9E2z4qjEMb1T3l3dRXSZMhnRC4GJJBconkNv8ArK4LG7jAUvqMenFiBsbsEoHxgQIZQNRNZfsU9C9NCTyBX19VS2JSO8;
+        path=/; expires=Thu, 07-Aug-25 10:00:39 GMT; domain=.transferwise.tech; HttpOnly;
+        Secure; SameSite=None
+      Server:
+      - cloudflare
+      Alt-Svc:
+      - h3=":443"; ma=86400
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":701432364,"business":null,"profile":<WISE_PROFILE_ID>,"accountHolderName":"someone
+        somewhere","currency":"GBP","country":"GB","type":"sort_code","details":{"address":{"country":"GB","countryCode":"GB","firstLine":"112
+        2nd street","postCode":"SW1P 3","city":"London","state":null},"email":"someone@somewhere.com","legalType":"PRIVATE","accountHolderName":null,"accountNumber":"28821822","sortCode":"231470","abartn":null,"accountType":null,"bankgiroNumber":null,"ifscCode":null,"bsbCode":null,"institutionNumber":null,"transitNumber":null,"phoneNumber":null,"bankCode":null,"russiaRegion":null,"routingNumber":null,"branchCode":null,"cpf":null,"cardToken":null,"idType":null,"idNumber":null,"idCountryIso3":null,"idValidFrom":null,"idValidTo":null,"clabe":null,"swiftCode":null,"dateOfBirth":null,"clearingNumber":null,"bankName":null,"branchName":null,"businessNumber":null,"province":null,"city":null,"rut":null,"token":null,"cnpj":null,"payinReference":null,"pspReference":null,"orderId":null,"idDocumentType":null,"idDocumentNumber":null,"identificationNumber":null,"targetProfile":null,"targetUserId":null,"taxId":null,"job":null,"nationality":null,"interacAccount":null,"bban":null,"town":null,"postCode":null,"language":null,"billerCode":null,"customerReferenceNumber":null,"prefix":null,"relationship":null,"IBAN":null,"iban":null,"bic":null,"BIC":null},"user":13122309,"active":true,"ownedByCustomer":false,"confirmations":null}'
+  recorded_at: Thu, 07 Aug 2025 09:30:39 GMT
+- request:
+    method: post
+    uri: https://api.sandbox.transferwise.tech/v3/profiles/<WISE_PROFILE_ID>/quotes
+    body:
+      encoding: UTF-8
+      string: '{"sourceAmount":null,"targetAmount":44.8731,"sourceCurrency":"USD","targetAccount":"701432364","targetCurrency":"GBP","profileId":"<WISE_PROFILE_ID>","preferredPayIn":"BALANCE"}'
+    headers:
+      Authorization:
+      - Bearer 8ead1034-8730-46a5-8750-7ce0482ef0bf
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Thu, 07 Aug 2025 09:30:40 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cache-Control:
+      - no-cache, no-store, max-age=0, must-revalidate
+      Expires:
+      - '0'
+      X-Content-Type-Options:
+      - nosniff
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - DENY
+      Pragma:
+      - no-cache
+      X-Trace-Id:
+      - d9cf8ddd4d7c85a5feae1bf12d6013c6
+      Route:
+      - v3_quotes_quote_create
+      X-Envoy-Upstream-Service-Time:
+      - '245'
+      X-Envoy-Attempt-Count:
+      - '1'
+      Vary:
+      - origin,access-control-request-method,access-control-request-headers,accept-encoding
+      Cf-Cache-Status:
+      - DYNAMIC
+      Set-Cookie:
+      - __cf_bm=O6KD4wZq3ma65TBUqhLol2WUZmoJ8t3qIV7uqxYmejw-1754559040-1.0.1.1-vf7COvw7z1YYr6wOIN8L3tVv4LJiHfzae0sjwWeFoT.xrdVK2RTsrttjbbmIrysQRAutlQNHQ7ul6AlhHRz_et6NZ.ceKedn0ia9tvLZ_i8;
+        path=/; expires=Thu, 07-Aug-25 10:00:40 GMT; domain=.transferwise.tech; HttpOnly;
+        Secure; SameSite=None
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - 96b5c1ae3c009a99-NAG
+      Alt-Svc:
+      - h3=":443"; ma=86400
+    body:
+      encoding: ASCII-8BIT
+      string: '{"targetAmount":44.87,"guaranteedTargetAmountAllowed":false,"targetAmountAllowed":true,"preferredPayIn":"BALANCE","paymentOptions":[{"formattedEstimatedDelivery":"in
+        seconds","estimatedDeliveryDelays":[],"allowedProfileTypes":["PERSONAL","BUSINESS"],"feePercentage":0.0130,"estimatedDelivery":"2025-08-07T09:30:39Z","sourceAmount":60.79,"targetAmount":44.87,"sourceCurrency":"USD","targetCurrency":"GBP","payOut":"BANK_TRANSFER","payIn":"BALANCE","price":{"priceSetId":558,"total":{"type":"TOTAL","label":"Total
+        fees","value":{"amount":0.79,"currency":"USD","label":"0.79 USD"}},"items":[{"type":"PAYIN","label":"fee","value":{"amount":0.0,"currency":"USD","label":"0
+        USD"}},{"type":"TRANSFERWISE","label":"Our fee","value":{"amount":0.79,"currency":"USD","label":"0.79
+        USD"}}],"priceDecisionReferenceId":"620f7926-59aa-425d-02a4-2c085e4d509b"},"fee":{"transferwise":0.79,"payIn":0.0,"discount":0,"total":0.79,"priceSetId":558,"partner":0.0},"disabled":false},{"formattedEstimatedDelivery":"in
+        seconds","estimatedDeliveryDelays":[],"allowedProfileTypes":["PERSONAL","BUSINESS"],"feePercentage":0.0789,"estimatedDelivery":"2025-08-07T09:30:39Z","sourceAmount":65.14,"targetAmount":44.87,"sourceCurrency":"USD","targetCurrency":"GBP","payOut":"BANK_TRANSFER","payIn":"GOOGLE_PAY","price":{"priceSetId":556,"total":{"type":"TOTAL","label":"Total
+        fees","value":{"amount":5.14,"currency":"USD","label":"5.14 USD"}},"items":[{"type":"PAYIN","label":"fee","value":{"amount":4.02,"currency":"USD","label":"4.02
+        USD"}},{"type":"TRANSFERWISE","label":"Our fee","value":{"amount":1.12,"currency":"USD","label":"1.12
+        USD"}}],"priceDecisionReferenceId":"620f7926-59aa-425d-02a4-2c085e4d509b"},"fee":{"transferwise":1.12,"payIn":4.02,"discount":0,"total":5.14,"priceSetId":556,"partner":0.0},"disabled":false},{"formattedEstimatedDelivery":"in
+        seconds","estimatedDeliveryDelays":[],"allowedProfileTypes":["PERSONAL","BUSINESS"],"feePercentage":0.0789,"estimatedDelivery":"2025-08-07T09:30:39Z","sourceAmount":65.14,"targetAmount":44.87,"sourceCurrency":"USD","targetCurrency":"GBP","payOut":"BANK_TRANSFER","payIn":"APPLE_PAY","price":{"priceSetId":556,"total":{"type":"TOTAL","label":"Total
+        fees","value":{"amount":5.14,"currency":"USD","label":"5.14 USD"}},"items":[{"type":"PAYIN","label":"fee","value":{"amount":4.02,"currency":"USD","label":"4.02
+        USD"}},{"type":"TRANSFERWISE","label":"Our fee","value":{"amount":1.12,"currency":"USD","label":"1.12
+        USD"}}],"priceDecisionReferenceId":"620f7926-59aa-425d-02a4-2c085e4d509b"},"fee":{"transferwise":1.12,"payIn":4.02,"discount":0,"total":5.14,"priceSetId":556,"partner":0.0},"disabled":false},{"formattedEstimatedDelivery":"in
+        seconds","estimatedDeliveryDelays":[],"allowedProfileTypes":["PERSONAL","BUSINESS"],"feePercentage":0.0310,"estimatedDelivery":"2025-08-07T09:30:39Z","sourceAmount":61.92,"targetAmount":44.87,"sourceCurrency":"USD","targetCurrency":"GBP","payOut":"BANK_TRANSFER","payIn":"DEBIT","price":{"priceSetId":556,"total":{"type":"TOTAL","label":"Total
+        fees","value":{"amount":1.92,"currency":"USD","label":"1.92 USD"}},"items":[{"type":"PAYIN","label":"fee","value":{"amount":0.8,"currency":"USD","label":"0.80
+        USD"}},{"type":"TRANSFERWISE","label":"Our fee","value":{"amount":1.12,"currency":"USD","label":"1.12
+        USD"}}],"priceDecisionReferenceId":"620f7926-59aa-425d-02a4-2c085e4d509b"},"fee":{"transferwise":1.12,"payIn":0.8,"discount":0,"total":1.92,"priceSetId":556,"partner":0.0},"disabled":false},{"formattedEstimatedDelivery":"in
+        seconds","estimatedDeliveryDelays":[],"allowedProfileTypes":["PERSONAL","BUSINESS"],"feePercentage":0.0789,"estimatedDelivery":"2025-08-07T09:30:39Z","sourceAmount":65.14,"targetAmount":44.87,"sourceCurrency":"USD","targetCurrency":"GBP","payOut":"BANK_TRANSFER","payIn":"CREDIT","price":{"priceSetId":556,"total":{"type":"TOTAL","label":"Total
+        fees","value":{"amount":5.14,"currency":"USD","label":"5.14 USD"}},"items":[{"type":"PAYIN","label":"fee","value":{"amount":4.02,"currency":"USD","label":"4.02
+        USD"}},{"type":"TRANSFERWISE","label":"Our fee","value":{"amount":1.12,"currency":"USD","label":"1.12
+        USD"}}],"priceDecisionReferenceId":"620f7926-59aa-425d-02a4-2c085e4d509b"},"fee":{"transferwise":1.12,"payIn":4.02,"discount":0,"total":5.14,"priceSetId":556,"partner":0.0},"disabled":false},{"formattedEstimatedDelivery":"in
+        seconds","estimatedDeliveryDelays":[],"allowedProfileTypes":["PERSONAL","BUSINESS"],"feePercentage":0.0207,"estimatedDelivery":"2025-08-07T09:30:39Z","sourceAmount":61.27,"targetAmount":44.87,"sourceCurrency":"USD","targetCurrency":"GBP","payOut":"BANK_TRANSFER","payIn":"DIRECT_DEBIT","price":{"priceSetId":556,"total":{"type":"TOTAL","label":"Total
+        fees","value":{"amount":1.27,"currency":"USD","label":"1.27 USD"}},"items":[{"type":"PAYIN","label":"fee","value":{"amount":0.15,"currency":"USD","label":"0.15
+        USD"}},{"type":"TRANSFERWISE","label":"Our fee","value":{"amount":1.12,"currency":"USD","label":"1.12
+        USD"}}],"priceDecisionReferenceId":"620f7926-59aa-425d-02a4-2c085e4d509b"},"fee":{"transferwise":1.12,"payIn":0.15,"discount":0,"total":1.27,"priceSetId":556,"partner":0.0},"disabled":false},{"formattedEstimatedDelivery":"in
+        5 hours","estimatedDeliveryDelays":[],"allowedProfileTypes":["PERSONAL","BUSINESS"],"feePercentage":0.1075,"estimatedDelivery":"2025-08-07T14:20:00Z","sourceAmount":67.23,"targetAmount":44.87,"sourceCurrency":"USD","targetCurrency":"GBP","payOut":"BANK_TRANSFER","payIn":"BANK_TRANSFER","price":{"priceSetId":556,"total":{"type":"TOTAL","label":"Total
+        fees","value":{"amount":7.23,"currency":"USD","label":"7.23 USD"}},"items":[{"type":"PAYIN","label":"fee","value":{"amount":6.11,"currency":"USD","label":"6.11
+        USD"}},{"type":"TRANSFERWISE","label":"Our fee","value":{"amount":1.12,"currency":"USD","label":"1.12
+        USD"}}],"priceDecisionReferenceId":"620f7926-59aa-425d-02a4-2c085e4d509b"},"fee":{"transferwise":1.12,"payIn":6.11,"discount":0,"total":7.23,"priceSetId":556,"partner":0.0},"disabled":false},{"formattedEstimatedDelivery":"by
+        Thursday, August 14","estimatedDeliveryDelays":[],"allowedProfileTypes":["PERSONAL","BUSINESS"],"feePercentage":0.1075,"estimatedDelivery":"2025-08-14T18:00:00Z","sourceAmount":67.23,"targetAmount":44.87,"sourceCurrency":"USD","targetCurrency":"GBP","payOut":"BANK_TRANSFER","payIn":"SWIFT","price":{"priceSetId":556,"total":{"type":"TOTAL","label":"Total
+        fees","value":{"amount":7.23,"currency":"USD","label":"7.23 USD"}},"items":[{"type":"PAYIN","label":"fee","value":{"amount":6.11,"currency":"USD","label":"6.11
+        USD"}},{"type":"TRANSFERWISE","label":"Our fee","value":{"amount":1.12,"currency":"USD","label":"1.12
+        USD"}}],"priceDecisionReferenceId":"620f7926-59aa-425d-02a4-2c085e4d509b"},"fee":{"transferwise":1.12,"payIn":6.11,"discount":0,"total":7.23,"priceSetId":556,"partner":0.0},"disabled":false},{"formattedEstimatedDelivery":"in
+        seconds","estimatedDeliveryDelays":[],"allowedProfileTypes":["PERSONAL","BUSINESS"],"feePercentage":0.0663,"estimatedDelivery":"2025-08-07T09:30:39Z","sourceAmount":64.26,"targetAmount":44.87,"sourceCurrency":"USD","targetCurrency":"GBP","payOut":"BANK_TRANSFER","payIn":"INTERNATIONAL_DEBIT","price":{"priceSetId":556,"total":{"type":"TOTAL","label":"Total
+        fees","value":{"amount":4.26,"currency":"USD","label":"4.26 USD"}},"items":[{"type":"PAYIN","label":"fee","value":{"amount":3.14,"currency":"USD","label":"3.14
+        USD"}},{"type":"TRANSFERWISE","label":"Our fee","value":{"amount":1.12,"currency":"USD","label":"1.12
+        USD"}}],"priceDecisionReferenceId":"620f7926-59aa-425d-02a4-2c085e4d509b"},"fee":{"transferwise":1.12,"payIn":3.14,"discount":0,"total":4.26,"priceSetId":556,"partner":0.0},"disabled":false},{"formattedEstimatedDelivery":"in
+        seconds","estimatedDeliveryDelays":[],"allowedProfileTypes":["PERSONAL","BUSINESS"],"feePercentage":0.0792,"estimatedDelivery":"2025-08-07T09:30:39Z","sourceAmount":65.16,"targetAmount":44.87,"sourceCurrency":"USD","targetCurrency":"GBP","payOut":"BANK_TRANSFER","payIn":"MC_BUSINESS_CREDIT","price":{"priceSetId":556,"total":{"type":"TOTAL","label":"Total
+        fees","value":{"amount":5.16,"currency":"USD","label":"5.16 USD"}},"items":[{"type":"PAYIN","label":"fee","value":{"amount":4.04,"currency":"USD","label":"4.04
+        USD"}},{"type":"TRANSFERWISE","label":"Our fee","value":{"amount":1.12,"currency":"USD","label":"1.12
+        USD"}}],"priceDecisionReferenceId":"620f7926-59aa-425d-02a4-2c085e4d509b"},"fee":{"transferwise":1.12,"payIn":4.04,"discount":0,"total":5.16,"priceSetId":556,"partner":0.0},"disabled":false},{"formattedEstimatedDelivery":"in
+        seconds","estimatedDeliveryDelays":[],"allowedProfileTypes":["PERSONAL","BUSINESS"],"feePercentage":0.0310,"estimatedDelivery":"2025-08-07T09:30:39Z","sourceAmount":61.92,"targetAmount":44.87,"sourceCurrency":"USD","targetCurrency":"GBP","payOut":"BANK_TRANSFER","payIn":"MC_DEBIT_OR_PREPAID","price":{"priceSetId":556,"total":{"type":"TOTAL","label":"Total
+        fees","value":{"amount":1.92,"currency":"USD","label":"1.92 USD"}},"items":[{"type":"PAYIN","label":"fee","value":{"amount":0.8,"currency":"USD","label":"0.80
+        USD"}},{"type":"TRANSFERWISE","label":"Our fee","value":{"amount":1.12,"currency":"USD","label":"1.12
+        USD"}}],"priceDecisionReferenceId":"620f7926-59aa-425d-02a4-2c085e4d509b"},"fee":{"transferwise":1.12,"payIn":0.8,"discount":0,"total":1.92,"priceSetId":556,"partner":0.0},"disabled":false},{"formattedEstimatedDelivery":"in
+        seconds","estimatedDeliveryDelays":[],"allowedProfileTypes":["PERSONAL","BUSINESS"],"feePercentage":0.0310,"estimatedDelivery":"2025-08-07T09:30:39Z","sourceAmount":61.92,"targetAmount":44.87,"sourceCurrency":"USD","targetCurrency":"GBP","payOut":"BANK_TRANSFER","payIn":"CARD","price":{"priceSetId":556,"total":{"type":"TOTAL","label":"Total
+        fees","value":{"amount":1.92,"currency":"USD","label":"1.92 USD"}},"items":[{"type":"PAYIN","label":"fee","value":{"amount":0.8,"currency":"USD","label":"0.80
+        USD"}},{"type":"TRANSFERWISE","label":"Our fee","value":{"amount":1.12,"currency":"USD","label":"1.12
+        USD"}}],"priceDecisionReferenceId":"620f7926-59aa-425d-02a4-2c085e4d509b"},"fee":{"transferwise":1.12,"payIn":0.8,"discount":0,"total":1.92,"priceSetId":556,"partner":0.0},"disabled":false},{"formattedEstimatedDelivery":"in
+        seconds","estimatedDeliveryDelays":[],"allowedProfileTypes":["PERSONAL","BUSINESS"],"feePercentage":0.0310,"estimatedDelivery":"2025-08-07T09:30:39Z","sourceAmount":61.92,"targetAmount":44.87,"sourceCurrency":"USD","targetCurrency":"GBP","payOut":"BANK_TRANSFER","payIn":"MAESTRO","price":{"priceSetId":556,"total":{"type":"TOTAL","label":"Total
+        fees","value":{"amount":1.92,"currency":"USD","label":"1.92 USD"}},"items":[{"type":"PAYIN","label":"fee","value":{"amount":0.8,"currency":"USD","label":"0.80
+        USD"}},{"type":"TRANSFERWISE","label":"Our fee","value":{"amount":1.12,"currency":"USD","label":"1.12
+        USD"}}],"priceDecisionReferenceId":"620f7926-59aa-425d-02a4-2c085e4d509b"},"fee":{"transferwise":1.12,"payIn":0.8,"discount":0,"total":1.92,"priceSetId":556,"partner":0.0},"disabled":false},{"formattedEstimatedDelivery":"in
+        seconds","estimatedDeliveryDelays":[],"allowedProfileTypes":["PERSONAL","BUSINESS"],"feePercentage":0.0475,"estimatedDelivery":"2025-08-07T09:30:39Z","sourceAmount":62.99,"targetAmount":44.87,"sourceCurrency":"USD","targetCurrency":"GBP","payOut":"BANK_TRANSFER","payIn":"INT_DEBIT_WITH_EUROPEAN_CARD","price":{"priceSetId":556,"total":{"type":"TOTAL","label":"Total
+        fees","value":{"amount":2.99,"currency":"USD","label":"2.99 USD"}},"items":[{"type":"PAYIN","label":"fee","value":{"amount":1.87,"currency":"USD","label":"1.87
+        USD"}},{"type":"TRANSFERWISE","label":"Our fee","value":{"amount":1.12,"currency":"USD","label":"1.12
+        USD"}}],"priceDecisionReferenceId":"620f7926-59aa-425d-02a4-2c085e4d509b"},"fee":{"transferwise":1.12,"payIn":1.87,"discount":0,"total":2.99,"priceSetId":556,"partner":0.0},"disabled":false},{"formattedEstimatedDelivery":"in
+        seconds","estimatedDeliveryDelays":[],"allowedProfileTypes":["PERSONAL","BUSINESS"],"feePercentage":0.0475,"estimatedDelivery":"2025-08-07T09:30:39Z","sourceAmount":62.99,"targetAmount":44.87,"sourceCurrency":"USD","targetCurrency":"GBP","payOut":"BANK_TRANSFER","payIn":"INT_CREDIT_WITH_EUROPEAN_CARD","price":{"priceSetId":556,"total":{"type":"TOTAL","label":"Total
+        fees","value":{"amount":2.99,"currency":"USD","label":"2.99 USD"}},"items":[{"type":"PAYIN","label":"fee","value":{"amount":1.87,"currency":"USD","label":"1.87
+        USD"}},{"type":"TRANSFERWISE","label":"Our fee","value":{"amount":1.12,"currency":"USD","label":"1.12
+        USD"}}],"priceDecisionReferenceId":"620f7926-59aa-425d-02a4-2c085e4d509b"},"fee":{"transferwise":1.12,"payIn":1.87,"discount":0,"total":2.99,"priceSetId":556,"partner":0.0},"disabled":false},{"formattedEstimatedDelivery":"in
+        seconds","estimatedDeliveryDelays":[],"allowedProfileTypes":["PERSONAL","BUSINESS"],"feePercentage":0.0335,"estimatedDelivery":"2025-08-07T09:30:39Z","sourceAmount":62.08,"targetAmount":44.87,"sourceCurrency":"USD","targetCurrency":"GBP","payOut":"BANK_TRANSFER","payIn":"VISA_BUSINESS_DEBIT","price":{"priceSetId":556,"total":{"type":"TOTAL","label":"Total
+        fees","value":{"amount":2.08,"currency":"USD","label":"2.08 USD"}},"items":[{"type":"PAYIN","label":"fee","value":{"amount":0.96,"currency":"USD","label":"0.96
+        USD"}},{"type":"TRANSFERWISE","label":"Our fee","value":{"amount":1.12,"currency":"USD","label":"1.12
+        USD"}}],"priceDecisionReferenceId":"620f7926-59aa-425d-02a4-2c085e4d509b"},"fee":{"transferwise":1.12,"payIn":0.96,"discount":0,"total":2.08,"priceSetId":556,"partner":0.0},"disabled":false},{"formattedEstimatedDelivery":"in
+        seconds","estimatedDeliveryDelays":[],"allowedProfileTypes":["PERSONAL","BUSINESS"],"feePercentage":0.0310,"estimatedDelivery":"2025-08-07T09:30:39Z","sourceAmount":61.92,"targetAmount":44.87,"sourceCurrency":"USD","targetCurrency":"GBP","payOut":"BANK_TRANSFER","payIn":"VISA_DEBIT_OR_PREPAID","price":{"priceSetId":556,"total":{"type":"TOTAL","label":"Total
+        fees","value":{"amount":1.92,"currency":"USD","label":"1.92 USD"}},"items":[{"type":"PAYIN","label":"fee","value":{"amount":0.8,"currency":"USD","label":"0.80
+        USD"}},{"type":"TRANSFERWISE","label":"Our fee","value":{"amount":1.12,"currency":"USD","label":"1.12
+        USD"}}],"priceDecisionReferenceId":"620f7926-59aa-425d-02a4-2c085e4d509b"},"fee":{"transferwise":1.12,"payIn":0.8,"discount":0,"total":1.92,"priceSetId":556,"partner":0.0},"disabled":false},{"formattedEstimatedDelivery":"in
+        seconds","estimatedDeliveryDelays":[],"allowedProfileTypes":["PERSONAL","BUSINESS"],"feePercentage":0.0789,"estimatedDelivery":"2025-08-07T09:30:39Z","sourceAmount":65.14,"targetAmount":44.87,"sourceCurrency":"USD","targetCurrency":"GBP","payOut":"BANK_TRANSFER","payIn":"MC_CREDIT","price":{"priceSetId":556,"total":{"type":"TOTAL","label":"Total
+        fees","value":{"amount":5.14,"currency":"USD","label":"5.14 USD"}},"items":[{"type":"PAYIN","label":"fee","value":{"amount":4.02,"currency":"USD","label":"4.02
+        USD"}},{"type":"TRANSFERWISE","label":"Our fee","value":{"amount":1.12,"currency":"USD","label":"1.12
+        USD"}}],"priceDecisionReferenceId":"620f7926-59aa-425d-02a4-2c085e4d509b"},"fee":{"transferwise":1.12,"payIn":4.02,"discount":0,"total":5.14,"priceSetId":556,"partner":0.0},"disabled":false},{"formattedEstimatedDelivery":"in
+        seconds","estimatedDeliveryDelays":[],"allowedProfileTypes":["PERSONAL","BUSINESS"],"feePercentage":0.0532,"estimatedDelivery":"2025-08-07T09:30:39Z","sourceAmount":63.37,"targetAmount":44.87,"sourceCurrency":"USD","targetCurrency":"GBP","payOut":"BANK_TRANSFER","payIn":"MC_BUSINESS_DEBIT","price":{"priceSetId":556,"total":{"type":"TOTAL","label":"Total
+        fees","value":{"amount":3.37,"currency":"USD","label":"3.37 USD"}},"items":[{"type":"PAYIN","label":"fee","value":{"amount":2.25,"currency":"USD","label":"2.25
+        USD"}},{"type":"TRANSFERWISE","label":"Our fee","value":{"amount":1.12,"currency":"USD","label":"1.12
+        USD"}}],"priceDecisionReferenceId":"620f7926-59aa-425d-02a4-2c085e4d509b"},"fee":{"transferwise":1.12,"payIn":2.25,"discount":0,"total":3.37,"priceSetId":556,"partner":0.0},"disabled":false},{"formattedEstimatedDelivery":"in
+        seconds","estimatedDeliveryDelays":[],"allowedProfileTypes":["PERSONAL","BUSINESS"],"feePercentage":0.0820,"estimatedDelivery":"2025-08-07T09:30:39Z","sourceAmount":65.36,"targetAmount":44.87,"sourceCurrency":"USD","targetCurrency":"GBP","payOut":"BANK_TRANSFER","payIn":"VISA_BUSINESS_CREDIT","price":{"priceSetId":556,"total":{"type":"TOTAL","label":"Total
+        fees","value":{"amount":5.36,"currency":"USD","label":"5.36 USD"}},"items":[{"type":"PAYIN","label":"fee","value":{"amount":4.24,"currency":"USD","label":"4.24
+        USD"}},{"type":"TRANSFERWISE","label":"Our fee","value":{"amount":1.12,"currency":"USD","label":"1.12
+        USD"}}],"priceDecisionReferenceId":"620f7926-59aa-425d-02a4-2c085e4d509b"},"fee":{"transferwise":1.12,"payIn":4.24,"discount":0,"total":5.36,"priceSetId":556,"partner":0.0},"disabled":false},{"formattedEstimatedDelivery":"in
+        seconds","estimatedDeliveryDelays":[],"allowedProfileTypes":["PERSONAL","BUSINESS"],"feePercentage":0.0663,"estimatedDelivery":"2025-08-07T09:30:39Z","sourceAmount":64.26,"targetAmount":44.87,"sourceCurrency":"USD","targetCurrency":"GBP","payOut":"BANK_TRANSFER","payIn":"INTERNATIONAL_CREDIT","price":{"priceSetId":556,"total":{"type":"TOTAL","label":"Total
+        fees","value":{"amount":4.26,"currency":"USD","label":"4.26 USD"}},"items":[{"type":"PAYIN","label":"fee","value":{"amount":3.14,"currency":"USD","label":"3.14
+        USD"}},{"type":"TRANSFERWISE","label":"Our fee","value":{"amount":1.12,"currency":"USD","label":"1.12
+        USD"}}],"priceDecisionReferenceId":"620f7926-59aa-425d-02a4-2c085e4d509b"},"fee":{"transferwise":1.12,"payIn":3.14,"discount":0,"total":4.26,"priceSetId":556,"partner":0.0},"disabled":false},{"formattedEstimatedDelivery":"in
+        seconds","estimatedDeliveryDelays":[],"allowedProfileTypes":["PERSONAL","BUSINESS"],"feePercentage":0.0699,"estimatedDelivery":"2025-08-07T09:30:39Z","sourceAmount":64.51,"targetAmount":44.87,"sourceCurrency":"USD","targetCurrency":"GBP","payOut":"BANK_TRANSFER","payIn":"VISA_CREDIT","price":{"priceSetId":556,"total":{"type":"TOTAL","label":"Total
+        fees","value":{"amount":4.51,"currency":"USD","label":"4.51 USD"}},"items":[{"type":"PAYIN","label":"fee","value":{"amount":3.39,"currency":"USD","label":"3.39
+        USD"}},{"type":"TRANSFERWISE","label":"Our fee","value":{"amount":1.12,"currency":"USD","label":"1.12
+        USD"}}],"priceDecisionReferenceId":"620f7926-59aa-425d-02a4-2c085e4d509b"},"fee":{"transferwise":1.12,"payIn":3.39,"discount":0,"total":4.51,"priceSetId":556,"partner":0.0},"disabled":false}],"notices":[],"transferFlowConfig":{"highAmount":{"showFeePercentage":false,"trackAsHighAmountSender":false,"showEducationStep":false,"offerPrefundingOption":false,"overLimitThroughCs":false,"overLimitThroughWiseAccount":false}},"rateTimestamp":"2025-08-07T09:29:42Z","targetAccountDetailsOwnedByProfile":false,"clientId":"transferwise-personal-tokens","sourceCurrency":"USD","targetCurrency":"GBP","createdTime":"2025-08-07T09:30:39Z","rateType":"FIXED","payOut":"BANK_TRANSFER","funding":"POST","rateExpirationTime":"2025-08-07T21:59:59Z","providedAmountType":"TARGET","targetAccount":701432364,"payInCountry":"DE","payOutCountry":"GB","user":13122309,"profile":<WISE_PROFILE_ID>,"rate":0.747885,"guaranteedTargetAmount":false,"status":"PENDING","expirationTime":"2025-08-07T10:00:39Z","id":"f21f78f3-c5f8-47c3-8dac-971f09699968","type":"REGULAR"}'
+  recorded_at: Thu, 07 Aug 2025 09:30:40 GMT
+- request:
+    method: post
+    uri: https://api.sandbox.transferwise.tech/v1/transfers
+    body:
+      encoding: UTF-8
+      string: '{"targetAccount":"701432364","quoteUuid":"f21f78f3-c5f8-47c3-8dac-971f09699968","customerTransactionId":"b11095fe-ccc7-47bf-984b-5285f3aa63d1","details":{"transferPurpose":"verification.transfers.purpose.pay.other","sourceOfFunds":"verification.source.of.funds.other","reference":"PMT"}}'
+    headers:
+      Authorization:
+      - Bearer 8ead1034-8730-46a5-8750-7ce0482ef0bf
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Thu, 07 Aug 2025 09:30:41 GMT
+      Content-Type:
+      - application/json;charset=UTF-8
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Ray:
+      - 96b5c1b17a519a95-NAG
+      X-Content-Type-Options:
+      - nosniff
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - DENY
+      Cache-Control:
+      - no-cache, no-store, max-age=0, must-revalidate
+      Expires:
+      - '0'
+      Pragma:
+      - no-cache
+      X-Trace-Id:
+      - f5d266b5cc33eea36420f799169997ea
+      Route:
+      - public_transfer_post_transfer
+      X-Envoy-Upstream-Service-Time:
+      - '857'
+      X-Envoy-Attempt-Count:
+      - '1'
+      Vary:
+      - origin,access-control-request-method,access-control-request-headers,accept-encoding
+      Cf-Cache-Status:
+      - DYNAMIC
+      Set-Cookie:
+      - __cf_bm=deQQ2i4rbIrNuescRxDmQG0J1xruOmtWq9aNN.lfjMA-1754559041-1.0.1.1-pwZnmhz_8GT6ohonoY11wVRnZdh.LZFtwns2Rcw.U71Cjw9cFLSFTi19PJv53ntyp21G9JOXsiCT8ek9zAdZwEGH3opfp7h4gA57B4JKQTs;
+        path=/; expires=Thu, 07-Aug-25 10:00:41 GMT; domain=.transferwise.tech; HttpOnly;
+        Secure; SameSite=None
+      Server:
+      - cloudflare
+      Alt-Svc:
+      - h3=":443"; ma=86400
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":55309977,"user":13122309,"targetAccount":701432364,"sourceAccount":null,"quote":null,"quoteUuid":"f21f78f3-c5f8-47c3-8dac-971f09699968","status":"incoming_payment_waiting","reference":"PMT","rate":0.747885,"created":"2025-08-07
+        09:30:41","business":null,"transferRequest":null,"details":{"reference":"PMT"},"hasActiveIssues":false,"sourceCurrency":"USD","sourceValue":60.00,"targetCurrency":"GBP","targetValue":44.87,"customerTransactionId":"b11095fe-ccc7-47bf-984b-5285f3aa63d1"}'
+  recorded_at: Thu, 07 Aug 2025 09:30:41 GMT
+recorded_with: VCR 6.3.1

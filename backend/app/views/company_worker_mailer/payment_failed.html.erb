@@ -1,0 +1,34 @@
+<h1>
+  There was an issue processing your payment of <%= Money.from_amount(@amount, @currency).format(with_currency: true, symbol: false, no_cents_if_whole: true) %>
+</h1>
+<dl>
+  <dt>Invoice ID</dt>
+  <dd>
+    <%= @invoice.invoice_number %>
+  </dd>
+  <dt>Invoice amount</dt>
+  <dd>
+    <%= cents_format(@invoice.total_amount_in_usd_cents, with_currency: true, symbol: false) %>
+  </dd>
+  <dt>Bank account</dt>
+  <dd>
+    ****<%= @payment.recipient_last4 %>
+  </dd>
+</dl>
+<p>
+  Unfortunately, there was an issue processing your payment through Wise. This could be due to:
+</p>
+<ul>
+  <li>Incorrect bank account information</li>
+  <li>Bank transfer restrictions</li>
+  <li>Compliance or verification issues</li>
+  <li>Processing errors at the banking institution</li>
+</ul>
+
+<p>
+  Please log into your account to verify your bank details are correct and up-to-date. If your bank details appear correct, please contact support for assistance.
+</p>
+
+<p>
+  We'll attempt to process your payment again once the issue is resolved.
+</p>

@@ -203,7 +203,7 @@ RSpec.describe PayInvoice, :vcr do
         expect(invoice.reload.status).to eq(Invoice::FAILED)
       end
 
-      it "marks the invoice and payment as failed if creating a quote fails" do
+      it "marks the invoice and payment as failed if creating a quote fails and sends a notification" do
         allow_any_instance_of(Wise::PayoutApi).to receive(:create_quote) do
           { "error" => "some error" }
         end
@@ -213,6 +213,11 @@ RSpec.describe PayInvoice, :vcr do
           described_class.new(invoice.id).process
         end.to raise_error(described_class::WiseError) { |error| expect(error.message).to eq "Creating quote failed for payment #{Payment.last.id}" }
           .and change { invoice.payments.count }.by(1)
+          .and have_enqueued_mail(CompanyWorkerMailer, :payment_failed).with { |payment_id, amount, currency|
+            expect(payment_id).to eq(Payment.last.id)
+            expect(amount).to be_a(Float)
+            expect(currency).to eq(invoice.user.bank_account.currency)
+          }
 
         payment = Payment.last
         expect(payment.processor_uuid).to be_present
@@ -222,7 +227,7 @@ RSpec.describe PayInvoice, :vcr do
         expect(invoice.reload.status).to eq(Invoice::FAILED)
       end
 
-      it "marks the invoice and payment as failed if creating a transfer fails" do
+      it "marks the invoice and payment as failed if creating a transfer fails and sends a notification" do
         allow_any_instance_of(Wise::PayoutApi).to receive(:create_transfer) do
           { "error" => "some error" }
         end
@@ -232,6 +237,11 @@ RSpec.describe PayInvoice, :vcr do
           described_class.new(invoice.id).process
         end.to raise_error(described_class::WiseError) { |error| expect(error.message).to eq "Creating transfer failed for payment #{Payment.last.id}" }
           .and change { invoice.payments.count }.by(1)
+          .and have_enqueued_mail(CompanyWorkerMailer, :payment_failed).with { |payment_id, amount, currency|
+            expect(payment_id).to eq(Payment.last.id)
+            expect(amount).to be_a(Float)
+            expect(currency).to eq(invoice.user.bank_account.currency)
+          }
 
         payment = Payment.last
         expect(payment.processor_uuid).to be_present
@@ -241,7 +251,7 @@ RSpec.describe PayInvoice, :vcr do
         expect(invoice.reload.status).to eq(Invoice::FAILED)
       end
 
-      it "marks the invoice and payment as failed if funding fails" do
+      it "marks the invoice and payment as failed if funding fails and sends a notification" do
         allow_any_instance_of(Wise::PayoutApi).to receive(:fund_transfer) do
           {
             "type" => "BALANCE",
@@ -257,6 +267,11 @@ RSpec.describe PayInvoice, :vcr do
           described_class.new(invoice.id).process
         end.to raise_error(described_class::WiseError) { |error| expect(error.message).to eq "Funding transfer failed for payment #{Payment.last.id}" }
           .and change { invoice.payments.count }.by(1)
+          .and have_enqueued_mail(CompanyWorkerMailer, :payment_failed).with { |payment_id, amount, currency|
+            expect(payment_id).to eq(Payment.last.id)
+            expect(amount).to be_a(Float)
+            expect(currency).to eq(invoice.user.bank_account.currency)
+          }
 
         payment = Payment.last
         expect(payment.processor_uuid).to be_present
