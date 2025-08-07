@@ -6,8 +6,8 @@ import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BookUser,
   ChartPie,
+  ChevronDown,
   ChevronRight,
-  ChevronsUpDown,
   CircleDollarSign,
   Files,
   LogOut,
@@ -72,6 +72,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const canShowTryEquity = user.roles.administrator && !company.equityEnabled;
   const { data: session } = useSession();
   const { logout } = useUserStore();
+  const isDefaultLogo = !company.logo_url || company.logo_url.includes("default-company-logo");
 
   const handleLogout = async () => {
     if (session?.user) {
@@ -87,60 +88,92 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const switchCompany = async (companyId: string) => {
     useUserStore.setState((state) => ({ ...state, pending: true }));
-    await request({
-      method: "POST",
-      url: company_switch_path(companyId),
-      accept: "json",
-    });
-    await queryClient.resetQueries({ queryKey: ["currentUser", user.email] });
-    useUserStore.setState((state) => ({ ...state, pending: false }));
+    try {
+      await request({
+        method: "POST",
+        url: company_switch_path(companyId),
+        accept: "json",
+      });
+      await queryClient.resetQueries({ queryKey: ["currentUser", user.email] });
+      router.refresh();
+    } finally {
+      useUserStore.setState((state) => ({ ...state, pending: false }));
+    }
   };
 
   return (
     <SidebarProvider>
       <Sidebar collapsible="offcanvas">
-        <SidebarHeader className="border-sidebar-border border-b">
+        <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuButton
                     size="lg"
-                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                    className={`gap-4 ${user.companies.length > 1 ? "data-[state=open]:bg-sidebar-accent" : "hover:bg-transparent"}`}
                   >
-                    <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                      <Image src={defaultCompanyLogo} className="size-6" alt="" />
+                    <div
+                      className={`text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded ${
+                        isDefaultLogo ? "border-sidebar-border border bg-white" : ""
+                      }`}
+                    >
+                      <Image
+                        src={company.logo_url ?? defaultCompanyLogo.src}
+                        className={isDefaultLogo ? "size-4" : "size-8 rounded"}
+                        width={24}
+                        height={24}
+                        alt=""
+                      />
                     </div>
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-semibold">
                         {user.companies.find((c) => c.id === user.currentCompanyId)?.name ?? "Personal"}
                       </span>
-                      <span className="truncate text-xs">{user.email}</span>
+                      <span className="text-muted-foreground truncate text-xs">{user.email}</span>
                     </div>
-                    <ChevronsUpDown className="ml-auto" />
+                    {user.companies.length > 1 && <ChevronDown className="ml-auto" />}
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-                  align="start"
-                  side="bottom"
-                  sideOffset={4}
-                >
-                  {user.companies.map((company) => (
-                    <DropdownMenuItem
-                      key={company.id}
-                      onClick={() => {
-                        void switchCompany(company.id);
-                      }}
-                      className="gap-2 p-2"
-                    >
-                      <div className="flex size-6 items-center justify-center rounded-sm border">
-                        <Image src={defaultCompanyLogo} className="size-4 shrink-0" alt="" />
-                      </div>
-                      {company.name}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
+                {user.companies.length > 1 && (
+                  <DropdownMenuContent
+                    className="w-[--radix-dropdown-menu-trigger-width] min-w-[239px] rounded-lg"
+                    align="start"
+                    side="bottom"
+                    sideOffset={4}
+                  >
+                    {user.companies.map((company) => (
+                      <DropdownMenuItem
+                        key={company.id}
+                        onClick={() => {
+                          void switchCompany(company.id);
+                        }}
+                        className="gap-3 p-2 text-sm font-medium"
+                      >
+                        <div
+                          className={`flex size-6 items-center justify-center rounded-sm ${
+                            !company.logo_url || company.logo_url.includes("default-company-logo")
+                              ? "border-sidebar-border border bg-gray-50"
+                              : ""
+                          }`}
+                        >
+                          <Image
+                            src={company.logo_url ?? defaultCompanyLogo.src}
+                            className={
+                              !company.logo_url || company.logo_url.includes("default-company-logo")
+                                ? "size-4"
+                                : "size-6 shrink-0 rounded"
+                            }
+                            width={24}
+                            height={24}
+                            alt=""
+                          />
+                        </div>
+                        {company.name ?? "Personal"}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                )}
               </DropdownMenu>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -156,19 +189,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ) : null}
         </SidebarContent>
 
-        {company.checklistItems.length > 0 ? (
-          <SidebarGroup className="mt-auto px-0 py-0">
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <GettingStarted />
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ) : null}
-
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
+              {company.checklistItems.length > 0 ? <GettingStarted /> : null}
               {canShowTryEquity && showTryEquity ? (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
@@ -180,8 +204,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       role="button"
                       tabIndex={0}
                     >
-                      <span className="flex items-center gap-2">
-                        <Sparkles className="size-6" />
+                      <span className="flex items-center gap-3">
+                        <Sparkles className="size-4" />
                         <span>Try equity</span>
                       </span>
                       {hovered ? (

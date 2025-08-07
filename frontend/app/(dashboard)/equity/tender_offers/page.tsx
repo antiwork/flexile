@@ -13,8 +13,10 @@ import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
+import { useIsMobile } from "@/utils/use-mobile";
 
 export default function Buybacks() {
+  const isMobile = useIsMobile();
   const company = useCurrentCompany();
   const router = useRouter();
   const user = useCurrentUser();
@@ -38,12 +40,20 @@ export default function Buybacks() {
         title="Buybacks"
         headerActions={
           user.roles.administrator ? (
-            <Button asChild size="small" variant="outline">
-              <Link href="/equity/tender_offers/new">
-                <Plus className="size-4" />
-                New buyback
-              </Link>
-            </Button>
+            isMobile ? (
+              <Button asChild variant="floating-action">
+                <Link href="/equity/tender_offers/new">
+                  <Plus />
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild size="small" variant="outline">
+                <Link href="/equity/tender_offers/new">
+                  <Plus className="size-4" />
+                  New buyback
+                </Link>
+              </Button>
+            )
           ) : null
         }
       />

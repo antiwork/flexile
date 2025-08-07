@@ -5,10 +5,10 @@ import { useMutation } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/react-query";
 import { isFuture } from "date-fns";
 import { Decimal } from "decimal.js";
-import { AlertTriangle, CircleCheck, Copy } from "lucide-react";
+import { AlertTriangle, CircleCheck, Copy, Plus } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { parseAsString, useQueryState } from "nuqs";
-import React, { useMemo, useState } from "react";
+import React, { type Dispatch, type SetStateAction, useMemo, useState } from "react";
 import type { DateValue } from "react-aria-components";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -28,7 +28,16 @@ import TableSkeleton from "@/components/TableSkeleton";
 import Tabs from "@/components/Tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -40,6 +49,7 @@ import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { approve_company_invoices_path, company_equity_exercise_payment_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
+import { useIsMobile } from "@/utils/use-mobile";
 import FormFields, { schema as formSchema } from "../FormFields";
 
 const issuePaymentSchema = z.object({
@@ -177,16 +187,11 @@ export default function ContractorPage() {
         title={user.displayName}
         headerActions={
           contractor ? (
-            <div className="flex items-center gap-3">
-              <Button onClick={() => setIssuePaymentModalOpen(true)}>Issue payment</Button>
-              {contractor.endedAt && !isFuture(contractor.endedAt) ? (
-                <Status variant="critical">Alumni</Status>
-              ) : !contractor.endedAt || isFuture(contractor.endedAt) ? (
-                <Button variant="outline" onClick={() => setEndModalOpen(true)}>
-                  End contract
-                </Button>
-              ) : null}
-            </div>
+            <ActionPanel
+              contractor={contractor}
+              setIssuePaymentModalOpen={setIssuePaymentModalOpen}
+              setEndModalOpen={setEndModalOpen}
+            />
           ) : null
         }
       />
@@ -381,6 +386,63 @@ export default function ContractorPage() {
     </>
   );
 }
+
+const ActionPanel = ({
+  contractor,
+  setIssuePaymentModalOpen,
+  setEndModalOpen,
+}: {
+  contractor: { endedAt: Date | null };
+  setIssuePaymentModalOpen: Dispatch<SetStateAction<boolean>>;
+  setEndModalOpen: Dispatch<SetStateAction<boolean>>;
+}) => {
+  const isMobile = useIsMobile();
+  const handleIssuePaymentClick = () => {
+    setIssuePaymentModalOpen(true);
+  };
+  const handleEndContractClick = () => {
+    setEndModalOpen(true);
+  };
+
+  return isMobile ? (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="floating-action">
+          <Plus />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogTitle>Manage Payment or Contract</DialogTitle>
+        <DialogDescription className="sr-only">Manage Payment or Contract</DialogDescription>
+        <div className="flex flex-col gap-3">
+          <DialogClose asChild onClick={handleIssuePaymentClick}>
+            <Button>Issue payment</Button>
+          </DialogClose>
+          {contractor.endedAt && !isFuture(contractor.endedAt) ? (
+            <Status className="justify-center" variant="critical">
+              Alumni
+            </Status>
+          ) : !contractor.endedAt || isFuture(contractor.endedAt) ? (
+            <DialogClose asChild onClick={handleEndContractClick}>
+              <Button variant="outline">End contract</Button>
+            </DialogClose>
+          ) : null}
+        </div>
+      </DialogContent>
+    </Dialog>
+  ) : (
+    <div className="flex items-center gap-3">
+      <Button onClick={handleIssuePaymentClick}>Issue payment</Button>
+      {contractor.endedAt && !isFuture(contractor.endedAt) ? (
+        <Status variant="critical">Alumni</Status>
+      ) : !contractor.endedAt || isFuture(contractor.endedAt) ? (
+        <Button variant="outline" onClick={handleEndContractClick}>
+          End contract
+        </Button>
+      ) : null}
+    </div>
+  );
+};
 
 const DetailsTab = ({
   userId,
