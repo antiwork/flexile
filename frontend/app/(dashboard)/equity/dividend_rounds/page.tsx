@@ -1,7 +1,7 @@
 "use client";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import { capitalize } from "lodash-es";
-import { AlertCircle, CheckCircle2, Circle, CircleCheck, Clock, Plus } from "lucide-react";
+import { CheckCircle2, Circle, CircleCheck, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -14,14 +14,6 @@ import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 import NewDistributionModal from "./NewDistributionModal";
-
-const DIVIDEND_ROUND_STATUS = {
-  DRAFT: "DRAFT",
-  PAYMENT_SCHEDULED: "PAYMENT_SCHEDULED",
-  PAYMENT_IN_PROGRESS: "PAYMENT_IN_PROGRESS",
-  PARTIALLY_COMPLETED: "PARTIALLY_COMPLETED",
-  COMPLETED: "COMPLETED",
-} as const;
 
 type TransformedData = {
   id: bigint;
@@ -44,7 +36,7 @@ export default function DividendRounds() {
           computations.map((computation) => ({
             ...computation,
             type: "draft" as const,
-            status: DIVIDEND_ROUND_STATUS.DRAFT,
+            status: "Draft",
             dividendsIssuanceDate: new Date(computation.dividendsIssuanceDate),
             numberOfShareholders: BigInt(computation.numberOfShareholders),
           })),
@@ -159,15 +151,11 @@ function formatStatus(status: string) {
 
 function getStatus(status: string) {
   switch (status) {
-    case DIVIDEND_ROUND_STATUS.DRAFT:
+    case "Draft":
       return { Icon: Circle, color: "text-black/18" };
-    case DIVIDEND_ROUND_STATUS.PAYMENT_SCHEDULED:
-      return { Icon: Clock, color: "text-blue-600" };
-    case DIVIDEND_ROUND_STATUS.PAYMENT_IN_PROGRESS:
+    case "Issued":
       return { Icon: Circle, color: "text-blue-600" };
-    case DIVIDEND_ROUND_STATUS.PARTIALLY_COMPLETED:
-      return { Icon: AlertCircle, color: "text-orange" };
-    case DIVIDEND_ROUND_STATUS.COMPLETED:
+    case "Paid":
       return { Icon: CheckCircle2, color: "text-green" };
     default:
       return { Icon: Circle, color: "text-black/18" };

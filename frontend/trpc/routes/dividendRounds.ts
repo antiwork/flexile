@@ -1,8 +1,8 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { dividendRounds, dividends } from "@/db/schema";
+import { dividendRounds } from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 
 export const dividendRoundsRouter = createRouter({
@@ -21,20 +21,10 @@ export const dividendRoundsRouter = createRouter({
         totalAmountInCents: dividendRounds.totalAmountInCents,
         returnOfCapital: dividendRounds.returnOfCapital,
         readyForPayment: dividendRounds.readyForPayment,
-        status: sql<string>`
-        CASE
-          WHEN ${dividendRounds.status} = ${"Paid"} THEN ${"COMPLETED"}
-          WHEN COUNT(CASE WHEN ${dividends.status} = ${"Paid"} THEN 1 END) > 0 THEN ${"PARTIALLY_COMPLETED"}
-          WHEN ${dividendRounds.readyForPayment} = false THEN ${"PAYMENT_SCHEDULED"}
-          WHEN ${dividendRounds.readyForPayment} = true THEN ${"PAYMENT_IN_PROGRESS"}
-          ELSE ${dividendRounds.status}
-        END
-      `.as("status"),
+        status: dividendRounds.status,
       })
       .from(dividendRounds)
-      .leftJoin(dividends, eq(dividends.dividendRoundId, dividendRounds.id))
       .where(where)
-      .groupBy(dividendRounds.id, dividendRounds.readyForPayment, dividendRounds.status)
       .orderBy(desc(dividendRounds.id));
 
     return result;
