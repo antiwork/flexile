@@ -85,14 +85,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { data: helperSession } = useHelperSession();
 
   const switchCompany = async (companyId: string) => {
-    useUserStore.setState((state) => ({ ...state, pending: true }));
-    await request({
-      method: "POST",
-      url: company_switch_path(companyId),
-      accept: "json",
-    });
-    await queryClient.resetQueries({ queryKey: ["currentUser", user.email] });
-    useUserStore.setState((state) => ({ ...state, pending: false }));
+    try {
+      useUserStore.setState((state) => ({ ...state, pending: true }));
+      await request({
+        method: "POST",
+        url: company_switch_path(companyId),
+        accept: "json",
+      });
+      await queryClient.resetQueries({ queryKey: ["currentUser", user.email] });
+      window.location.reload();
+    } catch (_error) {
+      useUserStore.setState((state) => ({ ...state, pending: false }));
+    }
   };
 
   return (
