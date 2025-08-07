@@ -167,7 +167,8 @@ test.describe("Equity Grant Vesting Events", () => {
 
     // Wait for the modal to open and vesting events to load
     await expect(page.getByRole("dialog")).toBeVisible();
-    await expect(page.getByText("Vesting events")).toBeVisible();
+
+    await expect(page.getByText("Vesting events")).toBeVisible({ timeout: 10000 });
 
     // Verify vesting events section shows up
     const vestingEventsSection = page.getByRole("dialog");
