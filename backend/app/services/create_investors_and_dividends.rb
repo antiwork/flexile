@@ -64,9 +64,6 @@ class CreateInvestorsAndDividends
     end
 
     def create_investors
-      request_count = 0
-      start_time = Time.current
-
       @data.each do |email, info|
         puts "Creating investor #{email}"
         investment_amount_in_cents = (info.dig(:investment, :amount).to_d * 100.to_d).to_i
@@ -79,25 +76,12 @@ class CreateInvestorsAndDividends
             user.company_investors.create!(company:, investment_amount_in_cents:)
           end
         else
-          # Respect Clerk's rate limit
-          if request_count >= 10
-            elapsed = Time.current - start_time
-            if elapsed < 11.seconds
-              sleep_secs = 11.seconds - elapsed
-              puts "Sleeping for #{sleep_secs} seconds"
-              sleep(sleep_secs)
-            end
-            request_count = 0
-            start_time = Time.current
-          end
-
           result = InviteInvestor.new(current_user: primary_admin_user!, company:,
                                       dividend_date:,
                                       user_params: info[:user_params],
                                       investor_params: { investment_amount_in_cents: })
                                  .perform
           puts "Created investor #{email}"
-          request_count += 1
 
           if !result[:success]
             puts "Error for email #{email}:"

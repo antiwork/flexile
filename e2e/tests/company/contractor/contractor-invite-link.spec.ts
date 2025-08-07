@@ -1,9 +1,8 @@
-import { clerk } from "@clerk/testing/playwright";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { usersFactory } from "@test/factories/users";
-import { login } from "@test/helpers/auth";
+import { login, logout } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { and, eq } from "drizzle-orm";
 import { companies, companyContractors, companyInviteLinks, users } from "@/db/schema";
@@ -47,10 +46,44 @@ test.describe("Contractor Invite Link Joining flow", () => {
   test("invite link flow for unauthenticated user", async ({ page, context }) => {
     await page.goto(`/invite/${inviteLink?.token}`);
     await expect(page).toHaveURL(/signup/iu);
+    expect(page.url()).toContain(`invitation_token=${inviteLink?.token}`);
 
     const cookies = await context.cookies();
     const invitationCookie = cookies.find((c) => c.name === "invitation_token");
     expect(inviteLink?.token).toContain(invitationCookie?.value);
+
+    const email = "contractor-signup+e2e@example.com";
+
+    // Clean up any existing user with this email
+    await db.delete(users).where(eq(users.email, email));
+
+    // Enter email and request OTP
+    await page.getByLabel("Work email").fill(email);
+    await page.getByRole("button", { name: "Sign up" }).click();
+
+    // Wait for OTP step and enter verification code
+    await page.getByLabel("Verification code").waitFor();
+    await page.getByLabel("Verification code").fill("000000"); // Test OTP code
+    await page.getByRole("button", { name: "Continue" }).click();
+
+    await expect(page).toHaveURL(/documents/iu);
+
+    const contractor = await db.query.users.findFirst({
+      where: eq(users.email, email),
+    });
+
+    const contractorId = contractor?.id;
+    expect(contractorId).toBeDefined();
+
+    if (contractorId) {
+      const createdCompayContractor = await db.query.companyContractors.findFirst({
+        where: and(eq(companyContractors.companyId, company.id), eq(companyContractors.userId, contractorId)),
+      });
+
+      expect(createdCompayContractor).toBeDefined();
+      expect(createdCompayContractor?.role).toBe(null);
+      expect(createdCompayContractor?.contractSignedElsewhere).toBe(true);
+    }
   });
 
   test("invite link flow for authenticated user", async ({ page }) => {
@@ -96,7 +129,7 @@ test.describe("Contractor Invite Link Joining flow", () => {
     });
     expect(updatedCompayContractor?.role).not.toBe(null);
 
-    await clerk.signOut({ page });
+    await logout(page);
     await login(page, admin);
     await page.getByRole("link", { name: "People" }).click();
     await expect(page.getByRole("heading", { name: "People" })).toBeVisible();

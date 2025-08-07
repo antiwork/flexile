@@ -10,7 +10,6 @@ class VestingEvent < ApplicationRecord
   }.freeze
 
   has_paper_trail
-  has_one :equity_grant_transaction
   belongs_to :equity_grant
 
   validates :vesting_date, presence: true

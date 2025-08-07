@@ -19,7 +19,6 @@ RSpec.describe EquityGrant::UpdateVestedShares do
         expect(equity_grant.unvested_shares).to eq(1000)
         expect(equity_grant.vesting_events.processed.count).to eq(0)
         expect(equity_grant.vesting_events.cancelled.count).to eq(0)
-        expect(EquityGrantTransaction.count).to eq(0)
       end
     end
 
@@ -107,7 +106,6 @@ RSpec.describe EquityGrant::UpdateVestedShares do
                                                                                                                                                        ])
         expect(equity_grant).to have_attributes(vested_shares: 1000, unvested_shares: 0)
         expect(equity_grant.vesting_events.cancelled.count).to eq(0)
-        expect(EquityGrantTransaction.count).to eq(37)
       end
 
       context "when number of unvested shares in the equity grant is less than the required shares for a vesting event" do
@@ -120,7 +118,6 @@ RSpec.describe EquityGrant::UpdateVestedShares do
           travel_to(Date.parse("25 Oct, 2028")) # On the final event date
           expect { service.process }.to change { equity_grant.reload.vesting_events.processed.count }.by(34)
                                     .and change { equity_grant.vesting_events.cancelled.count }.by(3)
-                                    .and change { EquityGrantTransaction.count }.by(34)
           expect(equity_grant.vesting_events.cancelled.pluck(:cancellation_reason).uniq).to eq(["not_enough_shares_available"])
         end
       end
@@ -137,7 +134,6 @@ RSpec.describe EquityGrant::UpdateVestedShares do
 
       it "processes the invoice payment vesting event" do
         expect { service.process }.to change { equity_grant.reload.vesting_events.processed.count }.by(1)
-                                  .and change { EquityGrantTransaction.count }.by(1)
         expect(equity_grant.vesting_events.unprocessed.count).to eq(0)
         expect(equity_grant.vesting_events.processed.pluck(:vested_shares)).to eq([
                                                                                     123 # invoice payment vesting event
@@ -149,7 +145,6 @@ RSpec.describe EquityGrant::UpdateVestedShares do
         post_invoice_payment_vesting_event2 = create(:vesting_event, equity_grant:, vesting_date: Date.current, vested_shares: invoice2.equity_amount_in_options)
         service = described_class.new(equity_grant:, invoice: invoice2, post_invoice_payment_vesting_event: post_invoice_payment_vesting_event2)
         expect { service.process }.to change { equity_grant.reload.vesting_events.processed.count }.by(1)
-                                  .and change { EquityGrantTransaction.count }.by(1)
         expect(equity_grant.vesting_events.processed.pluck(:vested_shares)).to eq([
                                                                                     123, # previous invoice payment vesting event
                                                                                     25 # new invoice payment vesting event

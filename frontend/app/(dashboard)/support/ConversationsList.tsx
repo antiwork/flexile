@@ -82,9 +82,11 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
         {loading ? (
           <TableSkeleton columns={3} />
         ) : conversations.length === 0 ? (
-          <Placeholder icon={CircleCheck}>
-            No support tickets found. Create your first ticket to get started.
-          </Placeholder>
+          <div className="mx-4">
+            <Placeholder icon={CircleCheck}>
+              No support tickets found. Create your first ticket to get started.
+            </Placeholder>
+          </div>
         ) : (
           <Table>
             <TableHeader>

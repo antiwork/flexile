@@ -80,14 +80,14 @@ export const GettingStarted = () => {
   }
 
   return (
-    <SidebarMenuItem className="h-12 border-t border-gray-200">
+    <SidebarMenuItem>
       <Collapsible
         open={status === "expanded" || status === "completed"}
         onOpenChange={(expanded) => setStatus(expanded ? "expanded" : "collapsed")}
         className="flex h-full flex-col-reverse"
       >
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton className="h-full items-center justify-between rounded-none px-5">
+          <SidebarMenuButton className="items-center justify-between">
             {status === "completed" ? (
               <div className="flex h-4 w-4 items-center justify-center rounded-full border-2 border-blue-500 bg-blue-500">
                 <CheckIcon />
@@ -99,7 +99,7 @@ export const GettingStarted = () => {
             <span className="ml-auto text-gray-500">{progressPercentage}%</span>
           </SidebarMenuButton>
         </CollapsibleTrigger>
-        <CollapsibleContent className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 absolute mb-12 w-full origin-bottom overflow-hidden p-3 data-[state=closed]:duration-300 data-[state=open]:duration-200">
+        <CollapsibleContent className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 absolute mb-8 w-full origin-bottom overflow-hidden py-3 data-[state=closed]:duration-300 data-[state=open]:duration-200">
           {status === "completed" ? (
             <div className="rounded-lg border border-gray-200 bg-white pb-4 shadow-sm">
               <div className="mr-3 ml-4 flex h-11 items-center justify-between">

@@ -1,8 +1,7 @@
 "use client";
-import { CircleCheck, Trash } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { CircleCheck, Trash2 } from "lucide-react";
 import React, { useMemo, useState } from "react";
+import CompanyUpdateModal from "@/app/(dashboard)/updates/company/CompanyUpdateModal";
 import ViewUpdateDialog from "@/app/(dashboard)/updates/company/ViewUpdateDialog";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
@@ -22,28 +21,41 @@ const useData = () => {
   return { updates: data.updates, isLoading };
 };
 
+type UpdateListItem = ReturnType<typeof useData>["updates"][number];
+
 export default function CompanyUpdates() {
   const user = useCurrentUser();
   const { updates, isLoading } = useData();
+  const [showModal, setShowModal] = useState(false);
+  const [editingUpdateId, setEditingUpdateId] = useState<string | undefined>(undefined);
+
+  const handleNewUpdate = () => {
+    setEditingUpdateId(undefined);
+    setShowModal(true);
+  };
+
+  const handleEditUpdate = (update: UpdateListItem) => {
+    setEditingUpdateId(update.id);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setEditingUpdateId(undefined);
+  };
 
   return (
     <>
       <DashboardHeader
         title="Updates"
-        headerActions={
-          user.roles.administrator ? (
-            <Button asChild>
-              <Link href="/updates/company/new">New update</Link>
-            </Button>
-          ) : null
-        }
+        headerActions={user.roles.administrator ? <Button onClick={handleNewUpdate}>New update</Button> : null}
       />
 
       {isLoading ? (
         <TableSkeleton columns={user.roles.administrator ? 4 : 3} />
       ) : updates.length ? (
         user.roles.administrator ? (
-          <AdminList />
+          <AdminList onEditUpdate={handleEditUpdate} />
         ) : (
           <ViewList />
         )
@@ -52,14 +64,19 @@ export default function CompanyUpdates() {
           <Placeholder icon={CircleCheck}>No updates to display.</Placeholder>
         </div>
       )}
+
+      <CompanyUpdateModal
+        open={showModal}
+        onClose={handleCloseModal}
+        {...(editingUpdateId && { updateId: editingUpdateId })}
+      />
     </>
   );
 }
 
-const AdminList = () => {
+const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) => void }) => {
   const { updates } = useData();
   const company = useCurrentCompany();
-  const router = useRouter();
   const trpcUtils = trpc.useUtils();
 
   const [deletingUpdate, setDeletingUpdate] = useState<string | null>(null);
@@ -78,9 +95,9 @@ const AdminList = () => {
       columnHelper.accessor("title", {
         header: "Title",
         cell: (info) => (
-          <Link href={`/updates/company/${info.row.original.id}/edit`} className="no-underline">
+          <button onClick={() => onEditUpdate(info.row.original)} className="text-left no-underline hover:underline">
             {info.getValue()}
-          </Link>
+          </button>
         ),
       }),
       columnHelper.accessor((row) => (row.sentAt ? "Sent" : "Draft"), {
@@ -93,22 +110,25 @@ const AdminList = () => {
           <Button
             aria-label="Remove"
             variant="outline"
-            onClick={() => setDeletingUpdate(info.row.original.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setDeletingUpdate(info.row.original.id);
+            }}
             className="inline-flex cursor-pointer items-center border-none bg-transparent text-inherit underline hover:text-blue-600"
           >
-            <Trash className="size-4" />
+            <Trash2 className="size-4" />
           </Button>
         ),
       }),
     ],
-    [],
+    [onEditUpdate],
   );
 
   const table = useTable({ columns, data: updates });
 
   return (
     <>
-      <DataTable table={table} onRowClicked={(row) => router.push(`/updates/company/${row.id}/edit`)} />
+      <DataTable table={table} onRowClicked={(row) => onEditUpdate(row)} />
       <Dialog open={!!deletingUpdate} onOpenChange={() => setDeletingUpdate(null)}>
         <DialogContent>
           <DialogHeader>

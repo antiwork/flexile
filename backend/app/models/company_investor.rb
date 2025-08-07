@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class CompanyInvestor < ApplicationRecord
-  include ExternalId, Searchable
+  include ExternalId
 
   belongs_to :user
   belongs_to :company

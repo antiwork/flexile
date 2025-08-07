@@ -1,8 +1,9 @@
 import React, { useEffect, useId } from "react";
 import ComboBox from "@/components/ComboBox";
 import { FormControl, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { DocumentTemplateType } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
-import { DocumentTemplateType, trpc } from "@/trpc/client";
+import { trpc } from "@/trpc/client";
 
 const TemplateSelector = ({
   type,

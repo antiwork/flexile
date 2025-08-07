@@ -6,7 +6,6 @@ RSpec.describe EquityGrant::Vesting do
   describe "associations" do
     it { is_expected.to belong_to(:vesting_schedule).optional }
     it { is_expected.to have_many(:vesting_events).dependent(:destroy) }
-    it { is_expected.to have_many(:equity_grant_transactions) }
   end
 
   describe "validations" do

@@ -22,7 +22,7 @@ module PunditAuthorization
     end
 
     def debug_message(exception)
-      if clerk.user?
+      if Current.user
         "Pundit::NotAuthorizedError for #{exception.policy.class} " \
         "by User ID #{pundit_user.user.id} " \
         "#{pundit_user.company.present? ? "for Company ID #{pundit_user.company.id}" : "without a company (signed up as contractor)"} " \

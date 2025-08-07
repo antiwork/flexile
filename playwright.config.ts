@@ -17,6 +17,8 @@ export default defineConfig({
   use: {
     baseURL: "https://test.flexile.dev:3101",
     trace: "on-first-retry",
+    video: "retain-on-failure",
+    screenshot: "only-on-failure",
     contextOptions: {
       ignoreHTTPSErrors: true,
     },
@@ -31,7 +33,10 @@ export default defineConfig({
     },
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 1920, height: 1080 },
+      },
       dependencies: ["setup"],
     },
   ],
