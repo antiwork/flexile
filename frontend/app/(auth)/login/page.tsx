@@ -6,7 +6,7 @@ import { AuthAlerts } from "@/components/auth/AuthAlerts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
 import { useAuthApi } from "@/hooks/useAuthApi";
 import { useOtpFlowState } from "@/hooks/useOtpFlowState";
@@ -55,6 +55,7 @@ function LoginContent() {
                 <Input
                   id="email"
                   type="email"
+                  className="bg-white"
                   placeholder="Enter your work email..."
                   value={state.email}
                   onChange={(e) => actions.setEmail(e.target.value)}
@@ -66,7 +67,7 @@ function LoginContent() {
                 {state.loading ? "Logging in..." : "Log in"}
               </Button>
 
-              <div className="pt-6 text-center text-sm text-gray-600">
+              <div className="pt-6 text-center text-base text-gray-600">
                 Don't have an account?{" "}
                 <Link href="/signup" className="text-blue-600 hover:underline">
                   Sign up
@@ -74,60 +75,47 @@ function LoginContent() {
               </div>
             </form>
           ) : (
-            <div className="space-y-4">
+            <div className="flex flex-col items-center space-y-4">
               <form
                 onSubmit={(e) => {
                   void handleAuthenticate(e);
                 }}
-                className="space-y-4"
+                className="flex flex-col items-center space-y-4"
                 ref={formRef}
               >
-                <div className="flex flex-col items-center space-y-2">
-                  <Label htmlFor="otp" className="block">
-                    Verification code
-                  </Label>
-                  <InputOTP
-                    id="otp"
-                    maxLength={6}
-                    value={state.otp}
-                    onChange={(value) => {
-                      actions.setOtp(value);
-                      if (value.length === 6 && !state.loading) {
-                        setTimeout(() => formRef.current?.requestSubmit(), 100);
-                      }
-                    }}
-                    disabled={state.loading}
-                    autoFocus
-                    required
-                  >
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                    </InputOTPGroup>
-                    <InputOTPSeparator />
-                    <InputOTPGroup>
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
-                </div>
-                <Button type="submit" className="w-full" disabled={state.otp.length !== 6 || state.loading}>
+                <InputOTP
+                  id="otp"
+                  maxLength={6}
+                  containerClassName="mx-auto"
+                  value={state.otp}
+                  onChange={(value) => {
+                    actions.setOtp(value);
+                    if (value.length === 6 && !state.loading) {
+                      setTimeout(() => formRef.current?.requestSubmit(), 100);
+                    }
+                  }}
+                  disabled={state.loading}
+                  autoFocus
+                  required
+                >
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                  </InputOTPGroup>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+                <Button type="submit" className="mb-4 w-[342px]" disabled={state.otp.length !== 6 || state.loading}>
                   {state.loading ? "Verifying..." : "Continue"}
                 </Button>
               </form>
-
-              <div className="text-center">
-                <Button className="w-full" variant="outline" onClick={actions.backToEmail} disabled={state.loading}>
+              <div className="w-full text-center">
+                <Link href="/login" className="hover:underline" onClick={actions.backToEmail}>
                   Back to email
-                </Button>
-              </div>
-
-              <div className="text-center text-sm text-gray-600">
-                Don't have an account?{" "}
-                <Link href="/signup" className="text-blue-600 hover:underline">
-                  Sign up
                 </Link>
               </div>
             </div>
