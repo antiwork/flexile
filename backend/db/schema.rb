@@ -169,6 +169,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.bigint "total_options", default: 0, null: false
     t.virtual "fully_diluted_shares", type: :bigint, as: "(total_shares + total_options)", stored: true
     t.boolean "invested_in_angel_list_ruv", default: false, null: false
+    t.string "investor_type"
     t.index ["company_id"], name: "index_company_investors_on_company_id"
     t.index ["external_id"], name: "index_company_investors_on_external_id", unique: true
     t.index ["user_id", "company_id"], name: "index_company_investors_on_user_id_and_company_id", unique: true
@@ -234,6 +235,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.date "period_started_on"
     t.boolean "show_revenue", default: false, null: false
     t.boolean "show_net_income", default: false, null: false
+    t.string "recipient_types", default: [], array: true
     t.index ["company_id"], name: "index_company_updates_on_company_id"
     t.index ["external_id"], name: "index_company_updates_on_external_id", unique: true
   end
@@ -683,7 +685,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
   create_table "invoice_line_items", force: :cascade do |t|
     t.bigint "invoice_id", null: false
     t.string "description", null: false
-    t.decimal "quantity", precision: 10, scale: 2, null: false
+    t.decimal "quantity", null: false
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.integer "pay_rate_in_subunits", null: false
@@ -922,10 +924,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.boolean "team_member", default: false, null: false
     t.boolean "sent_invalid_tax_id_email", default: false, null: false
     t.string "clerk_id"
+    t.bigint "signup_invite_link_id"
     t.string "otp_secret_key"
     t.integer "otp_failed_attempts_count", default: 0, null: false
     t.datetime "otp_first_failed_at"
-    t.bigint "signup_invite_link_id"
     t.index ["clerk_id"], name: "index_users_on_clerk_id", unique: true
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true

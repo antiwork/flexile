@@ -13,10 +13,14 @@ import { assertDefined } from "@/utils/assert";
 const byId = (ctx: CompanyContext, id: string) =>
   and(eq(companyUpdates.companyId, ctx.company.id), eq(companyUpdates.externalId, id));
 
-const dataSchema = createInsertSchema(companyUpdates).pick({
-  title: true,
-  body: true,
-});
+const dataSchema = createInsertSchema(companyUpdates)
+  .pick({
+    title: true,
+    body: true,
+  })
+  .extend({
+    recipientTypes: z.array(z.enum(["admins", "investors", "active_contractors", "alumni_contractors"])).optional(),
+  });
 
 const checkHasInvestors = async (companyId: bigint) => {
   const hasInvestors = await db.query.companyInvestors.findFirst({
@@ -39,7 +43,7 @@ export const companyUpdatesRouter = createRouter({
       orderBy: desc(companyUpdates.createdAt),
     });
     const updates = rows.map((update) => ({
-      ...pick(update, ["title", "sentAt"]),
+      ...pick(update, ["title", "sentAt", "recipientTypes"]),
       id: update.externalId,
       summary: truncate(renderTiptapToText(update.body), { length: 300 }),
     }));
@@ -53,8 +57,7 @@ export const companyUpdatesRouter = createRouter({
     if (!update) throw new TRPCError({ code: "NOT_FOUND" });
 
     return {
-      ...pick(update, ["title", "body", "sentAt"]),
-
+      ...pick(update, ["title", "body", "sentAt", "recipientTypes"]),
       id: update.externalId,
     };
   }),
@@ -67,6 +70,7 @@ export const companyUpdatesRouter = createRouter({
       .values({
         ...pick(input, ["title", "body"]),
         companyId: ctx.company.id,
+        recipientTypes: input.recipientTypes || ["admins"],
         period: null,
         periodStartedOn: null,
         showRevenue: false,
@@ -83,6 +87,7 @@ export const companyUpdatesRouter = createRouter({
       .set({
         ...pick(input, ["title", "body"]),
         companyId: ctx.company.id,
+        recipientTypes: input.recipientTypes || ["admins"],
         period: null,
         periodStartedOn: null,
         showRevenue: false,
@@ -92,27 +97,36 @@ export const companyUpdatesRouter = createRouter({
       .returning();
     if (!update) throw new TRPCError({ code: "NOT_FOUND" });
   }),
-  publish: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    const hasInvestors = await checkHasInvestors(ctx.company.id);
-    if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+  publish: companyProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        minBilledAmount: z.number().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const hasInvestors = await checkHasInvestors(ctx.company.id);
+      if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-    const [update] = await db
-      .update(companyUpdates)
-      .set({ sentAt: new Date() })
-      .where(and(byId(ctx, input.id), isNull(companyUpdates.sentAt)))
-      .returning();
+      const [update] = await db
+        .update(companyUpdates)
+        .set({ sentAt: new Date() })
+        .where(and(byId(ctx, input.id), isNull(companyUpdates.sentAt)))
+        .returning();
 
-    if (!update) throw new TRPCError({ code: "NOT_FOUND" });
+      if (!update) throw new TRPCError({ code: "NOT_FOUND" });
 
-    await inngest.send({
-      name: "company.update.published",
-      data: {
-        updateId: update.externalId,
-      },
-    });
+      await inngest.send({
+        name: "company.update.published",
+        data: {
+          updateId: update.externalId,
+          recipientTypes: update.recipientTypes,
+          minBilledAmount: input.minBilledAmount,
+        },
+      });
 
-    return update.externalId;
-  }),
+      return update.externalId;
+    }),
   sendTestEmail: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
     const hasInvestors = await checkHasInvestors(ctx.company.id);
     if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
