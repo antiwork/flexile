@@ -119,7 +119,7 @@ export function AuthPage({
         <CardContent>
           {sendOtp.isSuccess ? (
             <Form {...otpForm}>
-              <form onSubmit={(e) => void submitOtpForm(e)} className="space-y-4">
+              <form onSubmit={(e) => void submitOtpForm(e)} className="flex flex-col items-center space-y-4">
                 <FormField
                   control={otpForm.control}
                   name="otp"
@@ -153,11 +153,21 @@ export function AuthPage({
                     </FormItem>
                   )}
                 />
-                <MutationStatusButton mutation={verifyOtp} type="submit" className="w-full" loadingText="Verifying...">
+                <MutationStatusButton
+                  mutation={verifyOtp}
+                  type="submit"
+                  className="w-[342px]"
+                  loadingText="Verifying..."
+                >
                   Continue
                 </MutationStatusButton>
-                <div className="text-center">
-                  <Button variant="link" onClick={() => sendOtp.reset()} disabled={verifyOtp.isPending}>
+                <div className="pt-6 text-center">
+                  <Button
+                    className="text-gray-600"
+                    variant="link"
+                    onClick={() => sendOtp.reset()}
+                    disabled={verifyOtp.isPending}
+                  >
                     Back to email
                   </Button>
                 </div>
@@ -190,7 +200,7 @@ export function AuthPage({
                   {sendOtpText}
                 </MutationStatusButton>
 
-                <div className="text-center text-gray-600">{switcher}</div>
+                <div className="pt-6 text-center text-gray-600">{switcher}</div>
               </form>
             </Form>
           ) : null}
