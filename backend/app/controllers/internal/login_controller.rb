@@ -1,9 +1,7 @@
 # frozen_string_literal: true
 
-class Api::V1::LoginController < Api::BaseController
-  include OtpValidation, UserDataSerialization
-
-  skip_before_action :authenticate_with_jwt
+class Internal::LoginController < Internal::BaseController
+  include OtpValidation, UserDataSerialization, JwtAuthenticatable
 
   def create
     email = params[:email]
