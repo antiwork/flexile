@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSession, signIn } from "next-auth/react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { MutationStatusButton } from "@/components/MutationButton";
@@ -43,6 +44,15 @@ export function AuthPage({
   const router = useRouter();
   const searchParams = useSearchParams();
   const invitationToken = searchParams.get("invitation_token");
+  const [googleAuthError, setGoogleAuthError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const errorParam = searchParams.get("error");
+    if (errorParam) {
+      setGoogleAuthError(errorParam);
+    }
+  }, [searchParams, router]);
+
   const queryClient = useQueryClient();
   const sendOtp = useMutation({
     mutationFn: async (values: { email: string }) => {
@@ -106,6 +116,7 @@ export function AuthPage({
   });
 
   const handleGoogleAuth = async () => {
+    setGoogleAuthError(null);
     const context = sendOtpText === "Sign up" ? "signup" : "login";
     document.cookie = `auth_context=${context}; path=/; max-age=300`;
 
@@ -190,16 +201,19 @@ export function AuthPage({
           ) : null}
           {!sendOtp.isSuccess ? (
             <div className="space-y-4">
-              <Button
-                type="button"
-                variant="outline"
-                className="flex w-full items-center gap-2"
-                onClick={() => void handleGoogleAuth()}
-                disabled={sendOtp.isPending}
-              >
-                <Image src={googleIcon} alt="Google" className="size-4" />
-                Continue with Google
-              </Button>
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={`flex w-full items-center gap-2 ${googleAuthError ? "border-destructive" : ""}`}
+                  onClick={() => void handleGoogleAuth()}
+                  disabled={sendOtp.isPending}
+                >
+                  <Image src={googleIcon} alt="Google" className="size-4" />
+                  Continue with Google
+                </Button>
+                {googleAuthError ? <p className="text-destructive text-sm">{googleAuthError}</p> : null}
+              </div>
 
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
