@@ -22,7 +22,7 @@
   --color-gray-300: #a3a3a0;
   --color-gray-600: #6e6f6a;
   --color-gray-800: #333333;
-  --color-orange: #FE9A00;
+  --color-orange: #fe9a00;
   --font-signature: "Caveat", cursive;
 }
 
@@ -134,11 +134,4 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
-}
-
- p.is-editor-empty:first-child::before {
-  content: attr(data-placeholder);
-  float: left;
-  height: 0;
-  pointer-events: none;
 }

@@ -1,5 +1,4 @@
 import type { Content } from "@tiptap/core";
-import { Placeholder } from "@tiptap/extensions";
 import { EditorContent, isList, useEditor } from "@tiptap/react";
 import { Bold, Heading, Italic, Link, List, Underline } from "lucide-react";
 import React, { useEffect, useState } from "react";
@@ -27,41 +26,6 @@ const RichText = ({ content }: { content: Content }) => {
       <EditorContent editor={editor} />
     </div>
   );
-};
-
-export const BasicRichTextEditor = ({
-  value,
-  onChange,
-  className,
-  placeholder = "Write something ...",
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  className?: string;
-}) => {
-  const editor = useEditor({
-    extensions: [...richTextExtensions, Placeholder.configure({ placeholder })],
-    content: value,
-    onUpdate: ({ editor }) => onChange(editor.getHTML()),
-    editorProps: {
-      attributes: {
-        class: cn(
-          "prose max-w-none p-3 h-[50vh] overflow-y-auto border-input rounded-md border bg-transparent text-sm placeholder:text-muted-foreground",
-          className,
-        ),
-      },
-    },
-    immediatelyRender: false,
-  });
-
-  useEffect(() => {
-    if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value, false);
-    }
-  }, [value, editor]);
-
-  return <EditorContent editor={editor} />;
 };
 
 export const Editor = ({
