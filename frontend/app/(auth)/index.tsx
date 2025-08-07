@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp";
 import logo from "@/public/logo-icon.svg";
 import { request } from "@/utils/request";
 
@@ -61,7 +62,7 @@ export function AuthPage({
 
       const result = await signIn("otp", { email, otp: values.otp, redirect: false });
 
-      if (result?.error) throw new Error(result.error);
+      if (result?.error) throw new Error("Invalid verification code");
 
       const session = await getSession();
       if (!session?.user.email) throw new Error("Invalid verification code");
@@ -123,10 +124,31 @@ export function AuthPage({
                   control={otpForm.control}
                   name="otp"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="justify-items-center">
                       <FormLabel>Verification code</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Enter 6-digit code" maxLength={6} required />
+                        <InputOTP
+                          {...field}
+                          maxLength={6}
+                          onChange={(value) => {
+                            field.onChange(value);
+                            if (value.length === 6) setTimeout(() => void submitOtpForm(), 100);
+                          }}
+                          autoFocus
+                          required
+                        >
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                          </InputOTPGroup>
+                          <InputOTPSeparator />
+                          <InputOTPGroup>
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                          </InputOTPGroup>
+                        </InputOTP>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
