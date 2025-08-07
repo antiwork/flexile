@@ -93,8 +93,7 @@ class DividendComputation < ApplicationRecord
       number_of_shareholders: data.map { _1[:company_investor_id] }.uniq.count,
       status: Dividend::ISSUED,
       total_amount_in_cents: (total_amount_in_usd * 100.to_d).to_i,
-      return_of_capital:,
-      release_document: release_document
+      return_of_capital:
     )
 
     data.each do |dividend_attrs|

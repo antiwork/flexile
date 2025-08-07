@@ -11,7 +11,6 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
       dividends_issuance_date: dividend_computation_params[:dividends_issuance_date] || Date.current,
       amount_in_usd: dividend_computation_params[:amount_in_usd],
       return_of_capital: dividend_computation_params[:return_of_capital],
-      release_document: dividend_computation_params[:release_document],
       name: dividend_computation_params[:name]
     ).process
 
@@ -33,6 +32,6 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     end
 
     def dividend_computation_params
-      params.require(:dividend_computation).permit(:amount_in_usd, :dividends_issuance_date, :return_of_capital, :release_document, :name)
+      params.require(:dividend_computation).permit(:amount_in_usd, :dividends_issuance_date, :return_of_capital, :name)
     end
 end

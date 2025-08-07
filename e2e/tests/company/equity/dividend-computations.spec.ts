@@ -82,7 +82,6 @@ test.describe("Dividend Computations", () => {
         await modal.getByLabel("Distribution name").fill("Q4 2024 Dividend");
         await modal.getByLabel("Total distribution amount").fill("50000");
         await expect(modal.getByText("Start a new distribution")).toBeVisible();
-        await modal.getByText("Require a signed investor agreement before releasing funds.").click();
         await modal.getByRole("button", { name: "Create distribution" }).click();
       },
       { page },
@@ -100,6 +99,5 @@ test.describe("Dividend Computations", () => {
     expect(computation.name).toBe("Q4 2024 Dividend");
     expect(computation.totalAmountInUsd).toBe("50000.0");
     expect(computation.returnOfCapital).toBe(false);
-    expect(computation.releaseDocument).toBeNull();
   });
 });

@@ -5,12 +5,11 @@ class DividendComputationGeneration
   MAX_PREFERRED_SHARE_HOLDING_DAYS = 90
   private_constant :DEFAULT_SHARE_HOLDING_DAYS, :MAX_PREFERRED_SHARE_HOLDING_DAYS
 
-  def initialize(company, amount_in_usd:, dividends_issuance_date: Date.current, return_of_capital:, release_document: nil, name:)
+  def initialize(company, amount_in_usd:, dividends_issuance_date: Date.current, return_of_capital:, name:)
     @company = company
     @amount_in_usd = amount_in_usd.to_d
     @dividends_issuance_date = dividends_issuance_date
     @return_of_capital = return_of_capital
-    @release_document = release_document
     @name = name
   end
 
@@ -19,7 +18,6 @@ class DividendComputationGeneration
       total_amount_in_usd: amount_in_usd,
       dividends_issuance_date:,
       return_of_capital:,
-      release_document: @release_document,
       name: @name
     )
     @preferred_dividend_total = 0.to_d

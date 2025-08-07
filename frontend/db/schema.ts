@@ -415,7 +415,6 @@ export const dividendComputations = pgTable(
     dividendsIssuanceDate: date("dividends_issuance_date", { mode: "string" }).notNull(),
     externalId: varchar("external_id").$default(nanoid).notNull(),
     returnOfCapital: boolean("return_of_capital").notNull(),
-    releaseDocument: text("release_document"),
     name: varchar("name").notNull(),
   },
   (table) => [
