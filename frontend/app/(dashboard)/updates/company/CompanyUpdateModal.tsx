@@ -2,25 +2,32 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { Users } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import RecipientSelector from "@/app/(dashboard)/updates/company/RecipientSelector";
 import ViewUpdateDialog from "@/app/(dashboard)/updates/company/ViewUpdateDialog";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import { Editor as RichTextEditor } from "@/components/RichText";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
-import { pluralize } from "@/utils/pluralize";
 
 const formSchema = z.object({
   title: z.string().trim().min(1, "This field is required."),
   body: z.string().regex(/>\w/u, "This field is required."),
+  recipientTypes: z.array(z.enum(["admins", "investors", "active_contractors", "alumni_contractors"])),
 });
 
 interface CompanyUpdateModalProps {
@@ -43,6 +50,7 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
     defaultValues: {
       title: update?.title ?? "",
       body: update?.body ?? "",
+      recipientTypes: update?.recipientTypes ?? ["admins"],
     },
   });
 
@@ -51,11 +59,13 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
       form.reset({
         title: update.title,
         body: update.body,
+        recipientTypes: update.recipientTypes ?? ["admins"],
       });
     } else if (!updateId) {
       form.reset({
         title: "",
         body: "",
+        recipientTypes: ["admins"],
       });
     }
   }, [update, updateId, form]);
@@ -63,8 +73,33 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [viewPreview, setViewPreview] = useState(false);
   const [previewUpdateId, setPreviewUpdateId] = useState<string | null>(null);
+  const [minBilledAmountDialogOpen, setMinBilledAmountDialogOpen] = useState(false);
+  const [minBilledAmount, setMinBilledAmount] = useState<number>(0);
 
-  const recipientCount = (company.contractorCount ?? 0) + (company.investorCount ?? 0);
+  // Get counts for recipient selector
+  const recipientCounts = {
+    admins: company.administratorCount ?? 0,
+    investors: company.investorCount ?? 0,
+    activeContractors: company.contractorCount ?? 0,
+    alumniContractors: company.alumniContractorCount ?? 0,
+  };
+
+  // Calculate total recipient count based on selected types
+  const selectedRecipientTypes = form.watch("recipientTypes");
+  const recipientCount = selectedRecipientTypes.reduce((sum, type) => {
+    switch (type) {
+      case "admins":
+        return sum + recipientCounts.admins;
+      case "investors":
+        return sum + recipientCounts.investors;
+      case "active_contractors":
+        return sum + recipientCounts.activeContractors;
+      case "alumni_contractors":
+        return sum + recipientCounts.alumniContractors;
+      default:
+        return sum;
+    }
+  }, 0);
 
   const createMutation = trpc.companyUpdates.create.useMutation();
   const updateMutation = trpc.companyUpdates.update.useMutation();
@@ -75,6 +110,7 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
       const data = {
         companyId: company.id,
         ...values,
+        recipientTypes: values.recipientTypes,
       };
       let id;
       if (update) {
@@ -86,7 +122,13 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
       } else {
         id = await createMutation.mutateAsync(data);
       }
-      if (!preview && !update?.sentAt) await publishMutation.mutateAsync({ companyId: company.id, id });
+      if (!preview && !update?.sentAt) {
+        await publishMutation.mutateAsync({
+          companyId: company.id,
+          id,
+          minBilledAmount: minBilledAmount > 0 ? minBilledAmount : undefined,
+        });
+      }
       void trpcUtils.companyUpdates.list.invalidate();
       await trpcUtils.companyUpdates.get.invalidate({ companyId: company.id, id });
       if (preview) {
@@ -124,6 +166,24 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
                 <div className="space-y-4">
                   <FormField
                     control={form.control}
+                    name="recipientTypes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <RecipientSelector
+                            value={field.value}
+                            onChange={field.onChange}
+                            counts={recipientCounts}
+                            onMinBilledAmountClick={() => setMinBilledAmountDialogOpen(true)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
                     name="title"
                     render={({ field }) => (
                       <FormItem>
@@ -149,29 +209,6 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
                       </FormItem>
                     )}
                   />
-                </div>
-
-                <div className="space-y-4">
-                  <Label>Recipients ({recipientCount.toLocaleString()})</Label>
-                  <div className="mt-2 space-y-2">
-                    {company.investorCount ? (
-                      <div className="flex items-center gap-2">
-                        <Users className="size-4" />
-                        <span>
-                          {company.investorCount.toLocaleString()} {pluralize("investor", company.investorCount)}
-                        </span>
-                      </div>
-                    ) : null}
-                    {company.contractorCount ? (
-                      <div className="flex items-center gap-2">
-                        <Users className="size-4" />
-                        <span>
-                          {company.contractorCount.toLocaleString()} active{" "}
-                          {pluralize("contractor", company.contractorCount)}
-                        </span>
-                      </div>
-                    ) : null}
-                  </div>
                 </div>
               </form>
             </Form>
@@ -237,6 +274,33 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
           }}
         />
       ) : null}
+
+      <Dialog open={minBilledAmountDialogOpen} onOpenChange={setMinBilledAmountDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Set minimum billed amount</DialogTitle>
+            <DialogDescription>Only include contractors who have billed at least this amount.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="min-amount">Minimum amount (USD)</Label>
+              <Input
+                id="min-amount"
+                type="number"
+                placeholder="0"
+                value={minBilledAmount || ""}
+                onChange={(e) => setMinBilledAmount(Number(e.target.value))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMinBilledAmountDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => setMinBilledAmountDialogOpen(false)}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

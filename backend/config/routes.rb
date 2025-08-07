@@ -13,7 +13,7 @@ admin_constraint = lambda do |request|
 end
 
 api_domain_constraint = lambda do |request|
-  Rails.env.test? || API_DOMAIN == request.host
+  Rails.env.test? || Rails.env.development? || API_DOMAIN == request.host
 end
 
 Rails.application.routes.draw do

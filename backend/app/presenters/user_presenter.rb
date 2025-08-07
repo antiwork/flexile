@@ -118,6 +118,8 @@ class UserPresenter
           exercisePriceInUsd: can_view_financial_data ? company.fmv_per_share_in_usd.to_s : nil,
           investorCount: user.company_administrator_for?(company) ? company.company_investors.where.not(user_id: company.company_workers.active.select(:user_id)).count : nil,
           contractorCount: user.company_administrator_for?(company) ? company.company_workers.active.count : nil,
+          administratorCount: user.company_administrator_for?(company) ? company.company_administrators.count : nil,
+          alumniContractorCount: user.company_administrator_for?(company) ? company.company_workers.where.not(ended_at: nil).count : nil,
           primaryAdminName: company.primary_admin.user.name,
           completedPaymentMethodSetup: company.bank_account_ready?,
           isTrusted: company.is_trusted,

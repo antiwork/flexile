@@ -29,6 +29,8 @@ const companySchema = z.object({
   exercisePriceInUsd: z.string().nullable(),
   contractorCount: z.number().nullable(),
   investorCount: z.number().nullable(),
+  administratorCount: z.number().nullable(),
+  alumniContractorCount: z.number().nullable(),
   primaryAdminName: z.string().nullable(),
   isTrusted: z.boolean(),
   externalId: z.string(),
