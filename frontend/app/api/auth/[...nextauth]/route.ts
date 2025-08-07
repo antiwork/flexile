@@ -34,11 +34,7 @@ function handler(req: NextRequest, ...params: unknown[]) {
             CredentialsProvider({
               id: "google",
               name: "Google (Test)",
-              credentials: {
-                email: { label: "Email", type: "email" },
-                name: { label: "Name", type: "text" },
-                googleId: { label: "Google ID", type: "text" },
-              },
+              credentials: {},
               authorize() {
                 const testGoogleUser = cookieMap.get("test_google_user");
 
@@ -46,7 +42,6 @@ function handler(req: NextRequest, ...params: unknown[]) {
                   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
                   const user = JSON.parse(testGoogleUser) as {
                     email: string;
-                    name: string;
                     googleUid: string;
                   };
 
