@@ -1,5 +1,5 @@
 "use client";
-import { CircleCheck, Plus } from "lucide-react";
+import { CheckCircle2, Circle, CircleCheck, Plus } from "lucide-react";
 import React, { useState } from "react";
 import CompanyUpdateModal from "@/app/(dashboard)/updates/company/CompanyUpdateModal";
 import ViewUpdateDialog from "@/app/(dashboard)/updates/company/ViewUpdateDialog";
@@ -59,11 +59,11 @@ export default function CompanyUpdates() {
       />
 
       {isLoading ? (
-        <div className="px-4 py-8">
+        <div className="px-6 py-8">
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="animate-pulse">
-                <div className="h-20 rounded bg-gray-200" />
+                <div className="h-16 rounded bg-gray-200" />
               </div>
             ))}
           </div>
@@ -102,29 +102,45 @@ const UpdatesList = ({
 
   return (
     <>
-      <div className="divide-y">
-        {updates.map((update) => (
-          <div
-            key={update.id}
-            className="flex cursor-pointer items-start justify-between px-4 py-4 transition-colors hover:bg-gray-50"
-            onClick={() => handleUpdateClick(update)}
-          >
-            <div className="min-w-0 flex-1 pr-4">
-              <div className="mb-1 flex items-center gap-2">
-                <h3 className="truncate text-sm font-semibold text-gray-900">{update.title}</h3>
-                {update.sentAt ? (
-                  <span className="inline-flex items-center rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
-                    Sent
-                  </span>
-                ) : null}
+      <div className="mx-6">
+        {/* Header row */}
+        <div className="grid grid-cols-12 gap-4 border-b border-gray-200 px-4 py-3 text-sm font-medium text-gray-500">
+          <div className="col-span-7">Title</div>
+          <div className="col-span-3 text-right">Date</div>
+          <div className="col-span-2 text-right">Status</div>
+        </div>
+
+        {/* Update rows */}
+        <div className="divide-y divide-gray-100">
+          {updates.map((update) => (
+            <div
+              key={update.id}
+              className="grid cursor-pointer grid-cols-12 items-start gap-4 px-4 py-4 transition-colors hover:bg-gray-50"
+              onClick={() => handleUpdateClick(update)}
+            >
+              <div className="col-span-7">
+                <h3 className="mb-1 text-sm font-medium text-gray-900">{update.title}</h3>
+                <p className="line-clamp-2 text-sm text-gray-500">{update.summary}</p>
               </div>
-              <p className="line-clamp-2 text-sm text-gray-600">{update.summary}</p>
+              <div className="col-span-3 text-right text-sm text-gray-500">
+                {update.sentAt ? formatDate(update.sentAt) : "—"}
+              </div>
+              <div className="col-span-2 text-right">
+                {update.sentAt ? (
+                  <div className="inline-flex items-center gap-1.5 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <span className="text-gray-900">Sent</span>
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center gap-1.5 text-sm">
+                    <Circle className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-500">Draft</span>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="text-sm whitespace-nowrap text-gray-500">
-              {update.sentAt ? formatDate(update.sentAt) : "Draft"}
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {!isAdmin && selectedUpdateId ? (
