@@ -784,18 +784,4 @@ RSpec.describe Company do
       expect(company.display_country).to eq("Romania")
     end
   end
-
-  describe "#dividend_computation_enabled?" do
-    let(:company) { create(:company) }
-
-    it "returns true when Flipper flag is enabled" do
-      Flipper.enable(:dividend_computation, company)
-      expect(company.dividend_computation_enabled?).to be true
-    end
-
-    it "returns false when Flipper flag is disabled" do
-      Flipper.disable(:dividend_computation, company)
-      expect(company.dividend_computation_enabled?).to be false
-    end
-  end
 end

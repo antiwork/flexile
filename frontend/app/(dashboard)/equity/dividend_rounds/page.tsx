@@ -37,7 +37,6 @@ type TransformedData = {
 
 export default function DividendRounds() {
   const company = useCurrentCompany();
-  const isDividendComputationEnabled = company.flags.includes("dividend_computation");
 
   const { data: dividendComputations = [], isLoading: isLoadingDividendComputations } =
     trpc.dividendComputations.list.useQuery(
@@ -51,7 +50,6 @@ export default function DividendRounds() {
             dividendsIssuanceDate: new Date(computation.dividendsIssuanceDate),
             numberOfShareholders: BigInt(computation.numberOfShareholders),
           })),
-        enabled: isDividendComputationEnabled,
       },
     );
   const { data: dividendRounds = [], isLoading: isLoadingDividendRounds } = trpc.dividendRounds.list.useQuery(
@@ -67,8 +65,8 @@ export default function DividendRounds() {
         })),
     },
   );
-  const isLoading = (isDividendComputationEnabled && isLoadingDividendComputations) || isLoadingDividendRounds;
-  const data: TransformedData[] = [...(isDividendComputationEnabled ? dividendComputations : []), ...dividendRounds];
+  const isLoading = isLoadingDividendComputations || isLoadingDividendRounds;
+  const data: TransformedData[] = [...dividendComputations, ...dividendRounds];
   const router = useRouter();
   const [isNewDistributionModalOpen, setIsNewDistributionModalOpen] = useState(false);
 
@@ -151,12 +149,10 @@ export default function DividendRounds() {
           table={table}
           onRowClicked={(row) => router.push(`/equity/dividend_rounds/${row.type}/${row.id}`)}
           actions={
-            isDividendComputationEnabled ? (
-              <Button variant="outline" size="small" onClick={() => setIsNewDistributionModalOpen(true)}>
-                <Plus className="size-4" />
-                New distribution
-              </Button>
-            ) : null
+            <Button variant="outline" size="small" onClick={() => setIsNewDistributionModalOpen(true)}>
+              <Plus className="size-4" />
+              New distribution
+            </Button>
           }
         />
       ) : (
@@ -165,9 +161,7 @@ export default function DividendRounds() {
         </div>
       )}
 
-      {isDividendComputationEnabled ? (
-        <NewDistributionModal open={isNewDistributionModalOpen} onOpenChange={setIsNewDistributionModalOpen} />
-      ) : null}
+      <NewDistributionModal open={isNewDistributionModalOpen} onOpenChange={setIsNewDistributionModalOpen} />
     </>
   );
 }

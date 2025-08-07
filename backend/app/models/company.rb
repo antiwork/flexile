@@ -184,9 +184,7 @@ class Company < ApplicationRecord
     Flipper.enabled?(:expenses, self)
   end
 
-  def dividend_computation_enabled?
-    Flipper.enabled?(:dividend_computation, self)
-  end
+
 
   def find_company_worker!(user:)
     company_workers.find_by!(user:)

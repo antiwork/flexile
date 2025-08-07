@@ -14,7 +14,6 @@ test.describe("Dividend Computations", () => {
   const setup = async () => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
       equityEnabled: true,
-      jsonData: { flags: ["dividend_computation"] },
     });
 
     const { user: investorUser1 } = await usersFactory.create();

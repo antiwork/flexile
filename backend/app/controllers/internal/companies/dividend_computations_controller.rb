@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class Internal::Companies::DividendComputationsController < Internal::Companies::BaseController
-  before_action :check_feature_flag
   before_action :set_dividend_computation, only: [:per_investor]
 
   def create
@@ -29,12 +28,6 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
   end
 
   private
-    def check_feature_flag
-      unless Current.company.dividend_computation_enabled?
-        render json: { error: "Feature not available" }, status: :not_found
-      end
-    end
-
     def set_dividend_computation
       @dividend_computation = Current.company.dividend_computations.find(params[:id])
     end

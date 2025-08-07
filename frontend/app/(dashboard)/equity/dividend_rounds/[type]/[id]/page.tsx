@@ -40,12 +40,6 @@ export default function DividendRound() {
 
   const company = useCurrentCompany();
   const router = useRouter();
-  const isDividendComputationEnabled = company.flags.includes("dividend_computation");
-
-  if (isDraft && !isDividendComputationEnabled) {
-    router.replace("/equity/dividend_rounds");
-    return null;
-  }
 
   const { data: dividendOutputs = [], isLoading: isLoadingDividendOutputs } = useQuery({
     queryKey: ["dividend-computation", id],
@@ -58,7 +52,7 @@ export default function DividendRound() {
       });
       return responseSchema.parse(await response.json());
     },
-    enabled: isDraft && isDividendComputationEnabled,
+    enabled: isDraft,
     select: (outputs) =>
       outputs.map((output) => ({
         investor: {
@@ -143,7 +137,7 @@ export default function DividendRound() {
   ];
 
   const data: TransformedData[] = isDraft ? dividendOutputs : dividends;
-  const isLoading = (isDraft && isDividendComputationEnabled ? isLoadingDividendOutputs : false) || isLoadingDividends;
+  const isLoading = isDraft ? isLoadingDividendOutputs : isLoadingDividends;
   const table = useTable({
     data,
     columns,
