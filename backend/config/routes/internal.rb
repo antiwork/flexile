@@ -2,6 +2,22 @@
 
 # Note: Route helpers don't have `internal_` prefix
 scope path: :internal, module: :internal do
+  resources :login, only: :create
+  resources :email_otp, only: :create
+  resources :signup, only: [] do
+    collection do
+      post :send_otp
+      post :verify_and_create
+    end
+  end
+
+  resources :oauth, only: [] do
+    collection do
+      post :google_login
+      post :google_signup
+    end
+  end
+
   namespace :demo do
     resources :companies, only: :show
   end

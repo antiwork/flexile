@@ -37,7 +37,6 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
   const headers: Record<string, string> = {
     cookie,
     "user-agent": userAgent,
-    referer: "x",
     accept: "application/json",
     ...(csrfToken ? { "x-csrf-token": csrfToken } : {}),
   };
@@ -46,21 +45,16 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
 
   // Get userId from NextAuth JWT session
   const session = await getServerSession(authOptions);
-  if (session?.user.jwt) {
+  if (session?.user) {
     // Extract user ID from JWT token
     try {
       const jwt = session.user.jwt;
-      if (typeof jwt === "string") {
-        const parts = jwt.split(".");
-        if (parts.length === 3) {
-          const base64Payload = parts[1];
-          if (base64Payload) {
-            const payload: unknown = JSON.parse(Buffer.from(base64Payload, "base64").toString());
-            if (payload && typeof payload === "object" && "user_id" in payload) {
-              userId = typeof payload.user_id === "number" ? payload.user_id : null;
-            }
-          }
-        }
+      const base64Payload = jwt.split(".")[1];
+      if (base64Payload) {
+        const payload = z
+          .object({ user_id: z.number() })
+          .safeParse(JSON.parse(Buffer.from(base64Payload, "base64").toString()));
+        if (payload.success) userId = payload.data.user_id;
       }
     } catch {}
   }

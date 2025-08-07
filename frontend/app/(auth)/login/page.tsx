@@ -1,162 +1,23 @@
 "use client";
-import Image from "next/image";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { Suspense, useRef } from "react";
-import { AuthAlerts } from "@/components/auth/AuthAlerts";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Label } from "@/components/ui/label";
-import { useAuthApi } from "@/hooks/useAuthApi";
-import { useOtpFlowState } from "@/hooks/useOtpFlowState";
-import googleIcon from "@/images/google.svg";
-import logo from "@/public/logo-icon.svg";
-
-function LoginContent() {
-  const searchParams = useSearchParams();
-  const urlError = searchParams.get("error");
-
-  const formRef = useRef<HTMLFormElement>(null);
-  const [state, actions] = useOtpFlowState();
-  const { handleSendOtp, handleAuthenticate, handleGoogleAuth } = useAuthApi(
-    {
-      type: "login",
-      sendOtpEndpoint: "/api/send-otp",
-    },
-    state,
-    actions,
-  );
-
-  return (
-    <div className="flex items-center justify-center">
-      <Card className="w-full max-w-md border-0 bg-transparent">
-        <CardHeader className="text-center">
-          <div className="mb-8 flex justify-center">
-            <Image src={logo} alt="Flexile" className="size-16" />
-          </div>
-          <CardTitle className="pb-1 text-xl font-medium">
-            {state.step === "email" ? "Welcome back" : "Check your email for a code"}
-          </CardTitle>
-          <CardDescription>
-            {state.step === "email" ? "Use your work email to log in." : "We’ve sent a 6-digit code to your email."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <AuthAlerts error={state.error || urlError || ""} success={state.success} />
-
-          {state.step === "email" ? (
-            <div className="space-y-4">
-              <Button
-                type="button"
-                variant="outline"
-                className="flex w-full items-center gap-2"
-                onClick={() => void handleGoogleAuth()}
-                disabled={state.loading}
-              >
-                <Image src={googleIcon} alt="Google" className="size-4" />
-                Continue with Google
-              </Button>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="text-muted-foreground bg-[#F8F8F8] px-2">Or continue with email</span>
-                </div>
-              </div>
-
-              <form
-                onSubmit={(e) => {
-                  void handleSendOtp(e);
-                }}
-                className="space-y-4"
-              >
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="block">
-                    Work email
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    className="bg-white"
-                    placeholder="Enter your work email..."
-                    value={state.email}
-                    onChange={(e) => actions.setEmail(e.target.value)}
-                    required
-                    disabled={state.loading}
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={state.loading}>
-                  {state.loading ? "Logging in..." : "Log in"}
-                </Button>
-
-                <div className="pt-6 text-center text-base text-gray-600">
-                  Don't have an account?{" "}
-                  <Link href="/signup" className="text-blue-600 hover:underline">
-                    Sign up
-                  </Link>
-                </div>
-              </form>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center space-y-4">
-              <form
-                onSubmit={(e) => {
-                  void handleAuthenticate(e);
-                }}
-                className="flex flex-col items-center space-y-4"
-                ref={formRef}
-              >
-                <InputOTP
-                  id="otp"
-                  maxLength={6}
-                  containerClassName="mx-auto"
-                  value={state.otp}
-                  onChange={(value) => {
-                    actions.setOtp(value);
-                    if (value.length === 6 && !state.loading) {
-                      setTimeout(() => formRef.current?.requestSubmit(), 100);
-                    }
-                  }}
-                  disabled={state.loading}
-                  autoFocus
-                  required
-                >
-                  <InputOTPGroup>
-                    <InputOTPSlot index={0} />
-                    <InputOTPSlot index={1} />
-                    <InputOTPSlot index={2} />
-                  </InputOTPGroup>
-                  <InputOTPGroup>
-                    <InputOTPSlot index={3} />
-                    <InputOTPSlot index={4} />
-                    <InputOTPSlot index={5} />
-                  </InputOTPGroup>
-                </InputOTP>
-                <Button type="submit" className="mb-4 w-[342px]" disabled={state.otp.length !== 6 || state.loading}>
-                  {state.loading ? "Verifying..." : "Continue"}
-                </Button>
-              </form>
-              <div className="w-full text-center">
-                <Link href="/login" className="hover:underline" onClick={actions.backToEmail}>
-                  Back to email
-                </Link>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+import { linkClasses } from "@/components/Link";
+import { AuthPage } from "..";
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <LoginContent />
-    </Suspense>
+    <AuthPage
+      title="Welcome back"
+      description="Use your work email to log in."
+      sendOtpText="Log in"
+      switcher={
+        <>
+          Don't have an account?{" "}
+          <Link href="/signup" className={linkClasses}>
+            Sign up
+          </Link>
+        </>
+      }
+      sendOtpUrl="/internal/email_otp"
+    />
   );
 }

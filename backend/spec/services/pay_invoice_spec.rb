@@ -203,16 +203,15 @@ RSpec.describe PayInvoice, :vcr do
         expect(invoice.reload.status).to eq(Invoice::FAILED)
       end
 
-      it "marks the invoice and payment as failed if creating a quote fails" do
-        allow_any_instance_of(Wise::PayoutApi).to receive(:create_quote) do
-          { "error" => "some error" }
-        end
+      it "marks the invoice and payment as failed and notifies on quote creation failure" do
+        allow_any_instance_of(Wise::PayoutApi).to receive(:create_quote).and_raise(PayInvoice::WiseError.new("Creating quote failed"))
         allow(Bugsnag).to receive(:notify)
 
         expect do
           described_class.new(invoice.id).process
-        end.to raise_error(described_class::WiseError) { |error| expect(error.message).to eq "Creating quote failed for payment #{Payment.last.id}" }
+        end.to raise_error(described_class::WiseError, "Creating quote failed")
           .and change { invoice.payments.count }.by(1)
+          .and have_enqueued_mail(CompanyWorkerMailer, :payment_failed_generic)
 
         payment = Payment.last
         expect(payment.processor_uuid).to be_present
@@ -222,16 +221,15 @@ RSpec.describe PayInvoice, :vcr do
         expect(invoice.reload.status).to eq(Invoice::FAILED)
       end
 
-      it "marks the invoice and payment as failed if creating a transfer fails" do
-        allow_any_instance_of(Wise::PayoutApi).to receive(:create_transfer) do
-          { "error" => "some error" }
-        end
+      it "marks the invoice and payment as failed and notifies on transfer creation failure" do
+        allow_any_instance_of(Wise::PayoutApi).to receive(:create_transfer).and_raise(PayInvoice::WiseError.new("Creating transfer failed"))
         allow(Bugsnag).to receive(:notify)
 
         expect do
           described_class.new(invoice.id).process
-        end.to raise_error(described_class::WiseError) { |error| expect(error.message).to eq "Creating transfer failed for payment #{Payment.last.id}" }
+        end.to raise_error(described_class::WiseError, "Creating transfer failed")
           .and change { invoice.payments.count }.by(1)
+          .and have_enqueued_mail(CompanyWorkerMailer, :payment_failed_generic)
 
         payment = Payment.last
         expect(payment.processor_uuid).to be_present
@@ -241,22 +239,15 @@ RSpec.describe PayInvoice, :vcr do
         expect(invoice.reload.status).to eq(Invoice::FAILED)
       end
 
-      it "marks the invoice and payment as failed if funding fails" do
-        allow_any_instance_of(Wise::PayoutApi).to receive(:fund_transfer) do
-          {
-            "type" => "BALANCE",
-            "status" => "REJECTED",
-            "errorCode" => "payment.exists",
-            "errorMessage" => nil,
-            "balanceTransactionId" => nil,
-          }
-        end
+      it "marks the invoice and payment as failed and notifies on funding failure" do
+        allow_any_instance_of(Wise::PayoutApi).to receive(:fund_transfer).and_raise(PayInvoice::WiseError.new("Funding transfer failed"))
         allow(Bugsnag).to receive(:notify)
 
         expect do
           described_class.new(invoice.id).process
-        end.to raise_error(described_class::WiseError) { |error| expect(error.message).to eq "Funding transfer failed for payment #{Payment.last.id}" }
+        end.to raise_error(described_class::WiseError, "Funding transfer failed")
           .and change { invoice.payments.count }.by(1)
+          .and have_enqueued_mail(CompanyWorkerMailer, :payment_failed_generic)
 
         payment = Payment.last
         expect(payment.processor_uuid).to be_present
@@ -264,6 +255,24 @@ RSpec.describe PayInvoice, :vcr do
         expect(payment.wise_transfer_id).to be_present
         expect(payment.status).to eq(Payment::FAILED)
         expect(invoice.reload.status).to eq(Invoice::FAILED)
+      end
+
+      it "sends an email with the correct arguments on payment failure" do
+        allow_any_instance_of(Company).to receive(:has_sufficient_balance?).and_return(true)
+        rate = 1.2
+        allow_any_instance_of(Wise::PayoutApi).to receive(:get_exchange_rate).and_return([{ "rate" => rate }])
+        allow_any_instance_of(Wise::PayoutApi).to receive(:get_recipient_account).and_return({ "active" => true })
+        allow_any_instance_of(Wise::PayoutApi).to receive(:create_quote).and_raise(PayInvoice::WiseError.new("Quote creation failed for test"))
+
+        expect do
+          expect do
+            described_class.new(invoice.id).process
+          end.to raise_error(PayInvoice::WiseError, "Quote creation failed for test")
+        end.to have_enqueued_mail(CompanyWorkerMailer, :payment_failed_generic).with do |payment_id, amount, currency|
+          expect(payment_id).to eq(Payment.last.id)
+          expect(amount).to eq(invoice.cash_amount_in_usd * rate)
+          expect(currency).to eq("GBP")
+        end
       end
     end
   end

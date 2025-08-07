@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-RSpec.describe Api::V1::LoginController, type: :controller do
+RSpec.describe Internal::LoginController, type: :controller do
   describe "POST #create" do
     let(:user) { create(:user) }
     let(:api_token) { GlobalConfig.get("API_SECRET_TOKEN", Rails.application.secret_key_base) }
@@ -82,22 +82,13 @@ RSpec.describe Api::V1::LoginController, type: :controller do
         expect(json_response["error"]).to eq("OTP code is required")
       end
 
-      it "returns bad request when API token is missing" do
-        post :create, params: { email: user.email, otp_code: valid_otp }
-
-        expect(response).to have_http_status(:bad_request)
-
-        json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Token is required")
-      end
-
       it "returns bad request when all parameters are missing" do
         post :create, params: {}
 
         expect(response).to have_http_status(:bad_request)
 
         json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Token is required")
+        expect(json_response["error"]).to eq("Email is required")
       end
     end
 
@@ -118,26 +109,6 @@ RSpec.describe Api::V1::LoginController, type: :controller do
 
         json_response = JSON.parse(response.body)
         expect(json_response["error"]).to eq("OTP code is required")
-      end
-
-      it "returns bad request when API token is empty string" do
-        post :create, params: { email: user.email, otp_code: valid_otp, token: "" }
-
-        expect(response).to have_http_status(:bad_request)
-
-        json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Token is required")
-      end
-    end
-
-    context "with invalid API token" do
-      it "returns unauthorized" do
-        post :create, params: { email: user.email, otp_code: valid_otp, token: "invalid_token" }
-
-        expect(response).to have_http_status(:unauthorized)
-
-        json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Invalid token")
       end
     end
 

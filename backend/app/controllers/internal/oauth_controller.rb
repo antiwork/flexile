@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class Api::V1::OauthController < Api::BaseController
+class Internal::OauthController < Api::BaseController
   include UserDataSerialization
 
   skip_before_action :authenticate_with_jwt

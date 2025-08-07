@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-RSpec.describe Api::V1::OauthController, type: :controller do
+RSpec.describe Internal::OauthController, type: :controller do
   let(:api_token) { GlobalConfig.get("API_SECRET_TOKEN", Rails.application.secret_key_base) }
   let(:email) { "user@example.com" }
   let(:google_id) { "google_123456789" }
