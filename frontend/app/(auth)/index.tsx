@@ -33,6 +33,7 @@ export function AuthPage({
   sendOtpUrl,
   sendOtpText,
   onVerifyOtp,
+  isSignup,
 }: {
   title: string;
   description: string;
@@ -40,6 +41,7 @@ export function AuthPage({
   sendOtpUrl: string;
   sendOtpText: string;
   onVerifyOtp?: (data: { email: string; otp: string }) => Promise<void>;
+  isSignup?: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -117,14 +119,18 @@ export function AuthPage({
 
   const handleGoogleAuth = async () => {
     setGoogleAuthError(null);
-    const context = sendOtpText === "Sign up" ? "signup" : "login";
+    const context = isSignup ? "signup" : "login";
     document.cookie = `auth_context=${context}; path=/; max-age=300`;
 
     if (invitationToken) {
       document.cookie = `auth_invitation_token=${invitationToken}; path=/; max-age=300`;
     }
 
-    await signIn("google", { callbackUrl: getRedirectUrl() });
+    try {
+      await signIn("google", { callbackUrl: getRedirectUrl() });
+    } catch (error) {
+      setGoogleAuthError(error instanceof Error ? error.message : "Failed to continue with Google");
+    }
   };
 
   return (

@@ -37,6 +37,7 @@ export default function SignUpPage() {
           );
         }
       }}
+      isSignup
     />
   );
 }
