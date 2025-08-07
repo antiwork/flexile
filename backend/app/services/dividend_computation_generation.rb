@@ -63,7 +63,7 @@ class DividendComputationGeneration
       available_amount = @amount_in_usd - @preferred_dividend_total
 
       if available_amount < 0
-        raise StandardError, "Cannot distribute #{@amount_in_usd} when preferred dividends require #{@preferred_dividend_total}"
+        raise StandardError, "Sorry, you cannot distribute $#{@amount_in_usd} as preferred investors require a return of at least $#{@preferred_dividend_total}"
       end
 
       eligible_fully_diluted_shares =
