@@ -133,6 +133,7 @@ export function AuthPage({
                             field.onChange(value);
                             if (value.length === 6) setTimeout(() => void submitOtpForm(), 100);
                           }}
+                          aria-label="Verification code"
                           autoFocus
                           required
                         >
