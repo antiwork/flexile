@@ -12,16 +12,11 @@ class Api::V1::OauthController < Api::BaseController
     return render json: { error: "Email is required" }, status: :bad_request if email.blank?
     return render json: { error: "Google ID is required" }, status: :bad_request if google_id.blank?
 
-    begin
-      user = handle_google_login(email, google_id)
-      return unless user
+    user = handle_google_login(email, google_id)
+    return unless user
 
-      user.update!(current_sign_in_at: Time.current)
-      success_response_with_jwt(user)
-    rescue StandardError => e
-      Rails.logger.error "Google OAuth login error: #{e.message}"
-      render json: { error: "Authentication failed" }, status: :internal_server_error
-    end
+    user.update!(current_sign_in_at: Time.current)
+    success_response_with_jwt(user)
   end
 
   def google_signup
@@ -32,16 +27,11 @@ class Api::V1::OauthController < Api::BaseController
     return render json: { error: "Email is required" }, status: :bad_request if email.blank?
     return render json: { error: "Google ID is required" }, status: :bad_request if google_id.blank?
 
-    begin
-      user = handle_google_signup(email, google_id, invitation_token)
-      return unless user
+    user = handle_google_signup(email, google_id, invitation_token)
+    return unless user
 
-      user.update!(current_sign_in_at: Time.current)
-      success_response_with_jwt(user)
-    rescue StandardError => e
-      Rails.logger.error "Google OAuth signup error: #{e.message}"
-      render json: { error: "Authentication failed" }, status: :internal_server_error
-    end
+    user.update!(current_sign_in_at: Time.current)
+    success_response_with_jwt(user)
   end
 
   private
