@@ -175,22 +175,24 @@ test.describe("Equity Grant Vesting Events", () => {
     // Check cliff vesting event (12,000 shares at month 12)
     const cliffDate = format(addMonths(vestingStartDate, 12), "MMM d, yyyy");
     await expect(vestingEventsSection).toContainText(cliffDate);
-    await expect(vestingEventsSection).toContainText("12,000 options");
-    await expect(vestingEventsSection).toContainText("(Vested)");
+    await expect(vestingEventsSection).toContainText("12,000 shares");
 
     // Check monthly vesting events
     for (let month = 13; month <= 15; month++) {
       const vestingDate = format(addMonths(vestingStartDate, month), "MMM d, yyyy");
       await expect(vestingEventsSection).toContainText(vestingDate);
-      await expect(vestingEventsSection).toContainText("1,000 options");
+      await expect(vestingEventsSection).toContainText("1,000 shares");
     }
 
-    // Verify some are marked as vested and others as scheduled
-    const vestedCount = await vestingEventsSection.getByText("(Vested)", { exact: false }).count();
-    expect(vestedCount).toBe(4); // Cliff + 3 monthly
+    // Verify only 4 processed events are shown (cliff + 3 monthly)
+    const sharesEntries = await vestingEventsSection.getByText(/\d+,?\d*\s+shares/u, { exact: false }).count();
+    expect(sharesEntries).toBe(4); // Only processed events should be visible
 
-    const scheduledCount = await vestingEventsSection.getByText("(Scheduled)", { exact: false }).count();
-    expect(scheduledCount).toBeGreaterThan(30); // Remaining monthly vesting events
+    // Should not show status indicators like (Vested) or (Scheduled)
+    const statusCount = await vestingEventsSection
+      .getByText(/\((Vested|Scheduled|Cancelled)\)/u, { exact: false })
+      .count();
+    expect(statusCount).toBe(0); // No status indicators should be visible
 
     // Verify other sections are still present within the modal
     const modalContent = page.getByRole("dialog");

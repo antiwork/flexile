@@ -124,18 +124,21 @@ const DetailsModal = ({
           />
           <Item label="Role type" value={relationshipDisplayNames[equityGrant.issueDateRelationship]} />
 
-          {fullEquityGrant?.vestingEvents && fullEquityGrant.vestingEvents.length > 0 ? (
+          {fullEquityGrant?.vestingEvents &&
+          fullEquityGrant.vestingEvents.filter((event) => event.processedAt).length > 0 ? (
             <>
               <Separator />
               <h3 className="text-md px-6 font-medium">Vesting events</h3>
-              {fullEquityGrant.vestingEvents.map((event) => (
-                <div key={event.id}>
-                  <Item
-                    label={`${formatDate(event.vestingDate)} ${event.processedAt ? "(Vested)" : event.cancelledAt ? "(Cancelled)" : "(Scheduled)"}`}
-                    value={`${event.vestedShares.toLocaleString()} options`}
-                  />
-                </div>
-              ))}
+              {fullEquityGrant.vestingEvents
+                .filter((event) => event.processedAt)
+                .map((event) => (
+                  <div key={event.id}>
+                    <Item
+                      label={formatDate(event.vestingDate)}
+                      value={`${event.vestedShares.toLocaleString()} shares`}
+                    />
+                  </div>
+                ))}
             </>
           ) : null}
         </div>
