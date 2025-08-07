@@ -73,10 +73,13 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
         });
       } else {
         const payload = {
-          started_at: data.startedAt.toString(),
-          pay_rate_in_subunits: data.payRateInSubunits,
-          pay_rate_type: data.payRateType,
-          role: data.role,
+          contractor: {
+            contract_signed_elsewhere: data.skipContract ?? false,
+            started_at: data.startedAt.toString(),
+            pay_rate_in_subunits: data.payRateInSubunits,
+            pay_rate_type: data.payRateType,
+            role: data.role,
+          },
           document: {
             text_content: data.content,
             attachment: data.attachment,

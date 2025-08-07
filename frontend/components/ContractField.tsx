@@ -17,7 +17,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/f
 import { Input } from "./ui/input";
 
 export const schema = z.object({
-  title: z.string(),
+  title: z.string().optional(),
   content: z.string().optional(),
   attachment: z.instanceof(File).optional(),
   signed: z.boolean().default(false),

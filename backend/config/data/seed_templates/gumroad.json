@@ -311,7 +311,8 @@
               "started_at": "2024-03-01",
               "pay_rate_in_subunits": 19900,
               "role": "Software engineer",
-              "pay_rate_type": "hourly"
+              "pay_rate_type": "hourly",
+              "contract_signed_elsewhere": true
             }
           },
           "company_investor_attributes": {
@@ -375,7 +376,14 @@
               "started_at": "2024-08-01",
               "pay_rate_in_subunits": 10000,
               "role": "Software engineer",
-              "pay_rate_type": "hourly"
+              "pay_rate_type": "hourly",
+              "contract_signed_elsewhere": false,
+              "document": {
+                "name": "Software Engineer Hourly Agreement",
+                "external_id": "onboarding-agreement-001",
+                "document_type": 0,
+                "text_content": "<p>Onboarding Agreement Content</p>"
+              }
             }
           }
         },
@@ -406,7 +414,14 @@
               "ended_at": "2024-01-20",
               "pay_rate_in_subunits": 9900,
               "role": "Software engineer",
-              "pay_rate_type": "hourly"
+              "pay_rate_type": "hourly",
+              "contract_signed_elsewhere": false,
+              "document": {
+                "name": "Software Engineer Agreement",
+                "external_id": "software-engineer-agreement-123",
+                "document_type": 0,
+                "text_content": "<p>Software Engineer Agreement Content</p>"
+              }
             }
           }
         },
@@ -434,7 +449,14 @@
               "started_at": "2023-05-01",
               "pay_rate_in_subunits": 19800,
               "role": "Product designer",
-              "pay_rate_type": "hourly"
+              "pay_rate_type": "hourly",
+              "contract_signed_elsewhere": false,
+              "document": {
+                "name": "Product Designer Agreement",
+                "external_id": "product-designer-agreement-456",
+                "document_type": 0,
+                "text_content": "<p>Product Designer Agreement Content</p>"
+              }
             }
           }
         },
@@ -463,7 +485,8 @@
               "started_at": "2024-06-01",
               "pay_rate_in_subunits": 50000,
               "role": "Project-based engineer",
-              "pay_rate_type": "project_based"
+              "pay_rate_type": "project_based",
+              "contract_signed_elsewhere": true
             }
           }
         },
@@ -492,7 +515,14 @@
               "started_at": "2024-05-01",
               "pay_rate_in_subunits": 12400,
               "role": "Customer supporter",
-              "pay_rate_type": "hourly"
+              "pay_rate_type": "hourly",
+              "contract_signed_elsewhere":false,
+              "document": {
+                "name": "Customer Support Agreement",
+                "external_id": "customer-support-agreement-789",
+                "document_type": 0,
+                "text_content": "<p>Customer Support Agreement Content</p>"
+              }
             }
           }
         }

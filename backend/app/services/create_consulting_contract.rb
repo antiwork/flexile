@@ -12,16 +12,23 @@ class CreateConsultingContract
   end
 
   def perform!
-    params = document_params.dup
-    params[:recipient] = company_worker.external_id
-    company_worker.user.documents.unsigned_contracts.each(&:mark_deleted!)
-    document = CreateDocument.new(
+    attributes = {
+      name: document_params[:name],
+      attachment: document_params[:attachment],
+      text_content: document_params[:text_content],
+      document_type: Document.document_types[:consulting_contract],
+      recipient: company_worker.external_id,
+    }
+
+    company_worker.user.documents.unsigned_contracts.find_each(&:mark_deleted!)
+
+    result = CreateDocument.new(
       user: company_administrator.user,
       company: company_worker.company,
-      params: params
-    ).perform![:document]
+      params: ActionController::Parameters.new(attributes)
+    ).perform!
 
-    document
+    result[:document]
   end
 
   private
