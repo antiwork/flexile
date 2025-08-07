@@ -4,10 +4,10 @@ import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
 import { useQueryClient } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import { formatISO } from "date-fns";
-import { LinkIcon, UserPlus, Users } from "lucide-react";
+import { LinkIcon, Plus, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useMemo, useState } from "react";
+import React, { type Dispatch, type SetStateAction, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import TemplateSelector from "@/app/(dashboard)/document_templates/TemplateSelector";
@@ -19,7 +19,15 @@ import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -27,6 +35,7 @@ import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
 import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
+import { useIsMobile } from "@/utils/use-mobile";
 import FormFields, { schema as formSchema } from "./FormFields";
 import InviteLinkModal from "./InviteLinkModal";
 
@@ -139,16 +148,7 @@ export default function PeoplePage() {
         title="People"
         headerActions={
           workers.length === 0 ? (
-            <div className="flex gap-2">
-              <Button size="small" variant="outline" onClick={() => setShowInviteLinkModal(true)}>
-                <LinkIcon className="size-4" />
-                Invite link
-              </Button>
-              <Button size="small" variant="outline" onClick={() => setShowInviteModal(true)}>
-                <UserPlus className="size-4" />
-                Add contractor
-              </Button>
-            </div>
+            <ActionPanel setShowInviteLinkModal={setShowInviteLinkModal} setShowInviteModal={setShowInviteModal} />
           ) : null
         }
       />
@@ -160,16 +160,7 @@ export default function PeoplePage() {
           table={table}
           searchColumn="user_name"
           actions={
-            <div className="flex gap-2">
-              <Button size="small" variant="outline" onClick={() => setShowInviteLinkModal(true)}>
-                <LinkIcon className="size-4" />
-                Invite link
-              </Button>
-              <Button size="small" variant="outline" onClick={() => setShowInviteModal(true)}>
-                <UserPlus className="size-4" />
-                Add contractor
-              </Button>
-            </div>
+            <ActionPanel setShowInviteLinkModal={setShowInviteLinkModal} setShowInviteModal={setShowInviteModal} />
           }
         />
       ) : (
@@ -255,3 +246,67 @@ export default function PeoplePage() {
     </>
   );
 }
+
+const ActionPanel = ({
+  setShowInviteLinkModal,
+  setShowInviteModal,
+}: {
+  setShowInviteLinkModal: Dispatch<SetStateAction<boolean>>;
+  setShowInviteModal: Dispatch<SetStateAction<boolean>>;
+}) => {
+  const isMobile = useIsMobile();
+  // Ensures smooth transition from Action Panel to Invite dialog, avoiding flicker from suspense query in TemplateSelector
+  const debounce = (fn: () => void, delay: number) => {
+    let timeout: NodeJS.Timeout;
+    return () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(fn, delay);
+    };
+  };
+  const handleInviteClick = () => {
+    setShowInviteModal(true);
+  };
+  const handleInviteLinkClick = () => {
+    setShowInviteLinkModal(true);
+  };
+  const handleMobileInviteClick = debounce(handleInviteClick, 200);
+
+  return isMobile ? (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="floating-action">
+          <Plus />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogTitle>Invite people to your workspace</DialogTitle>
+        <DialogDescription className="sr-only">Invite people to your workspace</DialogDescription>
+        <div className="flex flex-col gap-3">
+          <DialogClose asChild onClick={handleInviteLinkClick}>
+            <Button size="small" variant="outline">
+              <LinkIcon className="size-4" />
+              Invite link
+            </Button>
+          </DialogClose>
+          <DialogClose asChild onClick={handleMobileInviteClick}>
+            <Button size="small">
+              <Plus className="size-4" />
+              Add contractor
+            </Button>
+          </DialogClose>
+        </div>
+      </DialogContent>
+    </Dialog>
+  ) : (
+    <div className="flex flex-row gap-2">
+      <Button size="small" variant="outline" onClick={handleInviteLinkClick}>
+        <LinkIcon className="size-4" />
+        Invite link
+      </Button>
+      <Button size="small" onClick={handleInviteClick}>
+        <Plus className="size-4" />
+        Add contractor
+      </Button>
+    </div>
+  );
+};

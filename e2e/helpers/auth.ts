@@ -12,9 +12,6 @@ export const login = async (page: Page, user: typeof users.$inferSelect) => {
   await page.getByLabel("Work email").fill(user.email);
   await page.getByRole("button", { name: "Log in" }).click();
 
-  // Wait for OTP step to appear
-  await page.getByLabel("Verification code").waitFor();
-
   // Use test OTP code - backend should accept this in test environment
   // The InputOTP component uses a hidden input for actual input
   // Type into the OTP input container to trigger the input
@@ -46,9 +43,6 @@ export const signup = async (page: Page, email: string) => {
   // Enter email and request OTP
   await page.getByLabel("Work email").fill(email);
   await page.getByRole("button", { name: "Sign up" }).click();
-
-  // Wait for OTP step and enter verification code
-  await page.getByLabel("Verification code").waitFor();
 
   // The InputOTP component uses a hidden input for actual input
   // Type into the OTP input container to trigger the input

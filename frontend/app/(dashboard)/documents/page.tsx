@@ -10,6 +10,7 @@ import {
   Info,
   Pencil,
   PercentIcon,
+  Plus,
   SendHorizontal,
 } from "lucide-react";
 import type { Route } from "next";
@@ -30,7 +31,7 @@ import Status, { type Variant as StatusVariant } from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -40,6 +41,7 @@ import type { RouterOutput } from "@/trpc";
 import { DocumentTemplateType, DocumentType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
 import { formatDate } from "@/utils/time";
+import { useIsMobile } from "@/utils/use-mobile";
 
 type Document = RouterOutput["documents"]["list"][number];
 type SignableDocument = Document & { docusealSubmissionId: number };
@@ -93,10 +95,10 @@ function getStatus(document: Document): { variant: StatusVariant | undefined; na
 }
 
 const EditTemplates = () => {
+  const isMobile = useIsMobile();
   const company = useCurrentCompany();
   const router = useRouter();
 
-  const [open, setOpen] = useState(false);
   const [templates, { refetch: refetchTemplates }] = trpc.documents.templates.list.useSuspenseQuery({
     companyId: company.id,
   });
@@ -117,85 +119,91 @@ const EditTemplates = () => {
   });
 
   return (
-    <>
-      <Button variant="outline" size="small" onClick={() => setOpen(true)}>
-        <Pencil className="size-4" />
-        Edit templates
-      </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit templates</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
+    <Dialog>
+      <DialogTrigger asChild>
+        {isMobile ? (
+          <Button variant="floating-action">
+            <Plus />
+          </Button>
+        ) : (
+          <Button variant="outline" size="small">
+            <Pencil className="size-4" />
+            Edit templates
+          </Button>
+        )}
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit templates</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Type</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredTemplates.map((template) => (
+                <TableRow key={template.id}>
+                  <TableCell>
+                    <Link href={`/document_templates/${template.id}`} className="after:absolute after:inset-0">
+                      {template.name}
+                    </Link>
+                  </TableCell>
+                  <TableCell>{templateTypeLabels[template.type]}</TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTemplates.map((template) => (
-                  <TableRow key={template.id}>
-                    <TableCell>
-                      <Link href={`/document_templates/${template.id}`} className="after:absolute after:inset-0">
-                        {template.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{templateTypeLabels[template.type]}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <h3 className="text-lg font-medium">Create a new template</h3>
-            <Alert className="mx-4">
-              <Info className="size-4" />
-              <AlertDescription>
-                By creating a custom document template, you acknowledge that Flexile shall not be liable for any claims,
-                liabilities, or damages arising from or related to such documents. See our{" "}
-                <Link href="/terms" className="text-blue-600 hover:underline">
-                  Terms of Service
-                </Link>{" "}
-                for more details.
-              </AlertDescription>
-            </Alert>
-            <div className="grid grid-cols-3 gap-4">
-              <MutationButton
-                idleVariant="outline"
-                className="h-auto rounded-md p-6"
-                mutation={createTemplate}
-                param={{
-                  companyId: company.id,
-                  name: "Consulting agreement",
-                  type: DocumentTemplateType.ConsultingContract,
-                }}
-              >
-                <div className="flex flex-col items-center">
-                  <FileTextIcon className="size-6" />
-                  <span className="mt-2 whitespace-normal">Consulting agreement</span>
-                </div>
-              </MutationButton>
-              <MutationButton
-                idleVariant="outline"
-                className="h-auto rounded-md p-6"
-                mutation={createTemplate}
-                param={{
-                  companyId: company.id,
-                  name: "Equity grant contract",
-                  type: DocumentTemplateType.EquityPlanContract,
-                }}
-              >
-                <div className="flex flex-col items-center">
-                  <PercentIcon className="size-6" />
-                  <span className="mt-2 whitespace-normal">Equity grant contract</span>
-                </div>
-              </MutationButton>
-            </div>
+              ))}
+            </TableBody>
+          </Table>
+          <h3 className="text-lg font-medium">Create a new template</h3>
+          <Alert className="mx-4">
+            <Info className="size-4" />
+            <AlertDescription>
+              By creating a custom document template, you acknowledge that Flexile shall not be liable for any claims,
+              liabilities, or damages arising from or related to such documents. See our{" "}
+              <Link href="/terms" className="text-blue-600 hover:underline">
+                Terms of Service
+              </Link>{" "}
+              for more details.
+            </AlertDescription>
+          </Alert>
+          <div className="grid grid-cols-3 gap-4">
+            <MutationButton
+              idleVariant="outline"
+              className="h-auto rounded-md p-6"
+              mutation={createTemplate}
+              param={{
+                companyId: company.id,
+                name: "Consulting agreement",
+                type: DocumentTemplateType.ConsultingContract,
+              }}
+            >
+              <div className="flex flex-col items-center">
+                <FileTextIcon className="size-6" />
+                <span className="mt-2 whitespace-normal">Consulting agreement</span>
+              </div>
+            </MutationButton>
+            <MutationButton
+              idleVariant="outline"
+              className="h-auto rounded-md p-6"
+              mutation={createTemplate}
+              param={{
+                companyId: company.id,
+                name: "Equity grant contract",
+                type: DocumentTemplateType.EquityPlanContract,
+              }}
+            >
+              <div className="flex flex-col items-center">
+                <PercentIcon className="size-6" />
+                <span className="mt-2 whitespace-normal">Equity grant contract</span>
+              </div>
+            </MutationButton>
           </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
