@@ -5,9 +5,9 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import DatePicker from "@/components/DatePicker";
-import MutationButton from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import RadioButtons from "@/components/RadioButtons";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -73,6 +73,8 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
     onOpenChange(false);
   };
 
+  const submit = form.handleSubmit((values: FormValues) => mutation.mutateAsync(values));
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent>
@@ -85,7 +87,7 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
         </DialogHeader>
 
         <Form {...form}>
-          <form className="space-y-4">
+          <form onSubmit={(e) => void submit(e)} className="space-y-4">
             <FormField
               control={form.control}
               name="return_of_capital"
@@ -127,34 +129,21 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
                 <FormItem>
                   <FormLabel>Total distribution amount</FormLabel>
                   <FormControl>
-                    <NumberInput
-                      {...field}
-                      value={field.value}
-                      onChange={field.onChange}
-                      prefix="$"
-                      decimal
-                      placeholder="0"
-                    />
+                    <NumberInput value={field.value} onChange={field.onChange} prefix="$" decimal placeholder="0" />
                   </FormControl>
                   <p className="text-muted-foreground text-sm">Funds will be paid out to eligible shareholders.</p>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            <DialogFooter>
+              <Button type="submit" disabled={!form.formState.isValid || mutation.isPending}>
+                Create distribution
+              </Button>
+            </DialogFooter>
           </form>
         </Form>
-
-        <DialogFooter>
-          <MutationButton
-            mutation={mutation}
-            param={form.getValues()}
-            errorText={mutation.error?.message}
-            loadingText="Creating distribution..."
-            disabled={!form.formState.isValid}
-          >
-            Create distribution
-          </MutationButton>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
