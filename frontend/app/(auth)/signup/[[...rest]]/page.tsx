@@ -116,7 +116,7 @@ function SignUpContent() {
                     <InputOTPSlot index={5} />
                   </InputOTPGroup>
                 </InputOTP>
-                <Button type="submit" className="mb-4 w-[360px]" disabled={state.otp.length !== 6 || state.loading}>
+                <Button type="submit" className="mb-4 w-[342px]" disabled={state.otp.length !== 6 || state.loading}>
                   {state.loading ? "Creating account..." : "Continue"}
                 </Button>
               </form>
