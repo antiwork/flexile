@@ -154,19 +154,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ) : null}
         </SidebarContent>
 
-        {company.checklistItems.length > 0 ? (
-          <SidebarGroup className="mt-auto px-0 py-0">
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <GettingStarted />
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ) : null}
-
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
+              {company.checklistItems.length > 0 ? <GettingStarted /> : null}
               {canShowTryEquity && showTryEquity ? (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
@@ -179,7 +170,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       tabIndex={0}
                     >
                       <span className="flex items-center gap-2">
-                        <Sparkles className="size-6" />
+                        <Sparkles className="size-4" />
                         <span>Try equity</span>
                       </span>
                       {hovered ? (
