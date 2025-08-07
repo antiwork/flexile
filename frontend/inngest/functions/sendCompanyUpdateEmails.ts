@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, eq, isNotNull, isNull } from "drizzle-orm";
 import { NonRetriableError } from "inngest";
 import { db } from "@/db";
 import {
@@ -7,7 +7,6 @@ import {
   companyContractors,
   companyInvestors,
   companyUpdates,
-  invoices,
   users,
 } from "@/db/schema";
 import env from "@/env";
@@ -63,7 +62,6 @@ export default inngest.createFunction(
 
       const eventData = event.data;
       const recipientTypes = eventData.recipientTypes || update.recipientTypes || ["investors", "active_contractors"];
-      const minBilledAmount = eventData.minBilledAmount || 0;
 
       const baseQuery = (
         relationTable: typeof companyContractors | typeof companyInvestors | typeof companyAdministrators,
@@ -86,65 +84,17 @@ export default inngest.createFunction(
       }
 
       if (recipientTypes.includes("active_contractors")) {
-        if (minBilledAmount > 0) {
-          // Filter contractors by minimum billed amount
-          const activeContractorsWithBilling = db
-            .selectDistinct({ email: users.email })
-            .from(users)
-            .leftJoin(
-              companyContractors,
-              and(
-                eq(users.id, companyContractors.userId),
-                eq(companyContractors.companyId, company.id),
-                isNull(companyContractors.endedAt),
-              ),
-            )
-            .leftJoin(
-              invoices,
-              and(eq(invoices.companyContractorId, companyContractors.id), eq(invoices.status, "paid")),
-            )
-            .where(isNotNull(companyContractors.id))
-            .groupBy(users.email)
-            .having(sql`COALESCE(SUM(${invoices.totalAmountInUsdCents}), 0) >= ${minBilledAmount * 100}`);
-
-          queries.push(activeContractorsWithBilling);
-        } else {
-          const activeContractors = baseQuery(companyContractors).where(
-            and(isNotNull(companyContractors.id), isNull(companyContractors.endedAt)),
-          );
-          queries.push(activeContractors);
-        }
+        const activeContractors = baseQuery(companyContractors).where(
+          and(isNotNull(companyContractors.id), isNull(companyContractors.endedAt)),
+        );
+        queries.push(activeContractors);
       }
 
       if (recipientTypes.includes("alumni_contractors")) {
-        if (minBilledAmount > 0) {
-          // Filter contractors by minimum billed amount
-          const alumniContractorsWithBilling = db
-            .selectDistinct({ email: users.email })
-            .from(users)
-            .leftJoin(
-              companyContractors,
-              and(
-                eq(users.id, companyContractors.userId),
-                eq(companyContractors.companyId, company.id),
-                isNotNull(companyContractors.endedAt),
-              ),
-            )
-            .leftJoin(
-              invoices,
-              and(eq(invoices.companyContractorId, companyContractors.id), eq(invoices.status, "paid")),
-            )
-            .where(isNotNull(companyContractors.id))
-            .groupBy(users.email)
-            .having(sql`COALESCE(SUM(${invoices.totalAmountInUsdCents}), 0) >= ${minBilledAmount * 100}`);
-
-          queries.push(alumniContractorsWithBilling);
-        } else {
-          const alumniContractors = baseQuery(companyContractors).where(
-            and(isNotNull(companyContractors.id), isNotNull(companyContractors.endedAt)),
-          );
-          queries.push(alumniContractors);
-        }
+        const alumniContractors = baseQuery(companyContractors).where(
+          and(isNotNull(companyContractors.id), isNotNull(companyContractors.endedAt)),
+        );
+        queries.push(alumniContractors);
       }
 
       if (queries.length === 0) {
