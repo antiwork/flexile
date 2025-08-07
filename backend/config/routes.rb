@@ -79,7 +79,8 @@ Rails.application.routes.draw do
         end
         resources :oauth, only: [] do
           collection do
-            post :google
+            post :google_login
+            post :google_signup
           end
         end
       end
