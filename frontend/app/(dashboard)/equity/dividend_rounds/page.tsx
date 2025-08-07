@@ -137,7 +137,7 @@ export default function DividendRounds() {
     <>
       <DashboardHeader title="Dividends" />
       {isLoading ? (
-        <TableSkeleton columns={3} />
+        <TableSkeleton columns={6} />
       ) : data.length > 0 ? (
         <DataTable
           searchColumn="name"

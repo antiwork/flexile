@@ -165,7 +165,7 @@ export default function DividendRound() {
       <DashboardHeader title="Dividend" />
       {isDraft ? <DistributionDraftNotice /> : null}
       {isLoading ? (
-        <TableSkeleton columns={4} />
+        <TableSkeleton columns={5} />
       ) : (
         <DataTable table={table} onRowClicked={onRowClicked} searchColumn="investor" />
       )}
