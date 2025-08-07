@@ -10,7 +10,12 @@ export const login = async (page: Page, user: typeof users.$inferSelect) => {
   await page.getByLabel("Work email").fill(user.email);
   await page.getByRole("button", { name: "Log in" }).click();
 
-  await page.getByLabel("Verification code").fill(TEST_OTP_CODE);
+  // Wait for OTP step to appear
+  await page.getByLabel("Verification code").waitFor();
+
+  // The InputOTP component uses a hidden input for actual input
+  // Type into the OTP input container to trigger the input
+  await page.locator('[data-slot="input-otp"]').fill(TEST_OTP_CODE);
   await page.getByRole("button", { name: "Continue" }).click();
 
   await page.waitForURL(/^(?!.*\/login$).*/u);
@@ -39,9 +44,11 @@ export const signup = async (page: Page, email: string) => {
 
   // Wait for OTP step and enter verification code
   await page.getByLabel("Verification code").waitFor();
-  await page.getByLabel("Verification code").fill(TEST_OTP_CODE);
-  await page.getByRole("button", { name: "Continue" }).click();
 
-  // Wait for successful redirect to onboarding or dashboard
+  // The InputOTP component uses a hidden input for actual input
+  // Type into the OTP input container to trigger the input
+  await page.locator('[data-slot="input-otp"]').fill(TEST_OTP_CODE);
+
+  await page.getByRole("button", { name: "Continue" }).click(); // Wait for successful redirect to onboarding or dashboard
   await page.waitForURL(/^(?!.*\/(signup|login)$).*/u);
 };

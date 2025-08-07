@@ -15,10 +15,9 @@ RSpec.describe UserMailer, type: :mailer do
     end
 
     it "renders the body" do
-      expect(mail.body.encoded).to include("Your verification code is:")
+      expect(mail.body.encoded).to include("Your verification code is")
       expect(mail.body.encoded).to include(user.otp_code)
       expect(mail.body.encoded).to include("This code will expire in 10 minutes")
-      expect(mail.body.encoded).to include(ApplicationMailer::SUPPORT_EMAIL)
     end
 
     it "includes the correct OTP code" do

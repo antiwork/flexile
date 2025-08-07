@@ -199,6 +199,9 @@ importers:
       inngest:
         specifier: ^3.27.0
         version: 3.32.7(patch_hash=b859654a83fe3c45179ca9dbe71b7b6917366a67657f37658b146b1264870e28)(next@15.2.4(patch_hash=b88b2148998305bbdabddd07fbda67d9c9f6010995b25120053815e04bd5330b)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(typescript@5.8.2)
+      input-otp:
+        specifier: ^1.4.2
+        version: 1.4.2(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       iso-3166:
         specifier: ^4.3.0
         version: 4.3.0
@@ -4721,6 +4724,12 @@ packages:
         optional: true
       typescript:
         optional: true
+
+  input-otp@1.4.2:
+    resolution: {integrity: sha512-l3jWwYNvrEa6NTCt7BECfCm48GvwuZzkoeG3gBL2w4CHeOXW3eKFmf9UNYkNfYc3mxMrthMnxjIE07MT0zLBQA==}
+    peerDependencies:
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0.0 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0.0 || ^19.0.0-rc
 
   internal-slot@1.1.0:
     resolution: {integrity: sha512-4gd7VpWNQNB4UKKCFFVcp1AVv+FMOgs9NKzjHKusc8jTMhd5eL1NqQqOpE0KzMds804/yHlglp3uxgluOqAPLw==}
@@ -11969,6 +11978,11 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
+
+  input-otp@1.4.2(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
+    dependencies:
+      react: 19.0.0
+      react-dom: 19.0.0(react@19.0.0)
 
   internal-slot@1.1.0:
     dependencies:

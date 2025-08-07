@@ -416,18 +416,19 @@ test.describe("Invoices contractor flow", () => {
       await receivedInvoiceRow.click({ button: "right" });
       await expect(page.getByRole("menuitem").filter({ hasText: "Delete" })).toBeVisible();
 
-      await page.click("body");
+      await page.keyboard.press("Escape");
 
       const paidInvoiceRow = page.getByRole("row").getByText("Paid");
       await paidInvoiceRow.click({ button: "right" });
       await expect(page.getByRole("menuitem").filter({ hasText: "Delete" })).not.toBeVisible();
 
-      await page.click("body");
+      await page.keyboard.press("Escape");
 
       await expect(page.locator("tbody tr")).toHaveCount(3);
 
       const deletableInvoiceRow = page.getByRole("row").getByText("Awaiting approval").first();
       await deletableInvoiceRow.click({ button: "right" });
+      await expect(page.getByRole("menuitem", { name: "Delete" })).toBeVisible();
       await page.getByRole("menuitem", { name: "Delete" }).click();
       await page.getByRole("dialog").waitFor();
       await page.getByRole("button", { name: "Delete" }).click();

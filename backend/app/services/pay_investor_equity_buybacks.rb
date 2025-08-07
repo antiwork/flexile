@@ -20,7 +20,6 @@ class PayInvestorEquityBuybacks
               user.tax_information_confirmed_at.nil?
     return unless user.has_verified_tax_id?
 
-    raise "Feature unsupported for company #{company.id}" unless company.equity_enabled?
     raise "Flexile balance insufficient to pay for equity buybacks to investor #{company_investor.id}" unless Wise::AccountBalance.has_sufficient_flexile_balance?(net_amount_in_usd)
     raise "Unknown country for user #{user.id}" if user.country_code.blank?
 
