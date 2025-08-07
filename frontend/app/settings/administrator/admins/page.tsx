@@ -132,7 +132,7 @@ export default function AdminsPage() {
     <>
       <div className="grid gap-8">
         <hgroup>
-          <h2 className="mb-1 text-xl font-bold">Workspace admins</h2>
+          <h2 className="mb-1 text-3xl font-bold">Workspace admins</h2>
           <p className="text-muted-foreground text-base">Manage access for users with admin roles in your workspace.</p>
         </hgroup>
         {/* override default padding to align table content with page header */}

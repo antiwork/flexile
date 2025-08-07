@@ -81,8 +81,6 @@ class UserComplianceInfo < ApplicationRecord
     end
 
     def sync_with_quickbooks
-      return unless OnboardingState::Worker.new(user:, company: user.company_workers.first!.company).complete?
-
       columns_synced_with_quickbooks = %w[tax_id business_name]
 
       should_sync = if previous_changes.include?(:id)

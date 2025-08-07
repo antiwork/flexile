@@ -76,22 +76,6 @@ RSpec.describe User do
   end
 
   describe "callbacks" do
-    describe "#update_associated_pg_search_documents" do
-      it "updates invoice's search index" do
-        invoice = create(:invoice)
-        invoice.user.update!(legal_name: "Sam UpdatedName")
-
-        expect(invoice.pg_search_document.reload.content).to include("UpdatedName")
-      end
-
-      it "updates company_worker's search index" do
-        company_worker = create(:company_worker, user:)
-        user.reload.update!(legal_name: "Sam UpdatedName")
-
-        expect(company_worker.pg_search_document.reload.content).to include("UpdatedName")
-      end
-    end
-
     describe "#sync_with_quickbooks" do
       context "when user is a contractor" do
         let!(:company_worker_1) { create(:company_worker, user:) }
@@ -119,7 +103,7 @@ RSpec.describe User do
         end
 
         context "when user did not complete onboarding" do
-          before { allow_any_instance_of(OnboardingState::Worker).to receive(:complete?).and_return(false) }
+          before { user.update!(citizenship_country_code: nil) }
 
           it "does not schedule a QuickBooks data sync job when attributes change" do
             expect do

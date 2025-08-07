@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class CompanyInvestor < ApplicationRecord
-  include ExternalId, Searchable
+  include ExternalId
 
   belongs_to :user
   belongs_to :company
@@ -32,10 +32,6 @@ class CompanyInvestor < ApplicationRecord
 
     joins(:company).merge(Company.active)
       .where(id: dividends_subquery)
-  end
-
-  def completed_onboarding?
-    OnboardingState::Investor.new(user:, company:).complete?
   end
 
   def cumulative_dividends_roi

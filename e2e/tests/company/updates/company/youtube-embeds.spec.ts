@@ -129,16 +129,24 @@ test.describe("Company Updates - YouTube Embeds", () => {
 
   test("should allow creating company update with YouTube URL", async ({ page }) => {
     await login(page, adminUser);
-    await page.goto("/updates/company/new");
+    await page.goto("/updates/company");
 
-    await expect(page.getByLabel("Title")).toBeVisible();
-    await expect(page.getByLabel("Video URL (optional)")).toBeVisible();
+    await page.getByRole("button", { name: "New update" }).click();
+    await expect(page.getByRole("dialog", { name: "New company update" })).toBeVisible();
 
-    await page.getByLabel("Title").fill("Test Update with YouTube Video");
-    await page.getByLabel("Video URL (optional)").fill(ANTIWORK_VIDEO.fullUrl);
+    await withinModal(
+      async (modal) => {
+        await expect(modal.getByLabel("Title")).toBeVisible();
+        await expect(modal.getByLabel("Video URL (optional)")).toBeVisible();
 
-    await expect(page.getByLabel("Title")).toHaveValue("Test Update with YouTube Video");
-    await expect(page.getByLabel("Video URL (optional)")).toHaveValue(ANTIWORK_VIDEO.fullUrl);
+        await modal.getByLabel("Title").fill("Test Update with YouTube Video");
+        await modal.getByLabel("Video URL (optional)").fill(ANTIWORK_VIDEO.fullUrl);
+
+        await expect(modal.getByLabel("Title")).toHaveValue("Test Update with YouTube Video");
+        await expect(modal.getByLabel("Video URL (optional)")).toHaveValue(ANTIWORK_VIDEO.fullUrl);
+      },
+      { page, title: "New company update" },
+    );
   });
 
   test("should handle YouTube URLs with additional parameters", async ({ page }) => {

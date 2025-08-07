@@ -21,7 +21,6 @@ const env = z
     DOMAIN: z.string(),
     DOCUSEAL_TOKEN: z.string(),
     DOCUSEAL_USER_EMAIL: z.string(),
-    CLERK_SECRET_KEY: z.string(),
     SLACK_WEBHOOK_URL: z.string(),
     SLACK_WEBHOOK_CHANNEL: z.string(),
     SLACK_TOKEN: z.string(),
@@ -29,6 +28,7 @@ const env = z
     VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
     WISE_PROFILE_ID: z.string(),
     WISE_API_KEY: z.string(),
+    HELPER_HMAC_SECRET: z.string(),
   })
   .parse(process.env);
 

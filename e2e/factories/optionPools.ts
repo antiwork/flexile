@@ -12,7 +12,7 @@ export const optionPoolsFactory = {
         companyId: overrides.companyId || (await companiesFactory.create()).company.id,
         shareClassId: overrides.shareClassId || (await shareClassesFactory.create()).shareClass.id,
         name: overrides.name || "Best equity plan",
-        authorizedShares: overrides.authorizedShares || 100n,
+        authorizedShares: overrides.authorizedShares || 10000n,
         issuedShares: overrides.issuedShares || 50n,
         ...overrides,
       })

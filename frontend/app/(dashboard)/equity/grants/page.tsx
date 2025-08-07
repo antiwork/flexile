@@ -1,8 +1,9 @@
 "use client";
-import { CircleAlert, CircleCheck, Info, Pencil } from "lucide-react";
+import { CircleAlert, CircleCheck, Info, Pencil, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import NewEquityGrantModal from "@/app/(dashboard)/equity/grants/NewEquityGrantModal";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
@@ -10,13 +11,6 @@ import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,13 +26,16 @@ import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
+import { useIsMobile } from "@/utils/use-mobile";
 
 type EquityGrant = RouterOutput["equityGrants"]["list"][number];
 export default function GrantsPage() {
+  const isMobile = useIsMobile();
   const router = useRouter();
   const company = useCurrentCompany();
   const { data = [], isLoading, refetch } = trpc.equityGrants.list.useQuery({ companyId: company.id });
   const [cancellingGrantId, setCancellingGrantId] = useState<string | null>(null);
+  const [showNewGrantModal, setShowNewGrantModal] = useState(false);
   const cancellingGrant = data.find((grant) => grant.id === cancellingGrantId);
   const cancelGrant = trpc.equityGrants.cancel.useMutation({
     onSuccess: () => {
@@ -88,31 +85,25 @@ export default function GrantsPage() {
   return (
     <>
       <DashboardHeader
-        title={
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>Equity</BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Equity grants</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        }
+        title="Equity grants"
         headerActions={
           equityPlanContractTemplates.length > 0 ? (
-            <Button asChild>
-              <Link href={`/companies/${company.id}/administrator/equity_grants/new`}>
+            isMobile ? (
+              <Button variant="floating-action" onClick={() => setShowNewGrantModal(true)}>
+                <Plus />
+              </Button>
+            ) : (
+              <Button onClick={() => setShowNewGrantModal(true)}>
                 <Pencil className="size-4" />
                 New option grant
-              </Link>
-            </Button>
+              </Button>
+            )
           ) : null
         }
       />
 
       {equityPlanContractTemplates.length === 0 ? (
-        <Alert>
+        <Alert className="mx-4">
           <Info />
           <AlertDescription>
             <Link href="/documents" className={linkClasses}>
@@ -127,7 +118,9 @@ export default function GrantsPage() {
       ) : data.length > 0 ? (
         <DataTable table={table} onRowClicked={(row) => router.push(`/people/${row.user.id}`)} />
       ) : (
-        <Placeholder icon={CircleCheck}>There are no option grants right now.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>There are no option grants right now.</Placeholder>
+        </div>
       )}
       <Dialog open={!!cancellingGrantId} onOpenChange={() => setCancellingGrantId(null)}>
         <DialogContent>
@@ -158,7 +151,7 @@ export default function GrantsPage() {
                   <p className="text-sm text-red-500">{cancellingGrant.unvestedShares.toLocaleString()}</p>
                 </div>
               </div>
-              <Alert variant="destructive">
+              <Alert className="mx-4" variant="destructive">
                 <CircleAlert className="size-4" />
                 <AlertTitle>Important note</AlertTitle>
                 <AlertDescription>
@@ -182,6 +175,7 @@ export default function GrantsPage() {
           ) : null}
         </DialogContent>
       </Dialog>
+      <NewEquityGrantModal open={showNewGrantModal} onOpenChange={setShowNewGrantModal} />
     </>
   );
 }
