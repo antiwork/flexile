@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_07_054733) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_07_070620) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -382,7 +382,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_07_054733) do
     t.boolean "return_of_capital", null: false
     t.boolean "ready_for_payment", default: false, null: false
     t.text "release_document"
-    t.bigint "consolidated_invoice_id"
     t.index ["company_id"], name: "index_dividend_rounds_on_company_id"
     t.index ["external_id"], name: "index_dividend_rounds_on_external_id", unique: true
   end
