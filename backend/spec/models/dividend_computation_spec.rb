@@ -69,7 +69,7 @@ RSpec.describe DividendComputation do
                                   implied_shares: 497_092.to_d / 2_000_000_00.to_d * 966_308_66.to_d,
                                   principal_value_in_cents: 966_308_66)
 
-    @dividend_computation = DividendComputationGeneration.new(company, amount_in_usd: 1_000_000, return_of_capital: false, name: "Test Dividend").process
+    @dividend_computation = DividendComputationGeneration.new(company, amount_in_usd: 1_000_000, return_of_capital: false).process
   end
 
   describe "#to_csv" do
@@ -280,14 +280,14 @@ RSpec.describe DividendComputation do
     end
 
     it "handles edge case with no dividend computation outputs" do
-      empty_computation = create(:dividend_computation, company: company, total_amount_in_usd: 0, dividends_issuance_date: Date.current, name: "Empty")
+      empty_computation = create(:dividend_computation, company: company, total_amount_in_usd: 0, dividends_issuance_date: Date.current)
 
       result = empty_computation.broken_down_by_investor
       expect(result).to eq([])
     end
 
     it "handles edge case with only SAFE investors" do
-      safe_only_computation = create(:dividend_computation, company: company, total_amount_in_usd: 100_000, dividends_issuance_date: Date.current, name: "SAFE Only")
+      safe_only_computation = create(:dividend_computation, company: company, total_amount_in_usd: 100_000, dividends_issuance_date: Date.current)
 
       # Create only SAFE outputs
       create(:dividend_computation_output,
@@ -313,7 +313,7 @@ RSpec.describe DividendComputation do
     end
 
     it "handles edge case with only share-based investors" do
-      shares_only_computation = create(:dividend_computation, company: company, total_amount_in_usd: 100_000, dividends_issuance_date: Date.current, name: "Shares Only")
+      shares_only_computation = create(:dividend_computation, company: company, total_amount_in_usd: 100_000, dividends_issuance_date: Date.current)
 
       # Create only share-based outputs
       create(:dividend_computation_output,

@@ -8,7 +8,6 @@ class DividendComputation < ApplicationRecord
 
   validates :total_amount_in_usd, presence: true
   validates :dividends_issuance_date, presence: true
-  validates :name, presence: true
 
   def to_csv
     CSV.generate(headers: true) do |csv|

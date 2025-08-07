@@ -25,7 +25,6 @@ const DIVIDEND_ROUND_STATUS = {
 
 type TransformedData = {
   id: bigint;
-  name: string;
   totalAmountInUsd: string;
   numberOfShareholders: bigint;
   returnOfCapital: boolean;
@@ -58,7 +57,6 @@ export default function DividendRounds() {
         rounds.map((round) => ({
           ...round,
           type: "round" as const,
-          name: "—",
           dividendsIssuanceDate: round.issuedAt,
           totalAmountInUsd: String(round.totalAmountInCents / 100n),
         })),
@@ -71,10 +69,6 @@ export default function DividendRounds() {
 
   const columnHelper = createColumnHelper<TransformedData>();
   const columns = [
-    columnHelper.accessor("name", {
-      header: "Name",
-      cell: (info) => info.getValue(),
-    }),
     columnHelper.accessor("returnOfCapital", {
       header: "Type",
       cell: (info) => (info.getValue() ? "Return of capital" : "Dividend"),
@@ -120,7 +114,6 @@ export default function DividendRounds() {
   const table = useTable({
     columns,
     data,
-    enableGlobalFilter: true,
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     initialState: {
@@ -137,10 +130,9 @@ export default function DividendRounds() {
     <>
       <DashboardHeader title="Dividends" />
       {isLoading ? (
-        <TableSkeleton columns={6} />
+        <TableSkeleton columns={5} />
       ) : data.length > 0 ? (
         <DataTable
-          searchColumn="name"
           table={table}
           onRowClicked={(row) => router.push(`/equity/dividend_rounds/${row.type}/${row.id}`)}
           actions={

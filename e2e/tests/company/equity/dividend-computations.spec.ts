@@ -79,7 +79,6 @@ test.describe("Dividend Computations", () => {
     await withinModal(
       async (modal) => {
         await expect(modal.getByRole("heading", { name: "Start a new distribution" })).toBeVisible();
-        await modal.getByLabel("Distribution name").fill("Q4 2024 Dividend");
         await modal.getByLabel("Total distribution amount").fill("50000");
         await expect(modal.getByText("Start a new distribution")).toBeVisible();
         await modal.getByRole("button", { name: "Create distribution" }).click();
@@ -88,7 +87,6 @@ test.describe("Dividend Computations", () => {
     );
 
     await expect(page.getByRole("dialog")).not.toBeVisible();
-    await expect(page.getByText("Q4 2024 Dividend")).toBeVisible();
     await expect(page.getByText("Draft")).toBeVisible();
     await expect(page.getByText("50,000")).toBeVisible();
 
@@ -96,7 +94,6 @@ test.describe("Dividend Computations", () => {
       .findFirst({ where: eq(dividendComputations.companyId, company.id) })
       .then(takeOrThrow);
 
-    expect(computation.name).toBe("Q4 2024 Dividend");
     expect(computation.totalAmountInUsd).toBe("50000.0");
     expect(computation.returnOfCapital).toBe(false);
   });

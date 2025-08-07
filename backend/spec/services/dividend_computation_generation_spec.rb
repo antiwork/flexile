@@ -65,14 +65,13 @@ RSpec.describe DividendComputationGeneration do
 
     dividend_computation = nil
     expect do
-      dividend_computation = described_class.new(company, amount_in_usd: 1_000_000, return_of_capital: false, name: "Test Distribution 2024").process
+      dividend_computation = described_class.new(company, amount_in_usd: 1_000_000, return_of_capital: false).process
     end.to change { company.dividend_computations.count }.by(1)
        .and change { DividendComputationOutput.count }.by(10) # 1 record per investor per share class
 
     expect(dividend_computation.company).to eq(company)
     expect(dividend_computation.total_amount_in_usd).to eq(1_000_000)
     expect(dividend_computation.return_of_capital).to eq(false)
-    expect(dividend_computation.name).to eq("Test Distribution 2024")
     expect(dividend_computation.dividend_computation_outputs.count).to eq(10)
 
     # $ Available after paying dividend to preferred shares
@@ -211,10 +210,5 @@ RSpec.describe DividendComputationGeneration do
     # Assert sum of all computed dividends
     # It's more than the input that is 1M because of rounding up. This was the case when Cooley did the calculation too.
     expect(dividend_computation.dividend_computation_outputs.sum(:total_amount_in_usd)).to eq(1_000_000.05)
-
-    # Error is thrown when name is not provided
-    expect do
-      described_class.new(company, amount_in_usd: 500_000, return_of_capital: true).process
-    end.to raise_error(ArgumentError, /missing keyword: :name/)
   end
 end

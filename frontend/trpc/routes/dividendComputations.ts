@@ -16,7 +16,6 @@ export const dividendComputationsRouter = createRouter({
         totalAmountInUsd: dividendComputations.totalAmountInUsd,
         dividendsIssuanceDate: dividendComputations.dividendsIssuanceDate,
         returnOfCapital: dividendComputations.returnOfCapital,
-        name: dividendComputations.name,
         numberOfShareholders: sql<number>`
           COUNT(DISTINCT ${dividendComputationOutputs.companyInvestorId})
         `,

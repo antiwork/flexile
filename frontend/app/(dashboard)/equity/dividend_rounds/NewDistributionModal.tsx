@@ -17,7 +17,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
@@ -30,7 +29,6 @@ interface NewDistributionModalProps {
 
 const schema = z.object({
   return_of_capital: z.boolean(),
-  name: z.string().min(1, "Distribution name is required"),
   dividends_issuance_date: z.instanceof(CalendarDate, { message: "This field is required." }),
   amount_in_usd: z.number().min(0.01, "Amount must be greater than 0"),
 });
@@ -42,7 +40,6 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
     resolver: zodResolver(schema),
     defaultValues: {
       return_of_capital: false,
-      name: "",
       dividends_issuance_date: today(getLocalTimeZone()),
       amount_in_usd: 0,
     },
@@ -107,20 +104,6 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
                         className="grid-flow-col"
                       />
                     </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Distribution name</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
