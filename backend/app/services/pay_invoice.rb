@@ -69,12 +69,10 @@ class PayInvoice
     payment.update!(status: Payment::FAILED)
     invoice.update!(status: Invoice::FAILED)
 
-    unless e.message.include?("Bank account is no longer active")
-      target_currency = payment.wise_recipient&.currency || "USD"
-      amount = payment.net_amount_in_cents / 100.0
+    target_currency = payment.wise_recipient&.currency || "USD"
+    amount = payment.cash_amount_in_usd
 
-      CompanyWorkerMailer.payment_failed(payment.id, amount, target_currency).deliver_later
-    end
+    CompanyWorkerMailer.payment_failed(payment.id, amount, target_currency).deliver_later
 
     raise e
   end
