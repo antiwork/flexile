@@ -18,7 +18,7 @@ function parseCookies(cookieHeader: string): Map<string, string> {
   return cookieMap;
 }
 
-function handler(req: NextRequest, context: { params: { nextauth: string[] } }) {
+function handler(req: NextRequest, ...params: unknown[]) {
   const cookies = req.headers.get("cookie") || "";
   const cookieMap = parseCookies(cookies);
   const authContext = cookieMap.get("auth_context");
@@ -94,7 +94,7 @@ function handler(req: NextRequest, context: { params: { nextauth: string[] } }) 
   };
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
-  return NextAuth(augmentedOptions)(req, context);
+  return NextAuth(augmentedOptions)(req, ...params);
 }
 
 export { handler as GET, handler as POST };
