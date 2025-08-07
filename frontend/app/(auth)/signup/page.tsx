@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { z } from "zod";
+import { linkClasses } from "@/components/Link";
 import { request } from "@/utils/request";
 import { AuthPage } from "..";
 
@@ -13,7 +14,7 @@ export default function SignUpPage() {
       switcher={
         <>
           Already using Flexile?{" "}
-          <Link href="/login" className="text-blue-600 hover:underline">
+          <Link href="/login" className={linkClasses}>
             Log in
           </Link>
         </>

@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { linkClasses } from "@/components/Link";
 import { AuthPage } from "..";
 
 export default function LoginPage() {
@@ -11,7 +12,7 @@ export default function LoginPage() {
       switcher={
         <>
           Don't have an account?{" "}
-          <Link href="/signup" className="text-blue-600 hover:underline">
+          <Link href="/signup" className={linkClasses}>
             Sign up
           </Link>
         </>

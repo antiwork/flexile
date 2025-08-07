@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import logo from "@/public/logo-icon.svg";
 import { request } from "@/utils/request";
 
@@ -125,7 +125,6 @@ export function AuthPage({
                   name="otp"
                   render={({ field }) => (
                     <FormItem className="justify-items-center">
-                      <FormLabel>Verification code</FormLabel>
                       <FormControl>
                         <InputOTP
                           {...field}
@@ -142,7 +141,6 @@ export function AuthPage({
                             <InputOTPSlot index={1} />
                             <InputOTPSlot index={2} />
                           </InputOTPGroup>
-                          <InputOTPSeparator />
                           <InputOTPGroup>
                             <InputOTPSlot index={3} />
                             <InputOTPSlot index={4} />
@@ -158,16 +156,10 @@ export function AuthPage({
                   Continue
                 </MutationStatusButton>
                 <div className="text-center">
-                  <Button
-                    className="w-full"
-                    variant="outline"
-                    onClick={() => sendOtp.reset()}
-                    disabled={verifyOtp.isPending}
-                  >
+                  <Button variant="link" onClick={() => sendOtp.reset()} disabled={verifyOtp.isPending}>
                     Back to email
                   </Button>
                 </div>
-                <div className="text-center text-sm text-gray-600">{switcher}</div>
               </form>
             </Form>
           ) : null}
@@ -181,7 +173,13 @@ export function AuthPage({
                     <FormItem>
                       <FormLabel>Work email</FormLabel>
                       <FormControl>
-                        <Input {...field} type="email" placeholder="Enter your work email..." required />
+                        <Input
+                          {...field}
+                          type="email"
+                          placeholder="Enter your work email..."
+                          className="bg-white"
+                          required
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -191,7 +189,7 @@ export function AuthPage({
                   {sendOtpText}
                 </MutationStatusButton>
 
-                <div className="text-center text-sm text-gray-600">{switcher}</div>
+                <div className="text-center text-gray-600">{switcher}</div>
               </form>
             </Form>
           ) : null}
