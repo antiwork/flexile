@@ -76,87 +76,85 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent>
-        <div className="space-y-4">
-          <DialogHeader>
-            <DialogTitle>Start a new distribution</DialogTitle>
-            <DialogDescription>
-              Set the record date, enter the distribution amount, and confirm shareholder eligibility to start your
-              distribution round.
-            </DialogDescription>
-          </DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Start a new distribution</DialogTitle>
+          <DialogDescription>
+            Set the record date, enter the distribution amount, and confirm shareholder eligibility to start your
+            distribution round.
+          </DialogDescription>
+        </DialogHeader>
 
-          <Form {...form}>
-            <form className="space-y-4">
-              <FormField
-                control={form.control}
-                name="return_of_capital"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Type of distribution</FormLabel>
-                    <FormControl>
-                      <RadioButtons
-                        options={[
-                          { label: "Dividend", value: false },
-                          { label: "Return of capital", value: true },
-                        ]}
-                        value={field.value}
-                        onChange={field.onChange}
-                        className="grid-flow-col"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+        <Form {...form}>
+          <form className="space-y-4">
+            <FormField
+              control={form.control}
+              name="return_of_capital"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Type of distribution</FormLabel>
+                  <FormControl>
+                    <RadioButtons
+                      options={[
+                        { label: "Dividend", value: false },
+                        { label: "Return of capital", value: true },
+                      ]}
+                      value={field.value}
+                      onChange={field.onChange}
+                      className="grid-flow-col"
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="dividends_issuance_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <DatePicker {...field} label="Payment date" granularity="day" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="dividends_issuance_date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <DatePicker {...field} label="Payment date" granularity="day" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="amount_in_usd"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Total distribution amount</FormLabel>
-                    <FormControl>
-                      <NumberInput
-                        {...field}
-                        value={field.value}
-                        onChange={field.onChange}
-                        prefix="$"
-                        decimal
-                        placeholder="0"
-                      />
-                    </FormControl>
-                    <p className="text-muted-foreground text-sm">Funds will be paid out to eligible shareholders.</p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </form>
-          </Form>
+            <FormField
+              control={form.control}
+              name="amount_in_usd"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Total distribution amount</FormLabel>
+                  <FormControl>
+                    <NumberInput
+                      {...field}
+                      value={field.value}
+                      onChange={field.onChange}
+                      prefix="$"
+                      decimal
+                      placeholder="0"
+                    />
+                  </FormControl>
+                  <p className="text-muted-foreground text-sm">Funds will be paid out to eligible shareholders.</p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </form>
+        </Form>
 
-          <DialogFooter>
-            <MutationButton
-              mutation={mutation}
-              param={form.getValues()}
-              errorText={mutation.error?.message}
-              loadingText="Creating distribution..."
-              disabled={!form.formState.isValid}
-            >
-              Create distribution
-            </MutationButton>
-          </DialogFooter>
-        </div>
+        <DialogFooter>
+          <MutationButton
+            mutation={mutation}
+            param={form.getValues()}
+            errorText={mutation.error?.message}
+            loadingText="Creating distribution..."
+            disabled={!form.formState.isValid}
+          >
+            Create distribution
+          </MutationButton>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
