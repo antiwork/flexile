@@ -138,7 +138,7 @@ export function AuthPage({
             {sendOtp.isSuccess ? "Check your email for a code" : title}
           </CardTitle>
           <CardDescription>
-            {sendOtp.isSuccess ? "We've sent a 6-digit code to your email." : description}
+            {sendOtp.isSuccess ? "We’ve sent a 6-digit code to your email." : description}
           </CardDescription>
         </CardHeader>
         <CardContent>
