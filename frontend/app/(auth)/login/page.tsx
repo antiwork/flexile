@@ -64,7 +64,7 @@ function LoginContent() {
                   <span className="w-full border-t" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background text-muted-foreground px-2">Or continue with email</span>
+                  <span className="text-muted-foreground bg-[#F8F8F8] px-2">Or continue with email</span>
                 </div>
               </div>
 
