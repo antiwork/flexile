@@ -23,7 +23,7 @@ export const login = async (page: Page, user: typeof users.$inferSelect) => {
   await page.getByRole("button", { name: "Continue" }).click();
 
   // Wait for successful redirect
-  await page.waitForURL(/^(?!.*\/login$).*/);
+  await page.waitForURL(/^(?!.*\/login$).*/u);
 };
 
 export const logout = async (page: Page) => {
@@ -33,7 +33,7 @@ export const logout = async (page: Page) => {
   await page.getByRole("button", { name: "Log out" }).first().click();
 
   // Wait for redirect to login
-  await page.waitForURL(/.*\/login.*/);
+  await page.waitForURL(/.*\/login.*/u);
   await page.waitForLoadState("networkidle");
 };
 
@@ -55,5 +55,5 @@ export const signup = async (page: Page, email: string) => {
   await page.locator('[data-slot="input-otp"]').fill(TEST_OTP_CODE);
 
   await page.getByRole("button", { name: "Continue" }).click(); // Wait for successful redirect to onboarding or dashboard
-  await page.waitForURL(/^(?!.*\/(signup|login)$).*/);
+  await page.waitForURL(/^(?!.*\/(signup|login)$).*/u);
 };

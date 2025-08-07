@@ -148,7 +148,6 @@ export default [
       "no-console": "off",
       "no-debugger": "error",
       "no-empty-pattern": "off",
-      "require-unicode-regexp": "off",
       "no-restricted-syntax": [
         "error",
         {
