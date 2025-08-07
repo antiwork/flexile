@@ -12,11 +12,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import googleIcon from "@/images/google.svg";
 import logo from "@/public/logo-icon.svg";
 import { request } from "@/utils/request";
 
 const emailSchema = z.object({ email: z.string().email() });
 const otpSchema = z.object({ otp: z.string().length(6) });
+
+const getRedirectUrl = () => {
+  const redirectUrl =
+    typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect_url") : null;
+  return redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "/dashboard";
+};
 
 export function AuthPage({
   title,
@@ -68,12 +75,8 @@ export function AuthPage({
       if (!session?.user.email) throw new Error("Invalid verification code");
       await queryClient.resetQueries({ queryKey: ["currentUser", session.user.email] });
 
-      const redirectUrl =
-        typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect_url") : null;
-      router.replace(
-        // @ts-expect-error - Next currently does not allow checking this at runtime - the leading / ensures this is safe
-        redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "/dashboard",
-      );
+      // @ts-expect-error - Next currently does not allow checking this at runtime - the leading / ensures this is safe
+      router.replace(getRedirectUrl());
     },
   });
   const emailForm = useForm({
@@ -102,6 +105,17 @@ export function AuthPage({
     }
   });
 
+  const handleGoogleAuth = async () => {
+    const context = sendOtpText === "Sign up" ? "signup" : "login";
+    document.cookie = `auth_context=${context}; path=/; max-age=300`;
+
+    if (invitationToken) {
+      document.cookie = `auth_invitation_token=${invitationToken}; path=/; max-age=300`;
+    }
+
+    await signIn("google", { callbackUrl: getRedirectUrl() });
+  };
+
   return (
     <div className="flex items-center justify-center">
       <Card className="w-full max-w-md border-0 bg-transparent">
@@ -113,7 +127,7 @@ export function AuthPage({
             {sendOtp.isSuccess ? "Check your email for a code" : title}
           </CardTitle>
           <CardDescription>
-            {sendOtp.isSuccess ? "We’ve sent a 6-digit code to your email." : description}
+            {sendOtp.isSuccess ? "We've sent a 6-digit code to your email." : description}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -175,34 +189,56 @@ export function AuthPage({
             </Form>
           ) : null}
           {!sendOtp.isSuccess ? (
-            <Form {...emailForm}>
-              <form onSubmit={(e) => void submitEmailForm(e)} className="space-y-4">
-                <FormField
-                  control={emailForm.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Work email</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="email"
-                          placeholder="Enter your work email..."
-                          className="bg-white"
-                          required
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <MutationStatusButton mutation={sendOtp} type="submit" className="w-full" loadingText="Sending...">
-                  {sendOtpText}
-                </MutationStatusButton>
+            <div className="space-y-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex w-full items-center gap-2"
+                onClick={() => void handleGoogleAuth()}
+                disabled={sendOtp.isPending}
+              >
+                <Image src={googleIcon} alt="Google" className="size-4" />
+                Continue with Google
+              </Button>
 
-                <div className="pt-6 text-center text-gray-600">{switcher}</div>
-              </form>
-            </Form>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="text-muted-foreground bg-[#F8F8F8] px-2">Or continue with email</span>
+                </div>
+              </div>
+
+              <Form {...emailForm}>
+                <form onSubmit={(e) => void submitEmailForm(e)} className="space-y-4">
+                  <FormField
+                    control={emailForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Work email</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="email"
+                            placeholder="Enter your work email..."
+                            className="bg-white"
+                            required
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <MutationStatusButton mutation={sendOtp} type="submit" className="w-full" loadingText="Sending...">
+                    {sendOtpText}
+                  </MutationStatusButton>
+
+                  <div className="pt-6 text-center text-gray-600">{switcher}</div>
+                </form>
+              </Form>
+            </div>
           ) : null}
         </CardContent>
       </Card>

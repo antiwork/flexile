@@ -3,6 +3,7 @@ import NextAuth from "next-auth";
 import type { Account, User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
+import env from "@/env";
 import { authOptions } from "@/lib/auth";
 
 function parseCookies(cookieHeader: string): Map<string, string> {
@@ -78,10 +79,11 @@ function handler(req: NextRequest, ...params: unknown[]) {
         if (account?.provider === "google") {
           const invitationToken = cookieMap.get("auth_invitation_token");
 
-          const endpoint = authContext === "signup" ? "/api/google-signup" : "/api/google-login";
+          const endpoint = authContext === "signup" ? "/internal/oauth/google_signup" : "/internal/oauth/google_login";
           const requestBody: Record<string, unknown> = {
             email: user.email,
             google_id: user.id,
+            token: env.API_SECRET_TOKEN,
           };
 
           if (invitationToken) {
