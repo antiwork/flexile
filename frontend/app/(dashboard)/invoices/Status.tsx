@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
+import { cn } from "@/utils";
 import { formatDate } from "@/utils/time";
 
 type Invoice = Pick<
@@ -15,7 +16,7 @@ type Invoice = Pick<
 >;
 const MID_PAYMENT_INVOICE_STATES: Invoice["status"][] = ["payment_pending", "processing"];
 
-export function StatusDetails({ invoice }: { invoice: Invoice }) {
+export function StatusDetails({ invoice, className }: { invoice: Invoice; className?: string }) {
   const company = useCurrentCompany();
   const user = useCurrentUser();
   const [{ invoice: consolidatedInvoice }] = trpc.consolidatedInvoices.last.useSuspenseQuery({ companyId: company.id });
@@ -48,7 +49,7 @@ export function StatusDetails({ invoice }: { invoice: Invoice }) {
   })();
 
   return details ? (
-    <Alert className="mx-4" variant={invoice.status === "rejected" ? "destructive" : undefined}>
+    <Alert className={cn("mx-4", className)} variant={invoice.status === "rejected" ? "destructive" : undefined}>
       <AlertDescription>{details}</AlertDescription>
     </Alert>
   ) : null;

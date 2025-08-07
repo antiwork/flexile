@@ -1,5 +1,5 @@
 "use client";
-import { CircleCheck, Trash2 } from "lucide-react";
+import { CircleCheck, Plus, Trash2 } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import CompanyUpdateModal from "@/app/(dashboard)/updates/company/CompanyUpdateModal";
 import ViewUpdateDialog from "@/app/(dashboard)/updates/company/ViewUpdateDialog";
@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
+import { useIsMobile } from "@/utils/use-mobile";
 
 const useData = () => {
   const company = useCurrentCompany();
@@ -24,6 +25,7 @@ const useData = () => {
 type UpdateListItem = ReturnType<typeof useData>["updates"][number];
 
 export default function CompanyUpdates() {
+  const isMobile = useIsMobile();
   const user = useCurrentUser();
   const { updates, isLoading } = useData();
   const [showModal, setShowModal] = useState(false);
@@ -48,7 +50,17 @@ export default function CompanyUpdates() {
     <>
       <DashboardHeader
         title="Updates"
-        headerActions={user.roles.administrator ? <Button onClick={handleNewUpdate}>New update</Button> : null}
+        headerActions={
+          user.roles.administrator ? (
+            isMobile ? (
+              <Button variant="floating-action" onClick={handleNewUpdate}>
+                <Plus />
+              </Button>
+            ) : (
+              <Button onClick={handleNewUpdate}>New update</Button>
+            )
+          ) : null
+        }
       />
 
       {isLoading ? (
