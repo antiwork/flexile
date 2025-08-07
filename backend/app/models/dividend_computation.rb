@@ -24,7 +24,7 @@ class DividendComputation < ApplicationRecord
     end
   end
 
-  def to_per_investor
+  def broken_down_by_investor
     share_dividends, safe_dividends = dividends_info
 
     company_investor_ids = share_dividends.keys
@@ -61,7 +61,7 @@ class DividendComputation < ApplicationRecord
   def to_per_investor_csv
     CSV.generate(headers: true) do |csv|
       csv << ["Investor", "Investor ID", "Number of shares", "Amount (USD)"]
-      to_per_investor.each do |investor_data|
+      broken_down_by_investor.each do |investor_data|
         csv << [
           investor_data[:investor_name],
           investor_data[:company_investor_id],
