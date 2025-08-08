@@ -17,7 +17,7 @@ import { formatMoney } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { investor_breakdown_company_dividend_computation_path } from "@/utils/routes";
 
-export default function DividendRoundsPage() {
+export default function DividendRoundPage() {
   const { id, type } = useParams<{ id: string; type: "draft" | "round" }>();
   const isDraft = type === "draft";
 
