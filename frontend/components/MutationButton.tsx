@@ -26,7 +26,6 @@ export const MutationStatusButton = <T extends unknown>({
 
   return (
     <Button
-      className="whitespace-normal"
       disabled={mutation.isPending || !!success || !!error || disabled}
       variant={success ? "success" : error ? "critical" : idleVariant}
       {...buttonProps}
