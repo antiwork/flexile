@@ -87,6 +87,7 @@ export function AuthPage({
       if (!session?.user.email) throw new Error("Invalid verification code");
       await queryClient.resetQueries({ queryKey: ["currentUser", session.user.email] });
 
+      localStorage.setItem("lastLoginMethod", "email");
       // @ts-expect-error - Next currently does not allow checking this at runtime - the leading / ensures this is safe
       router.replace(getRedirectUrl());
     },
@@ -128,6 +129,7 @@ export function AuthPage({
 
     try {
       await signIn("google", { callbackUrl: getRedirectUrl() });
+      localStorage.setItem("lastLoginMethod", "google");
     } catch (error) {
       setGoogleAuthError(error instanceof Error ? error.message : "Failed to continue with Google");
     }
