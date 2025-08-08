@@ -62,6 +62,9 @@ export default function RecipientSelector({ value, onChange, counts }: Recipient
   );
 
   const handleToggle = (type: RecipientType) => {
+    // Admins must always be selected
+    if (type === "admins") return;
+
     if (value.includes(type)) {
       onChange(value.filter((t) => t !== type));
     } else {
@@ -71,6 +74,8 @@ export default function RecipientSelector({ value, onChange, counts }: Recipient
 
   const handleRemove = (type: RecipientType, e: React.MouseEvent) => {
     e.stopPropagation();
+    // Admins must always be selected
+    if (type === "admins") return;
     onChange(value.filter((t) => t !== type));
   };
 
@@ -78,7 +83,11 @@ export default function RecipientSelector({ value, onChange, counts }: Recipient
     (e: React.KeyboardEvent) => {
       if ((e.key === "Delete" || e.key === "Backspace") && value.length > 0) {
         e.preventDefault();
-        onChange(value.slice(0, -1));
+        // Don't remove if the last item is admins
+        const lastItem = value[value.length - 1];
+        if (lastItem !== "admins") {
+          onChange(value.slice(0, -1));
+        }
       }
     },
     [value, onChange],
@@ -119,13 +128,15 @@ export default function RecipientSelector({ value, onChange, counts }: Recipient
                   value.map((type) => (
                     <Badge key={type} variant="secondary" className="gap-1">
                       {getLabel(type)}
-                      <button
-                        type="button"
-                        onClick={(e) => handleRemove(type, e)}
-                        className="ring-offset-background focus:ring-ring ml-1 rounded-full outline-none focus:ring-2 focus:ring-offset-2"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
+                      {type !== "admins" && (
+                        <button
+                          type="button"
+                          onClick={(e) => handleRemove(type, e)}
+                          className="ring-offset-background focus:ring-ring ml-1 rounded-full outline-none focus:ring-2 focus:ring-offset-2"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
                     </Badge>
                   ))
                 )}
