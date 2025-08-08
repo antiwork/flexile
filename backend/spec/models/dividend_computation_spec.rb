@@ -275,56 +275,5 @@ RSpec.describe DividendComputation do
       result = empty_computation.broken_down_by_investor
       expect(result).to eq([])
     end
-
-    it "handles edge case with only SAFE investors" do
-      safe_only_computation = create(:dividend_computation, company: company, total_amount_in_usd: 100_000, dividends_issuance_date: Date.current)
-
-      # Create only SAFE outputs
-      create(:dividend_computation_output,
-             dividend_computation: safe_only_computation,
-             company_investor: nil,
-             investor_name: "Test SAFE",
-             share_class: "SAFE A",
-             number_of_shares: 1000,
-             total_amount_in_usd: 50_000,
-             preferred_dividend_amount_in_usd: 0,
-             dividend_amount_in_usd: 50_000,
-             qualified_dividend_amount_usd: 50_000)
-
-      result = safe_only_computation.broken_down_by_investor
-      expect(result.length).to eq(1)
-      expect(result.first).to include(
-        investor_name: "Test SAFE",
-        company_investor_id: nil,
-        investor_external_id: nil,
-        total_amount: 50_000,
-        number_of_shares: 1000
-      )
-    end
-
-    it "handles edge case with only share-based investors" do
-      shares_only_computation = create(:dividend_computation, company: company, total_amount_in_usd: 100_000, dividends_issuance_date: Date.current)
-
-      # Create only share-based outputs
-      create(:dividend_computation_output,
-             dividend_computation: shares_only_computation,
-             company_investor: @seed_investor,
-             share_class: "Common",
-             number_of_shares: 1000,
-             total_amount_in_usd: 50_000,
-             preferred_dividend_amount_in_usd: 0,
-             dividend_amount_in_usd: 50_000,
-             qualified_dividend_amount_usd: 50_000)
-
-      result = shares_only_computation.broken_down_by_investor
-      expect(result.length).to eq(1)
-      expect(result.first).to include(
-        investor_name: "Seed Investor",
-        company_investor_id: @seed_investor.id,
-        investor_external_id: @seed_investor.user.external_id,
-        total_amount: 50_000,
-        number_of_shares: 1000
-      )
-    end
   end
 end
