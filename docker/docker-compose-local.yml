@@ -21,7 +21,7 @@ services:
       - ./tmp/redis:/data
 
   nginx:
-    image: nginx:alpine
+    image: nginx:1.29-alpine
     volumes:
       - ./flexile_dev.conf:/etc/nginx/conf.d/default.conf
       - ../certificates:/etc/ssl/certs/
