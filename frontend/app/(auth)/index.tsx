@@ -13,8 +13,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import googleIcon from "@/images/google.svg";
 import logo from "@/public/logo-icon.svg";
+import { cn } from "@/utils";
 import { request } from "@/utils/request";
 
 const emailSchema = z.object({ email: z.string().email() });
@@ -26,6 +26,15 @@ const getRedirectUrl = () => {
   return redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "/dashboard";
 };
 
+const GoogleIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" className="size-6">
+    <path
+      fill="currentColor"
+      d="M11.999 4.51a7.486 7.486 0 0 0-7.5 7.5c0 4.165 3.358 7.5 7.5 7.5 3.596 0 7.492-2.855 7.5-7.546v-1.453h-7.5v3h4.195c-.62 1.741-2.24 3-4.195 3a4.5 4.5 0 1 1 0-9c1.054 0 2.032.353 2.787.968.245-.245 1.713-1.718 2.188-2.098-1.322-1.185-3.052-1.87-4.975-1.87"
+    />
+  </svg>
+);
+
 export function AuthPage({
   title,
   description,
@@ -34,6 +43,7 @@ export function AuthPage({
   sendOtpText,
   onVerifyOtp,
   isSignup,
+  highlightedAuthMethod,
 }: {
   title: string;
   description: string;
@@ -42,6 +52,7 @@ export function AuthPage({
   sendOtpText: string;
   onVerifyOtp?: (data: { email: string; otp: string }) => Promise<void>;
   isSignup?: boolean;
+  highlightedAuthMethod: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -212,11 +223,17 @@ export function AuthPage({
               <div className="space-y-2">
                 <Button
                   type="button"
-                  className={`flex w-full items-center gap-2 bg-[#006CEB] py-3 text-sm hover:bg-[#005BC4] ${googleAuthError ? "border-destructive" : "border-none"}`}
+                  variant={highlightedAuthMethod === "google" ? "primary" : "outline"}
+                  className={cn(
+                    `flex h-12 w-full items-center justify-center gap-2 text-sm`,
+                    googleAuthError && "border-destructive",
+                  )}
                   onClick={() => void handleGoogleAuth()}
                   disabled={sendOtp.isPending}
                 >
-                  <Image src={googleIcon} alt="Google" className="size-6" />
+                  <div className={cn("size-6", highlightedAuthMethod === "google" ? "text-white" : "text-gray-800")}>
+                    <GoogleIcon />
+                  </div>
                   {isSignup ? "Sign up with Google" : "Log in with Google"}
                 </Button>
                 {googleAuthError ? <p className="text-destructive text-sm">{googleAuthError}</p> : null}
@@ -252,7 +269,13 @@ export function AuthPage({
                       </FormItem>
                     )}
                   />
-                  <MutationStatusButton mutation={sendOtp} type="submit" className="w-full" loadingText="Sending...">
+                  <MutationStatusButton
+                    mutation={sendOtp}
+                    type="submit"
+                    idleVariant={highlightedAuthMethod === "email" ? "primary" : "outline"}
+                    className="h-12 w-full text-sm"
+                    loadingText="Sending..."
+                  >
                     {sendOtpText}
                   </MutationStatusButton>
 

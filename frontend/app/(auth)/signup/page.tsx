@@ -38,6 +38,7 @@ export default function SignUpPage() {
         }
       }}
       isSignup
+      highlightedAuthMethod="google"
     />
   );
 }

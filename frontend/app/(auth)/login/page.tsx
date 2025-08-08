@@ -6,13 +6,18 @@ import { AuthPage } from "..";
 
 export default function LoginPage() {
   const [description, setDescription] = useState<string>("");
+  const [highlightedAuthMethod, setHighlightedAuthMethod] = useState<string>("google");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const lastLoginMethod = localStorage.getItem("lastLoginMethod");
-      if (lastLoginMethod === "google") {
+      const method = localStorage.getItem("lastLoginMethod");
+
+      if (!method) return;
+
+      setHighlightedAuthMethod(method);
+      if (method === "google") {
         setDescription("You used Google to log in last time.");
-      } else if (lastLoginMethod === "email") {
+      } else if (method === "email") {
         setDescription("You used your work email to log in last time.");
       }
     }
@@ -32,6 +37,7 @@ export default function LoginPage() {
         </>
       }
       sendOtpUrl="/internal/email_otp"
+      highlightedAuthMethod={highlightedAuthMethod}
     />
   );
 }
