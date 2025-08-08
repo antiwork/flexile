@@ -21,12 +21,9 @@ export type CapTableInvestor = Investor | InvestorEntity | SAFEInvestor;
 
 export type CapTableInvestorForAdmin = InvestorForAdmin | SAFEInvestor;
 
-/* eslint-disable @typescript-eslint/consistent-type-assertions */
-export const isInvestor = (investor: CapTableInvestor): investor is Investor | InvestorEntity =>
-  "id" in (investor as Investor);
+export const isInvestor = (investor: CapTableInvestor): investor is Investor | InvestorEntity => "id" in investor;
 export const isInvestorForAdmin = (investor: CapTableInvestorForAdmin): investor is InvestorForAdmin =>
-  "email" in (investor as InvestorForAdmin);
-/* eslint-enable */
+  "email" in investor;
 
 export const fetchInvestorUserId = (investor: CapTableInvestor) => ("userId" in investor ? investor.userId : null);
 export const fetchInvestorId = (investor: CapTableInvestor) => ("id" in investor ? investor.id : null);

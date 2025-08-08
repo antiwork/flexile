@@ -123,7 +123,7 @@ class DividendComputationGeneration
 end
 
 =begin
-company = Company.is_gumroad.sole
+company = Company.find(5)
 service = DividendComputationGeneration.new(company, amount_in_usd: 5_346_877, return_of_capital: false)
 service.process
 

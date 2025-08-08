@@ -69,7 +69,7 @@ class ImportShareHoldings
     end
 
     def gumroad_company!
-      @_gumroad_company ||= Company.is_gumroad.sole
+      @_gumroad_company ||= Company.find(5)
     end
 end
 

@@ -1,15 +1,26 @@
 import React from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { cn } from "@/utils";
 
-export function DashboardHeader({ title, headerActions }: { title: React.ReactNode; headerActions?: React.ReactNode }) {
+export function DashboardHeader({
+  title,
+  headerActions,
+  className,
+}: {
+  title: React.ReactNode;
+  headerActions?: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <header className="px-4 max-md:py-2 md:pt-4">
+    <header className={cn("px-4 max-md:py-2 md:pt-4 print:visible print:*:visible", className)}>
       <div className="grid gap-y-8">
-        <div className="flex items-center justify-between gap-3">
-          <div>
+        <div className="flex items-center justify-between gap-3 print:block">
+          <div className="print:*:visible">
             <div className="flex items-center justify-between gap-2">
-              <SidebarTrigger className="md:hidden" />
-              <h1 className="text-xl font-semibold md:text-3xl md:font-bold">{title}</h1>
+              <SidebarTrigger className="md:hidden print:hidden" />
+              <h1 className="text-xl font-semibold md:text-3xl md:font-bold print:text-4xl print:font-bold print:text-black">
+                {title}
+              </h1>
             </div>
           </div>
 

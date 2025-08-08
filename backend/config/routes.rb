@@ -8,7 +8,8 @@ end
 require "sidekiq/cron/web"
 
 admin_constraint = lambda do |request|
-  request.env["clerk"].user? && User.find_by(clerk_id: request.env["clerk"].user_id)&.team_member?
+  user = JwtService.user_from_request(request)
+  user&.team_member?
 end
 
 api_domain_constraint = lambda do |request|

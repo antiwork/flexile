@@ -75,6 +75,7 @@ const statusNames = {
 type Invoice = RouterOutput["invoices"]["list"][number];
 
 export default function InvoicesPage() {
+  const isMobile = useIsMobile();
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const isMobile = useIsMobile();
@@ -387,6 +388,13 @@ export default function InvoicesPage() {
 
   return (
     <>
+      {isMobile ? (
+        <Button variant="floating-action" {...(!canSubmitInvoices ? { disabled: true } : { asChild: true })}>
+          <Link href="/invoices/new" inert={!canSubmitInvoices}>
+            <Plus />
+          </Link>
+        </Button>
+      ) : null}
       <DashboardHeader
         title="Invoices"
         headerActions={
@@ -529,7 +537,9 @@ export default function InvoicesPage() {
           )}
         />
       ) : (
-        <Placeholder icon={CircleCheck}>No invoices to display.</Placeholder>
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>No invoices to display.</Placeholder>
+        </div>
       )}
 
       <Dialog open={openModal === "approve"} onOpenChange={() => setOpenModal(null)}>
@@ -694,13 +704,23 @@ const quickInvoiceSchema = z.object({
 
 const QuickInvoicesSection = () => {
   const user = useCurrentUser();
+
+  // Early bail-out BEFORE any additional hooks that might change between renders.
+  if (!user.roles.worker) return null;
+
+  return <QuickInvoicesSectionContent />;
+};
+
+// Separated component that contains all hooks related to the worker view. This
+// avoids violating the Rules of Hooks when the parent conditionally renders.
+const QuickInvoicesSectionContent = () => {
+  const user = useCurrentUser();
   const company = useCurrentCompany();
   const trpcUtils = trpc.useUtils();
   const queryClient = useQueryClient();
 
-  if (!user.roles.worker) return null;
-  const payRateInSubunits = user.roles.worker.payRateInSubunits;
-  const isHourly = user.roles.worker.payRateType === "hourly";
+  const payRateInSubunits = user.roles.worker?.payRateInSubunits ?? 0;
+  const isHourly = user.roles.worker?.payRateType === "hourly";
 
   const { canSubmitInvoices } = useCanSubmitInvoices();
   const form = useForm({
@@ -718,6 +738,7 @@ const QuickInvoicesSection = () => {
   const hourly = form.watch("quantity").hourly;
   const rate = form.watch("rate") * 100;
   const totalAmountInCents = Math.ceil((quantity / (hourly ? 60 : 1)) * rate);
+
   const newCompanyInvoiceRoute = () => {
     const params = new URLSearchParams({
       date: date.toString(),
@@ -758,88 +779,90 @@ const QuickInvoicesSection = () => {
   const handleSubmit = form.handleSubmit(() => submit.mutate());
 
   return (
-    <Card className={canSubmitInvoices ? "" : "opacity-50"}>
-      <CardContent>
-        <Form {...form}>
-          <form
-            className="grid grid-cols-1 items-start gap-x-8 gap-y-6 lg:grid-cols-[1fr_auto_1fr]"
-            onSubmit={(e) => void handleSubmit(e)}
-          >
-            <div className="grid gap-6">
-              <FormField
-                control={form.control}
-                name="rate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Rate</FormLabel>
-                    <FormControl>
-                      <NumberInput {...field} min={0.01} step={0.01} prefix="$" />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="quantity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Hours / Qty</FormLabel>
-                    <FormControl>
-                      <QuantityInput {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <DatePicker {...field} label="Invoice date" granularity="day" />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
+    <div className="mx-4">
+      <Card className={canSubmitInvoices ? "" : "opacity-50"}>
+        <CardContent>
+          <Form {...form}>
+            <form
+              className="grid grid-cols-1 items-start gap-x-8 gap-y-6 lg:grid-cols-[1fr_auto_1fr]"
+              onSubmit={(e) => void handleSubmit(e)}
+            >
+              <div className="grid gap-6">
+                <FormField
+                  control={form.control}
+                  name="rate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Rate</FormLabel>
+                      <FormControl>
+                        <NumberInput {...field} min={0.01} step={0.01} prefix="$" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="quantity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Hours / Qty</FormLabel>
+                      <FormControl>
+                        <QuantityInput {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <DatePicker {...field} label="Invoice date" granularity="day" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-            <Separator orientation="horizontal" className="block w-full lg:hidden" />
-            <Separator orientation="vertical" className="hidden lg:block" />
+              <Separator orientation="horizontal" className="block w-full lg:hidden" />
+              <Separator orientation="vertical" className="hidden lg:block" />
 
-            <div className="grid gap-2">
-              <div className="mt-2 mb-2 pt-2 text-right lg:mt-16 lg:mb-3 lg:pt-0">
-                <span className="text-sm text-gray-500">Total amount</span>
-                <div className="text-3xl font-bold">{formatMoneyFromCents(totalAmountInCents)}</div>
-                {company.equityEnabled ? (
-                  <div className="mt-1 text-sm text-gray-500">
-                    ({formatMoneyFromCents(cashAmountCents)} cash +{" "}
-                    <Link href="/settings/payouts" className={linkClasses}>
-                      {formatMoneyFromCents(equityAmountCents)} equity
+              <div className="grid gap-2">
+                <div className="mt-2 mb-2 pt-2 text-right lg:mt-16 lg:mb-3 lg:pt-0">
+                  <span className="text-sm text-gray-500">Total amount</span>
+                  <div className="text-3xl font-bold">{formatMoneyFromCents(totalAmountInCents)}</div>
+                  {company.equityEnabled ? (
+                    <div className="mt-1 text-sm text-gray-500">
+                      ({formatMoneyFromCents(cashAmountCents)} cash +{" "}
+                      <Link href="/settings/payouts" className={linkClasses}>
+                        {formatMoneyFromCents(equityAmountCents)} equity
+                      </Link>
+                      )
+                    </div>
+                  ) : null}
+                </div>
+                <div className="flex flex-wrap items-center justify-end gap-3">
+                  <Button variant="outline" className="grow sm:grow-0" asChild disabled={!canSubmitInvoices}>
+                    <Link inert={!canSubmitInvoices} href={newCompanyInvoiceRoute()}>
+                      Add more info
                     </Link>
-                    )
-                  </div>
-                ) : null}
+                  </Button>
+                  <MutationStatusButton
+                    disabled={!canSubmitInvoices || totalAmountInCents <= 0}
+                    className="grow sm:grow-0"
+                    mutation={submit}
+                    type="submit"
+                    loadingText="Sending..."
+                  >
+                    Send for approval
+                  </MutationStatusButton>
+                </div>
               </div>
-              <div className="flex flex-wrap items-center justify-end gap-3">
-                <Button variant="outline" className="grow sm:grow-0" asChild disabled={!canSubmitInvoices}>
-                  <Link inert={!canSubmitInvoices} href={newCompanyInvoiceRoute()}>
-                    Add more info
-                  </Link>
-                </Button>
-                <MutationStatusButton
-                  disabled={!canSubmitInvoices || totalAmountInCents <= 0}
-                  className="grow sm:grow-0"
-                  mutation={submit}
-                  type="submit"
-                  loadingText="Sending..."
-                >
-                  Send for approval
-                </MutationStatusButton>
-              </div>
-            </div>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };

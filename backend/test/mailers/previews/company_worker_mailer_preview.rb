@@ -61,4 +61,12 @@ class CompanyWorkerMailerPreview < ActionMailer::Preview
   def vesting_event_processed
     CompanyWorkerMailer.vesting_event_processed(VestingEvent.last.id)
   end
+
+  def payment_failed_generic
+    invoice = Payment.last.invoice
+    rate = Wise::PayoutApi.new.get_exchange_rate(target_currency: invoice.user.bank_account.currency).first["rate"]
+    amount = invoice.cash_amount_in_usd * rate
+    currency = invoice.user.bank_account.currency
+    CompanyWorkerMailer.payment_failed_generic(Payment.last.id, amount, currency)
+  end
 end
