@@ -61,7 +61,12 @@ export default inngest.createFunction(
       if (event.data.recipients) return event.data.recipients;
 
       const eventData = event.data;
-      const recipientTypes = eventData.recipientTypes || update.recipientTypes || ["investors", "active_contractors"];
+      // Ensure admins are always included
+      let recipientTypes = eventData.recipientTypes ||
+        update.recipientTypes || ["admins", "investors", "active_contractors"];
+      if (!recipientTypes.includes("admins")) {
+        recipientTypes = ["admins", ...recipientTypes];
+      }
 
       const baseQuery = (
         relationTable: typeof companyContractors | typeof companyInvestors | typeof companyAdministrators,
@@ -73,10 +78,9 @@ export default inngest.createFunction(
 
       const queries = [];
 
-      if (recipientTypes.includes("admins")) {
-        const admins = baseQuery(companyAdministrators).where(isNotNull(companyAdministrators.id));
-        queries.push(admins);
-      }
+      // Always include admins
+      const admins = baseQuery(companyAdministrators).where(isNotNull(companyAdministrators.id));
+      queries.push(admins);
 
       if (recipientTypes.includes("investors")) {
         const investors = baseQuery(companyInvestors).where(isNotNull(companyInvestors.id));
