@@ -282,7 +282,7 @@ RSpec.describe DividendComputation do
       # Create only SAFE outputs
       create(:dividend_computation_output,
              dividend_computation: safe_only_computation,
-             company_investor: nil, # Override factory default
+             company_investor: nil,
              investor_name: "Test SAFE",
              share_class: "SAFE A",
              number_of_shares: 1000,

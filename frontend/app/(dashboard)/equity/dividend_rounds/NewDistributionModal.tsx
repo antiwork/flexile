@@ -33,7 +33,6 @@ const schema = z.object({
 });
 
 type FormValues = z.infer<typeof schema>;
-
 const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
