@@ -142,7 +142,7 @@ company = Company.find(5)
 service = DividendComputationGeneration.new(
   company,
   amount_in_usd: 5_346_877,
-  return_of_capital: false,
+  return_of_capital: false
 )
 service.process
 
