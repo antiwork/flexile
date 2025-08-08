@@ -31,8 +31,11 @@ const AddCapTablePage = () => {
 
   const [error, setError] = useState<string | null>(null);
 
+  const utils = trpc.useUtils();
   const createCapTableMutation = trpc.capTable.create.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
+      await utils.capTable.show.invalidate({ companyId: company.id, newSchema: false });
+      await utils.capTable.show.invalidate({ companyId: company.id, newSchema: true });
       router.push("/equity/investors");
     },
     onError: (error) => {
