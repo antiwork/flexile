@@ -22,7 +22,7 @@ import NewDistributionModal from "./NewDistributionModal";
 type DividendOrComputation = {
   id: bigint;
   status: string;
-  totalAmountInUsd: string;
+  totalAmountInUsd: number;
   numberOfShareholders: bigint;
   returnOfCapital: boolean;
   dividendsIssuanceDate: Date;
@@ -58,7 +58,7 @@ export default function DividendRounds() {
           id: BigInt(computation.id),
           type: "draft" as const,
           status: "Draft",
-          totalAmountInUsd: computation.total_amount_in_usd,
+          totalAmountInUsd: Number(computation.total_amount_in_usd),
           numberOfShareholders: BigInt(computation.number_of_shareholders),
           returnOfCapital: computation.return_of_capital,
           dividendsIssuanceDate: new Date(computation.dividends_issuance_date),
@@ -74,7 +74,7 @@ export default function DividendRounds() {
           ...round,
           type: "round" as const,
           dividendsIssuanceDate: round.issuedAt,
-          totalAmountInUsd: String(round.totalAmountInCents / 100n),
+          totalAmountInUsd: Number(round.totalAmountInCents / 100n),
         })),
     },
   );
