@@ -734,7 +734,7 @@ function OptionsTab({ investorId, userId }: { investorId: string; userId: string
     <TableSkeleton columns={6} />
   ) : equityGrants.length > 0 ? (
     <>
-      <DataTable table={table} onRowClicked={setSelectedEquityGrant} mobileFilterColumn="status" />
+      <DataTable table={table} onRowClicked={setSelectedEquityGrant} />
       {selectedEquityGrant ? (
         <DetailsModal
           equityGrant={selectedEquityGrant}
