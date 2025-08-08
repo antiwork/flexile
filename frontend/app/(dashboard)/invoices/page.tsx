@@ -479,19 +479,21 @@ export default function InvoicesPage() {
               now.
             </div>
           )}
-          <Card>
-            <CardContent>
-              {selectedApprovableInvoices.slice(0, 5).map((invoice, index, array) => (
-                <Fragment key={invoice.id}>
-                  <div className="flex justify-between gap-2">
-                    <b>{invoice.billFrom}</b>
-                    <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
-                  </div>
-                  {index !== array.length - 1 && <Separator />}
-                </Fragment>
-              ))}
-            </CardContent>
-          </Card>
+          <div className="mx-4">
+            <Card>
+              <CardContent>
+                {selectedApprovableInvoices.slice(0, 5).map((invoice, index, array) => (
+                  <Fragment key={invoice.id}>
+                    <div className="flex justify-between gap-2">
+                      <b>{invoice.billFrom}</b>
+                      <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
+                    </div>
+                    {index !== array.length - 1 && <Separator />}
+                  </Fragment>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
           {selectedApprovableInvoices.length > 5 && <div>and {selectedApprovableInvoices.length - 5} more</div>}
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenModal(null)}>
@@ -581,28 +583,30 @@ const TasksModal = ({
             </Button>
           </header>
           <Separator />
-          <Card className="border-none">
-            <CardContent className="p-0">
-              <div className="flex justify-between gap-2">
-                <div>Net amount in cash</div>
-                <div>{formatMoneyFromCents(invoice.cashAmountInCents)}</div>
-              </div>
-              <Separator />
-              {invoice.equityAmountInCents ? (
-                <>
-                  <div className="flex justify-between gap-2">
-                    <div>Swapped for equity ({invoice.equityPercentage}%)</div>
-                    <div>{formatMoneyFromCents(invoice.equityAmountInCents)}</div>
-                  </div>
-                  <Separator />
-                </>
-              ) : null}
-              <div className="flex justify-between gap-2 pb-4 font-medium">
-                <div>Payout total</div>
-                <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="mx-4">
+            <Card className="border-none">
+              <CardContent className="p-0">
+                <div className="flex justify-between gap-2">
+                  <div>Net amount in cash</div>
+                  <div>{formatMoneyFromCents(invoice.cashAmountInCents)}</div>
+                </div>
+                <Separator />
+                {invoice.equityAmountInCents ? (
+                  <>
+                    <div className="flex justify-between gap-2">
+                      <div>Swapped for equity ({invoice.equityPercentage}%)</div>
+                      <div>{formatMoneyFromCents(invoice.equityAmountInCents)}</div>
+                    </div>
+                    <Separator />
+                  </>
+                ) : null}
+                <div className="flex justify-between gap-2 pb-4 font-medium">
+                  <div>Payout total</div>
+                  <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </section>
         {isActionable(invoice) ? (
           <DialogFooter>
@@ -702,88 +706,90 @@ const QuickInvoicesSectionContent = () => {
   const handleSubmit = form.handleSubmit(() => submit.mutate());
 
   return (
-    <Card className={canSubmitInvoices ? "" : "opacity-50"}>
-      <CardContent>
-        <Form {...form}>
-          <form
-            className="grid grid-cols-1 items-start gap-x-8 gap-y-6 lg:grid-cols-[1fr_auto_1fr]"
-            onSubmit={(e) => void handleSubmit(e)}
-          >
-            <div className="grid gap-6">
-              <FormField
-                control={form.control}
-                name="rate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Rate</FormLabel>
-                    <FormControl>
-                      <NumberInput {...field} min={0.01} step={0.01} prefix="$" />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="quantity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Hours / Qty</FormLabel>
-                    <FormControl>
-                      <QuantityInput {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <DatePicker {...field} label="Invoice date" granularity="day" />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
+    <div className="mx-4">
+      <Card className={canSubmitInvoices ? "" : "opacity-50"}>
+        <CardContent>
+          <Form {...form}>
+            <form
+              className="grid grid-cols-1 items-start gap-x-8 gap-y-6 lg:grid-cols-[1fr_auto_1fr]"
+              onSubmit={(e) => void handleSubmit(e)}
+            >
+              <div className="grid gap-6">
+                <FormField
+                  control={form.control}
+                  name="rate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Rate</FormLabel>
+                      <FormControl>
+                        <NumberInput {...field} min={0.01} step={0.01} prefix="$" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="quantity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Hours / Qty</FormLabel>
+                      <FormControl>
+                        <QuantityInput {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <DatePicker {...field} label="Invoice date" granularity="day" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-            <Separator orientation="horizontal" className="block w-full lg:hidden" />
-            <Separator orientation="vertical" className="hidden lg:block" />
+              <Separator orientation="horizontal" className="block w-full lg:hidden" />
+              <Separator orientation="vertical" className="hidden lg:block" />
 
-            <div className="grid gap-2">
-              <div className="mt-2 mb-2 pt-2 text-right lg:mt-16 lg:mb-3 lg:pt-0">
-                <span className="text-sm text-gray-500">Total amount</span>
-                <div className="text-3xl font-bold">{formatMoneyFromCents(totalAmountInCents)}</div>
-                {company.equityEnabled ? (
-                  <div className="mt-1 text-sm text-gray-500">
-                    ({formatMoneyFromCents(cashAmountCents)} cash +{" "}
-                    <Link href="/settings/payouts" className={linkClasses}>
-                      {formatMoneyFromCents(equityAmountCents)} equity
+              <div className="grid gap-2">
+                <div className="mt-2 mb-2 pt-2 text-right lg:mt-16 lg:mb-3 lg:pt-0">
+                  <span className="text-sm text-gray-500">Total amount</span>
+                  <div className="text-3xl font-bold">{formatMoneyFromCents(totalAmountInCents)}</div>
+                  {company.equityEnabled ? (
+                    <div className="mt-1 text-sm text-gray-500">
+                      ({formatMoneyFromCents(cashAmountCents)} cash +{" "}
+                      <Link href="/settings/payouts" className={linkClasses}>
+                        {formatMoneyFromCents(equityAmountCents)} equity
+                      </Link>
+                      )
+                    </div>
+                  ) : null}
+                </div>
+                <div className="flex flex-wrap items-center justify-end gap-3">
+                  <Button variant="outline" className="grow sm:grow-0" asChild disabled={!canSubmitInvoices}>
+                    <Link inert={!canSubmitInvoices} href={newCompanyInvoiceRoute()}>
+                      Add more info
                     </Link>
-                    )
-                  </div>
-                ) : null}
+                  </Button>
+                  <MutationStatusButton
+                    disabled={!canSubmitInvoices || totalAmountInCents <= 0}
+                    className="grow sm:grow-0"
+                    mutation={submit}
+                    type="submit"
+                    loadingText="Sending..."
+                  >
+                    Send for approval
+                  </MutationStatusButton>
+                </div>
               </div>
-              <div className="flex flex-wrap items-center justify-end gap-3">
-                <Button variant="outline" className="grow sm:grow-0" asChild disabled={!canSubmitInvoices}>
-                  <Link inert={!canSubmitInvoices} href={newCompanyInvoiceRoute()}>
-                    Add more info
-                  </Link>
-                </Button>
-                <MutationStatusButton
-                  disabled={!canSubmitInvoices || totalAmountInCents <= 0}
-                  className="grow sm:grow-0"
-                  mutation={submit}
-                  type="submit"
-                  loadingText="Sending..."
-                >
-                  Send for approval
-                </MutationStatusButton>
-              </div>
-            </div>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
