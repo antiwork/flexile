@@ -96,48 +96,41 @@ export default function InvoicesPage() {
     contractorId: user.roles.administrator ? undefined : user.roles.worker?.id,
   });
 
+  const getInvoiceStatusLabel = useCallback((invoice: Invoice, company: { requiredInvoiceApprovals: number }) => {
+    switch (invoice.status) {
+      case "received":
+      case "approved":
+        if (invoice.approvals.length < company.requiredInvoiceApprovals) {
+          return "Awaiting approval";
+        }
+        return "Approved";
+      case "processing":
+        return "Payment in progress";
+      case "payment_pending":
+        return "Payment scheduled";
+      case "paid":
+        return "Paid";
+      case "rejected":
+        return "Rejected";
+      case "failed":
+        return "Failed";
+      default:
+        return statusNames[invoice.status] || invoice.status;
+    }
+  }, []);
+
   const precomputedFilterOptions = useMemo(() => {
     const statusSet = new Set<string>();
 
     for (const invoice of data) {
-      let label: string;
-
-      // Use the same switch statement logic from InvoiceStatus component
-      switch (invoice.status) {
-        case "received":
-        case "approved":
-          if (invoice.approvals.length < company.requiredInvoiceApprovals) {
-            label = "Awaiting approval";
-          } else {
-            label = "Approved";
-          }
-          break;
-        case "processing":
-          label = "Payment in progress";
-          break;
-        case "payment_pending":
-          label = "Payment scheduled";
-          break;
-        case "paid":
-          label = "Paid";
-          break;
-        case "rejected":
-          label = "Rejected";
-          break;
-        case "failed":
-          label = "Failed";
-          break;
-        default:
-          label = statusNames[invoice.status] || invoice.status;
-      }
-
+      const label = getInvoiceStatusLabel(invoice, company);
       statusSet.add(label);
     }
 
     return {
-      status: [...statusSet],
+      status: [...statusSet].sort(),
     };
-  }, [data, company.requiredInvoiceApprovals]);
+  }, [data, company, getInvoiceStatusLabel]);
 
   const { canSubmitInvoices, hasLegalDetails, unsignedContractId } = useCanSubmitInvoices();
 
@@ -258,43 +251,18 @@ export default function InvoicesPage() {
         (value) => (value ? formatMoneyFromCents(value) : "N/A"),
         "numeric",
       ),
-      columnHelper.accessor(
-        (row) => {
-          switch (row.status) {
-            case "received":
-            case "approved":
-              if (row.approvals.length < company.requiredInvoiceApprovals) {
-                return "Awaiting approval";
-              }
-              return "Approved";
-
-            case "processing":
-              return "Payment in progress";
-            case "payment_pending":
-              return "Payment scheduled";
-            case "paid":
-              return "Paid";
-            case "rejected":
-              return "Rejected";
-            case "failed":
-              return "Failed";
-            default:
-              return statusNames[row.status] || row.status;
-          }
+      columnHelper.accessor((row) => getInvoiceStatusLabel(row, company), {
+        id: "status",
+        header: "Status",
+        cell: (info) => (
+          <div className="relative z-1">
+            <Status invoice={info.row.original} />
+          </div>
+        ),
+        meta: {
+          filterOptions: precomputedFilterOptions.status,
         },
-        {
-          id: "status",
-          header: "Status",
-          cell: (info) => (
-            <div className="relative z-1">
-              <Status invoice={info.row.original} />
-            </div>
-          ),
-          meta: {
-            filterOptions: precomputedFilterOptions.status,
-          },
-        },
-      ),
+      }),
       columnHelper.accessor(isActionable, {
         id: "actions",
         header: () => null,
@@ -317,7 +285,7 @@ export default function InvoicesPage() {
         },
       }),
     ],
-    [precomputedFilterOptions, company.requiredInvoiceApprovals, user.roles.administrator],
+    [precomputedFilterOptions, company, user.roles.administrator, getInvoiceStatusLabel],
   );
 
   const handleInvoiceAction = (actionId: string, invoices: Invoice[]) => {
