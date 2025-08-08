@@ -26,7 +26,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useCurrentUser } from "@/global";
 import type { CurrentUser } from "@/models/user";
@@ -147,7 +146,6 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
         </Sidebar>
         <SidebarInset>
           <div className="flex items-center gap-2 p-2 md:hidden">
-            <SidebarTrigger />
             <Link href="/dashboard" className="flex items-center gap-2 text-sm">
               <ChevronLeft className="h-4 w-4" />
               <span className="font-medium">Back to app</span>

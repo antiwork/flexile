@@ -2,7 +2,7 @@
 
 import { HelperClientProvider, useUnreadConversationsCount } from "@helperai/react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
-import { skipToken, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   BookUser,
   ChartPie,
@@ -25,9 +25,8 @@ import Link, { type LinkProps } from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import React from "react";
-import { navLinks as equityNavLinks } from "@/app/(dashboard)/equity";
-import { useIsActionable } from "@/app/(dashboard)/invoices";
 import { useHelperSession } from "@/app/(dashboard)/support/SupportPortal";
+import BottomNavbar from "@/components/BottomNavbar";
 import { GettingStarted } from "@/components/GettingStarted";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -55,9 +54,10 @@ import {
 import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
 import defaultCompanyLogo from "@/images/default-company-logo.svg";
 import { storageKeys } from "@/models/constants";
-import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
+import { useIsMobile } from "@/utils/use-mobile";
+import { useNavData } from "@/utils/use-navdata";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = useCurrentUser();
@@ -70,6 +70,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const canShowTryEquity = user.roles.administrator && !company.equityEnabled;
   const { logout } = useUserStore();
   const isDefaultLogo = !company.logo_url || company.logo_url.includes("default-company-logo");
+  const isMobile = useIsMobile();
 
   const { data: helperSession } = useHelperSession();
 
@@ -243,43 +244,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <SidebarInset>
         <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
-          <main className="flex flex-1 flex-col not-print:overflow-y-auto">
+          <main className={`flex flex-1 flex-col not-print:overflow-y-auto ${isMobile ? "pb-20" : ""}`}>
             <div className="flex flex-col gap-4">{children}</div>
           </main>
         </div>
+        {isMobile ? <BottomNavbar /> : null}
       </SidebarInset>
     </SidebarProvider>
   );
 }
 
 const NavLinks = () => {
-  const user = useCurrentUser();
-  const company = useCurrentCompany();
-  const pathname = usePathname();
-  const routes = new Set(
-    company.routes.flatMap((route) => [route.label, ...(route.subLinks?.map((subLink) => subLink.label) || [])]),
-  );
-  const { data: invoicesData } = trpc.invoices.list.useQuery(
-    user.currentCompanyId && user.roles.administrator
-      ? { companyId: user.currentCompanyId, status: ["received", "approved", "failed"] }
-      : skipToken,
-    { refetchInterval: 30_000 },
-  );
-  const isInvoiceActionable = useIsActionable();
-  const { data: documentsData } = trpc.documents.list.useQuery(
-    user.currentCompanyId && user.id
-      ? {
-          companyId: user.currentCompanyId,
-          userId: user.roles.administrator || user.roles.lawyer ? null : user.id,
-          signable: true,
-        }
-      : skipToken,
-    { refetchInterval: 30_000 },
-  );
-  const updatesPath = company.routes.find((route) => route.label === "Updates")?.name;
-  const equityLinks = equityNavLinks(user, company);
-
-  const [isOpen, setIsOpen] = React.useState(() => localStorage.getItem(storageKeys.EQUITY_MENU_STATE) === "open");
+  const {
+    pathname,
+    routes,
+    invoicesData,
+    isInvoiceActionable,
+    documentsData,
+    updatesPath,
+    equityLinks,
+    isOpen,
+    setIsOpen,
+    company,
+  } = useNavData();
 
   return (
     <SidebarMenu>
@@ -336,7 +323,11 @@ const NavLinks = () => {
           open={isOpen}
           onOpenChange={(state) => {
             setIsOpen(state);
-            localStorage.setItem(storageKeys.EQUITY_MENU_STATE, state ? "open" : "closed");
+            try {
+              localStorage.setItem(storageKeys.EQUITY_MENU_STATE, state ? "open" : "closed");
+            } catch {
+              // Ignore localStorage errors
+            }
           }}
           className="group/collapsible"
         >
