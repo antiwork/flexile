@@ -175,118 +175,124 @@ export default function DataTable<T extends RowData>({
   return (
     <div className="grid gap-4">
       {filterable || actions ? (
-        <div className="mx-4 grid gap-2 md:flex md:justify-between">
-          <div className="flex gap-2">
-            {table.options.enableGlobalFilter !== false ? (
-              <div className="relative w-full md:w-60">
-                <SearchIcon className="absolute top-2.5 left-2.5 size-4" />
-                <Input
-                  value={
-                    z
-                      .string()
-                      .nullish()
-                      .parse(searchColumn ? searchColumn.getFilterValue() : table.getState().globalFilter) ?? ""
-                  }
-                  onChange={(e) =>
-                    searchColumn ? searchColumn.setFilterValue(e.target.value) : table.setGlobalFilter(e.target.value)
-                  }
-                  className="w-full pl-8"
-                  placeholder={searchColumn ? `Search by ${getColumnName(searchColumn)}...` : "Search..."}
-                />
-              </div>
-            ) : null}
-            {filterableColumns.length > 0 ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="small">
-                    <div className="flex items-center gap-1">
-                      <ListFilterIcon className="size-4" />
-                      <p className="hidden md:block">Filter</p>
-                      {activeFilterCount > 0 && (
-                        <Badge variant="secondary" className="rounded-sm px-1 font-normal">
-                          {activeFilterCount}
-                        </Badge>
-                      )}
-                    </div>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  {filterableColumns.map((column) => {
-                    const filterValue = filterValueSchema.optional().parse(column.getFilterValue());
-                    return (
-                      <DropdownMenuSub key={column.id}>
-                        <DropdownMenuSubTrigger>
-                          <div className="flex items-center gap-1">
-                            <span>{getColumnName(column)}</span>
-                            {Array.isArray(filterValue) && filterValue.length > 0 && (
-                              <Badge variant="secondary" className="rounded-sm px-1 font-normal">
-                                {filterValue.length}
-                              </Badge>
-                            )}
-                          </div>
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent>
-                          <DropdownMenuCheckboxItem
-                            checked={!filterValue?.length}
-                            onCheckedChange={() => column.setFilterValue(undefined)}
-                          >
-                            All
-                          </DropdownMenuCheckboxItem>
-                          {column.columnDef.meta?.filterOptions?.map((option) => (
-                            <DropdownMenuCheckboxItem
-                              key={option}
-                              checked={filterValue?.includes(option) ?? false}
-                              onCheckedChange={(checked) =>
-                                column.setFilterValue(
-                                  checked
-                                    ? [...(filterValue ?? []), option]
-                                    : filterValue && filterValue.length > 1
-                                      ? filterValue.filter((o) => o !== option)
-                                      : undefined,
-                                )
-                              }
-                            >
-                              {option}
-                            </DropdownMenuCheckboxItem>
-                          ))}
-                        </DropdownMenuSubContent>
-                      </DropdownMenuSub>
-                    );
-                  })}
-                  {activeFilterCount > 0 && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem variant="destructive" onSelect={() => table.resetColumnFilters(true)}>
-                        Clear all filters
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : null}
-            {selectable ? (
-              <div className={cn("flex gap-2", selectedRowCount === 0 && "pointer-events-none opacity-0")}>
-                <div className="bg-accent border-muted flex h-9 items-center justify-center rounded-md border border-dashed px-2 font-medium">
-                  <span className="text-sm whitespace-nowrap">
-                    <span className="inline-block w-4 text-center tabular-nums">{selectedRowCount}</span> selected
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="-mr-1 size-6 p-0 hover:bg-transparent"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      table.toggleAllRowsSelected(false);
-                    }}
-                  >
-                    <X className="size-4 shrink-0" aria-hidden="true" />
-                  </Button>
+        <div className="mx-4 space-y-2 md:space-y-0">
+          <div className={cn("grid gap-2", actions ? "md:grid-cols-[1fr_auto] md:justify-between" : "grid-cols-1")}>
+            <div className="flex w-full gap-2">
+              {table.options.enableGlobalFilter !== false ? (
+                <div className="relative flex-1 md:w-60 md:flex-none">
+                  <SearchIcon className="absolute top-2.5 left-2.5 size-4" />
+                  <Input
+                    value={
+                      z
+                        .string()
+                        .nullish()
+                        .parse(searchColumn ? searchColumn.getFilterValue() : table.getState().globalFilter) ?? ""
+                    }
+                    onChange={(e) =>
+                      searchColumn ? searchColumn.setFilterValue(e.target.value) : table.setGlobalFilter(e.target.value)
+                    }
+                    className="w-full pl-8"
+                    placeholder={searchColumn ? `Search by ${getColumnName(searchColumn)}...` : "Search..."}
+                  />
                 </div>
-                {selectionActions?.(selectedRows)}
-              </div>
-            ) : null}
+              ) : null}
+
+              {filterableColumns.length > 0 ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="small" className="shrink-0">
+                      <div className="flex items-center gap-1">
+                        <ListFilterIcon className="size-4" />
+                        <p className="hidden md:block">Filter</p>
+                        {activeFilterCount > 0 && (
+                          <Badge variant="secondary" className="rounded-sm px-1 font-normal">
+                            {activeFilterCount}
+                          </Badge>
+                        )}
+                      </div>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    {filterableColumns.map((column) => {
+                      const filterValue = filterValueSchema.optional().parse(column.getFilterValue());
+                      return (
+                        <DropdownMenuSub key={column.id}>
+                          <DropdownMenuSubTrigger>
+                            <div className="flex items-center gap-1">
+                              <span>{getColumnName(column)}</span>
+                              {Array.isArray(filterValue) && filterValue.length > 0 && (
+                                <Badge variant="secondary" className="rounded-sm px-1 font-normal">
+                                  {filterValue.length}
+                                </Badge>
+                              )}
+                            </div>
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent>
+                            <DropdownMenuCheckboxItem
+                              checked={!filterValue?.length}
+                              onCheckedChange={() => column.setFilterValue(undefined)}
+                            >
+                              All
+                            </DropdownMenuCheckboxItem>
+                            {column.columnDef.meta?.filterOptions?.map((option) => (
+                              <DropdownMenuCheckboxItem
+                                key={option}
+                                checked={filterValue?.includes(option) ?? false}
+                                onCheckedChange={(checked) =>
+                                  column.setFilterValue(
+                                    checked
+                                      ? [...(filterValue ?? []), option]
+                                      : filterValue && filterValue.length > 1
+                                        ? filterValue.filter((o) => o !== option)
+                                        : undefined,
+                                  )
+                                }
+                              >
+                                {option}
+                              </DropdownMenuCheckboxItem>
+                            ))}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                      );
+                    })}
+                    {activeFilterCount > 0 && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-destructive" onSelect={() => table.resetColumnFilters(true)}>
+                          Clear all filters
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
+
+              {selectable && selectedRowCount > 0 ? (
+                <div className={cn("flex gap-2", selectedRowCount === 0 && "pointer-events-none opacity-0")}>
+                  <div className="bg-accent border-muted flex h-9 items-center justify-center rounded-md border border-dashed px-2 font-medium">
+                    <span className="text-sm whitespace-nowrap">
+                      <span className="inline-block w-4 text-center tabular-nums">{selectedRowCount}</span> selected
+                    </span>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="-mr-1 size-6 p-0 hover:bg-transparent"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        table.toggleAllRowsSelected(false);
+                      }}
+                    >
+                      <X className="size-4 shrink-0" aria-hidden="true" />
+                    </Button>
+                  </div>
+                  {selectionActions?.(selectedRows)}
+                </div>
+              ) : null}
+            </div>
+
+            {actions ? <div className="flex justify-between md:justify-end md:gap-2">{actions}</div> : null}
           </div>
-          <div className="flex justify-between md:justify-end md:gap-2">{actions}</div>
         </div>
       ) : null}
 

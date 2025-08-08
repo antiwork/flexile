@@ -128,6 +128,7 @@ export default function PeoplePage() {
       }),
       columnHelper.simple("user.countryCode", "Country", (v) => v && countries.get(v)),
       columnHelper.accessor((row) => (row.endedAt ? "Alumni" : row.startedAt > new Date() ? "Onboarding" : "Active"), {
+        id: "status",
         header: "Status",
         meta: { filterOptions: precomputedFilterOptions.status },
         cell: (info) =>
@@ -144,7 +145,7 @@ export default function PeoplePage() {
           ),
       }),
     ],
-    [],
+    [precomputedFilterOptions],
   );
 
   const table = useTable({

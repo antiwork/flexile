@@ -13,6 +13,7 @@ import {
   Download,
   Eye,
   Info,
+  MoreHorizontal,
   Plus,
   SquarePen,
   Trash2,
@@ -48,8 +49,13 @@ import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -89,6 +95,49 @@ export default function InvoicesPage() {
     companyId: company.id,
     contractorId: user.roles.administrator ? undefined : user.roles.worker?.id,
   });
+
+  const precomputedFilterOptions = useMemo(() => {
+    const statusSet = new Set<string>();
+
+    for (const invoice of data) {
+      let label: string;
+
+      // Use the same switch statement logic from InvoiceStatus component
+      switch (invoice.status) {
+        case "received":
+        case "approved":
+          if (invoice.approvals.length < company.requiredInvoiceApprovals) {
+            label = "Awaiting approval";
+          } else {
+            label = "Approved";
+          }
+          break;
+        case "processing":
+          label = "Payment in progress";
+          break;
+        case "payment_pending":
+          label = "Payment scheduled";
+          break;
+        case "paid":
+          label = "Paid";
+          break;
+        case "rejected":
+          label = "Rejected";
+          break;
+        case "failed":
+          label = "Failed";
+          break;
+        default:
+          label = statusNames[invoice.status] || invoice.status;
+      }
+
+      statusSet.add(label);
+    }
+
+    return {
+      status: [...statusSet],
+    };
+  }, [data, company.requiredInvoiceApprovals]);
 
   const { canSubmitInvoices, hasLegalDetails, unsignedContractId } = useCanSubmitInvoices();
 
@@ -209,17 +258,43 @@ export default function InvoicesPage() {
         (value) => (value ? formatMoneyFromCents(value) : "N/A"),
         "numeric",
       ),
-      columnHelper.accessor((row) => statusNames[row.status], {
-        header: "Status",
-        cell: (info) => (
-          <div className="relative z-1">
-            <Status invoice={info.row.original} />
-          </div>
-        ),
-        meta: {
-          filterOptions: [...new Set(data.map((invoice) => statusNames[invoice.status]))],
+      columnHelper.accessor(
+        (row) => {
+          switch (row.status) {
+            case "received":
+            case "approved":
+              if (row.approvals.length < company.requiredInvoiceApprovals) {
+                return "Awaiting approval";
+              }
+              return "Approved";
+
+            case "processing":
+              return "Payment in progress";
+            case "payment_pending":
+              return "Payment scheduled";
+            case "paid":
+              return "Paid";
+            case "rejected":
+              return "Rejected";
+            case "failed":
+              return "Failed";
+            default:
+              return statusNames[row.status] || row.status;
+          }
         },
-      }),
+        {
+          id: "status",
+          header: "Status",
+          cell: (info) => (
+            <div className="relative z-1">
+              <Status invoice={info.row.original} />
+            </div>
+          ),
+          meta: {
+            filterOptions: precomputedFilterOptions.status,
+          },
+        },
+      ),
       columnHelper.accessor(isActionable, {
         id: "actions",
         header: () => null,
@@ -242,7 +317,7 @@ export default function InvoicesPage() {
         },
       }),
     ],
-    [],
+    [precomputedFilterOptions, company.requiredInvoiceApprovals, user.roles.administrator],
   );
 
   const handleInvoiceAction = (actionId: string, invoices: Invoice[]) => {
@@ -414,23 +489,48 @@ export default function InvoicesPage() {
         <TableSkeleton columns={6} />
       ) : data.length > 0 ? (
         <>
-          <div className="mx-4 flex justify-between md:hidden">
+          <div className="mx-4 flex items-center justify-between md:hidden">
             <h2 className="text-xl font-bold">
               {data.length} {pluralize("invoice", data.length)}
             </h2>
-            <Checkbox
-              checked={table.getIsAllRowsSelected()}
-              label="Select all"
-              onCheckedChange={(checked) => table.toggleAllRowsSelected(checked === true)}
-            />
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="small"
+                className="h-8 px-2"
+                onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
+              >
+                {table.getIsAllRowsSelected() ? "Deselect all" : "Select all"}
+              </Button>
+
+              {user.roles.administrator ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="small">
+                      <MoreHorizontal className="size-4" />
+                      <span className="sr-only">More options</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <a href={export_company_invoices_path(company.id)} className="flex items-center">
+                        <Download className="mr-2 size-4" />
+                        Download CSV
+                      </a>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
+            </div>
           </div>
 
           <DataTable
             table={table}
             onRowClicked={user.roles.administrator ? setDetailInvoice : undefined}
             searchColumn={user.roles.administrator ? "billFrom" : undefined}
+            mobileFilterColumn="status"
             actions={
-              user.roles.administrator ? (
+              user.roles.administrator && !isMobile ? (
                 <Button variant="outline" size="small" asChild>
                   <a href={export_company_invoices_path(company.id)}>
                     <Download className="size-4" />

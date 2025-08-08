@@ -701,7 +701,7 @@ function SharesTab({ investorId }: { investorId: string }) {
   return isLoading ? (
     <TableSkeleton columns={5} />
   ) : shareHoldings.length > 0 ? (
-    <DataTable table={table} mobileFilterColumn="status" />
+    <DataTable table={table} />
   ) : (
     <Placeholder icon={CircleCheck}>This investor does not hold any shares.</Placeholder>
   );
