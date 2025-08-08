@@ -375,10 +375,10 @@ const CompanySheet = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="mb-16 h-auto max-h-[80vh] rounded-t-[20px] border-0 pb-4"
+        className="mb-16 h-auto max-h-[80vh] rounded-t-[20px] border-0 pb-2"
         showCloseButton={false}
       >
-        <SheetHeader className="flex flex-row items-center space-y-0 pb-4">
+        <SheetHeader className="flex flex-row items-center space-y-0 pb-2">
           <button onClick={goBack} className="mr-3 rounded-full p-1 hover:bg-gray-100">
             <ChevronLeft className="size-5" />
           </button>
