@@ -86,12 +86,12 @@ class DividendComputation < ApplicationRecord
         safe_dividends[output.investor_name][:number_of_shares] += output.number_of_shares
         safe_dividends[output.investor_name][:total_amount] += output.total_amount_in_usd
         safe_dividends[output.investor_name][:qualified_dividends_amount] += output.qualified_dividend_amount_usd
-        safe_dividends[output.investor_name][:investment_amount_in_cents] += output.investment_amount_in_cents
+        safe_dividends[output.investor_name][:investment_amount_in_cents] += output.investment_amount_in_cents.to_i
       else
         share_dividends[output.company_investor_id][:number_of_shares] += output.number_of_shares
         share_dividends[output.company_investor_id][:total_amount] += output.total_amount_in_usd
         share_dividends[output.company_investor_id][:qualified_dividends_amount] += output.qualified_dividend_amount_usd
-        share_dividends[output.company_investor_id][:investment_amount_in_cents] += output.investment_amount_in_cents
+        share_dividends[output.company_investor_id][:investment_amount_in_cents] += output.investment_amount_in_cents.to_i
       end
     end
 
