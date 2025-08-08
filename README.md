@@ -69,25 +69,74 @@ pnpm playwright test
 <details>
 <summary>Stripe</summary>
 
-1. Go to your `Developers` dashboard at [stripe.com](https://stripe.com).
-2. Turn on `Test mode`.
-3. Go to the `API Keys` tab and copy the Publishable Key into `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` and Secret Key into `STRIPE_SECRET_KEY` in the .env file.
-   ![Stripe Secret Key](https://github.com/user-attachments/assets/0830b226-f2c2-4b92-a28f-f4682ad03ec0)
+**Step 1: Create a Stripe Account**
+
+1. Go to [stripe.com](https://stripe.com) and click "Start now" or "Sign up"
+2. Enter your email address and create a password
+3. Complete the account verification process
+
+**Step 2: Access Your Dashboard**
+
+1. Once logged in, you'll be taken to your Stripe Dashboard
+2. Make sure you're in **Test mode** (toggle should be ON in the top right)
+3. If not in test mode, click the toggle to switch to test mode
+
+**Step 3: Get Your API Keys**
+
+1. In the left sidebar, click on "Developers"
+2. Click on "API keys" from the submenu
+3. You'll see two keys:
+   - **Publishable key** (starts with `pk_test_`): Copy this value
+   - **Secret key** (starts with `sk_test_`): Click "Reveal" then copy this value
+
+**Step 4: Add to Environment File**
+
+1. Open your `.env` file in the project root
+2. Add the following variables:
+   ```
+   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
+   STRIPE_SECRET_KEY=sk_test_your_secret_key_here
+   ```
 
 </details>
 
 <details>
 <summary>Wise</summary>
 
-1. Go to [sandbox.transferwise.tech](https://sandbox.transferwise.tech/) and make a brand new Wise account using the register option and following Wise instructions.
-2. Once you got your account set up click on your profile.
-   ![Wise Sandbox Page](https://github.com/user-attachments/assets/bb8da9f7-a2cc-4c92-906c-a01c62df9870)
-3. Copy your Membership number and paste it into `WISE_PROFILE_ID` in the .env file.
-   ![Wise Sandbox Profile Settings](https://github.com/user-attachments/assets/790a43be-e41f-47ef-8ef9-05b6c8117cfc)
-4. Go to Integrations and Tools and then to API tokens.
-5. Create a new API token making sure it is set to Full Access.
-6. Reveal the full API key and copy it into `WISE_API_KEY` in the .env file.
-   ![Wise Sandbox API Settings](https://github.com/user-attachments/assets/f20be40f-0790-4435-abe6-8077a6c86fc3)
+**Step 1: Create a Wise Sandbox Account**
+
+1. Go to [sandbox.transferwise.tech](https://sandbox.transferwise.tech/)
+2. Click "Register" in the top right corner
+3. Enter your email address and follow the registration process
+4. Complete email verification and set up your account password
+5. Fill in your personal details as prompted (use test data for sandbox)
+
+**Step 2: Access Your Profile Information**
+
+1. Once logged in to your sandbox account, click on your profile/avatar in the top right
+2. Go to "Settings" or "Profile settings"
+3. Find your **Membership number** or **Profile ID**
+4. Copy this number (it will be used for `WISE_PROFILE_ID`)
+
+**Step 3: Generate API Token**
+
+1. In your account settings, look for "Integrations and Tools" or "API tokens"
+2. Click "Create API token" or "Generate new token"
+3. Set the token permissions to **Full Access** (required for transfers)
+4. Give your token a descriptive name (e.g., "Flexile Development")
+5. Click "Create token"
+6. **Important**: Copy the full API token immediately - you won't be able to see it again
+
+**Step 4: Add to Environment File**
+
+1. Open your `.env` file in the project root
+2. Add the following variables:
+   ```
+   WISE_PROFILE_ID=your_membership_number_here
+   WISE_API_KEY=your_full_api_token_here
+   ```
+
+**Note**: Keep your API credentials secure and never commit them to version control.
 
 </details>
 
