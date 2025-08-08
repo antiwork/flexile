@@ -14,9 +14,7 @@ class DividendComputationGeneration
 
   def process
     @computation = company.dividend_computations.create!(
-      total_amount_in_usd: amount_in_usd,
-      dividends_issuance_date:,
-      return_of_capital:
+      total_amount_in_usd: amount_in_usd, dividends_issuance_date:, return_of_capital:
     )
     @preferred_dividend_total = 0.to_d
     @common_dividend_total = 0.to_d
