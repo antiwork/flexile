@@ -1,0 +1,128 @@
+# frozen_string_literal: true
+
+class CompanyUsersPresenter
+  def initialize(company:)
+    @company = company
+  end
+
+  def props
+    {
+      administrators: administrators_props,
+      lawyers: lawyers_props,
+      contractors: contractors_props,
+      investors: investors_props,
+      all_users: all_users_props,
+    }
+  end
+
+  def administrators_props
+    admins = @company.company_administrators.includes(:user).order(:id)
+    primary_admin = admins.first
+
+    admins.map do |admin|
+      user = admin.user
+      roles = get_user_roles(user)
+
+      {
+        id: user.external_id,
+        email: user.email,
+        name: user.legal_name || user.preferred_name || user.email,
+        isAdmin: true,
+        role: primary_admin&.id == admin.id ? "Owner" : "Admin",
+        isOwner: primary_admin&.id == admin.id,
+        allRoles: roles,
+      }
+    end.sort_by { |admin| [admin[:isOwner] ? 0 : 1, admin[:name]] }
+  end
+
+  def lawyers_props
+    @company.company_lawyers.includes(:user).order(:id).map do |lawyer|
+      user = lawyer.user
+      roles = get_user_roles(user)
+
+      {
+        id: user.external_id,
+        email: user.email,
+        name: user.legal_name || user.preferred_name || user.email,
+        isAdmin: roles.include?("Admin"),
+        role: "Lawyer",
+        isOwner: is_primary_admin?(user),
+        allRoles: roles,
+      }
+    end.sort_by { |lawyer| lawyer[:name] }
+  end
+
+  def contractors_props
+    @company.company_workers.includes(:user).order(:id).map do |worker|
+      user = worker.user
+      roles = get_user_roles(user)
+
+      {
+        id: user.external_id,
+        email: user.email,
+        name: user.legal_name || user.preferred_name || user.email,
+        isAdmin: roles.include?("Admin"),
+        role: "Contractor",
+        isOwner: is_primary_admin?(user),
+        active: worker.active?,
+        allRoles: roles,
+      }
+    end.sort_by { |contractor| contractor[:name] }
+  end
+
+  def investors_props
+    @company.company_investors.includes(:user).order(:id).map do |investor|
+      user = investor.user
+      roles = get_user_roles(user)
+
+      {
+        id: user.external_id,
+        email: user.email,
+        name: user.legal_name || user.preferred_name || user.email,
+        isAdmin: roles.include?("Admin"),
+        role: "Investor",
+        isOwner: is_primary_admin?(user),
+        allRoles: roles,
+      }
+    end.sort_by { |investor| investor[:name] }
+  end
+
+  def all_users_props
+    seen = Set.new
+    all_users = []
+
+    # Collect all users from different roles
+    [administrators_props, lawyers_props, contractors_props, investors_props].each do |role_users|
+      role_users.each do |user|
+        next if seen.include?(user[:id])
+        seen.add(user[:id])
+        all_users << {
+          id: user[:id],
+          email: user[:email],
+          name: user[:name],
+          allRoles: user[:allRoles],
+        }
+      end
+    end
+
+    all_users.sort_by { |user| user[:name] }
+  end
+
+  private
+    def get_user_roles(user)
+      roles = []
+
+      # Check all possible roles for this user in this company
+      roles << "Admin" if @company.company_administrators.exists?(user: user)
+      roles << "Lawyer" if @company.company_lawyers.exists?(user: user)
+      roles << "Contractor" if @company.company_workers.exists?(user: user)
+      roles << "Investor" if @company.company_investors.exists?(user: user)
+
+      roles
+    end
+
+    def is_primary_admin?(user)
+      primary_admin = @company.primary_admin
+      primary_admin&.user_id == user.id
+    end
+end

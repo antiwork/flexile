@@ -46,6 +46,7 @@ declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
     numeric?: boolean;
     filterOptions?: string[];
+    className?: string;
   }
 }
 
@@ -301,7 +302,7 @@ export default function DataTable<T extends RowData>({
                 <TableHead
                   key={header.id}
                   colSpan={header.colSpan}
-                  className={`${cellClasses(header.column, "header")} ${sortable && header.column.getCanSort() ? "cursor-pointer" : ""}`}
+                  className={`${cellClasses(header.column, "header")} ${sortable && header.column.getCanSort() ? "cursor-pointer" : ""} ${header.column.columnDef.meta?.className || ""}`}
                   aria-sort={
                     header.column.getIsSorted() === "asc"
                       ? "ascending"
@@ -344,7 +345,7 @@ export default function DataTable<T extends RowData>({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className={`${cellClasses(cell.column)} ${cell.column.id === "actions" ? "relative z-1 md:text-right print:hidden" : ""}`}
+                      className={`${cellClasses(cell.column)} ${cell.column.id === "actions" ? "relative z-1 md:text-right print:hidden" : ""} ${cell.column.columnDef.meta?.className || ""}`}
                       onClick={(e) => cell.column.id === "actions" && e.stopPropagation()}
                     >
                       {typeof cell.column.columnDef.header === "string" && (
