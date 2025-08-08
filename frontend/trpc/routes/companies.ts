@@ -4,7 +4,16 @@ import { createUpdateSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
-import { activeStorageAttachments, activeStorageBlobs, companies, companyAdministrators, users } from "@/db/schema";
+import {
+  activeStorageAttachments,
+  activeStorageBlobs,
+  companies,
+  companyAdministrators,
+  companyContractors,
+  companyInvestors,
+  companyLawyers,
+  users,
+} from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 import {
   company_administrator_stripe_microdeposit_verifications_url,
@@ -69,6 +78,43 @@ export const companiesRouter = createRouter({
       if (a.isOwner !== b.isOwner) return a.isOwner ? -1 : 1;
       return a.name.localeCompare(b.name);
     });
+  }),
+
+  listCompanyUsers: companyProcedure.input(z.object({ companyId: z.string() })).query(async ({ ctx }) => {
+    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+
+    // Get all users related to this company (admins, lawyers, contractors, investors)
+    const adminUsers = await db.query.companyAdministrators.findMany({
+      where: eq(companyAdministrators.companyId, ctx.company.id),
+      with: { user: true },
+    });
+    const lawyerUsers = await db.query.companyLawyers.findMany({
+      where: eq(companyLawyers.companyId, ctx.company.id),
+      with: { user: true },
+    });
+    const contractorUsers = await db.query.companyContractors.findMany({
+      where: eq(companyContractors.companyId, ctx.company.id),
+      with: { user: true },
+    });
+    const investorUsers = await db.query.companyInvestors.findMany({
+      where: eq(companyInvestors.companyId, ctx.company.id),
+      with: { user: true },
+    });
+
+    const seen = new Set();
+    const all = [...adminUsers, ...lawyerUsers, ...contractorUsers, ...investorUsers]
+      .map((entry) => entry.user)
+      .filter((u) => {
+        if (seen.has(u.externalId)) return false;
+        seen.add(u.externalId);
+        return true;
+      })
+      .map((u) => ({
+        id: u.externalId,
+        email: u.email,
+        name: u.legalName || u.preferredName || u.email,
+      }));
+    return all.sort((a, b) => a.name.localeCompare(b.name));
   }),
   update: companyProcedure
     .input(

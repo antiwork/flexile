@@ -1,14 +1,15 @@
 "use client";
-import { CircleCheck } from "lucide-react";
+import { Plus, Users } from "lucide-react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import React, { useMemo } from "react";
 import CopyButton from "@/components/CopyButton";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
-import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import {
   fetchInvestorEmail,
@@ -102,6 +103,8 @@ export default function CapTable() {
         meta: { numeric: true },
         footer: "100%",
       }),
+
+      investorColumnHelper.simple("notes", "Notes"),
     ],
     [data],
   );
@@ -151,8 +154,15 @@ export default function CapTable() {
           <DataTable table={investorsTable} />
         </div>
       ) : (
-        <div className="mx-4">
-          <Placeholder icon={CircleCheck}>There are no active investors right now.</Placeholder>
+        <div className="mx-4 grid justify-items-center gap-4 rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-600">
+          <Users className="-mb-1 size-6 text-gray-600" aria-hidden="true" />
+          <div>Add your cap table to start managing equity and ownership records.</div>
+          <Button variant="outline" size="default" asChild>
+            <Link href="/equity/investors/add">
+              <Plus className="mr-2 size-4" />
+              Add cap table
+            </Link>
+          </Button>
         </div>
       )}
     </>
