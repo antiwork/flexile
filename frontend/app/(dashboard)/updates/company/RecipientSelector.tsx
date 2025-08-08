@@ -53,13 +53,7 @@ export default function RecipientSelector({ value, onChange, counts }: Recipient
     }
   };
 
-  const totalRecipients = useMemo(
-    () =>
-      // This is a simplified calculation - in reality, we'd need to de-duplicate
-      // across categories, but for now we'll just sum them up
-      value.reduce((sum, type) => sum + getCountForType(type), 0),
-    [value, counts],
-  );
+  const totalRecipients = useMemo(() => value.reduce((sum, type) => sum + getCountForType(type), 0), [value, counts]);
 
   const handleToggle = (type: RecipientType) => {
     // Admins must always be selected
