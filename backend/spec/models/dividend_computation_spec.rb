@@ -19,34 +19,34 @@ RSpec.describe DividendComputation do
     @common_class = create(:share_class, company:, name: "Common", original_issue_price_in_dollars: nil, hurdle_rate: nil)
 
     @seed_investor = create(:company_investor, user: create(:user, legal_name: "Seed Investor"), company:)
-    create(:share_holding, company_investor: @seed_investor, share_class: @seed_class, number_of_shares: 99_283, originally_acquired_at: 91.days.ago)
-    create(:share_holding, company_investor: @seed_investor, share_class: @seed_class, number_of_shares: 12_123, originally_acquired_at: 89.days.ago)
+    create(:share_holding, company_investor: @seed_investor, share_class: @seed_class, number_of_shares: 99_283, originally_acquired_at: 91.days.ago, total_amount_in_cents: 111_406_00)
+    create(:share_holding, company_investor: @seed_investor, share_class: @seed_class, number_of_shares: 12_123, originally_acquired_at: 89.days.ago, total_amount_in_cents: 13_625_00)
 
     @series_A_investor = create(:company_investor, user: create(:user, legal_name: "Series A Investor"), company:)
-    create(:share_holding, company_investor: @series_A_investor, share_class: @A_class, number_of_shares: 32_123)
-    create(:share_holding, company_investor: @series_A_investor, share_class: @A_class, number_of_shares: 1_346)
+    create(:share_holding, company_investor: @series_A_investor, share_class: @A_class, number_of_shares: 32_123, total_amount_in_cents: 39_768_00)
+    create(:share_holding, company_investor: @series_A_investor, share_class: @A_class, number_of_shares: 1_346, total_amount_in_cents: 1_666_00)
 
     @seed_and_series_A_investor = create(:company_investor,
                                          user: create(:user, legal_name: "Seed & Series A Investor"),
                                          company:)
-    create(:share_holding, company_investor: @seed_and_series_A_investor, share_class: @seed_class, number_of_shares: 3_098)
-    create(:share_holding, company_investor: @seed_and_series_A_investor, share_class: @seed_class, number_of_shares: 4_820)
+    create(:share_holding, company_investor: @seed_and_series_A_investor, share_class: @seed_class, number_of_shares: 3_098, total_amount_in_cents: 3_480_00)
+    create(:share_holding, company_investor: @seed_and_series_A_investor, share_class: @seed_class, number_of_shares: 4_820, total_amount_in_cents: 5_417_00)
     create(:share_holding, company_investor: @seed_and_series_A_investor, share_class: @A_class,
-                           number_of_shares: 2_934)
+                           number_of_shares: 2_934, total_amount_in_cents: 3_632_00)
     create(:share_holding, company_investor: @seed_and_series_A_investor, share_class: @A_class,
-                           number_of_shares: 1_589)
+                           number_of_shares: 1_589, total_amount_in_cents: 1_967_00)
 
     @common_investor = create(:company_investor, user: create(:user, legal_name: "Common Investor"), company:)
-    create(:share_holding, company_investor: @common_investor, share_class: @common_class, number_of_shares: 123, originally_acquired_at: 30.days.ago)
-    create(:share_holding, company_investor: @common_investor, share_class: @common_class, number_of_shares: 768, originally_acquired_at: 31.days.ago)
+    create(:share_holding, company_investor: @common_investor, share_class: @common_class, number_of_shares: 123, originally_acquired_at: 30.days.ago, total_amount_in_cents: 138_00)
+    create(:share_holding, company_investor: @common_investor, share_class: @common_class, number_of_shares: 768, originally_acquired_at: 31.days.ago, total_amount_in_cents: 863_00)
 
     @all_class_investor = create(:company_investor, user: create(:user, legal_name: "All class Investor"), company:)
-    create(:share_holding, company_investor: @all_class_investor, share_class: @seed_class, number_of_shares: 9_876)
-    create(:share_holding, company_investor: @all_class_investor, share_class: @seed_class, number_of_shares: 5_432)
-    create(:share_holding, company_investor: @all_class_investor, share_class: @A_class, number_of_shares: 1_987)
-    create(:share_holding, company_investor: @all_class_investor, share_class: @A_class, number_of_shares: 6_543)
-    create(:share_holding, company_investor: @all_class_investor, share_class: @common_class, number_of_shares: 210)
-    create(:share_holding, company_investor: @all_class_investor, share_class: @common_class, number_of_shares: 987)
+    create(:share_holding, company_investor: @all_class_investor, share_class: @seed_class, number_of_shares: 9_876, total_amount_in_cents: 11_100_00)
+    create(:share_holding, company_investor: @all_class_investor, share_class: @seed_class, number_of_shares: 5_432, total_amount_in_cents: 6_105_00)
+    create(:share_holding, company_investor: @all_class_investor, share_class: @A_class, number_of_shares: 1_987, total_amount_in_cents: 2_460_00)
+    create(:share_holding, company_investor: @all_class_investor, share_class: @A_class, number_of_shares: 6_543, total_amount_in_cents: 8_103_00)
+    create(:share_holding, company_investor: @all_class_investor, share_class: @common_class, number_of_shares: 210, total_amount_in_cents: 236_00)
+    create(:share_holding, company_investor: @all_class_investor, share_class: @common_class, number_of_shares: 987, total_amount_in_cents: 1_109_00)
 
     @entire_safe_owner = create(:company_investor, company:, user: create(:user, legal_name: "Richie Rich LLC"))
     @safe1 = create(:convertible_investment, company:, entity_name: "Richie Rich LLC", implied_shares: 987_632,
@@ -146,15 +146,15 @@ RSpec.describe DividendComputation do
       expect(dividend_round.return_of_capital).to eq(false)
 
       dividends_data = [
-        { investor: @seed_investor, total_amount_in_cents: 80_328_26, qualified_amount_cents: 71_587_08, number_of_shares: 111_406 },
-        { investor: @series_A_investor, total_amount_in_cents: 22_523_16, qualified_amount_cents: 22_523_16, number_of_shares: 33_469 },
-        { investor: @seed_and_series_A_investor, total_amount_in_cents: 8_752_98, qualified_amount_cents: 8_752_98, number_of_shares: 12_441 },
-        { investor: @common_investor, total_amount_in_cents: 522_34, qualified_amount_cents: 0, number_of_shares: 891 },
-        { investor: @all_class_investor, total_amount_in_cents: 17_479_75, qualified_amount_cents: 17_479_75, number_of_shares: 25_035 },
-        { investor: @entire_safe_owner, total_amount_in_cents: 57_8982_04, qualified_amount_cents: 57_8982_04, number_of_shares: nil },
-        { investor: @partial_safe_owner1, total_amount_in_cents: 17_988_36, qualified_amount_cents: 17_988_36, number_of_shares: nil },
-        { investor: @partial_safe_owner2, total_amount_in_cents: 13_2626_42, qualified_amount_cents: 13_2626_42, number_of_shares: nil },
-        { investor: @partial_safe_owner3, total_amount_in_cents: 14_0796_74, qualified_amount_cents: 14_0796_74, number_of_shares: nil }
+        { investor: @seed_investor, total_amount_in_cents: 80_328_26, qualified_amount_cents: 71_587_08, number_of_shares: 111_406, investment_amount_in_cents: 125_031_00 },
+        { investor: @series_A_investor, total_amount_in_cents: 22_523_16, qualified_amount_cents: 22_523_16, number_of_shares: 33_469, investment_amount_in_cents: 41_434_00 },
+        { investor: @seed_and_series_A_investor, total_amount_in_cents: 8_752_98, qualified_amount_cents: 8_752_98, number_of_shares: 12_441, investment_amount_in_cents: 14_496_00 },
+        { investor: @common_investor, total_amount_in_cents: 522_34, qualified_amount_cents: 0, number_of_shares: 891, investment_amount_in_cents: 1_001_00 },
+        { investor: @all_class_investor, total_amount_in_cents: 17_479_75, qualified_amount_cents: 17_479_75, number_of_shares: 25_035, investment_amount_in_cents: 29_113_00 },
+        { investor: @entire_safe_owner, total_amount_in_cents: 57_8982_04, qualified_amount_cents: 57_8982_04, number_of_shares: nil, investment_amount_in_cents: 1_000_000_00 },
+        { investor: @partial_safe_owner1, total_amount_in_cents: 17_988_36, qualified_amount_cents: 17_988_36, number_of_shares: nil, investment_amount_in_cents: 123_456_78 },
+        { investor: @partial_safe_owner2, total_amount_in_cents: 13_2626_42, qualified_amount_cents: 13_2626_42, number_of_shares: nil, investment_amount_in_cents: 910_234_56 },
+        { investor: @partial_safe_owner3, total_amount_in_cents: 14_0796_74, qualified_amount_cents: 14_0796_74, number_of_shares: nil, investment_amount_in_cents: 966_308_66 }
       ]
 
       dividends_data.each do |data|
@@ -165,6 +165,7 @@ RSpec.describe DividendComputation do
             total_amount_in_cents: data[:total_amount_in_cents],
             qualified_amount_cents: data[:qualified_amount_cents],
             number_of_shares: data[:number_of_shares],
+            investment_amount_in_cents: data[:investment_amount_in_cents],
             status: "Issued"
           )
         ).to eq(true)
@@ -177,15 +178,15 @@ RSpec.describe DividendComputation do
       share_dividends, safe_dividends = @dividend_computation.dividends_info
 
       expect(share_dividends).to eq({
-        @seed_investor.id => { number_of_shares: 111_406, total_amount: 80_328.26, qualified_dividends_amount: 71_587.08 },
-        @series_A_investor.id => { number_of_shares: 33_469, total_amount: 22_523.16, qualified_dividends_amount: 22_523.16 },
-        @seed_and_series_A_investor.id => { number_of_shares: 12_441, total_amount: 8_752.98, qualified_dividends_amount: 8_752.98 },
-        @common_investor.id => { number_of_shares: 891, total_amount: 522.34, qualified_dividends_amount: 0 },
-        @all_class_investor.id => { number_of_shares: 25_035, total_amount: 17_479.75, qualified_dividends_amount: 17_479.75 },
+        @seed_investor.id => { number_of_shares: 111_406, total_amount: 80_328.26, qualified_dividends_amount: 71_587.08, investment_amount_in_cents: 125_031_00 },
+        @series_A_investor.id => { number_of_shares: 33_469, total_amount: 22_523.16, qualified_dividends_amount: 22_523.16, investment_amount_in_cents: 41_434_00 },
+        @seed_and_series_A_investor.id => { number_of_shares: 12_441, total_amount: 8_752.98, qualified_dividends_amount: 8_752.98, investment_amount_in_cents: 14_496_00 },
+        @common_investor.id => { number_of_shares: 891, total_amount: 522.34, qualified_dividends_amount: 0, investment_amount_in_cents: 1_001_00 },
+        @all_class_investor.id => { number_of_shares: 25_035, total_amount: 17_479.75, qualified_dividends_amount: 17_479.75, investment_amount_in_cents: 29_113_00 },
       })
       expect(safe_dividends).to eq({
-        @safe1.entity_name => { number_of_shares: 987_632, total_amount: 578_982.04, qualified_dividends_amount: 578_982.04 },
-        @safe2.entity_name => { number_of_shares: 497_092, total_amount: 291_411.52, qualified_dividends_amount: 291_411.52 },
+        @safe1.entity_name => { number_of_shares: 987_632, total_amount: 578_982.04, qualified_dividends_amount: 578_982.04, investment_amount_in_cents: 1_000_000_00 },
+        @safe2.entity_name => { number_of_shares: 497_092, total_amount: 291_411.52, qualified_dividends_amount: 291_411.52, investment_amount_in_cents: 2_000_000_00 },
       })
     end
   end

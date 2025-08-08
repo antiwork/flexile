@@ -47,6 +47,7 @@ class DividendComputationGeneration
           preferred_dividend_amount_in_usd: dividend_usd,
           qualified_dividend_amount_usd:,
           total_amount_in_usd: dividend_usd,
+          investment_amount_in_cents: share_holding.investment_amount_in_cents,
         }
         computation.dividend_computation_outputs.create!(attrs)
         @preferred_dividend_total += dividend_usd
@@ -89,6 +90,7 @@ class DividendComputationGeneration
           dividend_amount_in_usd: dividend_usd,
           qualified_dividend_amount_usd:,
           total_amount_in_usd: dividend_usd,
+          investment_amount_in_cents: convertible.amount_in_cents,
         }
         computation.dividend_computation_outputs.create!(attrs)
         @common_dividend_total += dividend_usd
@@ -115,7 +117,8 @@ class DividendComputationGeneration
                 "CASE WHEN (share_classes.preferred = TRUE) AND '#{dividends_issuance_date}'::date - #{MAX_PREFERRED_SHARE_HOLDING_DAYS} > share_holdings.originally_acquired_at THEN number_of_shares " \
                 "WHEN (share_classes.preferred = FALSE) AND '#{dividends_issuance_date}'::date - #{DEFAULT_SHARE_HOLDING_DAYS} > share_holdings.originally_acquired_at THEN number_of_shares " \
                 "ELSE 0 END"\
-              ") AS qualified_shares"
+              ") AS qualified_shares, " \
+              "SUM(total_amount_in_cents) AS investment_amount_in_cents"
           )
           .order(:company_investor_id)
           .load
