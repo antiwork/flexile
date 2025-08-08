@@ -2,13 +2,13 @@
 
 class DividendComputationPolicy < ApplicationPolicy
   def create?
-    return unless company.equity_enabled?
+    return false unless company.equity_enabled?
 
     company_administrator.present? || company_lawyer.present?
   end
 
   def investor_breakdown?
-    return unless company.equity_enabled?
+    return false unless company.equity_enabled?
 
     company_administrator.present? || company_lawyer.present?
   end
