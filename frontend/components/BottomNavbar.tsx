@@ -113,6 +113,8 @@ const MobileNavLinks = ({
     sidebar.setOpenMobile(false);
   };
 
+  const moreActive = openSheet === "more" || openSheet === "settings" || openSheet === "company";
+
   return (
     <ul className="flex h-16 items-center justify-between px-2">
       {routes.has("Invoices") && (
@@ -177,11 +179,9 @@ const MobileNavLinks = ({
         />
       )}
       <MobileNavItem
-        icon={
-          <MoreHorizontal className={cn("mb-1 size-6", openSheet === "more" ? "text-blue-500" : "text-gray-400")} />
-        }
+        icon={<MoreHorizontal className={cn("mb-1 size-6", moreActive ? "text-blue-500" : "text-gray-400")} />}
         label="More"
-        active={openSheet === "more"}
+        active={moreActive}
         onClick={() => handleNavClick(onMoreClick)}
         asButton
       />
