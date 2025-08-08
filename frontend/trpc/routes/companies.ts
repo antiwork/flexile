@@ -83,25 +83,26 @@ export const companiesRouter = createRouter({
   listCompanyUsers: companyProcedure.input(z.object({ companyId: z.string() })).query(async ({ ctx }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-    // Get all users related to this company (admins, lawyers, contractors, investors)
-    const adminUsers = await db.query.companyAdministrators.findMany({
-      where: eq(companyAdministrators.companyId, ctx.company.id),
-      with: { user: true },
-    });
-    const lawyerUsers = await db.query.companyLawyers.findMany({
-      where: eq(companyLawyers.companyId, ctx.company.id),
-      with: { user: true },
-    });
-    const contractorUsers = await db.query.companyContractors.findMany({
-      where: eq(companyContractors.companyId, ctx.company.id),
-      with: { user: true },
-    });
-    const investorUsers = await db.query.companyInvestors.findMany({
-      where: eq(companyInvestors.companyId, ctx.company.id),
-      with: { user: true },
-    });
+    const [adminUsers, lawyerUsers, contractorUsers, investorUsers] = await Promise.all([
+      db.query.companyAdministrators.findMany({
+        where: eq(companyAdministrators.companyId, ctx.company.id),
+        with: { user: true },
+      }),
+      db.query.companyLawyers.findMany({
+        where: eq(companyLawyers.companyId, ctx.company.id),
+        with: { user: true },
+      }),
+      db.query.companyContractors.findMany({
+        where: eq(companyContractors.companyId, ctx.company.id),
+        with: { user: true },
+      }),
+      db.query.companyInvestors.findMany({
+        where: eq(companyInvestors.companyId, ctx.company.id),
+        with: { user: true },
+      }),
+    ]);
 
-    const seen = new Set();
+    const seen = new Set<string>();
     const all = [...adminUsers, ...lawyerUsers, ...contractorUsers, ...investorUsers]
       .map((entry) => entry.user)
       .filter((u) => {

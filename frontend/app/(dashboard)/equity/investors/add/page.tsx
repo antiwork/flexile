@@ -18,11 +18,6 @@ type Investor = {
   shares: number;
 };
 
-type User = {
-  id: string;
-  name: string;
-};
-
 const AddCapTablePage = () => {
   const company = useCurrentCompany();
   const router = useRouter();
@@ -44,6 +39,23 @@ const AddCapTablePage = () => {
   });
 
   const totalShares = useMemo(() => investors.reduce((sum, i) => sum + (Number(i.shares) || 0), 0), [investors]);
+
+  const getAvailableUsers = useMemo(
+    () => (currentRowId: string) => {
+      if (!users) return [];
+
+      // Get all selected user IDs except for the current row
+      const selectedUserIds = investors
+        .filter((inv) => inv.id !== currentRowId && inv.userId !== null)
+        .map((inv) => inv.userId);
+
+      // Filter out already selected users
+      return users
+        .filter((user) => !selectedUserIds.includes(user.id))
+        .map((user) => ({ value: user.id, label: user.name }));
+    },
+    [users, investors],
+  );
 
   const handleInvestorChange = (id: string, field: "userId" | "shares", value: string | number) => {
     setInvestors((prev) => prev.map((inv) => (inv.id === id ? { ...inv, [field]: value } : inv)));
@@ -105,7 +117,7 @@ const AddCapTablePage = () => {
           }
           return (
             <ComboBox
-              options={users?.map((u: User) => ({ value: u.id, label: u.name })) || []}
+              options={getAvailableUsers(row.original.id)}
               value={row.original.userId}
               onChange={(val) => handleInvestorChange(row.original.id, "userId", val)}
               placeholder={isLoading ? "Loading..." : "Select investor"}
@@ -171,7 +183,7 @@ const AddCapTablePage = () => {
         footer: () => <div></div>,
       }),
     ],
-    [users, isLoading, totalShares, investors.length],
+    [users, isLoading, totalShares, investors.length, getAvailableUsers],
   );
 
   const tableData = useMemo(() => {
