@@ -120,10 +120,10 @@ export function AuthPage({
   const handleGoogleAuth = async () => {
     setGoogleAuthError(null);
     const context = isSignup ? "signup" : "login";
-    document.cookie = `auth_context=${context}; path=/; max-age=300`;
+    document.cookie = `auth_context=${context}; path=/; max-age=300; Secure; SameSite=Strict`;
 
     if (invitationToken) {
-      document.cookie = `auth_invitation_token=${invitationToken}; path=/; max-age=300`;
+      document.cookie = `auth_invitation_token=${invitationToken}; path=/; max-age=300; Secure; SameSite=Strict`;
     }
 
     try {
