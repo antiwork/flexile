@@ -227,6 +227,7 @@ export function AuthPage({
                   className={cn(
                     `flex h-12 w-full items-center justify-center gap-2 text-sm`,
                     googleAuthError && "border-destructive",
+                    highlightedAuthMethod !== "google" && "bg-white",
                   )}
                   onClick={() => void handleGoogleAuth()}
                   disabled={sendOtp.isPending}
@@ -273,7 +274,7 @@ export function AuthPage({
                     mutation={sendOtp}
                     type="submit"
                     idleVariant={highlightedAuthMethod === "email" ? "primary" : "outline"}
-                    className="h-12 w-full text-sm"
+                    className={cn("h-12 w-full text-sm", highlightedAuthMethod !== "email" && "bg-white")}
                     loadingText="Sending..."
                   >
                     {sendOtpText}
