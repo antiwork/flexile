@@ -10,7 +10,6 @@ import { companyUpdatesRouter } from "./routes/companyUpdates";
 import { consolidatedInvoicesRouter } from "./routes/consolidatedInvoices";
 import { contractorsRouter } from "./routes/contractors";
 import { convertibleSecuritiesRouter } from "./routes/convertibleSecurities";
-import { dividendComputationsRouter } from "./routes/dividendComputations";
 import { dividendRoundsRouter } from "./routes/dividendRounds";
 import { dividendsRouter } from "./routes/dividends";
 import { documentsRouter } from "./routes/documents";
@@ -42,7 +41,6 @@ export const appRouter = createRouter({
   convertibleSecurities: convertibleSecuritiesRouter,
   dividends: dividendsRouter,
   dividendRounds: dividendRoundsRouter,
-  dividendComputations: dividendComputationsRouter,
   equityGrantExercises: equityGrantExercisesRouter,
   tenderOffers: tenderOffersRouter,
 

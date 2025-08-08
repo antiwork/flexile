@@ -3,6 +3,12 @@
 class Internal::Companies::DividendComputationsController < Internal::Companies::BaseController
   before_action :set_dividend_computation, only: [:investor_breakdown]
 
+  def index
+    authorize DividendComputation
+
+    render json: DividendComputationPresenter.new(Current.company).props
+  end
+
   def create
     authorize DividendComputation
 

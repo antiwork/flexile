@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useCurrentCompany } from "@/global";
-import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_dividend_computations_path } from "@/utils/routes";
 
@@ -46,7 +45,7 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
   });
 
   const company = useCurrentCompany();
-  const utils = trpc.useUtils();
+  const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: async (data: FormValues) => {
       await request({
@@ -59,7 +58,7 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
       });
     },
     onSuccess: () => {
-      utils.dividendComputations.list.invalidate({ companyId: company.id });
+      queryClient.invalidateQueries({ queryKey: ["dividendComputations", company.id] });
       handleClose();
     },
   });

@@ -87,7 +87,7 @@ scope path: :internal, module: :internal do
         post :sign
       end
     end
-    resources :dividend_computations, only: [:create] do
+    resources :dividend_computations, only: [:index, :create] do
       member do
         get :investor_breakdown
       end

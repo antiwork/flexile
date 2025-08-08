@@ -1,13 +1,17 @@
 # frozen_string_literal: true
 
 class DividendComputationPolicy < ApplicationPolicy
-  def create?
+  def index?
     return false unless company.equity_enabled?
 
     company_administrator.present? || company_lawyer.present?
   end
 
+  def create?
+    index?
+  end
+
   def investor_breakdown?
-    create?
+    index?
   end
 end
