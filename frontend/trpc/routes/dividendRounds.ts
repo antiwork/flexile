@@ -11,23 +11,19 @@ export const dividendRoundsRouter = createRouter({
     if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
     const where = eq(dividendRounds.companyId, ctx.company.id);
-
-    const result = await db
-      .select({
-        id: dividendRounds.id,
-        companyId: dividendRounds.companyId,
-        issuedAt: dividendRounds.issuedAt,
-        numberOfShareholders: dividendRounds.numberOfShareholders,
-        totalAmountInCents: dividendRounds.totalAmountInCents,
-        returnOfCapital: dividendRounds.returnOfCapital,
-        readyForPayment: dividendRounds.readyForPayment,
-        status: dividendRounds.status,
-      })
-      .from(dividendRounds)
-      .where(where)
-      .orderBy(desc(dividendRounds.id));
-
-    return result;
+    return await db.query.dividendRounds.findMany({
+      columns: {
+        id: true,
+        issuedAt: true,
+        totalAmountInCents: true,
+        numberOfShareholders: true,
+        returnOfCapital: true,
+        readyForPayment: true,
+        status: true,
+      },
+      where,
+      orderBy: [desc(dividendRounds.id)],
+    });
   }),
 
   get: companyProcedure.input(z.object({ id: z.number() })).query(async ({ ctx, input }) => {
