@@ -8,4 +8,8 @@ class CompanyPolicy < ApplicationPolicy
   def update?
     company_administrator.present? || record.nil?
   end
+
+  def create?
+    company_administrator.present?
+  end
 end
