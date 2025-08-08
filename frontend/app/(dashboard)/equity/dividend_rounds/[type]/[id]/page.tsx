@@ -4,24 +4,125 @@ import { useQuery } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import { Circle, Info } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import { z } from "zod";
 import DividendStatusIndicator from "@/app/(dashboard)/equity/DividendStatusIndicator";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import TableSkeleton from "@/components/TableSkeleton";
 import { useCurrentCompany } from "@/global";
+import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { investor_breakdown_company_dividend_computation_path } from "@/utils/routes";
 
-type RowData = {
-  investor: { name: string; id: string | null };
-  status: { value: string; Component: React.JSX.Element };
-  totalAmountUsd: number;
-  numberOfShares: number | null;
-  flexileFee: number;
+export default function DividendRoundsPage() {
+  const { id, type } = useParams<{ id: string; type: "draft" | "round" }>();
+  const isDraft = type === "draft";
+
+  return (
+    <>
+      <DashboardHeader title="Dividend" />
+      {isDraft ? <DividendComputation id={id} /> : <DividendRound id={id} />}
+    </>
+  );
+}
+
+type Dividend = RouterOutput["dividends"]["list"][number];
+const DividendRound = ({ id }: { id: string }) => {
+  const company = useCurrentCompany();
+  const router = useRouter();
+
+  const { data: dividends = [], isLoading } = trpc.dividends.list.useQuery({
+    companyId: company.id,
+    dividendRoundId: Number(id),
+  });
+
+  const calculateSums = useCallback((dividends: Dividend[]) => {
+    const totalAmountUsdSum = dividends.reduce((sum, dividend) => sum + Number(dividend.totalAmountInCents) / 100, 0);
+    const numberOfSharesSum = dividends.reduce(
+      (sum, dividend) => sum + (dividend.numberOfShares ? Number(dividend.numberOfShares) : 0),
+      0,
+    );
+    const flexileFeeSum = dividends.reduce(
+      (sum, dividend) => sum + calculateFlexileFees(Number(dividend.totalAmountInCents) / 100),
+      0,
+    );
+
+    return {
+      totalAmountUsdSum,
+      numberOfSharesSum,
+      flexileFeeSum,
+    };
+  }, []);
+
+  const sums = calculateSums(dividends);
+  const columnHelper = createColumnHelper<Dividend>();
+  const columns = [
+    columnHelper.accessor("investor.user.name", {
+      id: "investor",
+      header: "Investor",
+      cell: (info) => <div className="font-light">{info.getValue() || "Unknown"}</div>,
+      footer: "Total",
+    }),
+    columnHelper.accessor("numberOfShares", {
+      header: "Number of shares",
+      cell: (info) => {
+        const shares = info.getValue();
+        return shares && shares > 0 ? Number(shares).toLocaleString() : "—";
+      },
+      meta: { numeric: true },
+      footer: sums.numberOfSharesSum > 0 ? sums.numberOfSharesSum.toLocaleString() : "—",
+    }),
+    columnHelper.accessor("totalAmountInCents", {
+      header: "Return amount",
+      cell: (info) => formatMoney(Number(info.getValue()) / 100),
+      meta: { numeric: true },
+      footer: formatMoney(sums.totalAmountUsdSum),
+    }),
+    columnHelper.accessor("totalAmountInCents", {
+      id: "flexileFee",
+      header: "Fees",
+      cell: (info) => formatMoney(calculateFlexileFees(Number(info.getValue()) / 100)),
+      meta: { numeric: true },
+      footer: formatMoney(sums.flexileFeeSum),
+    }),
+    columnHelper.accessor("status", {
+      header: "Status",
+      cell: (info) => <DividendStatusIndicator dividend={info.row.original} />,
+      meta: {
+        filterOptions: Array.from(new Set(dividends.map((dividend) => dividend.status))),
+      },
+    }),
+  ];
+
+  const table = useTable({
+    data: dividends,
+    columns,
+    getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    initialState: {
+      sorting: [
+        {
+          id: "totalAmountInCents",
+          desc: true,
+        },
+      ],
+    },
+  });
+
+  const onRowClicked = (row: Dividend) => {
+    if (row.investor?.user?.id) {
+      router.push(`/people/${row.investor.user.id}?tab=dividends`);
+    }
+  };
+
+  if (isLoading) {
+    return <TableSkeleton columns={5} />;
+  }
+
+  return <DataTable table={table} onRowClicked={onRowClicked} searchColumn="investor" />;
 };
 
 const dividendOutputsSchema = z.array(
@@ -34,14 +135,12 @@ const dividendOutputsSchema = z.array(
   }),
 );
 
-export default function DividendRound() {
-  const { id, type } = useParams<{ id: string; type: "draft" | "round" }>();
-  const isDraft = type === "draft";
-
+type DividendComputationOutput = z.infer<typeof dividendOutputsSchema>[number];
+const DividendComputation = ({ id }: { id: string }) => {
   const company = useCurrentCompany();
   const router = useRouter();
 
-  const { data: dividendOutputs = [], isLoading: isLoadingDividendOutputs } = useQuery({
+  const { data: dividendOutputs = [], isLoading } = useQuery({
     queryKey: ["dividend-computation", id],
     queryFn: async () => {
       const response = await request({
@@ -52,138 +151,108 @@ export default function DividendRound() {
       });
       return dividendOutputsSchema.parse(await response.json());
     },
-    enabled: isDraft,
-    select: (outputs) =>
-      outputs.map((output) => ({
-        investor: {
-          name: output.investor_name || "Unknown",
-          id: output.investor_external_id ?? null,
-        },
-        status: {
-          value: "DRAFT",
-          Component: (
-            <div className="flex items-center gap-2">
-              <Circle className="size-4 text-black/18" />
-              <span>Draft</span>
-            </div>
-          ),
-        },
-        totalAmountUsd: Number(output.total_amount),
-        numberOfShares: output.number_of_shares,
-        flexileFee: calculateFlexileFees(Number(output.total_amount)),
-      })),
   });
 
-  const { data: dividends = [], isLoading: isLoadingDividends } = trpc.dividends.list.useQuery(
-    {
-      companyId: company.id,
-      dividendRoundId: Number(id),
-    },
-    {
-      enabled: !isDraft,
-      select: (dividends) =>
-        dividends.map((dividend) => ({
-          investor: {
-            name: dividend.investor?.user?.name || "Unknown",
-            id: dividend.investor?.user?.id,
-          },
-          status: { value: dividend.status, Component: <DividendStatusIndicator dividend={dividend} /> },
-          totalAmountUsd: Number(dividend.totalAmountInCents) / 100,
-          numberOfShares:
-            dividend.numberOfShares && dividend.numberOfShares > 0 ? Number(dividend.numberOfShares) : null,
-          flexileFee: calculateFlexileFees(Number(dividend.totalAmountInCents) / 100),
-        })),
-    },
+  const calculateSums = useCallback((dividendOutputs: DividendComputationOutput[]) => {
+    const totalAmountUsdSum = dividendOutputs.reduce((sum, output) => sum + Number(output.total_amount), 0);
+    const numberOfSharesSum = dividendOutputs.reduce((sum, output) => sum + output.number_of_shares, 0);
+    const flexileFeeSum = dividendOutputs.reduce(
+      (sum, output) => sum + calculateFlexileFees(Number(output.total_amount)),
+      0,
+    );
+
+    return {
+      totalAmountUsdSum,
+      numberOfSharesSum,
+      flexileFeeSum,
+    };
+  }, []);
+
+  const sums = calculateSums(dividendOutputs);
+  const columnHelper = createColumnHelper<DividendComputationOutput>();
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor("investor_name", {
+        id: "investor",
+        header: "Investor",
+        cell: (info) => <div className="font-light">{info.getValue() || "Unknown"}</div>,
+        footer: "Total",
+      }),
+      columnHelper.accessor("number_of_shares", {
+        header: "Number of shares",
+        cell: (info) => info.getValue().toLocaleString(),
+        meta: { numeric: true },
+        footer: sums.numberOfSharesSum.toLocaleString(),
+      }),
+      columnHelper.accessor("total_amount", {
+        header: "Return amount",
+        cell: (info) => formatMoney(Number(info.getValue())),
+        meta: { numeric: true },
+        footer: formatMoney(sums.totalAmountUsdSum),
+      }),
+      columnHelper.accessor("total_amount", {
+        id: "flexileFee",
+        header: "Fees",
+        cell: (info) => formatMoney(calculateFlexileFees(Number(info.getValue()))),
+        meta: { numeric: true },
+        footer: formatMoney(sums.flexileFeeSum),
+      }),
+      columnHelper.accessor("investor_external_id", {
+        id: "status",
+        header: "Status",
+        cell: () => (
+          <div className="flex items-center gap-2">
+            <Circle className="size-4 text-black/18" />
+            <span>Draft</span>
+          </div>
+        ),
+      }),
+    ],
+    [sums],
   );
 
-  const sums = calculateSums(isDraft ? dividendOutputs : dividends);
-
-  const columnHelper = createColumnHelper<RowData>();
-  const columns = [
-    columnHelper.accessor("investor.name", {
-      id: "investor",
-      header: "Investor",
-      cell: (info) => <div className="font-light">{info.getValue()}</div>,
-      footer: "Total",
-    }),
-    columnHelper.accessor("numberOfShares", {
-      header: "Number of shares",
-      // When actual dividends are created, this will be null for SAFE investors
-      cell: (info) => info.getValue()?.toLocaleString() ?? "—",
-      meta: { numeric: true },
-      footer: sums.numberOfSharesSum > 0 ? sums.numberOfSharesSum.toLocaleString() : "—",
-    }),
-    columnHelper.accessor("totalAmountUsd", {
-      header: "Return amount",
-      cell: (info) => formatMoney(info.getValue()),
-      meta: { numeric: true },
-      footer: formatMoney(sums.totalAmountUsdSum),
-    }),
-    columnHelper.accessor("flexileFee", {
-      header: "Fees",
-      cell: (info) => formatMoney(info.getValue()),
-      meta: { numeric: true },
-      footer: formatMoney(sums.flexileFeeSum),
-    }),
-    columnHelper.accessor("status.value", {
-      header: "Status",
-      cell: (info) => info.row.original.status.Component,
-      ...(!isDraft && {
-        meta: {
-          filterOptions: Array.from(new Set(dividends.map((dividend) => dividend.status.value))),
-        },
-      }),
-    }),
-  ];
-
-  const data: RowData[] = isDraft ? dividendOutputs : dividends;
-  const isLoading = isDraft ? isLoadingDividendOutputs : isLoadingDividends;
   const table = useTable({
-    data,
+    data: dividendOutputs,
     columns,
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     initialState: {
       sorting: [
         {
-          id: "totalAmountUsd",
+          id: "total_amount",
           desc: true,
         },
       ],
     },
   });
 
-  const onRowClicked = (row: RowData) => {
-    // No ID for SAFEs
-    if (row.investor.id) {
-      router.push(`/people/${row.investor.id}?tab=dividends`);
+  const onRowClicked = (row: DividendComputationOutput) => {
+    if (row.investor_external_id) {
+      router.push(`/people/${row.investor_external_id}?tab=dividends`);
     }
   };
 
+  if (isLoading) {
+    return <TableSkeleton columns={5} />;
+  }
+
   return (
     <>
-      <DashboardHeader title="Dividend" />
-      {isDraft ? <DistributionDraftNotice /> : null}
-      {isLoading ? (
-        <TableSkeleton columns={5} />
-      ) : (
-        <DataTable table={table} onRowClicked={onRowClicked} searchColumn="investor" />
-      )}
+      <DistributionDraftNotice />
+      <DataTable table={table} onRowClicked={onRowClicked} searchColumn="investor" />
     </>
   );
-}
+};
 
-function calculateSums(data: RowData[]) {
-  const totalAmountUsdSum = data.reduce((sum, item) => sum + item.totalAmountUsd, 0);
-  const numberOfSharesSum = data.reduce((sum, item) => sum + (item.numberOfShares ?? 0), 0);
-  const flexileFeeSum = data.reduce((sum, item) => sum + item.flexileFee, 0);
-
-  return {
-    totalAmountUsdSum,
-    numberOfSharesSum,
-    flexileFeeSum,
-  };
-}
+const DistributionDraftNotice = () => (
+  <div className="mb-4 flex items-center gap-2 bg-blue-50 px-4 py-4">
+    <Info className="size-3.5 flex-shrink-0 text-blue-600" />
+    <p className="text-sm">
+      <strong>Dividend distribution is still a draft.</strong> Shareholders won't be notified or paid until you click{" "}
+      <strong>Finalize distribution.</strong>
+    </p>
+  </div>
+);
 
 function calculateFlexileFees(totalAmountInUsd: number): number {
   const FLEXILE_FEE_RATE = 0.029; // 2.9%
@@ -193,13 +262,3 @@ function calculateFlexileFees(totalAmountInUsd: number): number {
   const calculatedFee = totalAmountInUsd * FLEXILE_FEE_RATE + FLEXILE_FLAT_FEE;
   return Math.min(FLEXILE_MAX_FEE, calculatedFee);
 }
-
-const DistributionDraftNotice = () => (
-  <div className="mb-4 flex items-center gap-2 bg-blue-50 px-4 py-4">
-    <Info className="size-3.5 flex-shrink-0 text-blue-600" />
-    <p className="text-sm">
-      <strong>Dividend distribution is still a draft.</strong> Shareholders won’t be notified or paid until you click{" "}
-      <strong>Finalize distribution.</strong>
-    </p>
-  </div>
-);

@@ -17,12 +17,12 @@ import NewDistributionModal from "./NewDistributionModal";
 
 type DividendOrComputation = {
   id: bigint;
+  type: "round" | "draft";
+  status: string;
   totalAmountInUsd: string;
   numberOfShareholders: bigint;
   returnOfCapital: boolean;
   dividendsIssuanceDate: Date;
-  type: "round" | "draft";
-  status: string;
 };
 
 export default function DividendRounds() {
