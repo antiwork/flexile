@@ -93,7 +93,7 @@ const InviteLinkModal = ({ open, onOpenChange }: InviteLinkModalProps) => {
                       <Switch
                         checked={field.value}
                         onCheckedChange={field.onChange}
-                        label={<span className="text-sm">Already signed contract elsewhere.</span>}
+                        label={<span className="text-sm">Already signed contract elsewhere</span>}
                       />
                     </FormControl>
                   </FormItem>

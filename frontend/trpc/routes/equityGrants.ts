@@ -61,6 +61,16 @@ export const equityGrantsRouter = createRouter({
       with: {
         optionPool: { columns: { name: true, companyId: true } },
         companyInvestor: { with: { user: { columns: { countryCode: true, state: true, email: true } } } },
+        vestingEvents: {
+          columns: {
+            id: true,
+            vestingDate: true,
+            vestedShares: true,
+            processedAt: true,
+            cancelledAt: true,
+          },
+          orderBy: (vestingEvents, { asc }) => [asc(vestingEvents.vestingDate)],
+        },
       },
     });
 

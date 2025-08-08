@@ -8,5 +8,5 @@
       "@/*": ["../frontend/*"]
     }
   },
-  "include": ["./**/*.ts", "../frontend/types.d.ts"]
+  "include": ["./**/*.ts", "../frontend/types/*.d.ts"]
 }

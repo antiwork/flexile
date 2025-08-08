@@ -158,7 +158,7 @@ test.describe("New Contractor", () => {
     const { email } = await fillForm(page);
     await page.getByLabel("Role").fill("Contract Signed Elsewhere Role");
 
-    await page.getByLabel("Already signed contract elsewhere.").check({ force: true });
+    await page.getByLabel("Already signed contract elsewhere").check({ force: true });
 
     await page.getByRole("button", { name: "Send invite" }).click();
 

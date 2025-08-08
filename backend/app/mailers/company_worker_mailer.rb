@@ -77,6 +77,17 @@ class CompanyWorkerMailer < ApplicationMailer
     mail(to: user.email, reply_to: company.email, subject: "🔴 Payment failed: re-enter your bank details")
   end
 
+  def payment_failed_generic(payment_id, amount, currency)
+    @payment = Payment.find(payment_id)
+    @invoice = @payment.invoice
+    @currency = currency
+    @amount = amount
+    @invoice.company
+    user = @invoice.user
+
+    mail(to: user.email, cc: "support@flexile.com", subject: "🔴 Payment failed: Payment Failure for Invoice ##{@invoice.id}")
+  end
+
   def equity_percent_selection(company_worker_id)
     company_worker = CompanyWorker.find(company_worker_id)
     @company = company_worker.company

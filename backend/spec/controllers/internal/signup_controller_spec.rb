@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-RSpec.describe Api::V1::SignupController, type: :controller do
+RSpec.describe Internal::SignupController, type: :controller do
   let(:api_token) { GlobalConfig.get("API_SECRET_TOKEN", Rails.application.secret_key_base) }
   let(:email) { "newuser@example.com" }
 
