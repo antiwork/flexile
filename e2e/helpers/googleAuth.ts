@@ -18,7 +18,7 @@ export const loginWithGoogle = async (page: Page, user: typeof users.$inferSelec
     },
   ]);
 
-  await page.getByRole("button", { name: "Continue with Google" }).click();
+  await page.getByRole("button", { name: "Log in with Google" }).click();
 
   // Wait for successful redirect
   await page.waitForURL(/^(?!.*\/login$).*/u);
@@ -44,7 +44,7 @@ export const signupWithGoogle = async (
     },
   ]);
 
-  await page.getByRole("button", { name: "Continue with Google" }).click();
+  await page.getByRole("button", { name: "Sign up with Google" }).click();
 
   await page.waitForURL(/^(?!.*\/(signup|login)$).*/u);
 };

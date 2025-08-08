@@ -210,23 +210,22 @@ export function AuthPage({
               <div className="space-y-2">
                 <Button
                   type="button"
-                  variant="outline"
-                  className={`flex w-full items-center gap-2 ${googleAuthError ? "border-destructive" : ""}`}
+                  className={`flex w-full items-center gap-2 border-none bg-[#006CEB] py-3 text-sm hover:bg-[#005BC4] ${googleAuthError ? "border-destructive" : ""}`}
                   onClick={() => void handleGoogleAuth()}
                   disabled={sendOtp.isPending}
                 >
-                  <Image src={googleIcon} alt="Google" className="size-4" />
-                  Continue with Google
+                  <Image src={googleIcon} alt="Google" className="size-6" />
+                  {isSignup ? "Sign up with Google" : "Log in with Google"}
                 </Button>
                 {googleAuthError ? <p className="text-destructive text-sm">{googleAuthError}</p> : null}
               </div>
 
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
+                  <span className="h-px w-full bg-[rgba(29,30,23,0.18)]" />
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="text-muted-foreground bg-[#F8F8F8] px-2">Or continue with email</span>
+                <div className="relative flex justify-center text-base">
+                  <span className="bg-[#F8F8F8] px-3">or</span>
                 </div>
               </div>
 

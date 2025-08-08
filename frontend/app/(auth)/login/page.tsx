@@ -7,7 +7,7 @@ export default function LoginPage() {
   return (
     <AuthPage
       title="Welcome back"
-      description="Use your work email to log in."
+      description="You used Google to log in last time."
       sendOtpText="Log in"
       switcher={
         <>

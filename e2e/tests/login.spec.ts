@@ -72,7 +72,7 @@ test("login with Google", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
-  await expect(page.getByText("Continue with Google")).not.toBeVisible();
+  await expect(page.getByText("Log in with Google")).not.toBeVisible();
 
   const updatedUser = await db.query.users.findFirst({ where: eq(users.id, user.id) });
   expect(updatedUser?.currentSignInAt).not.toBeNull();
