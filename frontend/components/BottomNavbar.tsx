@@ -303,8 +303,8 @@ const SettingsSheet = ({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
-        side="bottom"
-        className="mb-16 h-auto max-h-[80vh] rounded-t-[20px] border-0"
+        side="right"
+        className="inset-x-0 inset-y-auto top-auto bottom-16 h-auto max-h-[80vh] rounded-t-[20px] border-0 not-print:border-l-0"
         showCloseButton={false}
       >
         <SheetHeader className="flex flex-row items-center space-y-0 pb-4">
