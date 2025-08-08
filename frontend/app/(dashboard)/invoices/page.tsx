@@ -78,7 +78,6 @@ export default function InvoicesPage() {
   const isMobile = useIsMobile();
   const user = useCurrentUser();
   const company = useCurrentCompany();
-  const isMobile = useIsMobile();
   const [openModal, setOpenModal] = useState<"approve" | "reject" | "delete" | null>(null);
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
   const isActionable = useIsActionable();
