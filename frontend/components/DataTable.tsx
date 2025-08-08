@@ -40,6 +40,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/utils";
+import { useIsMobile } from "@/utils/use-mobile";
 
 declare module "@tanstack/react-table" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -92,6 +93,7 @@ interface TableProps<T> {
   onRowClicked?: ((row: T) => void) | undefined;
   actions?: React.ReactNode;
   searchColumn?: string | undefined;
+  mobileFilterColumn?: string | undefined; // New prop to specify which column to use for mobile filters
   contextMenuContent?: (context: {
     row: T;
     isSelected: boolean;
@@ -107,16 +109,18 @@ export default function DataTable<T extends RowData>({
   onRowClicked,
   actions,
   searchColumn: searchColumnName,
+  mobileFilterColumn,
   contextMenuContent,
   selectionActions,
 }: TableProps<T>) {
+  const isMobile = useIsMobile();
+
   React.useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         table.toggleAllRowsSelected(false);
       }
     }
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [table]);
@@ -133,6 +137,7 @@ export default function DataTable<T extends RowData>({
     }),
     [table.getState()],
   );
+
   const sortable = !!table.options.getSortedRowModel;
   const filterable = !!table.options.getFilteredRowModel;
   const selectable = !!table.options.enableRowSelection;
@@ -158,9 +163,12 @@ export default function DataTable<T extends RowData>({
       !numeric && "print:text-wrap",
     );
   };
+
   const searchColumn = searchColumnName ? table.getColumn(searchColumnName) : null;
+
   const getColumnName = (column: Column<T>) =>
     typeof column.columnDef.header === "string" ? column.columnDef.header : "";
+
   const selectedRows = table.getSelectedRowModel().rows.map((row) => row.original);
   const selectedRowCount = selectedRows.length;
 
@@ -193,7 +201,7 @@ export default function DataTable<T extends RowData>({
                   <Button variant="outline" size="small">
                     <div className="flex items-center gap-1">
                       <ListFilterIcon className="size-4" />
-                      Filter
+                      <p className="hidden md:block">Filter</p>
                       {activeFilterCount > 0 && (
                         <Badge variant="secondary" className="rounded-sm px-1 font-normal">
                           {activeFilterCount}
@@ -256,14 +264,12 @@ export default function DataTable<T extends RowData>({
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : null}
-
             {selectable ? (
               <div className={cn("flex gap-2", selectedRowCount === 0 && "pointer-events-none opacity-0")}>
                 <div className="bg-accent border-muted flex h-9 items-center justify-center rounded-md border border-dashed px-2 font-medium">
                   <span className="text-sm whitespace-nowrap">
                     <span className="inline-block w-4 text-center tabular-nums">{selectedRowCount}</span> selected
                   </span>
-
                   <Button
                     variant="ghost"
                     size="icon"
@@ -284,6 +290,72 @@ export default function DataTable<T extends RowData>({
         </div>
       ) : null}
 
+      {/* Mobile Status Filter Buttons */}
+      {isMobile && filterableColumns.length > 0 ? (
+        <div className="mx-4 md:hidden">
+          <div className="flex flex-wrap gap-2">
+            {filterableColumns
+              .filter(
+                (column) =>
+                  // Use specified column if provided
+                  (mobileFilterColumn && column.id === mobileFilterColumn) ||
+                  // Otherwise fallback to any status-related column
+                  (!mobileFilterColumn &&
+                    (column.id.toLowerCase().includes("status") ||
+                      (typeof column.columnDef.header === "string" &&
+                        column.columnDef.header.toLowerCase().includes("status")))),
+              )
+              .map((column) => {
+                const filterValue = filterValueSchema.optional().parse(column.getFilterValue());
+                const options = column.columnDef.meta?.filterOptions || [];
+                const allFiltersActive = !filterValue || filterValue.length === 0;
+
+                // First render an "All" button
+                return [
+                  <Button
+                    key={`${column.id}-all`}
+                    variant={allFiltersActive ? "default" : "outline"}
+                    size="small"
+                    className="rounded-full"
+                    onClick={() => {
+                      column.setFilterValue(undefined);
+                    }}
+                  >
+                    All
+                  </Button>,
+                  // Then render the rest of the filter buttons
+                  ...options.map((option) => {
+                    const isActive = filterValue?.includes(option) ?? false;
+                    return (
+                      <Button
+                        key={`${column.id}-${option}`}
+                        variant={isActive ? "default" : "outline"}
+                        size="small"
+                        className="rounded-full"
+                        onClick={() => {
+                          if (isActive) {
+                            // Remove filter
+                            const newValue =
+                              filterValue && filterValue.length > 1
+                                ? filterValue.filter((o) => o !== option)
+                                : undefined;
+                            column.setFilterValue(newValue);
+                          } else {
+                            // Add filter
+                            column.setFilterValue([...(filterValue ?? []), option]);
+                          }
+                        }}
+                      >
+                        {option}
+                      </Button>
+                    );
+                  }),
+                ];
+              })}
+          </div>
+        </div>
+      ) : null}
+
       <ShadcnTable className="caption-top not-print:max-md:grid">
         <TableHeader className="not-print:max-md:hidden">
           {data.headers.map((headerGroup) => (
@@ -301,7 +373,9 @@ export default function DataTable<T extends RowData>({
                 <TableHead
                   key={header.id}
                   colSpan={header.colSpan}
-                  className={`${cellClasses(header.column, "header")} ${sortable && header.column.getCanSort() ? "cursor-pointer" : ""}`}
+                  className={`${cellClasses(header.column, "header")} ${
+                    sortable && header.column.getCanSort() ? "cursor-pointer" : ""
+                  }`}
                   aria-sort={
                     header.column.getIsSorted() === "asc"
                       ? "ascending"
@@ -344,7 +418,9 @@ export default function DataTable<T extends RowData>({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className={`${cellClasses(cell.column)} ${cell.column.id === "actions" ? "relative z-1 md:text-right print:hidden" : ""}`}
+                      className={`${cellClasses(cell.column)} ${
+                        cell.column.id === "actions" ? "relative z-1 md:text-right print:hidden" : ""
+                      }`}
                       onClick={(e) => cell.column.id === "actions" && e.stopPropagation()}
                     >
                       {typeof cell.column.columnDef.header === "string" && (

@@ -92,6 +92,21 @@ export default function PeoplePage() {
     });
   });
 
+  const precomputedFilterOptions = useMemo(() => {
+    const roleSet = new Set<string>();
+
+    for (const worker of workers) {
+      if (worker.role) {
+        roleSet.add(worker.role);
+      }
+    }
+
+    return {
+      role: [...roleSet],
+      status: ["Active", "Onboarding", "Alumni"],
+    };
+  }, [workers]);
+
   const columnHelper = createColumnHelper<(typeof workers)[number]>();
   const columns = useMemo(
     () => [
@@ -109,12 +124,12 @@ export default function PeoplePage() {
       columnHelper.accessor("role", {
         header: "Role",
         cell: (info) => info.getValue() || "N/A",
-        meta: { filterOptions: [...new Set(workers.map((worker) => worker.role))] },
+        meta: { filterOptions: precomputedFilterOptions.role },
       }),
       columnHelper.simple("user.countryCode", "Country", (v) => v && countries.get(v)),
       columnHelper.accessor((row) => (row.endedAt ? "Alumni" : row.startedAt > new Date() ? "Onboarding" : "Active"), {
         header: "Status",
-        meta: { filterOptions: ["Active", "Onboarding", "Alumni"] },
+        meta: { filterOptions: precomputedFilterOptions.status },
         cell: (info) =>
           info.row.original.endedAt ? (
             <Status variant="critical">Ended on {formatDate(info.row.original.endedAt)}</Status>
@@ -159,6 +174,7 @@ export default function PeoplePage() {
         <DataTable
           table={table}
           searchColumn="user_name"
+          mobileFilterColumn="status"
           actions={
             <ActionPanel setShowInviteLinkModal={setShowInviteLinkModal} setShowInviteModal={setShowInviteModal} />
           }

@@ -90,6 +90,22 @@ export default function Dividends() {
   });
 
   const hasLegalDetails = user.legalName && user.address.street_address && user.taxInformationConfirmedAt;
+
+  const precomputedFilterOptions = useMemo(() => {
+    const statusSet = new Set<string>();
+
+    for (const dividend of data) {
+      // Extract status or any other filter options you need
+      if (dividend.status) {
+        statusSet.add(dividend.status);
+      }
+    }
+
+    return {
+      status: [...statusSet],
+    };
+  }, [data]);
+
   const columns = useMemo(
     () => [
       columnHelper.simple("dividendRound.issuedAt", "Issue date", formatDate),
@@ -102,6 +118,7 @@ export default function Dividends() {
       columnHelper.simple("netAmountInCents", "Net amount", (value) => formatMoneyFromCents(value ?? 0), "numeric"),
       columnHelper.accessor("status", {
         header: "Status",
+        meta: { filterOptions: precomputedFilterOptions.status },
         cell: (info) => (
           <div className="flex min-h-8 justify-between gap-2">
             <DividendStatusIndicator dividend={info.row.original} />
@@ -151,7 +168,7 @@ export default function Dividends() {
       {isLoading ? (
         <TableSkeleton columns={7} />
       ) : data.length > 0 ? (
-        <DataTable table={table} />
+        <DataTable table={table} mobileFilterColumn="status" />
       ) : (
         <div className="mx-4">
           <Placeholder icon={CircleCheck}>You have not been issued any dividends yet.</Placeholder>

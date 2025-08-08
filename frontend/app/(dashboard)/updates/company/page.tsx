@@ -140,7 +140,7 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
 
   return (
     <>
-      <DataTable table={table} onRowClicked={(row) => onEditUpdate(row)} />
+      <DataTable table={table} onRowClicked={(row) => onEditUpdate(row)} mobileFilterColumn="status" />
       <Dialog open={!!deletingUpdate} onOpenChange={() => setDeletingUpdate(null)}>
         <DialogContent>
           <DialogHeader>

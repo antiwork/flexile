@@ -701,7 +701,7 @@ function SharesTab({ investorId }: { investorId: string }) {
   return isLoading ? (
     <TableSkeleton columns={5} />
   ) : shareHoldings.length > 0 ? (
-    <DataTable table={table} />
+    <DataTable table={table} mobileFilterColumn="status" />
   ) : (
     <Placeholder icon={CircleCheck}>This investor does not hold any shares.</Placeholder>
   );
@@ -734,7 +734,7 @@ function OptionsTab({ investorId, userId }: { investorId: string; userId: string
     <TableSkeleton columns={6} />
   ) : equityGrants.length > 0 ? (
     <>
-      <DataTable table={table} onRowClicked={setSelectedEquityGrant} />
+      <DataTable table={table} onRowClicked={setSelectedEquityGrant} mobileFilterColumn="status" />
       {selectedEquityGrant ? (
         <DetailsModal
           equityGrant={selectedEquityGrant}

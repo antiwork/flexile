@@ -262,6 +262,24 @@ export default function DocumentsPage() {
     if (downloadUrl) window.location.href = downloadUrl;
   }, [downloadUrl]);
 
+  const precomputedFilterOptions = useMemo(() => {
+    const typeSet = new Set<string>();
+    const dateSet = new Set<string>();
+    const statusSet = new Set<string>();
+
+    for (const doc of documents) {
+      typeSet.add(typeLabels[doc.type]);
+      dateSet.add(doc.createdAt.getFullYear().toString());
+      statusSet.add(getStatus(doc).name);
+    }
+
+    return {
+      type: [...typeSet],
+      date: [...dateSet],
+      status: [...statusSet],
+    };
+  }, [documents, typeLabels]);
+
   const columns = useMemo(
     () =>
       [
@@ -274,21 +292,24 @@ export default function DocumentsPage() {
           : null,
         columnHelper.simple("name", "Document"),
         columnHelper.accessor((row) => typeLabels[row.type], {
+          id: "documentType", // Explicit ID
           header: "Type",
-          meta: { filterOptions: [...new Set(documents.map((document) => typeLabels[document.type]))] },
+          meta: { filterOptions: precomputedFilterOptions.type },
         }),
         columnHelper.accessor("createdAt", {
+          id: "documentDate", // Explicit ID
           header: "Date",
           cell: (info) => formatDate(info.getValue()),
           meta: {
-            filterOptions: [...new Set(documents.map((document) => document.createdAt.getFullYear().toString()))],
+            filterOptions: precomputedFilterOptions.date,
           },
           filterFn: (row, _, filterValue) =>
             Array.isArray(filterValue) && filterValue.includes(row.original.createdAt.getFullYear().toString()),
         }),
         columnHelper.accessor((row) => getStatus(row).name, {
+          id: "documentStatus", // Explicit ID
           header: "Status",
-          meta: { filterOptions: [...new Set(documents.map((document) => getStatus(document).name))] },
+          meta: { filterOptions: precomputedFilterOptions.status },
           cell: (info) => {
             const { variant, text } = getStatus(info.row.original);
             return <Status variant={variant}>{text}</Status>;
@@ -328,13 +349,14 @@ export default function DocumentsPage() {
           },
         }),
       ].filter((column) => !!column),
-    [userId],
+    [userId, precomputedFilterOptions],
   );
+
   const storedColumnFilters = columnFiltersSchema.safeParse(
     JSON.parse(localStorage.getItem(storageKeys.DOCUMENTS_COLUMN_FILTERS) ?? "{}"),
   );
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
-    storedColumnFilters.data ?? [{ id: "Status", value: ["Signature required"] }],
+    storedColumnFilters.data ?? [{ id: "documentStatus", value: ["Signature required"] }],
   );
   const table = useTable({
     columns,
@@ -403,6 +425,7 @@ export default function DocumentsPage() {
           <DataTable
             table={table}
             actions={isCompanyRepresentative ? <EditTemplates /> : undefined}
+            mobileFilterColumn="documentStatus"
             {...(isCompanyRepresentative && { searchColumn: "Signer" })}
           />
           {signDocument ? <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} /> : null}
