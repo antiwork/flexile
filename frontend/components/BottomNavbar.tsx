@@ -201,8 +201,12 @@ const EquitySheet = ({
   onClose: () => void;
 }) => (
   <Sheet open={open} onOpenChange={onOpenChange}>
-    <SheetContent side="bottom" className="mb-16 h-auto max-h-[80vh] rounded-t-[20px] border-0" showCloseButton={false}>
-      <SheetHeader className="pb-2">
+    <SheetContent
+      side="bottom"
+      className="mb-16 h-auto max-h-[80vh] rounded-t-[20px] border-0 pb-2"
+      showCloseButton={false}
+    >
+      <SheetHeader className="pb-0">
         <SheetTitle>Equity</SheetTitle>
       </SheetHeader>
       <div className="space-y-2">
@@ -308,7 +312,7 @@ const SettingsSheet = ({
           </button>
           <SheetTitle>Settings</SheetTitle>
         </SheetHeader>
-        <div className="mt-4 space-y-1">
+        <div className="mt-0 space-y-1">
           {filteredPersonalLinks.length > 0 && (
             <div className="mb-4">
               <h3 className="mb-2 pl-4 text-xs font-medium tracking-wider text-gray-500 uppercase">Personal</h3>
@@ -327,7 +331,7 @@ const SettingsSheet = ({
           )}
 
           {filteredCompanyLinks.length > 0 && (
-            <div className="mb-4">
+            <div className="mb-0">
               <h3 className="mb-2 pl-4 text-xs font-medium tracking-wider text-gray-500 uppercase">Company</h3>
               {filteredCompanyLinks.map((link) => (
                 <Link
@@ -452,7 +456,7 @@ const MoreSheet = ({
         <SheetHeader>
           <SheetTitle>More</SheetTitle>
         </SheetHeader>
-        <div className="mt-4 space-y-2">
+        <div className="mt-0 space-y-2">
           {user.companies.length > 1 ? (
             <button
               className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors hover:bg-gray-100"
