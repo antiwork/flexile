@@ -3,6 +3,7 @@ import {
   Building,
   ChartPie,
   ChevronLeft,
+  ChevronRight,
   ChevronsUpDown,
   CreditCard,
   Files,
@@ -320,7 +321,7 @@ const SettingsSheet = ({
                 <Link
                   key={link.route}
                   href={link.route}
-                  className="flex w-full items-center rounded-lg px-4 py-3 text-left transition-colors hover:bg-gray-100"
+                  className="flex w-full items-center rounded-lg px-4 py-3 pl-8 text-left transition-colors hover:bg-gray-100"
                   onClick={onClose}
                 >
                   <link.icon className="mr-3 size-5" />
@@ -329,6 +330,7 @@ const SettingsSheet = ({
               ))}
             </div>
           )}
+          <hr className="my-4 border-t border-gray-200" />
 
           {filteredCompanyLinks.length > 0 && (
             <div className="mb-0">
@@ -337,7 +339,7 @@ const SettingsSheet = ({
                 <Link
                   key={link.route}
                   href={link.route}
-                  className="flex w-full items-center rounded-lg px-4 py-3 text-left transition-colors hover:bg-gray-100"
+                  className="flex w-full items-center rounded-lg px-4 py-3 pl-8 text-left transition-colors hover:bg-gray-100"
                   onClick={onClose}
                 >
                   <link.icon className="mr-3 size-5" />
@@ -513,7 +515,8 @@ const MoreSheet = ({
             onClick={onSettingsClick}
           >
             <Settings className="mr-3 size-5" />
-            <span>Settings</span>
+            <span className="flex-1">Settings</span>
+            <ChevronRight className="size-4 text-gray-400" />
           </button>
 
           <Link
