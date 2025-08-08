@@ -53,7 +53,7 @@ class Document < ApplicationRecord
   scope :irs_tax_forms, -> { tax_document.where(name: SUPPORTED_IRS_TAX_FORM_NAMES) }
   scope :unsigned, -> { joins(:signatures).where(signatures: { signed_at: nil }) }
   scope :for_signatory, ->(user_id) { joins(:signatures).where(signatures: { user_id: user_id }) }
-  scope :unsigned_by, ->(user_id) { joins(:signatures).where(signatures: { user_id: user_id, signed_at: nil }) }
+  scope :unsigned_by, ->(title) { joins(:signatures).where(signatures: { title: title, signed_at: nil }) }
 
 
   def fetch_serializer(namespace: nil)

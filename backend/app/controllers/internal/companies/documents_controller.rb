@@ -6,15 +6,16 @@ class Internal::Companies::DocumentsController < Internal::Companies::BaseContro
   def index
     authorize Document
 
+    company_representative = Current.user.administrator? || Current.user.lawyer?
     filters = params.permit(:signable)
 
     documents = Current.company.documents
       .includes(signatures: :user, attachments_attachments: :blob)
       .where(deleted_at: nil)
 
-    documents = documents.for_signatory(Current.user.id) unless Current.user.administrator? || Current.user.lawyer?
+    documents = documents.for_signatory(Current.user.id) unless company_representative
     documents = documents.where(document_type: params[:type].to_i) if params[:type].present?
-    documents = documents.unsigned_by(Current.user.id) if filters[:signable] == "true"
+    documents = documents.unsigned_by(company_representative ? "Company Representative" : "Signer") if filters[:signable] == "true"
     documents = documents.distinct
     render json: documents.map { |doc| DocumentPresenter.new(doc).props }
   end

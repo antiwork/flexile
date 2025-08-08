@@ -228,7 +228,7 @@ export default function DocumentsPage() {
                 {!getCompletedAt(document) && isCompanyRepresentative ? (
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="ghost" size="small">
+                      <Button variant="ghost" name="admin-actions" size="small">
                         <EllipsisVertical className="size-4" />
                       </Button>
                     </PopoverTrigger>
@@ -236,15 +236,19 @@ export default function DocumentsPage() {
                       align="end"
                       className="border-muted w-44 rounded-md border bg-white p-0 text-sm shadow-sm"
                     >
-                      <Button
-                        variant="ghost"
-                        size="small"
-                        className="w-full justify-start"
-                        onClick={() => setDocumentAction({ action: "download", document })}
-                      >
-                        <Download className="size-4" />
-                        Download
-                      </Button>
+                      {document.attachment ? (
+                        <Button
+                          variant="ghost"
+                          size="small"
+                          className="w-full justify-start"
+                          onClick={() => setDocumentAction({ action: "download", document })}
+                        >
+                          <Download className="size-4" />
+                          <Link href={`/download/${document.attachment.key}/${document.attachment.filename}`} download>
+                            Download
+                          </Link>
+                        </Button>
+                      ) : null}
                       <Button
                         variant="ghost"
                         size="small"
@@ -281,7 +285,7 @@ export default function DocumentsPage() {
           },
         }),
       ].filter((column) => !!column),
-    [userId],
+    [userId, documents],
   );
   const storedColumnFilters = columnFiltersSchema.safeParse(
     JSON.parse(localStorage.getItem(storageKeys.DOCUMENTS_COLUMN_FILTERS) ?? "{}"),
@@ -579,6 +583,9 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Sign Document</DialogTitle>
+          <DialogDescription>
+            You are about to sign the document <span className="font-bold-sm">{document.name}</span>.
+          </DialogDescription>
         </DialogHeader>
         {document.textContent ? (
           <div
@@ -593,7 +600,6 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
             </a>
           </div>
         )}
-
         <div className="flex flex-col gap-2">
           <Label htmlFor={uid}>Your signature</Label>
           <Input
@@ -608,7 +614,6 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
             use them on documents just the same as a pen-and-paper signature.
           </p>
         </div>
-
         <DialogFooter>
           <div className="flex w-full flex-col gap-2">
             {signDocumentMutation.error ? <p className="text-red-500">{signDocumentMutation.error.message}</p> : null}

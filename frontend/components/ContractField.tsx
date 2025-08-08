@@ -174,6 +174,7 @@ const CreateFormFields = () => {
                     <Input
                       {...field}
                       type="text"
+                      name="document-title"
                       autoComplete="off"
                       onFocus={() => setDocumentPopoverOpen(true)}
                       onBlur={() => setDocumentPopoverOpen(false)}
@@ -223,7 +224,7 @@ const CreateFormFields = () => {
           <FormItem>
             <FormLabel>Document content</FormLabel>
             <FormControl>
-              <RichTextEditor {...field} className="max-h-42" />
+              <RichTextEditor {...field} className="max-h-52 overflow-y-auto" />
             </FormControl>
             <FormMessage />
           </FormItem>
