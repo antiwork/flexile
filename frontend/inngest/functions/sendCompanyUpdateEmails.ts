@@ -62,8 +62,7 @@ export default inngest.createFunction(
 
       const eventData = event.data;
       // Ensure admins are always included
-      let recipientTypes = eventData.recipientTypes ||
-        update.recipientTypes || ["admins", "investors", "active_contractors"];
+      let recipientTypes = eventData.recipientTypes || update.recipientTypes || ["admins"];
       if (!recipientTypes.includes("admins")) {
         recipientTypes = ["admins", ...recipientTypes];
       }
