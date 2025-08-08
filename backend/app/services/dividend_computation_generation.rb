@@ -60,10 +60,6 @@ class DividendComputationGeneration
     def generate_common_dividends
       available_amount = @amount_in_usd - @preferred_dividend_total
 
-      if available_amount < 0.to_d
-        raise StandardError, "Sorry, you cannot distribute $#{@amount_in_usd} as preferred investors require a return of at least $#{@preferred_dividend_total}"
-      end
-
       eligible_fully_diluted_shares =
         company.convertible_investments.sum(:implied_shares) + company.share_holdings.sum(:number_of_shares)
 
