@@ -210,7 +210,7 @@ export function AuthPage({
               <div className="space-y-2">
                 <Button
                   type="button"
-                  className={`flex w-full items-center gap-2 border-none bg-[#006CEB] py-3 text-sm hover:bg-[#005BC4] ${googleAuthError ? "border-destructive" : ""}`}
+                  className={`flex w-full items-center gap-2 bg-[#006CEB] py-3 text-sm hover:bg-[#005BC4] ${googleAuthError ? "border-destructive" : "border-none"}`}
                   onClick={() => void handleGoogleAuth()}
                   disabled={sendOtp.isPending}
                 >
