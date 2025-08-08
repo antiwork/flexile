@@ -63,7 +63,7 @@ class DividendComputation < ApplicationRecord
       }
     end
 
-    aggregated_data.sort_by { |data| -data[:total_amount] }
+    aggregated_data
   end
 
 

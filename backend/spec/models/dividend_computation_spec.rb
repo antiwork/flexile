@@ -94,13 +94,13 @@ RSpec.describe DividendComputation do
   describe "#to_per_investor_csv" do
     it "generates CSV data as expected" do
       expected_result = +"Investor,Investor ID,Number of shares,Amount (USD)\n"
-      expected_result << "Richie Rich LLC,,987632,578982.04\n"
-      expected_result << "Wefunder,,497092,291411.52\n"
       expected_result << "Seed Investor,#{@seed_investor.id},111406,80328.26\n"
       expected_result << "Series A Investor,#{@series_A_investor.id},33469,22523.16\n"
-      expected_result << "All class Investor,#{@all_class_investor.id},25035,17479.75\n"
       expected_result << "Seed & Series A Investor,#{@seed_and_series_A_investor.id},12441,8752.98\n"
       expected_result << "Common Investor,#{@common_investor.id},891,522.34\n"
+      expected_result << "All class Investor,#{@all_class_investor.id},25035,17479.75\n"
+      expected_result << "Richie Rich LLC,,987632,578982.04\n"
+      expected_result << "Wefunder,,497092,291411.52\n"
 
       expect(@dividend_computation.to_per_investor_csv).to eq(expected_result)
     end
@@ -197,8 +197,10 @@ RSpec.describe DividendComputation do
       expect(result).to be_an(Array)
       expect(result.length).to eq(7) # 5 share investors + 2 SAFE investors
 
-      # Should be sorted by total_amount descending
-      expect(result.map { |r| r[:total_amount] }).to eq(result.map { |r| r[:total_amount] }.sort.reverse)
+      expect(result.map { |r| r[:investor_name] }).to match_array([
+                                                                    "Richie Rich LLC", "Wefunder", "Seed Investor", "Series A Investor",
+                                                                    "All class Investor", "Seed & Series A Investor", "Common Investor"
+                                                                  ])
     end
 
     it "correctly aggregates share-based investors" do
@@ -265,18 +267,6 @@ RSpec.describe DividendComputation do
         total_amount: 291_411.52,
         number_of_shares: 497_092
       )
-    end
-
-    it "sorts results by total_amount in descending order" do
-      result = @dividend_computation.broken_down_by_investor
-
-      # Verify sorting
-      amounts = result.map { |r| r[:total_amount] }
-      expect(amounts).to eq(amounts.sort.reverse)
-
-      # Verify the highest amount is first
-      expect(result.first[:total_amount]).to eq(578_982.04) # Richie Rich LLC
-      expect(result.first[:investor_name]).to eq("Richie Rich LLC")
     end
 
     it "handles edge case with no dividend computation outputs" do
