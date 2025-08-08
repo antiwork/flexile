@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-RSpec.describe Api::V1::EmailOtpController, type: :controller do
+RSpec.describe Internal::EmailOtpController, type: :controller do
   describe "POST #create" do
     let(:user) { create(:user) }
     let(:api_token) { GlobalConfig.get("API_SECRET_TOKEN", Rails.application.secret_key_base) }
@@ -46,15 +46,6 @@ RSpec.describe Api::V1::EmailOtpController, type: :controller do
         json_response = JSON.parse(response.body)
         expect(json_response["error"]).to eq("Email is required")
       end
-
-      it "returns bad request when API token is missing" do
-        post :create, params: { email: user.email }
-
-        expect(response).to have_http_status(:bad_request)
-
-        json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Token is required")
-      end
     end
 
     context "with empty parameters" do
@@ -65,32 +56,6 @@ RSpec.describe Api::V1::EmailOtpController, type: :controller do
 
         json_response = JSON.parse(response.body)
         expect(json_response["error"]).to eq("Email is required")
-      end
-
-      it "returns bad request when API token is empty string" do
-        post :create, params: { email: user.email, token: "" }
-
-        expect(response).to have_http_status(:bad_request)
-
-        json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Token is required")
-      end
-    end
-
-    context "with invalid API token" do
-      it "returns unauthorized" do
-        post :create, params: { email: user.email, token: "invalid_token" }
-
-        expect(response).to have_http_status(:unauthorized)
-
-        json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Invalid token")
-      end
-
-      it "does not send any email" do
-        expect do
-          post :create, params: { email: user.email, token: "invalid_token" }
-        end.not_to have_enqueued_mail(UserMailer, :otp_code)
       end
     end
 

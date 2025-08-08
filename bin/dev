@@ -12,8 +12,6 @@ fi
 # Generate SSL certificates and start local services
 make local
 
-export ENABLE_DEFAULT_OTP=true
-
 export NODE_EXTRA_CA_CERTS="$(node docker/createCertificate.js)"
 
 # Generate combined SSL certificates and set environment variables
@@ -45,9 +43,5 @@ kill_process_listening_on_port 3000
 kill_process_listening_on_port 3001
 kill_process_listening_on_port 8288 # inngest
 rm -f backend/tmp/pids/server.pid
-
-
-# TODO: Remove this after making sure we can read NODE_ENV in api.ts
-export RAILS_ENV=development
 
 foreman start -f Procfile.dev "$@"

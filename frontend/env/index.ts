@@ -29,6 +29,8 @@ const env = z
     WISE_PROFILE_ID: z.string(),
     WISE_API_KEY: z.string(),
     HELPER_HMAC_SECRET: z.string(),
+    API_SECRET_TOKEN: z.string(),
+    NEXTAUTH_SECRET: z.string(),
   })
   .parse(process.env);
 

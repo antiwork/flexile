@@ -23,7 +23,7 @@ import type { Route } from "next";
 import Image from "next/image";
 import Link, { type LinkProps } from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { signOut, useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import React from "react";
 import { navLinks as equityNavLinks } from "@/app/(dashboard)/equity";
 import { useIsActionable } from "@/app/(dashboard)/invoices";
@@ -68,19 +68,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [showTryEquity, setShowTryEquity] = React.useState(true);
   const [hovered, setHovered] = React.useState(false);
   const canShowTryEquity = user.roles.administrator && !company.equityEnabled;
-  const { data: session } = useSession();
   const { logout } = useUserStore();
   const isDefaultLogo = !company.logo_url || company.logo_url.includes("default-company-logo");
-
-  const handleLogout = async () => {
-    if (session?.user) {
-      await signOut({ redirect: false });
-    }
-    // Clear user state
-    logout();
-    // Redirect to login
-    window.location.href = "/login";
-  };
 
   const { data: helperSession } = useHelperSession();
 
@@ -239,7 +228,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 Support center
               </NavItem>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => void handleLogout()} className="cursor-pointer">
+                <SidebarMenuButton
+                  onClick={() => void signOut({ redirect: false }).then(logout)}
+                  className="cursor-pointer"
+                >
                   <LogOut className="size-6" />
                   <span>Log out</span>
                 </SidebarMenuButton>

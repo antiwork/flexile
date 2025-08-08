@@ -108,7 +108,7 @@ end
 
 ### Usage:
 =begin
-company = Company.is_gumroad.sole
+company = Company.find(5)
 tax_year = 2023
 is_test = false
 attached = { "IRS-1099-DIV-#{tax_year}.txt" => Irs::Form1099divDataGenerator.new(company:, tax_year:, is_test:).process }

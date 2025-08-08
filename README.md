@@ -69,25 +69,32 @@ pnpm playwright test
 <details>
 <summary>Stripe</summary>
 
-1. Go to your `Developers` dashboard at [stripe.com](https://stripe.com).
-2. Turn on `Test mode`.
-3. Go to the `API Keys` tab and copy the Publishable Key into `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` and Secret Key into `STRIPE_SECRET_KEY` in the .env file.
-   ![Stripe Secret Key](https://github.com/user-attachments/assets/0830b226-f2c2-4b92-a28f-f4682ad03ec0)
+1. Create account at [stripe.com](https://stripe.com) and complete verification
+2. Enable **Test mode** (toggle in top right of dashboard)
+3. Navigate to **Developers** → **API keys**
+4. Copy **Publishable key** (`pk_test_...`) and **Secret key** (`sk_test_...` - click "Reveal" first)
+5. Add to `.env`:
+   ```
+   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
+   STRIPE_SECRET_KEY=sk_test_your_secret_key_here
+   ```
 
 </details>
 
 <details>
 <summary>Wise</summary>
 
-1. Go to [sandbox.transferwise.tech](https://sandbox.transferwise.tech/) and make a brand new Wise account using the register option and following Wise instructions.
-2. Once you got your account set up click on your profile.
-   ![Wise Sandbox Page](https://github.com/user-attachments/assets/bb8da9f7-a2cc-4c92-906c-a01c62df9870)
-3. Copy your Membership number and paste it into `WISE_PROFILE_ID` in the .env file.
-   ![Wise Sandbox Profile Settings](https://github.com/user-attachments/assets/790a43be-e41f-47ef-8ef9-05b6c8117cfc)
-4. Go to Integrations and Tools and then to API tokens.
-5. Create a new API token making sure it is set to Full Access.
-6. Reveal the full API key and copy it into `WISE_API_KEY` in the .env file.
-   ![Wise Sandbox API Settings](https://github.com/user-attachments/assets/f20be40f-0790-4435-abe6-8077a6c86fc3)
+1. Register at [sandbox.transferwise.tech](https://sandbox.transferwise.tech/) and complete email verification
+2. Click profile/avatar → **Settings** → copy your **Membership number**
+3. Go to **Integrations and Tools** → **API tokens** → **Create API token**
+4. Set permissions to **Full Access**, name it (e.g., "Flexile Development"), and copy the token immediately
+5. Add to `.env`:
+   ```
+   WISE_PROFILE_ID=your_membership_number_here
+   WISE_API_KEY=your_full_api_token_here
+   ```
+
+**Note**: Keep credentials secure and never commit to version control.
 
 </details>
 

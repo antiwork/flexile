@@ -1,13 +1,14 @@
 "use client";
-import { type QueryClient } from "@tanstack/react-query";
+import { type QueryClient, skipToken } from "@tanstack/react-query";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
-import { useSession } from "next-auth/react";
+import { SessionProvider, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import superjson from "superjson";
 import { useUserStore } from "@/global";
 import { request } from "@/utils/request";
+import { internal_current_user_data_path } from "@/utils/routes";
 import { type AppRouter } from "./server";
 import { createClient } from "./shared";
 
@@ -22,20 +23,17 @@ export const UserDataProvider = ({ children }: { children: React.ReactNode }) =>
 
   const { data, isLoading } = useQuery({
     queryKey: ["currentUser", userId],
-    queryFn: async (): Promise<unknown> => {
-      if (session?.user && "jwt" in session.user) {
-        const response = await request({
-          url: "/api/user-data",
-          method: "POST",
-          accept: "json",
-          jsonData: { jwt: session.user.jwt },
-          assertOk: true,
-        });
-        return await response.json();
-      }
-      throw new Error("No JWT token available");
-    },
-    enabled: !!isSignedIn,
+    queryFn: isSignedIn
+      ? async (): Promise<unknown> => {
+          const response = await request({
+            url: internal_current_user_data_path(),
+            method: "GET",
+            accept: "json",
+            assertOk: true,
+          });
+          return await response.json();
+        }
+      : skipToken,
   });
 
   useEffect(() => {
@@ -79,7 +77,9 @@ export function TRPCProvider({ children }: Readonly<{ children: React.ReactNode 
   );
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <SessionProvider>{children}</SessionProvider>
+      </QueryClientProvider>
     </trpc.Provider>
   );
 }

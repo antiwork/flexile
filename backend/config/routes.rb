@@ -64,19 +64,6 @@ Rails.application.routes.draw do
   scope module: :api, as: :api do
     constraints api_domain_constraint do
       namespace :v1 do
-        resources :login, only: :create
-        resources :email_otp, only: :create
-        resources :signup, only: [] do
-          collection do
-            post :send_otp
-            post :verify_and_create
-          end
-        end
-        resources :example, only: [] do
-          collection do
-            get :protected_action
-          end
-        end
       end
       namespace :helper do
         resource :users, only: :show

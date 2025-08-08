@@ -1,9 +1,7 @@
 # frozen_string_literal: true
 
-class Api::V1::SignupController < Api::BaseController
-  include OtpValidation, UserDataSerialization
-
-  skip_before_action :authenticate_with_jwt
+class Internal::SignupController < Internal::BaseController
+  include OtpValidation, UserDataSerialization, JwtAuthenticatable
 
   def send_otp
     email = params[:email]

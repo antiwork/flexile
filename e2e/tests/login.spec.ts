@@ -13,13 +13,13 @@ test("login", async ({ page }) => {
   await page.getByLabel("Work email").fill(email);
   await page.getByRole("button", { name: "Log in", exact: true }).click();
 
-  // Fill the OTP code using the InputOTP component's hidden input
-  // The form should auto-submit when all 6 digits are entered
-  const otpCode = "000000";
-  await page.locator('[data-slot="input-otp"]').fill(otpCode);
+  const otpField = page.getByLabel("Verification code");
+  await otpField.fill("000001");
+  await expect(otpField).not.toBeValid();
+  await expect(page.getByText("Invalid verification code")).toBeVisible();
+  await otpField.fill("000000");
+  await expect(otpField).toBeValid();
 
-  // No need to click the button as it should auto-submit
-  // Wait for navigation to complete after auto-submit
   await page.waitForURL(/.*\/invoices.*/u);
 
   await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();

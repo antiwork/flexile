@@ -98,7 +98,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_07_161839) do
     t.string "registration_state"
     t.string "external_id", null: false
     t.string "country_code"
-    t.boolean "is_gumroad", default: false, null: false
     t.boolean "dividends_allowed", default: false, null: false
     t.boolean "is_trusted", default: false, null: false
     t.boolean "show_analytics_to_contractors", default: false, null: false

@@ -190,7 +190,7 @@ end
 
 ### Usage:
 =begin
-company = Company.is_gumroad.sole
+company = Company.find(5)
 tax_year = 2023
 is_test = false
 attached = { "IRS-1042-S-#{tax_year}.txt" => Irs::Form1042sDataGenerator.new(company:, tax_year:, is_test:).process }
