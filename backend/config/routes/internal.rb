@@ -25,6 +25,10 @@ scope path: :internal, module: :internal do
 
   resources :roles, only: [:index, :show]
 
+  namespace :admin do
+    resource :impersonate, only: [:create], controller: "impersonate"
+  end
+
   # Company portal routes
   resources :companies, only: [], module: :companies do
     # Accessible by company administrator

@@ -23,7 +23,7 @@ import type { Route } from "next";
 import Image from "next/image";
 import Link, { type LinkProps } from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import React from "react";
 import { navLinks as equityNavLinks } from "@/app/(dashboard)/equity";
 import { useIsActionable } from "@/app/(dashboard)/invoices";
@@ -62,6 +62,7 @@ import { company_switch_path } from "@/utils/routes";
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = useCurrentUser();
   const company = useCurrentCompany();
+  const { data: session } = useSession();
   const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -90,7 +91,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <SidebarProvider>
-      <Sidebar collapsible="offcanvas">
+      <div className="flex h-screen w-full">
+        <Sidebar collapsible="offcanvas">
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -241,14 +243,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </SidebarGroup>
       </Sidebar>
 
-      <SidebarInset>
-        <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
-          <main className="flex flex-1 flex-col not-print:overflow-y-auto">
-            <div className="flex flex-col gap-4">{children}</div>
-          </main>
+        <SidebarInset className="flex-1">
+          <div className="flex flex-col not-print:h-screen not-print:overflow-hidden w-full">
+            {session?.user?.impersonatedBy && (
+              <div className="bg-amber-100 border-b border-amber-200 px-4 py-2 shrink-0">
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-2">
+                    <div className="bg-amber-600 text-white px-2 py-1 rounded text-xs font-medium">
+                      IMPERSONATING
+                    </div>
+                    <span className="text-amber-800 text-sm">
+                      You are impersonating <strong>{user.name}</strong> ({user.email})
+                    </span>
+                    <span className="text-amber-600 text-xs">
+                      (Admin: {session.user.impersonatedBy.name})
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => void signOut({ redirect: false }).then(logout)}
+                    className="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                  >
+                    Return to Admin
+                  </button>
+                </div>
+              </div>
+            )}
+            <main className="flex flex-1 flex-col not-print:overflow-y-auto">
+              <div className="flex flex-col gap-4">{children}</div>
+            </main>
+          </div>
+          </SidebarInset>
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+      </SidebarProvider>
   );
 }
 
