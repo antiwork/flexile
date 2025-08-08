@@ -14,7 +14,7 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
 
     dividend_computation = DividendComputationGeneration.new(
       Current.company,
-      dividends_issuance_date: dividend_computation_params[:dividends_issuance_date] || Date.current,
+      dividends_issuance_date: dividend_computation_params[:dividends_issuance_date]&.to_date || Date.current,
       amount_in_usd: dividend_computation_params[:amount_in_usd],
       return_of_capital: dividend_computation_params[:return_of_capital]
     ).process
