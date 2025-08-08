@@ -10,6 +10,34 @@ class CompanyAdministratorPolicy < ApplicationPolicy
   end
 
   def create?
-    user.company_administrator_for?(company)
+    show?
+  end
+
+  def index?
+    show?
+  end
+
+  def administrators?
+    show?
+  end
+
+  def lawyers?
+    show?
+  end
+
+  def contractors?
+    show?
+  end
+
+  def investors?
+    show?
+  end
+
+  def add_role?
+    show?
+  end
+
+  def remove_role?
+    show?
   end
 end
