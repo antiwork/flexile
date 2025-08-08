@@ -8,8 +8,6 @@ class DividendComputationPolicy < ApplicationPolicy
   end
 
   def investor_breakdown?
-    return false unless company.equity_enabled?
-
-    company_administrator.present? || company_lawyer.present?
+    create?
   end
 end
