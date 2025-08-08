@@ -29,14 +29,16 @@ type DividendOrComputation = {
   type: "round" | "draft";
 };
 
-const dividendComputationSchema = z.object({
-  id: z.number(),
-  company_id: z.number(),
-  total_amount_in_usd: z.string(),
-  dividends_issuance_date: z.string(),
-  return_of_capital: z.boolean(),
-  number_of_shareholders: z.number(),
-});
+const dividendComputationSchema = z.array(
+  z.object({
+    id: z.number(),
+    company_id: z.number(),
+    total_amount_in_usd: z.string(),
+    dividends_issuance_date: z.string(),
+    return_of_capital: z.boolean(),
+    number_of_shareholders: z.number(),
+  }),
+);
 
 export default function DividendRounds() {
   const company = useCurrentCompany();
@@ -50,19 +52,16 @@ export default function DividendRounds() {
         url: company_dividend_computations_path(company.id),
       });
 
-      return z
-        .array(dividendComputationSchema)
-        .parse(await response.json())
-        .map((computation) => ({
-          ...computation,
-          id: BigInt(computation.id),
-          type: "draft" as const,
-          status: "Draft",
-          totalAmountInUsd: Number(computation.total_amount_in_usd),
-          numberOfShareholders: BigInt(computation.number_of_shareholders),
-          returnOfCapital: computation.return_of_capital,
-          dividendsIssuanceDate: new Date(computation.dividends_issuance_date),
-        }));
+      return dividendComputationSchema.parse(await response.json()).map((computation) => ({
+        ...computation,
+        id: BigInt(computation.id),
+        type: "draft" as const,
+        status: "Draft",
+        totalAmountInUsd: Number(computation.total_amount_in_usd),
+        numberOfShareholders: BigInt(computation.number_of_shareholders),
+        returnOfCapital: computation.return_of_capital,
+        dividendsIssuanceDate: new Date(computation.dividends_issuance_date),
+      }));
     },
   });
 
