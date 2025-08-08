@@ -297,7 +297,7 @@ export default function DataTable<T extends RowData>({
       ) : null}
 
       {/* Mobile Status Filter Buttons */}
-      {isMobile && table.options.enableGlobalFilter && filterableColumns.length > 0 ? (
+      {isMobile && table.options.enableGlobalFilter !== false && filterableColumns.length > 0 ? (
         <div className="mx-4 md:hidden">
           <div className="flex flex-wrap gap-2">
             {filterableColumns

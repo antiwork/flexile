@@ -474,7 +474,7 @@ export default function InvoicesPage() {
               {user.roles.administrator ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="small">
+                    <Button variant="ghost" size="small" className="h-8">
                       <MoreHorizontal className="size-4" />
                       <span className="sr-only">More options</span>
                     </Button>
