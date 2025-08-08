@@ -2,10 +2,8 @@ name: Tests
 
 on:
   push:
+  workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
@@ -16,7 +14,7 @@ env:
 
 jobs:
   rspec:
-    runs-on: ubicloud-standard-2
+    runs-on: ubuntu-24.04
 
     services:
       postgres:
@@ -65,7 +63,7 @@ jobs:
 
   playwright:
     name: playwright
-    runs-on: ubicloud-standard-4
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
