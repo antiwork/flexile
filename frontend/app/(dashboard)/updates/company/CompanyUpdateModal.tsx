@@ -66,7 +66,6 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
   const [viewPreview, setViewPreview] = useState(false);
   const [previewUpdateId, setPreviewUpdateId] = useState<string | null>(null);
 
-  // Get counts for recipient selector
   const recipientCounts = {
     admins: company.administratorCount ?? 0,
     investors: company.investorCount ?? 0,
@@ -74,7 +73,6 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
     alumniContractors: company.alumniContractorCount ?? 0,
   };
 
-  // Calculate total recipient count based on selected types
   const selectedRecipientTypes = form.watch("recipientTypes");
   const recipientCount = selectedRecipientTypes.reduce((sum, type) => {
     switch (type) {
