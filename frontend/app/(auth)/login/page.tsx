@@ -5,7 +5,7 @@ import { linkClasses } from "@/components/Link";
 import { AuthPage } from "..";
 
 export default function LoginPage() {
-  const [description, setDescription] = useState<string>("");
+  const [description, setDescription] = useState<string>("Use Google or your work email to log in.");
   const [highlightedAuthMethod, setHighlightedAuthMethod] = useState<string>("google");
 
   useEffect(() => {
