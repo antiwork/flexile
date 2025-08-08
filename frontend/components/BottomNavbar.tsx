@@ -412,7 +412,7 @@ const CompanySheet = ({
                   }
                   width={24}
                   height={24}
-                  alt=""
+                  alt={`${companyItem.name ?? "Personal"} logo`}
                 />
               </div>
               <span className="flex-1 text-left">{companyItem.name || "Personal"}</span>
@@ -474,7 +474,7 @@ const MoreSheet = ({
                   className={isDefaultLogo ? "size-4" : "size-6 shrink-0 rounded"}
                   width={24}
                   height={24}
-                  alt=""
+                  alt={`${company.name ?? "Personal"} logo`}
                 />
               </div>
               <span className="flex-1">{company.name ?? "Personal"}</span>
@@ -492,7 +492,7 @@ const MoreSheet = ({
                   className={isDefaultLogo ? "size-4" : "size-6 shrink-0 rounded"}
                   width={24}
                   height={24}
-                  alt=""
+                  alt={`${company.name ?? "Personal"} logo`}
                 />
               </div>
               <span className="flex-1">{company.name ?? "Personal"}</span>
