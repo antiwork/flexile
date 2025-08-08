@@ -409,7 +409,7 @@ const CompanySheet = ({
                   alt=""
                 />
               </div>
-              <span className="flex-1 text-left">{companyItem.name || "Unnamed Company"}</span>
+              <span className="flex-1 text-left">{companyItem.name || "Personal"}</span>
               {companyItem.id === user.currentCompanyId && (
                 <div className="size-2 flex-shrink-0 rounded-full bg-blue-500"></div>
               )}
