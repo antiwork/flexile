@@ -152,20 +152,19 @@ export default function DividendRounds() {
 
   return (
     <>
-      <DashboardHeader title="Dividends" />
+      <DashboardHeader
+        title="Dividends"
+        headerActions={
+          <Button variant="outline" size="small" onClick={() => setIsNewDistributionModalOpen(true)}>
+            <Plus className="size-4" />
+            New distribution
+          </Button>
+        }
+      />
       {isLoading ? (
         <TableSkeleton columns={5} />
       ) : data.length > 0 ? (
-        <DataTable
-          table={table}
-          onRowClicked={(row) => router.push(`/equity/dividend_rounds/${row.type}/${row.id}`)}
-          actions={
-            <Button variant="outline" size="small" onClick={() => setIsNewDistributionModalOpen(true)}>
-              <Plus className="size-4" />
-              New distribution
-            </Button>
-          }
-        />
+        <DataTable table={table} onRowClicked={(row) => router.push(`/equity/dividend_rounds/${row.type}/${row.id}`)} />
       ) : (
         <div className="mx-4">
           <Placeholder icon={CircleCheck}>You have not issued any dividends yet.</Placeholder>
