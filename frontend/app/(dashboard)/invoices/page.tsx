@@ -479,21 +479,19 @@ export default function InvoicesPage() {
               now.
             </div>
           )}
-          <div className="mx-4">
-            <Card>
-              <CardContent>
-                {selectedApprovableInvoices.slice(0, 5).map((invoice, index, array) => (
-                  <Fragment key={invoice.id}>
-                    <div className="flex justify-between gap-2">
-                      <b>{invoice.billFrom}</b>
-                      <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
-                    </div>
-                    {index !== array.length - 1 && <Separator />}
-                  </Fragment>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
+          <Card>
+            <CardContent>
+              {selectedApprovableInvoices.slice(0, 5).map((invoice, index, array) => (
+                <Fragment key={invoice.id}>
+                  <div className="flex justify-between gap-2">
+                    <b>{invoice.billFrom}</b>
+                    <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
+                  </div>
+                  {index !== array.length - 1 && <Separator />}
+                </Fragment>
+              ))}
+            </CardContent>
+          </Card>
           {selectedApprovableInvoices.length > 5 && <div>and {selectedApprovableInvoices.length - 5} more</div>}
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenModal(null)}>
@@ -583,30 +581,28 @@ const TasksModal = ({
             </Button>
           </header>
           <Separator />
-          <div className="mx-4">
-            <Card className="border-none">
-              <CardContent className="p-0">
-                <div className="flex justify-between gap-2">
-                  <div>Net amount in cash</div>
-                  <div>{formatMoneyFromCents(invoice.cashAmountInCents)}</div>
-                </div>
-                <Separator />
-                {invoice.equityAmountInCents ? (
-                  <>
-                    <div className="flex justify-between gap-2">
-                      <div>Swapped for equity ({invoice.equityPercentage}%)</div>
-                      <div>{formatMoneyFromCents(invoice.equityAmountInCents)}</div>
-                    </div>
-                    <Separator />
-                  </>
-                ) : null}
-                <div className="flex justify-between gap-2 pb-4 font-medium">
-                  <div>Payout total</div>
-                  <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <Card className="border-none">
+            <CardContent className="p-0">
+              <div className="flex justify-between gap-2">
+                <div>Net amount in cash</div>
+                <div>{formatMoneyFromCents(invoice.cashAmountInCents)}</div>
+              </div>
+              <Separator />
+              {invoice.equityAmountInCents ? (
+                <>
+                  <div className="flex justify-between gap-2">
+                    <div>Swapped for equity ({invoice.equityPercentage}%)</div>
+                    <div>{formatMoneyFromCents(invoice.equityAmountInCents)}</div>
+                  </div>
+                  <Separator />
+                </>
+              ) : null}
+              <div className="flex justify-between gap-2 pb-4 font-medium">
+                <div>Payout total</div>
+                <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
+              </div>
+            </CardContent>
+          </Card>
         </section>
         {isActionable(invoice) ? (
           <DialogFooter>
