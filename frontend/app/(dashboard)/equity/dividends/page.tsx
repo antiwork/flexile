@@ -118,6 +118,7 @@ export default function Dividends() {
       columnHelper.simple("netAmountInCents", "Net amount", (value) => formatMoneyFromCents(value ?? 0), "numeric"),
       columnHelper.accessor("status", {
         header: "Status",
+        id: "status",
         meta: { filterOptions: precomputedFilterOptions.status },
         cell: (info) => (
           <div className="flex min-h-8 justify-between gap-2">
@@ -135,7 +136,7 @@ export default function Dividends() {
         ),
       }),
     ],
-    [],
+    [precomputedFilterOptions],
   );
   const table = useTable({ columns, data });
   return (

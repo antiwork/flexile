@@ -297,15 +297,13 @@ export default function DataTable<T extends RowData>({
       ) : null}
 
       {/* Mobile Status Filter Buttons */}
-      {isMobile && filterableColumns.length > 0 ? (
+      {isMobile && table.options.enableGlobalFilter && filterableColumns.length > 0 ? (
         <div className="mx-4 md:hidden">
           <div className="flex flex-wrap gap-2">
             {filterableColumns
               .filter(
                 (column) =>
-                  // Use specified column if provided
                   (mobileFilterColumn && column.id === mobileFilterColumn) ||
-                  // Otherwise fallback to any status-related column
                   (!mobileFilterColumn &&
                     (column.id.toLowerCase().includes("status") ||
                       (typeof column.columnDef.header === "string" &&
