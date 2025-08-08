@@ -5,6 +5,7 @@ import { dividendRoundsFactory } from "@test/factories/dividendRounds";
 import { shareClassesFactory } from "@test/factories/shareClasses";
 import { shareHoldingsFactory } from "@test/factories/shareHoldings";
 import { usersFactory } from "@test/factories/users";
+import { fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { eq } from "drizzle-orm";
@@ -80,6 +81,7 @@ test.describe("Dividend Computations", () => {
       async (modal) => {
         await expect(modal.getByRole("heading", { name: "Start a new distribution" })).toBeVisible();
         await modal.getByLabel("Total distribution amount").fill("50000");
+        await fillDatePicker(page, "Payment date", "12/25/2024");
         await expect(modal.getByText("Start a new distribution")).toBeVisible();
         await modal.getByRole("button", { name: "Create distribution" }).click();
       },
@@ -89,6 +91,7 @@ test.describe("Dividend Computations", () => {
     await expect(page.getByRole("dialog")).not.toBeVisible();
     await expect(page.getByText("Draft")).toBeVisible();
     await expect(page.getByText("50,000")).toBeVisible();
+    await expect(page.getByText("Dec 25, 2024")).toBeVisible();
 
     const computation = await db.query.dividendComputations
       .findFirst({ where: eq(dividendComputations.companyId, company.id) })
@@ -96,5 +99,6 @@ test.describe("Dividend Computations", () => {
 
     expect(computation.totalAmountInUsd).toBe("50000.0");
     expect(computation.returnOfCapital).toBe(false);
+    expect(computation.dividendsIssuanceDate).toBe("2024-12-25");
   });
 });
