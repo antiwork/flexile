@@ -14,7 +14,6 @@ class DividendComputationPresenter
       .map do |computation|
         {
           id: computation.id,
-          company_id: company.id,
           total_amount_in_usd: computation.total_amount_in_usd,
           dividends_issuance_date: computation.dividends_issuance_date,
           return_of_capital: computation.return_of_capital,

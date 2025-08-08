@@ -32,7 +32,6 @@ type DividendOrComputation = {
 const dividendComputationSchema = z.array(
   z.object({
     id: z.number(),
-    company_id: z.number(),
     total_amount_in_usd: z.string(),
     dividends_issuance_date: z.string(),
     return_of_capital: z.boolean(),
