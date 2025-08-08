@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import { Circle, Info } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import React, { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import { z } from "zod";
 import DividendStatusIndicator from "@/app/(dashboard)/equity/DividendStatusIndicator";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -39,63 +39,55 @@ const DividendRound = ({ id }: { id: string }) => {
     dividendRoundId: Number(id),
   });
 
-  const calculateSums = useCallback((dividends: Dividend[]) => {
-    const totalAmountUsdSum = dividends.reduce((sum, dividend) => sum + Number(dividend.totalAmountInCents) / 100, 0);
-    const numberOfSharesSum = dividends.reduce(
-      (sum, dividend) => sum + (dividend.numberOfShares ? Number(dividend.numberOfShares) : 0),
-      0,
-    );
-    const flexileFeeSum = dividends.reduce(
-      (sum, dividend) => sum + calculateFlexileFees(Number(dividend.totalAmountInCents) / 100),
-      0,
-    );
-
-    return {
-      totalAmountUsdSum,
-      numberOfSharesSum,
-      flexileFeeSum,
-    };
-  }, []);
-
-  const sums = calculateSums(dividends);
   const columnHelper = createColumnHelper<Dividend>();
-  const columns = [
-    columnHelper.accessor("investor.user.name", {
-      id: "investor",
-      header: "Investor",
-      cell: (info) => <div className="font-light">{info.getValue() || "Unknown"}</div>,
-      footer: "Total",
-    }),
-    columnHelper.accessor("numberOfShares", {
-      header: "Number of shares",
-      cell: (info) => {
-        const shares = info.getValue();
-        return shares && shares > 0 ? Number(shares).toLocaleString() : "—";
-      },
-      meta: { numeric: true },
-      footer: sums.numberOfSharesSum > 0 ? sums.numberOfSharesSum.toLocaleString() : "—",
-    }),
-    columnHelper.accessor("totalAmountInCents", {
-      header: "Return amount",
-      cell: (info) => formatMoney(Number(info.getValue()) / 100),
-      meta: { numeric: true },
-      footer: formatMoney(sums.totalAmountUsdSum),
-    }),
-    columnHelper.accessor("totalAmountInCents", {
-      id: "flexileFee",
-      header: "Fees",
-      cell: (info) => formatMoney(calculateFlexileFees(Number(info.getValue()) / 100)),
-      meta: { numeric: true },
-      footer: formatMoney(sums.flexileFeeSum),
-    }),
-    columnHelper.accessor("status", {
-      header: "Status",
-      cell: (info) => <DividendStatusIndicator dividend={info.row.original} />,
-      meta: {
-        filterOptions: Array.from(new Set(dividends.map((dividend) => dividend.status))),
-      },
-    }),
-  ];
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor("investor.user.name", {
+        id: "investor",
+        header: "Investor",
+        cell: (info) => <div className="font-light">{info.getValue() || "Unknown"}</div>,
+        footer: "Total",
+      }),
+      columnHelper.accessor("numberOfShares", {
+        header: "Number of shares",
+        cell: (info) => {
+          const shares = info.getValue();
+          return shares && shares > 0 ? Number(shares).toLocaleString() : "—";
+        },
+        meta: { numeric: true },
+        footer: () => {
+          const sum = dividends.reduce(
+            (sum, dividend) => sum + (dividend.numberOfShares ? Number(dividend.numberOfShares) : 0),
+            0,
+          );
+          return sum > 0 ? sum.toLocaleString() : "—";
+        },
+      }),
+      columnHelper.accessor("totalAmountInCents", {
+        header: "Return amount",
+        cell: (info) => formatMoney(Number(info.getValue()) / 100),
+        meta: { numeric: true },
+        footer: formatMoney(dividends.reduce((sum, dividend) => sum + Number(dividend.totalAmountInCents) / 100, 0)),
+      }),
+      columnHelper.accessor("totalAmountInCents", {
+        id: "flexileFee",
+        header: "Fees",
+        cell: (info) => formatMoney(calculateFlexileFees(Number(info.getValue()) / 100)),
+        meta: { numeric: true },
+        footer: formatMoney(
+          dividends.reduce((sum, dividend) => sum + calculateFlexileFees(Number(dividend.totalAmountInCents) / 100), 0),
+        ),
+      }),
+      columnHelper.accessor("status", {
+        header: "Status",
+        cell: (info) => <DividendStatusIndicator dividend={info.row.original} />,
+        meta: {
+          filterOptions: Array.from(new Set(dividends.map((dividend) => dividend.status))),
+        },
+      }),
+    ],
+    [dividends],
+  );
 
   const table = useTable({
     data: dividends,
@@ -153,22 +145,6 @@ const DividendComputation = ({ id }: { id: string }) => {
     },
   });
 
-  const calculateSums = useCallback((dividendOutputs: DividendComputationOutput[]) => {
-    const totalAmountUsdSum = dividendOutputs.reduce((sum, output) => sum + Number(output.total_amount), 0);
-    const numberOfSharesSum = dividendOutputs.reduce((sum, output) => sum + output.number_of_shares, 0);
-    const flexileFeeSum = dividendOutputs.reduce(
-      (sum, output) => sum + calculateFlexileFees(Number(output.total_amount)),
-      0,
-    );
-
-    return {
-      totalAmountUsdSum,
-      numberOfSharesSum,
-      flexileFeeSum,
-    };
-  }, []);
-
-  const sums = calculateSums(dividendOutputs);
   const columnHelper = createColumnHelper<DividendComputationOutput>();
   const columns = useMemo(
     () => [
@@ -182,20 +158,22 @@ const DividendComputation = ({ id }: { id: string }) => {
         header: "Number of shares",
         cell: (info) => info.getValue().toLocaleString(),
         meta: { numeric: true },
-        footer: sums.numberOfSharesSum.toLocaleString(),
+        footer: dividendOutputs.reduce((sum, output) => sum + output.number_of_shares, 0).toLocaleString(),
       }),
       columnHelper.accessor("total_amount", {
         header: "Return amount",
         cell: (info) => formatMoney(Number(info.getValue())),
         meta: { numeric: true },
-        footer: formatMoney(sums.totalAmountUsdSum),
+        footer: formatMoney(dividendOutputs.reduce((sum, output) => sum + Number(output.total_amount), 0)),
       }),
       columnHelper.accessor("total_amount", {
         id: "flexileFee",
         header: "Fees",
         cell: (info) => formatMoney(calculateFlexileFees(Number(info.getValue()))),
         meta: { numeric: true },
-        footer: formatMoney(sums.flexileFeeSum),
+        footer: formatMoney(
+          dividendOutputs.reduce((sum, output) => sum + calculateFlexileFees(Number(output.total_amount)), 0),
+        ),
       }),
       columnHelper.accessor("investor_external_id", {
         id: "status",
@@ -208,7 +186,7 @@ const DividendComputation = ({ id }: { id: string }) => {
         ),
       }),
     ],
-    [sums],
+    [dividendOutputs],
   );
 
   const table = useTable({
