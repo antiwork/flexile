@@ -7,7 +7,7 @@ class Internal::Companies::AdministratorsController < Internal::Companies::BaseC
     result = InviteAdmin.new(company: Current.company, email: params[:email], current_user: Current.user).perform
 
     if result[:success]
-      render json: { success: true }
+      head :created
     else
       render json: { success: false, field: result[:field], error_message: result[:error_message] }, status: :unprocessable_entity
     end

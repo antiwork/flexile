@@ -185,18 +185,21 @@ export default function RolesPage() {
       string,
       { id: string; name: string; email: string; role: string; isAdmin: boolean; isOwner: boolean }
     > = {};
-    admins.forEach((a) => {
-      byId[a.id] = { ...a };
-    });
-    lawyers.forEach((l) => {
-      const existing = byId[l.id];
+
+    for (const admin of admins) {
+      byId[admin.id] = { ...admin };
+    }
+
+    for (const lawyer of lawyers) {
+      const existing = byId[lawyer.id];
       if (existing) {
-        if (existing.role === "Owner") return;
+        if (existing.role === "Owner") continue;
         existing.role = existing.isAdmin ? "Admin" : "Lawyer";
       } else {
-        byId[l.id] = { ...l };
+        byId[lawyer.id] = { ...lawyer };
       }
-    });
+    }
+
     return Object.values(byId);
   }, [admins, lawyers]);
 
