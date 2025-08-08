@@ -91,7 +91,6 @@ export default function InvoicesPage() {
     companyId: company.id,
     contractorId: user.roles.administrator ? undefined : user.roles.worker?.id,
   });
-  const isMobile = useIsMobile();
 
   const { canSubmitInvoices, hasLegalDetails, unsignedContractId } = useCanSubmitInvoices();
 
