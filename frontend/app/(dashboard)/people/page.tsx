@@ -152,7 +152,7 @@ export default function PeoplePage() {
     columns,
     data: workers,
     initialState: {
-      sorting: [{ id: "Status", desc: false }],
+      sorting: [{ id: "status", desc: false }],
     },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
