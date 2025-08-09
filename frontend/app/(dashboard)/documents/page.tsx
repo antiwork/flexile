@@ -359,7 +359,6 @@ export default function DocumentsPage() {
           id: "statusSentOn",
           cell: (info) => {
             const document = info.row.original;
-            const sentOn = document.createdAt ? formatDate(document.createdAt) : "N/A";
             const { variant } = getStatus(info.row.original);
 
             return (
@@ -367,7 +366,7 @@ export default function DocumentsPage() {
                 <div className="flex h-5 w-4 items-center justify-center">
                   <Status variant={variant} />
                 </div>
-                <div className="self-end text-gray-600">{sentOn}</div>
+                <div className="self-end text-gray-600">{formatDate(document.createdAt)}</div>
               </div>
             );
           },
@@ -417,6 +416,7 @@ export default function DocumentsPage() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
     storedColumnFilters.data ?? [{ id: "status", value: ["Signature required"] }],
   );
+
   const table = useTable({
     columns,
     data: documents,
