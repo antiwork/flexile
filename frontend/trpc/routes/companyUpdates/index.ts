@@ -16,7 +16,6 @@ const byId = (ctx: CompanyContext, id: string) =>
 const dataSchema = createInsertSchema(companyUpdates).pick({
   title: true,
   body: true,
-  videoUrl: true,
 });
 
 const checkHasInvestors = async (companyId: bigint) => {
@@ -54,7 +53,7 @@ export const companyUpdatesRouter = createRouter({
     if (!update) throw new TRPCError({ code: "NOT_FOUND" });
 
     return {
-      ...pick(update, ["title", "body", "videoUrl", "sentAt"]),
+      ...pick(update, ["title", "body", "sentAt"]),
 
       id: update.externalId,
     };
@@ -66,7 +65,7 @@ export const companyUpdatesRouter = createRouter({
     const [update] = await db
       .insert(companyUpdates)
       .values({
-        ...pick(input, ["title", "body", "videoUrl"]),
+        ...pick(input, ["title", "body"]),
         companyId: ctx.company.id,
         period: null,
         periodStartedOn: null,
@@ -82,7 +81,7 @@ export const companyUpdatesRouter = createRouter({
     const [update] = await db
       .update(companyUpdates)
       .set({
-        ...pick(input, ["title", "body", "videoUrl"]),
+        ...pick(input, ["title", "body"]),
         companyId: ctx.company.id,
         period: null,
         periodStartedOn: null,
