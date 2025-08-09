@@ -102,6 +102,7 @@ const ExerciseModal = ({
               value={signature}
               onChange={(e) => setSignature(e.target.value)}
               className="font-signature text-xl"
+              placeholder="Type signature here..."
               aria-label="Signature"
             />
             <p className="text-muted-foreground text-xs">

@@ -8,7 +8,6 @@ import { optionPoolsFactory } from "@test/factories/optionPools";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker, selectComboboxOption } from "@test/helpers";
 import { login, logout } from "@test/helpers/auth";
-import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { DocumentTemplateType } from "@/db/enums";
@@ -16,7 +15,7 @@ import { companyInvestors, documents, documentSignatures, equityGrants } from "@
 import { assertDefined } from "@/utils/assert";
 
 test.describe("Equity Grants", () => {
-  test("allows issuing equity grants", async ({ page, next }) => {
+  test("allows issuing equity grants", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
       equityEnabled: true,
       fmvPerShareInUsd: "1",
@@ -24,9 +23,6 @@ test.describe("Equity Grants", () => {
       sharePriceInUsd: "1.00", // Set share price to match FMV
     });
     const { user: contractorUser } = await usersFactory.create();
-    let submitters = { "Company Representative": adminUser, Signer: contractorUser };
-    const { mockForm } = mockDocuseal(next, { submitters: () => submitters });
-    await mockForm(page);
     await companyContractorsFactory.create({
       companyId: company.id,
       userId: contractorUser.id,
@@ -103,7 +99,6 @@ test.describe("Equity Grants", () => {
       }),
     );
 
-    submitters = { "Company Representative": adminUser, Signer: projectBasedUser };
     await page.getByRole("button", { name: "New option grant" }).click();
 
     // Fill in recipient (required)
@@ -229,15 +224,13 @@ test.describe("Equity Grants", () => {
     ).not.toBeNull();
   });
 
-  test("allows exercising options", async ({ page, next }) => {
+  test("allows exercising options", async ({ page }) => {
     const { company } = await companiesFactory.createCompletedOnboarding({
       equityEnabled: true,
       conversionSharePriceUsd: "1",
       jsonData: { flags: ["option_exercising"] },
     });
     const { user } = await usersFactory.create();
-    const { mockForm } = mockDocuseal(next, {});
-    await mockForm(page);
     await companyContractorsFactory.create({ companyId: company.id, userId: user.id });
     const { companyInvestor } = await companyInvestorsFactory.create({ companyId: company.id, userId: user.id });
     await equityGrantsFactory.create({ companyInvestorId: companyInvestor.id, vestedShares: 100 });
@@ -256,17 +249,15 @@ test.describe("Equity Grants", () => {
         await expect(modal.getByText("Options valueBased on 2M valuation$1,0001,900%")).toBeVisible();
 
         await modal.getByRole("button", { name: "Proceed" }).click();
-        await modal.getByRole("button", { name: "Sign now" }).click();
-        await modal.getByRole("link", { name: "Type" }).click();
         await modal.getByPlaceholder("Type signature here...").fill("Admin Admin");
-        await modal.getByRole("button", { name: "Sign and complete" }).click();
+        await modal.getByRole("button", { name: "Sign" }).click();
       },
       { page },
     );
     await expect(page.getByText("We're awaiting a payment of $50 to exercise 10 options.")).toBeVisible();
   });
 
-  test("modal functionality for creating equity grants", async ({ page, next }) => {
+  test("modal functionality for creating equity grants", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
       equityEnabled: true,
       fmvPerShareInUsd: "1",
@@ -274,9 +265,7 @@ test.describe("Equity Grants", () => {
       sharePriceInUsd: "1.00", // Set share price to match FMV
     });
     const { user: contractorUser } = await usersFactory.create();
-    const submitters = { "Company Representative": adminUser, Signer: contractorUser };
-    const { mockForm } = mockDocuseal(next, { submitters: () => submitters });
-    await mockForm(page);
+
     await companyContractorsFactory.create({
       companyId: company.id,
       userId: contractorUser.id,
@@ -359,7 +348,7 @@ test.describe("Equity Grants", () => {
     await expect(row).toContainText("10,000");
   });
 
-  test("uses correct FMV share price for estimated value", async ({ page, next }) => {
+  test("uses correct FMV share price for estimated value", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
       equityEnabled: true,
       fmvPerShareInUsd: "2.50", // Set a specific FMV share price
@@ -367,9 +356,6 @@ test.describe("Equity Grants", () => {
       sharePriceInUsd: "2.50", // Set share price to match FMV
     });
     const { user: contractorUser } = await usersFactory.create();
-    const submitters = { "Company Representative": adminUser, Signer: contractorUser };
-    const { mockForm } = mockDocuseal(next, { submitters: () => submitters });
-    await mockForm(page);
     await companyContractorsFactory.create({
       companyId: company.id,
       userId: contractorUser.id,
@@ -405,7 +391,7 @@ test.describe("Equity Grants", () => {
     await expect(page.getByText("Estimated value: $25000.00, based on a $2.5")).toBeVisible();
   });
 
-  test("handles missing FMV share price gracefully", async ({ page, next }) => {
+  test("handles missing FMV share price gracefully", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
       equityEnabled: true,
       fmvPerShareInUsd: null,
@@ -413,9 +399,6 @@ test.describe("Equity Grants", () => {
       sharePriceInUsd: null, // Also set share price to null since we're testing missing price scenario
     });
     const { user: contractorUser } = await usersFactory.create();
-    const submitters = { "Company Representative": adminUser, Signer: contractorUser };
-    const { mockForm } = mockDocuseal(next, { submitters: () => submitters });
-    await mockForm(page);
     await companyContractorsFactory.create({
       companyId: company.id,
       userId: contractorUser.id,
