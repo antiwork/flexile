@@ -61,7 +61,7 @@ scope path: :internal, module: :internal do
         get :contractors
         get :investors
         post :add_role
-        delete :remove_role
+        post :remove_role
       end
     end
     resources :equity_grant_exercises, only: :create do
