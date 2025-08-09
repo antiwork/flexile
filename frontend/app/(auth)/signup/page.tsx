@@ -11,6 +11,7 @@ export default function SignUpPage() {
       title="Create account"
       description="Sign up using the account you use at work."
       sendOtpText="Sign up"
+      googleButtonText="Sign up with Google"
       switcher={
         <>
           Already using Flexile?{" "}
