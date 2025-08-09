@@ -233,8 +233,8 @@ export default function DataTable<T extends RowData>({
 
                       return (
                         <DropdownMenuSub key={column.id}>
-                          <DropdownMenuSubTrigger>
-                            <div className="flex items-center gap-1">
+                          <DropdownMenuSubTrigger className="max-md:h-11">
+                            <div className="box-border flex items-center gap-1">
                               <span>{getColumnName(column)}</span>
                               {Array.isArray(filterValue) && filterValue.length > 0 && (
                                 <Badge variant="secondary" className="rounded-sm px-1 font-normal">
@@ -247,11 +247,13 @@ export default function DataTable<T extends RowData>({
                             <DropdownMenuCheckboxItem
                               checked={!filterValue?.length}
                               onCheckedChange={() => column.setFilterValue(undefined)}
+                              className="max-md:h-11"
                             >
                               All
                             </DropdownMenuCheckboxItem>
                             {column.columnDef.meta?.filterOptions?.map((option) => (
                               <DropdownMenuCheckboxItem
+                                className="max-md:h-11"
                                 key={option}
                                 checked={filterValue?.includes(option) ?? false}
                                 onCheckedChange={(checked) =>
