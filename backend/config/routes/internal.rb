@@ -11,6 +11,13 @@ scope path: :internal, module: :internal do
     end
   end
 
+  resources :oauth, only: [] do
+    collection do
+      post :google_login
+      post :google_signup
+    end
+  end
+
   namespace :demo do
     resources :companies, only: :show
   end

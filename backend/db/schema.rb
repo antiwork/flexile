@@ -926,10 +926,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.integer "otp_failed_attempts_count", default: 0, null: false
     t.datetime "otp_first_failed_at"
     t.bigint "signup_invite_link_id"
+    t.string "google_uid"
     t.index ["clerk_id"], name: "index_users_on_clerk_id", unique: true
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["external_id"], name: "index_users_on_external_id", unique: true
+    t.index ["google_uid"], name: "index_users_on_google_uid", unique: true
     t.index ["invitation_token"], name: "index_users_on_invitation_token", unique: true
     t.index ["invited_by_id"], name: "index_users_on_invited_by_id"
     t.index ["invited_by_type", "invited_by_id"], name: "index_users_on_invited_by"
