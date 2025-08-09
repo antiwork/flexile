@@ -288,14 +288,13 @@ export default function InvoicesPage() {
         id: "statusSentOn",
         cell: (info) => {
           const invoice = info.row.original;
-          const sentOn = invoice.invoiceDate ? formatDate(invoice.invoiceDate) : "N/A";
 
           return (
             <div className="absolute inset-0 flex w-0 flex-col items-end justify-between py-2">
               <div className="flex h-5 w-4 items-center justify-center">
                 <Status invoice={invoice} iconOnly />
               </div>
-              <div className="self-end text-gray-600">{sentOn}</div>
+              <div className="self-end text-gray-600">{formatDate(invoice.invoiceDate)}</div>
             </div>
           );
         },
