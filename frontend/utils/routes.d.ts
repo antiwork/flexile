@@ -808,6 +808,30 @@ export const company_dividend_path: ((
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/dividend_computations(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_dividend_computations_url: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/dividend_computations(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_dividend_computations_path: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /internal/companies/:company_id/equity_exercise_payments/:id(.:format)
  * @param {any} company_id
  * @param {any} id
@@ -1571,6 +1595,34 @@ export const internal_userid_url: ((
  * @returns {string} route path
  */
 export const internal_userid_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/dividend_computations/:id/investor_breakdown(.:format)
+ * @param {any} company_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const investor_breakdown_company_dividend_computation_url: ((
+  company_id: RequiredRouteParameter,
+  id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/dividend_computations/:id/investor_breakdown(.:format)
+ * @param {any} company_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const investor_breakdown_company_dividend_computation_path: ((
+  company_id: RequiredRouteParameter,
+  id: RequiredRouteParameter,
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 

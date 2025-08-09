@@ -12,7 +12,15 @@ export const dividendRoundsRouter = createRouter({
 
     const where = eq(dividendRounds.companyId, ctx.company.id);
     return await db.query.dividendRounds.findMany({
-      columns: { id: true, issuedAt: true, totalAmountInCents: true, numberOfShareholders: true },
+      columns: {
+        id: true,
+        issuedAt: true,
+        totalAmountInCents: true,
+        numberOfShareholders: true,
+        returnOfCapital: true,
+        readyForPayment: true,
+        status: true,
+      },
       where,
       orderBy: [desc(dividendRounds.id)],
     });
