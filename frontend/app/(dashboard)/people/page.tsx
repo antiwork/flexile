@@ -177,15 +177,12 @@ export default function PeoplePage() {
           }
 
           return (
-            <div className="absolute inset-0 flex w-0 flex-col items-end justify-between py-2">
+            <div className="flex h-full flex-col items-end justify-between">
               <div className="flex h-5 w-4 items-center justify-center">
                 <Status variant={variant} />
               </div>
             </div>
           );
-        },
-        meta: {
-          cellClassName: "relative px-1.5",
         },
       }),
 

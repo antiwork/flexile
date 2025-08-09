@@ -170,7 +170,7 @@ export default function DataTable<T extends RowData>({
     [table.getState().columnFilters],
   );
 
-  const rowClasses = `px-1 py-2 md:px-0 ${isMobile ? "min-h-16" : ""}`;
+  const rowClasses = `px-1 py-2 md:px-0 ${isMobile ? "min-h-16 flex" : ""}`;
   const cellClasses = (column: Column<T> | null, type?: "header" | "footer") => {
     const numeric = column?.columnDef.meta?.numeric;
     return cn(
