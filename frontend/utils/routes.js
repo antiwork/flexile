@@ -1643,6 +1643,22 @@ export const export_company_invoices_path = /*#__PURE__*/ __jsr.r({"company_id":
 
 /**
  * Generates rails route to
+ * /internal/users/find_by_email(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const find_by_email_users_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"users"],[2,[7,"/"],[2,[6,"find_by_email"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/users/find_by_email(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const find_by_email_users_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"users"],[2,[7,"/"],[2,[6,"find_by_email"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
+
+/**
+ * Generates rails route to
  * /internal/current_user_data(.:format)
  * @param {object | undefined} options
  * @returns {string} route path

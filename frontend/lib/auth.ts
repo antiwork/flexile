@@ -1,5 +1,6 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import { z } from "zod";
 import env from "@/env";
 import { assertDefined } from "@/utils/assert";
@@ -11,6 +12,10 @@ const otpLoginSchema = z.object({
 
 export const authOptions = {
   providers: [
+    GoogleProvider({
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
+    }),
     CredentialsProvider({
       id: "otp",
       name: "Email OTP",
@@ -84,6 +89,56 @@ export const authOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
+    async signIn({ user, account }) {
+      // Allow OTP sign-ins to proceed as before
+      if (account?.provider === "otp") {
+        return true;
+      }
+      // For Google sign-ins, check if user exists in our database
+      if (account?.provider === "google" && user.email) {
+        try {
+          const response = await fetch(`${process.env.NEXTAUTH_URL}/internal/users/find_by_email`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: user.email,
+              token: env.API_SECRET_TOKEN,
+            }),
+          });
+
+          if (response.ok) {
+            const userData = z
+              .object({
+                user: z.object({
+                  id: z.number(),
+                  email: z.string(),
+                  name: z.string().nullable(),
+                  legal_name: z.string().nullable(),
+                  preferred_name: z.string().nullable(),
+                }),
+                jwt: z.string(),
+              })
+              .parse(await response.json());
+
+            // Store the backend user data for use in JWT callback
+            user.id = userData.user.id.toString();
+            user.name = userData.user.name ?? "";
+            user.legalName = userData.user.legal_name ?? "";
+            user.preferredName = userData.user.preferred_name ?? "";
+            user.jwt = userData.jwt;
+            return true;
+          }
+
+          // User doesn't exist in our database
+          return false;
+        } catch (error) {
+          // eslint-disable-next-line no-console -- logging error
+          console.error("Error checking user during Google sign-in:", error);
+          return false;
+        }
+      }
+      return true;
+    },
     jwt({ token, user }) {
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- next-auth types are wrong
       if (!user) return token;

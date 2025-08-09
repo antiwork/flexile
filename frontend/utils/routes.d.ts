@@ -1536,6 +1536,26 @@ export const export_company_invoices_path: ((
 
 /**
  * Generates rails route to
+ * /internal/users/find_by_email(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const find_by_email_users_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/users/find_by_email(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const find_by_email_users_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /internal/current_user_data(.:format)
  * @param {object | undefined} options
  * @returns {string} route path

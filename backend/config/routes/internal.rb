@@ -4,6 +4,11 @@
 scope path: :internal, module: :internal do
   resources :login, only: :create
   resources :email_otp, only: :create
+  resources :users, only: [] do
+    collection do
+      post :find_by_email
+    end
+  end
   resources :signup, only: [] do
     collection do
       post :send_otp
