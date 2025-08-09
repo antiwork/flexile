@@ -217,7 +217,7 @@ export default function DataTable<T extends RowData>({
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="small" className="w-9 md:w-auto">
                       <div className="flex items-center gap-1">
-                        <ListFilterIcon className="size-4" />
+                        <ListFilterIcon className="size-4" strokeWidth={2.25} />
                         <span className="hidden md:block">Filter</span>
                         {!isMobile && activeFilterCount > 0 && (
                           <Badge variant="secondary" className="rounded-sm px-1 font-normal">
