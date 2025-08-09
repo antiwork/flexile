@@ -343,7 +343,7 @@ export default function DataTable<T extends RowData>({
               </div>
             ) : null}
           </div>
-          {!isMobile && <div className="flex justify-between md:justify-end md:gap-2">{actions}</div>}
+          {actions ? <div className="flex justify-between md:justify-end md:gap-2">{actions}</div> : null}
         </div>
       ) : null}
 

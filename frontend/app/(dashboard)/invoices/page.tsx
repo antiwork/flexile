@@ -531,7 +531,7 @@ export default function InvoicesPage() {
           searchColumn={user.roles.administrator ? "billFrom" : undefined}
           tabsColumn="status"
           actions={
-            user.roles.administrator ? (
+            user.roles.administrator && !isMobile ? (
               <Button variant="outline" size="small" asChild>
                 <a href={export_company_invoices_path(company.id)}>
                   <Download className="size-4" />
