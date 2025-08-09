@@ -116,7 +116,16 @@ const UpdatesList = ({
             <div
               key={update.id}
               className="grid cursor-pointer grid-cols-12 items-start gap-4 px-4 py-4 transition-colors hover:bg-gray-50"
+              role="button"
+              tabIndex={0}
+              aria-label={`Open update ${update.title}`}
               onClick={() => handleUpdateClick(update)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleUpdateClick(update);
+                }
+              }}
             >
               <div className="col-span-7">
                 <h3 className="mb-1 text-sm font-medium text-gray-900">{update.title}</h3>
@@ -144,7 +153,12 @@ const UpdatesList = ({
       </div>
 
       {!isAdmin && selectedUpdateId ? (
-        <ViewUpdateDialog updateId={selectedUpdateId} onOpenChange={() => setSelectedUpdateId(null)} />
+        <ViewUpdateDialog
+          updateId={selectedUpdateId}
+          onOpenChange={(open) => {
+            if (!open) setSelectedUpdateId(null);
+          }}
+        />
       ) : null}
     </>
   );
