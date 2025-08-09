@@ -107,7 +107,6 @@ class Company < ApplicationRecord
   validates :brand_color, hex_color: true, if: :brand_color_changed?
 
   scope :active, -> { where(deactivated_at: nil) }
-  scope :is_gumroad, -> { where(is_gumroad: true) }
   scope :is_trusted, -> { where(is_trusted: true) }
 
   after_create_commit :create_balance!

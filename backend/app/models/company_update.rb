@@ -35,11 +35,6 @@ class CompanyUpdate < ApplicationRecord
     sent_at.present? ? SENT : DRAFT
   end
 
-  def youtube_video_id
-    return unless video_url&.match?(/youtube\.com|youtu\.be/)
-
-    video_url[/(?:youtube\.com.*[?&]v=|youtu\.be\/)([\w-]+)/, 1]
-  end
 
   private
     def period_started_on_must_be_the_first_day_of_the_period

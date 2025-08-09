@@ -1516,7 +1516,6 @@ export const companyUpdates = pgTable(
     title: varchar().notNull(),
     body: text().notNull(),
 
-    videoUrl: text("video_url"),
     sentAt: timestamp("sent_at", { precision: 6, mode: "date" }),
     createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
@@ -1664,7 +1663,6 @@ export const companies = pgTable(
 
     externalId: varchar("external_id").$default(nanoid).notNull(),
     countryCode: varchar("country_code"),
-    isGumroad: boolean("is_gumroad").notNull().default(false),
     isTrusted: boolean("is_trusted").notNull().default(false),
     equityEnabled: boolean("equity_enabled").notNull().default(false),
     showAnalyticsToContractors: boolean("show_analytics_to_contractors").notNull().default(false),

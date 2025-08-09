@@ -1,0 +1,75 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.sandbox.transferwise.tech/v1/accounts
+    body:
+      encoding: UTF-8
+      string: '{"currency":"GBP","type":"sort_code","details":{"legalType":"PRIVATE","email":"someone@somewhere.com","accountHolderName":"someone
+        somewhere","sortCode":231470,"accountNumber":28821822,"address":{"country":"GB","city":"London","firstLine":"112
+        2nd street","postCode":"SW1P 3"}},"profile":"<WISE_PROFILE_ID>"}'
+    headers:
+      Authorization:
+      - Bearer 2183da69-ce3d-4833-a098-b7e2b19a966d
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Thu, 07 Aug 2025 16:06:49 GMT
+      Content-Type:
+      - application/json;charset=UTF-8
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Ray:
+      - 96b805ff2e6989f0-BOM
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - DENY
+      Cache-Control:
+      - no-cache, no-store, max-age=0, must-revalidate
+      Expires:
+      - '0'
+      X-Content-Type-Options:
+      - nosniff
+      Pragma:
+      - no-cache
+      X-Trace-Id:
+      - 4f9d041346fa5a04bea4ffbe27457b31
+      Route:
+      - v1_account_create
+      X-Envoy-Upstream-Service-Time:
+      - '132'
+      X-Envoy-Attempt-Count:
+      - '1'
+      Vary:
+      - origin,access-control-request-method,access-control-request-headers,accept-encoding
+      Cf-Cache-Status:
+      - DYNAMIC
+      Set-Cookie:
+      - __cf_bm=2GMsP6UkhFEcqVl0bpaQcmLiGADpxvN1JlEehQIxM2I-1754582809-1.0.1.1-.9NlfOJSX.s6vsWHnnuc5xxStQ54q9n9X2PTM2bBDBkYXaowDzB0KRincJMmV6uqW_W_Hdf.DKU925zFMNpuQSZVfdjEpB.BEgLZXsQLGDs;
+        path=/; expires=Thu, 07-Aug-25 16:36:49 GMT; domain=.transferwise.tech; HttpOnly;
+        Secure; SameSite=None
+      Server:
+      - cloudflare
+      Alt-Svc:
+      - h3=":443"; ma=86400
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":701425726,"business":null,"profile":<WISE_PROFILE_ID>,"accountHolderName":"someone
+        somewhere","currency":"GBP","country":"GB","type":"sort_code","details":{"address":{"country":"GB","countryCode":"GB","firstLine":"112
+        2nd street","postCode":"SW1P 3","city":"London","state":null},"email":"someone@somewhere.com","legalType":"PRIVATE","accountHolderName":null,"accountNumber":"28821822","sortCode":"231470","abartn":null,"accountType":null,"bankgiroNumber":null,"ifscCode":null,"bsbCode":null,"institutionNumber":null,"transitNumber":null,"phoneNumber":null,"bankCode":null,"russiaRegion":null,"routingNumber":null,"branchCode":null,"cpf":null,"cardToken":null,"idType":null,"idNumber":null,"idCountryIso3":null,"idValidFrom":null,"idValidTo":null,"clabe":null,"swiftCode":null,"dateOfBirth":null,"clearingNumber":null,"bankName":null,"branchName":null,"businessNumber":null,"province":null,"city":null,"rut":null,"token":null,"cnpj":null,"payinReference":null,"pspReference":null,"orderId":null,"idDocumentType":null,"idDocumentNumber":null,"identificationNumber":null,"targetProfile":null,"targetUserId":null,"taxId":null,"job":null,"nationality":null,"interacAccount":null,"bban":null,"town":null,"postCode":null,"language":null,"billerCode":null,"customerReferenceNumber":null,"prefix":null,"relationship":null,"IBAN":null,"iban":null,"bic":null,"BIC":null},"user":13111899,"active":true,"ownedByCustomer":false,"confirmations":null}'
+  recorded_at: Thu, 07 Aug 2025 16:06:50 GMT
+recorded_with: VCR 6.3.1

@@ -6,7 +6,6 @@ RSpec.describe Irs::Form1042sDataGenerator do
     create(
       :company,
       :completed_onboarding,
-      is_gumroad: true,
       email: "hi@gumroad.com",
       name: "Gumroad, Inc.",
       tax_id: "453361423",

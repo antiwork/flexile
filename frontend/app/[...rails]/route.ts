@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
-import { API_SECRET_TOKEN } from "@/lib/api";
+import env from "@/env";
 import { authOptions } from "@/lib/auth";
 
 async function handler(req: Request) {
@@ -21,27 +21,14 @@ async function handler(req: Request) {
       url.protocol = "http";
   }
 
-  // Get NextAuth session to extract JWT token
   const session = await getServerSession(authOptions);
 
   const headers = new Headers(req.headers);
 
-  // Add JWT token to x-flexile-auth header if user is authenticated via OTP
-  if (session?.user && "jwt" in session.user) {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    const userWithJwt = session.user as typeof session.user & { jwt: string };
-    headers.set("x-flexile-auth", `Bearer ${userWithJwt.jwt}`);
-  }
+  if (session?.user) headers.set("x-flexile-auth", `Bearer ${session.user.jwt}`);
 
-  // Add API secret token for API requests
-  let finalUrl = url;
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/v1/")) {
-    if (API_SECRET_TOKEN) {
-      // For API requests, we need to pass both JWT and API secret token
-      const requestUrl = new URL(url);
-      requestUrl.searchParams.set("token", API_SECRET_TOKEN);
-      finalUrl = requestUrl;
-    }
+    url.searchParams.set("token", env.API_SECRET_TOKEN);
   }
 
   const data = {
@@ -51,7 +38,7 @@ async function handler(req: Request) {
     duplex: "half",
     redirect: "manual",
   } as const;
-  const response = await fetch(finalUrl, data);
+  const response = await fetch(url, data);
 
   const responseHeaders = new Headers(response.headers);
   responseHeaders.delete("content-encoding");

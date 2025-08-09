@@ -21,7 +21,6 @@ import { pluralize } from "@/utils/pluralize";
 const formSchema = z.object({
   title: z.string().trim().min(1, "This field is required."),
   body: z.string().regex(/>\w/u, "This field is required."),
-  videoUrl: z.string().nullable(),
 });
 
 interface CompanyUpdateModalProps {
@@ -44,7 +43,6 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
     defaultValues: {
       title: update?.title ?? "",
       body: update?.body ?? "",
-      videoUrl: update?.videoUrl ?? "",
     },
   });
 
@@ -53,13 +51,11 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
       form.reset({
         title: update.title,
         body: update.body,
-        videoUrl: update.videoUrl ?? "",
       });
     } else if (!updateId) {
       form.reset({
         title: "",
         body: "",
-        videoUrl: "",
       });
     }
   }, [update, updateId, form]);
@@ -79,7 +75,6 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
       const data = {
         companyId: company.id,
         ...values,
-        videoUrl: values.videoUrl || null,
       };
       let id;
       if (update) {
@@ -149,20 +144,6 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
                         <FormLabel>Update</FormLabel>
                         <FormControl>
                           <RichTextEditor {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="videoUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Video URL (optional)</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

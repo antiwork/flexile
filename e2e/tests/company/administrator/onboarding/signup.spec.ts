@@ -1,5 +1,6 @@
 import { faker } from "@faker-js/faker";
 import { db, takeOrThrow } from "@test/db";
+import { fillOtp } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
@@ -8,7 +9,6 @@ test.describe("Company administrator signup", () => {
   test("successfully signs up the company", async ({ page }) => {
     const email = "admin-signup+e2e@example.com";
 
-    // Clean up any existing user with this email
     await db.delete(users).where(eq(users.email, email));
 
     const companyName = faker.company.name();
@@ -22,27 +22,18 @@ test.describe("Company administrator signup", () => {
 
     await page.goto("/signup");
 
-    // Enter email and request OTP
     await page.getByLabel("Work email").fill(email);
     await page.getByRole("button", { name: "Sign up" }).click();
 
-    // Wait for OTP step and enter verification code
-    // The form should auto-submit when all 6 digits are entered
-    const otpCode = "000000";
-    await page.locator('[data-slot="input-otp"]').fill(otpCode);
+    await fillOtp(page);
 
-    // No need to click the button as it should auto-submit
-    // Wait for redirect to dashboard
     await page.waitForURL(/.*\/invoices.*/u);
 
-    // Wait for getting started sidebar to be visible and click on the first incomplete item
     await page.getByText("Add company details").waitFor();
     await page.getByText("Add company details").click();
 
-    // Wait for company details page to load
     await page.waitForURL(/.*\/settings\/administrator\/details.*/u);
 
-    // Fill in company details
     await page.getByLabel("Company's legal name").fill(companyName);
     await page.getByLabel("EIN").fill(ein);
     await page.getByLabel("Phone number").fill(phoneNumber);
