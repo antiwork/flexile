@@ -1,28 +1,26 @@
 # frozen_string_literal: true
 
 class AddUserRoleService
+  ALLOWED_ROLES = {
+    "admin" => :add_admin_role,
+    "lawyer" => :add_lawyer_role,
+    "contractor" => :add_contractor_role,
+    "investor" => :add_investor_role,
+  }.freeze
+
   def initialize(company:, user_id:, role:)
     @company = company
-    @user_id = user_id
+    @user_external_id = user_id
     @role = role
   end
 
   def perform
-    user = User.find_by(external_id: @user_id)
+    user = User.find_by(external_id: @user_external_id)
     return { success: false, error: "User not found" } unless user
 
-    case @role
-    when "admin"
-      add_admin_role(user)
-    when "lawyer"
-      add_lawyer_role(user)
-    when "contractor"
-      add_contractor_role(user)
-    when "investor"
-      add_investor_role(user)
-    else
-      { success: false, error: "Invalid role. Must be one of: admin, lawyer, contractor, investor" }
-    end
+    handler = ALLOWED_ROLES[@role.to_s.downcase]
+    return { success: false, error: "Invalid role. Must be one of: #{ALLOWED_ROLES.keys.join(', ')}" } unless handler
+    send(handler, user)
   end
 
   private

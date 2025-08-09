@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "rails_helper"
+require "spec_helper"
 
 RSpec.describe Internal::Companies::UsersController, type: :controller do
   let(:company) { create(:company) }
@@ -9,13 +9,18 @@ RSpec.describe Internal::Companies::UsersController, type: :controller do
   let(:other_user) { create(:user) }
 
   before do
-    sign_in admin_user
-    allow(controller).to receive(:current_context).and_return(
+    allow(controller).to receive(:authenticate_user_json!).and_return(true)
+
+    Current.user = admin_user
+    Current.company = company
+    Current.company_administrator = company_administrator
+
+    allow(controller).to receive(:current_context) do
+      Current.user = admin_user
+      Current.company = company
+      Current.company_administrator = company_administrator
       CurrentContext.new(user: admin_user, company: company)
-    )
-    allow(controller).to receive(:Current).and_return(
-      double(user: admin_user, company: company, company_administrator: company_administrator)
-    )
+    end
   end
 
   describe "GET #index" do
@@ -32,9 +37,9 @@ RSpec.describe Internal::Companies::UsersController, type: :controller do
     end
   end
 
-  describe "GET #list_administrators" do
+  describe "GET #administrators" do
     it "returns administrators for the company" do
-      get :list_administrators, params: { company_id: company.external_id }
+      get :administrators, params: { company_id: company.external_id }
       expect(response).to have_http_status(:ok)
 
       json_response = JSON.parse(response.body)
@@ -71,6 +76,33 @@ RSpec.describe Internal::Companies::UsersController, type: :controller do
       end
     end
 
+    context "when role is provided in different case" do
+      it "normalizes the role and adds it" do
+        post :add_role, params: {
+          company_id: company.external_id,
+          user_id: other_user.external_id,
+          role: "Admin",
+        }
+
+        expect(response).to have_http_status(:ok)
+        expect(company.company_administrators.exists?(user: other_user)).to be(true)
+      end
+    end
+
+    context "when role is invalid" do
+      it "returns unprocessable entity with error" do
+        post :add_role, params: {
+          company_id: company.external_id,
+          user_id: other_user.external_id,
+          role: "invalid_role",
+        }
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        json_response = JSON.parse(response.body)
+        expect(json_response["error"]).to match(/Invalid role/i)
+      end
+    end
+
     context "when user already has the role" do
       before do
         create(:company_administrator, company: company, user: other_user)
@@ -90,12 +122,12 @@ RSpec.describe Internal::Companies::UsersController, type: :controller do
     end
   end
 
-  describe "DELETE #remove_role" do
+  describe "POST #remove_role" do
     let!(:other_admin) { create(:company_administrator, company: company, user: other_user) }
 
     context "when removing admin role" do
       it "removes admin role from user" do
-        delete :remove_role, params: {
+        post :remove_role, params: {
           company_id: company.external_id,
           user_id: other_user.external_id,
           role: "admin",
@@ -112,7 +144,7 @@ RSpec.describe Internal::Companies::UsersController, type: :controller do
       end
 
       it "returns error" do
-        delete :remove_role, params: {
+        post :remove_role, params: {
           company_id: company.external_id,
           user_id: admin_user.external_id,
           role: "admin",
@@ -126,7 +158,7 @@ RSpec.describe Internal::Companies::UsersController, type: :controller do
 
     context "when trying to remove own admin role" do
       it "returns error" do
-        delete :remove_role, params: {
+        post :remove_role, params: {
           company_id: company.external_id,
           user_id: admin_user.external_id,
           role: "admin",

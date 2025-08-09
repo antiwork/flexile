@@ -41,8 +41,8 @@ class Internal::Companies::UsersController < Internal::Companies::BaseController
 
     result = AddUserRoleService.new(
       company: Current.company,
-      user_id: params[:user_id],
-      role: params[:role]
+      user_id: user_params[:user_id],
+      role: user_params[:role]
     ).perform
 
     if result[:success]
@@ -57,8 +57,8 @@ class Internal::Companies::UsersController < Internal::Companies::BaseController
 
     result = RemoveUserRoleService.new(
       company: Current.company,
-      user_id: params[:user_id],
-      role: params[:role],
+      user_id: user_params[:user_id],
+      role: user_params[:role],
       current_user: Current.user
     ).perform
 

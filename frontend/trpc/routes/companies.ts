@@ -178,23 +178,6 @@ export const companiesRouter = createRouter({
       }
     }),
 
-  revokeAdminRole: companyProcedure
-    .input(z.object({ companyId: z.string(), userId: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
-
-      const response = await fetch(remove_role_company_users_url(ctx.company.externalId, { host: ctx.host }), {
-        method: "DELETE",
-        headers: { ...ctx.headers, "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: input.userId, role: "admin" }),
-      });
-
-      if (!response.ok) {
-        const errorData = z.object({ error: z.string() }).parse(await response.json());
-        throw new TRPCError({ code: "BAD_REQUEST", message: errorData.error });
-      }
-    }),
-
   listLawyers: companyProcedure
     .input(z.object({ companyId: z.string() }))
     .output(
@@ -394,7 +377,7 @@ export const companiesRouter = createRouter({
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
       const response = await fetch(remove_role_company_users_url(ctx.company.externalId, { host: ctx.host }), {
-        method: "DELETE",
+        method: "POST",
         headers: { ...ctx.headers, "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: input.userId, role: input.role }),
       });

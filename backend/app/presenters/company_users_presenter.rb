@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "set"
+
 class CompanyUsersPresenter
   def initialize(company:)
     @company = company
@@ -91,7 +93,6 @@ class CompanyUsersPresenter
     seen = Set.new
     all_users = []
 
-    # Collect all users from different roles
     [administrators_props, lawyers_props, contractors_props, investors_props].each do |role_users|
       role_users.each do |user|
         next if seen.include?(user[:id])
@@ -112,7 +113,6 @@ class CompanyUsersPresenter
     def get_user_roles(user)
       roles = []
 
-      # Check all possible roles for this user in this company
       roles << "Admin" if @company.company_administrators.exists?(user: user)
       roles << "Lawyer" if @company.company_lawyers.exists?(user: user)
       roles << "Contractor" if @company.company_workers.exists?(user: user)
