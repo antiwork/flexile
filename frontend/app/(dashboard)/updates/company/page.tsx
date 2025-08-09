@@ -90,6 +90,7 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
   const { updates } = useData();
   const company = useCurrentCompany();
   const trpcUtils = trpc.useUtils();
+  const isMobile = useIsMobile();
 
   const [deletingUpdate, setDeletingUpdate] = useState<string | null>(null);
 
@@ -101,7 +102,7 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
   });
 
   const columnHelper = createColumnHelper<(typeof updates)[number]>();
-  const columns = useMemo(
+  const desktopColumns = useMemo(
     () => [
       columnHelper.simple("sentAt", "Sent on", (v) => (v ? formatDate(v) : "-")),
       columnHelper.accessor("title", {
@@ -136,6 +137,48 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
     [onEditUpdate],
   );
 
+  const mobileColumns = useMemo(
+    () => [
+      columnHelper.display({
+        id: "titleSummary",
+        cell: (info) => {
+          const update = info.row.original;
+          return (
+            <div className="flex flex-col gap-2">
+              <div>
+                <div className="truncate text-base font-medium">{update.title}</div>
+                <div className="font-normal text-gray-600">{update.summary}</div>
+              </div>
+            </div>
+          );
+        },
+        meta: {
+          cellClassName: "w-full",
+        },
+      }),
+      columnHelper.display({
+        id: "statusSentOn",
+        cell: (info) => {
+          const update = info.row.original;
+
+          return (
+            <div className="absolute inset-0 flex w-0 flex-col items-end justify-between py-2">
+              <div className="flex h-5 w-4 items-center justify-center">
+                <Status variant={update.sentAt ? "success" : undefined} />
+              </div>
+              <div className="self-end text-gray-600">{update.sentAt ? formatDate(update.sentAt) : "-"}</div>
+            </div>
+          );
+        },
+        meta: {
+          cellClassName: "relative px-1.5",
+        },
+      }),
+    ],
+    [onEditUpdate],
+  );
+
+  const columns = isMobile ? mobileColumns : desktopColumns;
   const table = useTable({ columns, data: updates });
 
   return (
