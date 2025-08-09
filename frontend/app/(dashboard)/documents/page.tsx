@@ -340,7 +340,7 @@ export default function DocumentsPage() {
           id: "documentNameSigner",
           cell: (info) => (
             <div className="flex flex-col gap-1">
-              <div className="truncate text-base font-medium">{info.row.original.name}</div>
+              <div className="text-base font-medium">{info.row.original.name}</div>
               {isCompanyRepresentative ? (
                 <div className="text-sm font-normal">
                   {
@@ -355,6 +355,7 @@ export default function DocumentsPage() {
             cellClassName: "w-full",
           },
         }),
+
         columnHelper.display({
           id: "statusSentOn",
           cell: (info) => {
@@ -366,11 +367,12 @@ export default function DocumentsPage() {
                 <div className="flex h-5 w-4 items-center justify-center">
                   <Status variant={variant} />
                 </div>
-                <div className="self-end text-gray-600">{formatDate(document.createdAt)}</div>
+                <div className="text-gray-600">{formatDate(document.createdAt)}</div>
               </div>
             );
           },
         }),
+
         columnHelper.accessor((row) => getStatus(row).name, {
           id: "status",
           meta: { filterOptions: [...new Set(documents.map((document) => getStatus(document).name))], hidden: true },
@@ -386,6 +388,7 @@ export default function DocumentsPage() {
               },
             )
           : null,
+
         columnHelper.accessor("createdAt", {
           id: "createdAt",
           header: "Date",
@@ -397,6 +400,7 @@ export default function DocumentsPage() {
           filterFn: (row, _, filterValue) =>
             Array.isArray(filterValue) && filterValue.includes(row.original.createdAt.getFullYear().toString()),
         }),
+
         columnHelper.accessor((row) => typeLabels[row.type], {
           header: "Type",
           meta: { filterOptions: [...new Set(documents.map((document) => typeLabels[document.type]))], hidden: true },

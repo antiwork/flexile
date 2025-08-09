@@ -262,7 +262,7 @@ export default function InvoicesPage() {
           return user.roles.administrator ? (
             <div className="flex flex-col gap-2">
               <div>
-                <div className="truncate text-base font-medium">{invoice.billFrom}</div>
+                <div className="text-base font-medium">{invoice.billFrom}</div>
                 <div className="text-gray-600">{invoice.contractor.role}</div>
               </div>
               <div className="text-sm">{amount}</div>

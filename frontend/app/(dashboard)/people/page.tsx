@@ -133,7 +133,7 @@ export default function PeoplePage() {
           ),
       }),
     ],
-    [workers.map((worker) => worker.role).join(",")],
+    [workers],
   );
   const mobileColumns = useMemo(
     () => [
@@ -144,7 +144,7 @@ export default function PeoplePage() {
           return (
             <>
               <div>
-                <div className="truncate text-base font-medium">{person.user.name}</div>
+                <div className="text-base font-medium">{person.user.name}</div>
                 <div className="text-sm font-normal">{person.role}</div>
               </div>
               {person.user.countryCode ? (
@@ -212,7 +212,7 @@ export default function PeoplePage() {
         },
       }),
     ],
-    [workers.map((worker) => worker.role).join(",")],
+    [workers],
   );
 
   const columns = isMobile ? mobileColumns : desktopColumns;

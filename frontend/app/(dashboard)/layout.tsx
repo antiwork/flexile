@@ -243,7 +243,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <SidebarInset>
         <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
-          <main className="flex flex-1 flex-col pb-4 not-print:overflow-y-auto">
+          <main className="flex flex-1 flex-col not-print:overflow-y-auto">
             <div className="flex flex-col gap-2 md:gap-4">{children}</div>
           </main>
         </div>
