@@ -421,7 +421,7 @@ export default function InvoicesPage() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem asChild>
-                      <a href={export_company_invoices_path(company.id)} className="flex items-center gap-2">
+                      <a href={export_company_invoices_path(company.id)} className="flex h-11 items-center gap-2">
                         <Download className="size-4" />
                         Download CSV
                       </a>
