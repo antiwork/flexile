@@ -46,10 +46,9 @@ test("login with redirect_url", async ({ page }) => {
   // Fill the OTP code using the InputOTP component's hidden input
   // The form should auto-submit when all 6 digits are entered
   const otpCode = "000000";
-  await page.locator('[data-slot="input-otp"]').fill(otpCode);
+  await page.locator('[data-input-otp="true"]').fill(otpCode);
 
-  // No need to click the button as it should auto-submit
-  await page.waitForLoadState("networkidle");
+  await page.waitForURL(/.*\/people.*/u);
 
   await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
 
