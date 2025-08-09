@@ -144,10 +144,10 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
         cell: (info) => {
           const update = info.row.original;
           return (
-            <div className="flex flex-col gap-2">
+            <div className="flex w-3xs flex-col gap-2">
               <div>
                 <div className="truncate text-base font-medium">{update.title}</div>
-                <div className="font-normal text-gray-600">{update.summary}</div>
+                <div className="truncate font-normal text-gray-600">{update.summary}</div>
               </div>
             </div>
           );
