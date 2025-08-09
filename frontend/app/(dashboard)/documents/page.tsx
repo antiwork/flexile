@@ -12,7 +12,9 @@ import {
   Trash2Icon,
   UserPlus,
 } from "lucide-react";
+import type { Route } from "next";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import React, { useEffect, useId, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -547,6 +549,8 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
   const uid = useId();
   const user = useCurrentUser();
   const company = useCurrentCompany();
+  const [redirectUrl] = useQueryState("next");
+  const router = useRouter();
   const [signature, setSignature] = useState(user.legalName);
 
   const queryClient = useQueryClient();
@@ -574,7 +578,9 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["documents"] });
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-      onClose();
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- not ideal, but there's no good way to assert this right now
+      if (redirectUrl) router.push(redirectUrl as Route);
+      else onClose();
     },
   });
 

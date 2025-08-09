@@ -88,11 +88,7 @@ test.describe("Document Creation", () => {
   test("writes document content and submits", async ({ page }) => {
     await page.getByRole("button", { name: "New document" }).click();
 
-    const writeTab = page.getByRole("tab", { name: "Write" });
-    await writeTab.waitFor({ state: "visible" });
-    await expect(writeTab).toBeVisible();
-    await writeTab.click();
-
+    await page.getByRole("tab", { name: "Write" }).click();
     await page.locator('input[type="text"][name="document-title"]').fill("Test Agreement");
     await page.locator('[contenteditable="true"]').fill("Test Agreement");
     await page.getByRole("button", { name: "Create" }).click();

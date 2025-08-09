@@ -12,7 +12,6 @@ import { contractorsRouter } from "./routes/contractors";
 import { convertibleSecuritiesRouter } from "./routes/convertibleSecurities";
 import { dividendRoundsRouter } from "./routes/dividendRounds";
 import { dividendsRouter } from "./routes/dividends";
-import { documentsRouter } from "./routes/documents";
 import { equityGrantExercisesRouter } from "./routes/equityGrantExercises";
 import { equityGrantsRouter } from "./routes/equityGrants";
 import { expenseCategoriesRouter } from "./routes/expenseCategories";
@@ -34,7 +33,6 @@ export const appRouter = createRouter({
   quickbooks: quickbooksRouter,
   invoices: invoicesRouter,
   consolidatedInvoices: consolidatedInvoicesRouter,
-  documents: documentsRouter,
   equityGrants: equityGrantsRouter,
   shareHoldings: shareHoldingsRouter,
   investors: investorsRouter,

@@ -4,7 +4,6 @@ import { companyAdministratorsFactory } from "@test/factories/companyAdministrat
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
-import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
 import { PayRateType } from "@/db/enums";
@@ -49,7 +48,7 @@ test.describe("Edit contractor", () => {
     await expect(page.getByRole("row").filter({ hasText: contractor1User.preferredName || "" })).toBeVisible();
     await expect(page.getByRole("row").filter({ hasText: contractor2User.preferredName || "" })).not.toBeVisible();
   });
-  test("allows editing details of contractors", async ({ page, next }) => {
+  test("allows editing details of contractors", async ({ page }) => {
     const { company } = await companiesFactory.create();
     const { user: admin } = await usersFactory.create();
     await companyAdministratorsFactory.create({
@@ -62,10 +61,6 @@ test.describe("Edit contractor", () => {
     assert(contractor != null, "Contractor is required");
     assert(contractor.preferredName != null, "Contractor preferred name is required");
     assert(contractor.legalName != null, "Contractor legal name is required");
-    const { mockForm } = mockDocuseal(next, {
-      submitters: () => ({ "Company Representative": admin, Signer: contractor }),
-    });
-    await mockForm(page);
 
     await login(page, admin);
     await page.getByRole("link", { name: "People" }).click();
@@ -79,7 +74,7 @@ test.describe("Edit contractor", () => {
     await page.getByLabel("Role").fill("Stuff-doer");
     await page.getByLabel("Rate").fill("107");
     await page.getByRole("button", { name: "Save changes" }).click();
-    await expect(page.getByRole("button", { name: "Sign now" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Agree & Submit" })).toBeVisible();
 
     const updatedContractor = await db.query.companyContractors.findFirst({
       where: eq(users.id, companyContractor.id),
@@ -89,7 +84,7 @@ test.describe("Edit contractor", () => {
     expect(updatedContractor.payRateInSubunits).toBe(10700);
   });
 
-  test("allows editing details of contractors with a custom rate", async ({ page, next }) => {
+  test("allows editing details of contractors with a custom rate", async ({ page }) => {
     const { company } = await companiesFactory.create();
     const { user: admin } = await usersFactory.create();
     await companyAdministratorsFactory.create({
@@ -103,10 +98,6 @@ test.describe("Edit contractor", () => {
     });
     assert(user !== undefined);
     assert(user.preferredName !== null);
-    const { mockForm } = mockDocuseal(next, {
-      submitters: () => ({ "Company Representative": admin, Signer: user }),
-    });
-    await mockForm(page);
 
     await login(page, admin);
     await page.getByRole("link", { name: "People" }).click();
@@ -117,7 +108,7 @@ test.describe("Edit contractor", () => {
     await page.getByRole("radio", { name: "Custom" }).click({ force: true });
     await page.getByLabel("Rate").fill("2000");
     await page.getByRole("button", { name: "Save changes" }).click();
-    await expect(page.getByRole("button", { name: "Sign now" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Agree & Submit" })).toBeVisible();
 
     const updatedContractor = await db.query.companyContractors.findFirst({
       where: eq(users.id, companyContractor.id),

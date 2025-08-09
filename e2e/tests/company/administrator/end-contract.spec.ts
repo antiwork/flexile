@@ -3,7 +3,6 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { fillDatePicker } from "@test/helpers";
 import { login, logout } from "@test/helpers/auth";
-import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
 import { addDays, addYears, format } from "date-fns";
 import { eq } from "drizzle-orm";
@@ -11,7 +10,7 @@ import { users } from "@/db/schema";
 import { assert } from "@/utils/assert";
 
 test.describe("End contract", () => {
-  test("allows admin to end contractor's contract", async ({ page, next }) => {
+  test("allows admin to end contractor's contract", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
 
     await login(page, adminUser);
@@ -44,20 +43,17 @@ test.describe("End contract", () => {
     // Re-invite
     await page.getByRole("link", { name: "People" }).click();
     await page.getByRole("button", { name: "Add contractor" }).click();
-    const { mockForm } = mockDocuseal(next, {
-      submitters: () => ({ "Company Representative": adminUser, Signer: contractor }),
-    });
-    await mockForm(page);
     await page.getByLabel("Email").fill(contractor.email);
     const startDate = addYears(new Date(), 1);
     await fillDatePicker(page, "Start date", format(startDate, "MM/dd/yyyy"));
+    await page.getByRole("tab", { name: "Write" }).click();
+    await page.locator('input[type="text"][name="document-title"]').fill("Test Agreement");
+    await page.getByRole("paragraph").fill("Test Agreement");
     await page.getByRole("button", { name: "Send invite" }).click();
     await withinModal(
       async (modal) => {
-        await modal.getByRole("button", { name: "Sign now" }).click();
-        await modal.getByRole("link", { name: "Type" }).click();
-        await modal.getByPlaceholder("Type signature here...").fill("Admin Admin");
-        await modal.getByRole("button", { name: "Complete" }).click();
+        await modal.getByRole("textbox", { name: "Signature" }).fill("Admin Admin");
+        await modal.getByRole("button", { name: "Agree & Submit" }).click();
       },
       { page },
     );
@@ -72,10 +68,8 @@ test.describe("End contract", () => {
     await logout(page);
     await login(page, contractor);
     await page.getByRole("link", { name: "sign it" }).click();
-    await page.getByRole("button", { name: "Sign now" }).click();
-    await page.getByRole("link", { name: "Type" }).click();
-    await page.getByPlaceholder("Type signature here...").fill("Flexy Bob");
-    await page.getByRole("button", { name: "Complete" }).click();
+    await page.getByRole("textbox", { name: "Signature" }).fill("Admin Admin");
+    await page.getByRole("button", { name: "Agree & Submit" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
   });
 

@@ -1,16 +1,23 @@
 import { CurrencyDollarIcon } from "@heroicons/react/20/solid";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
+import { z } from "zod";
 import MutationButton from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
+import { documentSchema } from "@/models/document";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
-import { approve_company_invoices_path, company_invoice_path, reject_company_invoices_path } from "@/utils/routes";
+import {
+  approve_company_invoices_path,
+  company_documents_path,
+  company_invoice_path,
+  reject_company_invoices_path,
+} from "@/utils/routes";
 
 type Invoice = RouterOutput["invoices"]["list"][number] | RouterOutput["invoices"]["get"];
 export const EDITABLE_INVOICE_STATES: Invoice["status"][] = ["received", "rejected"];
@@ -22,15 +29,23 @@ export const taxRequirementsMet = (invoice: Invoice) =>
 export const useCanSubmitInvoices = () => {
   const user = useCurrentUser();
   const company = useCurrentCompany();
-  const { data: documents } = trpc.documents.list.useQuery(
-    { companyId: company.id, userId: user.id, signable: true },
-    { enabled: !!user.roles.worker },
-  );
+  const { data: documents = [] } = useQuery({
+    queryKey: ["signableDocuments"],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        signable: "true",
+      });
+      const url = `${company_documents_path(company.id)}?${params.toString()}`;
+      const response = await request({ method: "GET", accept: "json", url, assertOk: true });
+      return z.array(documentSchema).parse(await response.json());
+    },
+    enabled: !!user.roles.worker,
+  });
   const { data: contractorInfo } = trpc.users.getContractorInfo.useQuery(
     { companyId: company.id },
     { enabled: !!user.roles.worker },
   );
-  const unsignedContractId = documents?.[0]?.id;
+  const unsignedContractId = documents[0]?.id;
   const hasLegalDetails = user.address.street_address && !!user.taxInformationConfirmedAt;
   const contractSignedElsewhere = contractorInfo?.contractSignedElsewhere ?? false;
 

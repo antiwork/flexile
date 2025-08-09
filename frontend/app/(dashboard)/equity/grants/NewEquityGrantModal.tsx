@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
+import { useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -70,6 +71,7 @@ interface NewEquityGrantModalProps {
 export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGrantModalProps) {
   const trpcUtils = trpc.useUtils();
   const company = useCurrentCompany();
+  const queryClient = useQueryClient();
   const [data] = trpc.equityGrants.new.useSuspenseQuery({ companyId: company.id });
   const [showExercisePeriods, setShowExercisePeriods] = useState(false);
 
@@ -139,7 +141,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
       await trpcUtils.equityGrants.list.invalidate();
       await trpcUtils.equityGrants.totals.invalidate();
       await trpcUtils.capTable.show.invalidate();
-      await trpcUtils.documents.list.invalidate();
+      await queryClient.invalidateQueries({ queryKey: ["documents"] });
 
       handleClose(false);
     },

@@ -3,7 +3,7 @@
 import { ArrowUpTrayIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { PaperAirplaneIcon, PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { type DateValue, parseDate } from "@internationalized/date";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
 import { CircleAlert } from "lucide-react";
 import Link from "next/link";
@@ -102,6 +102,7 @@ const Edit = () => {
   const [errorField, setErrorField] = useState<string | null>(null);
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
+  const queryClient = useQueryClient();
   const worker = user.roles.worker;
   assert(worker != null);
 
@@ -188,7 +189,7 @@ const Edit = () => {
         assertOk: true,
       });
       await trpcUtils.invoices.list.invalidate({ companyId: company.id });
-      await trpcUtils.documents.list.invalidate();
+      await queryClient.invalidateQueries({ queryKey: ["documents"] });
       router.push("/invoices");
     },
   });

@@ -1,8 +1,10 @@
 "use client";
+import { useQuery } from "@tanstack/react-query";
 import { CircleAlert, CircleCheck, Info, Pencil, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { z } from "zod";
 import NewEquityGrantModal from "@/app/(dashboard)/equity/grants/NewEquityGrantModal";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
@@ -22,9 +24,12 @@ import {
 } from "@/components/ui/dialog";
 import { DocumentTemplateType } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
+import { type Document, documentSchema } from "@/models/document";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
+import { request } from "@/utils/request";
+import { company_documents_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
 
@@ -76,10 +81,15 @@ export default function GrantsPage() {
   );
 
   const table = useTable({ columns, data });
-  const [equityPlanContractTemplates] = trpc.documents.templates.list.useSuspenseQuery({
-    companyId: company.id,
-    type: DocumentTemplateType.EquityPlanContract,
-    signable: true,
+
+  const { data: equityPlanContractTemplates = [] } = useQuery<Document[]>({
+    queryKey: [`${DocumentTemplateType.EquityPlanContract}documentTemplates`],
+    queryFn: async () => {
+      const params = new URLSearchParams({ type: String(DocumentTemplateType.EquityPlanContract), signable: "true" });
+      const url = `${company_documents_path(company.id)}?${params.toString()}`;
+      const response = await request({ method: "GET", accept: "json", url, assertOk: true });
+      return z.array(documentSchema).parse(await response.json());
+    },
   });
 
   return (

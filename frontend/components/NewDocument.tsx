@@ -135,7 +135,7 @@ export const NewDocument = () => {
                     <FormLabel>Document type</FormLabel>
                     <FormControl>
                       <ComboBox
-                        value={field.value?.toString() ?? ""}
+                        value={field.value.toString()}
                         onChange={(value) => form.setValue("type", value)}
                         options={documentTypeOptions}
                         placeholder="Select document type"

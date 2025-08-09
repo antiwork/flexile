@@ -126,8 +126,6 @@ test.describe("Documents share, sign and delete functionality", () => {
       email: "contractor2@example.com",
     });
 
-    assert(contractor2User.user !== undefined);
-
     await companyContractorsFactory.create({
       companyId: company.id,
       role: "Test Contractor",

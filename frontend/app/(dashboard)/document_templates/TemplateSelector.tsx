@@ -22,8 +22,6 @@ const TemplateSelector = ({
   const { data: templates = [] } = useQuery<Document[]>({
     queryKey: [`${type}documentTemplates`],
     queryFn: async () => {
-      if (!company) return [];
-
       const params = new URLSearchParams({ type: String(type), signable: "true" });
       const url = `${company_documents_path(company.id)}?${params.toString()}`;
       const response = await request({ method: "GET", accept: "json", url, assertOk: true });

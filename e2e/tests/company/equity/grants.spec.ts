@@ -2,7 +2,6 @@ import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
-import { documentTemplatesFactory } from "@test/factories/documentTemplates";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { optionPoolsFactory } from "@test/factories/optionPools";
 import { usersFactory } from "@test/factories/users";
@@ -10,7 +9,7 @@ import { fillDatePicker, selectComboboxOption } from "@test/helpers";
 import { login, logout } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { and, desc, eq, inArray } from "drizzle-orm";
-import { DocumentTemplateType } from "@/db/enums";
+import { DocumentType } from "@/db/enums";
 import { companyInvestors, documents, documentSignatures, equityGrants } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 
@@ -44,10 +43,17 @@ test.describe("Equity Grants", () => {
     await expect(page.getByText("Create equity plan contract templates")).toBeVisible();
 
     // Create the required document template
-    await documentTemplatesFactory.create({
-      companyId: company.id,
-      type: DocumentTemplateType.EquityPlanContract,
-    });
+    const [equityDocumentTemplate] = await db
+      .insert(documents)
+      .values({
+        companyId: company.id,
+        name: "Equity Plan Contract",
+        type: DocumentType.EquityPlanContract,
+        year: new Date().getFullYear(),
+        textContent: "This is a test equity plan contract.",
+      })
+      .returning();
+    assertDefined(equityDocumentTemplate);
     await page.reload();
 
     // After creating the template, the alert should disappear and the button should be visible
@@ -275,10 +281,17 @@ test.describe("Equity Grants", () => {
       authorizedShares: 20000n, // Ensure enough shares in the pool
       issuedShares: 0n, // No shares issued yet
     });
-    await documentTemplatesFactory.create({
-      companyId: company.id,
-      type: DocumentTemplateType.EquityPlanContract,
-    });
+    const [equityDocumentTemplate] = await db
+      .insert(documents)
+      .values({
+        companyId: company.id,
+        name: "Equity Plan Contract",
+        type: DocumentType.EquityPlanContract,
+        year: new Date().getFullYear(),
+        textContent: "This is a test equity plan contract.",
+      })
+      .returning();
+    assertDefined(equityDocumentTemplate);
 
     await login(page, adminUser);
     await page.getByRole("button", { name: "Equity" }).click();
@@ -365,10 +378,17 @@ test.describe("Equity Grants", () => {
       authorizedShares: 20000n, // Ensure enough shares in the pool
       issuedShares: 0n, // No shares issued yet
     });
-    await documentTemplatesFactory.create({
-      companyId: company.id,
-      type: DocumentTemplateType.EquityPlanContract,
-    });
+    const [equityDocumentTemplate] = await db
+      .insert(documents)
+      .values({
+        companyId: company.id,
+        name: "Equity Plan Contract",
+        type: DocumentType.EquityPlanContract,
+        year: new Date().getFullYear(),
+        textContent: "This is a test equity plan contract.",
+      })
+      .returning();
+    assertDefined(equityDocumentTemplate);
 
     await login(page, adminUser);
     await page.getByRole("button", { name: "Equity" }).click();
@@ -408,10 +428,17 @@ test.describe("Equity Grants", () => {
       authorizedShares: 20000n, // Ensure enough shares in the pool
       issuedShares: 0n, // No shares issued yet
     });
-    await documentTemplatesFactory.create({
-      companyId: company.id,
-      type: DocumentTemplateType.EquityPlanContract,
-    });
+    const [equityDocumentTemplate] = await db
+      .insert(documents)
+      .values({
+        companyId: company.id,
+        name: "Equity Plan Contract",
+        type: DocumentType.EquityPlanContract,
+        year: new Date().getFullYear(),
+        textContent: "This is a test equity plan contract.",
+      })
+      .returning();
+    assertDefined(equityDocumentTemplate);
 
     await login(page, adminUser);
     await page.getByRole("button", { name: "Equity" }).click();

@@ -31,7 +31,7 @@ class DocumentPresenter
       document.signatures.map do |signature|
         {
           id: signature.user.external_id.to_s,
-          name: signature.user.name,
+          name: signature.user.name || signature.user.email,
           email: signature.user.email,
           title: signature.title,
           signedAt: signature.signed_at&.iso8601,

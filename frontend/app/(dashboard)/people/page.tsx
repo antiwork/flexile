@@ -79,6 +79,7 @@ export default function PeoplePage() {
       const payRateType = values.payRateType === PayRateType.Hourly ? "hourly" : "fixed";
       const startDate = formatISO(values.startDate.toDate(getLocalTimeZone()));
 
+      let response;
       if (attachment) {
         const formData = new FormData();
         formData.append("contractor[email]", values.email);
@@ -91,7 +92,7 @@ export default function PeoplePage() {
         formData.append("document[attachment]", attachment);
         formData.append("document[name]", attachment.name);
         formData.append("document[signed]", values.signed.toString());
-        await request({
+        response = await request({
           url: company_workers_path(company.id),
           method: "POST",
           accept: "json",
@@ -114,16 +115,17 @@ export default function PeoplePage() {
             signed: values.signed,
           },
         };
-        const response = await request({
+        response = await request({
           url: company_workers_path(company.id),
           method: "POST",
           accept: "json",
           jsonData: payload,
           assertOk: true,
         });
-
-        return z.object({ documentId: z.string().optional() }).parse(await response.json());
       }
+
+      const responseData = z.object({ document_id: z.number().nullable() }).parse(await response.json());
+      return { documentId: responseData.document_id };
     },
     onSuccess: async (data) => {
       await refetch();
@@ -132,7 +134,7 @@ export default function PeoplePage() {
       form.reset();
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
 
-      if (data?.documentId)
+      if (data.documentId)
         router.push(`/documents?${new URLSearchParams({ sign: data.documentId.toString(), next: "/people" })}`);
     },
   });

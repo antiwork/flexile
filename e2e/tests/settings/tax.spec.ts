@@ -8,7 +8,6 @@ import { userComplianceInfosFactory } from "@test/factories/userComplianceInfos"
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker, selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
-import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test } from "@test/index";
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { BusinessType, DocumentType, TaxClassification } from "@/db/enums";
@@ -20,7 +19,7 @@ test.describe("Tax settings", () => {
   let adminUser: typeof users.$inferSelect;
   let user: typeof users.$inferSelect;
 
-  test.beforeEach(async ({ page, next }) => {
+  test.beforeEach(async () => {
     ({ company, adminUser } = await companiesFactory.createCompletedOnboarding());
 
     user = (
@@ -33,10 +32,6 @@ test.describe("Tax settings", () => {
         { withoutComplianceInfo: true },
       )
     ).user;
-    const { mockForm } = mockDocuseal(next, {
-      submitters: () => ({ "Company Representative": adminUser, Signer: user }),
-    });
-    await mockForm(page);
   });
 
   test.describe("as a contractor", () => {

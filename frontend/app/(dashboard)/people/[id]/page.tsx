@@ -1,7 +1,7 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getLocalTimeZone, today } from "@internationalized/date";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/react-query";
 import { isFuture } from "date-fns";
 import { Decimal } from "decimal.js";
@@ -453,6 +453,7 @@ const DetailsTab = ({
 }) => {
   const company = useCurrentCompany();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [user] = trpc.users.get.useSuspenseQuery({ companyId: company.id, id: userId });
   const [contractor] = trpc.contractors.get.useSuspenseQuery({ companyId: company.id, userId });
   const form = useForm<z.infer<typeof formSchema>>({
@@ -465,7 +466,7 @@ const DetailsTab = ({
   const updateContractor = trpc.contractors.update.useMutation({
     onSuccess: async (data) => {
       await trpcUtils.contractors.list.invalidate();
-      await trpcUtils.documents.list.invalidate();
+      await queryClient.invalidateQueries({ queryKey: ["documents"] });
       await trpcUtils.contractors.get.invalidate({ userId });
       return router.push(data.documentId ? `/documents?sign=${data.documentId}` : "/people");
     },
