@@ -40,6 +40,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/utils";
+import { useIsMobile } from "@/utils/use-mobile";
 
 declare module "@tanstack/react-table" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -92,6 +93,7 @@ interface TableProps<T> {
   onRowClicked?: ((row: T) => void) | undefined;
   actions?: React.ReactNode;
   searchColumn?: string | undefined;
+  mobileFilterColumn?: string | undefined; // New prop to specify which column to use for mobile filters
   contextMenuContent?: (context: {
     row: T;
     isSelected: boolean;
@@ -107,16 +109,18 @@ export default function DataTable<T extends RowData>({
   onRowClicked,
   actions,
   searchColumn: searchColumnName,
+  mobileFilterColumn,
   contextMenuContent,
   selectionActions,
 }: TableProps<T>) {
+  const isMobile = useIsMobile();
+
   React.useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         table.toggleAllRowsSelected(false);
       }
     }
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [table]);
@@ -133,6 +137,7 @@ export default function DataTable<T extends RowData>({
     }),
     [table.getState()],
   );
+
   const sortable = !!table.options.getSortedRowModel;
   const filterable = !!table.options.getFilteredRowModel;
   const selectable = !!table.options.enableRowSelection;
@@ -158,129 +163,200 @@ export default function DataTable<T extends RowData>({
       !numeric && "print:text-wrap",
     );
   };
+
   const searchColumn = searchColumnName ? table.getColumn(searchColumnName) : null;
+
   const getColumnName = (column: Column<T>) =>
     typeof column.columnDef.header === "string" ? column.columnDef.header : "";
+
   const selectedRows = table.getSelectedRowModel().rows.map((row) => row.original);
   const selectedRowCount = selectedRows.length;
 
   return (
     <div className="grid gap-4">
       {filterable || actions ? (
-        <div className="mx-4 grid gap-2 md:flex md:justify-between">
-          <div className="flex gap-2">
-            {table.options.enableGlobalFilter !== false ? (
-              <div className="relative w-full md:w-60">
-                <SearchIcon className="absolute top-2.5 left-2.5 size-4" />
-                <Input
-                  value={
-                    z
-                      .string()
-                      .nullish()
-                      .parse(searchColumn ? searchColumn.getFilterValue() : table.getState().globalFilter) ?? ""
-                  }
-                  onChange={(e) =>
-                    searchColumn ? searchColumn.setFilterValue(e.target.value) : table.setGlobalFilter(e.target.value)
-                  }
-                  className="w-full pl-8"
-                  placeholder={searchColumn ? `Search by ${getColumnName(searchColumn)}...` : "Search..."}
-                />
-              </div>
-            ) : null}
-            {filterableColumns.length > 0 ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="small">
-                    <div className="flex items-center gap-1">
-                      <ListFilterIcon className="size-4" />
-                      Filter
-                      {activeFilterCount > 0 && (
-                        <Badge variant="secondary" className="rounded-sm px-1 font-normal">
-                          {activeFilterCount}
-                        </Badge>
-                      )}
-                    </div>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  {filterableColumns.map((column) => {
-                    const filterValue = filterValueSchema.optional().parse(column.getFilterValue());
-                    return (
-                      <DropdownMenuSub key={column.id}>
-                        <DropdownMenuSubTrigger>
-                          <div className="flex items-center gap-1">
-                            <span>{getColumnName(column)}</span>
-                            {Array.isArray(filterValue) && filterValue.length > 0 && (
-                              <Badge variant="secondary" className="rounded-sm px-1 font-normal">
-                                {filterValue.length}
-                              </Badge>
-                            )}
-                          </div>
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent>
-                          <DropdownMenuCheckboxItem
-                            checked={!filterValue?.length}
-                            onCheckedChange={() => column.setFilterValue(undefined)}
-                          >
-                            All
-                          </DropdownMenuCheckboxItem>
-                          {column.columnDef.meta?.filterOptions?.map((option) => (
+        <div className="mx-4 space-y-2 md:space-y-0">
+          <div className={cn("grid gap-2", actions ? "md:grid-cols-[1fr_auto] md:justify-between" : "grid-cols-1")}>
+            <div className="flex w-full gap-2">
+              {table.options.enableGlobalFilter !== false ? (
+                <div className="relative flex-1 md:w-60 md:flex-none">
+                  <SearchIcon className="absolute top-2.5 left-2.5 size-4" />
+                  <Input
+                    value={
+                      z
+                        .string()
+                        .nullish()
+                        .parse(searchColumn ? searchColumn.getFilterValue() : table.getState().globalFilter) ?? ""
+                    }
+                    onChange={(e) =>
+                      searchColumn ? searchColumn.setFilterValue(e.target.value) : table.setGlobalFilter(e.target.value)
+                    }
+                    className="w-full pl-8"
+                    placeholder={searchColumn ? `Search by ${getColumnName(searchColumn)}...` : "Search..."}
+                  />
+                </div>
+              ) : null}
+
+              {filterableColumns.length > 0 ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="small" className="shrink-0">
+                      <div className="flex items-center gap-1">
+                        <ListFilterIcon className="size-4" />
+                        <p className="hidden md:block">Filter</p>
+                        {activeFilterCount > 0 && (
+                          <Badge variant="secondary" className="rounded-sm px-1 font-normal">
+                            {activeFilterCount}
+                          </Badge>
+                        )}
+                      </div>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    {filterableColumns.map((column) => {
+                      const filterValue = filterValueSchema.optional().parse(column.getFilterValue());
+                      return (
+                        <DropdownMenuSub key={column.id}>
+                          <DropdownMenuSubTrigger>
+                            <div className="flex items-center gap-1">
+                              <span>{getColumnName(column)}</span>
+                              {Array.isArray(filterValue) && filterValue.length > 0 && (
+                                <Badge variant="secondary" className="rounded-sm px-1 font-normal">
+                                  {filterValue.length}
+                                </Badge>
+                              )}
+                            </div>
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent>
                             <DropdownMenuCheckboxItem
-                              key={option}
-                              checked={filterValue?.includes(option) ?? false}
-                              onCheckedChange={(checked) =>
-                                column.setFilterValue(
-                                  checked
-                                    ? [...(filterValue ?? []), option]
-                                    : filterValue && filterValue.length > 1
-                                      ? filterValue.filter((o) => o !== option)
-                                      : undefined,
-                                )
-                              }
+                              checked={!filterValue?.length}
+                              onCheckedChange={() => column.setFilterValue(undefined)}
                             >
-                              {option}
+                              All
                             </DropdownMenuCheckboxItem>
-                          ))}
-                        </DropdownMenuSubContent>
-                      </DropdownMenuSub>
-                    );
-                  })}
-                  {activeFilterCount > 0 && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem variant="destructive" onSelect={() => table.resetColumnFilters(true)}>
-                        Clear all filters
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : null}
+                            {column.columnDef.meta?.filterOptions?.map((option) => (
+                              <DropdownMenuCheckboxItem
+                                key={option}
+                                checked={filterValue?.includes(option) ?? false}
+                                onCheckedChange={(checked) =>
+                                  column.setFilterValue(
+                                    checked
+                                      ? [...(filterValue ?? []), option]
+                                      : filterValue && filterValue.length > 1
+                                        ? filterValue.filter((o) => o !== option)
+                                        : undefined,
+                                  )
+                                }
+                              >
+                                {option}
+                              </DropdownMenuCheckboxItem>
+                            ))}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                      );
+                    })}
+                    {activeFilterCount > 0 && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-destructive" onSelect={() => table.resetColumnFilters(true)}>
+                          Clear all filters
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
 
-            {selectable ? (
-              <div className={cn("flex gap-2", selectedRowCount === 0 && "pointer-events-none opacity-0")}>
-                <div className="bg-accent border-muted flex h-9 items-center justify-center rounded-md border border-dashed px-2 font-medium">
-                  <span className="text-sm whitespace-nowrap">
-                    <span className="inline-block w-4 text-center tabular-nums">{selectedRowCount}</span> selected
-                  </span>
+              {selectable && selectedRowCount > 0 ? (
+                <div className={cn("flex gap-2", selectedRowCount === 0 && "pointer-events-none opacity-0")}>
+                  <div className="bg-accent border-muted flex h-9 items-center justify-center rounded-md border border-dashed px-2 font-medium">
+                    <span className="text-sm whitespace-nowrap">
+                      <span className="inline-block w-4 text-center tabular-nums">{selectedRowCount}</span> selected
+                    </span>
 
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="-mr-1 size-6 p-0 hover:bg-transparent"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        table.toggleAllRowsSelected(false);
+                      }}
+                    >
+                      <X className="size-4 shrink-0" aria-hidden="true" />
+                    </Button>
+                  </div>
+                  {selectionActions?.(selectedRows)}
+                </div>
+              ) : null}
+            </div>
+
+            {actions ? <div className="flex justify-between md:justify-end md:gap-2">{actions}</div> : null}
+          </div>
+        </div>
+      ) : null}
+
+      {/* Mobile Status Filter Buttons */}
+      {isMobile && table.options.enableGlobalFilter !== false && filterableColumns.length > 0 ? (
+        <div className="mx-4 md:hidden">
+          <div className="flex flex-wrap gap-2">
+            {filterableColumns
+              .filter(
+                (column) =>
+                  (mobileFilterColumn && column.id === mobileFilterColumn) ||
+                  (!mobileFilterColumn &&
+                    (column.id.toLowerCase().includes("status") ||
+                      (typeof column.columnDef.header === "string" &&
+                        column.columnDef.header.toLowerCase().includes("status")))),
+              )
+              .map((column) => {
+                const filterValue = filterValueSchema.optional().parse(column.getFilterValue());
+                const options = column.columnDef.meta?.filterOptions || [];
+                const allFiltersActive = !filterValue || filterValue.length === 0;
+
+                // First render an "All" button
+                return [
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    className="-mr-1 size-6 p-0 hover:bg-transparent"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      table.toggleAllRowsSelected(false);
+                    key={`${column.id}-all`}
+                    variant={allFiltersActive ? "default" : "outline"}
+                    size="small"
+                    className="rounded-full"
+                    onClick={() => {
+                      column.setFilterValue(undefined);
                     }}
                   >
-                    <X className="size-4 shrink-0" aria-hidden="true" />
-                  </Button>
-                </div>
-                {selectionActions?.(selectedRows)}
-              </div>
-            ) : null}
+                    All
+                  </Button>,
+                  // Then render the rest of the filter buttons
+                  ...options.map((option) => {
+                    const isActive = filterValue?.includes(option) ?? false;
+                    return (
+                      <Button
+                        key={`${column.id}-${option}`}
+                        variant={isActive ? "default" : "outline"}
+                        size="small"
+                        className="rounded-full"
+                        onClick={() => {
+                          if (isActive) {
+                            // Remove filter
+                            const newValue =
+                              filterValue && filterValue.length > 1
+                                ? filterValue.filter((o) => o !== option)
+                                : undefined;
+                            column.setFilterValue(newValue);
+                          } else {
+                            // Add filter
+                            column.setFilterValue([...(filterValue ?? []), option]);
+                          }
+                        }}
+                      >
+                        {option}
+                      </Button>
+                    );
+                  }),
+                ];
+              })}
           </div>
-          <div className="flex justify-between md:justify-end md:gap-2">{actions}</div>
         </div>
       ) : null}
 
@@ -301,7 +377,9 @@ export default function DataTable<T extends RowData>({
                 <TableHead
                   key={header.id}
                   colSpan={header.colSpan}
-                  className={`${cellClasses(header.column, "header")} ${sortable && header.column.getCanSort() ? "cursor-pointer" : ""}`}
+                  className={`${cellClasses(header.column, "header")} ${
+                    sortable && header.column.getCanSort() ? "cursor-pointer" : ""
+                  }`}
                   aria-sort={
                     header.column.getIsSorted() === "asc"
                       ? "ascending"
@@ -344,7 +422,9 @@ export default function DataTable<T extends RowData>({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className={`${cellClasses(cell.column)} ${cell.column.id === "actions" ? "relative z-1 md:text-right print:hidden" : ""}`}
+                      className={`${cellClasses(cell.column)} ${
+                        cell.column.id === "actions" ? "relative z-1 md:text-right print:hidden" : ""
+                      }`}
                       onClick={(e) => cell.column.id === "actions" && e.stopPropagation()}
                     >
                       {typeof cell.column.columnDef.header === "string" && (
