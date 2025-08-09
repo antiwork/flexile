@@ -78,7 +78,6 @@ export function AuthPage({
   });
   const emailForm = useForm({
     resolver: zodResolver(emailSchema),
-    disabled: sendOtp.isPending,
   });
   const submitEmailForm = emailForm.handleSubmit(async (values) => {
     try {
@@ -134,6 +133,7 @@ export function AuthPage({
                             if (value.length === 6) setTimeout(() => void submitOtpForm(), 100);
                           }}
                           aria-label="Verification code"
+                          disabled={sendOtp.isPending}
                           autoFocus
                           required
                         >
