@@ -288,6 +288,7 @@ export default function DocumentsPage() {
             Array.isArray(filterValue) && filterValue.includes(row.original.createdAt.getFullYear().toString()),
         }),
         columnHelper.accessor((row) => getStatus(row).name, {
+          id: "status",
           header: "Status",
           meta: { filterOptions: [...new Set(documents.map((document) => getStatus(document).name))] },
           cell: (info) => {
@@ -414,7 +415,7 @@ export default function DocumentsPage() {
     JSON.parse(localStorage.getItem(storageKeys.DOCUMENTS_COLUMN_FILTERS) ?? "{}"),
   );
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
-    storedColumnFilters.data ?? [{ id: "Status", value: ["Signature required"] }],
+    storedColumnFilters.data ?? [{ id: "status", value: ["Signature required"] }],
   );
   const table = useTable({
     columns,
