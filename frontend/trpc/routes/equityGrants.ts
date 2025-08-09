@@ -171,14 +171,15 @@ export const equityGrantsRouter = createRouter({
           totalVestingDurationMonths: z.number().nullable(),
           cliffDurationMonths: z.number().nullable(),
           vestingFrequencyMonths: z.string().nullable(),
-          docusealTemplateId: z.string(),
+          docusealTemplateId: z.string().optional(),
+          internalTemplateId: z.bigint().optional(),
         }),
     )
     .mutation(async ({ input, ctx }) => {
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
       const template = await db.query.documentTemplates.findFirst({
         where: and(
-          eq(documentTemplates.externalId, input.docusealTemplateId),
+          eq(documentTemplates.externalId, input.docusealTemplateId!),
           eq(documentTemplates.type, DocumentTemplateType.EquityPlanContract),
           or(eq(documentTemplates.companyId, ctx.company.id), isNull(documentTemplates.companyId)),
         ),

@@ -10,6 +10,7 @@ import { companyProcedure, createRouter } from "@/trpc";
 import { simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
 import { templatesRouter } from "./templates";
+import { internalDocumentsRouter } from "./internal";
 
 docuseal.configure({ key: env.DOCUSEAL_TOKEN });
 
@@ -130,4 +131,5 @@ export const documentsRouter = createRouter({
   }),
 
   templates: templatesRouter,
+  internal: internalDocumentsRouter,
 });

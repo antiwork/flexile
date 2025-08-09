@@ -452,9 +452,18 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.integer "docuseal_submission_id"
+    t.string "file_storage_key"
+    t.jsonb "signature_data"
+    t.string "status", default: "unsigned"
+    t.boolean "is_template", default: false
+    t.bigint "created_from_template_id"
     t.index ["company_id"], name: "index_documents_on_company_id"
+    t.index ["created_from_template_id"], name: "index_documents_on_created_from_template_id"
     t.index ["docuseal_submission_id"], name: "index_documents_on_docuseal_submission_id"
     t.index ["equity_grant_id"], name: "index_documents_on_equity_grant_id"
+    t.index ["file_storage_key"], name: "index_documents_on_file_storage_key"
+    t.index ["is_template"], name: "index_documents_on_is_template"
+    t.index ["status"], name: "index_documents_on_status"
     t.index ["user_compliance_info_id"], name: "index_documents_on_user_compliance_info_id"
   end
 
@@ -922,10 +931,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.boolean "team_member", default: false, null: false
     t.boolean "sent_invalid_tax_id_email", default: false, null: false
     t.string "clerk_id"
+    t.bigint "signup_invite_link_id"
     t.string "otp_secret_key"
     t.integer "otp_failed_attempts_count", default: 0, null: false
     t.datetime "otp_first_failed_at"
-    t.bigint "signup_invite_link_id"
     t.index ["clerk_id"], name: "index_users_on_clerk_id", unique: true
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true

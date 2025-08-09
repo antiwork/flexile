@@ -561,6 +561,12 @@ export const documents = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
     docusealSubmissionId: integer("docuseal_submission_id"),
+    // Internal document system fields
+    fileStorageKey: varchar("file_storage_key"),
+    signatureData: jsonb("signature_data"),
+    status: varchar().default("unsigned"),
+    isTemplate: boolean("is_template").default(false),
+    createdFromTemplateId: bigint("created_from_template_id", { mode: "bigint" }),
   },
   (table) => [
     index("index_documents_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
