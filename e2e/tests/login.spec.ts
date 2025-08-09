@@ -18,8 +18,7 @@ test("login", async ({ page }) => {
   await otpField.fill("000001");
   await expect(otpField).not.toBeValid();
   await expect(page.getByText("Invalid verification code")).toBeVisible();
-  await otpField.fill("000000");
-  await expect(otpField).toBeValid();
+  await fillOtp(page);
 
   await page.waitForURL(/.*\/invoices.*/u);
 
