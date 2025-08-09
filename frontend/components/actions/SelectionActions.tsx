@@ -1,20 +1,16 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import type { ActionConfig, ActionContext } from "./types";
+import type { ActionConfig, ActionContext, AvailableActions } from "./types";
 
-interface SelectionActionsProps<T> {
-  selectedItems: T[];
-  config: ActionConfig<T>;
-  actionContext: ActionContext;
-  onAction: (actionId: string, items: T[]) => void;
-}
-
-export function SelectionActions<T>({ selectedItems, config, actionContext, onAction }: SelectionActionsProps<T>) {
+export function getAvailableActions<T>(
+  selectedItems: T[],
+  config: ActionConfig<T>,
+  actionContext: ActionContext,
+): AvailableActions<T>[] {
   const context = selectedItems.length > 1 ? "bulk" : "single";
   const targetItem = selectedItems.length === 1 ? selectedItems[0] : null;
 
-  // Filter actions based on permissions, context, and showIn
-  const availableActions = Object.entries(config.actions)
+  return Object.entries(config.actions)
     .filter(
       ([_, action]) =>
         action.permissions.includes(actionContext.userRole) &&
@@ -32,6 +28,17 @@ export function SelectionActions<T>({ selectedItems, config, actionContext, onAc
             : false,
     }))
     .filter((action) => action.available);
+}
+
+interface SelectionActionsProps<T> {
+  selectedItems: T[];
+  config: ActionConfig<T>;
+  availableActions: AvailableActions<T>[];
+  onAction: (actionId: string, items: T[]) => void;
+}
+
+export function SelectionActions<T>({ selectedItems, config, availableActions, onAction }: SelectionActionsProps<T>) {
+  const targetItem = selectedItems.length === 1 ? selectedItems[0] : null;
 
   return (
     <>

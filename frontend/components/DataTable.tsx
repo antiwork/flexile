@@ -40,6 +40,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/utils";
+import { useIsMobile } from "@/utils/use-mobile";
 
 declare module "@tanstack/react-table" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -110,6 +111,7 @@ export default function DataTable<T extends RowData>({
   contextMenuContent,
   selectionActions,
 }: TableProps<T>) {
+  const isMobile = useIsMobile();
   React.useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
@@ -257,7 +259,7 @@ export default function DataTable<T extends RowData>({
               </DropdownMenu>
             ) : null}
 
-            {selectable ? (
+            {selectable && !isMobile ? (
               <div className={cn("flex gap-2", selectedRowCount === 0 && "pointer-events-none opacity-0")}>
                 <div className="bg-accent border-muted flex h-9 items-center justify-center rounded-md border border-dashed px-2 font-medium">
                   <span className="text-sm whitespace-nowrap">
