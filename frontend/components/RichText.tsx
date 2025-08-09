@@ -10,11 +10,11 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/utils";
 import { richTextExtensions } from "@/utils/richText";
 
-const RichText = ({ content }: { content: Content }) => {
+const RichText = ({ content, className }: { content: Content; className?: string }) => {
   const editor = useEditor({
     extensions: richTextExtensions,
     content,
-    editorProps: { attributes: { class: "prose" } },
+    editorProps: { attributes: { class: cn("prose", className) } },
     editable: false,
     immediatelyRender: false,
   });

@@ -66,7 +66,7 @@ export const tenderOffersRouter = createRouter({
       throw new TRPCError({ code: "FORBIDDEN" });
 
     const tenderOffer = await db.query.tenderOffers.findFirst({
-      columns: { id: true, startsAt: true, endsAt: true, minimumValuation: true },
+      columns: { id: true, startsAt: true, endsAt: true, minimumValuation: true, letterOfTransmittal: true },
       where: and(eq(tenderOffers.externalId, input.id), eq(tenderOffers.companyId, ctx.company.id)),
     });
 
@@ -81,7 +81,7 @@ export const tenderOffersRouter = createRouter({
     });
 
     return {
-      ...pick(tenderOffer, ["startsAt", "endsAt", "minimumValuation"]),
+      ...pick(tenderOffer, ["startsAt", "endsAt", "minimumValuation", "letterOfTransmittal"]),
       attachment: attachment?.blob,
     };
   }),

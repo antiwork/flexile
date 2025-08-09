@@ -84,69 +84,71 @@ export default function NewBuyback() {
         }
       />
 
-      <Form {...form}>
-        <form onSubmit={(e) => void submit(e)} className="grid gap-4">
-          <FormField
-            control={form.control}
-            name="startDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <DatePicker {...field} label="Start date" granularity="day" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="endDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <DatePicker label="End date" {...field} granularity="day" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="minimumValuation"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Starting valuation</FormLabel>
-                <FormControl>
-                  <NumberInput {...field} prefix="$" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+      <div className="mx-4">
+        <Form {...form}>
+          <form onSubmit={(e) => void submit(e)} className="grid gap-4">
+            <FormField
+              control={form.control}
+              name="startDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <DatePicker {...field} label="Start date" granularity="day" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="endDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <DatePicker label="End date" {...field} granularity="day" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="minimumValuation"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Starting valuation</FormLabel>
+                  <FormControl>
+                    <NumberInput {...field} prefix="$" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <FormField
-            control={form.control}
-            name="attachment"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Document package</FormLabel>
-                <FormControl>
-                  <Input type="file" accept="application/zip" onChange={(e) => field.onChange(e.target.files?.[0])} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <MutationStatusButton
-            className="justify-self-end"
-            type="submit"
-            mutation={createMutation}
-            loadingText="Creating..."
-          >
-            Create buyback
-          </MutationStatusButton>
-        </form>
-      </Form>
+            <FormField
+              control={form.control}
+              name="attachment"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Document package</FormLabel>
+                  <FormControl>
+                    <Input type="file" accept="application/zip" onChange={(e) => field.onChange(e.target.files?.[0])} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <MutationStatusButton
+              className="justify-self-end"
+              type="submit"
+              mutation={createMutation}
+              loadingText="Creating..."
+            >
+              Create buyback
+            </MutationStatusButton>
+          </form>
+        </Form>
+      </div>
     </>
   );
 }
