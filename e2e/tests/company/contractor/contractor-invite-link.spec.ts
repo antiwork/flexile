@@ -62,8 +62,7 @@ test.describe("Contractor Invite Link Joining flow", () => {
     await page.getByRole("button", { name: "Sign up" }).click();
 
     // Wait for OTP step and enter verification code
-    await page.locator('[data-slot="input-otp"]').fill("000000"); // Test OTP code
-    await page.getByRole("button", { name: "Continue" }).click();
+    await page.locator('[data-input-otp="true"]').fill("000000"); // Test OTP code
 
     await expect(page).toHaveURL(/documents/iu);
 
