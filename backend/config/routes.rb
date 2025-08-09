@@ -18,6 +18,8 @@ end
 
 Rails.application.routes.draw do
   namespace :admin, constraints: admin_constraint do
+    get "impersonation", to: "impersonations#create", as: "create_impersonation"
+    delete "impersonation", to: "impersonations#destroy", as: "impersonation"
     resources :company_workers
     resources :company_administrators
     resources :companies
