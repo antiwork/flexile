@@ -17,7 +17,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { type Dispatch, type SetStateAction, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import DocusealForm, { customCss } from "@/app/(dashboard)/documents/DocusealForm";
@@ -31,7 +31,15 @@ import Status, { type Variant as StatusVariant } from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -94,8 +102,11 @@ function getStatus(document: Document): { variant: StatusVariant | undefined; na
   }
 }
 
-const EditTemplates = () => {
-  const isMobile = useIsMobile();
+const EditTemplates = ({
+  setShowEditTemplatesDialog,
+}: {
+  setShowEditTemplatesDialog: Dispatch<SetStateAction<boolean>>;
+}) => {
   const company = useCurrentCompany();
   const router = useRouter();
 
@@ -119,19 +130,7 @@ const EditTemplates = () => {
   });
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        {isMobile ? (
-          <Button variant="floating-action">
-            <Plus />
-          </Button>
-        ) : (
-          <Button variant="outline" size="small">
-            <Pencil className="size-4" />
-            Edit templates
-          </Button>
-        )}
-      </DialogTrigger>
+    <Dialog defaultOpen onOpenChange={setShowEditTemplatesDialog}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit templates</DialogTitle>
@@ -212,10 +211,13 @@ const inviteLawyerSchema = z.object({
 });
 
 export default function DocumentsPage() {
+  const isMobile = useIsMobile();
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showEditTemplatesDialog, setShowEditTemplatesDialog] = useState(false);
   const isCompanyRepresentative = !!user.roles.administrator || !!user.roles.lawyer;
+  const showInviteLawyerButton = !!user.roles.administrator && company.flags.includes("lawyers");
   const userId = isCompanyRepresentative ? null : user.id;
   const canSign = user.address.street_address || isCompanyRepresentative;
 
@@ -353,22 +355,39 @@ export default function DocumentsPage() {
 
   const filingDueDateFor1099DIV = new Date(currentYear, 2, 31);
 
+  const handleEditTemplatesClick = () => {
+    setShowEditTemplatesDialog(true);
+  };
+  const handleInviteLawyerClick = () => {
+    setShowInviteModal(true);
+  };
+
   return (
     <>
       <DashboardHeader
         title="Documents"
         headerActions={
-          <>
-            {isCompanyRepresentative && documents.length === 0 ? <EditTemplates /> : null}
-            {user.roles.administrator && company.flags.includes("lawyers") ? (
-              <Button onClick={() => setShowInviteModal(true)}>
-                <BriefcaseBusiness className="size-4" />
-                Invite lawyer
-              </Button>
-            ) : null}
-          </>
+          isMobile ? (
+            <FloatingActionTrigger
+              showEditTemplates={isCompanyRepresentative}
+              showInviteLawyer={showInviteLawyerButton}
+              editTemplatesClick={handleEditTemplatesClick}
+              inviteLawyerClick={handleInviteLawyerClick}
+            />
+          ) : (
+            <>
+              {isCompanyRepresentative && documents.length === 0 ? (
+                <EditTemplatesButton onClick={handleEditTemplatesClick} />
+              ) : null}
+              {showInviteLawyerButton ? <InviteLawyerButton onClick={handleInviteLawyerClick} /> : null}
+            </>
+          )
         }
       />
+
+      {isCompanyRepresentative && showEditTemplatesDialog ? (
+        <EditTemplates setShowEditTemplatesDialog={setShowEditTemplatesDialog} />
+      ) : null}
 
       {!canSign || (user.roles.administrator && new Date() <= filingDueDateFor1099DIV) ? (
         <div className="grid gap-4">
@@ -402,7 +421,11 @@ export default function DocumentsPage() {
         <>
           <DataTable
             table={table}
-            actions={isCompanyRepresentative ? <EditTemplates /> : undefined}
+            actions={
+              isCompanyRepresentative && !isMobile ? (
+                <EditTemplatesButton onClick={handleEditTemplatesClick} />
+              ) : undefined
+            }
             {...(isCompanyRepresentative && { searchColumn: "Signer" })}
           />
           {signDocument ? <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} /> : null}
@@ -494,3 +517,54 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
     </Dialog>
   );
 };
+
+const EditTemplatesButton = ({ onClick: handleClick }: { onClick: () => void }) => (
+  <Button variant="outline" size="small" onClick={handleClick}>
+    <Pencil className="size-4" />
+    Edit templates
+  </Button>
+);
+
+const InviteLawyerButton = ({ onClick: handleClick }: { onClick: () => void }) => (
+  <Button size="small" onClick={handleClick}>
+    <BriefcaseBusiness className="size-4" />
+    Invite lawyer
+  </Button>
+);
+
+const FloatingActionTrigger = ({
+  showEditTemplates,
+  showInviteLawyer,
+  editTemplatesClick,
+  inviteLawyerClick,
+}: {
+  showEditTemplates: boolean;
+  showInviteLawyer: boolean;
+  editTemplatesClick: () => void;
+  inviteLawyerClick: () => void;
+}) =>
+  showEditTemplates && showInviteLawyer ? (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="floating-action">
+          <Plus />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogTitle>Edit Templates & Invite Lawyer</DialogTitle>
+        <DialogDescription className="sr-only">Edit Templates & Invite Lawyer</DialogDescription>
+        <div className="flex flex-col gap-3">
+          <DialogClose asChild>
+            <EditTemplatesButton onClick={editTemplatesClick} />
+          </DialogClose>
+          <DialogClose asChild>
+            <InviteLawyerButton onClick={inviteLawyerClick} />
+          </DialogClose>
+        </div>
+      </DialogContent>
+    </Dialog>
+  ) : showEditTemplates || showInviteLawyer ? (
+    <Button variant="floating-action" onClick={showEditTemplates ? editTemplatesClick : inviteLawyerClick}>
+      <Plus />
+    </Button>
+  ) : null;
