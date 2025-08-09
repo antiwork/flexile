@@ -1530,6 +1530,7 @@ export const companyUpdates = pgTable(
     periodStartedOn: date("period_started_on", { mode: "string" }),
     showRevenue: boolean("show_revenue").notNull().default(false),
     showNetIncome: boolean("show_net_income").notNull().default(false),
+    recipientTypes: varchar("recipient_types").array().default([]),
   },
   (table) => [
     index("index_company_updates_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),

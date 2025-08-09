@@ -169,6 +169,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.bigint "total_options", default: 0, null: false
     t.virtual "fully_diluted_shares", type: :bigint, as: "(total_shares + total_options)", stored: true
     t.boolean "invested_in_angel_list_ruv", default: false, null: false
+    t.string "investor_type"
     t.index ["company_id"], name: "index_company_investors_on_company_id"
     t.index ["external_id"], name: "index_company_investors_on_external_id", unique: true
     t.index ["user_id", "company_id"], name: "index_company_investors_on_user_id_and_company_id", unique: true
@@ -234,6 +235,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.date "period_started_on"
     t.boolean "show_revenue", default: false, null: false
     t.boolean "show_net_income", default: false, null: false
+    t.string "recipient_types", default: [], array: true
     t.index ["company_id"], name: "index_company_updates_on_company_id"
     t.index ["external_id"], name: "index_company_updates_on_external_id", unique: true
   end

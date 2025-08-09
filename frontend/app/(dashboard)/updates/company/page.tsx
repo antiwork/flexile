@@ -1,16 +1,11 @@
 "use client";
-import { CircleCheck, Plus, Trash2 } from "lucide-react";
-import React, { useMemo, useState } from "react";
+import { CheckCircle2, Circle, CircleCheck, Plus } from "lucide-react";
+import React, { useState } from "react";
 import CompanyUpdateModal from "@/app/(dashboard)/updates/company/CompanyUpdateModal";
 import ViewUpdateDialog from "@/app/(dashboard)/updates/company/ViewUpdateDialog";
 import { DashboardHeader } from "@/components/DashboardHeader";
-import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
-import Status from "@/components/Status";
-import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
@@ -36,8 +31,8 @@ export default function CompanyUpdates() {
     setShowModal(true);
   };
 
-  const handleEditUpdate = (update: UpdateListItem) => {
-    setEditingUpdateId(update.id);
+  const handleEditUpdate = (updateId: string) => {
+    setEditingUpdateId(updateId);
     setShowModal(true);
   };
 
@@ -64,135 +59,106 @@ export default function CompanyUpdates() {
       />
 
       {isLoading ? (
-        <TableSkeleton columns={user.roles.administrator ? 4 : 3} />
+        <div className="px-6 py-8">
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="animate-pulse">
+                <div className="h-16 rounded bg-gray-200" />
+              </div>
+            ))}
+          </div>
+        </div>
       ) : updates.length ? (
-        user.roles.administrator ? (
-          <AdminList onEditUpdate={handleEditUpdate} />
-        ) : (
-          <ViewList />
-        )
+        <UpdatesList updates={updates} onEditUpdate={handleEditUpdate} isAdmin={user.roles.administrator} />
       ) : (
         <div className="mx-4">
           <Placeholder icon={CircleCheck}>No updates to display.</Placeholder>
         </div>
       )}
 
-      <CompanyUpdateModal
-        open={showModal}
-        onClose={handleCloseModal}
-        {...(editingUpdateId && { updateId: editingUpdateId })}
-      />
+      <CompanyUpdateModal open={showModal} onClose={handleCloseModal} updateId={editingUpdateId} />
     </>
   );
 }
 
-const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) => void }) => {
-  const { updates } = useData();
-  const company = useCurrentCompany();
-  const trpcUtils = trpc.useUtils();
-
-  const [deletingUpdate, setDeletingUpdate] = useState<string | null>(null);
-
-  const deleteMutation = trpc.companyUpdates.delete.useMutation({
-    onSuccess: () => {
-      void trpcUtils.companyUpdates.list.invalidate();
-      setDeletingUpdate(null);
-    },
-  });
-
-  const columnHelper = createColumnHelper<(typeof updates)[number]>();
-  const columns = useMemo(
-    () => [
-      columnHelper.simple("sentAt", "Sent on", (v) => (v ? formatDate(v) : "-")),
-      columnHelper.accessor("title", {
-        header: "Title",
-        cell: (info) => (
-          <button onClick={() => onEditUpdate(info.row.original)} className="text-left no-underline hover:underline">
-            {info.getValue()}
-          </button>
-        ),
-      }),
-      columnHelper.accessor((row) => (row.sentAt ? "Sent" : "Draft"), {
-        header: "Status",
-        cell: (info) => <Status variant={info.getValue() === "Sent" ? "success" : undefined}>{info.getValue()}</Status>,
-      }),
-      columnHelper.display({
-        id: "actions",
-        cell: (info) => (
-          <Button
-            aria-label="Remove"
-            variant="outline"
-            onClick={(e) => {
-              e.stopPropagation();
-              setDeletingUpdate(info.row.original.id);
-            }}
-            className="inline-flex cursor-pointer items-center border-none bg-transparent text-inherit underline hover:text-blue-600"
-          >
-            <Trash2 className="size-4" />
-          </Button>
-        ),
-      }),
-    ],
-    [onEditUpdate],
-  );
-
-  const table = useTable({ columns, data: updates });
-
-  return (
-    <>
-      <DataTable table={table} onRowClicked={(row) => onEditUpdate(row)} />
-      <Dialog open={!!deletingUpdate} onOpenChange={() => setDeletingUpdate(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete update?</DialogTitle>
-          </DialogHeader>
-          <p>
-            "{updates.find((update) => update.id === deletingUpdate)?.title}" will be permanently deleted and cannot be
-            restored.
-          </p>
-          <DialogFooter>
-            <div className="grid auto-cols-fr grid-flow-col items-center gap-3">
-              <Button variant="outline" onClick={() => setDeletingUpdate(null)}>
-                No, cancel
-              </Button>
-              <MutationButton
-                mutation={deleteMutation}
-                param={{ companyId: company.id, id: deletingUpdate ?? "" }}
-                loadingText="Deleting..."
-              >
-                Yes, delete
-              </MutationButton>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-};
-
-const ViewList = () => {
-  const { updates } = useData();
+const UpdatesList = ({
+  updates,
+  onEditUpdate,
+  isAdmin,
+}: {
+  updates: UpdateListItem[];
+  onEditUpdate: (updateId: string) => void;
+  isAdmin: boolean;
+}) => {
   const [selectedUpdateId, setSelectedUpdateId] = useState<string | null>(null);
-  const columnHelper = createColumnHelper<(typeof updates)[number]>();
-  const columns = useMemo(
-    () => [
-      columnHelper.simple("title", "Title"),
-      columnHelper.accessor("summary", {
-        header: "Summary",
-        cell: (info) => <div className="whitespace-normal">{info.getValue()}</div>,
-      }),
-      columnHelper.simple("sentAt", "Published On", (v) => (v ? formatDate(v) : "-")),
-    ],
-    [],
-  );
-  const table = useTable({ columns, data: updates });
-  const handleRowClick = (row: { id: string }) => setSelectedUpdateId(row.id);
+
+  const handleUpdateClick = (update: UpdateListItem) => {
+    if (isAdmin) {
+      onEditUpdate(update.id);
+    } else {
+      setSelectedUpdateId(update.id);
+    }
+  };
 
   return (
     <>
-      <DataTable table={table} onRowClicked={handleRowClick} />
-      {selectedUpdateId ? (
-        <ViewUpdateDialog updateId={selectedUpdateId} onOpenChange={() => setSelectedUpdateId(null)} />
+      <div className="mx-6">
+        {/* Header row */}
+        <div className="grid grid-cols-12 gap-4 border-b border-gray-200 px-4 py-3 text-sm font-medium text-gray-500">
+          <div className="col-span-7">Title</div>
+          <div className="col-span-3 text-right">Date</div>
+          <div className="col-span-2 text-right">Status</div>
+        </div>
+
+        {/* Update rows */}
+        <div className="divide-y divide-gray-100">
+          {updates.map((update) => (
+            <div
+              key={update.id}
+              className="grid cursor-pointer grid-cols-12 items-start gap-4 px-4 py-4 transition-colors hover:bg-gray-50"
+              role="button"
+              tabIndex={0}
+              aria-label={`Open update ${update.title}`}
+              onClick={() => handleUpdateClick(update)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleUpdateClick(update);
+                }
+              }}
+            >
+              <div className="col-span-7">
+                <h3 className="mb-1 text-sm font-medium text-gray-900">{update.title}</h3>
+                <p className="line-clamp-2 text-sm text-gray-500">{update.summary}</p>
+              </div>
+              <div className="col-span-3 text-right text-sm text-gray-500">
+                {update.sentAt ? formatDate(update.sentAt) : "—"}
+              </div>
+              <div className="col-span-2 text-right">
+                {update.sentAt ? (
+                  <div className="inline-flex items-center gap-1.5 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <span className="text-gray-900">Sent</span>
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center gap-1.5 text-sm">
+                    <Circle className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-500">Draft</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {!isAdmin && selectedUpdateId ? (
+        <ViewUpdateDialog
+          updateId={selectedUpdateId}
+          onOpenChange={(open) => {
+            if (!open) setSelectedUpdateId(null);
+          }}
+        />
       ) : null}
     </>
   );
