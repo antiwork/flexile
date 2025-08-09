@@ -13,8 +13,12 @@ class CreateDocument
   def perform!
     return { success: false, error_message: "Invalid parameters" } unless is_param_keys_valid?
 
+    if params[:attachment].present? && !params[:attachment].respond_to?(:open)
+      return { success: false, error_message: "Invalid attachment parameter" }
+    end
+
     attributes = {
-      **document_params.except(:attachment).to_h,
+      **document_params.except(:attachment, :signed, :recipient),
       year: Date.current.year,
       company: company,
     }
@@ -52,7 +56,7 @@ class CreateDocument
 
     def document_params
       params[:document_type] = params[:document_type].to_i
-      params.permit(:name, :document_type, :text_content, :attachment)
+      params.to_h
     end
 
     def is_param_keys_valid?

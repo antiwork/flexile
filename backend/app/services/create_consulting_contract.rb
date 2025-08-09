@@ -25,7 +25,7 @@ class CreateConsultingContract
     result = CreateDocument.new(
       user: company_administrator.user,
       company: company_worker.company,
-      params: ActionController::Parameters.new(attributes)
+      params: attributes
     ).perform!
 
     result[:document]

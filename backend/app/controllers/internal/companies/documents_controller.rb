@@ -93,9 +93,9 @@ class Internal::Companies::DocumentsController < Internal::Companies::BaseContro
       end
 
       render json: { message: "Document shared successfully" }, status: :ok
-    rescue ActiveRecord::RecordInvalid => e
-      render json: { error_message: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
     end
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { error_message: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
   end
 
   def destroy

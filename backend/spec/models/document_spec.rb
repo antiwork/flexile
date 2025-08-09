@@ -86,9 +86,32 @@ RSpec.describe Document do
     end
 
     context "when type is equity_plan_contract" do
-      subject { build(:equity_plan_contract_doc) }
+      subject(:document) { build(:equity_plan_contract_doc) }
 
       it { is_expected.to validate_presence_of(:equity_grant_id) }
+
+      context "when signatures are unsigned" do
+        before do
+          document.signatures.each { |s| s.signed_at = nil }
+        end
+
+        it "does not require equity_grant_id" do
+          document.equity_grant = nil
+          expect(document).to be_valid
+        end
+      end
+
+      context "when signatures are signed" do
+        before do
+          document.signatures.each { |s| s.signed_at = Time.current }
+        end
+
+        it "requires equity_grant_id" do
+          document.equity_grant = nil
+          expect(document).to be_invalid
+          expect(document.errors[:equity_grant_id]).to include("can't be blank")
+        end
+      end
     end
   end
 
