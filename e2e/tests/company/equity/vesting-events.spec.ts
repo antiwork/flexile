@@ -2,6 +2,7 @@ import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
+import { documentsFactory } from "@test/factories/documents";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { optionPoolsFactory } from "@test/factories/optionPools";
 import { usersFactory } from "@test/factories/users";
@@ -11,7 +12,7 @@ import { expect, test } from "@test/index";
 import { addMonths, format } from "date-fns";
 import { and, eq } from "drizzle-orm";
 import { DocumentType } from "@/db/enums";
-import { documents, equityGrants, vestingEvents, vestingSchedules } from "@/db/schema";
+import { equityGrants, vestingEvents, vestingSchedules } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 
 test.describe.configure({ mode: "serial" });
@@ -38,18 +39,15 @@ test.describe("Equity Grant Vesting Events", () => {
       issuedShares: 0n,
     });
 
-    const [equityDocumentTemplate] = await db
-      .insert(documents)
-      .values({
+    await documentsFactory.create(
+      {
         companyId: company.id,
-        name: "Equity Plan Contract",
         type: DocumentType.EquityPlanContract,
-        year: new Date().getFullYear(),
-        textContent: "This is a test equity plan contract.",
-      })
-      .returning();
-    assertDefined(equityDocumentTemplate);
-
+      },
+      {
+        signatures: [{ userId: adminUser.id, title: "Company Representative" as const }],
+      },
+    );
     // Create a vesting schedule (4 year vesting with 1 year cliff, monthly vesting)
     let vestingSchedule = await db.query.vestingSchedules.findFirst({
       where: and(
@@ -259,17 +257,15 @@ test.describe("Equity Grant Vesting Events", () => {
       issuedShares: 0n,
     });
 
-    const [equityDocumentTemplate] = await db
-      .insert(documents)
-      .values({
+    await documentsFactory.create(
+      {
         companyId: company.id,
-        name: "Equity Plan Contract",
         type: DocumentType.EquityPlanContract,
-        year: new Date().getFullYear(),
-        textContent: "This is a test equity plan contract.",
-      })
-      .returning();
-    assertDefined(equityDocumentTemplate);
+      },
+      {
+        signatures: [{ userId: adminUser.id, title: "Company Representative" as const }],
+      },
+    );
 
     await login(page, adminUser);
     await page.getByRole("button", { name: "Equity" }).click();
