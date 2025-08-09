@@ -13,6 +13,7 @@ import {
   Download,
   Eye,
   Info,
+  MoreHorizontal,
   Plus,
   SquarePen,
   Trash2,
@@ -49,6 +50,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -397,22 +404,39 @@ export default function InvoicesPage() {
       <DashboardHeader
         title="Invoices"
         headerActions={
-          user.roles.worker ? (
-            isMobile ? (
-              <button
-                className="text-blue-600"
-                onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
-              >
-                {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
-              </button>
-            ) : (
-              <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
-                <Link href="/invoices/new" inert={!canSubmitInvoices}>
-                  <Plus className="size-4" />
-                  New invoice
-                </Link>
-              </Button>
-            )
+          isMobile ? (
+            <div className="flex items-center gap-4">
+              {data.length > 0 ? (
+                <button
+                  className="text-blue-600"
+                  onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
+                >
+                  {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
+                </button>
+              ) : null}
+              {user.roles.administrator ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger>
+                    <MoreHorizontal className="size-5 text-blue-600" strokeWidth={1.75} />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <a href={export_company_invoices_path(company.id)} className="flex items-center gap-2">
+                        <Download className="size-4" />
+                        Download CSV
+                      </a>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
+            </div>
+          ) : user.roles.worker ? (
+            <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
+              <Link href="/invoices/new" inert={!canSubmitInvoices}>
+                <Plus className="size-4" />
+                New invoice
+              </Link>
+            </Button>
           ) : null
         }
       />
