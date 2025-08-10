@@ -581,6 +581,8 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["documents"] });
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      await queryClient.invalidateQueries({ queryKey: ["companyDocuments", company.id, { signable: true }] });
+
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- not ideal, but there's no good way to assert this right now
       if (redirectUrl) router.push(redirectUrl as Route);
       else onClose();

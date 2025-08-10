@@ -270,7 +270,7 @@ const NavLinks = () => {
   const isInvoiceActionable = useIsActionable();
 
   const { data: documentsData = [] } = useQuery({
-    queryKey: ["signableDocuments", user.id, company.id],
+    queryKey: ["companyDocuments", company.id, { signable: true }],
     queryFn: async () => {
       if (!user.currentCompanyId || !user.id) return [];
       const params = new URLSearchParams({

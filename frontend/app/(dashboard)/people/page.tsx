@@ -76,7 +76,7 @@ export default function PeoplePage() {
   const saveMutation = useMutation({
     mutationFn: async (values: z.infer<typeof schema>) => {
       const attachment = form.getValues("attachment");
-      const payRateType = values.payRateType === PayRateType.Hourly ? "hourly" : "fixed";
+      const payRateType = values.payRateType === PayRateType.Hourly ? "hourly" : "project_based";
       const startDate = formatISO(values.startDate.toDate(getLocalTimeZone()));
 
       let response;

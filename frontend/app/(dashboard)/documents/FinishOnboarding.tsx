@@ -52,12 +52,14 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
       if (!user?.roles.worker) {
         throw new Error("Worker role not found");
       }
+      const payRateType = data.payRateType === PayRateType.Hourly ? "hourly" : "project_based";
+
       let response;
       const contractSignedElsewhere = !!(data.skipContract ?? false);
       if (data.attachment && !contractSignedElsewhere) {
         const formData = new FormData();
         formData.append("contractor[role]", data.role);
-        formData.append("contractor[pay_rate_type]", String(data.payRateType));
+        formData.append("contractor[pay_rate_type]", payRateType);
         formData.append("contractor[pay_rate_in_subunits]", String(data.payRateInSubunits));
         formData.append("contractor[started_at]", String(data.startedAt));
         formData.append("contractor[contract_signed_elsewhere]", String(contractSignedElsewhere));
@@ -78,7 +80,7 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
             contract_signed_elsewhere: contractSignedElsewhere,
             started_at: data.startedAt.toString(),
             pay_rate_in_subunits: data.payRateInSubunits,
-            pay_rate_type: data.payRateType,
+            pay_rate_type: payRateType,
             role: data.role,
           },
         };
