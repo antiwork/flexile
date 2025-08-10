@@ -18,12 +18,14 @@ class FlexileFeeCalculator
   end
 
   def calculate_invoice_fee_cents(total_amount_in_usd_cents)
-    fee_cents = INVOICE_BASE_FEE_CENTS + (total_amount_in_usd_cents * INVOICE_PERCENTAGE / 100)
-    [fee_cents, INVOICE_MAX_FEE_CENTS].min.round
+    percentage_fee_cents = (total_amount_in_usd_cents.to_d * INVOICE_PERCENTAGE.to_d / 100).round
+    fee_cents = INVOICE_BASE_FEE_CENTS + percentage_fee_cents
+    [fee_cents, INVOICE_MAX_FEE_CENTS].min
   end
 
   def calculate_dividend_fee_cents(total_amount_in_cents)
-    fee_cents = DIVIDEND_BASE_FEE_CENTS + (total_amount_in_cents * DIVIDEND_PERCENTAGE / 100)
-    [fee_cents, DIVIDEND_MAX_FEE_CENTS].min.round
+    percentage_fee_cents = (total_amount_in_cents.to_d * DIVIDEND_PERCENTAGE.to_d / 100).round
+    fee_cents = DIVIDEND_BASE_FEE_CENTS + percentage_fee_cents
+    [fee_cents, DIVIDEND_MAX_FEE_CENTS].min
   end
 end
