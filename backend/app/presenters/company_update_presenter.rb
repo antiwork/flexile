@@ -47,8 +47,6 @@ class CompanyUpdatePresenter
       period_label: company_update.period ? period_label(company_update.period_started_on, company_update.period) : nil,
       sender_name: company.primary_admin.user.name,
       body: company_update.body,
-      video_url: company_update.video_url,
-      youtube_video_id: company_update.youtube_video_id,
       status: company_update.status,
     }
 
@@ -79,7 +77,6 @@ class CompanyUpdatePresenter
         period_started_on: company_update.period_started_on,
         sent_at: company_update.sent_at,
         status: company_update.status,
-        video_url: company_update.video_url,
         show_revenue: company_update.show_revenue?,
         show_net_income: company_update.show_net_income?,
       }

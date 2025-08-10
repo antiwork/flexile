@@ -11,12 +11,11 @@ import { trpc } from "@/trpc/client";
 function ViewUpdateDialog({ updateId, onOpenChange }: { updateId: string; onOpenChange: () => void }) {
   const company = useCurrentCompany();
   const {
-    data: update = { title: "", sentAt: null, body: "", videoUrl: null },
+    data: update = { title: "", sentAt: null, body: "" },
     isLoading,
     isError,
   } = trpc.companyUpdates.get.useQuery({ companyId: company.id, id: updateId });
   const sendTestEmail = trpc.companyUpdates.sendTestEmail.useMutation();
-  const youtubeId = update.videoUrl && /(?:youtube\.com.*[?&]v=|youtu\.be\/)([\w-]+)/u.exec(update.videoUrl)?.[1];
 
   return (
     <Dialog defaultOpen onOpenChange={onOpenChange}>
@@ -53,25 +52,6 @@ function ViewUpdateDialog({ updateId, onOpenChange }: { updateId: string; onOpen
           ) : (
             <>
               <RichText content={update.body} />
-              {youtubeId ? (
-                <div className="aspect-video">
-                  {/* eslint-disable-next-line -- can't use sandbox for youtube embeds */}
-                  <iframe
-                    className="size-full"
-                    width="560"
-                    height="315"
-                    src={`https://www.youtube.com/embed/${youtubeId}?controls=0&rel=0`}
-                    title="YouTube video player"
-                    allow="clipboard-write; encrypted-media; picture-in-picture;"
-                    referrerPolicy="strict-origin-when-cross-origin"
-                    allowFullScreen
-                  />
-                </div>
-              ) : update.videoUrl ? (
-                <a href={update.videoUrl} className="self-start underline" target="_blank" rel="noreferrer">
-                  Watch the video
-                </a>
-              ) : null}
               <p>{company.primaryAdminName}</p>
             </>
           )}

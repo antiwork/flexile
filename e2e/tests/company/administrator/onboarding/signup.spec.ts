@@ -1,5 +1,6 @@
 import { faker } from "@faker-js/faker";
 import { db, takeOrThrow } from "@test/db";
+import { fillOtp } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
@@ -24,7 +25,7 @@ test.describe("Company administrator signup", () => {
     await page.getByLabel("Work email").fill(email);
     await page.getByRole("button", { name: "Sign up" }).click();
 
-    await page.getByLabel("Verification code").fill("000000");
+    await fillOtp(page);
 
     await page.waitForURL(/.*\/invoices.*/u);
 
