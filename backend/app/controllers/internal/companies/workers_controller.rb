@@ -55,9 +55,9 @@ class Internal::Companies::WorkersController < Internal::Companies::BaseControll
       contractor_params[:pay_rate_in_subunits] = contractor_params[:pay_rate_in_subunits].to_i if contractor_params[:pay_rate_in_subunits].present?
       contractor_params[:contract_signed_elsewhere] = ActiveModel::Type::Boolean.new.cast(contractor_params[:contract_signed_elsewhere])
 
-      unless contractor_params[:contract_signed_elsewhere]
-        document_params = params.require(:document).permit(:name, :text_content, :attachment, :signed)
-        contractor_params = contractor_params.merge(document: document_params)
+      if contractor_params[:contract_signed_elsewhere] != true
+        document_params = params.fetch(:document, {}).permit(:name, :text_content, :attachment, :signed)
+        contractor_params[:document] = document_params if document_params.present?
       end
 
       contractor_params

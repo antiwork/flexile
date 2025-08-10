@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { CloudUpload, PencilIcon, Trash2 } from "lucide-react";
+import { CloudUpload, PencilLine, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Label } from "react-aria-components";
 import { useFormContext } from "react-hook-form";
 import { z } from "zod";
 import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUserStore } from "@/global";
 import { type Document, documentSchema } from "@/models/document";
 import { request } from "@/utils/request";
@@ -38,36 +39,34 @@ const UploadFormFields = () => {
           <FormItem>
             <FormControl>
               {file ? (
-                <div className="mt-2 flex items-center justify-between rounded-lg border border-gray-200 bg-white p-2">
+                <div className="bg-background border-muted mt-2 flex items-center justify-between rounded-md border p-2">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded bg-red-50">
-                      <span className="text-xs font-medium text-red-500">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-md bg-red-50">
+                      <span className="text-destructive text-xs font-medium">
                         {file.type.replace(/^.*\//u, "").toUpperCase()}
                       </span>
                     </div>
                     <div>
                       <div className="text-sm font-medium">{file.name}</div>
-                      <div className="text-xs text-gray-500">{(file.size / 1024).toFixed(1)} KB</div>
+                      <div className="text-muted-foreground text-xs">{(file.size / 1024).toFixed(1)} KB</div>
                     </div>
                   </div>
                   <Button
                     variant="ghost"
-                    size="small"
+                    size="icon"
                     aria-label="Remove file"
                     onClick={() => {
                       form.setValue("attachment", undefined);
                       form.setValue("title", "");
                     }}
                   >
+                    <Trash2 className="text-muted-foreground hover:text-destructive size-4" />
                     <span className="sr-only">Remove</span>
-                    <Trash2 className="text-grey-600 size-4 hover:text-red-600" />
                   </Button>
                 </div>
               ) : (
                 <div
-                  className={`mt-2 flex flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-8 transition-colors ${
-                    dragActive ? "border-black bg-gray-50" : "border-gray-200 bg-white"
-                  }`}
+                  className={`mt-2 flex-col items-center justify-center rounded-md border-2 border-dashed px-4 py-8 transition-colors ${dragActive ? "border-primary bg-muted" : "border-muted bg-background"} `}
                   onDragOver={(e) => {
                     e.preventDefault();
                     setDragActive(true);
@@ -99,14 +98,7 @@ const UploadFormFields = () => {
                       type="file"
                       accept=".pdf,.doc,.docx"
                       className="hidden"
-                      onChange={(e) => {
-                        const selectedFile = e.target.files?.[0] ?? null;
-                        field.onChange(selectedFile);
-                        if (selectedFile) {
-                          form.setValue("title", selectedFile.name);
-                          form.setValue("attachment", selectedFile);
-                        }
-                      }}
+                      onChange={(e) => field.onChange(e.target.files?.[0])}
                     />
                   </div>
                 </div>
@@ -238,11 +230,6 @@ const CreateFormFields = () => {
 const ContractField = ({ label }: { label?: string }) => {
   const form = useFormContext();
 
-  const tabs = [
-    { label: "Upload", tab: "upload", icon: <CloudUpload className="h-4 w-4" /> },
-    { label: "Write", tab: "create", icon: <PencilIcon className="h-4 w-4" /> },
-  ];
-
   const [selectedTab, setSelectedTab] = useState("upload");
   useEffect(() => {
     form.resetField("signed");
@@ -254,22 +241,16 @@ const ContractField = ({ label }: { label?: string }) => {
   return (
     <div className="space-y-2">
       <div>{label ? <Label>{label}</Label> : null}</div>
-      <div className="flex gap-2 rounded-lg bg-gray-50 p-2 shadow-sm">
-        {tabs.map((tab) => (
-          <Button
-            key={tab.tab}
-            variant="ghost"
-            size="small"
-            className={`w-full ${selectedTab === tab.tab ? "bg-white" : ""} hover:bg-slate-50`}
-            onClick={() => setSelectedTab(tab.tab)}
-            role="tab"
-            aria-selected={selectedTab === tab.tab}
-          >
-            {tab.icon}
-            {tab.label}
-          </Button>
-        ))}
-      </div>
+      <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+        <TabsList className="w-full">
+          <TabsTrigger value="upload">
+            <CloudUpload className="size-4" /> Upload
+          </TabsTrigger>
+          <TabsTrigger value="create">
+            <PencilLine className="size-4" /> Write
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
       {(() => {
         switch (selectedTab) {
           case "upload":

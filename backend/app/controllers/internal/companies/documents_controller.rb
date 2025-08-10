@@ -43,7 +43,7 @@ class Internal::Companies::DocumentsController < Internal::Companies::BaseContro
       render json: { error_message: "Signature is required" }, status: :unprocessable_entity and return
     end
 
-    signature = @document.signatures.find_by(user: Current.user, signed_at: nil)
+    signature = @document.signatures.find_by(user: Current.user, signed_at: nil, title: params[:title])
     unless signature
       render json: { error_message: "You are not allowed to sign this document" }, status: :unprocessable_entity and return
     end
@@ -74,27 +74,24 @@ class Internal::Companies::DocumentsController < Internal::Companies::BaseContro
       new_document.save!
 
       new_document.signatures.create!(
-        user: Current.user,
-        title: "Company Representative",
-        signed_at: Time.current
-      )
-      new_document.signatures.create!(
-        user: signer,
-        title: "Signer",
-        signed_at: nil
+        [
+          { user: Current.user, title: "Company Representative" },
+          { user: signer, title: "Signer" }
+        ]
       )
 
       if @document.attachments.attached?
-        @document.attachments.each do |attachment|
-          new_document.attachments.attach(
+        attachments = @document.attachments.map do |attachment|
+          {
             io: StringIO.new(attachment.download),
             filename: attachment.filename.to_s,
-            content_type: attachment.content_type
-          )
+            content_type: attachment.content_type,
+          }
         end
+        new_document.attachments.attach(attachments)
       end
 
-      render json: { message: "Document shared successfully" }, status: :ok
+      render json: { message: "Document shared successfully", document: DocumentPresenter.new(new_document).props }, status: :ok
     end
   rescue ActiveRecord::RecordInvalid => e
     render json: { error_message: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
@@ -117,6 +114,6 @@ class Internal::Companies::DocumentsController < Internal::Companies::BaseContro
     end
 
     def document_params
-      params.permit(:name, :document_type, :text_content, :year, :attachment)
+      params.permit(:name, :document_type, :text_content, :year, :attachment, :signed, :recipient)
     end
 end

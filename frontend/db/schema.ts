@@ -24,7 +24,6 @@ import { deterministicEncryptedString, encryptedJson, encryptedString } from "@/
 import {
   BusinessType,
   companyUpdatePeriods,
-  DocumentTemplateType,
   DocumentType,
   invoiceStatuses,
   optionGrantIssueDateRelationships,
@@ -511,34 +510,6 @@ export const dividendsDividendPayments = pgTable(
     index("index_dividends_dividend_payments_on_dividend_payment_id").using(
       "btree",
       table.dividendPaymentId.asc().nullsLast().op("int8_ops"),
-    ),
-  ],
-);
-
-export const documentTemplates = pgTable(
-  "document_templates",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    companyId: bigint("company_id", { mode: "bigint" }),
-    name: varchar().notNull(),
-    type: integer("document_type").$type<DocumentTemplateType>().notNull(),
-    externalId: varchar("external_id").$default(nanoid).notNull(),
-    docusealId: bigint("docuseal_id", { mode: "bigint" }).notNull(),
-    signable: boolean("signable").notNull().default(false),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-  },
-  (table) => [
-    index("index_document_templates_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
-    uniqueIndex("index_document_templates_on_external_id").using(
-      "btree",
-      table.externalId.asc().nullsLast().op("text_ops"),
-    ),
-    uniqueIndex("index_document_templates_on_docuseal_id").using(
-      "btree",
-      table.docusealId.asc().nullsLast().op("int8_ops"),
     ),
   ],
 );

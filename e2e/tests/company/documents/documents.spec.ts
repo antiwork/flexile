@@ -142,7 +142,7 @@ test.describe("Documents share, sign and delete functionality", () => {
 
     await page.getByRole("button", { name: "Share" }).click();
 
-    expect(page.getByText(`Select who are you sharing "${document1.name}" with.`)).toBeVisible();
+    await expect(page.getByText(`Select who are you sharing "${document1.name}" with.`)).toBeVisible();
 
     await page.getByRole("combobox", { name: "Recipient" }).click();
     await expect(page.getByRole("option", { name: "Contractor 2" })).toBeVisible();

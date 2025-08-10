@@ -90,7 +90,7 @@ export default function GrantsPage() {
       const response = await request({ method: "GET", accept: "json", url, assertOk: true });
       return z.array(documentSchema).parse(await response.json());
     },
-    enabled: Boolean(company?.id),
+    enabled: Boolean(company.id),
   });
 
   return (

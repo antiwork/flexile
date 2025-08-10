@@ -27,6 +27,7 @@ import { linkClasses } from "@/components/Link";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import { NewDocument } from "@/components/NewDocument";
 import Placeholder from "@/components/Placeholder";
+import RichText from "@/components/RichText";
 import Status, { type Variant as StatusVariant } from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -596,10 +597,9 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
           </DialogDescription>
         </DialogHeader>
         {document.textContent ? (
-          <div
-            className="prose border-muted min-h-0 grow overflow-y-auto rounded-md border p-4 text-black"
-            dangerouslySetInnerHTML={{ __html: document.textContent ?? "" }}
-          />
+          <div className="max-h-100 overflow-y-auto rounded-md border p-2">
+            <RichText content={document.textContent} />
+          </div>
         ) : (
           <div className="flex items-center gap-1">
             <Download className="size-4" />
