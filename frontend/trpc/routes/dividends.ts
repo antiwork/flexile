@@ -12,6 +12,7 @@ export const dividendsRouter = createRouter({
       z.object({
         investorId: z.string().optional(),
         dividendRoundId: z.number().optional(),
+        companyId: z.string().optional(), // Optional for backward compatibility, not used in query
       }),
     )
     .query(async ({ input, ctx }) => {

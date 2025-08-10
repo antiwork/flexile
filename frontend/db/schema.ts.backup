@@ -490,12 +490,6 @@ export const dividends = pgTable(
       "btree",
       table.userComplianceInfoId.asc().nullsLast().op("int8_ops"),
     ),
-    // Front end for unique constraint.
-    uniqueIndex("index_dividends_on_dividend_round_and_investor_unique").using(
-      "btree",
-      table.dividendRoundId.asc().nullsLast().op("int8_ops"),
-      table.companyInvestorId.asc().nullsLast().op("int8_ops"),
-    ),
   ],
 );
 
@@ -1591,7 +1585,7 @@ export const investorDividendRounds = pgTable(
     dividendIssuedEmailSent: boolean("dividend_issued_email_sent").notNull().default(false),
   },
   (table) => [
-    uniqueIndex("index_investor_dividend_round_uniqueness").using(
+    index("index_investor_dividend_round_uniqueness").using(
       "btree",
       table.companyInvestorId.asc().nullsLast().op("int8_ops"),
       table.dividendRoundId.asc().nullsLast().op("int8_ops"),

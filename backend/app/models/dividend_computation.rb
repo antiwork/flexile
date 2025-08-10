@@ -65,13 +65,16 @@ class DividendComputation < ApplicationRecord
     )
 
     data.each do |dividend_attrs|
-      company.company_investors.find(dividend_attrs[:company_investor_id]).dividends.create!(
+      company_investor = company.company_investors.find(dividend_attrs[:company_investor_id])
+      Dividend.find_or_create_for_investor_and_round!(
+        company_investor:,
         dividend_round:,
-        company:,
-        total_amount_in_cents: (dividend_attrs[:total_amount] * 100.to_d).to_i,
-        qualified_amount_cents: (dividend_attrs[:qualified_dividends_amount] * 100.to_d).to_i,
-        number_of_shares: dividend_attrs[:number_of_shares],
-        status: Dividend::ISSUED # TODO (sharang): set `PENDING_SIGNUP` if user.encrypted_password is ""
+        attributes: {
+          total_amount_in_cents: (dividend_attrs[:total_amount] * 100.to_d).to_i,
+          qualified_amount_cents: (dividend_attrs[:qualified_dividends_amount] * 100.to_d).to_i,
+          number_of_shares: dividend_attrs[:number_of_shares],
+          status: Dividend::ISSUED, # TODO (sharang): set `PENDING_SIGNUP` if user.encrypted_password is ""
+        }
       )
     end
   end

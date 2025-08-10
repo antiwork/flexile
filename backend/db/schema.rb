@@ -403,6 +403,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.index ["company_id"], name: "index_dividends_on_company_id"
     t.index ["company_investor_id"], name: "index_dividends_on_company_investor_id"
     t.index ["dividend_round_id"], name: "index_dividends_on_dividend_round_id"
+    t.index ["dividend_round_id", "company_investor_id"], name: "index_dividends_on_dividend_round_and_investor_unique", unique: true
     t.index ["user_compliance_info_id"], name: "index_dividends_on_user_compliance_info_id"
   end
 

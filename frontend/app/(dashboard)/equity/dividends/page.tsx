@@ -38,13 +38,14 @@ const columnHelper = createColumnHelper<Dividend>();
 export default function Dividends() {
   const company = useCurrentCompany();
   const user = useCurrentUser();
+  const investorId = user.roles.investor?.id;
   const {
     data = [],
     refetch,
     isLoading,
   } = trpc.dividends.list.useQuery({
     companyId: company.id,
-    investorId: user.roles.investor?.id,
+    ...(investorId && { investorId }),
   });
   const [signingDividend, setSigningDividend] = useState<{
     id: bigint;

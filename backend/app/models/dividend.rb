@@ -27,6 +27,7 @@ class Dividend < ApplicationRecord
   validates :withholding_percentage, numericality: { greater_than_or_equal_to: 0, only_integer: true }, allow_nil: true
   validates :net_amount_in_cents, numericality: { greater_than_or_equal_to: 0, only_integer: true }, allow_nil: true
   validates :qualified_amount_cents, numericality: { greater_than_or_equal_to: 0, only_integer: true }
+  validates :company_investor_id, uniqueness: { scope: :dividend_round_id }
 
   scope :pending_signup, -> { where(status: PENDING_SIGNUP) }
   scope :paid, -> { where(status: PAID) }
@@ -38,5 +39,23 @@ class Dividend < ApplicationRecord
 
   def mark_retained!(reason)
     update!(status: RETAINED, retained_reason: reason)
+  end
+
+  # Prevent race conditions
+  def self.find_or_create_for_investor_and_round!(company_investor:, dividend_round:, attributes: {})
+    # Using find_or_create_by with explicit lock to prevent race conditions
+    transaction do
+      existing = where(company_investor:, dividend_round:).lock.first
+      return existing if existing
+
+      create!({
+        company_investor:,
+        dividend_round:,
+        company: dividend_round.company,
+      }.merge(attributes))
+    end
+  rescue ActiveRecord::RecordNotUnique
+    # If unique constraint is violated, retry once to find the existing record
+    where(company_investor:, dividend_round:).first!
   end
 end
