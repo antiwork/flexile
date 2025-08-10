@@ -81,11 +81,13 @@ class GrantStockOptions
       document.save!
 
       if template_document.present?
-        document.attachments.attach(
-          io: template_document.attachment.download,
-          filename: template_document.attachment.filename.to_s,
-          content_type: template_document.attachment.content_type
-        )
+        template_document.attachments.each do |attachment|
+          document.attachments.attach(
+            io: StringIO.new(attachment.download),
+            filename: attachment.filename.to_s,
+            content_type: attachment.content_type
+          )
+        end
       end
       CompanyWorkerMailer.equity_grant_issued(equity_grant.id).deliver_later
       { success: true, document_id: document.id }
