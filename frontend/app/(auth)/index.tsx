@@ -91,7 +91,6 @@ export function AuthPage({
 
   const otpForm = useForm({
     resolver: zodResolver(otpSchema),
-    disabled: verifyOtp.isPending,
   });
   const submitOtpForm = otpForm.handleSubmit(async (values) => {
     try {
@@ -133,7 +132,7 @@ export function AuthPage({
                             if (value.length === 6) setTimeout(() => void submitOtpForm(), 100);
                           }}
                           aria-label="Verification code"
-                          disabled={sendOtp.isPending}
+                          disabled={verifyOtp.isPending}
                           autoFocus
                           required
                         >
@@ -190,6 +189,7 @@ export function AuthPage({
                           placeholder="Enter your work email..."
                           className="bg-white"
                           required
+                          disabled={sendOtp.isPending}
                         />
                       </FormControl>
                       <FormMessage />
