@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_10_025444) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -422,21 +422,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.datetime "signed_at"
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
+    t.text "signature"
     t.index ["document_id"], name: "index_document_signatures_on_document_id"
     t.index ["user_id"], name: "index_document_signatures_on_user_id"
-  end
-
-  create_table "document_templates", force: :cascade do |t|
-    t.bigint "company_id"
-    t.string "name", null: false
-    t.integer "document_type", null: false
-    t.string "external_id", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.boolean "signable", default: false, null: false
-    t.bigint "docuseal_id", null: false
-    t.index ["company_id"], name: "index_document_templates_on_company_id"
-    t.index ["external_id"], name: "index_document_templates_on_external_id", unique: true
   end
 
   create_table "documents", force: :cascade do |t|

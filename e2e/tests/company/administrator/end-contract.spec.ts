@@ -48,7 +48,7 @@ test.describe("End contract", () => {
     await fillDatePicker(page, "Start date", format(startDate, "MM/dd/yyyy"));
     await page.getByRole("tab", { name: "Write" }).click();
     await page.locator('input[type="text"][name="document-title"]').fill("Test Agreement");
-    await page.getByRole("paragraph").fill("Test Agreement");
+    await page.locator('[contenteditable="true"]').first().fill("Test Agreement");
     await page.getByRole("button", { name: "Send invite" }).click();
     await withinModal(
       async (modal) => {

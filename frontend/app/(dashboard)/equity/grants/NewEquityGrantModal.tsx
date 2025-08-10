@@ -51,7 +51,7 @@ const formSchema = z.object({
   disabilityExerciseMonths: z.number().min(0),
   retirementExerciseMonths: z.number().min(0),
   boardApprovalDate: z.instanceof(CalendarDate, { message: "This field is required." }),
-  documentTemplateId: z.string(),
+  documentTemplateId: z.string().min(1, "Must be present."),
 });
 const refinedSchema = formSchema.refine(
   (data) => data.optionGrantType !== "iso" || ["employee", "founder"].includes(data.issueDateRelationship),

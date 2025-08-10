@@ -18,7 +18,7 @@ class CompanyWorkerPolicy < ApplicationPolicy
   end
 
   def update?
-    company_administrator.present? || company_worker.present? && company_worker.user == user
+    company_administrator.present? || (company_worker.present? && company_worker.user_id == user.id)
   end
 
   def updates?

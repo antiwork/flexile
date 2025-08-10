@@ -155,6 +155,7 @@ const CreateFormFields = () => {
       const response = await request({ method: "GET", accept: "json", url, assertOk: true });
       return z.array(documentSchema).parse(await response.json());
     },
+    enabled: Boolean(companyId),
   });
 
   const filteredDocuments = documents.filter((document) => document.textContent);
@@ -244,8 +245,11 @@ const ContractField = ({ label }: { label?: string }) => {
 
   const [selectedTab, setSelectedTab] = useState("upload");
   useEffect(() => {
-    form.resetField("document");
-  }, [selectedTab, form]);
+    form.resetField("signed");
+    form.resetField("attachment");
+    form.resetField("title");
+    form.resetField("content");
+  }, [selectedTab]);
 
   return (
     <div className="space-y-2">

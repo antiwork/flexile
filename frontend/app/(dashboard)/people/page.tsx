@@ -84,7 +84,7 @@ export default function PeoplePage() {
         const formData = new FormData();
         formData.append("contractor[email]", values.email);
         formData.append("contractor[role]", values.role);
-        formData.append("contractor[pay_rate_type]", payRateType.toString());
+        formData.append("contractor[pay_rate_type]", payRateType);
         formData.append("contractor[pay_rate_in_subunits]", values.payRateInSubunits?.toString() ?? "");
         formData.append("contractor[started_at]", startDate);
         formData.append("contractor[contract_signed_elsewhere]", values.contractSignedElsewhere.toString());

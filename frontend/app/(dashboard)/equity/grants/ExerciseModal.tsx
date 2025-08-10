@@ -213,7 +213,9 @@ const ExerciseModal = ({
               <Button variant="outline" onClick={() => setSigning(false)}>
                 Back
               </Button>
-              <Button onClick={() => submitMutation.mutate()}>Sign</Button>
+              <Button disabled={!signature?.trim()} onClick={() => submitMutation.mutate()}>
+                Sign
+              </Button>
             </>
           ) : (
             <Button onClick={() => setSigning(true)}>Proceed</Button>

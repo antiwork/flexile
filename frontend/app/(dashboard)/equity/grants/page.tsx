@@ -22,7 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { DocumentTemplateType } from "@/db/enums";
+import { DocumentType } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
 import { type Document, documentSchema } from "@/models/document";
 import type { RouterOutput } from "@/trpc";
@@ -83,13 +83,14 @@ export default function GrantsPage() {
   const table = useTable({ columns, data });
 
   const { data: equityPlanContractTemplates = [] } = useQuery<Document[]>({
-    queryKey: [`${DocumentTemplateType.EquityPlanContract}documentTemplates`],
+    queryKey: ["companyDocuments", company.id, { type: DocumentType.EquityPlanContract, signable: true }],
     queryFn: async () => {
-      const params = new URLSearchParams({ type: String(DocumentTemplateType.EquityPlanContract), signable: "true" });
+      const params = new URLSearchParams({ type: String(DocumentType.EquityPlanContract), signable: "true" });
       const url = `${company_documents_path(company.id)}?${params.toString()}`;
       const response = await request({ method: "GET", accept: "json", url, assertOk: true });
       return z.array(documentSchema).parse(await response.json());
     },
+    enabled: Boolean(company?.id),
   });
 
   return (

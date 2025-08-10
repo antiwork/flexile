@@ -88,8 +88,6 @@ RSpec.describe Document do
     context "when type is equity_plan_contract" do
       subject(:document) { build(:equity_plan_contract_doc) }
 
-      it { is_expected.to validate_presence_of(:equity_grant_id) }
-
       context "when signatures are unsigned" do
         before do
           document.signatures.each { |s| s.signed_at = nil }

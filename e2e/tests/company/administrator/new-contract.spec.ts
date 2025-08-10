@@ -56,7 +56,7 @@ test.describe("New Contractor", () => {
 
     await page.getByRole("tab", { name: "Write" }).click();
     await page.locator('input[type="text"][name="document-title"]').fill("Test Agreement");
-    await page.getByRole("paragraph").fill("Test Agreement");
+    await page.locator('[contenteditable="true"]').first().fill("Test Agreement");
 
     await page.getByRole("button", { name: "Send invite" }).click();
     await withinModal(
@@ -87,7 +87,7 @@ test.describe("New Contractor", () => {
     await page.getByLabel("Rate").fill("1000");
     await page.getByRole("tab", { name: "Write" }).click();
     await page.locator('input[type="text"][name="document-title"]').fill("Test Agreement");
-    await page.getByRole("paragraph").fill("Test Agreement");
+    await page.locator('[contenteditable="true"]').first().fill("Test Agreement");
 
     await page.getByRole("button", { name: "Send invite" }).click();
     await withinModal(

@@ -1,6 +1,6 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type ColumnFiltersState, getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import {
   BriefcaseBusiness,
@@ -420,7 +420,8 @@ const ShareDocumentModal = ({ document, onClose }: { document: Document; onClose
   const company = useCurrentCompany();
 
   const { data: recipients } = trpc.contractors.list.useQuery(
-    company.id ? { companyId: company.id, excludeAlumni: true } : skipToken,
+    { companyId: company.id, excludeAlumni: true },
+    { enabled: Boolean(company.id) },
   );
   const [selectedRecipient, setSelectedRecipient] = useState(recipients?.[0] ?? null);
 
@@ -564,6 +565,7 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
         method: "POST",
         jsonData: {
           title: document.signatories.find((signatory) => signatory.id === user.id)?.title ?? "Company Representative",
+          signature,
         },
         assertOk: true,
         accept: "json",

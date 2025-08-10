@@ -66,7 +66,6 @@ export const NewDocument = () => {
       }
 
       const jsonData = {
-        signed,
         document_type: type,
         name: title,
         text_content: content,

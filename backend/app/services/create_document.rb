@@ -17,33 +17,35 @@ class CreateDocument
       return { success: false, error_message: "Invalid attachment parameter" }
     end
 
+    permitted = document_params.slice(:name, :document_type, :text_content)
     attributes = {
-      **document_params.except(:attachment, :signed, :recipient),
+      **permitted,
       year: Date.current.year,
       company: company,
     }
     document = user.documents.build(attributes)
+    document.attachments = document_params[:attachment] if document_params[:attachment].present?
 
-    signed_at = ActiveModel::Type::Boolean.new.cast(params[:signed]) ? Time.current : nil
-    document.signatures.build(user: user, title: "Company Representative", signed_at: signed_at)
-    if params[:recipient].present?
-      signer = company.company_workers.find_by(external_id: params[:recipient])&.user
-      document.signatures.build(user: signer, title: "Signer", signed_at: signed_at) if signer
-    end
+    ActiveRecord::Base.transaction do
+      signed_at = ActiveModel::Type::Boolean.new.cast(params[:signed]) ? Time.current : nil
+      document.signatures.build(user: user, title: "Company Representative", signed_at: signed_at)
+      if params[:recipient].present?
+        signer = company.company_workers.find_by(external_id: params[:recipient])&.user
+        document.signatures.build(user: signer, title: "Signer", signed_at: signed_at) if signer
+      end
 
-    document.save!
+      signed_at = ActiveModel::Type::Boolean.new.cast(params[:signed]) ? Time.current : nil
+      document.signatures.build(user: user, title: "Company Representative", signed_at: signed_at)
+      if params[:recipient].present?
+        signer = company.company_workers.find_by(external_id: params[:recipient])&.user
+        document.signatures.build(user: signer, title: "Signer", signed_at: signed_at) if signer
+      end
 
-    if document.text_content.present?
-      CreateDocumentAttachmentJob.perform_async(document.id)
-    end
+      document.save!
 
-    if document_params[:attachment].present?
-      attachment = document_params[:attachment]
-      document.attachments.attach(
-        io: attachment.open,
-        filename: attachment.original_filename,
-        content_type: attachment.content_type,
-      )
+      if document.text_content.present?
+        CreateDocumentAttachmentJob.perform_async(document.id)
+      end
     end
 
     { success: true, document: document }
@@ -55,8 +57,8 @@ class CreateDocument
     attr_reader :company, :params, :user
 
     def document_params
-      params[:document_type] = params[:document_type].to_i
-      params.to_h
+      params[:document_type] = params[:document_type].to_i if params.key?(:document_type)
+      params.to_h.slice(:name, :document_type, :text_content, :attachment, :signed, :recipient).compact
     end
 
     def is_param_keys_valid?

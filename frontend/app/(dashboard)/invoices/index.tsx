@@ -30,7 +30,7 @@ export const useCanSubmitInvoices = () => {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const { data: documents = [] } = useQuery({
-    queryKey: ["signableDocuments"],
+    queryKey: ["companyDocuments", company.id, { signable: true }],
     queryFn: async () => {
       const params = new URLSearchParams({
         signable: "true",

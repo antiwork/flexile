@@ -20,7 +20,7 @@ const TemplateSelector = ({
   const uid = useId();
 
   const { data: templates = [] } = useQuery<Document[]>({
-    queryKey: [`${type}documentTemplates`],
+    queryKey: ["companyDocuments", company.id, { type, signable: true }],
     queryFn: async () => {
       const params = new URLSearchParams({ type: String(type), signable: "true" });
       const url = `${company_documents_path(company.id)}?${params.toString()}`;

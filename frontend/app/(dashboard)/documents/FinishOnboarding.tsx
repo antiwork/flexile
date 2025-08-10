@@ -11,8 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
+import { PayRateType } from "@/db/enums";
 import { useCurrentCompany, useUserStore } from "@/global";
-import { PayRateType } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_worker_path } from "@/utils/routes";
 
@@ -53,17 +53,18 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
         throw new Error("Worker role not found");
       }
       let response;
-      if (data.attachment) {
+      const contractSignedElsewhere = !!(data.skipContract ?? false);
+      if (data.attachment && !contractSignedElsewhere) {
         const formData = new FormData();
         formData.append("contractor[role]", data.role);
-        formData.append("contractor[pay_rate_type]", data.payRateType.toString());
-        formData.append("contractor[pay_rate_in_subunits]", data.payRateInSubunits.toString());
-        formData.append("contractor[started_at]", data.startedAt.toString());
-        formData.append("contractor[contract_signed_elsewhere]", (data.skipContract ?? false).toString());
+        formData.append("contractor[pay_rate_type]", String(data.payRateType));
+        formData.append("contractor[pay_rate_in_subunits]", String(data.payRateInSubunits));
+        formData.append("contractor[started_at]", String(data.startedAt));
+        formData.append("contractor[contract_signed_elsewhere]", String(contractSignedElsewhere));
 
         formData.append("document[attachment]", data.attachment);
         formData.append("document[name]", data.attachment.name);
-        formData.append("document[signed]", data.signed.toString());
+        formData.append("document[signed]", String(!!data.signed));
         response = await request({
           url: company_worker_path(company.id, user.roles.worker.id),
           method: "PATCH",
@@ -72,20 +73,25 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
           assertOk: true,
         });
       } else {
-        const payload = {
+        const basePayload = {
           contractor: {
-            contract_signed_elsewhere: data.skipContract ?? false,
+            contract_signed_elsewhere: contractSignedElsewhere,
             started_at: data.startedAt.toString(),
             pay_rate_in_subunits: data.payRateInSubunits,
             pay_rate_type: data.payRateType,
             role: data.role,
           },
-          document: {
-            text_content: data.content,
-            attachment: data.attachment,
-            signed: false,
-          },
         };
+
+        const payload = contractSignedElsewhere
+          ? basePayload
+          : {
+              ...basePayload,
+              document: {
+                text_content: data.content,
+                signed: !!data.signed,
+              },
+            };
         response = request({
           url: company_worker_path(company.id, user.roles.worker.id),
           method: "PATCH",

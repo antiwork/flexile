@@ -45,7 +45,7 @@ export const companyInviteLinksRouter = createRouter({
 
       if (!userSignedDocument) return { documentId: null };
 
-      return { documentId: null };
+      return { documentId: userSignedDocument.documentId };
     }),
 
   accept: baseProcedure.input(z.object({ token: z.string() })).mutation(async ({ ctx, input }) => {

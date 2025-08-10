@@ -42,7 +42,6 @@ class UserPresenter
       street_address:,
       billing_entity_name:,
       legal_type: business_entity? ? "BUSINESS" : "PRIVATE",
-      unsigned_document_id: documents.unsigned.first&.id,
     }
   end
 

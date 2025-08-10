@@ -56,6 +56,7 @@ RSpec.describe CreateDocument do
       params = { name: "Doc", document_type: Document.document_types[:consulting_contract], text_content: "abc", signed: true }
       result = described_class.new(user:, company:, params:).perform!
       expect(result[:success]).to be true
+      expect(result[:document].signatures).not_to be_empty
       expect(result[:document].signatures.all? { |s| s.signed_at.present? }).to be true
     end
   end
@@ -65,6 +66,7 @@ RSpec.describe CreateDocument do
       params = { name: "Doc", document_type: Document.document_types[:consulting_contract], text_content: "abc", signed: false }
       result = described_class.new(user:, company:, params:).perform!
       expect(result[:success]).to be true
+      expect(result[:document].signatures).not_to be_empty
       expect(result[:document].signatures.all? { |s| s.signed_at.nil? }).to be true
     end
   end

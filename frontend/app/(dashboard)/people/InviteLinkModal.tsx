@@ -1,3 +1,4 @@
+"use client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Copy } from "lucide-react";
 import React, { useState } from "react";
@@ -26,7 +27,6 @@ interface InviteLinkModalProps {
 const InviteLinkModal = ({ open, onOpenChange }: InviteLinkModalProps) => {
   const company = useCurrentCompany();
   const [showResetLinkModal, setShowResetLinkModal] = useState(false);
-  const hostname = window.location.hostname;
 
   const { data: invite, refetch } = useQuery({
     queryKey: ["companyInviteLink", company.id],
@@ -35,7 +35,8 @@ const InviteLinkModal = ({ open, onOpenChange }: InviteLinkModalProps) => {
       const url = company_invite_links_path(company.id);
       const response = await request({ url, method: "GET", accept: "json", assertOk: true });
       const data = z.object({ invite_link: z.string(), success: z.boolean() }).parse(await response.json());
-      return { invite_link: `${hostname}/invite/${data.invite_link}` };
+      const origin = window.location.origin;
+      return { invite_link: `${origin}/invite/${data.invite_link}` };
     },
     enabled: !!open && !!company.id,
     refetchOnWindowFocus: false,

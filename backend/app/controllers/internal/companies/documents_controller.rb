@@ -7,14 +7,14 @@ class Internal::Companies::DocumentsController < Internal::Companies::BaseContro
     authorize Document
 
     company_representative = Current.user.administrator? || Current.user.lawyer?
-    filters = params.permit(:signable)
+    filters = params.permit(:signable, :type)
 
     documents = Current.company.documents
       .includes(signatures: :user, attachments_attachments: :blob)
       .where(deleted_at: nil)
-
+      .order(created_at: :asc)
     documents = documents.for_signatory(Current.user.id) unless company_representative
-    documents = documents.where(document_type: params[:type].to_i) if params[:type].present?
+    documents = documents.where(document_type: params[:type].to_i) if filters[:type].present?
     documents = documents.unsigned_by(company_representative ? "Company Representative" : "Signer") if filters[:signable] == "true"
     documents = documents.distinct
     render json: documents.map { |doc| DocumentPresenter.new(doc).props }
@@ -24,7 +24,7 @@ class Internal::Companies::DocumentsController < Internal::Companies::BaseContro
     authorize Document
 
     result = CreateDocument.new(
-      params:,
+      params: document_params,
       user: Current.user,
       company: Current.company,
     ).perform!
@@ -37,24 +37,26 @@ class Internal::Companies::DocumentsController < Internal::Companies::BaseContro
   end
 
   def sign
-    authorize Document
+    authorize @document, :sign?
 
-    unless @document.signatures.exists?(user: Current.user)
-      render json: { errors: ["You are not allowed to sign this document"] }, status: :unprocessable_entity and return
+    unless params[:signature].present?
+      render json: { error_message: "Signature is required" }, status: :unprocessable_entity and return
     end
 
-    signature = @document.signatures.where(user: Current.user, title: params[:title]).first
-    signature.update!(signed_at: Time.current)
+    signature = @document.signatures.find_by(user: Current.user, signed_at: nil)
+    unless signature
+      render json: { error_message: "You are not allowed to sign this document" }, status: :unprocessable_entity and return
+    end
 
-    if signature.save
-      render json: DocumentPresenter.new(@document).props
+    if signature.update(signed_at: Time.current, signature: params[:signature])
+      render json: DocumentPresenter.new(@document.reload).props
     else
       render json: { error_message: signature.errors.full_messages.to_sentence }, status: :unprocessable_entity
     end
   end
 
   def share
-    authorize Document
+    authorize @document, :share?
 
     signer = Current.company.company_workers.find_by(external_id: params[:recipient])&.user
 
@@ -99,7 +101,7 @@ class Internal::Companies::DocumentsController < Internal::Companies::BaseContro
   end
 
   def destroy
-    authorize Document
+    authorize @document, :destroy?
 
     if @document.signatures.where(signed_at: nil).none?
       render json: { error_message: "Cannot delete a signed document" }, status: :unprocessable_entity and return
@@ -112,5 +114,9 @@ class Internal::Companies::DocumentsController < Internal::Companies::BaseContro
   private
     def set_document
       @document = Current.company.documents.find(params[:id])
+    end
+
+    def document_params
+      params.permit(:name, :document_type, :text_content, :year, :attachment)
     end
 end

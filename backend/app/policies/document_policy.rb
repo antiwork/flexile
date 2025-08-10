@@ -10,7 +10,7 @@ class DocumentPolicy < ApplicationPolicy
   end
 
   def sign?
-    index?
+    company_administrator.present? || record.signatories.where(user_id: user.id, signed_at: nil).exists?
   end
 
   def share?

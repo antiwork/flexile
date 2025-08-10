@@ -26,7 +26,7 @@ class Internal::Companies::WorkersController < Internal::Companies::BaseControll
   end
 
   def update
-    authorize CompanyWorker
+    authorize @company_worker
 
     result = UpdateWorker.new(
       company_worker: @company_worker,
@@ -52,7 +52,6 @@ class Internal::Companies::WorkersController < Internal::Companies::BaseControll
         :contract_signed_elsewhere
       )
 
-      contractor_params[:pay_rate_type] = contractor_params[:pay_rate_type].to_i if contractor_params[:pay_rate_type].present?
       contractor_params[:pay_rate_in_subunits] = contractor_params[:pay_rate_in_subunits].to_i if contractor_params[:pay_rate_in_subunits].present?
       contractor_params[:contract_signed_elsewhere] = ActiveModel::Type::Boolean.new.cast(contractor_params[:contract_signed_elsewhere])
 
@@ -65,6 +64,6 @@ class Internal::Companies::WorkersController < Internal::Companies::BaseControll
     end
 
     def set_company_worker
-      @company_worker = Current.company.company_workers.find_by(external_id: params[:id])
+      @company_worker = Current.company.company_workers.find_by!(external_id: params[:id])
     end
 end

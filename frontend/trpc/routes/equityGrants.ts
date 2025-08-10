@@ -208,6 +208,7 @@ export const equityGrantsRouter = createRouter({
               total_vesting_duration_months: input.totalVestingDurationMonths,
               cliff_duration_months: input.cliffDurationMonths,
               vesting_frequency_months: input.vestingFrequencyMonths,
+              document_template_id: input.documentTemplateId,
             },
           }),
         },
