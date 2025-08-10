@@ -43,7 +43,7 @@ cd backend
 bundle install
 
 # Check if database exists and has seed data
-if bin/rails runner "DocumentTemplate.first" 2>/dev/null; then
+if bin/rails runner "exit(DocumentTemplate.exists? ? 0 : 1)" >/dev/null 2>&1; then
   echo "Database already seeded, skipping db:prepare"
 else
   echo "Preparing database and seeding..."
@@ -54,7 +54,11 @@ fi
 cd ..
 
 function kill_process_listening_on_port {
-  lsof -i :$1 2>/dev/null | grep LISTEN | awk '{print $2}' | xargs -r kill -9 2>/dev/null || true
+  # TODO (techdebt): ensure cross-platform behavior (macOS/Linux)
+  pids="$(lsof -t -i :"$1" -sTCP:LISTEN 2>/dev/null | tr '\n' ' ')"
+  if [ -n "$pids" ]; then
+    kill -9 $pids 2>/dev/null || true
+  fi
 }
 
 echo "Cleaning up existing processes..."
@@ -62,10 +66,6 @@ kill_process_listening_on_port 3000
 kill_process_listening_on_port 3001
 kill_process_listening_on_port 8288 # inngest
 rm -f backend/tmp/pids/server.pid
-
-# Create necessary directories
-mkdir -p docker/tmp/postgres
-mkdir -p docker/tmp/redis
 
 echo "Starting application services..."
 # Export SSL environment variables for the foreman processes
