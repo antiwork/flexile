@@ -26,4 +26,4 @@
   <% end %>
 </dl>
 
-<%= link_to(contractor.contract_signed_elsewhere ? "Set up your payment info" : "Review and sign your contract", url || (contractor.contract_signed_elsewhere ? "#{PROTOCOL}://#{DOMAIN}/invoices" : "#{PROTOCOL}://#{DOMAIN}/documents?sign=#{user.documents.unsigned.first&.id}"), class: "button") %>
+<%= link_to(contractor.contract_signed_elsewhere ? "Set up your payment info" : "Review and sign your contract", url || (contractor.contract_signed_elsewhere ? "#{PROTOCOL}://#{DOMAIN}/invoices" : "#{PROTOCOL}://#{DOMAIN}/documents?sign=#{user.documents..unsigned.order(created_at: :desc).pick(:id)}}"), class: "button") %>

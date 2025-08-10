@@ -568,12 +568,14 @@ class SeedDataGeneratorFromTemplate
               contract_signed_elsewhere: company_worker_attributes.fetch("contract_signed_elsewhere", false),
             }
 
-            if company_worker_attributes.key?("document")
+            if company_worker_attributes.key?("document") && !worker_params[:contract_signed_elsewhere]
+              doc = company_worker_attributes.fetch("document")
               document_params = {
-                name: company_worker_attributes.fetch("document").fetch("name"),
-                text_content: company_worker_attributes.fetch("document").fetch("text_content", nil),
-                attachment: company_worker_attributes.fetch("document").fetch("attachment", nil),
-              }
+                name: doc.fetch("name"),
+                text_content: doc.fetch("text_content", nil),
+                attachment: doc.fetch("attachment", nil),
+                signed: doc.fetch("signed", nil),
+              }.compact
               worker_params[:document] = document_params
             end
 
@@ -599,6 +601,7 @@ class SeedDataGeneratorFromTemplate
 
             if !company_worker.contract_signed_elsewhere
               document = contractor.documents.unsigned_contracts.reload.first
+              raise "Expected an unsigned contract for #{contractor.email}" unless document
               document.signatures.where(user: contractor).update!(signed_at: Time.current)
             end
 

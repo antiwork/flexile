@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class InviteWorker
-  attr_reader :current_user, :company, :company_administrator, :email, :attachment, :document
+  attr_reader :current_user, :company, :company_administrator, :email
   attr_accessor :params
 
   def initialize(current_user:, company:, company_administrator:, worker_params:)
