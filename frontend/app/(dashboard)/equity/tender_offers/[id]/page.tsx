@@ -176,7 +176,7 @@ export default function BuybackView() {
           </div>
         </div>
 
-        {isOpen && holdings.length ? (
+        {(isOpen && holdings.length) || user.roles.administrator ? (
           <>
             <Separator />
             <h2 className="text-xl font-medium">Letter of transmittal</h2>

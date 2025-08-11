@@ -1,4 +1,3 @@
-import type { Content } from "@tiptap/core";
 import { EditorContent, isList, useEditor } from "@tiptap/react";
 import { Bold, Heading, Italic, Link, List, Underline } from "lucide-react";
 import React, { useEffect, useState } from "react";
@@ -16,7 +15,7 @@ const RichText = ({
   className,
   onChange,
 }: {
-  content: Content;
+  content: string;
   editable?: boolean;
   onChange?: (value: string) => void;
   className?: string;
@@ -35,8 +34,7 @@ const RichText = ({
   });
 
   useEffect(() => {
-    if (!editor) return;
-    if (editor.getHTML() !== content) {
+    if (editor && content !== editor.getHTML()) {
       editor.commands.setContent(content, false);
     }
   }, [content, editor]);

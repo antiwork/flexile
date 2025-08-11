@@ -5,6 +5,7 @@ import { companyAdministratorsFactory } from "@test/factories/companyAdministrat
 import { fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
+import { addDays, format, formatDate } from "date-fns";
 import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
 
@@ -29,20 +30,28 @@ test.describe("Buyback creation", () => {
     await page.getByRole("link", { name: "Buybacks" }).click();
     await page.getByRole("link", { name: "New buyback" }).click();
 
-    await fillDatePicker(page, "Start date", "08/08/2022");
-    await fillDatePicker(page, "End date", "09/09/2022");
+    const startDate = new Date();
+    const endDate = addDays(new Date(), 30);
+
+    await fillDatePicker(page, "Start date", format(startDate, "MM/dd/yyyy"));
+    await fillDatePicker(page, "End date", format(endDate, "MM/dd/yyyy"));
     await page.getByLabel("Starting valuation").fill("100000000");
     await page.getByLabel("Document package").setInputFiles("e2e/samples/sample.zip");
-    await page.locator('.tiptap[contenteditable="true"]').fill(faker.lorem.paragraphs());
+
+    const letterOfTransmittal = faker.lorem.paragraphs();
+    await page.locator('.tiptap[contenteditable="true"]').fill(letterOfTransmittal);
 
     await page.getByRole("button", { name: "Create buyback" }).click();
     await expect(page.getByText("There are no buybacks yet.")).toBeVisible();
     await page.reload();
 
-    await expect(
-      page.getByRole("row", {
-        name: /Aug 8, 2022.*Sep 9, 2022.*\$100,000,000/u,
-      }),
-    ).toBeVisible();
+    await page
+      .getByRole("row", {
+        name: new RegExp(`${formatDate(endDate, "MMM d, yyyy")}.*\\$100,000,000`, "u"),
+      })
+      .click();
+
+    await page.waitForLoadState("domcontentloaded");
+    await expect(page.locator(".prose")).toContainText(letterOfTransmittal.substring(0, 50));
   });
 });
