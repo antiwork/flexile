@@ -212,7 +212,7 @@ export const companiesRouter = createRouter({
       z.object({
         companyId: z.string(),
         userId: z.string(),
-        role: z.enum(["admin", "lawyer", "contractor", "investor"]),
+        role: z.enum(["admin", "lawyer"]),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -235,7 +235,7 @@ export const companiesRouter = createRouter({
       z.object({
         companyId: z.string(),
         userId: z.string(),
-        role: z.enum(["admin", "lawyer", "contractor", "investor"]),
+        role: z.enum(["admin", "lawyer"]),
       }),
     )
     .mutation(async ({ ctx, input }) => {

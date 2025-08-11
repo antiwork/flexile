@@ -30,8 +30,6 @@ RSpec.describe Internal::Companies::UsersController do
         json_response = response.parsed_body
         expect(json_response).to have_key("administrators")
         expect(json_response).to have_key("lawyers")
-        expect(json_response).to have_key("contractors")
-        expect(json_response).to have_key("investors")
         expect(json_response).to have_key("all_users")
       end
     end
@@ -58,25 +56,7 @@ RSpec.describe Internal::Companies::UsersController do
       end
     end
 
-    context "when filter=contractors" do
-      it "returns contractors for the company" do
-        get :index, params: { company_id: company.external_id, filter: "contractors" }
-        expect(response).to have_http_status(:ok)
 
-        json_response = response.parsed_body
-        expect(json_response).to be_an(Array)
-      end
-    end
-
-    context "when filter=investors" do
-      it "returns investors for the company" do
-        get :index, params: { company_id: company.external_id, filter: "investors" }
-        expect(response).to have_http_status(:ok)
-
-        json_response = response.parsed_body
-        expect(json_response).to be_an(Array)
-      end
-    end
 
     context "when filter=administrators,lawyers" do
       it "returns both administrators and lawyers" do
@@ -88,8 +68,8 @@ RSpec.describe Internal::Companies::UsersController do
         expect(json_response.length).to be >= 1
       end
 
-      it "returns Owner first, then other users sorted by role and name" do
-        # Create another admin to test sorting
+      it "returns users without guaranteed order" do
+        # Create another admin to test multiple users
         other_admin_user = create(:user)
         create(:company_administrator, company: company, user: other_admin_user)
 
@@ -100,26 +80,14 @@ RSpec.describe Internal::Companies::UsersController do
         expect(json_response).to be_an(Array)
         expect(json_response.length).to be >= 2
 
-        # First user should be the Owner (primary admin)
-        expect(json_response.first["isOwner"]).to be(true)
-        expect(json_response.first["role"]).to eq("Owner")
-
-        # Second user should be the other admin
-        expect(json_response.second["isOwner"]).to be(false)
-        expect(json_response.second["role"]).to eq("Admin")
+        # Verify both users are present but order is not guaranteed
+        user_ids = json_response.map { |user| user["id"] }
+        expect(user_ids).to include(admin_user.external_id)
+        expect(user_ids).to include(other_admin_user.external_id)
       end
     end
 
-    context "when filter=administrators,contractors,investors" do
-      it "returns administrators, contractors, and investors" do
-        get :index, params: { company_id: company.external_id, filter: "administrators,contractors,investors" }
-        expect(response).to have_http_status(:ok)
 
-        json_response = response.parsed_body
-        expect(json_response).to be_an(Array)
-        expect(json_response.length).to be >= 1
-      end
-    end
 
     context "when filter has whitespace" do
       it "handles whitespace in filter parameter" do
@@ -140,8 +108,6 @@ RSpec.describe Internal::Companies::UsersController do
         json_response = response.parsed_body
         expect(json_response).to have_key("administrators")
         expect(json_response).to have_key("lawyers")
-        expect(json_response).to have_key("contractors")
-        expect(json_response).to have_key("investors")
         expect(json_response).to have_key("all_users")
       end
     end

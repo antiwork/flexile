@@ -4,8 +4,6 @@ class AddUserRoleService
   ALLOWED_ROLES = {
     "admin" => :add_admin_role,
     "lawyer" => :add_lawyer_role,
-    "contractor" => :add_contractor_role,
-    "investor" => :add_investor_role,
   }.freeze
 
   def initialize(company:, user_id:, role:)
@@ -39,37 +37,6 @@ class AddUserRoleService
       return { success: false, error: "User is already a lawyer" } if existing_lawyer
 
       @company.company_lawyers.create!(user: user)
-      { success: true }
-    rescue ActiveRecord::RecordInvalid => e
-      { success: false, error: e.record.errors.full_messages.to_sentence }
-    end
-
-    def add_contractor_role(user)
-      existing_contractor = @company.company_workers.find_by(user: user)
-      return { success: false, error: "User is already a contractor" } if existing_contractor
-
-      @company.company_workers.create!(
-        user: user,
-        started_at: Time.current,
-        pay_rate_type: :hourly,
-        role: "Contractor",
-        contract_signed_elsewhere: false
-      )
-      { success: true }
-    rescue ActiveRecord::RecordInvalid => e
-      { success: false, error: e.record.errors.full_messages.to_sentence }
-    end
-
-    def add_investor_role(user)
-      existing_investor = @company.company_investors.find_by(user: user)
-      return { success: false, error: "User is already an investor" } if existing_investor
-
-      @company.company_investors.create!(
-        user: user,
-        total_shares: 0,
-        total_options: 0,
-        investment_amount_in_cents: 0
-      )
       { success: true }
     rescue ActiveRecord::RecordInvalid => e
       { success: false, error: e.record.errors.full_messages.to_sentence }

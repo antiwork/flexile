@@ -213,7 +213,32 @@ export default function RolesPage() {
       }
     }
 
-    return Object.values(byId);
+    // Sort the results: Owner first, then by role, then by name
+    return Object.values(byId).sort((a, b) => {
+      // First: Owner status (Owner first)
+      if (a.isOwner !== b.isOwner) return a.isOwner ? -1 : 1;
+
+      // Second: Role priority (Owner > Admin > Lawyer)
+      const getRolePriority = (role: string): number => {
+        switch (role) {
+          case "Owner":
+            return 0;
+          case "Admin":
+            return 1;
+          case "Lawyer":
+            return 2;
+          default:
+            return 3;
+        }
+      };
+
+      const aPriority = getRolePriority(a.role);
+      const bPriority = getRolePriority(b.role);
+      if (aPriority !== bPriority) return aPriority - bPriority;
+
+      // Third: Name alphabetically
+      return a.name.localeCompare(b.name);
+    });
   }, [adminsAndLawyers]);
 
   const columnHelper = createColumnHelper<(typeof allRoles)[number]>();

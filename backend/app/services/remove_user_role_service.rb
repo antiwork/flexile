@@ -4,8 +4,6 @@ class RemoveUserRoleService
   ALLOWED_ROLES = {
     "admin" => :remove_admin_role,
     "lawyer" => :remove_lawyer_role,
-    "contractor" => :remove_contractor_role,
-    "investor" => :remove_investor_role,
   }.freeze
 
   def initialize(company:, user_id:, role:, current_user:)
@@ -37,7 +35,7 @@ class RemoveUserRoleService
       end
 
       # Prevent removing own admin role
-      acting_user = @current_user || Current.user
+      acting_user = @current_user
       if acting_user&.id == user.id
         return { success: false, error: "You cannot remove your own admin role" }
       end
@@ -54,28 +52,6 @@ class RemoveUserRoleService
       return { success: false, error: "User is not a lawyer" } unless lawyer
 
       lawyer.destroy!
-      { success: true }
-    end
-
-    def remove_contractor_role(user)
-      contractor = @company.company_workers.find_by(user: user)
-      return { success: false, error: "User is not a contractor" } unless contractor
-
-      # For contractors, we set ended_at instead of deleting to preserve history
-      contractor.update!(ended_at: Time.current)
-      { success: true }
-    end
-
-    def remove_investor_role(user)
-      investor = @company.company_investors.find_by(user: user)
-      return { success: false, error: "User is not an investor" } unless investor
-
-      # Check if investor has any active investments
-      if investor.total_shares > 0 || investor.total_options > 0 || investor.investment_amount_in_cents > 0
-        return { success: false, error: "Cannot remove investor with active investments" }
-      end
-
-      investor.destroy!
       { success: true }
     end
 end
