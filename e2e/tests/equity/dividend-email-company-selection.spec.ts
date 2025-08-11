@@ -30,12 +30,12 @@ test.describe("Dividend Email Company Selection", () => {
     const { companyInvestor: investorA } = await companyInvestorsFactory.create({
       companyId: companyA.id,
       userId: investorUser.id,
-      investmentAmountInCents: 100000n,
+      investmentAmountInCents: BigInt(100000),
     });
     const { companyInvestor: investorB } = await companyInvestorsFactory.create({
       companyId: companyB.id,
       userId: investorUser.id,
-      investmentAmountInCents: 200000n,
+      investmentAmountInCents: BigInt(200000),
     });
 
     const dividendRoundA = await dividendRoundsFactory.create({
@@ -51,18 +51,18 @@ test.describe("Dividend Email Company Selection", () => {
       companyId: companyA.id,
       companyInvestorId: investorA.id,
       dividendRoundId: dividendRoundA.id,
-      totalAmountInCents: 50000n,
-      withheldTaxCents: 5000n,
-      numberOfShares: 500n,
+      totalAmountInCents: BigInt(50000),
+      withheldTaxCents: BigInt(5000),
+      numberOfShares: BigInt(500),
       status: "Issued",
     });
     await dividendsFactory.create({
       companyId: companyB.id,
       companyInvestorId: investorB.id,
       dividendRoundId: dividendRoundB.id,
-      totalAmountInCents: 75000n,
-      withheldTaxCents: 7500n,
-      numberOfShares: 750n,
+      totalAmountInCents: BigInt(75000),
+      withheldTaxCents: BigInt(7500),
+      numberOfShares: BigInt(750),
       status: "Issued",
     });
 
