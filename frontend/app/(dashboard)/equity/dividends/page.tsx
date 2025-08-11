@@ -45,8 +45,8 @@ export default function Dividends() {
 
   useEffect(() => {
     const companyIdParam = searchParams.get("company_id");
-    if (companyIdParam && companyIdParam !== company.external_id) {
-      const targetCompany = user.companies.find((c) => c.external_id === companyIdParam);
+    if (companyIdParam && companyIdParam !== company.externalId) {
+      const targetCompany = user.companies.find((c) => c.externalId === companyIdParam);
       if (targetCompany && targetCompany.id !== company.id) {
         const switchCompany = async () => {
           useUserStore.setState((state) => ({ ...state, pending: true }));
