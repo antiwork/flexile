@@ -649,7 +649,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_12_170245) do
   create_table "invoice_line_items", force: :cascade do |t|
     t.bigint "invoice_id", null: false
     t.string "description", null: false
-    t.decimal "quantity", null: false
+    t.decimal "quantity", precision: 10, scale: 2, null: false
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.integer "pay_rate_in_subunits", null: false

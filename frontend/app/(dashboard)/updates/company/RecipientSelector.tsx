@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useCurrentCompany } from "@/global";
+import { trpc } from "@/trpc/client";
 
 export type RecipientType = "admins" | "investors" | "active_contractors" | "alumni_contractors";
 
@@ -49,6 +51,7 @@ export default function RecipientSelector({
   const [showMinBilled, setShowMinBilled] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const company = useCurrentCompany();
 
   const getCountForType = (type: RecipientType): number => {
     switch (type) {
@@ -65,13 +68,20 @@ export default function RecipientSelector({
     }
   };
 
-  const totalRecipients = useMemo(
-    () =>
-      // TODO: This currently just sums the counts and doesn't deduplicate users who belong to multiple groups
-      // Should be replaced with a server-side query that returns the actual unique recipient count
-      value.reduce((sum, type) => sum + getCountForType(type), 0),
-    [value, counts],
+  // Get the actual unique recipient count from the server
+  const { data: recipientData } = trpc.companyUpdates.getUniqueRecipientCount.useQuery(
+    {
+      companyId: company.id,
+      recipientTypes: value,
+      minBilledAmount,
+    },
+    {
+      enabled: value.length > 0,
+      staleTime: 10000, // Cache for 10 seconds
+    },
   );
+
+  const totalRecipients = recipientData?.uniqueCount ?? 0;
 
   // Filter options based on search text and hide already selected items
   const filteredOptions = useMemo(

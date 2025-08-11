@@ -17,6 +17,13 @@ export const inngest = new Inngest({
         companyId: z.string(),
       }),
     },
+    "company.update.published": {
+      data: z.object({
+        updateId: z.string(),
+        recipientTypes: z.array(z.string()).optional(),
+        minBilledAmount: z.number().optional(),
+      }),
+    },
   }),
   middleware: [superjsonMiddleware],
 });

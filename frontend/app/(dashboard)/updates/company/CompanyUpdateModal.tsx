@@ -20,7 +20,15 @@ type RecipientType = "admins" | "investors" | "active_contractors" | "alumni_con
 const recipientTypeSet = new Set<RecipientType>(["admins", "investors", "active_contractors", "alumni_contractors"]);
 function narrowRecipientTypes(input: unknown): RecipientType[] | undefined {
   if (!Array.isArray(input)) return undefined;
-  return input.filter((t): t is RecipientType => typeof t === "string" && recipientTypeSet.has(t));
+  const result: RecipientType[] = [];
+  for (const item of input) {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    if (typeof item === "string" && recipientTypeSet.has(item as RecipientType)) {
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      result.push(item as RecipientType);
+    }
+  }
+  return result.length > 0 ? result : undefined;
 }
 
 const formSchema = z.object({
@@ -85,22 +93,22 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
   };
 
   const selectedRecipientTypes = form.watch("recipientTypes");
-  // TODO: This currently just sums the counts and doesn't deduplicate users who belong to multiple groups
-  // Should be replaced with a server-side query that returns the actual unique recipient count
-  const recipientCount = selectedRecipientTypes.reduce((sum, type) => {
-    switch (type) {
-      case "admins":
-        return sum + recipientCounts.admins;
-      case "investors":
-        return sum + recipientCounts.investors;
-      case "active_contractors":
-        return sum + recipientCounts.activeContractors;
-      case "alumni_contractors":
-        return sum + recipientCounts.alumniContractors;
-      default:
-        return sum;
-    }
-  }, 0);
+  const selectedMinBilledAmount = form.watch("minBilledAmount");
+
+  // Get the actual unique recipient count from the server
+  const { data: recipientData } = trpc.companyUpdates.getUniqueRecipientCount.useQuery(
+    {
+      companyId: company.id,
+      recipientTypes: selectedRecipientTypes,
+      minBilledAmount: selectedMinBilledAmount,
+    },
+    {
+      enabled: selectedRecipientTypes.length > 0,
+      staleTime: 10000, // Cache for 10 seconds
+    },
+  );
+
+  const recipientCount = recipientData?.uniqueCount ?? 0;
 
   const createMutation = trpc.companyUpdates.create.useMutation();
   const updateMutation = trpc.companyUpdates.update.useMutation();
@@ -127,6 +135,7 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
         await publishMutation.mutateAsync({
           companyId: company.id,
           id,
+          minBilledAmount: values.minBilledAmount,
         });
       }
       void trpcUtils.companyUpdates.list.invalidate();

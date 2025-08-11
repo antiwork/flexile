@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, eq, gte, isNotNull, isNull, sql } from "drizzle-orm";
 import { NonRetriableError } from "inngest";
 import { db } from "@/db";
 import {
@@ -7,6 +7,7 @@ import {
   companyContractors,
   companyInvestors,
   companyUpdates,
+  invoices,
   users,
 } from "@/db/schema";
 import env from "@/env";
@@ -85,22 +86,56 @@ export default inngest.createFunction(
         queries.push(investors);
       }
 
+      const minBilledAmount = event.data.minBilledAmount;
+
       if (recipientTypes.includes("active_contractors")) {
-        // TODO: once minBilledAmount is available on the update or in event.data,
-        // filter active contractors by total billed amount ≥ minBilledAmount
-        const activeContractors = baseQuery(companyContractors).where(
-          and(isNotNull(companyContractors.id), isNull(companyContractors.endedAt)),
-        );
-        queries.push(activeContractors);
+        if (minBilledAmount && minBilledAmount > 0) {
+          // Filter contractors by total billed amount
+          const activeContractors = db
+            .selectDistinct({ email: users.email })
+            .from(users)
+            .leftJoin(
+              companyContractors,
+              and(eq(users.id, companyContractors.userId), eq(companyContractors.companyId, company.id)),
+            )
+            .leftJoin(invoices, eq(invoices.companyContractorId, companyContractors.id))
+            .where(and(isNotNull(companyContractors.id), isNull(companyContractors.endedAt)))
+            .groupBy(users.email)
+            .having(
+              gte(sql`COALESCE(SUM(${invoices.totalAmountInUsdCents}), 0)`, BigInt(Math.round(minBilledAmount * 100))),
+            );
+          queries.push(activeContractors);
+        } else {
+          const activeContractors = baseQuery(companyContractors).where(
+            and(isNotNull(companyContractors.id), isNull(companyContractors.endedAt)),
+          );
+          queries.push(activeContractors);
+        }
       }
 
       if (recipientTypes.includes("alumni_contractors")) {
-        // TODO: once minBilledAmount is available on the update or in event.data,
-        // filter alumni contractors by total billed amount ≥ minBilledAmount
-        const alumniContractors = baseQuery(companyContractors).where(
-          and(isNotNull(companyContractors.id), isNotNull(companyContractors.endedAt)),
-        );
-        queries.push(alumniContractors);
+        if (minBilledAmount && minBilledAmount > 0) {
+          // Filter contractors by total billed amount
+          const alumniContractors = db
+            .selectDistinct({ email: users.email })
+            .from(users)
+            .leftJoin(
+              companyContractors,
+              and(eq(users.id, companyContractors.userId), eq(companyContractors.companyId, company.id)),
+            )
+            .leftJoin(invoices, eq(invoices.companyContractorId, companyContractors.id))
+            .where(and(isNotNull(companyContractors.id), isNotNull(companyContractors.endedAt)))
+            .groupBy(users.email)
+            .having(
+              gte(sql`COALESCE(SUM(${invoices.totalAmountInUsdCents}), 0)`, BigInt(Math.round(minBilledAmount * 100))),
+            );
+          queries.push(alumniContractors);
+        } else {
+          const alumniContractors = baseQuery(companyContractors).where(
+            and(isNotNull(companyContractors.id), isNotNull(companyContractors.endedAt)),
+          );
+          queries.push(alumniContractors);
+        }
       }
 
       if (queries.length === 0) {
