@@ -171,4 +171,38 @@ test.describe("company update creation", () => {
     expect(updatedRecord?.title).toBe("Updated Title");
     expect(updatedRecord?.sentAt).not.toBeNull();
   });
+
+  test("allows inserting link with Enter key in rich text editor", async ({ page }) => {
+    const title = "Test Update with Link";
+    const content = "Check out this link";
+    const linkUrl = "https://example.com";
+
+    await login(page, adminUser);
+    await page.goto("/updates/company");
+
+    await page.getByRole("button", { name: "New update" }).click();
+    await expect(page.getByRole("dialog", { name: "New company update" })).toBeVisible();
+
+    await withinModal(
+      async (modal) => {
+        await modal.getByLabel("Title").fill(title);
+
+        await modal.locator('[contenteditable="true"]').fill(content);
+
+        await modal.locator('[contenteditable="true"]').selectText();
+
+        await modal.getByRole("button", { name: "Link" }).click();
+      },
+      { page, title: "New company update" },
+    );
+
+    await expect(page.getByRole("dialog", { name: "Insert Link" })).toBeVisible();
+
+    await page.getByLabel("URL").fill(linkUrl);
+    await page.getByLabel("URL").press("Enter");
+
+    await expect(page.getByRole("dialog", { name: "Insert Link" })).not.toBeVisible();
+
+    await expect(page.getByRole("dialog", { name: "New company update" })).toBeVisible();
+  });
 });
