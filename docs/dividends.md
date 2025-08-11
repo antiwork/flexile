@@ -101,13 +101,7 @@ rescue => e
 end
 ```
 
-This will also send out the dividend issued email automatically.
-
-To send emails manually if needed:
-
-```ruby
-dividend_round.send_dividend_emails
-```
+Note: This will also send out the dividend issued email.
 
 #### Resending Invitations
 
@@ -138,10 +132,10 @@ This is only necessary if investors are not imported with investment and dividen
 #### Generate Dividend Computation
 
 ```ruby
-company = Company.is_gumroad.sole
+company = Company.find(5)
 service = DividendComputationGeneration.new(
   company,
-  amount_in_usd: 5_346_877,
+  amount_in_usd: 2_570_000,
   return_of_capital: false
 )
 service.process
@@ -152,10 +146,6 @@ puts service.instance_variable_get(:@preferred_dividend_total) + service.instanc
 ```
 
 #### Generate Dividends from Computation
-
-```ruby
-DividendComputation.generate_dividends
-```
 
 #### Validate the Data
 
@@ -168,16 +158,20 @@ attached = {
 }
 
 AdminMailer.custom(
-  to: ["support@flexile.com"],
+  to: ["sahil.lavingia@gmail.com", "howard@antiwork.com"],
   subject: "Test",
   body: "Attached",
   attached: attached
 ).deliver_now
 ```
 
-> Note: After generating dividends, call `dividend_round.send_dividend_emails` to send emails to investors.
-
 ## Processing Dividends
+
+```ruby
+dividend_computation.generate_dividends
+```
+
+> Note: After generating dividends, call `dividend_round.send_dividend_emails` to send emails to investors.
 
 ### Calculating Fees
 
