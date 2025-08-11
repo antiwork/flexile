@@ -362,7 +362,6 @@ export default function InvoicesPage() {
     getRowId: (invoice) => invoice.id,
     initialState: {
       sorting: [{ id: user.roles.administrator ? "status" : "invoiceDate", desc: !user.roles.administrator }],
-      columnFilters: user.roles.administrator ? [{ id: "status", value: ["Awaiting approval", "Failed"] }] : [],
     },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
