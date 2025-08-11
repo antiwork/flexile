@@ -34,7 +34,6 @@ test.describe("view company updates", () => {
       companyId: company.id,
       title: "Company Update: Contractor View",
       body: "<p>Test contractor view content for body.</p>",
-      videoUrl: "https://www.youtube.com/watch?v=qaTy2klHNuI",
       sentAt: new Date(),
     });
 
@@ -46,10 +45,6 @@ test.describe("view company updates", () => {
     await withinModal(
       async (modal) => {
         await expect(modal.getByText("Test contractor view content for body.")).toBeVisible();
-
-        const iframe = modal.locator('iframe[src*="youtube.com/embed"]');
-        await expect(iframe).toHaveAttribute("src", "https://www.youtube.com/embed/qaTy2klHNuI?controls=0&rel=0");
-
         await expect(modal.getByText(adminUserpreferredName)).toBeVisible();
       },
       { page, title: companyUpdate.title },
@@ -62,7 +57,6 @@ test.describe("view company updates", () => {
       companyId: company.id,
       title: "Company Update: Investor View",
       body: "<p>Test investor view content for body.</p>",
-      videoUrl: "https://www.test.com/watch?v=qaTy2klHNuI",
       sentAt: new Date(),
     });
 
@@ -74,11 +68,6 @@ test.describe("view company updates", () => {
     await withinModal(
       async (modal) => {
         await expect(modal.getByText("Test investor view content for body.")).toBeVisible();
-
-        const videoLink = modal.getByRole("link", { name: "Watch the video" });
-        await expect(videoLink).toHaveAttribute("href", "https://www.test.com/watch?v=qaTy2klHNuI");
-        await expect(videoLink).toHaveAttribute("target", "_blank");
-
         await expect(modal.getByText(adminUserpreferredName)).toBeVisible();
       },
       { page, title: companyUpdate.title },

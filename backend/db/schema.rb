@@ -226,7 +226,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_11_162507) do
     t.bigint "company_id", null: false
     t.string "title", null: false
     t.text "body", null: false
-    t.text "video_url"
     t.datetime "sent_at"
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
