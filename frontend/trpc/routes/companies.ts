@@ -8,12 +8,8 @@ import { activeStorageAttachments, activeStorageBlobs, companies } from "@/db/sc
 import { companyProcedure, createRouter } from "@/trpc";
 import {
   add_role_company_users_url,
-  administrators_company_users_url,
   company_administrator_stripe_microdeposit_verifications_url,
   company_users_url,
-  contractors_company_users_url,
-  investors_company_users_url,
-  lawyers_company_users_url,
   microdeposit_verification_details_company_invoices_url,
   remove_role_company_users_url,
 } from "@/utils/routes";
@@ -44,46 +40,6 @@ export const companiesRouter = createRouter({
     return pick(ctx.company, ["taxId", "brandColor", "website", "name", "phoneNumber"]);
   }),
 
-  listAdministrators: companyProcedure
-    .input(z.object({ companyId: z.string() }))
-    .output(
-      z.array(
-        z.object({
-          id: z.string(),
-          email: z.string(),
-          name: z.string(),
-          isAdmin: z.boolean(),
-          role: z.string(),
-          isOwner: z.boolean(),
-          allRoles: z.array(z.string()),
-        }),
-      ),
-    )
-    .query(async ({ ctx }) => {
-      if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
-
-      const response = await fetch(administrators_company_users_url(ctx.company.externalId, { host: ctx.host }), {
-        headers: ctx.headers,
-      });
-
-      if (!response.ok) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      }
-
-      return z
-        .array(
-          z.object({
-            id: z.string(),
-            email: z.string(),
-            name: z.string(),
-            isAdmin: z.boolean(),
-            role: z.string(),
-            isOwner: z.boolean(),
-            allRoles: z.array(z.string()),
-          }),
-        )
-        .parse(await response.json());
-    }),
   update: companyProcedure
     .input(
       createUpdateSchema(companies, {
@@ -178,63 +134,38 @@ export const companiesRouter = createRouter({
       }
     }),
 
-  listLawyers: companyProcedure
-    .input(z.object({ companyId: z.string() }))
-    .output(
-      z.array(
-        z.object({
-          id: z.string(),
-          email: z.string(),
-          name: z.string(),
-          isAdmin: z.boolean(),
-          role: z.string(),
-          isOwner: z.boolean(),
-          allRoles: z.array(z.string()),
-        }),
-      ),
-    )
-    .query(async ({ ctx }) => {
-      if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
-
-      const response = await fetch(lawyers_company_users_url(ctx.company.externalId, { host: ctx.host }), {
-        headers: ctx.headers,
-      });
-
-      if (!response.ok) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      }
-
-      return z
-        .array(
-          z.object({
-            id: z.string(),
-            email: z.string(),
-            name: z.string(),
-            isAdmin: z.boolean(),
-            role: z.string(),
-            isOwner: z.boolean(),
-            allRoles: z.array(z.string()),
-          }),
-        )
-        .parse(await response.json());
-    }),
-
   listCompanyUsers: companyProcedure
-    .input(z.object({ companyId: z.string() }))
+    .input(
+      z.object({
+        companyId: z.string(),
+        roles: z.array(z.enum(["administrators", "lawyers", "contractors", "investors"])).optional(),
+      }),
+    )
     .output(
       z.array(
         z.object({
           id: z.string(),
           email: z.string(),
           name: z.string(),
+          isAdmin: z.boolean().optional(),
+          role: z.string().optional(),
+          isOwner: z.boolean().optional(),
+          active: z.boolean().optional(),
           allRoles: z.array(z.string()),
         }),
       ),
     )
-    .query(async ({ ctx }) => {
+    .query(async ({ ctx, input }) => {
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-      const response = await fetch(company_users_url(ctx.company.externalId, { host: ctx.host }), {
+      let url = company_users_url(ctx.company.externalId, { host: ctx.host });
+
+      if (input.roles && input.roles.length > 0) {
+        const filterParam = input.roles.join(",");
+        url = company_users_url(ctx.company.externalId, { host: ctx.host, params: { filter: filterParam } });
+      }
+
+      const response = await fetch(url, {
         headers: ctx.headers,
       });
 
@@ -242,100 +173,34 @@ export const companiesRouter = createRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
 
-      const data = z
-        .object({
-          all_users: z.array(
-            z.object({
-              id: z.string(),
-              email: z.string(),
-              name: z.string(),
-              allRoles: z.array(z.string()),
-            }),
-          ),
-        })
-        .parse(await response.json());
+      // If no roles specified, extract all_users from the full response
+      if (!input.roles || input.roles.length === 0) {
+        const data = z
+          .object({
+            all_users: z.array(
+              z.object({
+                id: z.string(),
+                email: z.string(),
+                name: z.string(),
+                allRoles: z.array(z.string()),
+              }),
+            ),
+          })
+          .parse(await response.json());
 
-      return data.all_users;
-    }),
-
-  listContractors: companyProcedure
-    .input(z.object({ companyId: z.string() }))
-    .output(
-      z.array(
-        z.object({
-          id: z.string(),
-          email: z.string(),
-          name: z.string(),
-          isAdmin: z.boolean(),
-          role: z.string(),
-          isOwner: z.boolean(),
-          active: z.boolean(),
-          allRoles: z.array(z.string()),
-        }),
-      ),
-    )
-    .query(async ({ ctx }) => {
-      if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
-
-      const response = await fetch(contractors_company_users_url(ctx.company.externalId, { host: ctx.host }), {
-        headers: ctx.headers,
-      });
-
-      if (!response.ok) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        return data.all_users;
       }
-
+      // If roles specified, return the filtered response directly
       return z
         .array(
           z.object({
             id: z.string(),
             email: z.string(),
             name: z.string(),
-            isAdmin: z.boolean(),
-            role: z.string(),
-            isOwner: z.boolean(),
-            active: z.boolean(),
-            allRoles: z.array(z.string()),
-          }),
-        )
-        .parse(await response.json());
-    }),
-
-  listInvestors: companyProcedure
-    .input(z.object({ companyId: z.string() }))
-    .output(
-      z.array(
-        z.object({
-          id: z.string(),
-          email: z.string(),
-          name: z.string(),
-          isAdmin: z.boolean(),
-          role: z.string(),
-          isOwner: z.boolean(),
-          allRoles: z.array(z.string()),
-        }),
-      ),
-    )
-    .query(async ({ ctx }) => {
-      if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
-
-      const response = await fetch(investors_company_users_url(ctx.company.externalId, { host: ctx.host }), {
-        headers: ctx.headers,
-      });
-
-      if (!response.ok) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      }
-
-      return z
-        .array(
-          z.object({
-            id: z.string(),
-            email: z.string(),
-            name: z.string(),
-            isAdmin: z.boolean(),
-            role: z.string(),
-            isOwner: z.boolean(),
+            isAdmin: z.boolean().optional(),
+            role: z.string().optional(),
+            isOwner: z.boolean().optional(),
+            active: z.boolean().optional(),
             allRoles: z.array(z.string()),
           }),
         )

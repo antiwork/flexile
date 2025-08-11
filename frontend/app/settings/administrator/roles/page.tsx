@@ -129,16 +129,16 @@ export default function RolesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [confirmRevoke, setConfirmRevoke] = useState<{ id: string; name: string; role: string } | null>(null);
 
-  const { data: admins = [] } = trpc.companies.listAdministrators.useQuery({ companyId: company.id });
-  const { data: lawyers = [] } = trpc.companies.listLawyers.useQuery({ companyId: company.id });
+  const { data: adminsAndLawyers = [] } = trpc.companies.listCompanyUsers.useQuery({
+    companyId: company.id,
+    roles: ["administrators", "lawyers"],
+  });
   const { data: companyUsers = [] } = trpc.companies.listCompanyUsers.useQuery({ companyId: company.id });
 
   const trpcUtils = trpc.useUtils();
 
   const addRoleMutation = trpc.companies.addRole.useMutation({
     onSuccess: async () => {
-      await trpcUtils.companies.listAdministrators.invalidate();
-      await trpcUtils.companies.listLawyers.invalidate();
       await trpcUtils.companies.listCompanyUsers.invalidate();
       setShowAddModal(false);
       addMemberForm.reset();
@@ -147,8 +147,6 @@ export default function RolesPage() {
 
   const inviteLawyerMutation = trpc.lawyers.invite.useMutation({
     onSuccess: async () => {
-      await trpcUtils.companies.listAdministrators.invalidate();
-      await trpcUtils.companies.listLawyers.invalidate();
       await trpcUtils.companies.listCompanyUsers.invalidate();
       setShowAddModal(false);
       addMemberForm.reset();
@@ -157,8 +155,6 @@ export default function RolesPage() {
 
   const inviteAdminMutation = trpc.administrators.invite.useMutation({
     onSuccess: async () => {
-      await trpcUtils.companies.listAdministrators.invalidate();
-      await trpcUtils.companies.listLawyers.invalidate();
       await trpcUtils.companies.listCompanyUsers.invalidate();
       setShowAddModal(false);
       addMemberForm.reset();
@@ -167,8 +163,7 @@ export default function RolesPage() {
 
   const removeRoleMutation = trpc.companies.removeRole.useMutation({
     onSuccess: async () => {
-      await trpcUtils.companies.listAdministrators.invalidate();
-      await trpcUtils.companies.listLawyers.invalidate();
+      await trpcUtils.companies.listCompanyUsers.invalidate();
       setConfirmRevoke(null);
     },
   });
@@ -186,8 +181,19 @@ export default function RolesPage() {
       { id: string; name: string; email: string; role: string; isAdmin: boolean; isOwner: boolean }
     > = {};
 
+    // Separate admins and lawyers from the combined result
+    const admins = adminsAndLawyers.filter((user) => user.isAdmin);
+    const lawyers = adminsAndLawyers.filter((user) => !user.isAdmin);
+
     for (const admin of admins) {
-      byId[admin.id] = { ...admin };
+      byId[admin.id] = {
+        id: admin.id,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role || "Admin",
+        isAdmin: admin.isAdmin || false,
+        isOwner: admin.isOwner || false,
+      };
     }
 
     for (const lawyer of lawyers) {
@@ -196,12 +202,19 @@ export default function RolesPage() {
         if (existing.role === "Owner") continue;
         existing.role = existing.isAdmin ? "Admin" : "Lawyer";
       } else {
-        byId[lawyer.id] = { ...lawyer };
+        byId[lawyer.id] = {
+          id: lawyer.id,
+          name: lawyer.name,
+          email: lawyer.email,
+          role: lawyer.role || "Lawyer",
+          isAdmin: lawyer.isAdmin || false,
+          isOwner: lawyer.isOwner || false,
+        };
       }
     }
 
     return Object.values(byId);
-  }, [admins, lawyers]);
+  }, [adminsAndLawyers]);
 
   const columnHelper = createColumnHelper<(typeof allRoles)[number]>();
   const columns = useMemo(
@@ -332,7 +345,7 @@ export default function RolesPage() {
           <p className="text-muted-foreground text-base">Use roles to grant deeper access to your workspace.</p>
         </hgroup>
         <div className="[&_td:first-child]:!pl-0 [&_td:last-child]:!pr-0 [&_th:first-child]:!pl-0 [&_th:last-child]:!pr-0">
-          {admins.length === 0 && lawyers.length === 0 ? (
+          {adminsAndLawyers.length === 0 ? (
             <TableSkeleton columns={3} />
           ) : (
             <div className="[&_table]:w-full [&_table]:table-fixed [&_td:nth-child(1)]:w-[75%] [&_td:nth-child(2)]:w-[15%] [&_td:nth-child(2)]:pr-1 [&_td:nth-child(2)]:text-left [&_td:nth-child(3)]:w-[10%] [&_td:nth-child(3)]:pr-0 [&_td:nth-child(3)]:pl-0 [&_th:nth-child(1)]:w-[75%] [&_th:nth-child(2)]:w-[15%] [&_th:nth-child(3)]:w-[10%] [&>div>div:first-child]:mx-0">

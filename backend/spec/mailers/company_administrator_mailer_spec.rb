@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe CompanyAdministratorMailer, type: :mailer do
+RSpec.describe CompanyAdministratorMailer do
   describe "invitation_instructions" do
     let(:company) { create(:company, :completed_onboarding) }
     let(:user) { create(:user) }

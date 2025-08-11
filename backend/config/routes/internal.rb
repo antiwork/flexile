@@ -56,10 +56,6 @@ scope path: :internal, module: :internal do
     resources :administrators, only: [:create]
     resources :users, only: [:index] do
       collection do
-        get :administrators
-        get :lawyers
-        get :contractors
-        get :investors
         post :add_role
         post :remove_role
       end

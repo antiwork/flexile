@@ -524,30 +524,6 @@ export const admin_users_path: ((
 
 /**
  * Generates rails route to
- * /internal/companies/:company_id/users/administrators(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const administrators_company_users_url: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/companies/:company_id/users/administrators(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const administrators_company_users_path: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /helper/users(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
@@ -1296,30 +1272,6 @@ export const connect_company_quickbooks_path: ((
 
 /**
  * Generates rails route to
- * /internal/companies/:company_id/users/contractors(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const contractors_company_users_url: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/companies/:company_id/users/contractors(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const contractors_company_users_path: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /internal/demo/companies/:id(.:format)
  * @param {any} id
  * @param {object | undefined} options
@@ -1696,30 +1648,6 @@ export const internal_userid_path: ((
 
 /**
  * Generates rails route to
- * /internal/companies/:company_id/users/investors(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const investors_company_users_url: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/companies/:company_id/users/investors(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const investors_company_users_path: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /invoices(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
@@ -1755,30 +1683,6 @@ export const invoices_new_url: ((
  * @returns {string} route path
  */
 export const invoices_new_path: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/companies/:company_id/users/lawyers(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const lawyers_company_users_url: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/companies/:company_id/users/lawyers(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const lawyers_company_users_path: ((
-  company_id: RequiredRouteParameter,
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 

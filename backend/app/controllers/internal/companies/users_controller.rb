@@ -5,35 +5,46 @@ class Internal::Companies::UsersController < Internal::Companies::BaseController
     authorize CompanyAdministrator
 
     presenter = CompanyUsersPresenter.new(company: Current.company)
-    render json: presenter.props
-  end
 
-  def administrators
-    authorize CompanyAdministrator
+    if params[:filter].present?
+      filters = params[:filter].split(",").map(&:strip)
+      valid_filters = %w[administrators lawyers contractors investors]
+      applied_filters = filters & valid_filters
 
-    presenter = CompanyUsersPresenter.new(company: Current.company)
-    render json: presenter.administrators_props
-  end
+      if applied_filters.any?
+        combined_users = []
 
-  def lawyers
-    authorize CompanyAdministrator
+        applied_filters.each do |filter|
+          case filter
+          when "administrators"
+            combined_users.concat(presenter.administrators_props)
+          when "lawyers"
+            combined_users.concat(presenter.lawyers_props)
+          when "contractors"
+            combined_users.concat(presenter.contractors_props)
+          when "investors"
+            combined_users.concat(presenter.investors_props)
+          end
+        end
 
-    presenter = CompanyUsersPresenter.new(company: Current.company)
-    render json: presenter.lawyers_props
-  end
-
-  def contractors
-    authorize CompanyAdministrator
-
-    presenter = CompanyUsersPresenter.new(company: Current.company)
-    render json: presenter.contractors_props
-  end
-
-  def investors
-    authorize CompanyAdministrator
-
-    presenter = CompanyUsersPresenter.new(company: Current.company)
-    render json: presenter.investors_props
+        # Remove duplicates based on user ID and sort by role priority then name
+        unique_users = combined_users.uniq { |user| user[:id] }.sort_by do |user|
+          [
+            user[:isOwner] ? 0 : 1,  # Owner first
+            user[:role] == "Owner" ? 0 : 1,  # Owner role first
+            user[:role] == "Admin" ? 0 : 1,  # Admin role second
+            user[:role] == "Lawyer" ? 0 : 1, # Lawyer role third
+            user[:name]  # Then by name
+          ]
+        end
+        render json: unique_users
+      else
+        # No valid filters, return all users
+        render json: presenter.props
+      end
+    else
+      render json: presenter.props
+    end
   end
 
   def add_role
