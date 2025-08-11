@@ -2,7 +2,7 @@ import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { usersFactory } from "@test/factories/users";
-import { login, logout } from "@test/helpers/auth";
+import { fillOtp, login, logout } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { and, eq } from "drizzle-orm";
 import { companies, companyContractors, companyInviteLinks, users } from "@/db/schema";
@@ -62,8 +62,7 @@ test.describe("Contractor Invite Link Joining flow", () => {
     await page.getByRole("button", { name: "Sign up" }).click();
 
     // Wait for OTP step and enter verification code
-    await page.locator('[data-slot="input-otp"]').fill("000000"); // Test OTP code
-    await page.getByRole("button", { name: "Continue" }).click();
+    await fillOtp(page);
 
     await expect(page).toHaveURL(/documents/iu);
 
