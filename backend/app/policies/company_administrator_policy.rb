@@ -25,14 +25,6 @@ class CompanyAdministratorPolicy < ApplicationPolicy
     show?
   end
 
-  def contractors?
-    show?
-  end
-
-  def investors?
-    show?
-  end
-
   def add_role?
     show?
   end

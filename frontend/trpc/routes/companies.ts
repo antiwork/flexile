@@ -138,7 +138,7 @@ export const companiesRouter = createRouter({
     .input(
       z.object({
         companyId: z.string(),
-        roles: z.array(z.enum(["administrators", "lawyers", "contractors", "investors"])).optional(),
+        roles: z.array(z.enum(["administrators", "lawyers"])).optional(),
       }),
     )
     .output(

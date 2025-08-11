@@ -11,8 +11,6 @@ class CompanyUsersPresenter
     {
       administrators: administrators_props,
       lawyers: lawyers_props,
-      contractors: contractors_props,
-      investors: investors_props,
       all_users: all_users_props,
     }
   end
@@ -54,46 +52,11 @@ class CompanyUsersPresenter
     end.sort_by { |lawyer| lawyer[:name] }
   end
 
-  def contractors_props
-    @company.company_workers.includes(:user).order(:id).map do |worker|
-      user = worker.user
-      roles = get_user_roles(user)
-
-      {
-        id: user.external_id,
-        email: user.email,
-        name: user.legal_name || user.preferred_name || user.email,
-        isAdmin: roles.include?("Admin"),
-        role: "Contractor",
-        isOwner: is_primary_admin?(user),
-        active: worker.active?,
-        allRoles: roles,
-      }
-    end.sort_by { |contractor| contractor[:name] }
-  end
-
-  def investors_props
-    @company.company_investors.includes(:user).order(:id).map do |investor|
-      user = investor.user
-      roles = get_user_roles(user)
-
-      {
-        id: user.external_id,
-        email: user.email,
-        name: user.legal_name || user.preferred_name || user.email,
-        isAdmin: roles.include?("Admin"),
-        role: "Investor",
-        isOwner: is_primary_admin?(user),
-        allRoles: roles,
-      }
-    end.sort_by { |investor| investor[:name] }
-  end
-
   def all_users_props
     seen = Set.new
     all_users = []
 
-    [administrators_props, lawyers_props, contractors_props, investors_props].each do |role_users|
+    [administrators_props, lawyers_props].each do |role_users|
       role_users.each do |user|
         next if seen.include?(user[:id])
         seen.add(user[:id])
@@ -115,8 +78,6 @@ class CompanyUsersPresenter
 
       roles << "Admin" if @company.company_administrators.exists?(user: user)
       roles << "Lawyer" if @company.company_lawyers.exists?(user: user)
-      roles << "Contractor" if @company.company_workers.exists?(user: user)
-      roles << "Investor" if @company.company_investors.exists?(user: user)
 
       roles
     end
