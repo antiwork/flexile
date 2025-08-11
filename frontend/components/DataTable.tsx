@@ -314,7 +314,7 @@ export default function DataTable<T extends RowData>({
               <div className="no-scrollbar flex gap-1 overflow-x-auto">
                 <button
                   onClick={() => tabFilterColumn.setFilterValue(undefined)}
-                  className={`bg-secondary h-9 h-11 rounded-full border px-4 text-sm leading-5 font-medium ${
+                  className={`bg-secondary h-9 rounded-full border px-4 text-sm leading-5 font-medium ${
                     !tabFilterValue?.length ? "border-blue-600 !bg-blue-600/5" : "border-border"
                   }`}
                 >
@@ -333,7 +333,7 @@ export default function DataTable<T extends RowData>({
                           : [...(currentValue ?? []), option],
                       );
                     }}
-                    className={`bg-secondary h-9 h-11 rounded-full border px-4 text-sm leading-5 font-medium whitespace-nowrap ${
+                    className={`bg-secondary h-9 rounded-full border px-4 text-sm leading-5 font-medium whitespace-nowrap ${
                       tabFilterValue?.includes(option) ? "border-blue-600 !bg-blue-600/5" : "border-border"
                     }`}
                   >

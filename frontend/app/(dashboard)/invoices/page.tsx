@@ -401,10 +401,10 @@ export default function InvoicesPage() {
         title="Invoices"
         headerActions={
           isMobile ? (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center">
               {data.length > 0 ? (
                 <button
-                  className="text-blue-600"
+                  className="p-2 text-blue-600"
                   onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
                 >
                   {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
@@ -412,7 +412,7 @@ export default function InvoicesPage() {
               ) : null}
               {user.roles.administrator ? (
                 <DropdownMenu>
-                  <DropdownMenuTrigger>
+                  <DropdownMenuTrigger className="p-2">
                     <MoreHorizontal className="size-5 text-blue-600" strokeWidth={1.75} />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
