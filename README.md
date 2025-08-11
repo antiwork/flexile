@@ -97,18 +97,19 @@ pnpm playwright test
 
 <details> 
 <summary>Resend</summary>
+
 1. Create account at [resend.com](https://resend.com) and complete email verification
 2. Navigate to **API Keys** in the dashboard
 3. Click **Create API Key**, give it a name (e.g., "Flexile Development")
-4. Copy the API key immediately (starts with re_)
+4. Copy the API key immediately (starts with re\_)
 5. Add to `.env`:
    ```
    RESEND_API_KEY=re_your_api_key_here
    ```
 
-**Note**: Keep credentials secure and never commit to version control.
-
 </details>
+
+**Note**: Keep credentials secure and never commit to version control.
 
 ## License
 
