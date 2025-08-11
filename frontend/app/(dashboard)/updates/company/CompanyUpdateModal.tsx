@@ -257,7 +257,10 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
           {update?.sentAt ? (
             <p>Your update will be visible in Flexile. No new emails will be sent.</p>
           ) : (
-            <p>Your update will be emailed to {recipientCount.toLocaleString()} stakeholders.</p>
+            <p>
+              Your update will be emailed to {recipientCount.toLocaleString()}{" "}
+              {recipientCount === 1 ? "stakeholder" : "stakeholders"}.
+            </p>
           )}
           <DialogFooter>
             <div className="grid auto-cols-fr grid-flow-col items-center gap-3">

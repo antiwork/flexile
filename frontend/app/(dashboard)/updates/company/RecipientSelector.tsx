@@ -193,7 +193,9 @@ export default function RecipientSelector({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <Label>Recipients</Label>
-        <span className="text-muted-foreground text-sm">{totalRecipients} recipients</span>
+        <span className="text-muted-foreground text-sm">
+          {totalRecipients} {totalRecipients === 1 ? "recipient" : "recipients"}
+        </span>
       </div>
       <div ref={dropdownRef}>
         <DropdownMenu
