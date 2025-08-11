@@ -13,8 +13,9 @@ const dataSchema = createInsertSchema(tenderOffers)
     startsAt: true,
     endsAt: true,
     minimumValuation: true,
+    letterOfTransmittal: true,
   })
-  .extend({ attachmentKey: z.string() });
+  .extend({ attachmentKey: z.string(), letterOfTransmittal: z.string() });
 
 export const tenderOffersRouter = createRouter({
   create: companyProcedure.input(dataSchema.required()).mutation(async ({ ctx, input }) => {

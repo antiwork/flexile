@@ -10,12 +10,27 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/utils";
 import { richTextExtensions } from "@/utils/richText";
 
-const RichText = ({ content, className }: { content: Content; className?: string }) => {
+const RichText = ({
+  content,
+  editable = false,
+  className,
+  onChange,
+}: {
+  content: Content;
+  editable?: boolean;
+  onChange?: (value: string) => void;
+  className?: string;
+}) => {
   const editor = useEditor({
     extensions: richTextExtensions,
     content,
-    editorProps: { attributes: { class: cn("prose", className) } },
-    editable: false,
+    onUpdate: ({ editor }) => onChange?.(editor.getHTML()),
+    editorProps: {
+      attributes: {
+        class: cn(className, "prose"),
+      },
+    },
+    editable,
     immediatelyRender: false,
   });
 
