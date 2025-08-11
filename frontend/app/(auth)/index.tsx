@@ -66,12 +66,13 @@ export function AuthPage({
   const router = useRouter();
   const searchParams = useSearchParams();
   const invitationToken = searchParams.get("invitation_token");
-  const [googleAuthError, setGoogleAuthError] = useState<string | null>(null);
+  const [oauthError, setOauthError] = useState<string | null>(null);
+  const [errorProvider, setErrorProvider] = useState<string | null>(localStorage.getItem("lastLoginMethod"));
 
   useEffect(() => {
     const errorParam = searchParams.get("error");
     if (errorParam) {
-      setGoogleAuthError(errorParam);
+      setOauthError(errorParam);
     }
   }, [searchParams, router]);
 
@@ -139,7 +140,8 @@ export function AuthPage({
   });
 
   const handleGoogleAuth = async () => {
-    setGoogleAuthError(null);
+    setOauthError(null);
+    setErrorProvider(null);
     const context = isSignup ? "signup" : "login";
     document.cookie = `auth_context=${context}; path=/; max-age=300; Secure; SameSite=Strict`;
 
@@ -151,12 +153,14 @@ export function AuthPage({
       await signIn("google", { callbackUrl: getRedirectUrl() });
       localStorage.setItem("lastLoginMethod", "google");
     } catch (error) {
-      setGoogleAuthError(error instanceof Error ? error.message : "Failed to continue with Google");
+      setOauthError(error instanceof Error ? error.message : "Failed to continue with Google");
+      setErrorProvider("google");
     }
   };
 
   const handleGitHubAuth = async () => {
-    setGoogleAuthError(null);
+    setOauthError(null);
+    setErrorProvider(null);
     const context = isSignup ? "signup" : "login";
     document.cookie = `auth_context=${context}; path=/; max-age=300; Secure; SameSite=Strict`;
 
@@ -168,7 +172,8 @@ export function AuthPage({
       await signIn("github", { callbackUrl: getRedirectUrl() });
       localStorage.setItem("lastLoginMethod", "github");
     } catch (error) {
-      setGoogleAuthError(error instanceof Error ? error.message : "Failed to continue with GitHub");
+      setOauthError(error instanceof Error ? error.message : "Failed to continue with GitHub");
+      setErrorProvider("github");
     }
   };
 
@@ -252,7 +257,7 @@ export function AuthPage({
                   variant={highlightedAuthMethod === "google" ? "primary" : "outline"}
                   className={cn(
                     `flex h-12 w-full items-center justify-center gap-2 text-sm`,
-                    googleAuthError && "border-destructive",
+                    oauthError && errorProvider === "google" && "border-destructive",
                     highlightedAuthMethod !== "google" && "bg-white",
                   )}
                   onClick={() => void handleGoogleAuth()}
@@ -263,12 +268,15 @@ export function AuthPage({
                   </div>
                   {isSignup ? "Sign up with Google" : "Log in with Google"}
                 </Button>
+                {oauthError && errorProvider === "google" ? (
+                  <p className="text-destructive text-sm">{oauthError}</p>
+                ) : null}
                 <Button
                   type="button"
                   variant={highlightedAuthMethod === "github" ? "primary" : "outline"}
                   className={cn(
                     `flex h-12 w-full items-center justify-center gap-2 text-sm`,
-                    googleAuthError && "border-destructive",
+                    oauthError && errorProvider === "github" && "border-destructive",
                     highlightedAuthMethod !== "github" && "bg-white",
                   )}
                   onClick={() => void handleGitHubAuth()}
@@ -279,7 +287,9 @@ export function AuthPage({
                   </div>
                   {isSignup ? "Sign up with GitHub" : "Log in with GitHub"}
                 </Button>
-                {googleAuthError ? <p className="text-destructive text-sm">{googleAuthError}</p> : null}
+                {oauthError && errorProvider === "github" ? (
+                  <p className="text-destructive text-sm">{oauthError}</p>
+                ) : null}
               </div>
 
               <div className="relative">
