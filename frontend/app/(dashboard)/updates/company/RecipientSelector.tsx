@@ -274,10 +274,12 @@ export default function RecipientSelector({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <p className="text-muted-foreground text-sm">Duplicate recipients will be removed automatically.</p>
+      {!hasContractors && (
+        <p className="text-muted-foreground mt-2 text-sm">Duplicate recipients will be removed automatically.</p>
+      )}
 
       {hasContractors && onMinBilledAmountChange ? (
-        <div className="mt-4 space-y-3">
+        <div className="mt-2 space-y-3">
           <button
             type="button"
             onClick={() => setShowMinBilled(!showMinBilled)}
