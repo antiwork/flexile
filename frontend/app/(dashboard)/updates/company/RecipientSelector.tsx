@@ -46,6 +46,7 @@ export default function RecipientSelector({
   const [open, setOpen] = useState(false);
   const [filterText, setFilterText] = useState("");
   const [focusedIndex, setFocusedIndex] = useState(0);
+  const [showMinBilled, setShowMinBilled] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -276,24 +277,36 @@ export default function RecipientSelector({
       <p className="text-muted-foreground text-sm">Duplicate recipients will be removed automatically.</p>
 
       {hasContractors && onMinBilledAmountChange ? (
-        <div className="mt-4 rounded-lg border p-4">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="min-billed-amount">Minimum billed amount</Label>
-            <Input
-              id="min-billed-amount"
-              type="number"
-              placeholder="0"
-              value={minBilledAmount ?? ""}
-              onChange={(e) => {
-                const value = e.target.value ? parseFloat(e.target.value) : undefined;
-                onMinBilledAmountChange(value);
-              }}
-              className="w-32"
-            />
-          </div>
-          <p className="text-muted-foreground mt-2 text-xs">
-            Only include contractors who have billed at least this amount
-          </p>
+        <div className="mt-4 space-y-3">
+          <button
+            type="button"
+            onClick={() => setShowMinBilled(!showMinBilled)}
+            className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+          >
+            <span className="text-lg leading-none">{showMinBilled ? "−" : "+"}</span>
+            Set min billed amount
+          </button>
+          {showMinBilled ? (
+            <div className="space-y-2">
+              <Label htmlFor="min-billed-amount" className="text-sm font-normal text-gray-700">
+                Contractors must've billed at least this amount
+              </Label>
+              <div className="relative">
+                <span className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500">$</span>
+                <Input
+                  id="min-billed-amount"
+                  type="number"
+                  placeholder="0"
+                  value={minBilledAmount ?? ""}
+                  onChange={(e) => {
+                    const value = e.target.value ? parseFloat(e.target.value) : undefined;
+                    onMinBilledAmountChange(value);
+                  }}
+                  className="pl-8"
+                />
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>
