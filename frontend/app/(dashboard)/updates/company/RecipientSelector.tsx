@@ -210,7 +210,8 @@ export default function RecipientSelector({
                 {value.map((type) => (
                   <span
                     key={type}
-                    className="inline-flex items-center gap-1 rounded border border-gray-300 bg-white px-2 py-0.5 text-sm font-normal text-gray-700"
+                    className="inline-flex items-center gap-1 rounded bg-gray-50 px-2 py-0.5 text-sm font-normal text-gray-900"
+                    style={{ backgroundColor: "rgba(29, 30, 23, 0.03)" }}
                   >
                     {getLabel(type)}
                     {type !== "admins" && (
@@ -220,7 +221,7 @@ export default function RecipientSelector({
                         className="ring-offset-background focus:ring-ring ml-0.5 rounded-full outline-none focus:ring-2 focus:ring-offset-2"
                         aria-label={`Remove ${getLabel(type)}`}
                       >
-                        <X className="h-3 w-3 text-gray-500 hover:text-gray-700" />
+                        <X className="h-3 w-3 text-gray-400 hover:text-gray-600" />
                       </button>
                     )}
                   </span>
