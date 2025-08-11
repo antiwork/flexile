@@ -15,9 +15,10 @@ RSpec.describe CompanyInvestorMailer do
 
       expect(mail.to).to eq([user.email])
       expect(mail.subject).to eq("Upcoming distribution from #{company.name}")
-      expect(plaintext).to include("You’re set to receive a $50.00 distribution from your investment in #{company.name}.")
+      expect(plaintext).to include("You're set to receive a $50.00 distribution from your investment in #{company.name}.")
       expect(plaintext).to include("Based on your total investment of $1,000.00, your total return so far is 10.0%.")
       expect(plaintext).to include("We plan to send this payment to your payout method ending in 1234, with $10.00 expected to be withheld for taxes.")
+      expect(mail.body.encoded).to include("company_id=#{company.external_id}")
     end
 
     context "when tax information is missing" do
