@@ -22,8 +22,12 @@ export const login = async (page: Page, user: typeof users.$inferSelect) => {
 };
 
 export const logout = async (page: Page) => {
-  // Navigate to invoices page to ensure we're on a dashboard page with sidebar
-  await page.goto("/invoices");
+  if (page.url().includes("/login")) {
+    return;
+  }
+  if (!page.url().includes("/invoices")) {
+    await page.goto("/invoices");
+  }
 
   await page.getByRole("button", { name: "Log out" }).first().click();
 
