@@ -27,8 +27,6 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     ).process
 
     render json: { id: dividend_computation.id }, status: :created
-  rescue StandardError => e
-    render json: { error_message: e.message }, status: :unprocessable_entity
   end
 
   def show
