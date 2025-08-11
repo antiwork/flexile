@@ -92,6 +92,7 @@ interface TableProps<T> {
   onRowClicked?: ((row: T) => void) | undefined;
   actions?: React.ReactNode;
   searchColumn?: string | undefined;
+  searchColumnPlaceholder?: string;
   contextMenuContent?: (context: {
     row: T;
     isSelected: boolean;
@@ -107,6 +108,7 @@ export default function DataTable<T extends RowData>({
   onRowClicked,
   actions,
   searchColumn: searchColumnName,
+  searchColumnPlaceholder,
   contextMenuContent,
   selectionActions,
 }: TableProps<T>) {
@@ -183,7 +185,10 @@ export default function DataTable<T extends RowData>({
                     searchColumn ? searchColumn.setFilterValue(e.target.value) : table.setGlobalFilter(e.target.value)
                   }
                   className="w-full pl-8"
-                  placeholder={searchColumn ? `Search by ${getColumnName(searchColumn)}...` : "Search..."}
+                  placeholder={
+                    searchColumnPlaceholder ??
+                    (searchColumn ? `Search by ${getColumnName(searchColumn)}...` : "Search...")
+                  }
                 />
               </div>
             ) : null}
