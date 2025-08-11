@@ -54,7 +54,6 @@ fi
 cd ..
 
 function kill_process_listening_on_port {
-  # TODO (techdebt): ensure cross-platform behavior (macOS/Linux)
   pids="$(lsof -t -i :"$1" -sTCP:LISTEN 2>/dev/null | tr '\n' ' ')"
   if [ -n "$pids" ]; then
     kill -9 $pids 2>/dev/null || true
