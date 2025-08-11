@@ -83,7 +83,60 @@ RSpec.describe JwtAuthenticatable, type: :controller do
       end
     end
 
-    context "without authorization header" do
+    context "with valid JWT token in cookie" do
+      it "authenticates the user" do
+        payload = {
+          user_id: user.id,
+          email: user.email,
+          exp: 1.month.from_now.to_i,
+        }
+        token = JWT.encode(payload, jwt_secret, "HS256")
+
+        request.cookies["auth_token"] = token
+        get :test_action
+
+        expect(response).to have_http_status(:ok)
+        json_response = JSON.parse(response.body)
+        expect(json_response["message"]).to eq("authenticated")
+      end
+    end
+
+    context "with expired JWT token in cookie" do
+      it "returns unauthorized" do
+        payload = {
+          user_id: user.id,
+          email: user.email,
+          exp: 1.hour.ago.to_i,
+        }
+        token = JWT.encode(payload, jwt_secret, "HS256")
+
+        request.cookies["auth_token"] = token
+        get :test_action
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    context "with both header and cookie tokens" do
+      it "prioritizes header token over cookie" do
+        payload = {
+          user_id: user.id,
+          email: user.email,
+          exp: 1.month.from_now.to_i,
+        }
+        valid_token = JWT.encode(payload, jwt_secret, "HS256")
+        
+        request.headers["x-flexile-auth"] = "Bearer #{valid_token}"
+        request.cookies["auth_token"] = "invalid_cookie_token"
+        get :test_action
+
+        expect(response).to have_http_status(:ok)
+        json_response = JSON.parse(response.body)
+        expect(json_response["message"]).to eq("authenticated")
+      end
+    end
+
+    context "without authorization header or cookie" do
       it "does not authenticate" do
         get :test_action
 

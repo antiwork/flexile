@@ -37,6 +37,9 @@ Rails.application.routes.draw do
       end
     end
 
+    get :impersonate, to: "impersonation#create"
+    delete :impersonate, to: "impersonation#destroy"
+
     mount Sidekiq::Web, at: "/sidekiq"
     mount Flipper::UI.app(Flipper) => "/flipper"
 
