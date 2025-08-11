@@ -96,41 +96,18 @@ export default function InvoicesPage() {
     contractorId: user.roles.administrator ? undefined : user.roles.worker?.id,
   });
 
-  const getInvoiceStatusLabel = useCallback((invoice: Invoice, company: { requiredInvoiceApprovals: number }) => {
-    switch (invoice.status) {
-      case "received":
-      case "approved":
-        if (invoice.approvals.length < company.requiredInvoiceApprovals) {
-          return "Awaiting approval";
-        }
-        return "Approved";
-      case "processing":
-        return "Payment in progress";
-      case "payment_pending":
-        return "Payment scheduled";
-      case "paid":
-        return "Paid";
-      case "rejected":
-        return "Rejected";
-      case "failed":
-        return "Failed";
-      default:
-        return statusNames[invoice.status] || invoice.status;
-    }
-  }, []);
-
   const precomputedFilterOptions = useMemo(() => {
     const statusSet = new Set<string>();
 
     for (const invoice of data) {
-      const label = getInvoiceStatusLabel(invoice, company);
+      const label = statusNames[invoice.status] || invoice.status;
       statusSet.add(label);
     }
 
     return {
       status: [...statusSet].sort(),
     };
-  }, [data, company, getInvoiceStatusLabel]);
+  }, [data, company]);
 
   const { canSubmitInvoices, hasLegalDetails, unsignedContractId } = useCanSubmitInvoices();
 
@@ -251,7 +228,7 @@ export default function InvoicesPage() {
         (value) => (value ? formatMoneyFromCents(value) : "N/A"),
         "numeric",
       ),
-      columnHelper.accessor((row) => getInvoiceStatusLabel(row, company), {
+      columnHelper.accessor((row) => statusNames[row.status] || row.status, {
         id: "status",
         header: "Status",
         cell: (info) => (
@@ -285,7 +262,7 @@ export default function InvoicesPage() {
         },
       }),
     ],
-    [precomputedFilterOptions, company, user.roles.administrator, getInvoiceStatusLabel],
+    [precomputedFilterOptions, company, user.roles.administrator],
   );
 
   const handleInvoiceAction = (actionId: string, invoices: Invoice[]) => {
