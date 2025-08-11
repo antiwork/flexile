@@ -35,6 +35,7 @@ export const tenderOffersRouter = createRouter({
           startsAt: input.startsAt,
           endsAt: input.endsAt,
           minimumValuation: input.minimumValuation,
+          letterOfTransmittal: input.letterOfTransmittal,
         })
         .returning();
       if (!tenderOffer) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });

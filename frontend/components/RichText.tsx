@@ -34,7 +34,12 @@ const RichText = ({
     immediatelyRender: false,
   });
 
-  useEffect(() => void editor?.commands.setContent(content, false), [content]);
+  useEffect(() => {
+    if (!editor) return;
+    if (editor.getHTML() !== content) {
+      editor.commands.setContent(content, false);
+    }
+  }, [content, editor]);
 
   return (
     <div>
