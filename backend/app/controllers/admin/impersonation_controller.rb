@@ -18,12 +18,15 @@ class Admin::ImpersonationController < Admin::ApplicationController
     session[:impersonated_user_id] = user.id
     Current.user = user
 
+    # TODO (techdebt): Add audit logging for impersonation events
+    Rails.logger.info("Admin impersonation started: #{Current.user.email} impersonating #{user.email}")
+
     jwt_token = JwtService.generate_token(user)
     cookies[:auth_token] = {
       value: jwt_token,
       httponly: true,
       secure: Rails.env.production?,
-      same_site: :lax
+      same_site: :lax,
     }
 
     redirect_to admin_root_path, notice: "Now impersonating #{user.display_name}"
@@ -40,12 +43,15 @@ class Admin::ImpersonationController < Admin::ApplicationController
     session.delete(:impersonated_user_id)
     Current.user = impersonator
 
+    # TODO (techdebt): Add audit logging for impersonation events
+    Rails.logger.info("Admin impersonation ended: #{impersonator.email} stopped impersonating")
+
     jwt_token = JwtService.generate_token(impersonator)
     cookies[:auth_token] = {
       value: jwt_token,
       httponly: true,
       secure: Rails.env.production?,
-      same_site: :lax
+      same_site: :lax,
     }
 
     redirect_to admin_root_path, notice: "Stopped impersonating, back to #{impersonator.display_name}"

@@ -15,9 +15,9 @@ RSpec.describe Admin::ImpersonationController, type: :controller do
     context "with valid token" do
       it "impersonates the target user" do
         token = target_user.signed_id(purpose: :impersonate, expires_in: 5.minutes)
-        
+
         get :create, params: { token: token }
-        
+
         expect(response).to redirect_to(admin_root_path)
         expect(flash[:notice]).to eq("Now impersonating #{target_user.display_name}")
         expect(session[:impersonator_id]).to eq(admin_user.id)
@@ -29,7 +29,7 @@ RSpec.describe Admin::ImpersonationController, type: :controller do
     context "with invalid token" do
       it "redirects with error" do
         get :create, params: { token: "invalid_token" }
-        
+
         expect(response).to redirect_to(admin_root_path)
         expect(flash[:alert]).to eq("Invalid or expired impersonation token")
       end
@@ -38,9 +38,9 @@ RSpec.describe Admin::ImpersonationController, type: :controller do
     context "with expired token" do
       it "redirects with error" do
         token = target_user.signed_id(purpose: :impersonate, expires_in: -1.minute)
-        
+
         get :create, params: { token: token }
-        
+
         expect(response).to redirect_to(admin_root_path)
         expect(flash[:alert]).to eq("Invalid or expired impersonation token")
       end
@@ -49,7 +49,7 @@ RSpec.describe Admin::ImpersonationController, type: :controller do
     context "with blank token" do
       it "redirects with error" do
         get :create, params: { token: "" }
-        
+
         expect(response).to redirect_to(admin_root_path)
         expect(flash[:alert]).to eq("Invalid impersonation token")
       end
@@ -59,9 +59,9 @@ RSpec.describe Admin::ImpersonationController, type: :controller do
       it "redirects with error" do
         fake_user = build(:user, id: 99999)
         token = fake_user.signed_id(purpose: :impersonate, expires_in: 5.minutes)
-        
+
         get :create, params: { token: token }
-        
+
         expect(response).to redirect_to(admin_root_path)
         expect(flash[:alert]).to eq("User not found")
       end
@@ -77,7 +77,7 @@ RSpec.describe Admin::ImpersonationController, type: :controller do
 
       it "stops impersonation and restores original user" do
         delete :destroy
-        
+
         expect(response).to redirect_to(admin_root_path)
         expect(flash[:notice]).to eq("Stopped impersonating, back to #{admin_user.display_name}")
         expect(session[:impersonator_id]).to be_nil
@@ -89,7 +89,7 @@ RSpec.describe Admin::ImpersonationController, type: :controller do
     context "without active impersonation" do
       it "redirects with error" do
         delete :destroy
-        
+
         expect(response).to redirect_to(admin_root_path)
         expect(flash[:alert]).to eq("No active impersonation")
       end
@@ -103,7 +103,7 @@ RSpec.describe Admin::ImpersonationController, type: :controller do
 
       it "redirects with error" do
         delete :destroy
-        
+
         expect(response).to redirect_to(admin_root_path)
         expect(flash[:alert]).to eq("Original user not found")
       end

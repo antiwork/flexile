@@ -31,7 +31,7 @@ RSpec.describe "impersonation:generate_url", type: :task do
 
   it "shows error when host is not configured" do
     Rails.application.config.action_mailer.default_url_options = {}
-    
+
     expect { invoke_task("impersonation:generate_url", user.email) }.to output(
       "Error: action_mailer.default_url_options[:host] not configured\nSet in config/environments/#{Rails.env}.rb or via environment variable\n"
     ).to_stdout.and raise_error(SystemExit)
@@ -39,9 +39,9 @@ RSpec.describe "impersonation:generate_url", type: :task do
 
   private
 
-  def invoke_task(task_name, *args)
-    task = Rake::Task[task_name]
-    task.reenable
-    task.invoke(*args)
-  end
+    def invoke_task(task_name, *args)
+      task = Rake::Task[task_name]
+      task.reenable
+      task.invoke(*args)
+    end
 end

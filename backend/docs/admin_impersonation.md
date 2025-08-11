@@ -11,7 +11,7 @@ rails impersonation:generate_url[user@example.com]
 ```
 
 This outputs a secure URL that expires in 5 minutes:
-```
+```text
 Impersonation URL for John Doe (user@example.com):
 https://yourapp.com/admin/impersonate?token=AbCdEf...
 

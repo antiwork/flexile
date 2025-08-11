@@ -125,7 +125,7 @@ RSpec.describe JwtAuthenticatable, type: :controller do
           exp: 1.month.from_now.to_i,
         }
         valid_token = JWT.encode(payload, jwt_secret, "HS256")
-        
+
         request.headers["x-flexile-auth"] = "Bearer #{valid_token}"
         request.cookies["auth_token"] = "invalid_cookie_token"
         get :test_action
