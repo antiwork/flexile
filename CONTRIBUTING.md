@@ -23,6 +23,61 @@
 - Write TypeScript for frontend code
 - Follow Ruby conventions for backend code
 
+## Development Guidelines
+
+### Code Standards
+
+- Always use the latest version of TypeScript, React, and Next.js
+- Sentence case headers and buttons and stuff, not title case
+- Always write ALL of the code
+- Don't apologize for errors, fix them
+- Newlines at end of files, always
+- No explanatory comments please
+
+### Feature Development
+
+- Add page to `frontend/app/**/page.tsx`
+- Add any components to `frontend/components/**/*.tsx`
+- Add tRPC API routes to `frontend/trpc/routes/**/index.ts` and then add those to `frontend/trpc/server.ts`
+- Create API handlers using tRPC API routes that follow REST principles
+- Forms for adding new objects to the database should inherit values from the last object added to the table (e.g., contractor forms should default to the last contractor's values like contractSignedElsewhere, payRateInSubunits, role, etc.)
+
+### Testing Guidelines
+
+- Use Playwright tests in `e2e/**/*.spec.ts`
+- If migrating from rspec, delete the rspec tests
+- Factories can be created using the rspec factories in `spec/factories` in the `/e2e/factories` folder
+- For any broken locators / assertions, you can use the playwright extension to record tests or pick locators
+- Avoid using `page.waitForTimeout()` in e2e tests unless absolutely necessary, as timeouts slow down test execution. Instead use `waitFor()`, `toBeVisible()`, `toPass()`, or other Playwright assertions that wait for specific conditions
+- For Ruby/Rails changes:
+  - Add or update unit tests in `backend/spec/models/` for model changes
+  - Add or update controller tests in `backend/spec/controllers/` for controller changes
+  - Add or update system tests in `backend/spec/system/` for UI flow changes
+  - Run tests with `bundle exec rspec <path_to_spec>` to verify
+- For TypeScript/Next.js changes:
+  - Add or update unit tests for front-end business logic
+  - Add or update e2e tests in `e2e/tests/` that cover the changed functionality
+  - Follow the existing test patterns in similar files
+  - Run tests with `pnpm playwright test <path_to_spec>` to verify e2e tests
+- Tests should cover:
+  - Happy path (expected behavior)
+  - Edge cases and error handling
+  - Any regressions that might be introduced
+
+### Frontend Development
+
+- Do not use `React.FC`. Use the following syntax: `const Component = ({ prop1, prop2 }: { prop1: string; prop2: number }) => { ... }`
+- When building UI, use existing components from `frontend/components/` when available: `Button`, `Input`, `DataTable`, `Placeholder`, `ComboBox`, `NumberInput`, `MutationButton`, `Dialog`, `Form` components, etc.
+
+### Database Schema
+
+- Any changes to the database schema via Rails migrations in `backend/db/migrate/` must be reflected in `frontend/db/schema.ts`
+- The frontend schema file should be updated to match the Rails schema structure for type safety
+
+### Tech Debt
+
+- Add a `TODO (techdebt)` comment to document refactors that should be made in the future
+
 ## Writing Bug Reports
 
 A great bug report includes:
