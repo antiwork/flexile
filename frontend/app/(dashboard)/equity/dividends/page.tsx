@@ -57,9 +57,7 @@ export default function Dividends() {
               accept: "json",
             });
             await queryClient.resetQueries({ queryKey: ["currentUser", user.email] });
-            const newUrl = new URL(window.location.href);
-            newUrl.searchParams.delete("company_id");
-            router.replace(newUrl.pathname + newUrl.search);
+            router.replace("/equity/dividends");
           } catch (_error) {
             useUserStore.setState((state) => ({ ...state, pending: false }));
           }
