@@ -283,9 +283,9 @@ export default function RecipientSelector({
           <button
             type="button"
             onClick={() => setShowMinBilled(!showMinBilled)}
-            className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+            className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700"
           >
-            <span className="text-lg leading-none">{showMinBilled ? "−" : "+"}</span>
+            <span className="text-base">{showMinBilled ? "−" : "+"}</span>
             Set min billed amount
           </button>
           {showMinBilled ? (
