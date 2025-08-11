@@ -5,7 +5,7 @@ import { companyAdministratorsFactory } from "@test/factories/companyAdministrat
 import { fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
-import { addDays, format, formatDate } from "date-fns";
+import { addDays, format } from "date-fns";
 import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
 
@@ -47,7 +47,7 @@ test.describe("Buyback creation", () => {
 
     await page
       .getByRole("row", {
-        name: new RegExp(`${formatDate(endDate, "MMM d, yyyy")}.*\\$100,000,000`, "u"),
+        name: new RegExp(`${format(startDate, "MMM d, yyyy")}.*${format(endDate, "MMM d, yyyy")}.*\\$100,000,000`, "u"),
       })
       .click();
 
