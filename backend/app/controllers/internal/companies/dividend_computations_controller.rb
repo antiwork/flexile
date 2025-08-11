@@ -1,12 +1,19 @@
 # frozen_string_literal: true
 
 class Internal::Companies::DividendComputationsController < Internal::Companies::BaseController
-  before_action :set_dividend_computation, only: [:investor_breakdown]
+  before_action :set_dividend_computation, only: [:show]
 
   def index
     authorize DividendComputation
 
-    render json: DividendComputationPresenter.new(Current.company).props
+    dividend_computations = Current.company.dividend_computations
+      .with_shareholder_count
+      .order(id: :desc)
+      .map do |computation|
+      DividendComputationPresenter.new(computation).props
+    end
+
+    render json: dividend_computations
   end
 
   def create
@@ -24,11 +31,13 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     render json: { error_message: e.message }, status: :unprocessable_entity
   end
 
-  def investor_breakdown
+  def show
     authorize @dividend_computation
 
-    aggregated_data = @dividend_computation.broken_down_by_investor
-    render json: aggregated_data
+    computation_data = DividendComputationPresenter.new(@dividend_computation).props
+    computation_outputs = @dividend_computation.broken_down_by_investor
+
+    render json: computation_data.merge(computation_outputs:)
   end
 
   private

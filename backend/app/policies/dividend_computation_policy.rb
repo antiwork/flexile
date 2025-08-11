@@ -11,7 +11,7 @@ class DividendComputationPolicy < ApplicationPolicy
     index?
   end
 
-  def investor_breakdown?
+  def show?
     index?
   end
 end

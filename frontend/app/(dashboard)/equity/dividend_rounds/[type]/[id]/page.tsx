@@ -15,7 +15,7 @@ import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
-import { investor_breakdown_company_dividend_computation_path } from "@/utils/routes";
+import { company_dividend_computation_path } from "@/utils/routes";
 
 export default function DividendRoundPage() {
   const { id, type } = useParams<{ id: string; type: "draft" | "round" }>();
@@ -117,34 +117,43 @@ const DividendRound = ({ id }: { id: string }) => {
   return <DataTable table={table} onRowClicked={onRowClicked} searchColumn="investor" />;
 };
 
-const dividendOutputsSchema = z.array(
-  z.object({
-    investor_name: z.string(),
-    company_investor_id: z.number().nullable(),
-    investor_external_id: z.string().nullable(),
-    total_amount: z.string(),
-    number_of_shares: z.number(),
-  }),
-);
+const dividendComputationSchema = z.object({
+  id: z.number(),
+  total_amount_in_usd: z.string(),
+  dividends_issuance_date: z.string(),
+  return_of_capital: z.boolean(),
+  number_of_shareholders: z.number(),
+  computation_outputs: z.array(
+    z.object({
+      investor_name: z.string(),
+      company_investor_id: z.number().nullable(),
+      investor_external_id: z.string().nullable(),
+      total_amount: z.string(),
+      number_of_shares: z.number(),
+    }),
+  ),
+});
 
-type DividendComputationOutput = z.infer<typeof dividendOutputsSchema>[number];
+type DividendComputation = z.infer<typeof dividendComputationSchema>;
+type DividendComputationOutput = DividendComputation["computation_outputs"][number];
 const DividendComputation = ({ id }: { id: string }) => {
   const company = useCurrentCompany();
   const router = useRouter();
 
-  const { data: dividendOutputs = [], isLoading } = useQuery({
+  const { data: dividendComputation, isLoading } = useQuery({
     queryKey: ["dividend-computation", id],
     queryFn: async () => {
       const response = await request({
         method: "GET",
         accept: "json",
-        url: investor_breakdown_company_dividend_computation_path(company.id, BigInt(id)),
+        url: company_dividend_computation_path(company.id, BigInt(id)),
         assertOk: true,
       });
-      return dividendOutputsSchema.parse(await response.json());
+      return dividendComputationSchema.parse(await response.json());
     },
   });
 
+  const computationOutputs = dividendComputation?.computation_outputs ?? [];
   const columnHelper = createColumnHelper<DividendComputationOutput>();
   const columns = useMemo(
     () => [
@@ -158,13 +167,13 @@ const DividendComputation = ({ id }: { id: string }) => {
         header: "Number of shares",
         cell: (info) => info.getValue().toLocaleString(),
         meta: { numeric: true },
-        footer: dividendOutputs.reduce((sum, output) => sum + output.number_of_shares, 0).toLocaleString(),
+        footer: computationOutputs.reduce((sum, output) => sum + output.number_of_shares, 0).toLocaleString(),
       }),
       columnHelper.accessor("total_amount", {
         header: "Return amount",
         cell: (info) => formatMoney(Number(info.getValue())),
         meta: { numeric: true },
-        footer: formatMoney(dividendOutputs.reduce((sum, output) => sum + Number(output.total_amount), 0)),
+        footer: formatMoney(computationOutputs.reduce((sum, output) => sum + Number(output.total_amount), 0)),
       }),
       columnHelper.accessor("total_amount", {
         id: "flexileFee",
@@ -172,7 +181,7 @@ const DividendComputation = ({ id }: { id: string }) => {
         cell: (info) => formatMoney(calculateFlexileFees(Number(info.getValue()))),
         meta: { numeric: true },
         footer: formatMoney(
-          dividendOutputs.reduce((sum, output) => sum + calculateFlexileFees(Number(output.total_amount)), 0),
+          computationOutputs.reduce((sum, output) => sum + calculateFlexileFees(Number(output.total_amount)), 0),
         ),
       }),
       columnHelper.accessor("investor_external_id", {
@@ -186,11 +195,11 @@ const DividendComputation = ({ id }: { id: string }) => {
         ),
       }),
     ],
-    [dividendOutputs],
+    [computationOutputs],
   );
 
   const table = useTable({
-    data: dividendOutputs,
+    data: computationOutputs,
     columns,
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
