@@ -57,8 +57,7 @@ test.describe("Manage admin access", () => {
 
   test.describe("Admin List Display", () => {
     test("displays only administrators with owner first", async ({ page }) => {
-      await login(page, primaryAdmin);
-      await page.goto("/settings/administrator/admins");
+      await login(page, primaryAdmin, "/settings/administrator/admins");
 
       // Wait for the page to be fully loaded
       await page.waitForLoadState("networkidle");
@@ -109,8 +108,7 @@ test.describe("Manage admin access", () => {
         companyId: company.id,
       });
 
-      await login(page, primaryAdmin);
-      await page.goto("/settings/administrator/admins");
+      await login(page, primaryAdmin, "/settings/administrator/admins");
 
       // Should display legal_name, not preferred_name
       await expect(page.getByText("John Legal Name")).toBeVisible();
@@ -128,8 +126,7 @@ test.describe("Manage admin access", () => {
         companyId: company.id,
       });
 
-      await login(page, primaryAdmin);
-      await page.goto("/settings/administrator/admins");
+      await login(page, primaryAdmin, "/settings/administrator/admins");
 
       // Should display email as fallback (use first occurrence)
       await expect(page.getByText(adminWithoutName.email).first()).toBeVisible();
@@ -138,8 +135,7 @@ test.describe("Manage admin access", () => {
 
   test.describe("Admin Role Revoke", () => {
     test("allows revoking admin access", async ({ page }) => {
-      await login(page, primaryAdmin);
-      await page.goto("/settings/administrator/admins");
+      await login(page, primaryAdmin, "/settings/administrator/admins");
 
       // Find second admin row and click ellipsis menu
       const secondAdminRow = page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "", "u") });
@@ -175,8 +171,7 @@ test.describe("Manage admin access", () => {
     });
 
     test("prevents removing own admin role", async ({ page }) => {
-      await login(page, primaryAdmin);
-      await page.goto("/settings/administrator/admins");
+      await login(page, primaryAdmin, "/settings/administrator/admins");
 
       // Owner role should not have any action button
       const ownRow = page.getByRole("row", { name: new RegExp(primaryAdmin.legalName || "", "u") });
@@ -184,8 +179,7 @@ test.describe("Manage admin access", () => {
     });
 
     test("disables action for non-owner current user", async ({ page }) => {
-      await login(page, secondAdmin);
-      await page.goto("/settings/administrator/admins");
+      await login(page, secondAdmin, "/settings/administrator/admins");
 
       // Find own row (marked with "You")
       const ownRow = page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "", "u") });
@@ -203,8 +197,7 @@ test.describe("Manage admin access", () => {
           and(eq(companyAdministrators.companyId, company.id), eq(companyAdministrators.userId, multiRoleUser.id)),
         );
 
-      await login(page, secondAdmin);
-      await page.goto("/settings/administrator/admins");
+      await login(page, secondAdmin, "/settings/administrator/admins");
 
       // Primary admin (owner) should not have action button
       const ownerRow = page.getByRole("row", { name: new RegExp(primaryAdmin.legalName || "", "u") });
@@ -217,8 +210,7 @@ test.describe("Manage admin access", () => {
     });
 
     test("shows button state during revoke", async ({ page }) => {
-      await login(page, primaryAdmin);
-      await page.goto("/settings/administrator/admins");
+      await login(page, primaryAdmin, "/settings/administrator/admins");
 
       const secondAdminRow = page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "", "u") });
       const ellipsisButton = secondAdminRow.getByRole("button", { name: "Open menu" });
@@ -238,15 +230,13 @@ test.describe("Manage admin access", () => {
 
   test.describe("Authorization", () => {
     test("redirects non-admin users", async ({ page }) => {
-      await login(page, contractorUser);
-      await page.goto("/settings/administrator/admins");
+      await login(page, contractorUser, "/settings/administrator/admins");
 
       await expect(page.getByRole("heading", { name: "Admins" })).not.toBeVisible();
     });
 
     test("allows second admin to access page", async ({ page }) => {
-      await login(page, secondAdmin);
-      await page.goto("/settings/administrator/admins");
+      await login(page, secondAdmin, "/settings/administrator/admins");
 
       // Should be able to access the page
       await expect(page.getByRole("heading", { name: "Workspace admins" })).toBeVisible();
@@ -256,8 +246,7 @@ test.describe("Manage admin access", () => {
 
   test.describe("Multi-role Users", () => {
     test("shows multi-role users as Admin when they have admin role", async ({ page }) => {
-      await login(page, primaryAdmin);
-      await page.goto("/settings/administrator/admins");
+      await login(page, primaryAdmin, "/settings/administrator/admins");
 
       // Multi-role user should show "Admin" role
       const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
@@ -265,8 +254,7 @@ test.describe("Manage admin access", () => {
     });
 
     test("removes multi-role user from list when admin role is revoked", async ({ page }) => {
-      await login(page, primaryAdmin);
-      await page.goto("/settings/administrator/admins");
+      await login(page, primaryAdmin, "/settings/administrator/admins");
 
       // Multi-role user currently shows as Admin
       const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });

@@ -38,9 +38,8 @@ test.describe("One-off payments", () => {
 
   test.describe("admin creates a payment", () => {
     test("allows admin to create a one-off payment for a contractor without equity", async ({ page, sentEmails }) => {
-      await login(page, adminUser);
+      await login(page, adminUser, `/people/${workerUser.externalId}?tab=invoices`);
 
-      await page.goto(`/people/${workerUser.externalId}?tab=invoices`);
       await page.getByRole("button", { name: "Issue payment" }).click();
 
       await withinModal(
@@ -100,9 +99,7 @@ test.describe("One-off payments", () => {
         await db.update(companies).set({ fmvPerShareInUsd: null }).where(eq(companies.id, company.id));
         await db.delete(equityGrants).where(eq(equityGrants.companyInvestorId, companyInvestor.id));
 
-        await login(page, adminUser);
-
-        await page.goto(`/people/${workerUser.externalId}?tab=invoices`);
+        await login(page, adminUser, `/people/${workerUser.externalId}?tab=invoices`);
         await page.getByRole("button", { name: "Issue payment" }).click();
 
         await withinModal(
@@ -119,9 +116,8 @@ test.describe("One-off payments", () => {
       });
 
       test("with a fixed equity percentage", async ({ page, sentEmails }) => {
-        await login(page, adminUser);
+        await login(page, adminUser, `/people/${workerUser.externalId}?tab=invoices`);
 
-        await page.goto(`/people/${workerUser.externalId}?tab=invoices`);
         await page.getByRole("button", { name: "Issue payment" }).click();
 
         await withinModal(
@@ -160,9 +156,8 @@ test.describe("One-off payments", () => {
       });
 
       test("with an allowed equity percentage range", async ({ page, sentEmails }) => {
-        await login(page, adminUser);
+        await login(page, adminUser, `/people/${workerUser.externalId}?tab=invoices`);
 
-        await page.goto(`/people/${workerUser.externalId}?tab=invoices`);
         await page.getByRole("button", { name: "Issue payment" }).click();
 
         await withinModal(
@@ -245,9 +240,8 @@ test.describe("One-off payments", () => {
           cashAmountInCents: BigInt(5400),
           totalAmountInUsdCents: BigInt(6000),
         });
-        await login(page, workerUser);
+        await login(page, workerUser, `/invoices/${invoice.externalId}`);
 
-        await page.goto(`/invoices/${invoice.externalId}`);
         await page.getByRole("button", { name: "Accept payment" }).click();
         await page.waitForLoadState("networkidle");
 
@@ -273,9 +267,8 @@ test.describe("One-off payments", () => {
           minAllowedEquityPercentage: 0,
           maxAllowedEquityPercentage: 100,
         });
-        await login(page, workerUser);
+        await login(page, workerUser, `/invoices/${invoice.externalId}`);
 
-        await page.goto(`/invoices/${invoice.externalId}`);
         await page.getByRole("button", { name: "Accept payment" }).click();
         await page.waitForLoadState("networkidle");
 
@@ -327,9 +320,8 @@ test.describe("One-off payments", () => {
       page,
       sentEmails: _,
     }) => {
-      await login(page, adminUser);
+      await login(page, adminUser, `/people/${workerUser.externalId}?tab=invoices`);
 
-      await page.goto(`/people/${workerUser.externalId}?tab=invoices`);
       await page.getByRole("button", { name: "Issue payment" }).click();
 
       await withinModal(
@@ -395,8 +387,7 @@ test.describe("One-off payments", () => {
 
       await db.update(invoices).set({ status: "failed" }).where(eq(invoices.id, invoice.id));
 
-      await login(page, adminUser);
-      await page.goto("/invoices");
+      await login(page, adminUser, "/invoices");
 
       await expect(page.locator("tbody")).toBeVisible();
 

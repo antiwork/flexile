@@ -47,8 +47,7 @@ test.describe("Mobile navigation", () => {
     });
 
     await page.setViewportSize(mobileViewport);
-    await login(page, adminUser);
-    await page.goto(`/people`);
+    await login(page, adminUser, "/people");
 
     await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
 

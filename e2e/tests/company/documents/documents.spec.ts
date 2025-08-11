@@ -72,9 +72,8 @@ test.describe("Documents search functionality", () => {
       },
     );
 
-    await login(page, admin);
+    await login(page, admin, "/documents");
 
-    await page.goto("/documents");
     await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
 
     await expect(page.getByRole("row").filter({ hasText: document1.name })).toBeVisible();

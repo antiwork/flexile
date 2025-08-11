@@ -59,6 +59,7 @@ export default function Dividends() {
       useUserStore.setState((state) => ({ ...state, pending: false }));
     }
   };
+
   useEffect(() => {
     if (!companyIdParam) return;
     if (companyIdParam && companyIdParam !== company.externalId) {

@@ -67,7 +67,6 @@ test.describe("Dividend Email Company Selection", () => {
     });
 
     await login(page, investorUser);
-
     // Initially logged in as Company Alpha (first created company)
     await page.getByRole("button", { name: "Equity" }).click();
     await page.getByRole("link", { name: "Dividends" }).first().click();
@@ -109,8 +108,9 @@ test.describe("Dividend Email Company Selection", () => {
     await page.goto("/equity/dividends?company_id=invalid-id");
 
     await expect(page.getByRole("table")).toBeVisible();
-
+    
     await page.waitForTimeout(1000);
+
     expect(page.url()).not.toContain("company_id");
   });
 });
