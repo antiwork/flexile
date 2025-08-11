@@ -7,7 +7,9 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     authorize DividendComputation
 
     dividend_computations = Current.company.dividend_computations
-      .with_shareholder_count
+      .select("dividend_computations.*, COUNT(DISTINCT dividend_computation_outputs.company_investor_id) as number_of_shareholders_from_query")
+      .joins("LEFT JOIN dividend_computation_outputs ON dividend_computations.id = dividend_computation_outputs.dividend_computation_id")
+      .group("dividend_computations.id")
       .order(id: :desc)
       .map do |computation|
       DividendComputationPresenter.new(computation).props

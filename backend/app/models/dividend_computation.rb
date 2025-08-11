@@ -9,15 +9,7 @@ class DividendComputation < ApplicationRecord
   validates :total_amount_in_usd, presence: true
   validates :dividends_issuance_date, presence: true
 
-  scope :with_shareholder_count, -> {
-    select("dividend_computations.*, COUNT(DISTINCT dividend_computation_outputs.company_investor_id) as number_of_shareholders_from_query")
-      .joins("LEFT JOIN dividend_computation_outputs ON dividend_computations.id = dividend_computation_outputs.dividend_computation_id")
-      .group("dividend_computations.id")
-  }
 
-  def number_of_shareholders
-    respond_to?(:number_of_shareholders_from_query) ? number_of_shareholders_from_query : dividend_computation_outputs.distinct.count(:company_investor_id)
-  end
 
   def to_csv
     CSV.generate(headers: true) do |csv|
