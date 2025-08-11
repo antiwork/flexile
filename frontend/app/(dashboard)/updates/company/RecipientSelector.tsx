@@ -65,18 +65,13 @@ export default function RecipientSelector({
     }
   };
 
-  const totalRecipients = useMemo(() => {
-    // Calculate unique recipients count
-    const uniqueCount = new Set();
-    value.forEach((type) => {
-      // Note: This is simplified - in reality, you'd need to deduplicate actual recipient IDs
-      const count = getCountForType(type);
-      for (let i = 0; i < count; i++) {
-        uniqueCount.add(`${type}_${i}`);
-      }
-    });
-    return uniqueCount.size;
-  }, [value, counts]);
+  const totalRecipients = useMemo(
+    () =>
+      // TODO: This currently just sums the counts and doesn't deduplicate users who belong to multiple groups
+      // Should be replaced with a server-side query that returns the actual unique recipient count
+      value.reduce((sum, type) => sum + getCountForType(type), 0),
+    [value, counts],
+  );
 
   // Filter options based on search text and hide already selected items
   const filteredOptions = useMemo(
@@ -113,6 +108,16 @@ export default function RecipientSelector({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      // Handle backspace for removing badges when no filter text
+      if ((e.key === "Delete" || e.key === "Backspace") && !filterText && value.length > 0) {
+        const lastItem = value[value.length - 1];
+        if (lastItem !== "admins") {
+          e.preventDefault();
+          onChange(value.slice(0, -1));
+        }
+        return;
+      }
+
       if (!open) {
         if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
           e.preventDefault();
@@ -123,32 +128,34 @@ export default function RecipientSelector({
         switch (e.key) {
           case "ArrowDown":
             e.preventDefault();
-            setFocusedIndex((prev) => Math.min(prev + 1, filteredOptions.length - 1));
+            e.stopPropagation();
+            setFocusedIndex((prev) => {
+              const next = prev + 1;
+              return next >= filteredOptions.length ? 0 : next;
+            });
             break;
           case "ArrowUp":
             e.preventDefault();
-            setFocusedIndex((prev) => Math.max(prev - 1, 0));
+            e.stopPropagation();
+            setFocusedIndex((prev) => {
+              const next = prev - 1;
+              return next < 0 ? filteredOptions.length - 1 : next;
+            });
             break;
           case "Enter":
             e.preventDefault();
+            e.stopPropagation();
             if (filteredOptions[focusedIndex]) {
               handleToggle(filteredOptions[focusedIndex].value);
+              setFilterText("");
             }
             break;
           case "Escape":
             e.preventDefault();
+            e.stopPropagation();
             setOpen(false);
             setFilterText("");
             break;
-        }
-      }
-
-      // Handle backspace for removing badges
-      if ((e.key === "Delete" || e.key === "Backspace") && !filterText && value.length > 0) {
-        e.preventDefault();
-        const lastItem = value[value.length - 1];
-        if (lastItem !== "admins") {
-          onChange(value.slice(0, -1));
         }
       }
     },
@@ -156,22 +163,10 @@ export default function RecipientSelector({
   );
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target instanceof Node ? event.target : null)) {
-        setOpen(false);
-        setFilterText("");
-      }
-    };
-
     if (open) {
-      document.addEventListener("mousedown", handleClickOutside);
       // Focus the input when dropdown opens
       setTimeout(() => inputRef.current?.focus(), 0);
     }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
   }, [open]);
 
   // Reset focused index when filtered options change
@@ -232,7 +227,16 @@ export default function RecipientSelector({
                   type="text"
                   value={filterText}
                   onChange={(e) => setFilterText(e.target.value)}
-                  onKeyDown={handleKeyDown}
+                  onKeyDown={(e) => {
+                    // Don't prevent default for regular typing
+                    if (
+                      !["ArrowDown", "ArrowUp", "Enter", "Escape", "Delete", "Backspace"].includes(e.key) ||
+                      (e.key === "Backspace" && filterText)
+                    ) {
+                      return;
+                    }
+                    handleKeyDown(e);
+                  }}
                   placeholder="Select recipients..."
                   className="placeholder:text-muted-foreground min-w-[120px] flex-1 bg-transparent text-sm outline-none"
                   onClick={(e) => {
@@ -257,13 +261,15 @@ export default function RecipientSelector({
                 return (
                   <DropdownMenuItem
                     key={option.value}
-                    className={`justify-between ${isFocused ? "bg-accent" : ""}`}
+                    className={`cursor-pointer justify-between ${isFocused ? "bg-gray-100" : ""}`}
                     onSelect={(e) => {
                       e.preventDefault();
                       handleToggle(option.value);
                       setFilterText("");
+                      // Keep dropdown open after selection for multiple selections
                     }}
                     onMouseEnter={() => setFocusedIndex(index)}
+                    onFocus={() => setFocusedIndex(index)}
                   >
                     <span>{option.label}</span>
                     <span className="text-muted-foreground">{count}</span>

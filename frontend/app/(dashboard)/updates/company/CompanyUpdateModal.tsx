@@ -16,6 +16,13 @@ import { Input } from "@/components/ui/input";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 
+type RecipientType = "admins" | "investors" | "active_contractors" | "alumni_contractors";
+const recipientTypeSet = new Set<RecipientType>(["admins", "investors", "active_contractors", "alumni_contractors"]);
+function narrowRecipientTypes(input: unknown): RecipientType[] | undefined {
+  if (!Array.isArray(input)) return undefined;
+  return input.filter((t): t is RecipientType => typeof t === "string" && recipientTypeSet.has(t));
+}
+
 const formSchema = z.object({
   title: z.string().trim().min(1, "This field is required."),
   body: z.string().regex(/>\w/u, "This field is required."),
@@ -43,13 +50,7 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
     defaultValues: {
       title: update?.title ?? "",
       body: update?.body ?? "",
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      recipientTypes: (update?.recipientTypes ?? ["admins"]) as (
-        | "admins"
-        | "investors"
-        | "active_contractors"
-        | "alumni_contractors"
-      )[],
+      recipientTypes: narrowRecipientTypes(update?.recipientTypes) ?? ["admins"],
       minBilledAmount: undefined,
     },
   });
@@ -59,13 +60,7 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
       form.reset({
         title: update.title,
         body: update.body,
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-        recipientTypes: (update.recipientTypes ?? ["admins"]) as (
-          | "admins"
-          | "investors"
-          | "active_contractors"
-          | "alumni_contractors"
-        )[],
+        recipientTypes: narrowRecipientTypes(update.recipientTypes) ?? ["admins"],
         minBilledAmount: undefined,
       });
     } else if (!updateId) {
@@ -90,6 +85,8 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
   };
 
   const selectedRecipientTypes = form.watch("recipientTypes");
+  // TODO: This currently just sums the counts and doesn't deduplicate users who belong to multiple groups
+  // Should be replaced with a server-side query that returns the actual unique recipient count
   const recipientCount = selectedRecipientTypes.reduce((sum, type) => {
     switch (type) {
       case "admins":

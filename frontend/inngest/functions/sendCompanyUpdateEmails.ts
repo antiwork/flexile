@@ -86,6 +86,8 @@ export default inngest.createFunction(
       }
 
       if (recipientTypes.includes("active_contractors")) {
+        // TODO: once minBilledAmount is available on the update or in event.data,
+        // filter active contractors by total billed amount ≥ minBilledAmount
         const activeContractors = baseQuery(companyContractors).where(
           and(isNotNull(companyContractors.id), isNull(companyContractors.endedAt)),
         );
@@ -93,6 +95,8 @@ export default inngest.createFunction(
       }
 
       if (recipientTypes.includes("alumni_contractors")) {
+        // TODO: once minBilledAmount is available on the update or in event.data,
+        // filter alumni contractors by total billed amount ≥ minBilledAmount
         const alumniContractors = baseQuery(companyContractors).where(
           and(isNotNull(companyContractors.id), isNotNull(companyContractors.endedAt)),
         );
@@ -135,7 +139,7 @@ export default inngest.createFunction(
           const emails = recipientBatch.map((recipient) => ({
             from: `${name} via Flexile <noreply@${env.DOMAIN}>`,
             to: recipient.email,
-            subject: `${name}: ${update.title} investor update`,
+            subject: `${name}: ${update.title}`,
             react,
           }));
           const response = await resend.batch.send(emails);
