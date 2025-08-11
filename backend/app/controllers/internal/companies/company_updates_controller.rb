@@ -75,6 +75,6 @@ class Internal::Companies::CompanyUpdatesController < Internal::Companies::BaseC
     def company_update_params
       params
         .require(:company_update)
-        .permit(:title, :body, :video_url, :period, :period_started_on, :show_revenue, :show_net_income)
+        .permit(:title, :body, :period, :period_started_on, :show_revenue, :show_net_income)
     end
 end

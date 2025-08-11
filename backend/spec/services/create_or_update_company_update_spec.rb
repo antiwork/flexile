@@ -6,7 +6,6 @@ RSpec.describe CreateOrUpdateCompanyUpdate do
     {
       title: "Update title",
       body: "Update body",
-      video_url: "https://example.com/video",
     }
   end
 
@@ -26,7 +25,6 @@ RSpec.describe CreateOrUpdateCompanyUpdate do
         company_update = result[:company_update]
         expect(company_update.body).to eq("Update body")
         expect(company_update.title).to eq("Update title")
-        expect(company_update.video_url).to eq("https://example.com/video")
       end
     end
 
