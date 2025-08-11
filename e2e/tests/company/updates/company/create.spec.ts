@@ -35,8 +35,7 @@ test.describe("company update creation", () => {
     const title = "Published Update";
     const content = "This will be published";
 
-    await login(page, adminUser);
-    await page.goto("/updates/company");
+    await login(page, adminUser, "/updates/company");
 
     await page.getByRole("button", { name: "New update" }).click();
     await expect(page.getByRole("dialog", { name: "New company update" })).toBeVisible();
@@ -67,8 +66,7 @@ test.describe("company update creation", () => {
     const title = "Test Update";
     const content = "Test content";
 
-    await login(page, adminUser);
-    await page.goto("/updates/company");
+    await login(page, adminUser, "/updates/company");
 
     await page.getByRole("button", { name: "New update" }).click();
     await expect(page.getByRole("dialog", { name: "New company update" })).toBeVisible();
@@ -98,8 +96,7 @@ test.describe("company update creation", () => {
   });
 
   test("prevents submission with validation errors", async ({ page }) => {
-    await login(page, adminUser);
-    await page.goto("/updates/company");
+    await login(page, adminUser, "/updates/company");
 
     await page.getByRole("button", { name: "New update" }).click();
     await expect(page.getByRole("dialog", { name: "New company update" })).toBeVisible();
@@ -144,8 +141,7 @@ test.describe("company update creation", () => {
       body: "<p>Original content</p>",
     });
 
-    await login(page, adminUser);
-    await page.goto("/updates/company");
+    await login(page, adminUser, "/updates/company");
 
     await page.getByRole("row").filter({ hasText: "Original Title" }).click();
     await expect(page.getByRole("dialog", { name: "Edit company update" })).toBeVisible();
