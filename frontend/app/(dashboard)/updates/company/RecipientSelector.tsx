@@ -2,7 +2,6 @@
 
 import { ChevronDown, X } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -209,19 +208,22 @@ export default function RecipientSelector({
             >
               <div className="flex flex-1 flex-wrap items-center gap-1">
                 {value.map((type) => (
-                  <Badge key={type} variant="secondary" className="gap-1">
+                  <span
+                    key={type}
+                    className="inline-flex items-center gap-1 rounded border border-gray-300 bg-white px-2 py-0.5 text-sm font-normal text-gray-700"
+                  >
                     {getLabel(type)}
                     {type !== "admins" && (
                       <button
                         type="button"
                         onClick={(e) => handleRemove(type, e)}
-                        className="ring-offset-background focus:ring-ring ml-1 rounded-full outline-none focus:ring-2 focus:ring-offset-2"
+                        className="ring-offset-background focus:ring-ring ml-0.5 rounded-full outline-none focus:ring-2 focus:ring-offset-2"
                         aria-label={`Remove ${getLabel(type)}`}
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-3 w-3 text-gray-500 hover:text-gray-700" />
                       </button>
                     )}
-                  </Badge>
+                  </span>
                 ))}
                 <input
                   ref={inputRef}
