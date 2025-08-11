@@ -1731,6 +1731,7 @@ export const users = pgTable(
     clerkId: varchar("clerk_id"),
     signupInviteLinkId: bigint("signup_invite_link_id", { mode: "number" }),
     otpSecretKey: varchar("otp_secret_key"),
+    githubUid: varchar("github_uid"),
   },
   (table) => [
     index("index_users_on_confirmation_token").using("btree", table.confirmationToken.asc().nullsLast().op("text_ops")),
@@ -1752,6 +1753,7 @@ export const users = pgTable(
       "btree",
       table.signupInviteLinkId.asc().nullsLast().op("int8_ops"),
     ),
+    index("index_users_on_github_uid").using("btree", table.githubUid.asc().nullsLast().op("text_ops")),
   ],
 );
 

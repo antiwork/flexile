@@ -11,6 +11,11 @@ scope path: :internal, module: :internal do
     end
   end
 
+  namespace :oauth do
+    post :github_login
+    post :github_signup
+  end
+
   namespace :demo do
     resources :companies, only: :show
   end

@@ -31,6 +31,9 @@ const env = z
     HELPER_HMAC_SECRET: z.string(),
     API_SECRET_TOKEN: z.string(),
     NEXTAUTH_SECRET: z.string(),
+    NEXTAUTH_URL: z.string(),
+    GITHUB_CLIENT_ID: z.string().optional(),
+    GITHUB_CLIENT_SECRET: z.string().optional(),
   })
   .parse(process.env);
 
