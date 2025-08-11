@@ -142,12 +142,8 @@ export default inngest.createFunction(
         return [];
       }
 
-      // Combine all queries - for now just execute them separately and de-duplicate
-      const allRecipients = [];
-      for (const query of queries) {
-        const results = await query;
-        allRecipients.push(...results);
-      }
+      // Execute all queries in parallel for better performance
+      const allRecipients = (await Promise.all(queries)).flat();
 
       // De-duplicate by email
       const uniqueEmails = new Set(allRecipients.map((r) => r.email));
@@ -179,9 +175,7 @@ export default inngest.createFunction(
           }));
           const response = await resend.batch.send(emails);
           if (response.error)
-            throw new Error(
-              `Resend error: ${response.error.message}; Recipients: ${emails.map((e) => e.to).join(", ")}`,
-            );
+            throw new Error(`Resend error: ${response.error.message}; recipient_count=${emails.length}`);
         });
       },
     );
