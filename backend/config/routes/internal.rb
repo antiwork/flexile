@@ -15,6 +15,8 @@ scope path: :internal, module: :internal do
     collection do
       post :google_login
       post :google_signup
+      post :github_login
+      post :github_signup
     end
   end
 

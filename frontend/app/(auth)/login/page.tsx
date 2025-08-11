@@ -17,6 +17,8 @@ export default function LoginPage() {
       setHighlightedAuthMethod(method);
       if (method === "google") {
         setDescription("You used Google to log in last time.");
+      } else if (method === "github") {
+        setDescription("You used GitHub to log in last time.");
       } else if (method === "email") {
         setDescription("You used your work email to log in last time.");
       }

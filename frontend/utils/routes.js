@@ -1643,6 +1643,38 @@ export const export_company_invoices_path = /*#__PURE__*/ __jsr.r({"company_id":
 
 /**
  * Generates rails route to
+ * /internal/oauth/github_login(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const github_login_oauth_index_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"oauth"],[2,[7,"/"],[2,[6,"github_login"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/oauth/github_login(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const github_login_oauth_index_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"oauth"],[2,[7,"/"],[2,[6,"github_login"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
+
+/**
+ * Generates rails route to
+ * /internal/oauth/github_signup(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const github_signup_oauth_index_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"oauth"],[2,[7,"/"],[2,[6,"github_signup"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/oauth/github_signup(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const github_signup_oauth_index_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"oauth"],[2,[7,"/"],[2,[6,"github_signup"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
+
+/**
+ * Generates rails route to
  * /internal/oauth/google_login(.:format)
  * @param {object | undefined} options
  * @returns {string} route path

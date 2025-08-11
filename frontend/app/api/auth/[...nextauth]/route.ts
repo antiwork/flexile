@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import NextAuth from "next-auth";
 import type { Account, User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import env from "@/env";
 import { authOptions } from "@/lib/auth";
@@ -58,15 +59,52 @@ function handler(req: NextRequest, ...params: unknown[]) {
                 return null;
               },
             }),
+            CredentialsProvider({
+              id: "github",
+              name: "GitHub (Test)",
+              credentials: {},
+              authorize() {
+                const testGitHubUser = cookieMap.get("test_github_user");
+
+                if (testGitHubUser) {
+                  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+                  const user = JSON.parse(testGitHubUser) as {
+                    email: string;
+                    githubUid: string;
+                  };
+
+                  const result = {
+                    id: user.githubUid,
+                    email: user.email,
+                    name: "",
+                    jwt: "",
+                    legalName: "",
+                    preferredName: "",
+                  };
+                  return result;
+                }
+                return null;
+              },
+            }),
           ]
-        : process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
-          ? [
-              GoogleProvider({
-                clientId: process.env.GOOGLE_CLIENT_ID,
-                clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-              }),
-            ]
-          : []),
+        : [
+            ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+              ? [
+                  GoogleProvider({
+                    clientId: process.env.GOOGLE_CLIENT_ID,
+                    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+                  }),
+                ]
+              : []),
+            ...(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET
+              ? [
+                  GitHubProvider({
+                    clientId: process.env.GITHUB_CLIENT_ID,
+                    clientSecret: process.env.GITHUB_CLIENT_SECRET,
+                  }),
+                ]
+              : []),
+          ]),
     ],
     callbacks: {
       ...authOptions.callbacks,
@@ -78,6 +116,50 @@ function handler(req: NextRequest, ...params: unknown[]) {
           const requestBody: Record<string, unknown> = {
             email: user.email,
             google_id: user.id,
+            token: env.API_SECRET_TOKEN,
+          };
+
+          if (invitationToken) {
+            requestBody.invitation_token = invitationToken;
+          }
+
+          const response = await fetch(`${process.env.NEXTAUTH_URL}${endpoint}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(requestBody),
+          });
+
+          if (!response.ok) {
+            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+            const errorData = (await response.json()) as { error?: string };
+            throw new Error(errorData.error || "Authentication failed");
+          }
+
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+          const data = (await response.json()) as {
+            user: {
+              id: number;
+              email: string;
+              name: string;
+              legal_name?: string;
+              preferred_name?: string;
+            };
+            jwt: string;
+          };
+
+          user.jwt = data.jwt;
+          user.legalName = data.user.legal_name || "";
+          user.preferredName = data.user.preferred_name || "";
+          user.id = data.user.id.toString();
+        } else if (account?.provider === "github") {
+          const invitationToken = cookieMap.get("auth_invitation_token");
+
+          const endpoint = authContext === "signup" ? "/internal/oauth/github_signup" : "/internal/oauth/github_login";
+          const requestBody: Record<string, unknown> = {
+            email: user.email,
+            github_id: user.id,
             token: env.API_SECRET_TOKEN,
           };
 
