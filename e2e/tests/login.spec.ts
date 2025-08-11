@@ -1,5 +1,6 @@
 import { db } from "@test/db";
 import { usersFactory } from "@test/factories/users";
+import { fillOtp } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
@@ -17,8 +18,7 @@ test("login", async ({ page }) => {
   await otpField.fill("000001");
   await expect(otpField).not.toBeValid();
   await expect(page.getByText("Invalid verification code")).toBeVisible();
-  await otpField.fill("000000");
-  await expect(otpField).toBeValid();
+  await fillOtp(page);
 
   await page.waitForURL(/.*\/invoices.*/u);
 
@@ -43,13 +43,10 @@ test("login with redirect_url", async ({ page }) => {
   await page.getByLabel("Work email").fill(email);
   await page.getByRole("button", { name: "Log in", exact: true }).click();
 
-  // Fill the OTP code using the InputOTP component's hidden input
-  // The form should auto-submit when all 6 digits are entered
-  const otpCode = "000000";
-  await page.locator('[data-slot="input-otp"]').fill(otpCode);
+  await fillOtp(page);
 
   // No need to click the button as it should auto-submit
-  await page.waitForLoadState("networkidle");
+  await page.waitForURL(/.*\/people.*/u);
 
   await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
 

@@ -1521,7 +1521,6 @@ export const companyUpdates = pgTable(
     title: varchar().notNull(),
     body: text().notNull(),
 
-    videoUrl: text("video_url"),
     sentAt: timestamp("sent_at", { precision: 6, mode: "date" }),
     createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })

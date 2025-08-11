@@ -1,4 +1,4 @@
-import { Heading, Img, Link, Preview, Text } from "@react-email/components";
+import { Heading, Img, Preview, Text } from "@react-email/components";
 import React from "react";
 import { companies, companyUpdates } from "@/db/schema";
 import { RichText } from "@/trpc/email";
@@ -37,11 +37,6 @@ const CompanyUpdatePublished = ({
 
     <Heading as="h1">{update.title}</Heading>
     <RichText content={update.body} />
-    {update.videoUrl ? (
-      <Link href={update.videoUrl} target="_blank">
-        View video
-      </Link>
-    ) : null}
   </EmailLayout>
 );
 

@@ -1,3 +1,4 @@
+import { faker } from "@faker-js/faker";
 import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
@@ -32,6 +33,7 @@ test.describe("Buyback creation", () => {
     await fillDatePicker(page, "End date", "09/09/2022");
     await page.getByLabel("Starting valuation").fill("100000000");
     await page.getByLabel("Document package").setInputFiles("e2e/samples/sample.zip");
+    await page.locator('.tiptap[contenteditable="true"]').fill(faker.lorem.paragraphs());
 
     await page.getByRole("button", { name: "Create buyback" }).click();
     await expect(page.getByText("There are no buybacks yet.")).toBeVisible();
