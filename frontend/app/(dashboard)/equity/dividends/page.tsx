@@ -62,7 +62,7 @@ export default function Dividends() {
 
   useEffect(() => {
     if (!companyIdParam) return;
-    if (companyIdParam && companyIdParam !== company.externalId) {
+    if (companyIdParam !== company.externalId) {
       const targetCompany = user.companies.find((c) => c.externalId === companyIdParam);
       if (targetCompany && targetCompany.id !== company.id) {
         void switchCompany(targetCompany.id);
