@@ -20,12 +20,13 @@ const formSchema = z.object({
   title: z.string().trim().min(1, "This field is required."),
   body: z.string().regex(/>\w/u, "This field is required."),
   recipientTypes: z.array(z.enum(["admins", "investors", "active_contractors", "alumni_contractors"])),
+  minBilledAmount: z.number().optional(),
 });
 
 interface CompanyUpdateModalProps {
   open: boolean;
   onClose: () => void;
-  updateId?: string;
+  updateId?: string | undefined;
 }
 
 const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps) => {
@@ -42,7 +43,14 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
     defaultValues: {
       title: update?.title ?? "",
       body: update?.body ?? "",
-      recipientTypes: update?.recipientTypes ?? ["admins"],
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      recipientTypes: (update?.recipientTypes ?? ["admins"]) as (
+        | "admins"
+        | "investors"
+        | "active_contractors"
+        | "alumni_contractors"
+      )[],
+      minBilledAmount: undefined,
     },
   });
 
@@ -51,13 +59,21 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
       form.reset({
         title: update.title,
         body: update.body,
-        recipientTypes: update.recipientTypes ?? ["admins"],
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+        recipientTypes: (update.recipientTypes ?? ["admins"]) as (
+          | "admins"
+          | "investors"
+          | "active_contractors"
+          | "alumni_contractors"
+        )[],
+        minBilledAmount: undefined,
       });
     } else if (!updateId) {
       form.reset({
         title: "",
         body: "",
         recipientTypes: ["admins"],
+        minBilledAmount: undefined,
       });
     }
   }, [update, updateId, form]);
@@ -157,7 +173,13 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <RecipientSelector value={field.value} onChange={field.onChange} counts={recipientCounts} />
+                          <RecipientSelector
+                            value={field.value}
+                            onChange={field.onChange}
+                            counts={recipientCounts}
+                            minBilledAmount={form.watch("minBilledAmount") ?? undefined}
+                            onMinBilledAmountChange={(amount) => form.setValue("minBilledAmount", amount)}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

@@ -69,7 +69,7 @@ export default function CompanyUpdates() {
           </div>
         </div>
       ) : updates.length ? (
-        <UpdatesList updates={updates} onEditUpdate={handleEditUpdate} isAdmin={user.roles.administrator} />
+        <UpdatesList updates={updates} onEditUpdate={handleEditUpdate} isAdmin={!!user.roles.administrator} />
       ) : (
         <div className="mx-4">
           <Placeholder icon={CircleCheck}>No updates to display.</Placeholder>
@@ -153,12 +153,7 @@ const UpdatesList = ({
       </div>
 
       {!isAdmin && selectedUpdateId ? (
-        <ViewUpdateDialog
-          updateId={selectedUpdateId}
-          onOpenChange={(open) => {
-            if (!open) setSelectedUpdateId(null);
-          }}
-        />
+        <ViewUpdateDialog updateId={selectedUpdateId} onOpenChange={() => setSelectedUpdateId(null)} />
       ) : null}
     </>
   );

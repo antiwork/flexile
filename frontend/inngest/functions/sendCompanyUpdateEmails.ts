@@ -60,9 +60,8 @@ export default inngest.createFunction(
     const recipients = await step.run("fetch-recipients", async () => {
       if (event.data.recipients) return event.data.recipients;
 
-      const eventData = event.data;
       // Ensure admins are always included
-      let recipientTypes = eventData.recipientTypes || update.recipientTypes || ["admins"];
+      let recipientTypes = update.recipientTypes || ["admins"];
       if (!recipientTypes.includes("admins")) {
         recipientTypes = ["admins", ...recipientTypes];
       }
@@ -104,18 +103,16 @@ export default inngest.createFunction(
         return [];
       }
 
-      // Combine all queries with UNION to de-duplicate recipients
-      if (queries.length === 1) {
-        return queries[0];
+      // Combine all queries - for now just execute them separately and de-duplicate
+      const allRecipients = [];
+      for (const query of queries) {
+        const results = await query;
+        allRecipients.push(...results);
       }
 
-      // Build union query manually for multiple queries
-      let unionQuery = queries[0];
-      for (let i = 1; i < queries.length; i++) {
-        unionQuery = sql`${unionQuery} UNION ${queries[i]}`;
-      }
-
-      return db.select({ email: sql<string>`email` }).from(sql`(${unionQuery}) as combined_recipients`);
+      // De-duplicate by email
+      const uniqueEmails = new Set(allRecipients.map((r) => r.email));
+      return Array.from(uniqueEmails).map((email) => ({ email }));
     });
 
     const logoUrl = await step.run("get-logo-url", async () => companyLogoUrl(company.id));
@@ -128,22 +125,27 @@ export default inngest.createFunction(
       logoUrl,
     });
     const name = companyName(company);
-    const sendEmailsSteps = Array.from({ length: Math.ceil(recipients.length / BATCH_SIZE) }, (_, batchIndex) => {
-      const start = batchIndex * BATCH_SIZE;
-      const recipientBatch = recipients.slice(start, start + BATCH_SIZE);
+    const sendEmailsSteps = Array.from(
+      { length: Math.ceil((recipients ?? []).length / BATCH_SIZE) },
+      (_, batchIndex) => {
+        const start = batchIndex * BATCH_SIZE;
+        const recipientBatch = (recipients ?? []).slice(start, start + BATCH_SIZE);
 
-      return step.run(`send-update-emails-${batchIndex + 1}`, async () => {
-        const emails = recipientBatch.map((recipient) => ({
-          from: `${name} via Flexile <noreply@${env.DOMAIN}>`,
-          to: recipient.email,
-          subject: `${name}: ${update.title} investor update`,
-          react,
-        }));
-        const response = await resend.batch.send(emails);
-        if (response.error)
-          throw new Error(`Resend error: ${response.error.message}; Recipients: ${emails.map((e) => e.to).join(", ")}`);
-      });
-    });
+        return step.run(`send-update-emails-${batchIndex + 1}`, async () => {
+          const emails = recipientBatch.map((recipient) => ({
+            from: `${name} via Flexile <noreply@${env.DOMAIN}>`,
+            to: recipient.email,
+            subject: `${name}: ${update.title} investor update`,
+            react,
+          }));
+          const response = await resend.batch.send(emails);
+          if (response.error)
+            throw new Error(
+              `Resend error: ${response.error.message}; Recipients: ${emails.map((e) => e.to).join(", ")}`,
+            );
+        });
+      },
+    );
 
     await Promise.all(sendEmailsSteps);
   },
