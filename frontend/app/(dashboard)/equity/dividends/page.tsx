@@ -43,29 +43,32 @@ export default function Dividends() {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
 
+  const companyIdParam = searchParams.get("company_id");
+
+  const switchCompany = async (companyId: string) => {
+    useUserStore.setState((state) => ({ ...state, pending: true }));
+    try {
+      await request({
+        method: "POST",
+        url: company_switch_path(companyId),
+        accept: "json",
+      });
+      await queryClient.resetQueries({ queryKey: ["currentUser", user.email] });
+      router.replace("/equity/dividends");
+    } finally {
+      useUserStore.setState((state) => ({ ...state, pending: false }));
+    }
+  };
   useEffect(() => {
-    const companyIdParam = searchParams.get("company_id");
+    if (!companyIdParam) return;
     if (companyIdParam && companyIdParam !== company.externalId) {
       const targetCompany = user.companies.find((c) => c.externalId === companyIdParam);
       if (targetCompany && targetCompany.id !== company.id) {
-        const switchCompany = async () => {
-          useUserStore.setState((state) => ({ ...state, pending: true }));
-          try {
-            await request({
-              method: "POST",
-              url: company_switch_path(targetCompany.id),
-              accept: "json",
-            });
-            await queryClient.resetQueries({ queryKey: ["currentUser", user.email] });
-            router.replace("/equity/dividends");
-          } catch (_error) {
-            useUserStore.setState((state) => ({ ...state, pending: false }));
-          }
-        };
-        void switchCompany();
+        void switchCompany(targetCompany.id);
       }
     }
-  }, [searchParams, company, user, router, queryClient]);
+  }, [companyIdParam, company.externalId, company.id, user.companies, user.email]);
+
   const {
     data = [],
     refetch,
