@@ -54,15 +54,6 @@ const DividendRound = ({ id }: { id: string }) => {
         meta: { numeric: true },
         footer: formatMoney(dividends.reduce((sum, dividend) => sum + Number(dividend.totalAmountInCents) / 100, 0)),
       }),
-      columnHelper.accessor("totalAmountInCents", {
-        id: "flexileFee",
-        header: "Fees",
-        cell: (info) => formatMoney(calculateFlexileFees(Number(info.getValue()) / 100)),
-        meta: { numeric: true },
-        footer: formatMoney(
-          dividends.reduce((sum, dividend) => sum + calculateFlexileFees(Number(dividend.totalAmountInCents) / 100), 0),
-        ),
-      }),
       columnHelper.accessor("status", {
         header: "Status",
         cell: (info) => <DividendStatusIndicator dividend={info.row.original} />,
@@ -154,15 +145,6 @@ const DividendComputation = ({ id }: { id: string }) => {
         meta: { numeric: true },
         footer: formatMoney(computationOutputs.reduce((sum, output) => sum + Number(output.total_amount), 0)),
       }),
-      columnHelper.accessor("total_amount", {
-        id: "flexileFee",
-        header: "Fees",
-        cell: (info) => formatMoney(calculateFlexileFees(Number(info.getValue()))),
-        meta: { numeric: true },
-        footer: formatMoney(
-          computationOutputs.reduce((sum, output) => sum + calculateFlexileFees(Number(output.total_amount)), 0),
-        ),
-      }),
       columnHelper.accessor("investor_external_id", {
         id: "status",
         header: "Status",
@@ -219,12 +201,3 @@ const DistributionDraftNotice = () => (
     </p>
   </div>
 );
-
-function calculateFlexileFees(totalAmountInUsd: number): number {
-  const FLEXILE_FEE_RATE = 0.029; // 2.9%
-  const FLEXILE_FLAT_FEE = 0.3; // $0.30
-  const FLEXILE_MAX_FEE = 30; // $30 cap
-
-  const calculatedFee = totalAmountInUsd * FLEXILE_FEE_RATE + FLEXILE_FLAT_FEE;
-  return Math.min(FLEXILE_MAX_FEE, calculatedFee);
-}
