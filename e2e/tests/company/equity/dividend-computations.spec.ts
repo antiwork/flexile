@@ -1,3 +1,4 @@
+import { getLocalTimeZone, today } from "@internationalized/date";
 import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
@@ -8,8 +9,10 @@ import { usersFactory } from "@test/factories/users";
 import { fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
+import { format } from "date-fns";
 import { eq } from "drizzle-orm";
 import { dividendComputations } from "@/db/schema";
+import { formatDate } from "@/utils/time";
 
 test.describe("Dividend Computations", () => {
   const setup = async () => {
@@ -69,6 +72,7 @@ test.describe("Dividend Computations", () => {
 
   test("creates dividend computation", async ({ page }) => {
     const { company, adminUser } = await setup();
+    const date = today(getLocalTimeZone()).add({ days: 15 });
 
     await login(page, adminUser);
     await page.getByRole("button", { name: "Equity" }).click();
@@ -81,7 +85,7 @@ test.describe("Dividend Computations", () => {
       async (modal) => {
         await expect(modal.getByRole("heading", { name: "Start a new distribution" })).toBeVisible();
         await modal.getByLabel("Total distribution amount").fill("50000");
-        await fillDatePicker(page, "Payment date", "12/25/2024");
+        await fillDatePicker(page, "Payment date", format(date.toString(), "MM/dd/yyyy"));
         await expect(modal.getByText("Start a new distribution")).toBeVisible();
         await modal.getByRole("button", { name: "Create distribution" }).click();
       },
@@ -91,7 +95,8 @@ test.describe("Dividend Computations", () => {
     await expect(page.getByRole("dialog")).not.toBeVisible();
     await expect(page.getByText("Draft")).toBeVisible();
     await expect(page.getByText("50,000")).toBeVisible();
-    await expect(page.getByText("Dec 25, 2024")).toBeVisible();
+
+    await expect(page.getByText(formatDate(date.toString()))).toBeVisible();
 
     const computation = await db.query.dividendComputations
       .findFirst({ where: eq(dividendComputations.companyId, company.id) })
@@ -99,6 +104,29 @@ test.describe("Dividend Computations", () => {
 
     expect(computation.totalAmountInUsd).toBe("50000.0");
     expect(computation.returnOfCapital).toBe(false);
-    expect(computation.dividendsIssuanceDate).toBe("2024-12-25");
+    expect(computation.dividendsIssuanceDate).toBe(date.toString());
+  });
+
+  test("prevents creating dividend computation with date less than 10 days in future", async ({ page }) => {
+    const { adminUser } = await setup();
+    const date = today(getLocalTimeZone()).add({ days: 5 });
+
+    await login(page, adminUser);
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Dividends" }).first().click();
+
+    await expect(page.getByRole("button", { name: "New distribution" })).toBeVisible();
+    await page.getByRole("button", { name: "New distribution" }).click();
+
+    await withinModal(
+      async (modal) => {
+        await expect(modal.getByRole("heading", { name: "Start a new distribution" })).toBeVisible();
+        await modal.getByLabel("Total distribution amount").fill("50000");
+        await fillDatePicker(page, "Payment date", format(date.toString(), "MM/dd/yyyy"));
+        await expect(modal.getByText("Payment date must be at least 10 days in the future")).toBeVisible();
+        await expect(modal.getByRole("button", { name: "Create distribution" })).toBeDisabled();
+      },
+      { page },
+    );
   });
 });

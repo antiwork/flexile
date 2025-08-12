@@ -29,17 +29,24 @@ interface NewDistributionModalProps {
 
 const schema = z.object({
   return_of_capital: z.boolean(),
-  dividends_issuance_date: z.instanceof(CalendarDate, { message: "This field is required." }),
-  amount_in_usd: z.number().min(0.01, "Amount must be greater than 0"),
+  dividends_issuance_date: z.instanceof(CalendarDate, { message: "This field is required." }).refine((date) => {
+    const currentDate = today(getLocalTimeZone());
+    const tenDaysFromNow = currentDate.add({ days: 10 });
+    return date.compare(tenDaysFromNow) >= 0;
+  }, "Payment date must be at least 10 days in the future"),
+  amount_in_usd: z
+    .number({ invalid_type_error: "Total distribution amount is required" })
+    .min(0.01, "Amount must be greater than 0"),
 });
 
 type FormValues = z.infer<typeof schema>;
 const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
+    mode: "onChange",
     defaultValues: {
       return_of_capital: false,
-      dividends_issuance_date: today(getLocalTimeZone()),
+      dividends_issuance_date: today(getLocalTimeZone()).add({ days: 10 }),
       amount_in_usd: 0,
     },
   });
