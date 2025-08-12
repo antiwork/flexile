@@ -138,7 +138,7 @@ const ComboBox = ({ options = [], value, onChange, placeholder = "Select...", cl
             )}
             {orphans.length > 0 && (
               <CommandGroup heading="Workspace Members">
-                {investors.map((option) => (
+                {orphans.map((option) => (
                   <OptionItem
                     key={option.email}
                     option={option}

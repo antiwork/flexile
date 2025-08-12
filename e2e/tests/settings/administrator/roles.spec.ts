@@ -239,10 +239,7 @@ test.describe("Manage workspace roles", () => {
       await page.getByRole("combobox").first().click();
       await expect(listBox).toBeVisible();
 
-      // const searchInput = page.getByPlaceholder("Search by name or invite by email...");
-
       // All users should be present again
-      // await searchInput.fill("");
       await expect(adminOption).not.toBeAttached();
       await expect(contractorOption).toBeAttached();
       await expect(investorOption).toBeAttached();

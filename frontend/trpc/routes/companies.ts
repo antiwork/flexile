@@ -470,14 +470,15 @@ export const companiesRouter = createRouter({
 
       // Keep the original database-based admin role revocation for backward compatibility
       // Check if this would remove the last administrator
-
       if (input.role === "Admin") {
         const adminCount = await db
           .select({ count: count() })
           .from(companyAdministrators)
           .where(and(eq(companyAdministrators.companyId, ctx.company.id)));
 
-        if (adminCount[0]?.count === 0) {
+        // Short circuit when no admin present
+        // Owner & another admin
+        if ((adminCount[0]?.count ?? 0) <= 2) {
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "Cannot remove the last administrator",

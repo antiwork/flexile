@@ -80,15 +80,12 @@ export default function RolePage() {
     },
   );
 
-  const roledMembersEmailList = useRef<Set<string>>(new Set());
-
-  roledMembersEmailList.current = new Set(users.map((member) => member.email));
-
+  const enrolledMembersEmailSet = useMemo(() => new Set(users.map((member) => member.email)), [users]);
   // 2. Form
   const addMemberForm = useForm<WorkspaceMemberAdditionForm>({
     resolver: zodResolver(
       addWorkspaceMemberSchema.superRefine((data, ctx) => {
-        if (roledMembersEmailList.current.has(data.user.email)) {
+        if (enrolledMembersEmailSet.has(data.user.email)) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message: "Cannot invite members with a role assigned",
@@ -441,15 +438,17 @@ export default function RolePage() {
             <Button
               variant="critical"
               onClick={() => {
-                const role = ROLES_WHITELIST.safeParse(confirmRevokeUser?.role).data;
-                if (confirmRevokeUser && role) {
-                  revokeRoleMutation.mutate({
-                    companyId: company.id,
-                    userId: confirmRevokeUser.id,
-                    role,
-                  });
-                  setConfirmRevokeUser(null);
+                if (!confirmRevokeUser) return;
+                const parseResult = ROLES_WHITELIST.safeParse(confirmRevokeUser.role);
+                if (!parseResult.success) {
+                  return;
                 }
+                revokeRoleMutation.mutate({
+                  companyId: company.id,
+                  userId: confirmRevokeUser.id,
+                  role: parseResult.data,
+                });
+                setConfirmRevokeUser(null);
               }}
             >
               Remove {confirmRevokeUser?.role.toLowerCase()}

@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-include ActiveJob::TestHelper
-
 RSpec.describe InviteAdministrator do
+  include ActiveJob::TestHelper
+
   let!(:company) { create(:company, :completed_onboarding) }
   let(:email) { "admin@example.com" }
   let!(:current_user) { create(:user) }
