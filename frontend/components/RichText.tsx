@@ -9,6 +9,14 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/utils";
 import { richTextExtensions } from "@/utils/richText";
 
+export type ToolbarItem = {
+  label: string;
+  name: string;
+  icon: React.ElementType;
+  onClick?: () => void;
+  attributes?: Record<string, unknown>;
+};
+
 const RichText = ({ content, className }: { content: string; className?: string }) => {
   const editor = useEditor({
     extensions: richTextExtensions,
@@ -35,7 +43,6 @@ export const Editor = ({
   value,
   onChange,
   className,
-  toolbarItems,
   id,
   "aria-label": ariaLabel,
   ...props
@@ -43,13 +50,7 @@ export const Editor = ({
   value: string | null;
   onChange: (value: string) => void;
   className?: string;
-  toolbarItems?: {
-    label: string;
-    name: string;
-    icon: React.ElementType;
-    onClick?: () => void;
-    attributes?: Record<string, unknown>;
-  }[];
+  toolbarItems?: ToolbarItem[];
   id?: string;
 } & React.ComponentProps<"div">) => {
   const [addingLink, setAddingLink] = useState<{ url: string } | null>(null);
@@ -80,7 +81,7 @@ export const Editor = ({
 
   const currentLink: unknown = editor?.getAttributes("link").href;
 
-  toolbarItems ||= [
+  const toolbarItems = props.toolbarItems ?? [
     { label: "Bold", name: "bold", icon: Bold },
     { label: "Italic", name: "italic", icon: Italic },
     { label: "Underline", name: "underline", icon: Underline },
