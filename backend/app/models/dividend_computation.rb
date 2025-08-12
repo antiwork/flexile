@@ -9,10 +9,13 @@ class DividendComputation < ApplicationRecord
   validates :total_amount_in_usd, presence: true
   validates :dividends_issuance_date, presence: true
 
+  # Counts unique shareholders (direct + SAFE holders via convertible investments)
   scope :with_shareholder_count, -> {
-    select("dividend_computations.*, COUNT(DISTINCT dividend_computation_outputs.company_investor_id) as number_of_shareholders_from_query")
-    .joins("LEFT JOIN dividend_computation_outputs ON dividend_computations.id = dividend_computation_outputs.dividend_computation_id")
-    .group("dividend_computations.id")
+    select("dividend_computations.*, COUNT(DISTINCT COALESCE(dividend_computation_outputs.company_investor_id, convertible_securities.company_investor_id)) as number_of_shareholders_from_query")
+      .joins("LEFT JOIN dividend_computation_outputs ON dividend_computations.id = dividend_computation_outputs.dividend_computation_id")
+      .joins("LEFT JOIN convertible_investments ON dividend_computation_outputs.investor_name = convertible_investments.entity_name AND convertible_investments.company_id = dividend_computations.company_id")
+      .joins("LEFT JOIN convertible_securities ON convertible_investments.id = convertible_securities.convertible_investment_id")
+      .group("dividend_computations.id")
   }
 
   def number_of_shareholders
