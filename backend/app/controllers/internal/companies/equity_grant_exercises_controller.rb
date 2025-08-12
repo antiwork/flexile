@@ -3,14 +3,17 @@
 class Internal::Companies::EquityGrantExercisesController < Internal::Companies::BaseController
   before_action :load_equity_grant_exercise!, only: [:resend]
 
+  def new
+    authorize EquityGrantExercise
+
+    render json: { exercise_notice: Current.company.exercise_notice }
+  end
 
   def create
     authorize EquityGrantExercise
 
     result = EquityExercisingService.create_request(equity_grants_params:,
-                                                    submission_id: params[:submission_id],
-                                                    company_investor: Current.company_investor!,
-                                                    company_worker: Current.company_worker!)
+                                                    company_investor: Current.company_investor!)
 
     if result[:success]
       render json: { id: result[:exercise].id }

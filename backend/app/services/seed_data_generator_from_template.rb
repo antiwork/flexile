@@ -790,9 +790,7 @@ class SeedDataGeneratorFromTemplate
                 number_of_options: equity_grant_data.fetch("equity_grant_exercise").fetch("model_attributes").fetch("number_of_options"),
               }
             ],
-            company_investor:,
-            company_worker:,
-            submission_id: "submission"
+            company_investor:
           )
         end
       end

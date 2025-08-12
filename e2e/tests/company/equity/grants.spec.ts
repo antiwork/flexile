@@ -254,10 +254,8 @@ test.describe("Equity Grants", () => {
         await expect(modal.getByText("Options valueBased on 2M valuation$1,0001,900%")).toBeVisible();
 
         await modal.getByRole("button", { name: "Proceed" }).click();
-        await modal.getByRole("button", { name: "Sign now" }).click();
-        await modal.getByRole("link", { name: "Type" }).click();
-        await modal.getByPlaceholder("Type signature here...").fill("Admin Admin");
-        await modal.getByRole("button", { name: "Sign and complete" }).click();
+        await expect(modal.getByRole("heading", { name: "Notice of Exercise" })).toBeVisible();
+        await modal.getByRole("button", { name: "Sign and submit" }).click();
       },
       { page },
     );

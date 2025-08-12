@@ -53,7 +53,7 @@ scope path: :internal, module: :internal do
     end
     resources :workers, only: [:create]
     resources :lawyers, only: [:create]
-    resources :equity_grant_exercises, only: :create do
+    resources :equity_grant_exercises, only: [:new, :create] do
       member do
         post :resend
       end

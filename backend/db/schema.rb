@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_12_115511) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -106,6 +106,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.decimal "conversion_share_price_usd"
     t.jsonb "json_data", default: {"flags" => []}, null: false
     t.boolean "equity_enabled", default: false, null: false
+    t.text "exercise_notice"
     t.index ["external_id"], name: "index_companies_on_external_id", unique: true
   end
 
@@ -129,12 +130,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.datetime "updated_at", null: false
     t.datetime "ended_at"
     t.string "external_id", null: false
-    t.integer "pay_rate_type", default: 0, null: false
     t.boolean "sent_equity_percent_selection_email", default: false, null: false
     t.integer "pay_rate_in_subunits"
     t.string "pay_rate_currency", default: "usd", null: false
     t.string "role"
     t.boolean "contract_signed_elsewhere", default: false, null: false
+    t.integer "pay_rate_type", default: 0, null: false
     t.integer "equity_percentage", default: 0, null: false
     t.index ["company_id"], name: "index_company_contractors_on_company_id"
     t.index ["external_id"], name: "index_company_contractors_on_external_id", unique: true
@@ -447,11 +448,11 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.integer "document_type", null: false
     t.integer "year", null: false
     t.datetime "deleted_at"
-    t.datetime "emailed_at"
-    t.jsonb "json_data"
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.integer "docuseal_submission_id"
+    t.datetime "emailed_at"
+    t.json "json_data"
     t.index ["company_id"], name: "index_documents_on_company_id"
     t.index ["docuseal_submission_id"], name: "index_documents_on_docuseal_submission_id"
     t.index ["equity_grant_id"], name: "index_documents_on_equity_grant_id"
