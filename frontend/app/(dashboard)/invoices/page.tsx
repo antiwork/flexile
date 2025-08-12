@@ -28,7 +28,6 @@ import {
   DeleteModal,
   EDITABLE_INVOICE_STATES,
   RejectModal,
-  taxRequirementsMet,
   useApproveInvoices,
   useIsActionable,
   useIsDeletable,
@@ -97,7 +96,7 @@ export default function InvoicesPage() {
   const isPayNowDisabled = useCallback(
     (invoice: Invoice) => {
       const payable = isPayable(invoice);
-      return payable && (!company.completedPaymentMethodSetup || !taxRequirementsMet(invoice));
+      return payable && !company.completedPaymentMethodSetup;
     },
     [isPayable, company.completedPaymentMethodSetup],
   );
@@ -401,16 +400,6 @@ export default function InvoicesPage() {
               </AlertDescription>
             </Alert>
           ) : null}
-
-          {!data.every(taxRequirementsMet) && (
-            <Alert className="mx-4" variant="destructive">
-              <AlertTriangle className="size-4" />
-              <AlertTitle>Missing tax information.</AlertTitle>
-              <AlertDescription>
-                Some invoices are not payable until contractors provide tax information.
-              </AlertDescription>
-            </Alert>
-          )}
         </>
       ) : null}
 
