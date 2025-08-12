@@ -153,7 +153,7 @@ export default function DataTable<T extends RowData>({
   const selectable = !!table.options.enableRowSelection;
   const filterableColumns = table.getAllColumns().filter((column) => column.columnDef.meta?.filterOptions);
   const tabFilterColumn = tabsColumnName
-    ? table.getAllColumns().filter((column) => column.id === tabsColumnName && column.columnDef.meta?.filterOptions)[0]
+    ? table.getAllColumns().find((column) => column.id === tabsColumnName && column.columnDef.meta?.filterOptions)
     : null;
   const dropdownFilterColumns = filterableColumns.filter((column) =>
     tabsColumnName && isMobile ? column.id !== tabsColumnName : true,
@@ -327,7 +327,7 @@ export default function DataTable<T extends RowData>({
                       const currentValue = tabFilterValue;
                       tabFilterColumn.setFilterValue(
                         currentValue?.includes(option)
-                          ? currentValue && currentValue.length > 1
+                          ? currentValue.length > 1
                             ? currentValue.filter((o) => o !== option)
                             : undefined
                           : [...(currentValue ?? []), option],
