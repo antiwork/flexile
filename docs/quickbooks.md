@@ -294,7 +294,6 @@ QuickbooksMonthlyFinancialReportSyncJob.perform_async(company_id, month, year)
 
 - Fetches Profit and Loss report from QuickBooks for previous month
 - Extracts Revenue ("Total Income") and "Net Income" figures
-- Updates `CompanyMonthlyFinancialReport` records in Flexile
 
 ## Managing Integration Status
 

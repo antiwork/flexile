@@ -162,34 +162,6 @@ export const companyLawyers = pgTable(
   ],
 );
 
-export const companyMonthlyFinancialReports = pgTable(
-  "company_monthly_financial_reports",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    companyId: bigint("company_id", { mode: "bigint" }).notNull(),
-    year: integer().notNull(),
-    month: integer().notNull(),
-    netIncomeCents: bigint("net_income_cents", { mode: "bigint" }).notNull(),
-    revenueCents: bigint("revenue_cents", { mode: "bigint" }).notNull(),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-  },
-  (table) => [
-    index("index_company_monthly_financial_reports_on_company_id").using(
-      "btree",
-      table.companyId.asc().nullsLast().op("int8_ops"),
-    ),
-    uniqueIndex("index_company_monthly_financials_on_company_year_month").using(
-      "btree",
-      table.companyId.asc().nullsLast().op("int8_ops"),
-      table.year.asc().nullsLast().op("int4_ops"),
-      table.month.asc().nullsLast().op("int4_ops"),
-    ),
-  ],
-);
-
 export const companyStripeAccounts = pgTable(
   "company_stripe_accounts",
   {
