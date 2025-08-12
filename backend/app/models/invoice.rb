@@ -29,10 +29,7 @@ class Invoice < ApplicationRecord
   DELETABLE_STATES = [RECEIVED, APPROVED]
   ALL_STATES = READ_ONLY_STATES + EDITABLE_STATES
 
-  BASE_FLEXILE_FEE_CENTS = 50
-  MAX_FLEXILE_FEE_CENTS = 15_00
-  PERCENT_FLEXILE_FEE = 1.5
-  private_constant :BASE_FLEXILE_FEE_CENTS, :MAX_FLEXILE_FEE_CENTS, :PERCENT_FLEXILE_FEE
+
 
   has_many :invoice_line_items, autosave: true
   has_many :invoice_expenses, autosave: true
@@ -83,7 +80,7 @@ class Invoice < ApplicationRecord
   }
   validates :flexile_fee_cents, presence: true, numericality: {
     only_integer: true,
-    greater_than_or_equal_to: BASE_FLEXILE_FEE_CENTS,
+    greater_than_or_equal_to: FlexileFeeCalculator::INVOICE_BASE_FEE_CENTS,
   }, on: :create
   validate :total_must_be_a_sum_of_cash_and_equity
   validate :min_equity_less_than_max_equity
