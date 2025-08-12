@@ -253,9 +253,9 @@ const BankAccountsSection = () => {
       return z
         .object({
           email: z.string(),
-          country_code: z.string(),
-          citizenship_country_code: z.string(),
-          country: z.string(),
+          country_code: z.string().nullable(),
+          citizenship_country_code: z.string().nullable(),
+          country: z.string().nullable(),
           state: z.string().nullable(),
           city: z.string().nullable(),
           zip_code: z.string().nullable(),
@@ -279,7 +279,7 @@ const BankAccountsSection = () => {
     data.bank_accounts.find((bankAccount) => bankAccount.used_for_dividends)?.id,
   );
 
-  const isFromSanctionedCountry = sanctionedCountries.has(data.country_code);
+  const isFromSanctionedCountry = data.country_code ? sanctionedCountries.has(data.country_code) : false;
 
   const useBankAccountMutation = useMutation({
     mutationFn: async ({ bankAccountId, useFor }: { bankAccountId: number; useFor: "invoices" | "dividends" }) => {

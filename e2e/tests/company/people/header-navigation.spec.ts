@@ -56,8 +56,7 @@ test.describe("People header navigation", () => {
     const { company, adminUser } = await setup();
     const companyLawyer = (await usersFactory.create()).user;
     await companyLawyersFactory.create({ companyId: company.id, userId: companyLawyer.id });
-    await login(page, companyLawyer);
-    await page.goto(`/people/${adminUser.externalId}`);
+    await login(page, companyLawyer, `/people/${adminUser.externalId}`);
 
     await expect(page.getByRole("tab", { name: "Details" })).not.toBeVisible();
     for (const { name, href } of expectedTabs) await expectTab(page, name, href);
@@ -65,8 +64,7 @@ test.describe("People header navigation", () => {
 
   test("shows the expected tabs for company administrator", async ({ page }) => {
     const { adminUser } = await setup();
-    await login(page, adminUser);
-    await page.goto(`/people/${adminUser.externalId}`);
+    await login(page, adminUser, `/people/${adminUser.externalId}`);
 
     for (const { name, href } of expectedTabs) await expectTab(page, name, href);
     await expectTab(page, "Details", "details");

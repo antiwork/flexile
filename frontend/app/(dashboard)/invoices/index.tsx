@@ -140,18 +140,27 @@ export const useApproveInvoices = (onSuccess?: () => void) => {
   });
 };
 
-export const ApproveButton = ({ invoice, onApprove }: { invoice: Invoice; onApprove?: () => void }) => {
+export const ApproveButton = ({
+  invoice,
+  onApprove,
+  className,
+}: {
+  invoice: Invoice;
+  onApprove?: () => void;
+  className?: string;
+}) => {
   const company = useCurrentCompany();
   const approveInvoices = useApproveInvoices(onApprove);
   const pay = useIsPayable()(invoice);
 
   return (
     <MutationButton
+      className={className}
       mutation={approveInvoices}
       param={{ [pay ? "pay_ids" : "approve_ids"]: [invoice.id] }}
       successText={pay ? "Payment initiated" : "Approved!"}
       loadingText={pay ? "Sending payment..." : "Approving..."}
-      disabled={!!pay && (!company.completedPaymentMethodSetup || !taxRequirementsMet(invoice))}
+      disabled={!!pay && !company.completedPaymentMethodSetup}
     >
       {pay ? (
         <>
@@ -207,15 +216,16 @@ export const RejectModal = ({
         </DialogHeader>
         <div className="grid gap-2">
           <Label htmlFor="reject-reason">
-            Explain why the {ids.length > 1 ? "invoices were" : "invoice was"} rejected and how to fix it (optional)
+            Optionally, explain why the {ids.length > 1 ? "invoices were" : "invoice was"} rejected and how to fix it.
           </Label>
           <Textarea
             id="reject-reason"
             value={reason}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setReason(e.target.value)}
+            className="min-h-32"
           />
         </div>
-        <DialogFooter>
+        <DialogFooter className="max-md:grid max-md:grid-cols-2">
           <Button variant="outline" onClick={onClose}>
             No, cancel
           </Button>

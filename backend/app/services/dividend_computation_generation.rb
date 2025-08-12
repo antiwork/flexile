@@ -5,7 +5,12 @@ class DividendComputationGeneration
   MAX_PREFERRED_SHARE_HOLDING_DAYS = 90
   private_constant :DEFAULT_SHARE_HOLDING_DAYS, :MAX_PREFERRED_SHARE_HOLDING_DAYS
 
-  def initialize(company, amount_in_usd:, dividends_issuance_date: Date.current, return_of_capital:)
+  class InsufficientAmountError < StandardError; end
+
+  def initialize(company, amount_in_usd:, dividends_issuance_date: 10.days.from_now.to_date, return_of_capital:)
+    raise ArgumentError, "Please specify whether this is a return of capital distribution" if return_of_capital.nil?
+    raise ArgumentError, "Dividend issuance date must be at least 10 days in the future to allow proper planning and notification" if dividends_issuance_date < 10.days.from_now.to_date
+
     @company = company
     @amount_in_usd = amount_in_usd.to_d
     @dividends_issuance_date = dividends_issuance_date
@@ -13,6 +18,9 @@ class DividendComputationGeneration
   end
 
   def process
+    required_preferred = calculate_required_preferred_dividends
+    raise InsufficientAmountError, "Sorry, you cannot distribute $#{amount_in_usd} as preferred investors require a return of at least $#{required_preferred}" if amount_in_usd < required_preferred
+
     @computation = company.dividend_computations.create!(
       total_amount_in_usd: amount_in_usd, dividends_issuance_date:, return_of_capital:
     )
@@ -101,6 +109,18 @@ class DividendComputationGeneration
       (number * factor).ceil.to_d / factor
     end
 
+    def calculate_required_preferred_dividends
+      return 0.to_d unless company.share_holdings.joins(:share_class).where.not(share_classes: { hurdle_rate: nil }).exists?
+
+      company.share_holdings.joins(:share_class)
+             .where.not(share_classes: { hurdle_rate: nil })
+             .sum do |share_holding|
+        hurdle_rate = share_holding.share_class.hurdle_rate
+        original_issue_price = share_holding.share_class.original_issue_price_in_dollars
+        roundup((hurdle_rate / 100.to_d) * original_issue_price * share_holding.total_shares.to_d)
+      end
+    end
+
     def shares_per_class_per_investor
       return @_shares_per_class_per_investor if defined?(@_shares_per_class_per_investor)
 
@@ -124,7 +144,7 @@ end
 
 =begin
 company = Company.find(5)
-service = DividendComputationGeneration.new(company, amount_in_usd: 5_346_877, return_of_capital: false)
+service = DividendComputationGeneration.new(company, amount_in_usd: 5_346_877, dividends_issuance_date: 15.days.from_now.to_date, return_of_capital: false)
 service.process
 
 puts service.instance_variable_get(:@preferred_dividend_total)

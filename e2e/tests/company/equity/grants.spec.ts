@@ -167,8 +167,7 @@ test.describe("Equity Grants", () => {
         ),
       );
     await logout(page);
-    await login(page, contractorUser);
-    await page.goto("/invoices");
+    await login(page, contractorUser, "/invoices");
     await page.getByRole("link", { name: "New invoice" }).first().click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-1");
     await fillDatePicker(page, "Date", "10/15/2024");
@@ -182,8 +181,7 @@ test.describe("Equity Grants", () => {
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
 
     await logout(page);
-    await login(page, projectBasedUser);
-    await page.goto("/invoices");
+    await login(page, projectBasedUser, "/invoices");
     await page.getByRole("link", { name: "New invoice" }).first().click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-2");
     await fillDatePicker(page, "Date", "11/01/2024");

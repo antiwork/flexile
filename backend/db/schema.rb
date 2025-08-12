@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_09_120029) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -102,7 +102,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.boolean "is_trusted", default: false, null: false
     t.boolean "show_analytics_to_contractors", default: false, null: false
     t.string "default_currency", default: "usd", null: false
-    t.boolean "lawyers_enabled", default: false, null: false
     t.decimal "conversion_share_price_usd"
     t.jsonb "json_data", default: {"flags" => []}, null: false
     t.boolean "equity_enabled", default: false, null: false
@@ -922,10 +921,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.boolean "team_member", default: false, null: false
     t.boolean "sent_invalid_tax_id_email", default: false, null: false
     t.string "clerk_id"
+    t.bigint "signup_invite_link_id"
     t.string "otp_secret_key"
     t.integer "otp_failed_attempts_count", default: 0, null: false
     t.datetime "otp_first_failed_at"
-    t.bigint "signup_invite_link_id"
     t.index ["clerk_id"], name: "index_users_on_clerk_id", unique: true
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
