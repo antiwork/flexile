@@ -6,7 +6,6 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
 
     dividend_computations = Current.company.dividend_computations
       .includes(:dividend_computation_outputs)
-      .order(id: :desc)
       .map do |computation|
       DividendComputationPresenter.new(computation).props
     end
