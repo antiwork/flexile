@@ -107,7 +107,7 @@ test.describe("Dividend Email Company Selection", () => {
 
     await page.goto("/equity/dividends?company_id=invalid-id");
 
-    await expect(page.getByRole("table")).toBeVisible();
+    await expect(page.getByText("You have not been issued any dividends yet.")).toBeVisible();
 
     expect(page.url()).not.toContain("company_id");
   });
