@@ -45,6 +45,8 @@ bundle install
 # Check if database exists and has seed data
 if bin/rails runner "exit(DocumentTemplate.exists? ? 0 : 1)" >/dev/null 2>&1; then
   echo "Database already seeded, skipping db:prepare"
+  echo "Migrating database..."
+  bin/rails db:migrate
 else
   echo "Preparing database and seeding..."
   # Use environment variables to handle SSL for this session only
