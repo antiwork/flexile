@@ -7,12 +7,12 @@ RSpec.describe CompanyUpdateEmailJob do
     let(:company_update) { create(:company_update, company: company, title: "Q1 Update") }
 
     it "sends company update email to the specified user" do
-      expect do
-        described_class.new.perform(company_update.id, user.id)
-      end.to have_enqueued_mail(CompanyUpdateMailer, :update_published).with(
+      expect(CompanyUpdateMailer).to receive(:update_published).with(
         company_update_id: company_update.id,
         user_id: user.id
-      )
+      ).and_return(double(deliver_now: true))
+
+      described_class.new.perform(company_update.id, user.id)
     end
   end
 end
