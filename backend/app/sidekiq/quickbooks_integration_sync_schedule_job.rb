@@ -15,10 +15,10 @@ class QuickbooksIntegrationSyncScheduleJob
     contractors = company.company_workers.active
     return if contractors.none?
 
-    array_of_args = contractors.map do |object|
-      [company_id, object.class.name, object.id]
+    contractors.each do |worker|
+      QuickbooksDataSyncJob.perform_async(company_id, worker.class.name, worker.id)
     end
 
-    QuickbooksDataSyncJob.perform_bulk(array_of_args)
+    integration.update!(last_sync_at: Time.current)
   end
 end

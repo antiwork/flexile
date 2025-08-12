@@ -3,7 +3,6 @@ import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { integrations } from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import {
   CLEARANCE_BANK_ACCOUNT_NAME,
   getQuickbooksAuthUrl,
@@ -194,10 +193,5 @@ export const quickbooksRouter = createRouter({
           },
         })
         .where(eq(integrations.id, integration.id));
-
-      await inngest.send({
-        name: "quickbooks/sync-integration",
-        data: { companyId: String(ctx.company.id) },
-      });
     }),
 });

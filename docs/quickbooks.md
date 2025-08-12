@@ -208,17 +208,16 @@ The `integration_records` table in Flexile's database links Flexile entities to 
 **Background jobs**:
 
 ```ruby
-QuickbooksIntegrationSyncScheduleJob.perform_async(integration_id)
-QuickbooksDataSyncJob.perform_async(contractor_id, 'CompanyContractor')
+QuickbooksIntegrationSyncScheduleJob.perform_async(company_id)
 ```
 
 **What this does**:
 
-- Checks if corresponding Vendor exists in QBO (matching by email and display name)
-- Creates new Vendor in QBO if not found
-- Updates existing Vendor sync token if found
+- Activates the QuickBooks integration
+- Syncs all active company workers to QuickBooks as vendors
+- Each worker is synced individually using `QuickbooksDataSyncJob`
 - Creates or updates `integration_record` to link Flexile `CompanyContractor` with QBO `Vendor`
-- Triggers `quickbooks/sync-workers` Inngest event for batch processing
+- Updates integration's `last_sync_at` timestamp
 
 ### Syncing Invoices as Bills
 
@@ -362,13 +361,14 @@ puts integration.sync_error if integration.sync_error.present?
 3. Review Audit Log in QBO for specific transactions
 4. Compare data between Flexile and QuickBooks
 
-### Check Inngest Dashboard
+### Check Sidekiq Dashboard
 
-Monitor function status for:
+Monitor job status for:
 
-- `quickbooks/sync-integration`
-- `quickbooks/sync-workers`
-- `quickbooks/sync-financial-report`
+- `QuickbooksIntegrationSyncScheduleJob`
+- `QuickbooksDataSyncJob`
+- `QuickbooksCompanyFinancialReportSyncJob`
+- `QuickbooksMonthlyFinancialReportSyncJob`
 
 ### Manual Resync
 
