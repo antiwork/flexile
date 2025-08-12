@@ -23,6 +23,10 @@ export const calculateInvoiceEquity = async ({
   let equityPercentage = providedEquityPercentage ?? companyContractor.equityPercentage;
 
   const unvestedGrant = await getUniqueUnvestedEquityGrantForYear(companyContractor, invoiceYear);
+  if (equityPercentage !== 0 && !unvestedGrant) {
+    Bugsnag.notify(`calculateInvoiceEquity: Error selecting active grant for CompanyWorker ${companyContractor.id}`);
+    return null;
+  }
   let sharePriceUsd = unvestedGrant?.sharePriceUsd ?? 0;
   if (equityPercentage !== 0 && !unvestedGrant) {
     const company = await db.query.companies.findFirst({
