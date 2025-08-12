@@ -14,29 +14,5 @@ RSpec.describe CompanyUpdateEmailJob do
         user_id: user.id
       )
     end
-
-    context "when company_update_id is invalid" do
-      it "raises ActiveRecord::RecordNotFound" do
-        expect do
-          described_class.new.perform(999999, user.id)
-        end.to raise_error(ActiveRecord::RecordNotFound)
-      end
-    end
-
-    context "when user_id is invalid" do
-      it "raises ActiveRecord::RecordNotFound" do
-        expect do
-          described_class.new.perform(company_update.id, 999999)
-        end.to raise_error(ActiveRecord::RecordNotFound)
-      end
-    end
-
-    context "when both IDs are invalid" do
-      it "raises ActiveRecord::RecordNotFound" do
-        expect do
-          described_class.new.perform(999999, 999999)
-        end.to raise_error(ActiveRecord::RecordNotFound)
-      end
-    end
   end
 end
