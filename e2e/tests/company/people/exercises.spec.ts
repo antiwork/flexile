@@ -53,8 +53,7 @@ test.describe("People - Exercises Table", () => {
       shareHoldingId: shareHolding2.id,
     });
 
-    await login(page, adminUser);
-    await page.goto(`/people/${investorUser.externalId}`);
+    await login(page, adminUser, `/people/${investorUser.externalId}`);
     await page.waitForLoadState("networkidle");
 
     // Go to the exercises tab

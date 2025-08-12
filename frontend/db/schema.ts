@@ -1672,7 +1672,6 @@ export const companies = pgTable(
     showAnalyticsToContractors: boolean("show_analytics_to_contractors").notNull().default(false),
     defaultCurrency: varchar("default_currency").default("usd").notNull(),
 
-    lawyersEnabled: boolean("lawyers_enabled").notNull().default(false),
     conversionSharePriceUsd: numeric("conversion_share_price_usd"),
     jsonData: jsonb("json_data").notNull().$type<{ flags: string[] }>().default({ flags: [] }),
   },

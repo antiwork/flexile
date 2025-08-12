@@ -93,6 +93,8 @@ test.describe("Contractor Invite Link Joining flow", () => {
       userId: contractor.id,
     });
 
+    // Adding redirect route so it's a quick login
+    // await login(page, contractor, "/settings");
     await login(page, contractor);
 
     await page.goto(`/invite/${inviteLink?.token}`);
@@ -128,9 +130,7 @@ test.describe("Contractor Invite Link Joining flow", () => {
     expect(updatedCompayContractor?.role).not.toBe(null);
 
     await logout(page);
-    await login(page, admin);
-    await page.getByRole("link", { name: "People" }).click();
-    await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
+    await login(page, admin, "/people");
 
     const row = page.getByRole("row").filter({ hasText: contractor.preferredName || contractor.email });
     await expect(row).toContainText(contractor.preferredName || contractor.email);
