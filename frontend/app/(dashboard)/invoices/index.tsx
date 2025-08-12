@@ -16,6 +16,9 @@ type Invoice = RouterOutput["invoices"]["list"][number] | RouterOutput["invoices
 export const EDITABLE_INVOICE_STATES: Invoice["status"][] = ["received", "rejected"];
 export const DELETABLE_INVOICE_STATES: Invoice["status"][] = ["received", "approved"];
 
+export const taxRequirementsMet = (invoice: Invoice) =>
+  !!invoice.contractor.user.complianceInfo?.taxInformationConfirmedAt;
+
 export const useCanSubmitInvoices = () => {
   const user = useCurrentUser();
   const company = useCurrentCompany();

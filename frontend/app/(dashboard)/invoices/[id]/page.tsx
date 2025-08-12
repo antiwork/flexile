@@ -1,6 +1,6 @@
 "use client";
 
-import { ExclamationTriangleIcon as _ExclamationTriangleIcon } from "@heroicons/react/20/solid";
+import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { InformationCircleIcon, PaperClipIcon, PencilIcon, PrinterIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { CircleAlert, Trash2 } from "lucide-react";
@@ -10,7 +10,7 @@ import React, { Fragment, useMemo, useState } from "react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -30,6 +30,7 @@ import {
   EDITABLE_INVOICE_STATES,
   LegacyAddress,
   RejectModal,
+  taxRequirementsMet,
   useIsActionable,
   useIsDeletable,
 } from "..";
@@ -253,6 +254,13 @@ export default function InvoicePage() {
           </DialogContent>
         </Dialog>
       ) : null}
+      {!taxRequirementsMet(invoice) && (
+        <Alert className="mx-4 print:hidden" variant="destructive">
+          <ExclamationTriangleIcon />
+          <AlertTitle>Missing tax information.</AlertTitle>
+          <AlertDescription>Invoice is not payable until contractor provides tax information.</AlertDescription>
+        </Alert>
+      )}
 
       <StatusDetails invoice={invoice} className="print:hidden" />
 
