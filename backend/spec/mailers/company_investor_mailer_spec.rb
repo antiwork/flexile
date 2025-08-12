@@ -15,9 +15,10 @@ RSpec.describe CompanyInvestorMailer do
 
       expect(mail.to).to eq([user.email])
       expect(mail.subject).to eq("Upcoming distribution from #{company.name}")
-      expect(plaintext).to include("You’re set to receive a $50.00 distribution from your investment in #{company.name}.")
+      expect(plaintext).to include("Flexile Hello #{user.name}, You’re set to receive a $50.00 distribution from your investment in #{company.name}.")
       expect(plaintext).to include("Based on your total investment of $1,000.00, your total return so far is 10.0%.")
       expect(plaintext).to include("We plan to send this payment to your payout method ending in 1234, with $10.00 expected to be withheld for taxes.")
+      expect(mail.body.encoded).to include("company_id=#{company.external_id}")
     end
 
     context "when tax information is missing" do
@@ -32,7 +33,7 @@ RSpec.describe CompanyInvestorMailer do
         mail = described_class.dividend_issued(investor_dividend_round_id: investor_dividend_round.id)
         plaintext = ActionView::Base.full_sanitizer.sanitize(mail.body.encoded).gsub("\r\n", " ").gsub(/\s+/, " ").strip
 
-        expect(plaintext).to include("You’re set to receive a $50.00 distribution from your investment in #{company.name}.")
+        expect(plaintext).to include("Flexile Hello #{user.name}, You’re set to receive a $50.00 distribution from your investment in #{company.name}.")
         expect(plaintext).to include("Based on your total investment of $1,000.00, your total return so far is 10.0%.")
         expect(plaintext).to include("We plan to send this payment to your payout method ending in 1234, with $10.00 expected to be withheld for taxes.")
       end
@@ -45,7 +46,7 @@ RSpec.describe CompanyInvestorMailer do
         mail = described_class.dividend_issued(investor_dividend_round_id: investor_dividend_round.id)
         plaintext = ActionView::Base.full_sanitizer.sanitize(mail.body.encoded).gsub("\r\n", " ").gsub(/\s+/, " ").strip
 
-        expect(plaintext).to include("You’re set to receive a $50.00 distribution from your investment in #{company.name}.")
+        expect(plaintext).to include("Flexile Hello #{user.name}, You’re set to receive a $50.00 distribution from your investment in #{company.name}.")
         expect(plaintext).to include("Based on your total investment of $1,000.00, your total return so far is 10.0%.")
         expect(plaintext).to include("You currently do not have a bank account set up for dividends.")
         expect(plaintext).to include("Once set up, we will send this payment to it, with $10.00 expected to be withheld for taxes.")

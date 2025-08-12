@@ -53,6 +53,13 @@ scope path: :internal, module: :internal do
     end
     resources :workers, only: [:create]
     resources :lawyers, only: [:create]
+    resources :administrators, only: [:create]
+    resources :users, only: [:index] do
+      collection do
+        post :add_role
+        post :remove_role
+      end
+    end
     resources :equity_grant_exercises, only: :create do
       member do
         post :resend

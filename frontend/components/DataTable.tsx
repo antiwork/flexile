@@ -40,12 +40,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/utils";
+import { useIsMobile } from "@/utils/use-mobile";
 
 declare module "@tanstack/react-table" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface ColumnMeta<TData extends RowData, TValue> {
     numeric?: boolean;
     filterOptions?: string[];
+    className?: string;
   }
 }
 
@@ -110,6 +112,7 @@ export default function DataTable<T extends RowData>({
   contextMenuContent,
   selectionActions,
 }: TableProps<T>) {
+  const isMobile = useIsMobile();
   React.useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
@@ -257,7 +260,7 @@ export default function DataTable<T extends RowData>({
               </DropdownMenu>
             ) : null}
 
-            {selectable ? (
+            {selectable && !isMobile ? (
               <div className={cn("flex gap-2", selectedRowCount === 0 && "pointer-events-none opacity-0")}>
                 <div className="bg-accent border-muted flex h-9 items-center justify-center rounded-md border border-dashed px-2 font-medium">
                   <span className="text-sm whitespace-nowrap">
@@ -301,7 +304,7 @@ export default function DataTable<T extends RowData>({
                 <TableHead
                   key={header.id}
                   colSpan={header.colSpan}
-                  className={`${cellClasses(header.column, "header")} ${sortable && header.column.getCanSort() ? "cursor-pointer" : ""}`}
+                  className={`${cellClasses(header.column, "header")} ${sortable && header.column.getCanSort() ? "cursor-pointer" : ""} ${header.column.columnDef.meta?.className || ""}`}
                   aria-sort={
                     header.column.getIsSorted() === "asc"
                       ? "ascending"
@@ -344,7 +347,7 @@ export default function DataTable<T extends RowData>({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className={`${cellClasses(cell.column)} ${cell.column.id === "actions" ? "relative z-1 md:text-right print:hidden" : ""}`}
+                      className={`${cellClasses(cell.column)} ${cell.column.id === "actions" ? "relative z-1 md:text-right print:hidden" : ""} ${cell.column.columnDef.meta?.className || ""}`}
                       onClick={(e) => cell.column.id === "actions" && e.stopPropagation()}
                     >
                       {typeof cell.column.columnDef.header === "string" && (
