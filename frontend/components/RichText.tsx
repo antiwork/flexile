@@ -45,6 +45,7 @@ export const Editor = ({
   className,
   id,
   "aria-label": ariaLabel,
+  toolbarItems: propToolbarItems,
   ...props
 }: {
   value: string | null;
@@ -81,7 +82,7 @@ export const Editor = ({
 
   const currentLink: unknown = editor?.getAttributes("link").href;
 
-  const toolbarItems = props.toolbarItems ?? [
+  const toolbarItems = propToolbarItems || [
     { label: "Bold", name: "bold", icon: Bold },
     { label: "Italic", name: "italic", icon: Italic },
     { label: "Underline", name: "underline", icon: Underline },
