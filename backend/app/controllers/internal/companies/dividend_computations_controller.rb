@@ -36,7 +36,8 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     render json: computation_data.merge(computation_outputs:)
   end
 
-  def dividend_computation_params
-    params.require(:dividend_computation).permit(:amount_in_usd, :dividends_issuance_date, :return_of_capital)
-  end
+  private
+    def dividend_computation_params
+      params.require(:dividend_computation).permit(:amount_in_usd, :dividends_issuance_date, :return_of_capital)
+    end
 end
