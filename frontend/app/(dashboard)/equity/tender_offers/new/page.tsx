@@ -24,7 +24,7 @@ const formSchema = z.object({
   endDate: z.instanceof(CalendarDate, { message: "This field is required." }),
   minimumValuation: z.number(),
   attachment: z.instanceof(File, { message: "This field is required." }),
-  letterOfTransmittal: z.string(),
+  letterOfTransmittal: z.string().min(1, "This field is required."),
 });
 
 export default function NewBuyback() {

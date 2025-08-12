@@ -18,6 +18,7 @@ const RichText = ({ content, className }: { content: string; className?: string 
         class: cn(className, "prose"),
       },
     },
+    editable: false,
     immediatelyRender: false,
   });
 
@@ -52,7 +53,9 @@ export const Editor = ({
   id?: string;
 } & React.ComponentProps<"div">) => {
   const [addingLink, setAddingLink] = useState<{ url: string } | null>(null);
-  id ||= React.useId();
+
+  const uid = React.useId();
+  const componentId = id ?? uid;
 
   const editor = useEditor({
     extensions: richTextExtensions,
@@ -61,7 +64,7 @@ export const Editor = ({
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
     editorProps: {
       attributes: {
-        id,
+        id: componentId,
         class: cn(className, "prose p-4 min-h-60 max-h-96 overflow-y-auto max-w-full rounded-b-md outline-none"),
         "aria-label": ariaLabel ?? "",
       },
