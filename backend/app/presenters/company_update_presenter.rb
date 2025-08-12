@@ -27,13 +27,6 @@ class CompanyUpdatePresenter
     }
 
     if company_update.persisted?
-      if company_update.period.present? && props[:financial_periods].none? { _1[:period] == company_update.period.to_sym && _1[:period_started_on] == company_update.period_started_on.to_s }
-        props[:financial_periods] << {
-          label: "#{period_label(company_update.period_started_on, company_update.period)} (Original period)",
-          period: company_update.period,
-          period_started_on: company_update.period_started_on.to_s,
-        }.merge(fetch_financial_data(company_update.period_started_on, company_update.period) || {})
-      end
       props[:company_update] = present_update(company_update)
     end
 
@@ -44,7 +37,6 @@ class CompanyUpdatePresenter
     props = {
       id: company_update.external_id,
       title: company_update.title,
-      period_label: company_update.period ? period_label(company_update.period_started_on, company_update.period) : nil,
       sender_name: company.primary_admin.user.name,
       body: company_update.body,
       status: company_update.status,
@@ -73,12 +65,8 @@ class CompanyUpdatePresenter
         id: company_update.external_id,
         title: company_update.title,
         body: company_update.body,
-        period: company_update.period,
-        period_started_on: company_update.period_started_on,
         sent_at: company_update.sent_at,
         status: company_update.status,
-        show_revenue: company_update.show_revenue?,
-        show_net_income: company_update.show_net_income?,
       }
     end
 end
