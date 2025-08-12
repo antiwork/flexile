@@ -278,10 +278,6 @@ QuickbooksDataSyncJob.perform_async(consolidated_payment_id, 'ConsolidatedPaymen
    - Debits the clearing account for total amount
    - Credits company's main bank account
 
-### Syncing Financial Reports
-
-**When**: Automatically on the 20th of each month
-
 ## Managing Integration Status
 
 ### Integration Statuses
