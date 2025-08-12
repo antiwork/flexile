@@ -12,7 +12,7 @@ class CompanyUpdatePresenter
     financial_periods = %i[month quarter year].map do |period|
       date = today.public_send("last_#{period}").public_send("beginning_of_#{period}")
       {
-        label: "#{period_label(date, period)} (Last #{period})",
+        label: "Last #{period}",
         period:,
         period_started_on: date.to_s,
       }.merge(fetch_financial_data(date, period) || {})
@@ -50,13 +50,6 @@ class CompanyUpdatePresenter
   private
     attr_reader :company_update, :company
 
-    def period_label(time, period)
-      case period.to_sym
-      when :month then "#{time.strftime("%B")} #{time.year}"
-      when :quarter then "Q#{time.quarter} #{time.year}"
-      when :year then time.year.to_s
-      end
-    end
 
 
 
