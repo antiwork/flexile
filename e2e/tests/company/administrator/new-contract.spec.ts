@@ -184,8 +184,7 @@ test.describe("New Contractor", () => {
       payRateType: PayRateType.Custom,
       contractSignedElsewhere: true,
     });
-    await login(page, user);
-    await page.goto("/people");
+    await login(page, user, "/people");
     await page.getByRole("button", { name: "Add contractor" }).click();
     await expect(page.getByLabel("Role")).toHaveValue("Hourly Role 1");
     await expect(page.getByLabel("Rate")).toHaveValue("100");
@@ -202,8 +201,7 @@ test.describe("New Contractor", () => {
     const targetDate = new Date();
     targetDate.setDate(targetDay);
 
-    await login(page, user);
-    await page.goto("/people");
+    await login(page, user, "/people");
     await page.getByRole("button", { name: "Add contractor" }).click();
 
     await expect(page.getByText("Who's joining?")).toBeVisible();

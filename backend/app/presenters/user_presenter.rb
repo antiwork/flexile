@@ -123,6 +123,7 @@ class UserPresenter
           isTrusted: company.is_trusted,
           checklistItems: company.checklist_items(user),
           checklistCompletionPercentage: company.checklist_completion_percentage(user),
+          externalId: company.external_id,
         }
       end,
       id: user.external_id,

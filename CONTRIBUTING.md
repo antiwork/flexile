@@ -44,25 +44,7 @@
 
 ### Testing Guidelines
 
-- Use Playwright tests in `e2e/**/*.spec.ts`
-- If migrating from rspec, delete the rspec tests
-- Factories can be created using the rspec factories in `spec/factories` in the `/e2e/factories` folder
-- For any broken locators / assertions, you can use the playwright extension to record tests or pick locators
-- Avoid using `page.waitForTimeout()` in e2e tests unless absolutely necessary, as timeouts slow down test execution. Instead use `waitFor()`, `toBeVisible()`, `toPass()`, or other Playwright assertions that wait for specific conditions
-- For Ruby/Rails changes:
-  - Add or update unit tests in `backend/spec/models/` for model changes
-  - Add or update controller tests in `backend/spec/controllers/` for controller changes
-  - Add or update system tests in `backend/spec/system/` for UI flow changes
-  - Run tests with `bundle exec rspec <path_to_spec>` to verify
-- For TypeScript/Next.js changes:
-  - Add or update unit tests for front-end business logic
-  - Add or update e2e tests in `e2e/tests/` that cover the changed functionality
-  - Follow the existing test patterns in similar files
-  - Run tests with `pnpm playwright test <path_to_spec>` to verify e2e tests
-- Tests should cover:
-  - Happy path (expected behavior)
-  - Edge cases and error handling
-  - Any regressions that might be introduced
+- All functional changes require specs for models, controllers, services, and e2e tests
 
 ### Frontend Development
 

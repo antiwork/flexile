@@ -84,8 +84,6 @@ export default function RolePage() {
 
   roledMembersEmailList.current = new Set(users.map((member) => member.email));
 
-  // const roledMembersEmailList = useMemo(() => ;
-
   // 2. Form
   const addMemberForm = useForm<WorkspaceMemberAdditionForm>({
     resolver: zodResolver(
@@ -168,7 +166,7 @@ export default function RolePage() {
     },
   });
 
-  //  Switch based on selected option
+  // Switch based on selected option
   // For existing user, change role
   // For new user, invite flow
   const addMemberFormSubmit = useCallback(
