@@ -2,7 +2,7 @@
 
 RSpec.describe CompanyUpdateEmailJob do
   describe "#perform" do
-    let(:company) { create(:company, name: "TestCo", email: "admin@testco.com") }
+    let(:company) { create(:company, :completed_onboarding, name: "TestCo", email: "admin@testco.com") }
     let(:user) { create(:user, email: "user@example.com") }
     let(:company_update) { create(:company_update, company: company, title: "Q1 Update") }
 
