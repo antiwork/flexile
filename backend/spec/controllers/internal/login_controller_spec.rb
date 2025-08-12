@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
-require "spec_helper"
-
-RSpec.describe Internal::LoginController, type: :controller do
+RSpec.describe Internal::LoginController do
   describe "POST #create" do
     let(:user) { create(:user) }
     let(:api_token) { GlobalConfig.get("API_SECRET_TOKEN", Rails.application.secret_key_base) }
@@ -16,7 +14,7 @@ RSpec.describe Internal::LoginController, type: :controller do
 
         expect(response).to have_http_status(:ok)
 
-        json_response = JSON.parse(response.body)
+        json_response = response.parsed_body
         expect(json_response["jwt"]).to be_present
         expect(json_response["user"]["id"]).to eq(user.id)
         expect(json_response["user"]["email"]).to eq(user.email)
@@ -32,7 +30,7 @@ RSpec.describe Internal::LoginController, type: :controller do
 
         expect(response).to have_http_status(:unauthorized)
 
-        json_response = JSON.parse(response.body)
+        json_response = response.parsed_body
         expect(json_response["error"]).to eq("Invalid verification code, please try again.")
       end
     end
@@ -47,7 +45,7 @@ RSpec.describe Internal::LoginController, type: :controller do
 
         expect(response).to have_http_status(:unauthorized)
 
-        json_response = JSON.parse(response.body)
+        json_response = response.parsed_body
         expect(json_response["error"]).to eq("Invalid verification code, please try again.")
       end
     end
@@ -58,7 +56,7 @@ RSpec.describe Internal::LoginController, type: :controller do
 
         expect(response).to have_http_status(:not_found)
 
-        json_response = JSON.parse(response.body)
+        json_response = response.parsed_body
         expect(json_response["error"]).to eq("User not found")
       end
     end
@@ -69,7 +67,7 @@ RSpec.describe Internal::LoginController, type: :controller do
 
         expect(response).to have_http_status(:bad_request)
 
-        json_response = JSON.parse(response.body)
+        json_response = response.parsed_body
         expect(json_response["error"]).to eq("Email is required")
       end
 
@@ -78,7 +76,7 @@ RSpec.describe Internal::LoginController, type: :controller do
 
         expect(response).to have_http_status(:bad_request)
 
-        json_response = JSON.parse(response.body)
+        json_response = response.parsed_body
         expect(json_response["error"]).to eq("OTP code is required")
       end
 
@@ -87,7 +85,7 @@ RSpec.describe Internal::LoginController, type: :controller do
 
         expect(response).to have_http_status(:bad_request)
 
-        json_response = JSON.parse(response.body)
+        json_response = response.parsed_body
         expect(json_response["error"]).to eq("Email is required")
       end
     end
@@ -98,7 +96,7 @@ RSpec.describe Internal::LoginController, type: :controller do
 
         expect(response).to have_http_status(:bad_request)
 
-        json_response = JSON.parse(response.body)
+        json_response = response.parsed_body
         expect(json_response["error"]).to eq("Email is required")
       end
 
@@ -107,7 +105,7 @@ RSpec.describe Internal::LoginController, type: :controller do
 
         expect(response).to have_http_status(:bad_request)
 
-        json_response = JSON.parse(response.body)
+        json_response = response.parsed_body
         expect(json_response["error"]).to eq("OTP code is required")
       end
     end
@@ -123,7 +121,7 @@ RSpec.describe Internal::LoginController, type: :controller do
 
         expect(response).to have_http_status(:too_many_requests)
 
-        json_response = JSON.parse(response.body)
+        json_response = response.parsed_body
         expect(json_response["error"]).to eq("Too many login attempts. Please wait before trying again.")
         expect(json_response["retry_after"]).to eq(10.minutes.to_i)
       end
@@ -133,7 +131,7 @@ RSpec.describe Internal::LoginController, type: :controller do
       it "generates a valid JWT token" do
         post :create, params: { email: user.email, otp_code: valid_otp, token: api_token }
 
-        json_response = JSON.parse(response.body)
+        json_response = response.parsed_body
         jwt_token = json_response["jwt"]
 
         jwt_secret = GlobalConfig.get("JWT_SECRET", Rails.application.secret_key_base)

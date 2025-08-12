@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
-require "spec_helper"
-
-RSpec.describe CompanyUpdateMailer, type: :mailer do
+RSpec.describe CompanyUpdateMailer do
   describe "#update_published" do
     let(:company) { create(:company, :completed_onboarding) }
     let(:user) { create(:user) }

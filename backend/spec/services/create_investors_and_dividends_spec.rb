@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "spec_helper"
-
 RSpec.describe CreateInvestorsAndDividends do
   let(:company) { create(:company) }
   let!(:company_admin) { create(:company_administrator, company: company) }
