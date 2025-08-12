@@ -26,10 +26,6 @@ RSpec.describe Internal::Companies::DividendComputationsController, type: :contr
     allow_any_instance_of(DividendComputationPolicy).to receive(:show?).and_return(true)
   end
 
-  after do
-    Current.reset
-  end
-
   describe "GET #index" do
     before do
       dividend_computation
