@@ -11,7 +11,7 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import DatePicker from "@/components/DatePicker";
 import { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
-import RichText from "@/components/RichText";
+import { Editor as RichTextEditor } from "@/components/RichText";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -149,19 +149,13 @@ export default function NewBuyback() {
                 <FormItem>
                   <FormLabel>Letter of transmittal</FormLabel>
                   <FormControl>
-                    <div>
-                      <RichText
-                        editable
-                        content={field.value || ""}
-                        onChange={field.onChange}
-                        className="border-input placeholder:text-muted-foreground h-[50vh] max-w-none overflow-y-auto rounded-md border bg-transparent p-3 text-sm"
-                      />
-                      <p className="mt-2 text-xs text-gray-500">
-                        Rich text formatting will be preserved. You can paste from Word or Google Docs.
-                      </p>
-                    </div>
+                    <RichTextEditor {...field} toolbarItems={[]} aria-label="Letter of transmittal" />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage>
+                    <span className="text-xs text-gray-500">
+                      Rich text formatting will be preserved. You can paste from Word or Google Docs.
+                    </span>
+                  </FormMessage>
                 </FormItem>
               )}
             />

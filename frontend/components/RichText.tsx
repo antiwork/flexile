@@ -9,35 +9,19 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/utils";
 import { richTextExtensions } from "@/utils/richText";
 
-const RichText = ({
-  content,
-  editable = false,
-  className,
-  onChange,
-}: {
-  content: string;
-  editable?: boolean;
-  onChange?: (value: string) => void;
-  className?: string;
-}) => {
+const RichText = ({ content, className }: { content: string; className?: string }) => {
   const editor = useEditor({
     extensions: richTextExtensions,
     content,
-    onUpdate: ({ editor }) => onChange?.(editor.getHTML()),
     editorProps: {
       attributes: {
         class: cn(className, "prose"),
       },
     },
-    editable,
     immediatelyRender: false,
   });
 
-  useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content, false);
-    }
-  }, [content, editor]);
+  useEffect(() => void editor?.commands.setContent(content, false), [content]);
 
   return (
     <div>
@@ -50,14 +34,25 @@ export const Editor = ({
   value,
   onChange,
   className,
+  toolbarItems,
+  id,
+  "aria-label": ariaLabel,
   ...props
 }: {
   value: string | null;
   onChange: (value: string) => void;
   className?: string;
+  toolbarItems?: {
+    label: string;
+    name: string;
+    icon: React.ElementType;
+    onClick?: () => void;
+    attributes?: Record<string, unknown>;
+  }[];
+  id?: string;
 } & React.ComponentProps<"div">) => {
   const [addingLink, setAddingLink] = useState<{ url: string } | null>(null);
-  const id = React.useId();
+  id ||= React.useId();
 
   const editor = useEditor({
     extensions: richTextExtensions,
@@ -68,6 +63,7 @@ export const Editor = ({
       attributes: {
         id,
         class: cn(className, "prose p-4 min-h-60 max-h-96 overflow-y-auto max-w-full rounded-b-md outline-none"),
+        "aria-label": ariaLabel ?? "",
       },
     },
     immediatelyRender: false,
@@ -81,7 +77,7 @@ export const Editor = ({
 
   const currentLink: unknown = editor?.getAttributes("link").href;
 
-  const toolbarItems = [
+  toolbarItems ||= [
     { label: "Bold", name: "bold", icon: Bold },
     { label: "Italic", name: "italic", icon: Italic },
     { label: "Underline", name: "underline", icon: Underline },
@@ -94,6 +90,7 @@ export const Editor = ({
     },
     { label: "Bullet list", name: "bulletList", icon: List },
   ];
+
   const onToolbarClick = (item: (typeof toolbarItems)[number]) => {
     if (!editor) return;
     if (item.onClick) return item.onClick();
@@ -116,20 +113,23 @@ export const Editor = ({
         className,
       )}
     >
-      <div className="border-input group-aria-invalid:border-destructive flex border-b">
-        {toolbarItems.map((item) => (
-          <button
-            type="button"
-            className={cn(linkClasses, "p-3 text-sm")}
-            key={item.label}
-            aria-label={item.label}
-            aria-pressed={editor?.isActive(item.name, item.attributes)}
-            onClick={() => onToolbarClick(item)}
-          >
-            <item.icon className="size-5" />
-          </button>
-        ))}
-      </div>
+      {toolbarItems.length ? (
+        <div className="border-input group-aria-invalid:border-destructive flex border-b">
+          {toolbarItems.map((item) => (
+            <button
+              type="button"
+              className={cn(linkClasses, "p-3 text-sm")}
+              key={item.label}
+              aria-label={item.label}
+              aria-pressed={editor?.isActive(item.name, item.attributes)}
+              onClick={() => onToolbarClick(item)}
+            >
+              <item.icon className="size-5" />
+            </button>
+          ))}
+        </div>
+      ) : null}
+
       {editor ? <EditorContent editor={editor} /> : null}
       <Dialog open={!!addingLink} onOpenChange={() => setAddingLink(null)}>
         <DialogContent>

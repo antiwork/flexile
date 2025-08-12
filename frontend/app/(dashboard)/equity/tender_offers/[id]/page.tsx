@@ -195,11 +195,12 @@ export default function BuybackView() {
               </div>
               <Separator />
               <div className="flex flex-col gap-4">
-                <div className="h-96 overflow-y-auto rounded-md border p-4">
-                  <RichText
-                    content={data.letterOfTransmittal || "Letter of transmittal not available"}
-                    className="max-w-none"
-                  />
+                <div
+                  role="region"
+                  aria-label="Letter of transmittal"
+                  className="h-96 overflow-y-auto rounded-md border p-4"
+                >
+                  <RichText content={data.letterOfTransmittal} className="max-w-none" />
                 </div>
                 <div className="grid gap-3">
                   {signed ? (

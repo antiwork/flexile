@@ -844,7 +844,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.integer "accepted_price_cents"
-    t.text "letter_of_transmittal"
+    t.text "letter_of_transmittal", null: false
     t.index ["company_id"], name: "index_tender_offers_on_company_id"
     t.index ["external_id"], name: "index_tender_offers_on_external_id", unique: true
   end

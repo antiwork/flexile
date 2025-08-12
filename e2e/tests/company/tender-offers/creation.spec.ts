@@ -39,7 +39,7 @@ test.describe("Buyback creation", () => {
     await page.getByLabel("Document package").setInputFiles("e2e/samples/sample.zip");
 
     const letterOfTransmittal = faker.lorem.paragraphs();
-    await page.locator('.tiptap[contenteditable="true"]').fill(letterOfTransmittal);
+    await page.getByLabel("Letter of transmittal").fill(letterOfTransmittal);
 
     await page.getByRole("button", { name: "Create buyback" }).click();
     await expect(page.getByText("There are no buybacks yet.")).toBeVisible();
@@ -51,7 +51,8 @@ test.describe("Buyback creation", () => {
       })
       .click();
 
-    await page.waitForLoadState("domcontentloaded");
-    await expect(page.locator(".prose")).toContainText(letterOfTransmittal.substring(0, 50));
+    await expect(page.getByRole("region", { name: "Letter of transmittal" })).toContainText(letterOfTransmittal, {
+      useInnerText: true,
+    });
   });
 });

@@ -1179,7 +1179,7 @@ export const tenderOffers = pgTable(
       .notNull()
       .$onUpdate(() => new Date()),
     acceptedPriceCents: integer("accepted_price_cents"),
-    letterOfTransmittal: text("letter_of_transmittal"),
+    letterOfTransmittal: text("letter_of_transmittal").notNull(),
   },
   (table) => [
     index("index_tender_offers_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
