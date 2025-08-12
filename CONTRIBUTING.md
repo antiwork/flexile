@@ -4,22 +4,6 @@ Please see the main [Antiwork Contributing Guidelines](https://github.com/antiwo
 
 ## Flexile-Specific Development Guidelines
 
-### Style Guide
-
-- Follow the existing code patterns
-- Use clear, descriptive variable names
-- Write TypeScript for frontend code
-- Follow Ruby conventions for backend code
-
-### Code Standards
-
-- Always use the latest version of TypeScript, React, and Next.js
-- Sentence case headers and buttons and stuff, not title case
-- Always write ALL of the code
-- Don't apologize for errors, fix them
-- Newlines at end of files, always
-- No explanatory comments please
-
 ### Feature Development
 
 - Add page to `frontend/app/**/page.tsx`
@@ -41,11 +25,3 @@ Please see the main [Antiwork Contributing Guidelines](https://github.com/antiwo
 
 - Any changes to the database schema via Rails migrations in `backend/db/migrate/` must be reflected in `frontend/db/schema.ts`
 - The frontend schema file should be updated to match the Rails schema structure for type safety
-
-### Tech Debt
-
-- Add a `TODO (techdebt)` comment to document refactors that should be made in the future
-
-## License
-
-By contributing, you agree that your contributions will be licensed under the [MIT License](LICENSE.md).
