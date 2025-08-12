@@ -43,7 +43,6 @@ export function AuthPage({
   sendOtpText,
   onVerifyOtp,
   isSignup,
-  highlightedAuthMethod,
 }: {
   title: string;
   description: string;
@@ -52,7 +51,6 @@ export function AuthPage({
   sendOtpText: string;
   onVerifyOtp?: (data: { email: string; otp: string }) => Promise<void>;
   isSignup?: boolean;
-  highlightedAuthMethod: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -222,16 +220,15 @@ export function AuthPage({
               <div className="space-y-2">
                 <Button
                   type="button"
-                  variant={highlightedAuthMethod === "google" ? "primary" : "outline"}
+                  variant="primary"
                   className={cn(
                     `flex h-12 w-full items-center justify-center gap-2 text-sm`,
                     googleAuthError && "border-destructive",
-                    highlightedAuthMethod !== "google" && "bg-white",
                   )}
                   onClick={() => void handleGoogleAuth()}
                   disabled={sendOtp.isPending}
                 >
-                  <div className={cn("size-6", highlightedAuthMethod === "google" ? "text-white" : "text-gray-800")}>
+                  <div className="size-6 text-white">
                     <GoogleIcon />
                   </div>
                   {isSignup ? "Sign up with Google" : "Log in with Google"}
@@ -273,8 +270,8 @@ export function AuthPage({
                   <MutationStatusButton
                     mutation={sendOtp}
                     type="submit"
-                    idleVariant={highlightedAuthMethod === "email" ? "primary" : "outline"}
-                    className={cn("h-12 w-full text-sm", highlightedAuthMethod !== "email" && "bg-white")}
+                    idleVariant="outline"
+                    className="h-12 w-full bg-white text-sm"
                     loadingText="Sending..."
                   >
                     {sendOtpText}
