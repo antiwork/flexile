@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "spec_helper"
-
 RSpec.describe FlexileFeeCalculator do
   describe ".calculate_invoice_fee_cents" do
     it "calculates base fee for zero amount" do
