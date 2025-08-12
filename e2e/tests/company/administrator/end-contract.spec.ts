@@ -9,6 +9,7 @@ import { addDays, addYears, format } from "date-fns";
 import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
 import { assert } from "@/utils/assert";
+import { formatDate, formatServerDate } from "@/utils/time";
 
 test.describe("End contract", () => {
   test("allows admin to end contractor's contract", async ({ page, next }) => {
@@ -33,10 +34,10 @@ test.describe("End contract", () => {
 
     await page.getByRole("button", { name: "Yes, end contract" }).click();
 
-    await expect(page.getByRole("row").getByText(`Ended on ${format(new Date(), "MMM d, yyyy")}`)).toBeVisible();
+    await expect(page.getByRole("row").getByText(`Ended on ${formatDate(formatServerDate(new Date()))}`)).toBeVisible();
     await page.getByRole("link", { name: contractor.preferredName }).click();
 
-    await expect(page.getByText(`Contract ended on ${format(new Date(), "MMM d, yyyy")}`)).toBeVisible();
+    await expect(page.getByText(`Contract ended on ${formatDate(formatServerDate(new Date()))}`)).toBeVisible();
     await expect(page.getByText("Alumni")).toBeVisible();
     await expect(page.getByRole("button", { name: "End contract" })).not.toBeVisible();
     await expect(page.getByRole("button", { name: "Save changes" })).not.toBeVisible();
@@ -66,7 +67,7 @@ test.describe("End contract", () => {
       page
         .getByRole("row")
         .filter({ hasText: contractor.preferredName })
-        .filter({ hasText: `Starts on ${format(startDate, "MMM d, yyyy")}` }),
+        .filter({ hasText: `Starts on ${formatDate(formatServerDate(startDate))}` }),
     ).toBeVisible();
 
     await logout(page);
@@ -103,7 +104,7 @@ test.describe("End contract", () => {
     await page.getByRole("button", { name: "Yes, end contract" }).click();
 
     await page.getByRole("link", { name: contractor.preferredName }).click();
-    await expect(page.getByText(`Contract ends on ${format(futureDate, "MMM d, yyyy")}`)).toBeVisible();
+    await expect(page.getByText(`Contract ends on ${formatDate(formatServerDate(futureDate))}`)).toBeVisible();
     await expect(page.getByRole("button", { name: "End contract" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Save changes" })).not.toBeVisible();
 
