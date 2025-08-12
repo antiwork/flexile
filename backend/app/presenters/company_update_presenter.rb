@@ -15,7 +15,7 @@ class CompanyUpdatePresenter
         label: "Last #{period}",
         period:,
         period_started_on: date.to_s,
-      }.merge(fetch_financial_data(date, period) || {})
+      }
     end
 
     props = {
