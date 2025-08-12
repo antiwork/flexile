@@ -48,21 +48,6 @@ const DividendRound = ({ id }: { id: string }) => {
         cell: (info) => <div className="font-light">{info.getValue() || "Unknown"}</div>,
         footer: "Total",
       }),
-      columnHelper.accessor("numberOfShares", {
-        header: "Number of shares",
-        cell: (info) => {
-          const shares = info.getValue();
-          return shares && shares > 0 ? Number(shares).toLocaleString() : "—";
-        },
-        meta: { numeric: true },
-        footer: () => {
-          const sum = dividends.reduce(
-            (sum, dividend) => sum + (dividend.numberOfShares ? Number(dividend.numberOfShares) : 0),
-            0,
-          );
-          return sum > 0 ? sum.toLocaleString() : "—";
-        },
-      }),
       columnHelper.accessor("totalAmountInCents", {
         header: "Return amount",
         cell: (info) => formatMoney(Number(info.getValue()) / 100),
@@ -162,12 +147,6 @@ const DividendComputation = ({ id }: { id: string }) => {
         header: "Investor",
         cell: (info) => <div className="font-light">{info.getValue() || "Unknown"}</div>,
         footer: "Total",
-      }),
-      columnHelper.accessor("number_of_shares", {
-        header: "Number of shares",
-        cell: (info) => info.getValue().toLocaleString(),
-        meta: { numeric: true },
-        footer: computationOutputs.reduce((sum, output) => sum + output.number_of_shares, 0).toLocaleString(),
       }),
       columnHelper.accessor("total_amount", {
         header: "Return amount",
