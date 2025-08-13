@@ -13,8 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
+import { type RecipientType } from "@/types/recipientTypes";
 
-export type RecipientType = "admins" | "investors" | "active_contractors" | "alumni_contractors";
+export { type RecipientType } from "@/types/recipientTypes";
 
 interface RecipientCounts {
   admins: number;

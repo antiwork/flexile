@@ -1,5 +1,6 @@
 import { EventSchemas, Inngest } from "inngest";
 import { z } from "zod";
+import { minBilledAmountSchema, recipientTypesSchema } from "@/types/recipientTypes";
 import { superjsonMiddleware } from "./middleware";
 
 export const inngest = new Inngest({
@@ -20,8 +21,8 @@ export const inngest = new Inngest({
     "company.update.published": {
       data: z.object({
         updateId: z.string(),
-        recipientTypes: z.array(z.string()).optional(),
-        minBilledAmount: z.number().optional(),
+        recipientTypes: recipientTypesSchema.optional(),
+        minBilledAmount: minBilledAmountSchema,
       }),
     },
   }),

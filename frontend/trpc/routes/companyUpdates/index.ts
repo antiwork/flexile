@@ -15,6 +15,7 @@ import {
 import { inngest } from "@/inngest/client";
 import { type CompanyContext, companyProcedure, createRouter, renderTiptapToText } from "@/trpc";
 import { isActive } from "@/trpc/routes/contractors";
+import { minBilledAmountSchema, type RecipientType, recipientTypesSchema } from "@/types/recipientTypes";
 import { assertDefined } from "@/utils/assert";
 
 const byId = (ctx: CompanyContext, id: string) =>
@@ -77,7 +78,7 @@ export const companyUpdatesRouter = createRouter({
       .values({
         ...pick(input, ["title", "body"]),
         companyId: ctx.company.id,
-        recipientTypes: input.recipientTypes || ["admins"],
+        recipientTypes: Array.from(new Set([...(input.recipientTypes ?? []), "admins"])),
       })
       .returning();
     return assertDefined(update).externalId;
@@ -90,7 +91,7 @@ export const companyUpdatesRouter = createRouter({
       .set({
         ...pick(input, ["title", "body"]),
         companyId: ctx.company.id,
-        recipientTypes: input.recipientTypes || ["admins"],
+        recipientTypes: Array.from(new Set([...(input.recipientTypes ?? []), "admins"])),
       })
       .where(byId(ctx, input.id))
       .returning();
@@ -100,7 +101,7 @@ export const companyUpdatesRouter = createRouter({
     .input(
       z.object({
         id: z.string(),
-        minBilledAmount: z.number().optional(),
+        minBilledAmount: minBilledAmountSchema,
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -115,11 +116,17 @@ export const companyUpdatesRouter = createRouter({
 
       if (!update) throw new TRPCError({ code: "NOT_FOUND" });
 
+      // Validate recipient types from database
+      const validRecipientTypes = update.recipientTypes?.filter(
+        (type): type is RecipientType =>
+          type === "admins" || type === "investors" || type === "active_contractors" || type === "alumni_contractors",
+      );
+
       await inngest.send({
         name: "company.update.published",
         data: {
           updateId: update.externalId,
-          recipientTypes: update.recipientTypes ?? undefined,
+          recipientTypes: validRecipientTypes?.length ? validRecipientTypes : undefined,
           minBilledAmount: input.minBilledAmount,
         },
       });
@@ -141,13 +148,13 @@ export const companyUpdatesRouter = createRouter({
   getUniqueRecipientCount: companyProcedure
     .input(
       z.object({
-        recipientTypes: z.array(z.enum(["admins", "investors", "active_contractors", "alumni_contractors"])),
-        minBilledAmount: z.number().optional(),
+        recipientTypes: recipientTypesSchema,
+        minBilledAmount: minBilledAmountSchema,
       }),
     )
     .query(async ({ ctx, input }) => {
       const companyId = ctx.company.id;
-      const queries = [];
+      const queries: Promise<{ email: string }[]>[] = [];
 
       // Build base query function
       const baseQuery = (
@@ -229,12 +236,8 @@ export const companyUpdatesRouter = createRouter({
         return { uniqueCount: 0 };
       }
 
-      // Execute all queries and deduplicate
-      const allRecipients = [];
-      for (const query of queries) {
-        const results = await query;
-        allRecipients.push(...results);
-      }
+      // Execute all queries in parallel and deduplicate
+      const allRecipients = (await Promise.all(queries)).flat();
 
       // Deduplicate by email
       const uniqueEmails = new Set(allRecipients.map((r) => r.email));

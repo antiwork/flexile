@@ -16,6 +16,7 @@ import CompanyUpdatePublished from "@/inngest/functions/emails/CompanyUpdatePubl
 import { BATCH_SIZE, resend } from "@/trpc/email";
 import { companyLogoUrl, companyName } from "@/trpc/routes/companies";
 import { userDisplayName } from "@/trpc/routes/users";
+import { type RecipientType } from "@/types/recipientTypes";
 
 export default inngest.createFunction(
   { id: "send-company-update-emails" },
@@ -62,10 +63,17 @@ export default inngest.createFunction(
       if (event.data.recipients) return event.data.recipients;
 
       // Ensure admins are always included
-      let recipientTypes = update.recipientTypes || ["admins"];
-      if (!recipientTypes.includes("admins")) {
-        recipientTypes = ["admins", ...recipientTypes];
-      }
+      const dbRecipientTypes = update.recipientTypes || ["admins"];
+      // Validate that all types are valid RecipientType values
+      const recipientTypes: RecipientType[] = dbRecipientTypes.filter(
+        (type): type is RecipientType =>
+          type === "admins" || type === "investors" || type === "active_contractors" || type === "alumni_contractors",
+      );
+
+      // Add admins if not included
+      const finalRecipientTypes = recipientTypes.includes("admins")
+        ? recipientTypes
+        : (["admins", ...recipientTypes] satisfies RecipientType[]);
 
       const baseQuery = (
         relationTable: typeof companyContractors | typeof companyInvestors | typeof companyAdministrators,
@@ -75,20 +83,20 @@ export default inngest.createFunction(
           .from(users)
           .leftJoin(relationTable, and(eq(users.id, relationTable.userId), eq(relationTable.companyId, company.id)));
 
-      const queries = [];
+      const queries: Promise<{ email: string }[]>[] = [];
 
       // Always include admins
       const admins = baseQuery(companyAdministrators).where(isNotNull(companyAdministrators.id));
       queries.push(admins);
 
-      if (recipientTypes.includes("investors")) {
+      if (finalRecipientTypes.includes("investors")) {
         const investors = baseQuery(companyInvestors).where(isNotNull(companyInvestors.id));
         queries.push(investors);
       }
 
       const minBilledAmount = event.data.minBilledAmount;
 
-      if (recipientTypes.includes("active_contractors")) {
+      if (finalRecipientTypes.includes("active_contractors")) {
         if (minBilledAmount && minBilledAmount > 0) {
           // Filter contractors by total billed amount
           const activeContractors = db
@@ -113,7 +121,7 @@ export default inngest.createFunction(
         }
       }
 
-      if (recipientTypes.includes("alumni_contractors")) {
+      if (finalRecipientTypes.includes("alumni_contractors")) {
         if (minBilledAmount && minBilledAmount > 0) {
           // Filter contractors by total billed amount
           const alumniContractors = db

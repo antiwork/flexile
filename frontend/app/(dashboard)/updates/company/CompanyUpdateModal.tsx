@@ -15,27 +15,26 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
+import { RECIPIENT_TYPES, type RecipientType } from "@/types/recipientTypes";
 
-type RecipientType = "admins" | "investors" | "active_contractors" | "alumni_contractors";
-const recipientTypeSet = new Set<RecipientType>(["admins", "investors", "active_contractors", "alumni_contractors"]);
+const recipientTypeValues: readonly string[] = RECIPIENT_TYPES;
+const isRecipientType = (value: unknown): value is RecipientType =>
+  typeof value === "string" && recipientTypeValues.includes(value);
+
 function narrowRecipientTypes(input: unknown): RecipientType[] | undefined {
   if (!Array.isArray(input)) return undefined;
-  const result: RecipientType[] = [];
-  for (const item of input) {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    if (typeof item === "string" && recipientTypeSet.has(item as RecipientType)) {
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      result.push(item as RecipientType);
-    }
-  }
-  return result.length > 0 ? result : undefined;
+  const narrowed = input.filter(isRecipientType);
+  const unique = Array.from(new Set(narrowed));
+  return unique.length > 0 ? unique : undefined;
 }
 
 const formSchema = z.object({
   title: z.string().trim().min(1, "This field is required."),
   body: z.string().regex(/>\w/u, "This field is required."),
-  recipientTypes: z.array(z.enum(["admins", "investors", "active_contractors", "alumni_contractors"])),
-  minBilledAmount: z.number().optional(),
+  recipientTypes: z
+    .array(z.enum(["admins", "investors", "active_contractors", "alumni_contractors"]))
+    .refine((arr) => arr.includes("admins"), { message: "Admins must be included." }),
+  minBilledAmount: z.number().nonnegative().optional(),
 });
 
 interface CompanyUpdateModalProps {
@@ -96,17 +95,18 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
   const selectedMinBilledAmount = form.watch("minBilledAmount");
 
   // Get the actual unique recipient count from the server
-  const { data: recipientData } = trpc.companyUpdates.getUniqueRecipientCount.useQuery(
-    {
-      companyId: company.id,
-      recipientTypes: selectedRecipientTypes,
-      minBilledAmount: selectedMinBilledAmount,
-    },
-    {
-      enabled: selectedRecipientTypes.length > 0,
-      staleTime: 10000, // Cache for 10 seconds
-    },
-  );
+  const { data: recipientData, isFetching: isRecipientCountFetching } =
+    trpc.companyUpdates.getUniqueRecipientCount.useQuery(
+      {
+        companyId: company.id,
+        recipientTypes: selectedRecipientTypes,
+        minBilledAmount: selectedMinBilledAmount,
+      },
+      {
+        enabled: selectedRecipientTypes.length > 0,
+        staleTime: 10000, // Cache for 10 seconds
+      },
+    );
 
   const recipientCount = recipientData?.uniqueCount ?? 0;
 
@@ -116,10 +116,12 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
 
   const saveMutation = useMutation({
     mutationFn: async ({ values, preview }: { values: z.infer<typeof formSchema>; preview: boolean }) => {
+      // Ensure admins are always included and deduplicate
+      const safeRecipientTypes = Array.from(new Set<RecipientType>([...values.recipientTypes, "admins"]));
       const data = {
         companyId: company.id,
         ...values,
-        recipientTypes: values.recipientTypes,
+        recipientTypes: safeRecipientTypes,
       };
       let id;
       if (update) {
@@ -256,6 +258,8 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
           </DialogHeader>
           {update?.sentAt ? (
             <p>Your update will be visible in Flexile. No new emails will be sent.</p>
+          ) : isRecipientCountFetching ? (
+            <p>Calculating recipient count...</p>
           ) : (
             <p>
               Your update will be emailed to {recipientCount.toLocaleString()}{" "}
