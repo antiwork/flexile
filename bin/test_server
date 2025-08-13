@@ -13,7 +13,6 @@ kill_process_listening_on_port 3100
 kill_process_listening_on_port 3101
 kill_process_listening_on_port 3037
 
-
 export NODE_TLS_REJECT_UNAUTHORIZED=0
 export RAILS_ENV=test
 export NODE_ENV=test
