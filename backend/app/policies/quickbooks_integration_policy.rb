@@ -16,4 +16,8 @@ class QuickbooksIntegrationPolicy < ApplicationPolicy
   def list_accounts?
     update?
   end
+
+  def sync_integration?
+    update?
+  end
 end

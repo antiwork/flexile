@@ -3,7 +3,6 @@ import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { integrations } from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import {
   CLEARANCE_BANK_ACCOUNT_NAME,
   getQuickbooksAuthUrl,
@@ -12,6 +11,7 @@ import {
 } from "@/lib/quickbooks";
 import { type CompanyContext, companyProcedure, createRouter } from "@/trpc";
 import { assert, assertDefined } from "@/utils/assert";
+import { request } from "@/utils/request";
 
 const oauthState = (ctx: CompanyContext) => Buffer.from(`${ctx.company.id}:${ctx.company.name}`).toString("base64");
 
@@ -195,9 +195,17 @@ export const quickbooksRouter = createRouter({
         })
         .where(eq(integrations.id, integration.id));
 
-      await inngest.send({
-        name: "quickbooks/sync-integration",
-        data: { companyId: String(ctx.company.id) },
-      });
+      const syncUrl = `/internal/companies/${ctx.company.id}/administrator/quickbooks/sync_integration`;
+
+      try {
+        await request({
+          url: syncUrl,
+          method: "POST",
+          accept: "json",
+          assertOk: true,
+        });
+      } catch {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to trigger QuickBooks sync" });
+      }
     }),
 });

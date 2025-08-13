@@ -39,6 +39,7 @@ scope path: :internal, module: :internal do
           get :connect
           delete :disconnect
           get :list_accounts
+          post :sync_integration
         end
       end
       resources :stripe_microdeposit_verifications, only: :create
