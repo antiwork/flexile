@@ -5,7 +5,8 @@ class QuickbooksIntegrationSyncScheduleJob
   sidekiq_options retry: 5
 
   def perform(company_id)
-    company = Company.find(company_id)
+    company = Company.find_by(id: company_id)
+    return if company.nil?
     integration = company.quickbooks_integration
 
     return if integration.nil? || integration.status_deleted?
@@ -17,6 +18,8 @@ class QuickbooksIntegrationSyncScheduleJob
 
 
     active_worker_ids = contractors.pluck(:id)
-    QuickbooksWorkersSyncJob.perform_async(company_id, active_worker_ids)
+    active_worker_ids.each_slice(100) do |batch_ids|
+      QuickbooksWorkersSyncJob.perform_async(company_id, batch_ids)
+    end
   end
 end

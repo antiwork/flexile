@@ -29,7 +29,7 @@ RSpec.describe QuickbooksIntegrationSyncScheduleJob, type: :sidekiq do
         it "enqueues QuickbooksWorkersSyncJob with active worker IDs" do
           expect(QuickbooksWorkersSyncJob).to receive(:perform_async).with(
             company.id,
-            [worker1.id, worker2.id]
+            contain_exactly(worker1.id, worker2.id)
           )
 
           described_class.new.perform(company.id)
@@ -41,6 +41,7 @@ RSpec.describe QuickbooksIntegrationSyncScheduleJob, type: :sidekiq do
           expect(QuickbooksWorkersSyncJob).not_to receive(:perform_async)
 
           described_class.new.perform(company.id)
+          expect(integration.reload.status).to eq("active")
         end
       end
 
@@ -59,9 +60,33 @@ RSpec.describe QuickbooksIntegrationSyncScheduleJob, type: :sidekiq do
           described_class.new.perform(company.id)
         end
       end
+
+      context "when there are many workers requiring batching" do
+        let!(:workers) { create_list(:company_worker, 250, company: company) }
+
+        it "batches workers into multiple jobs" do
+          # Expect 3 batches: 2 full batches of 100 and 1 partial batch of 50
+          expect(QuickbooksWorkersSyncJob).to receive(:perform_async).exactly(3).times
+
+          described_class.new.perform(company.id)
+        end
+
+        it "respects the batch size of 100" do
+          batches = []
+          allow(QuickbooksWorkersSyncJob).to receive(:perform_async) do |company_id, worker_ids|
+            batches << worker_ids.size
+          end
+
+          described_class.new.perform(company.id)
+
+          expect(batches).to eq([100, 100, 50])
+        end
+      end
     end
 
     context "when integration is nil" do
+      before { company.quickbooks_integration&.destroy! }
+
       it "returns early without processing" do
         expect(QuickbooksWorkersSyncJob).not_to receive(:perform_async)
 
@@ -82,10 +107,10 @@ RSpec.describe QuickbooksIntegrationSyncScheduleJob, type: :sidekiq do
     end
 
     context "when company does not exist" do
-      it "raises ActiveRecord::RecordNotFound" do
-        expect do
-          described_class.new.perform(999999)
-        end.to raise_error(ActiveRecord::RecordNotFound)
+      it "returns early without processing" do
+        expect(QuickbooksWorkersSyncJob).not_to receive(:perform_async)
+
+        described_class.new.perform(999999)
       end
     end
   end

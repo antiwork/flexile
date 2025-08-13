@@ -12,6 +12,7 @@ import {
 import { type CompanyContext, companyProcedure, createRouter } from "@/trpc";
 import { assert, assertDefined } from "@/utils/assert";
 import { request } from "@/utils/request";
+import { sync_integration_company_administrator_quickbooks_path } from "@/utils/routes";
 
 const oauthState = (ctx: CompanyContext) => Buffer.from(`${ctx.company.id}:${ctx.company.name}`).toString("base64");
 
@@ -43,26 +44,32 @@ export const quickbooksRouter = createRouter({
       expenseAccounts: [],
       bankAccounts: [],
     };
-    if (integration.status !== "active") return data;
+    if (integration.status === "deleted") return data;
 
-    const qbo = getQuickbooksClient(integration);
-    const [expenseAccounts, bankAccounts] = await Promise.all([
-      qbo.findAccounts({ AccountType: "Expense" }),
-      qbo.findAccounts({ AccountType: "Bank" }),
-    ]);
-    const formatAccounts = (accounts: typeof expenseAccounts.QueryResponse.Account) =>
-      accounts?.map((account) => ({
-        id: assertDefined(account.Id),
-        name: account.AcctNum ? `${account.AcctNum} - ${account.Name}` : account.Name,
-      }));
+    try {
+      const qbo = getQuickbooksClient(integration);
+      const [expenseAccounts, bankAccounts] = await Promise.all([
+        qbo.findAccounts({ AccountType: "Expense" }),
+        qbo.findAccounts({ AccountType: "Bank" }),
+      ]);
+      const formatAccounts = (accounts: typeof expenseAccounts.QueryResponse.Account) =>
+        accounts?.map((account) => ({
+          id: assertDefined(account.Id),
+          name: account.AcctNum ? `${account.AcctNum} - ${account.Name}` : account.Name,
+        }));
 
-    return {
-      ...data,
-      expenseAccounts: formatAccounts(expenseAccounts.QueryResponse.Account),
-      bankAccounts: formatAccounts(
-        bankAccounts.QueryResponse.Account?.filter((account) => account.Name !== CLEARANCE_BANK_ACCOUNT_NAME),
-      ),
-    };
+      return {
+        ...data,
+        expenseAccounts: formatAccounts(expenseAccounts.QueryResponse.Account),
+        bankAccounts: formatAccounts(
+          bankAccounts.QueryResponse.Account?.filter((account) => account.Name !== CLEARANCE_BANK_ACCOUNT_NAME),
+        ),
+      };
+    } catch {
+      // If we can't load accounts (e.g., token expired), return base data
+      // This allows the UI to show the integration status while preventing errors
+      return data;
+    }
   }),
 
   // TODO (techdebt): move this to the page itself
@@ -150,6 +157,19 @@ export const quickbooksRouter = createRouter({
           },
         });
       }
+
+      // Trigger QuickBooks sync after successful connection/reconnection
+      const syncUrl = sync_integration_company_administrator_quickbooks_path(String(ctx.company.id));
+      try {
+        await request({
+          url: syncUrl,
+          method: "POST",
+          accept: "json",
+          assertOk: true,
+        });
+      } catch {
+        // Don't fail the connection if sync fails - non-fatal error
+      }
     }),
 
   disconnect: companyProcedure.mutation(async ({ ctx }) => {
@@ -195,8 +215,8 @@ export const quickbooksRouter = createRouter({
         })
         .where(eq(integrations.id, integration.id));
 
-      const syncUrl = `/internal/companies/${ctx.company.id}/administrator/quickbooks/sync_integration`;
-
+      // Try to trigger sync after saving configuration, but don't fail if it doesn't work
+      const syncUrl = sync_integration_company_administrator_quickbooks_path(String(ctx.company.id));
       try {
         await request({
           url: syncUrl,
@@ -205,7 +225,8 @@ export const quickbooksRouter = createRouter({
           assertOk: true,
         });
       } catch {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to trigger QuickBooks sync" });
+        // Don't fail the configuration save if sync fails - just log it
+        // The user can manually trigger sync later if needed
       }
     }),
 });

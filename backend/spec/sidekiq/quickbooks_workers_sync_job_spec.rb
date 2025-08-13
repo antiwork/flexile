@@ -10,10 +10,14 @@ RSpec.describe QuickbooksWorkersSyncJob, type: :sidekiq do
   let(:worker1) { create(:company_worker, company: company) }
   let(:worker2) { create(:company_worker, company: company) }
   let(:active_worker_ids) { [worker1.id, worker2.id] }
+  let(:lock_manager) { instance_double(LockManager) }
+
   before do
     allow(IntegrationApi::Quickbooks).to receive(:new).and_return(
       instance_double(IntegrationApi::Quickbooks, sync_data_for: true)
     )
+    allow(LockManager).to receive(:new).and_return(lock_manager)
+    allow(lock_manager).to receive(:lock!).and_yield
   end
 
   describe "#perform" do
@@ -52,10 +56,11 @@ RSpec.describe QuickbooksWorkersSyncJob, type: :sidekiq do
         worker1
         non_existent_id = 999999
 
+        quickbooks_service = instance_double(IntegrationApi::Quickbooks)
+        allow(IntegrationApi::Quickbooks).to receive(:new).with(company_id: company.id).and_return(quickbooks_service)
+        expect(quickbooks_service).to receive(:sync_data_for).with(object: worker1).once
 
-        expect do
-          described_class.new.perform(company.id, [worker1.id, non_existent_id])
-        end.not_to raise_error
+        expect { described_class.new.perform(company.id, [worker1.id, non_existent_id]) }.not_to raise_error
       end
 
       it "skips inactive workers" do
@@ -65,8 +70,49 @@ RSpec.describe QuickbooksWorkersSyncJob, type: :sidekiq do
         quickbooks_service = instance_double(IntegrationApi::Quickbooks)
         allow(IntegrationApi::Quickbooks).to receive(:new).with(company_id: company.id).and_return(quickbooks_service)
         expect(quickbooks_service).to receive(:sync_data_for).with(object: worker1).once
+        expect(quickbooks_service).not_to receive(:sync_data_for).with(object: worker2)
 
         described_class.new.perform(company.id, [worker1.id, worker2.id])
+      end
+
+      it "uses distributed locking with company-specific key" do
+        expect(lock_manager).to receive(:lock!).with("quickbooks_workers_sync:#{company.id}")
+
+        described_class.new.perform(company.id, active_worker_ids)
+      end
+    end
+
+    context "error handling" do
+      before do
+        config = integration.configuration || {}
+        config["consulting_services_expense_account_id"] = "1"
+        config["flexile_fees_expense_account_id"] = "1"
+        config["default_bank_account_id"] = "1"
+        integration.update_columns(status: "active", configuration: config)
+      end
+
+      it "continues processing other workers when one worker sync fails" do
+        worker1
+        worker2
+
+        quickbooks_service = instance_double(IntegrationApi::Quickbooks)
+        allow(IntegrationApi::Quickbooks).to receive(:new).with(company_id: company.id).and_return(quickbooks_service)
+
+        # First worker fails, second should still be processed
+        expect(quickbooks_service).to receive(:sync_data_for).with(object: worker1).and_raise(StandardError.new("API Error"))
+        expect(quickbooks_service).to receive(:sync_data_for).with(object: worker2)
+
+        expect { described_class.new.perform(company.id, [worker1.id, worker2.id]) }.not_to raise_error
+      end
+
+      it "re-raises Unauthorized errors to stop the job" do
+        worker1
+
+        quickbooks_service = instance_double(IntegrationApi::Quickbooks)
+        allow(IntegrationApi::Quickbooks).to receive(:new).with(company_id: company.id).and_return(quickbooks_service)
+        expect(quickbooks_service).to receive(:sync_data_for).with(object: worker1).and_raise(StandardError.new("Unauthorized"))
+
+        expect { described_class.new.perform(company.id, [worker1.id]) }.to raise_error(StandardError, "Unauthorized")
       end
     end
 
@@ -76,10 +122,6 @@ RSpec.describe QuickbooksWorkersSyncJob, type: :sidekiq do
       it "returns early without processing" do
         expect(IntegrationApi::Quickbooks).not_to receive(:new)
 
-        described_class.new.perform(company.id, active_worker_ids)
-      end
-
-      it "does not update last_sync_at" do
         described_class.new.perform(company.id, active_worker_ids)
       end
     end
@@ -103,10 +145,10 @@ RSpec.describe QuickbooksWorkersSyncJob, type: :sidekiq do
     end
 
     context "when company does not exist" do
-      it "raises ActiveRecord::RecordNotFound" do
-        expect do
-          described_class.new.perform(999999, active_worker_ids)
-        end.to raise_error(ActiveRecord::RecordNotFound)
+      it "returns early without processing" do
+        expect(IntegrationApi::Quickbooks).not_to receive(:new)
+
+        described_class.new.perform(999999, active_worker_ids)
       end
     end
   end

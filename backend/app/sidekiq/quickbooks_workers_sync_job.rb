@@ -5,20 +5,31 @@ class QuickbooksWorkersSyncJob
   sidekiq_options retry: 5
 
   def perform(company_id, active_worker_ids)
-    company = Company.find(company_id)
-    integration = company.quickbooks_integration
-
-    return if integration.nil? || integration.status != "active"
-
-
-    active_worker_ids.each do |worker_id|
-      worker = CompanyWorker.find_by(id: worker_id)
-      next unless worker&.ended_at.nil?
-
-      IntegrationApi::Quickbooks.new(company_id: company_id).sync_data_for(object: worker)
+    lock_manager = LockManager.new
+    lock_manager.lock!("quickbooks_workers_sync:#{company_id}") do
+      perform_sync(company_id, active_worker_ids)
     end
-
-
-    integration.update!(last_sync_at: Time.current)
   end
+
+  private
+    def perform_sync(company_id, active_worker_ids)
+      company = Company.find_by(id: company_id)
+      return if company.nil?
+
+      integration = company.quickbooks_integration
+      return if integration.nil? || integration.status != "active"
+
+
+
+      qbo = IntegrationApi::Quickbooks.new(company_id: company_id)
+
+      company.company_workers.where(id: active_worker_ids, ended_at: nil).find_each do |worker|
+        qbo.sync_data_for(object: worker)
+      rescue => e
+        Rails.logger.error("Failed to sync worker #{worker.id} for company #{company_id}: #{e.message}")
+        raise if e.is_a?(StandardError) && e.message.include?("Unauthorized")
+      end
+
+      integration.update!(last_sync_at: Time.current)
+    end
 end
