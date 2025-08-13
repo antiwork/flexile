@@ -68,9 +68,7 @@ test.describe("invoice creation", () => {
     await expect(page.getByText("Net amount in cash$60")).toBeVisible();
 
     await fillDatePicker(page, "Date", "08/08/2021");
-    await page.waitForTimeout(300);
     await page.getByLabel("Hours / Qty").fill("100:00");
-    await page.waitForTimeout(300);
     await page.getByPlaceholder("Description").fill("I worked on invoices");
 
     await expect(page.getByText("Total services$6,000")).toBeVisible();
@@ -101,7 +99,6 @@ test.describe("invoice creation", () => {
     await page.getByPlaceholder("Description").fill("item name");
     await page.getByLabel("Hours / Qty").fill("01:00");
     await page.getByPlaceholder("Enter notes about your").fill("sent as alumni");
-    await page.waitForTimeout(100);
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByRole("cell", { name: "Awaiting approval (0/2)" })).toBeVisible();
   });
