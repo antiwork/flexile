@@ -23,7 +23,6 @@ import { customAlphabet } from "nanoid";
 import { deterministicEncryptedString, encryptedJson, encryptedString } from "@/lib/encryptedField";
 import {
   BusinessType,
-  companyUpdatePeriods,
   DocumentTemplateType,
   DocumentType,
   invoiceStatuses,
@@ -158,34 +157,6 @@ export const companyLawyers = pgTable(
       "btree",
       table.userId.asc().nullsLast().op("int8_ops"),
       table.companyId.asc().nullsLast().op("int8_ops"),
-    ),
-  ],
-);
-
-export const companyMonthlyFinancialReports = pgTable(
-  "company_monthly_financial_reports",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    companyId: bigint("company_id", { mode: "bigint" }).notNull(),
-    year: integer().notNull(),
-    month: integer().notNull(),
-    netIncomeCents: bigint("net_income_cents", { mode: "bigint" }).notNull(),
-    revenueCents: bigint("revenue_cents", { mode: "bigint" }).notNull(),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-  },
-  (table) => [
-    index("index_company_monthly_financial_reports_on_company_id").using(
-      "btree",
-      table.companyId.asc().nullsLast().op("int8_ops"),
-    ),
-    uniqueIndex("index_company_monthly_financials_on_company_year_month").using(
-      "btree",
-      table.companyId.asc().nullsLast().op("int8_ops"),
-      table.year.asc().nullsLast().op("int4_ops"),
-      table.month.asc().nullsLast().op("int4_ops"),
     ),
   ],
 );
@@ -1526,10 +1497,6 @@ export const companyUpdates = pgTable(
       .notNull()
       .$onUpdate(() => new Date()),
     externalId: varchar("external_id").$default(nanoid).notNull(),
-    period: varchar({ enum: companyUpdatePeriods }),
-    periodStartedOn: date("period_started_on", { mode: "string" }),
-    showRevenue: boolean("show_revenue").notNull().default(false),
-    showNetIncome: boolean("show_net_income").notNull().default(false),
   },
   (table) => [
     index("index_company_updates_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
@@ -1672,7 +1639,6 @@ export const companies = pgTable(
     showAnalyticsToContractors: boolean("show_analytics_to_contractors").notNull().default(false),
     defaultCurrency: varchar("default_currency").default("usd").notNull(),
 
-    lawyersEnabled: boolean("lawyers_enabled").notNull().default(false),
     conversionSharePriceUsd: numeric("conversion_share_price_usd"),
     jsonData: jsonb("json_data").notNull().$type<{ flags: string[] }>().default({ flags: [] }),
     inviteLink: varchar("invite_link"),

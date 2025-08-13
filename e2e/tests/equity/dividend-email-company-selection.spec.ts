@@ -67,17 +67,31 @@ test.describe("Dividend Email Company Selection", () => {
     });
 
     await login(page, investorUser);
+    // Initially logged in as Company Alpha (first created company)
     await page.getByRole("button", { name: "Equity" }).click();
     await page.getByRole("link", { name: "Dividends" }).first().click();
 
     await expect(page.getByRole("table")).toBeVisible();
+    // Verify Company Alpha's dividend is shown
+    await expect(page.getByRole("cell", { name: "$500" })).toBeVisible(); // gross amount
+    await expect(page.getByRole("cell", { name: "500", exact: true })).toBeVisible(); // shares
 
+    // Now simulate clicking dividend email link for Company Beta (with company_id parameter)
     await page.goto(`/equity/dividends?company_id=${companyB.externalId}`);
 
-    await expect(page.getByRole("table")).toBeVisible();
-    await expect(page.getByRole("cell", { name: "$750" })).toBeVisible();
+    // Wait for company switch to complete by waiting for Company Beta to appear in the header
+    await expect(page.getByText("Company Beta")).toBeVisible({ timeout: 10000 });
 
-    await page.waitForTimeout(2000);
+    // Verify Company Beta's dividend is now shown
+    await expect(page.getByRole("table")).toBeVisible();
+    await expect(page.getByRole("cell", { name: "$750" })).toBeVisible(); // gross amount
+    await expect(page.getByRole("cell", { name: "750", exact: true })).toBeVisible(); // shares
+
+    // Verify Company Alpha's dividend is NOT shown
+    await expect(page.getByRole("cell", { name: "$500" })).not.toBeVisible();
+    await expect(page.getByRole("cell", { name: "500" })).not.toBeVisible();
+
+    // Verify URL was cleaned up after switch
     expect(page.url()).not.toContain("company_id");
   });
 
@@ -93,6 +107,8 @@ test.describe("Dividend Email Company Selection", () => {
 
     await page.goto("/equity/dividends?company_id=invalid-id");
 
-    await expect(page.getByRole("table")).toBeVisible();
+    await expect(page.getByText("You have not been issued any dividends yet.")).toBeVisible();
+
+    expect(page.url()).not.toContain("company_id");
   });
 });

@@ -188,7 +188,6 @@ Data synchronization is primarily managed by background jobs and event-driven up
 
 - **`QuickbooksIntegrationSyncScheduleJob`**: Runs after the initial integration setup to sync all active company contractors
 - **`QuickbooksDataSyncJob`**: Handles the ongoing synchronization of individual records (contractors, invoices, payments) as they are created or updated in Flexile
-- **`QuickbooksCompanyFinancialReportSyncJob`** & **`QuickbooksMonthlyFinancialReportSyncJob`**: Run monthly (on the 20th) to pull your company's revenue and net income from QuickBooks into Flexile
 
 **Linking Records**:
 The `integration_records` table in Flexile's database links Flexile entities to their corresponding QuickBooks entities using external IDs and sync tokens.
@@ -278,23 +277,6 @@ QuickbooksDataSyncJob.perform_async(consolidated_payment_id, 'ConsolidatedPaymen
    - Creates `JournalEntry` in QBO to clear amounts from "Flexile.com Money Out Clearing" account
    - Debits the clearing account for total amount
    - Credits company's main bank account
-
-### Syncing Financial Reports
-
-**When**: Automatically on the 20th of each month
-
-**Background jobs**:
-
-```ruby
-QuickbooksCompanyFinancialReportSyncJob.perform_async(company_id)
-QuickbooksMonthlyFinancialReportSyncJob.perform_async(company_id, month, year)
-```
-
-**What this does**:
-
-- Fetches Profit and Loss report from QuickBooks for previous month
-- Extracts Revenue ("Total Income") and "Net Income" figures
-- Updates `CompanyMonthlyFinancialReport` records in Flexile
 
 ## Managing Integration Status
 

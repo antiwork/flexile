@@ -57,10 +57,10 @@ test.describe("One-off payments", () => {
       });
       expect(invoice).toEqual(
         expect.objectContaining({
-          totalAmountInUsdCents: 215430n,
+          totalAmountInUsdCents: BigInt(215430),
           equityPercentage: 0,
-          cashAmountInCents: 215430n,
-          equityAmountInCents: 0n,
+          cashAmountInCents: BigInt(215430),
+          equityAmountInCents: BigInt(0),
           equityAmountInOptions: 0,
           minAllowedEquityPercentage: null,
           maxAllowedEquityPercentage: null,
@@ -136,10 +136,10 @@ test.describe("One-off payments", () => {
         });
         expect(invoice).toEqual(
           expect.objectContaining({
-            totalAmountInUsdCents: 50000n,
+            totalAmountInUsdCents: BigInt(50000),
             equityPercentage: 10,
-            cashAmountInCents: 45000n,
-            equityAmountInCents: 5000n,
+            cashAmountInCents: BigInt(45000),
+            equityAmountInCents: BigInt(5000),
             equityAmountInOptions: 5,
             minAllowedEquityPercentage: null,
             maxAllowedEquityPercentage: null,
@@ -207,10 +207,10 @@ test.describe("One-off payments", () => {
         });
         expect(invoice).toEqual(
           expect.objectContaining({
-            totalAmountInUsdCents: 50000n,
+            totalAmountInUsdCents: BigInt(50000),
             equityPercentage: 25,
-            cashAmountInCents: 37500n,
-            equityAmountInCents: 12500n,
+            cashAmountInCents: BigInt(37500),
+            equityAmountInCents: BigInt(12500),
             equityAmountInOptions: 13,
             minAllowedEquityPercentage: 25,
             maxAllowedEquityPercentage: 75,
@@ -260,7 +260,7 @@ test.describe("One-off payments", () => {
           invoiceType: "other",
           status: "approved",
           equityPercentage: 0,
-          equityAmountInCents: 0n,
+          equityAmountInCents: BigInt(0),
           equityAmountInOptions: 0,
           cashAmountInCents: BigInt(50000),
           totalAmountInUsdCents: BigInt(50000),
@@ -302,10 +302,10 @@ test.describe("One-off payments", () => {
         await page.waitForLoadState("networkidle");
         expect(await db.query.invoices.findFirst({ where: eq(invoices.id, invoice.id) })).toEqual(
           expect.objectContaining({
-            totalAmountInUsdCents: 50000n,
+            totalAmountInUsdCents: BigInt(50000),
             equityPercentage: 25,
-            cashAmountInCents: 37500n,
-            equityAmountInCents: 12500n,
+            cashAmountInCents: BigInt(37500),
+            equityAmountInCents: BigInt(12500),
             equityAmountInOptions: 13,
             minAllowedEquityPercentage: 0,
             maxAllowedEquityPercentage: 100,

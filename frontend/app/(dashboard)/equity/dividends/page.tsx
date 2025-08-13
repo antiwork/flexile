@@ -43,6 +43,8 @@ export default function Dividends() {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
 
+  const companyIdParam = searchParams.get("company_id");
+
   const switchCompany = async (companyId: string) => {
     useUserStore.setState((state) => ({ ...state, pending: true }));
     try {
@@ -59,14 +61,17 @@ export default function Dividends() {
   };
 
   useEffect(() => {
-    const companyIdParam = searchParams.get("company_id");
-    if (companyIdParam && companyIdParam !== company.externalId) {
+    if (!companyIdParam) return;
+    if (companyIdParam !== company.externalId) {
       const targetCompany = user.companies.find((c) => c.externalId === companyIdParam);
       if (targetCompany && targetCompany.id !== company.id) {
         void switchCompany(targetCompany.id);
+      } else {
+        router.replace("/equity/dividends");
       }
     }
-  }, [searchParams, company, user, router, queryClient]);
+  }, [companyIdParam, company.externalId, company.id, user.companies, user.email]);
+
   const {
     data = [],
     refetch,

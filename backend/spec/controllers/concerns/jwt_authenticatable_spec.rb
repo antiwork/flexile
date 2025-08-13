@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
-require "spec_helper"
-
-RSpec.describe JwtAuthenticatable, type: :controller do
+RSpec.describe JwtAuthenticatable do
   controller(ActionController::Base) do
     include JwtAuthenticatable
 
@@ -37,7 +35,7 @@ RSpec.describe JwtAuthenticatable, type: :controller do
         get :test_action
 
         expect(response).to have_http_status(:ok)
-        json_response = JSON.parse(response.body)
+        json_response = response.parsed_body
         expect(json_response["message"]).to eq("authenticated")
       end
     end
