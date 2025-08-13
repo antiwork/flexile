@@ -37,13 +37,7 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
     },
   });
 
-  const trpcUtils = trpc.useUtils();
-  const updateContractor = trpc.companyInviteLinks.completeOnboarding.useMutation({
-    onSuccess: async () => {
-      await trpcUtils.documents.list.invalidate();
-      onNext();
-    },
-  });
+  const updateContractor = trpc.companyInviteLinks.completeOnboarding.useMutation({ onSuccess: onNext });
   const submit = form.handleSubmit((values) => {
     updateContractor.mutate({ companyId: company.id, ...values, startedAt: values.startedAt.toString() });
   });

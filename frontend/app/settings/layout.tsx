@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useCurrentUser } from "@/global";
 import type { CurrentUser } from "@/models/user";
+import { UserDataProvider } from "@/trpc/client";
 
 const personalLinks = [
   {
@@ -60,8 +61,8 @@ const companyLinks = [
     isVisible: (user: CurrentUser) => !!user.roles.administrator,
   },
   {
-    label: "Workspace admins",
-    route: "/settings/administrator/admins" as const,
+    label: "Roles",
+    route: "/settings/administrator/roles" as const,
     icon: ShieldUser,
     isVisible: (user: CurrentUser) => !!user.roles.administrator,
   },
@@ -84,7 +85,7 @@ const companyLinks = [
     isVisible: (user: CurrentUser) => !!user.roles.administrator,
   },
 ];
-export default function SettingsLayout({ children }: { children: React.ReactNode }) {
+function SettingsLayout({ children }: { children: React.ReactNode }) {
   const user = useCurrentUser();
   const pathname = usePathname();
   const filteredPersonalLinks = personalLinks.filter((link) => link.isVisible(user));
@@ -157,5 +158,13 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
         </SidebarInset>
       </div>
     </SidebarProvider>
+  );
+}
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <UserDataProvider>
+      <SettingsLayout>{children}</SettingsLayout>
+    </UserDataProvider>
   );
 }
