@@ -23,13 +23,16 @@ RSpec.describe Internal::Companies::UsersController do
 
   describe "GET #index" do
     context "when no filter is provided" do
-      it "returns administrators and lawyers for the company" do
+      it "returns all users for the company" do
         get :index, params: { company_id: company.external_id }
         expect(response).to have_http_status(:ok)
 
         json_response = response.parsed_body
         expect(json_response).to have_key("administrators")
         expect(json_response).to have_key("lawyers")
+        expect(json_response).to have_key("contractors")
+        expect(json_response).to have_key("investors")
+        expect(json_response).to have_key("all_users")
       end
     end
 
@@ -55,7 +58,25 @@ RSpec.describe Internal::Companies::UsersController do
       end
     end
 
+    context "when filter=contractors" do
+      it "returns contractors for the company" do
+        get :index, params: { company_id: company.external_id, filter: "contractors" }
+        expect(response).to have_http_status(:ok)
 
+        json_response = response.parsed_body
+        expect(json_response).to be_an(Array)
+      end
+    end
+
+    context "when filter=investors" do
+      it "returns investors for the company" do
+        get :index, params: { company_id: company.external_id, filter: "investors" }
+        expect(response).to have_http_status(:ok)
+
+        json_response = response.parsed_body
+        expect(json_response).to be_an(Array)
+      end
+    end
 
     context "when filter=administrators,lawyers" do
       it "returns both administrators and lawyers" do
@@ -100,13 +121,16 @@ RSpec.describe Internal::Companies::UsersController do
     end
 
     context "when filter is invalid" do
-      it "returns administrators and lawyers (default behavior)" do
+      it "returns all users (default behavior)" do
         get :index, params: { company_id: company.external_id, filter: "invalid_filter" }
         expect(response).to have_http_status(:ok)
 
         json_response = response.parsed_body
         expect(json_response).to have_key("administrators")
         expect(json_response).to have_key("lawyers")
+        expect(json_response).to have_key("contractors")
+        expect(json_response).to have_key("investors")
+        expect(json_response).to have_key("all_users")
       end
     end
   end
