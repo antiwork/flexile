@@ -395,7 +395,7 @@ export default function InvoicesPage() {
 
   return (
     <>
-      {isMobile ? (
+      {isMobile && user.roles.worker ? (
         <Button variant="floating-action" {...(!canSubmitInvoices ? { disabled: true } : { asChild: true })}>
           <Link href="/invoices/new" inert={!canSubmitInvoices}>
             <Plus />
