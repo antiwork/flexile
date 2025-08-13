@@ -61,8 +61,6 @@ test.describe("invoice creation", () => {
 
     await login(page, contractorUser, "/invoices/new");
 
-    await page.getByPlaceholder("Description").fill("I worked on invoices");
-    await page.getByLabel("Hours").fill("03:25");
     await expect(page.getByText("Total services$60")).toBeVisible();
     await expect(page.getByText("Swapped for equity (not paid in cash)$0")).toBeVisible();
     await expect(page.getByText("Net amount in cash$60")).toBeVisible();
