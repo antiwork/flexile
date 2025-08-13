@@ -16,10 +16,9 @@ class Api::QuickbooksController < ApiController
   end
 
   private
-
-  def set_company
-    @company = current_user.companies.find(params[:company_id])
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: "Company not found" }, status: :not_found
-  end
+    def set_company
+      @company = current_user.companies.find(params[:company_id])
+    rescue ActiveRecord::RecordNotFound
+      render json: { error: "Company not found" }, status: :not_found
+    end
 end
