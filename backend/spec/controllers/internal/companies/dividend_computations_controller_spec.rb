@@ -71,6 +71,15 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       expect(response).to have_http_status(:created)
       expect(DividendComputation.find(response.parsed_body["id"]).return_of_capital).to eq(true)
     end
+
+    it "handles amount in usd parameter" do
+      params_with_amount = valid_params.deep_dup
+      params_with_amount[:dividend_computation][:amount_in_usd] = 250_000
+      post :create, params: params_with_amount
+
+      expect(response).to have_http_status(:created)
+      expect(DividendComputation.find(response.parsed_body["id"]).total_amount_in_usd).to eq(250_000)
+    end
   end
 
   describe "GET #show" do
