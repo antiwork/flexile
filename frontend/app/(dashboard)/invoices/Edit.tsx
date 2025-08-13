@@ -186,6 +186,7 @@ const Edit = () => {
       }
       if (notes.length) formData.append("invoice[notes]", notes);
       if (attachment?.blob) formData.append("invoice[attachment]", attachment.blob);
+      if (!attachment) formData.append("invoice[attachment]", "");
 
       await request({
         method: id ? "PATCH" : "POST",
